@@ -1,0 +1,108 @@
+<script>
+/* ───────────────────────────────────────────
+   ComponentAdminOrders — Riepilogo ordini ciclo
+   ─────────────────────────────────────────── */
+
+PM.components.adminOrders = {
+
+  subTab: 'product',
+
+  render: function(container) {
+    PM.showLoading(container);
+
+    PM.api('getMemberDashboard')
+      .then(function(data) {
+        if (!data.cycle) {
+          PM.html(container, '<div class="card"><div class="text-muted">Nessun ciclo attivo.</div></div>');
+          return;
+        }
+        return PM.api('adminGetCycleSummary', { cycle_id: data.cycle.cycle_id })
+          .then(function(summary) {
+            PM.components.adminOrders.renderSummary(container, summary, data.cycle.title);
+          });
+      })
+      .catch(function(err) {
+        PM.html(container,
+          '<div style="text-align:center;padding:40px 0;">' +
+          '<h2>Errore di caricamento</h2>' +
+          '<p class="text-muted mt-8">' + PM._esc(err.message) + '</p>' +
+          '<button class="btn btn-primary mt-16" onclick="PM.components.adminOrders.render(\'admin-orders-panel\')">Riprova</button></div>');
+      });
+  },
+
+  renderSummary: function(container, s, title) {
+    var self = PM.components.adminOrders;
+
+    var html =
+      '<div class="flex-between mb-8">' +
+        '<h2>' + PM._esc(title) + '</h2>' +
+        '<div><strong>' + s.order_count + '</strong> soci &middot; <strong>' + PM.formatCurrency(s.grand_total) + '</strong></div>' +
+      '</div>' +
+      '<div class="admin-tabs mb-16">' +
+        '<div class="admin-tab active" id="otab-product" onclick="PM.components.adminOrders.switchSub(\'product\')">Per prodotto</div>' +
+        '<div class="admin-tab" id="otab-member" onclick="PM.components.adminOrders.switchSub(\'member\')">Per socio</div>' +
+      '</div>' +
+      '<div id="orders-product-panel" class="admin-panel active"></div>' +
+      '<div id="orders-member-panel" class="admin-panel"></div>';
+
+    PM.html(container, html);
+
+    // Per prodotto
+    var phtml = '<div class="card"><div class="table-wrap"><table><thead><tr><th>Prodotto</th><th class="text-right">Qtà</th><th class="text-right">Totale</th></tr></thead><tbody>';
+    s.by_product.forEach(function(p) {
+      var name = p.name + (p.variant ? ' ' + p.variant : '');
+      phtml += '<tr><td>' + PM._esc(name) + ' <span class="text-muted text-sm">' + PM._esc(p.format) + '</span></td>' +
+        '<td class="text-right">' + p.total_qty + '</td>' +
+        '<td class="text-right">' + PM.formatCurrency(p.total_amount) + '</td></tr>';
+    });
+    phtml += '</tbody></table></div>' +
+      '<button class="btn btn-outline btn-sm mt-8" onclick="PM.components.adminOrders.copyTable(\'product\')">Copia tabella</button></div>';
+    PM.html('orders-product-panel', phtml);
+
+    // Per socio
+    var mhtml = '<div class="card"><div class="table-wrap"><table><thead><tr><th>Socio</th><th class="text-right">Totale</th></tr></thead><tbody>';
+    s.by_member.forEach(function(m) {
+      mhtml += '<tr><td>' + PM._esc(m.full_name) + '</td><td class="text-right">' + PM.formatCurrency(m.total) + '</td></tr>';
+    });
+    mhtml += '</tbody></table></div>' +
+      '<button class="btn btn-outline btn-sm mt-8" onclick="PM.components.adminOrders.copyTable(\'member\')">Copia tabella</button></div>';
+    PM.html('orders-member-panel', mhtml);
+
+    // Store for copy
+    self._summary = s;
+  },
+
+  switchSub: function(tab) {
+    document.getElementById('otab-product').className = 'admin-tab' + (tab === 'product' ? ' active' : '');
+    document.getElementById('otab-member').className = 'admin-tab' + (tab === 'member' ? ' active' : '');
+    document.getElementById('orders-product-panel').className = 'admin-panel' + (tab === 'product' ? ' active' : '');
+    document.getElementById('orders-member-panel').className = 'admin-panel' + (tab === 'member' ? ' active' : '');
+  },
+
+  _summary: null,
+
+  copyTable: function(type) {
+    var s = PM.components.adminOrders._summary;
+    if (!s) return;
+    var text = '';
+
+    if (type === 'product') {
+      text = 'Prodotto\tFormato\tQtà\tTotale\n';
+      s.by_product.forEach(function(p) {
+        text += p.name + (p.variant ? ' ' + p.variant : '') + '\t' + p.format + '\t' + p.total_qty + '\t' + p.total_amount.toFixed(2) + '\n';
+      });
+    } else {
+      text = 'Socio\tTotale\n';
+      s.by_member.forEach(function(m) {
+        text += m.full_name + '\t' + m.total.toFixed(2) + '\n';
+      });
+    }
+
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).then(function() {
+        PM.toast('Tabella copiata');
+      });
+    }
+  }
+};
+</script>

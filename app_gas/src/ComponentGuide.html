@@ -1,0 +1,166 @@
+<script>
+/* ───────────────────────────────────────────
+   ComponentGuide — Guida per soci e admin
+   ─────────────────────────────────────────── */
+
+PM.components.guide = {
+
+  load: function() {
+    var isAdmin = PM.state.session && PM.state.session.role === 'admin';
+    var html = '';
+
+    html +=
+      '<h1 class="mb-16">Guida</h1>';
+
+    // ── SEZIONE SOCI ──
+    html +=
+      '<div class="card">' +
+        '<h2 style="color:var(--green);">Come ordinare</h2>' +
+        '<div class="guide-steps">' +
+          '<div class="guide-step">' +
+            '<div class="guide-num">1</div>' +
+            '<div><strong>Apri l\'app</strong><br>' +
+              '<span class="text-muted text-sm">Usa il link che hai ricevuto. Ti consigliamo di aggiungerlo alla schermata Home del telefono per accedere con un tap.</span></div>' +
+          '</div>' +
+          '<div class="guide-step">' +
+            '<div class="guide-num">2</div>' +
+            '<div><strong>Controlla se c\'è un ordine aperto</strong><br>' +
+              '<span class="text-muted text-sm">Nella Home vedrai se l\'ordine della settimana è aperto e quando chiude. Se è chiuso, dovrai aspettare il prossimo.</span></div>' +
+          '</div>' +
+          '<div class="guide-step">' +
+            '<div class="guide-num">3</div>' +
+            '<div><strong>Vai al tab Ordine</strong><br>' +
+              '<span class="text-muted text-sm">Clicca sull\'icona del carrello in basso. Vedrai la lista dei prodotti disponibili.</span></div>' +
+          '</div>' +
+          '<div class="guide-step">' +
+            '<div class="guide-num">4</div>' +
+            '<div><strong>Scegli le quantità</strong><br>' +
+              '<span class="text-muted text-sm">Usa i pulsanti <strong>+</strong> e <strong>−</strong> per ogni prodotto. Il totale si aggiorna automaticamente in basso.</span></div>' +
+          '</div>' +
+          '<div class="guide-step">' +
+            '<div class="guide-num">5</div>' +
+            '<div><strong>Salva l\'ordine</strong><br>' +
+              '<span class="text-muted text-sm">Premi il pulsante verde <strong>Salva ordine</strong> in basso. Vedrai una conferma. Puoi modificare l\'ordine finché il ciclo è aperto.</span></div>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+
+    // Saldo e pagamenti
+    html +=
+      '<div class="card">' +
+        '<h2 style="color:var(--green);">Saldo e pagamenti</h2>' +
+        '<ul class="guide-list">' +
+          '<li>Il tuo <strong>saldo</strong> è visibile nella Home. Rappresenta il tuo credito presso l\'associazione.</li>' +
+          '<li>Quando un ciclo d\'ordine viene chiuso, il costo del tuo ordine viene <strong>addebitato automaticamente</strong> dal saldo.</li>' +
+          '<li>Per ricaricare il saldo, effettua un <strong>bonifico</strong> sul conto dell\'associazione. La tesoriera lo registrerà nell\'app.</li>' +
+          '<li>Se il saldo è <span style="color:var(--red);font-weight:600;">negativo</span> (rosso), significa che devi effettuare un bonifico.</li>' +
+        '</ul>' +
+      '</div>';
+
+    // Storico
+    html +=
+      '<div class="card">' +
+        '<h2 style="color:var(--green);">Storico</h2>' +
+        '<ul class="guide-list">' +
+          '<li>Nel tab <strong>Storico</strong> trovi due sezioni:</li>' +
+          '<li><strong>Ordini</strong>: i tuoi ordini passati. Tocca un ordine per vedere il dettaglio dei prodotti.</li>' +
+          '<li><strong>Movimenti</strong>: tutti i movimenti del tuo saldo (bonifici, addebiti ordini, rettifiche).</li>' +
+        '</ul>' +
+      '</div>';
+
+    // Suggerimento schermata home
+    html +=
+      '<div class="card" style="background:var(--green-light);">' +
+        '<h2>Aggiungi alla schermata Home</h2>' +
+        '<ul class="guide-list">' +
+          '<li><strong>iPhone (Safari)</strong>: tocca l\'icona di condivisione (quadrato con freccia) → "Aggiungi a schermata Home"</li>' +
+          '<li><strong>Android (Chrome)</strong>: tocca i tre puntini in alto → "Aggiungi a schermata Home"</li>' +
+        '</ul>' +
+      '</div>';
+
+    // ── SEZIONE ADMIN ──
+    if (isAdmin) {
+      html +=
+        '<div style="margin-top:24px;padding-top:24px;border-top:3px solid var(--green);">' +
+          '<h1 class="mb-16" style="color:var(--green);">Guida Amministratore</h1>' +
+        '</div>';
+
+      html +=
+        '<div class="card">' +
+          '<h2>Flusso settimanale</h2>' +
+          '<div class="guide-steps">' +
+            '<div class="guide-step">' +
+              '<div class="guide-num">1</div>' +
+              '<div><strong>Crea il ciclo d\'ordine</strong><br>' +
+                '<span class="text-muted text-sm">Admin → Ciclo → inserisci titolo (es. "Settimana 14 aprile"), data chiusura ordine e data ritiro.</span></div>' +
+            '</div>' +
+            '<div class="guide-step">' +
+              '<div class="guide-num">2</div>' +
+              '<div><strong>Carica i prodotti</strong><br>' +
+                '<span class="text-muted text-sm">Admin → Prodotti. Puoi <strong>duplicare</strong> i prodotti dal ciclo precedente (il modo più veloce) oppure incollarli come testo:<br><code>Nome;Varietà;Formato;Prezzo</code></span></div>' +
+            '</div>' +
+            '<div class="guide-step">' +
+              '<div class="guide-num">3</div>' +
+              '<div><strong>Aspetta gli ordini</strong><br>' +
+                '<span class="text-muted text-sm">I soci ordinano dal loro telefono. Puoi monitorare in Admin → Ordini.</span></div>' +
+            '</div>' +
+            '<div class="guide-step">' +
+              '<div class="guide-num">4</div>' +
+              '<div><strong>Chiudi il ciclo</strong><br>' +
+                '<span class="text-muted text-sm">Admin → Ciclo → "Chiudi ciclo". Questo blocca le modifiche e <strong>genera automaticamente gli addebiti</strong> sul saldo di ogni socio.</span></div>' +
+            '</div>' +
+            '<div class="guide-step">' +
+              '<div class="guide-num">5</div>' +
+              '<div><strong>Invia il riepilogo al fornitore</strong><br>' +
+                '<span class="text-muted text-sm">Admin → Ordini → "Per prodotto" → "Copia tabella". Incolla in un messaggio o email per il fornitore.</span></div>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+
+      html +=
+        '<div class="card">' +
+          '<h2>Gestione bonifici</h2>' +
+          '<ul class="guide-list">' +
+            '<li>Quando ricevi un bonifico da un socio, vai in Admin → <strong>Bonifici</strong>.</li>' +
+            '<li>Seleziona il socio, inserisci importo e data, poi clicca "Registra bonifico".</li>' +
+            '<li>Il saldo del socio si aggiorna immediatamente.</li>' +
+            '<li>Puoi controllare tutti i saldi in Admin → Bonifici (tabella in basso).</li>' +
+          '</ul>' +
+        '</div>';
+
+      html +=
+        '<div class="card">' +
+          '<h2>Gestione soci</h2>' +
+          '<ul class="guide-list">' +
+            '<li>Admin → <strong>Soci</strong> per aggiungere nuovi soci o disattivare chi non partecipa più.</li>' +
+            '<li>Serve la <strong>email Google</strong> del socio (quella con cui farà login).</li>' +
+            '<li>Disattivare un socio non cancella i suoi dati — può essere riattivato in futuro.</li>' +
+          '</ul>' +
+        '</div>';
+
+      html +=
+        '<div class="card">' +
+          '<h2>Il tuo ordine personale</h2>' +
+          '<ul class="guide-list">' +
+            '<li>Come admin puoi anche ordinare! Usa il tab <strong>Ordine</strong> (icona carrello) come un socio normale.</li>' +
+            '<li>Il pannello Admin è un tab separato che non interferisce con il tuo ordine.</li>' +
+          '</ul>' +
+        '</div>';
+
+      html +=
+        '<div class="card">' +
+          '<h2>Formato testo prodotti</h2>' +
+          '<div class="text-sm" style="font-family:monospace;background:var(--gray-100);padding:12px;border-radius:8px;margin-top:8px;">' +
+            'Carota;;500 g;1.75<br>' +
+            'Cavolo;verza;1 kg;3.50<br>' +
+            'Patata;pasta gialla;1 kg;2.30;Az. Miglio<br>' +
+            'Cipolla;dorata;500 g;1.75;;poca disponibilità' +
+          '</div>' +
+          '<div class="text-muted text-sm mt-8">Campi: Nome;Varietà;Formato;Prezzo;Fornitore;Note<br>Solo Nome e Prezzo sono obbligatori.</div>' +
+        '</div>';
+    }
+
+    PM.html('guide-content', html);
+  }
+};
+</script>

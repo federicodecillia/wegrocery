@@ -1,0 +1,16 @@
+<script>
+/* ───────────────────────────────────────────
+   AppMember.html — Member-specific logic
+   ─────────────────────────────────────────── */
+
+// Promise.finally polyfill for older browsers
+if (typeof Promise.prototype.finally !== 'function') {
+  Promise.prototype.finally = function(callback) {
+    var P = this.constructor;
+    return this.then(
+      function(value) { return P.resolve(callback()).then(function() { return value; }); },
+      function(reason) { return P.resolve(callback()).then(function() { throw reason; }); }
+    );
+  };
+}
+</script>

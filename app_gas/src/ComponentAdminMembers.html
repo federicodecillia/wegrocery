@@ -1,0 +1,105 @@
+<script>
+/* ───────────────────────────────────────────
+   ComponentAdminMembers — Gestione soci
+   ─────────────────────────────────────────── */
+
+PM.components.adminMembers = {
+
+  render: function(container) {
+    PM.showLoading(container);
+
+    PM.api('adminGetMembers')
+      .then(function(members) {
+        var active = members.filter(function(m) { return String(m.active) !== 'false'; });
+        var inactive = members.filter(function(m) { return String(m.active) === 'false'; });
+
+        var html = '';
+
+        // Form nuovo socio
+        html +=
+          '<h2 class="mb-8">Aggiungi socio</h2>' +
+          '<div class="card">' +
+            '<div class="form-group">' +
+              '<label class="form-label">Nome completo</label>' +
+              '<input class="form-input" id="mem-name" placeholder="Mario Rossi">' +
+            '</div>' +
+            '<div class="form-group">' +
+              '<label class="form-label">Email Google</label>' +
+              '<input class="form-input" id="mem-email" type="email" placeholder="mario.rossi@gmail.com">' +
+            '</div>' +
+            '<div class="form-group">' +
+              '<label class="form-label">Ruolo</label>' +
+              '<select class="form-select" id="mem-role">' +
+                '<option value="member">Socio</option>' +
+                '<option value="admin">Amministratore</option>' +
+              '</select>' +
+            '</div>' +
+            '<button class="btn btn-primary btn-block" onclick="PM.components.adminMembers.addMember()">Aggiungi</button>' +
+          '</div>';
+
+        // Lista attivi
+        html += '<h2 class="mt-16 mb-8">Soci attivi (' + active.length + ')</h2>';
+        html += '<div class="card"><div class="table-wrap"><table><thead><tr><th>Nome</th><th>Ruolo</th><th></th></tr></thead><tbody>';
+        active.sort(function(a,b) { return a.full_name.localeCompare(b.full_name); }).forEach(function(m) {
+          var roleLabel = m.role === 'admin' ? '<span class="badge badge-open">Admin</span>' : 'Socio';
+          html += '<tr><td>' + PM._esc(m.full_name) + '<br><span class="text-muted text-sm">' + PM._esc(m.email) + '</span></td>' +
+            '<td>' + roleLabel + '</td>' +
+            '<td><button class="btn btn-sm btn-outline" onclick="PM.components.adminMembers.toggleActive(\'' + PM._esc(m.email) + '\',\'' + PM._esc(m.full_name) + '\',false)">Disattiva</button></td></tr>';
+        });
+        html += '</tbody></table></div></div>';
+
+        // Inattivi
+        if (inactive.length) {
+          html += '<h2 class="mt-16 mb-8">Soci inattivi (' + inactive.length + ')</h2>';
+          html += '<div class="card"><div class="table-wrap"><table><tbody>';
+          inactive.forEach(function(m) {
+            html += '<tr><td>' + PM._esc(m.full_name) + '</td>' +
+              '<td><button class="btn btn-sm btn-primary" onclick="PM.components.adminMembers.toggleActive(\'' + PM._esc(m.email) + '\',\'' + PM._esc(m.full_name) + '\',true)">Riattiva</button></td></tr>';
+          });
+          html += '</tbody></table></div></div>';
+        }
+
+        PM.html(container, html);
+      })
+      .catch(function(err) {
+        PM.html(container,
+          '<div style="text-align:center;padding:40px 0;">' +
+          '<h2>Errore di caricamento</h2>' +
+          '<p class="text-muted mt-8">' + PM._esc(err.message) + '</p>' +
+          '<button class="btn btn-primary mt-16" onclick="PM.components.adminMembers.render(\'admin-members-panel\')">Riprova</button></div>');
+      });
+  },
+
+  addMember: function() {
+    var name  = document.getElementById('mem-name').value.trim();
+    var email = document.getElementById('mem-email').value.trim();
+    var role  = document.getElementById('mem-role').value;
+
+    if (!name) { PM.toast('Inserisci il nome', 'error'); return; }
+    if (!email) { PM.toast('Inserisci l\'email', 'error'); return; }
+
+    PM.api('adminUpsertMember', { full_name: name, email: email, role: role, active: true })
+      .then(function() {
+        PM.toast('Socio aggiunto');
+        document.getElementById('mem-name').value = '';
+        document.getElementById('mem-email').value = '';
+        PM.components.adminMembers.render('admin-members-panel');
+      })
+      .catch(function(err) { PM.toast(err.message, 'error'); });
+  },
+
+  toggleActive: function(email, name, active) {
+    var action = active ? 'riattivare' : 'disattivare';
+    PM.confirm(action.charAt(0).toUpperCase() + action.slice(1) + '?', 'Vuoi ' + action + ' ' + name + '?')
+      .then(function(ok) {
+        if (!ok) return;
+        PM.api('adminUpsertMember', { full_name: name, email: email, active: active })
+          .then(function() {
+            PM.toast(name + (active ? ' riattivato' : ' disattivato'));
+            PM.components.adminMembers.render('admin-members-panel');
+          })
+          .catch(function(err) { PM.toast(err.message, 'error'); });
+      });
+  }
+};
+</script>

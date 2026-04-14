@@ -1,0 +1,177 @@
+<script>
+/* ───────────────────────────────────────────
+   ComponentOrderForm — Form ordine con stepper
+   ─────────────────────────────────────────── */
+
+PM.components.orderForm = {
+
+  draft: {},      // { product_id: quantity }
+  products: [],
+  cycleId: null,
+  balance: 0,
+  saving: false,
+
+  load: function() {
+    PM.showLoading('order-content');
+    PM.api('getMemberDashboard')
+      .then(function(data) {
+        PM.state.dashboard = data;
+        PM.components.orderForm.balance = data.balance;
+
+        if (!data.cycle) {
+          PM.html('order-content',
+            '<div style="text-align:center;padding:40px 0;">' +
+            '<h2>Nessun ordine aperto</h2>' +
+            '<p class="text-muted mt-8">Torna quando l\'ordine sarà aperto.</p></div>');
+          document.getElementById('sticky-footer').classList.remove('visible');
+          return;
+        }
+
+        var of = PM.components.orderForm;
+        of.cycleId = data.cycle.cycle_id;
+        of.products = data.products;
+
+        // Init draft from existing order
+        of.draft = {};
+        data.my_lines.forEach(function(line) {
+          if (line.quantity > 0) of.draft[line.product_id] = line.quantity;
+        });
+
+        of.render();
+        document.getElementById('sticky-footer').classList.add('visible');
+      })
+      .catch(function(err) {
+        PM.html('order-content',
+          '<div style="text-align:center;padding:40px 0;">' +
+          '<h2>Errore di caricamento</h2>' +
+          '<p class="text-muted mt-8">' + PM._esc(err.message) + '</p>' +
+          '<button class="btn btn-primary mt-16" onclick="PM.components.orderForm.load()">Riprova</button></div>');
+        document.getElementById('sticky-footer').classList.remove('visible');
+      });
+  },
+
+  render: function() {
+    var of = PM.components.orderForm;
+    var d = PM.state.dashboard;
+
+    var closeInfo = d.cycle ? 'Chiusura: ' + PM.formatDateTime(d.cycle.order_close_at) : '';
+
+    var html = '<h1 style="margin-bottom:4px;">' + PM._esc(d.cycle.title) + '</h1>' +
+      '<div class="text-muted mb-16">' + closeInfo + '</div>';
+
+    of.products.forEach(function(p) {
+      var qty = of.draft[p.product_id] || 0;
+      var sub = Math.round(qty * p.unit_price * 100) / 100;
+      var cardClass = qty > 0 ? 'product-card has-qty' : 'product-card zero-qty';
+      var meta = [];
+      if (p.variant) meta.push(p.variant);
+      if (p.format) meta.push(p.format);
+      meta.push(PM.formatCurrency(p.unit_price));
+
+      html +=
+        '<div class="' + cardClass + '" id="pcard-' + p.product_id + '">' +
+          '<div class="product-name">' + PM._esc(p.name) + '</div>' +
+          '<div class="product-meta">' + PM._esc(meta.join(' · ')) + '</div>' +
+          (p.notes ? '<div class="product-meta">' + PM._esc(p.notes) + '</div>' : '') +
+          '<div class="stepper">' +
+            '<button class="stepper-btn" onclick="PM.components.orderForm.changeQty(\'' + p.product_id + '\',-1)" aria-label="Meno">−</button>' +
+            '<span class="stepper-qty" id="qty-' + p.product_id + '">' + qty + '</span>' +
+            '<button class="stepper-btn" onclick="PM.components.orderForm.changeQty(\'' + p.product_id + '\',1)" aria-label="Più">+</button>' +
+          '</div>' +
+          '<div class="stepper-sub" id="sub-' + p.product_id + '">' + (sub > 0 ? PM.formatCurrency(sub) : '') + '</div>' +
+        '</div>';
+    });
+
+    // Spacer for sticky footer
+    html += '<div style="height:80px;"></div>';
+
+    PM.html('order-content', html);
+    of.updateFooter();
+  },
+
+  changeQty: function(productId, delta) {
+    var of = PM.components.orderForm;
+    var current = of.draft[productId] || 0;
+    var next = Math.max(0, current + delta);
+    of.draft[productId] = next;
+
+    // Update card
+    var qtyEl = document.getElementById('qty-' + productId);
+    var subEl = document.getElementById('sub-' + productId);
+    var card  = document.getElementById('pcard-' + productId);
+
+    if (qtyEl) {
+      qtyEl.textContent = next;
+      qtyEl.classList.remove('bump');
+      void qtyEl.offsetWidth;
+      qtyEl.classList.add('bump');
+    }
+
+    // Find price
+    var price = 0;
+    for (var i = 0; i < of.products.length; i++) {
+      if (of.products[i].product_id === productId) { price = of.products[i].unit_price; break; }
+    }
+    var sub = Math.round(next * price * 100) / 100;
+    if (subEl) subEl.textContent = sub > 0 ? PM.formatCurrency(sub) : '';
+
+    if (card) {
+      if (next > 0) {
+        card.className = 'product-card has-qty';
+      } else {
+        card.className = 'product-card zero-qty';
+      }
+    }
+
+    of.updateFooter();
+  },
+
+  updateFooter: function() {
+    var of = PM.components.orderForm;
+    var total = 0;
+    of.products.forEach(function(p) {
+      var qty = of.draft[p.product_id] || 0;
+      total += qty * p.unit_price;
+    });
+    total = Math.round(total * 100) / 100;
+
+    document.getElementById('footer-total').textContent = 'Totale: ' + PM.formatCurrency(total);
+    var afterBalance = Math.round((of.balance - total) * 100) / 100;
+    var balEl = document.getElementById('footer-balance');
+    balEl.textContent = 'Saldo dopo ordine: ' + PM.formatCurrency(afterBalance);
+    balEl.style.color = afterBalance < 0 ? 'var(--red)' : 'var(--gray-500)';
+  },
+
+  save: function() {
+    var of = PM.components.orderForm;
+    if (of.saving || !of.cycleId) return;
+    of.saving = true;
+
+    var btn = document.getElementById('btn-save-order');
+    btn.disabled = true;
+    btn.textContent = 'Salvataggio...';
+
+    var lines = [];
+    for (var pid in of.draft) {
+      if (of.draft[pid] > 0) {
+        lines.push({ product_id: pid, quantity: of.draft[pid] });
+      }
+    }
+
+    PM.api('saveMyOrder', { cycle_id: of.cycleId, lines: lines })
+      .then(function(res) {
+        PM.toast('Ordine salvato');
+        btn.textContent = 'Salvato ✓';
+        setTimeout(function() { btn.textContent = 'Salva ordine'; }, 2000);
+      })
+      .catch(function(err) {
+        PM.toast(err.message, 'error');
+        btn.textContent = 'Salva ordine';
+      })
+      .finally(function() {
+        of.saving = false;
+        btn.disabled = false;
+      });
+  }
+};
+</script>

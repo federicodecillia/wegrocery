@@ -1,0 +1,109 @@
+<script>
+/* ───────────────────────────────────────────
+   ComponentMemberHome — Dashboard socio
+   ─────────────────────────────────────────── */
+
+PM.components.memberHome = {
+
+  load: function() {
+    PM.html('home-content',
+      '<div class="skeleton-card"><div class="skeleton skeleton-title"></div><div class="skeleton skeleton-hero"></div><div class="skeleton skeleton-text" style="width:60%;margin:0 auto;"></div></div>' +
+      '<div class="skeleton-card"><div class="skeleton skeleton-text" style="width:70%;"></div><div class="skeleton skeleton-text" style="width:90%;"></div><div class="skeleton skeleton-text" style="width:40%;"></div></div>');
+
+    PM.api('getMemberDashboard')
+      .then(function(data) {
+        PM.state.dashboard = data;
+        PM.components.memberHome.render(data);
+        var badge = document.getElementById('nav-badge-order');
+        if (badge) {
+          if (data.cycle) badge.classList.remove('hidden');
+          else badge.classList.add('hidden');
+        }
+      })
+      .catch(function(err) {
+        PM.html('home-content',
+          '<div class="empty-state">' +
+          '<span class="empty-state-icon">&#9888;&#65039;</span>' +
+          '<h2>Errore di caricamento</h2>' +
+          '<p class="mt-8">' + PM._esc(err.message) + '</p>' +
+          '<button class="btn btn-primary mt-16" onclick="PM.components.memberHome.load()">Riprova</button></div>');
+      });
+  },
+
+  render: function(d) {
+    var saldoClass = d.balance >= 0 ? 'positive' : 'negative';
+
+    // Greeting
+    var hour = new Date().getHours();
+    var greeting = hour < 13 ? 'Buongiorno' : (hour < 18 ? 'Buon pomeriggio' : 'Buonasera');
+
+    var html =
+      '<div style="padding-top:var(--sp-5);margin-bottom:var(--sp-4);">' +
+        '<h1>' + greeting + ', ' + PM._esc(d.full_name.split(' ')[0]) + '</h1>' +
+      '</div>';
+
+    // Saldo hero card
+    html +=
+      '<div class="saldo-card ' + saldoClass + '">' +
+        '<div class="saldo-label">Il tuo saldo</div>' +
+        '<div class="saldo-value ' + saldoClass + '">' + PM.formatCurrency(d.balance) + '</div>' +
+      '</div>';
+
+    // Ciclo
+    if (d.cycle) {
+      var closeDate = new Date(d.cycle.order_close_at);
+      var now = new Date();
+      var openDate = new Date(d.cycle.order_open_at || d.cycle.created_at);
+      var totalMs = closeDate - openDate;
+      var elapsedMs = now - openDate;
+      var pct = Math.min(100, Math.max(0, Math.round((elapsedMs / totalMs) * 100)));
+      var remaining = closeDate - now;
+      var hoursLeft = Math.max(0, Math.round(remaining / 3600000));
+
+      var progressClass = '';
+      var urgencyBadge = '';
+      if (hoursLeft <= 12) {
+        progressClass = ' danger';
+        urgencyBadge = ' <span class="badge badge-neg">Chiude presto!</span>';
+      } else if (hoursLeft <= 24) {
+        progressClass = ' warning';
+      }
+
+      html +=
+        '<div class="card-elevated">' +
+          '<div class="card-header">' +
+            '<h2>Ordine aperto</h2>' +
+            '<span class="badge badge-open">Aperto</span>' +
+          '</div>' +
+          '<div style="font-weight:600;font-size:1.05rem;">' + PM._esc(d.cycle.title) + '</div>' +
+          '<div class="text-muted mt-4">Chiusura: ' + PM.formatDateTime(d.cycle.order_close_at) + urgencyBadge + '</div>' +
+          (d.cycle.pickup_date ? '<div class="text-muted">Ritiro: ' + PM.formatDate(d.cycle.pickup_date) + '</div>' : '') +
+          '<div class="progress-bar"><div class="progress-fill' + progressClass + '" style="width:' + pct + '%;"></div></div>' +
+          '<div class="progress-text">' + (hoursLeft > 0 ? hoursLeft + ' ore rimanenti' : 'Chiusura imminente') + '</div>' +
+          (d.order_total > 0
+            ? '<div class="mt-8" style="font-weight:600;">Il tuo ordine: ' + PM.formatCurrency(d.order_total) + '</div>'
+            : '<div class="mt-8 text-muted">Non hai ancora ordinato</div>') +
+          '<button class="btn btn-primary btn-block mt-16" onclick="PM.navigate(\'ordine\')">Vai all\'ordine</button>' +
+        '</div>';
+    } else {
+      html +=
+        '<div class="card">' +
+          '<div class="card-header">' +
+            '<h2>Ordine</h2>' +
+            '<span class="badge badge-closed">Chiuso</span>' +
+          '</div>' +
+          '<div class="text-muted">Nessun ordine aperto al momento.</div>' +
+        '</div>';
+    }
+
+    PM.html('home-content', html);
+  }
+};
+
+/* Escape HTML */
+PM._esc = PM._esc || function(str) {
+  var d = document.createElement('div');
+  d.textContent = str || '';
+  return d.innerHTML;
+};
+</script>

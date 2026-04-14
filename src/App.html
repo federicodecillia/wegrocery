@@ -1,0 +1,535 @@
+<script>
+  const state = {
+    session: null,
+    dashboard: null,
+    balances: [],
+    orderDraft: {}
+  };
+
+  function api(action, payload) {
+    return new Promise((resolve, reject) => {
+      google.script.run
+        .withSuccessHandler((res) => {
+          if (!res.ok) {
+            reject(new Error(res.error.message));
+            return;
+          }
+          resolve(res.result);
+        })
+        .withFailureHandler((err) => reject(err))
+        .callApi(action, payload || {});
+    });
+  }
+
+  function setStatus(message) {
+    document.getElementById('status-line').textContent = message;
+  }
+
+  function formatCurrency(value) {
+    return 'EUR ' + Number(value || 0).toFixed(2);
+  }
+
+  function formatDate(iso) {
+    if (!iso) {
+      return '';
+    }
+    return String(iso).replace('T', ' ').slice(0, 16);
+  }
+
+  function parseNumber(value) {
+    return Number(String(value || '0').replace(',', '.'));
+  }
+
+  function renderTable(rows, columns) {
+    if (!rows.length) {
+      return '<p class="muted">Nessun dato</p>';
+    }
+    const head = '<tr>' + columns.map((c) => '<th>' + c.label + '</th>').join('') + '</tr>';
+    const body = rows.map((r) => {
+      return '<tr>' + columns.map((c) => '<td>' + (r[c.key] ?? '') + '</td>').join('') + '</tr>';
+    }).join('');
+    return '<table><thead>' + head + '</thead><tbody>' + body + '</tbody></table>';
+  }
+
+  function mapOrderByProduct(orderLines) {
+    const map = {};
+    orderLines.forEach((line) => {
+      map[line.product_id] = Number(line.quantity || 0);
+    });
+    return map;
+  }
+
+  function getLocalDateInputValue(daysOffset) {
+    const d = new Date();
+    d.setDate(d.getDate() + daysOffset);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return year + '-' + month + '-' + day;
+  }
+
+  function getLocalDateTimeInputValue(daysOffset, hour, minute) {
+    const d = new Date();
+    d.setDate(d.getDate() + daysOffset);
+    d.setHours(hour, minute, 0, 0);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mm = String(d.getMinutes()).padStart(2, '0');
+    return year + '-' + month + '-' + day + 'T' + hh + ':' + mm;
+  }
+
+  function setDefaultAdminInputs() {
+    const pickup = document.getElementById('cycle-pickup-date');
+    const openAt = document.getElementById('cycle-open-at');
+    const closeAt = document.getElementById('cycle-close-at');
+    const topupDate = document.getElementById('topup-date');
+
+    if (pickup && !pickup.value) {
+      pickup.value = getLocalDateInputValue(2);
+    }
+    if (openAt && !openAt.value) {
+      openAt.value = getLocalDateTimeInputValue(0, 9, 0);
+    }
+    if (closeAt && !closeAt.value) {
+      closeAt.value = getLocalDateTimeInputValue(2, 12, 0);
+    }
+    if (topupDate && !topupDate.value) {
+      topupDate.value = getLocalDateInputValue(0);
+    }
+  }
+
+  function showViewByRole() {
+    const isAdmin = state.session.role === 'admin';
+    document.getElementById('member-view').classList.toggle('hidden', isAdmin);
+    document.getElementById('admin-view').classList.toggle('hidden', !isAdmin);
+  }
+
+  function renderMemberOrderTable() {
+    const wrapper = document.getElementById('member-order-table');
+    const cycle = state.dashboard.open_cycle;
+
+    if (!cycle) {
+      wrapper.innerHTML = '<p class="muted">Nessun ciclo aperto al momento. Torna quando l\'admin apre il prossimo ordine.</p>';
+      document.getElementById('member-save-order-btn').disabled = true;
+      document.getElementById('member-order-total').textContent = 'Totale ordine: EUR 0.00';
+      return;
+    }
+
+    if (!state.dashboard.products.length) {
+      wrapper.innerHTML = '<p class="muted">Il ciclo e\' aperto ma il listino non e\' ancora stato caricato.</p>';
+      document.getElementById('member-save-order-btn').disabled = true;
+      return;
+    }
+
+    const rows = state.dashboard.products.map((p) => {
+      const qty = state.orderDraft[p.product_id] ?? 0;
+      const subtotal = Number(p.unit_price || 0) * Number(qty || 0);
+      return '' +
+        '<tr>' +
+          '<td>' + (p.name || '') + '</td>' +
+          '<td>' + (p.variant || '') + '</td>' +
+          '<td>' + (p.format || '') + '</td>' +
+          '<td>' + formatCurrency(p.unit_price) + '</td>' +
+          '<td><input type="number" min="0" step="0.1" value="' + qty + '" data-pid="' + p.product_id + '" class="qty-input" /></td>' +
+          '<td>' + formatCurrency(subtotal) + '</td>' +
+        '</tr>';
+    }).join('');
+
+    wrapper.innerHTML =
+      '<table>' +
+        '<thead>' +
+          '<tr>' +
+            '<th>Prodotto</th>' +
+            '<th>Variante</th>' +
+            '<th>Formato</th>' +
+            '<th>Prezzo</th>' +
+            '<th>Quantita</th>' +
+            '<th>Subtotale</th>' +
+          '</tr>' +
+        '</thead>' +
+        '<tbody>' + rows + '</tbody>' +
+      '</table>';
+
+    document.querySelectorAll('.qty-input').forEach((input) => {
+      input.addEventListener('input', () => {
+        const pid = input.dataset.pid;
+        state.orderDraft[pid] = Number(input.value || 0);
+        updateMemberOrderTotal();
+      });
+    });
+
+    document.getElementById('member-save-order-btn').disabled = false;
+    updateMemberOrderTotal();
+  }
+
+  function updateMemberOrderTotal() {
+    const products = state.dashboard?.products || [];
+    const total = products.reduce((acc, p) => {
+      const qty = Number(state.orderDraft[p.product_id] || 0);
+      return acc + (Number(p.unit_price || 0) * qty);
+    }, 0);
+    document.getElementById('member-order-total').textContent = 'Totale ordine: ' + formatCurrency(total);
+  }
+
+  function renderMemberView(orderHistory, ledger) {
+    const dashboard = state.dashboard;
+    document.getElementById('member-balance').textContent = formatCurrency(dashboard.my_balance);
+
+    if (dashboard.open_cycle) {
+      document.getElementById('member-cycle-status').textContent = 'Aperto: ' + dashboard.open_cycle.title;
+      document.getElementById('member-cycle-meta').textContent =
+        'Ritiro: ' + dashboard.open_cycle.pickup_date +
+        ' | Chiusura: ' + formatDate(dashboard.open_cycle.order_close_at);
+    } else {
+      document.getElementById('member-cycle-status').textContent = 'Nessun ciclo aperto';
+      document.getElementById('member-cycle-meta').textContent = '';
+    }
+
+    renderMemberOrderTable();
+
+    document.getElementById('member-history-orders').innerHTML = renderTable(orderHistory, [
+      { key: 'title', label: 'Ciclo' },
+      { key: 'pickup_date', label: 'Ritiro' },
+      { key: 'status', label: 'Stato' },
+      { key: 'total', label: 'Totale EUR' }
+    ]);
+
+    const ledgerRows = ledger.map((x) => ({
+      entry_date: x.entry_date,
+      type: x.type,
+      amount: Number(x.amount || 0).toFixed(2),
+      note: x.note || ''
+    }));
+
+    document.getElementById('member-history-ledger').innerHTML = renderTable(ledgerRows, [
+      { key: 'entry_date', label: 'Data' },
+      { key: 'type', label: 'Tipo' },
+      { key: 'amount', label: 'Importo' },
+      { key: 'note', label: 'Nota' }
+    ]);
+  }
+
+  function renderAdminSelfView() {
+    const dashboard = state.dashboard;
+    document.getElementById('admin-self-balance').textContent = formatCurrency(dashboard.my_balance);
+    if (dashboard.open_cycle) {
+      document.getElementById('admin-self-cycle-status').textContent =
+        'Aperto: ' + dashboard.open_cycle.title +
+        ' | Chiusura: ' + formatDate(dashboard.open_cycle.order_close_at);
+      document.getElementById('admin-open-cycle-hint').textContent =
+        'Ciclo aperto attuale: ' + dashboard.open_cycle.title + '.';
+    } else {
+      document.getElementById('admin-self-cycle-status').textContent = 'Nessun ciclo aperto';
+      document.getElementById('admin-open-cycle-hint').textContent = 'Nessun ciclo aperto. Compila i campi e premi \"Apri ordine\".';
+    }
+  }
+
+  function buildTopupMemberSelect() {
+    const select = document.getElementById('topup-member-id');
+    if (!select) {
+      return;
+    }
+    const current = select.value;
+    const options = ['<option value="">Seleziona socio...</option>'].concat(
+      state.balances.map((b) => {
+        return '<option value="' + b.member_id + '">' +
+          b.full_name + ' (' + formatCurrency(b.balance) + ')' +
+          '</option>';
+      })
+    );
+    select.innerHTML = options.join('');
+    if (current) {
+      select.value = current;
+    }
+  }
+
+  function parseProductsInput(raw) {
+    const text = String(raw || '').trim();
+    if (!text) {
+      return [];
+    }
+
+    if (text[0] === '[') {
+      const parsed = JSON.parse(text);
+      if (!Array.isArray(parsed)) {
+        throw new Error('Il JSON prodotti deve essere un array.');
+      }
+      return parsed.map((p) => ({
+        name: p.name || '',
+        variant: p.variant || '',
+        format: p.format || '',
+        unit_price: parseNumber(p.unit_price || 0),
+        supplier: p.supplier || '',
+        notes: p.notes || '',
+        active: p.active === false ? false : true
+      }));
+    }
+
+    const lines = text.split('\n').map((x) => x.trim()).filter(Boolean);
+    const products = lines.map((line, index) => {
+      const parts = line.split(';').map((p) => p.trim());
+      if (!parts[0]) {
+        throw new Error('Riga ' + (index + 1) + ': nome prodotto mancante.');
+      }
+      const unitPrice = parseNumber(parts[3] || 0);
+      if (!unitPrice || unitPrice <= 0) {
+        throw new Error('Riga ' + (index + 1) + ': prezzo non valido.');
+      }
+      return {
+        name: parts[0],
+        variant: parts[1] || '',
+        format: parts[2] || '',
+        unit_price: unitPrice,
+        supplier: '',
+        notes: '',
+        active: true
+      };
+    });
+    return products;
+  }
+
+  async function refreshBalances() {
+    const balances = await api('adminGetBalances');
+    state.balances = balances || [];
+
+    const rows = state.balances.map((b) => ({
+      full_name: b.full_name,
+      email: b.email,
+      role: b.role,
+      member_id: b.member_id,
+      balance: Number(b.balance || 0).toFixed(2)
+    }));
+    document.getElementById('balances-table').innerHTML = renderTable(rows, [
+      { key: 'full_name', label: 'Nome' },
+      { key: 'email', label: 'Email' },
+      { key: 'role', label: 'Ruolo' },
+      { key: 'member_id', label: 'Member ID' },
+      { key: 'balance', label: 'Saldo EUR' }
+    ]);
+    buildTopupMemberSelect();
+  }
+
+  async function refreshDashboard() {
+    var dashboard = await api('getMemberDashboard');
+
+    state.session = dashboard.session;
+    state.dashboard = dashboard;
+    state.orderDraft = mapOrderByProduct(dashboard.my_order_lines || []);
+
+    var session = dashboard.session;
+    document.getElementById('session-pill').textContent = session.full_name + ' (' + session.role + ')';
+    showViewByRole();
+
+    if (session.role === 'admin') {
+      renderAdminSelfView();
+      await refreshBalances();
+    } else {
+      renderMemberView(dashboard.order_history || [], dashboard.ledger || []);
+    }
+  }
+
+  async function saveOrder() {
+    const cycle = state.dashboard?.open_cycle;
+    if (!cycle) {
+      setStatus('Nessun ciclo aperto.');
+      return;
+    }
+    const lines = Object.keys(state.orderDraft).map((productId) => ({
+      product_id: productId,
+      quantity: Number(state.orderDraft[productId] || 0)
+    }));
+    await api('saveMyOrder', { cycle_id: cycle.cycle_id, lines: lines });
+    await refreshDashboard();
+    setStatus('Ordine salvato correttamente.');
+  }
+
+  function validateCycleInputs() {
+    const title = document.getElementById('cycle-title').value.trim();
+    const pickupDate = document.getElementById('cycle-pickup-date').value;
+    const openAt = document.getElementById('cycle-open-at').value;
+    const closeAt = document.getElementById('cycle-close-at').value;
+
+    if (!title) {
+      throw new Error('Inserisci il titolo del ciclo.');
+    }
+    if (!pickupDate) {
+      throw new Error('Inserisci la data di ritiro.');
+    }
+    if (!openAt) {
+      throw new Error('Inserisci la data/ora di apertura.');
+    }
+    if (!closeAt) {
+      throw new Error('Inserisci la data/ora di chiusura.');
+    }
+    if (new Date(closeAt) <= new Date(openAt)) {
+      throw new Error('La chiusura deve essere successiva all\'apertura.');
+    }
+    return { title, pickupDate, openAt, closeAt };
+  }
+
+  async function createCycle() {
+    const form = validateCycleInputs();
+    await api('adminCreateCycle', {
+      title: form.title,
+      pickup_date: form.pickupDate,
+      order_open_at: form.openAt,
+      order_close_at: form.closeAt,
+      notes: ''
+    });
+    await refreshDashboard();
+    setStatus('Ciclo creato con successo.');
+  }
+
+  async function saveProducts() {
+    const cycle = state.dashboard?.open_cycle;
+    if (!cycle) {
+      setStatus('Apri prima un ciclo ordine.');
+      return;
+    }
+    const raw = document.getElementById('products-input').value || '';
+    const parsed = parseProductsInput(raw);
+    if (!parsed.length) {
+      throw new Error('Inserisci almeno un prodotto.');
+    }
+    await api('adminUpdateProducts', { cycle_id: cycle.cycle_id, products: parsed });
+    await refreshDashboard();
+    setStatus('Prodotti salvati.');
+  }
+
+  async function closeCycle() {
+    const cycle = state.dashboard?.open_cycle;
+    if (!cycle) {
+      setStatus('Non c\'e\' nessun ciclo aperto.');
+      return;
+    }
+    await api('adminCloseCycle', { cycle_id: cycle.cycle_id });
+    await refreshDashboard();
+    setStatus('Ciclo chiuso. Addebiti ordine generati.');
+  }
+
+  async function recordTopup() {
+    const memberId = document.getElementById('topup-member-id').value;
+    const entryDate = document.getElementById('topup-date').value;
+    const amount = parseNumber(document.getElementById('topup-amount').value);
+    const note = document.getElementById('topup-note').value;
+
+    if (!memberId) {
+      throw new Error('Seleziona il socio.');
+    }
+    if (!entryDate) {
+      throw new Error('Inserisci la data bonifico.');
+    }
+    if (!(amount > 0)) {
+      throw new Error('Inserisci un importo maggiore di zero.');
+    }
+
+    await api('adminRecordTopup', {
+      member_id: memberId,
+      entry_date: entryDate,
+      amount: amount,
+      note: note
+    });
+    await refreshBalances();
+    await refreshDashboard();
+    setStatus('Bonifico registrato.');
+  }
+
+  async function upsertMember() {
+    const fullName = document.getElementById('member-full-name').value.trim();
+    const email = document.getElementById('member-email').value.trim();
+    const role = document.getElementById('member-role').value;
+
+    if (!fullName) {
+      throw new Error('Inserisci il nome completo del socio.');
+    }
+    if (!email) {
+      throw new Error('Inserisci l\'email del socio.');
+    }
+
+    await api('adminUpsertMember', {
+      full_name: fullName,
+      email: email,
+      role: role,
+      active: true
+    });
+    await refreshBalances();
+    setStatus('Membro salvato.');
+  }
+
+  function bindEvents() {
+    document.getElementById('member-save-order-btn').addEventListener('click', async () => {
+      try {
+        await saveOrder();
+      } catch (error) {
+        setStatus(error.message);
+      }
+    });
+
+    document.getElementById('create-cycle-btn').addEventListener('click', async () => {
+      try {
+        await createCycle();
+      } catch (error) {
+        setStatus(error.message);
+      }
+    });
+
+    document.getElementById('save-products-btn').addEventListener('click', async () => {
+      try {
+        await saveProducts();
+      } catch (error) {
+        setStatus(error.message);
+      }
+    });
+
+    document.getElementById('close-cycle-btn').addEventListener('click', async () => {
+      try {
+        await closeCycle();
+      } catch (error) {
+        setStatus(error.message);
+      }
+    });
+
+    document.getElementById('record-topup-btn').addEventListener('click', async () => {
+      try {
+        await recordTopup();
+      } catch (error) {
+        setStatus(error.message);
+      }
+    });
+
+    document.getElementById('upsert-member-btn').addEventListener('click', async () => {
+      try {
+        await upsertMember();
+      } catch (error) {
+        setStatus(error.message);
+      }
+    });
+
+    document.getElementById('refresh-balances-btn').addEventListener('click', async () => {
+      try {
+        await refreshBalances();
+        setStatus('Saldi aggiornati.');
+      } catch (error) {
+        setStatus(error.message);
+      }
+    });
+  }
+
+  async function boot() {
+    bindEvents();
+    setDefaultAdminInputs();
+    setStatus('Caricamento in corso...');
+    try {
+      await refreshDashboard();
+      setStatus('Pronto.');
+    } catch (error) {
+      var msg = error.message || 'Errore di comunicazione col server.';
+      document.getElementById('status-line').innerHTML =
+        msg + ' — <a href="#" onclick="event.preventDefault(); boot();" style="color:var(--accent);font-weight:700;">Riprova</a>';
+    }
+  }
+
+  boot();
+</script>

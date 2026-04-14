@@ -1,0 +1,91 @@
+<script>
+/* ───────────────────────────────────────────
+   ComponentAdminLedger — Bonifici e saldi
+   ─────────────────────────────────────────── */
+
+PM.components.adminLedger = {
+
+  render: function(container) {
+    PM.showLoading(container);
+    var self = PM.components.adminLedger;
+
+    Promise.all([
+      PM.api('adminGetBalances'),
+      PM.api('adminGetMembers')
+    ]).then(function(results) {
+      var balances = results[0];
+      var members = results[1].filter(function(m) { return String(m.active) !== 'false'; });
+
+      var html = '';
+
+      // Form bonifico
+      html +=
+        '<h2 class="mb-8">Registra bonifico</h2>' +
+        '<div class="card">' +
+          '<div class="form-group">' +
+            '<label class="form-label">Socio</label>' +
+            '<select class="form-select" id="topup-member">' +
+              '<option value="">Seleziona socio...</option>';
+      members.sort(function(a,b){ return a.full_name.localeCompare(b.full_name); }).forEach(function(m) {
+        html += '<option value="' + m.member_id + '">' + PM._esc(m.full_name) + '</option>';
+      });
+      html +=
+            '</select>' +
+          '</div>' +
+          '<div class="form-group">' +
+            '<label class="form-label">Importo (€)</label>' +
+            '<input class="form-input" id="topup-amount" type="number" step="0.01" min="0.01" placeholder="50.00">' +
+          '</div>' +
+          '<div class="form-group">' +
+            '<label class="form-label">Data</label>' +
+            '<input class="form-input" id="topup-date" type="date" value="' + new Date().toISOString().substring(0,10) + '">' +
+          '</div>' +
+          '<div class="form-group">' +
+            '<label class="form-label">Nota (opzionale)</label>' +
+            '<input class="form-input" id="topup-note" placeholder="es. Bonifico gennaio">' +
+          '</div>' +
+          '<button class="btn btn-primary btn-block" onclick="PM.components.adminLedger.recordTopup()">Registra bonifico</button>' +
+        '</div>';
+
+      // Tabella saldi
+      html +=
+        '<h2 class="mt-16 mb-8">Saldi soci</h2>' +
+        '<div class="card"><div class="table-wrap"><table>' +
+          '<thead><tr><th>Socio</th><th class="text-right">Saldo</th></tr></thead><tbody>';
+      balances.forEach(function(b) {
+        var cls = b.balance < 0 ? 'balance-negative' : (b.balance > 0 ? 'balance-positive' : '');
+        html += '<tr><td>' + PM._esc(b.full_name) + '</td><td class="text-right ' + cls + '" style="font-weight:600;">' + PM.formatCurrency(b.balance) + '</td></tr>';
+      });
+      html += '</tbody></table></div></div>';
+
+      PM.html(container, html);
+    }).catch(function(err) {
+      PM.html(container,
+        '<div style="text-align:center;padding:40px 0;">' +
+        '<h2>Errore di caricamento</h2>' +
+        '<p class="text-muted mt-8">' + PM._esc(err.message) + '</p>' +
+        '<button class="btn btn-primary mt-16" onclick="PM.components.adminLedger.render(\'admin-ledger-panel\')">Riprova</button></div>');
+    });
+  },
+
+  recordTopup: function() {
+    var memberId = document.getElementById('topup-member').value;
+    var amount   = document.getElementById('topup-amount').value;
+    var date     = document.getElementById('topup-date').value;
+    var note     = document.getElementById('topup-note').value.trim();
+
+    if (!memberId) { PM.toast('Seleziona un socio', 'error'); return; }
+    if (!amount || parseFloat(amount) <= 0) { PM.toast('Inserisci un importo valido', 'error'); return; }
+
+    PM.api('adminRecordTopup', {
+      member_id:  memberId,
+      amount:     parseFloat(amount),
+      entry_date: date,
+      note:       note || 'Bonifico'
+    }).then(function(res) {
+      PM.toast('Bonifico registrato. Nuovo saldo: ' + PM.formatCurrency(res.new_balance));
+      PM.components.adminLedger.render('admin-ledger-panel');
+    }).catch(function(err) { PM.toast(err.message, 'error'); });
+  }
+};
+</script>

@@ -1,0 +1,138 @@
+<script>
+/* ───────────────────────────────────────────
+   ComponentHistory — Storico ordini + movimenti
+   ─────────────────────────────────────────── */
+
+PM.components.history = {
+
+  activeTab: 'orders',
+
+  load: function() {
+    PM.showLoading('history-content');
+    var h = PM.components.history;
+    h.activeTab = 'orders';
+
+    Promise.all([
+      PM.api('getMyOrderHistory'),
+      PM.api('getMyLedger')
+    ]).then(function(results) {
+      h.renderShell(results[0], results[1]);
+    }).catch(function(err) {
+      PM.html('history-content',
+        '<div style="text-align:center;padding:40px 0;">' +
+        '<h2>Errore di caricamento</h2>' +
+        '<p class="text-muted mt-8">' + PM._esc(err.message) + '</p>' +
+        '<button class="btn btn-primary mt-16" onclick="PM.components.history.load()">Riprova</button></div>');
+    });
+  },
+
+  renderShell: function(orders, ledger) {
+    var h = PM.components.history;
+
+    var html =
+      '<h1>Storico</h1>' +
+      '<div class="admin-tabs mt-8 mb-16">' +
+        '<div class="admin-tab active" id="htab-orders" onclick="PM.components.history.switchTab(\'orders\')">Ordini</div>' +
+        '<div class="admin-tab" id="htab-ledger" onclick="PM.components.history.switchTab(\'ledger\')">Movimenti</div>' +
+      '</div>' +
+      '<div id="history-orders-panel" class="admin-panel active"></div>' +
+      '<div id="history-ledger-panel" class="admin-panel"></div>';
+
+    PM.html('history-content', html);
+    h.renderOrders(orders);
+    h.renderLedger(ledger);
+  },
+
+  switchTab: function(tab) {
+    var h = PM.components.history;
+    h.activeTab = tab;
+
+    document.getElementById('htab-orders').className = 'admin-tab' + (tab === 'orders' ? ' active' : '');
+    document.getElementById('htab-ledger').className = 'admin-tab' + (tab === 'ledger' ? ' active' : '');
+    document.getElementById('history-orders-panel').className = 'admin-panel' + (tab === 'orders' ? ' active' : '');
+    document.getElementById('history-ledger-panel').className = 'admin-panel' + (tab === 'ledger' ? ' active' : '');
+  },
+
+  renderOrders: function(orders) {
+    if (!orders || !orders.length) {
+      PM.html('history-orders-panel', '<div class="empty-state"><span class="empty-state-icon">&#128722;</span><h2>Nessun ordine</h2><p>I tuoi ordini appariranno qui.</p></div>');
+      return;
+    }
+
+    var html = '';
+    orders.forEach(function(o, idx) {
+      html +=
+        '<div class="history-item" id="hord-' + idx + '" onclick="PM.components.history.toggleOrder(' + idx + ',\'' + o.cycle_id + '\')">' +
+          '<div class="history-row">' +
+            '<div>' +
+              '<div style="font-weight:600;">' + PM._esc(o.title) + '</div>' +
+              '<div class="text-muted text-sm">' + PM.formatDate(o.pickup_date) + '</div>' +
+            '</div>' +
+            '<div style="display:flex;align-items:center;gap:4px;">' +
+              '<span style="font-weight:700;">' + PM.formatCurrency(o.order_total) + '</span>' +
+              '<span class="history-chevron">&#9656;</span>' +
+            '</div>' +
+          '</div>' +
+          '<div class="history-detail" id="hdet-' + idx + '"></div>' +
+        '</div>';
+    });
+
+    PM.html('history-orders-panel', html);
+  },
+
+  toggleOrder: function(idx, cycleId) {
+    var item = document.getElementById('hord-' + idx);
+    var det  = document.getElementById('hdet-' + idx);
+    if (!item || !det) return;
+
+    if (item.classList.contains('expanded')) {
+      item.classList.remove('expanded');
+      return;
+    }
+
+    item.classList.add('expanded');
+
+    // Load detail if empty
+    if (!det.innerHTML) {
+      det.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+      PM.api('getMyOrderDetail', { cycle_id: cycleId })
+        .then(function(data) {
+          var h = '<table><thead><tr><th>Prodotto</th><th class="text-right">Qtà</th><th class="text-right">Totale</th></tr></thead><tbody>';
+          data.lines.forEach(function(l) {
+            var name = l.product_name + (l.variant ? ' ' + l.variant : '');
+            h += '<tr><td>' + PM._esc(name) + '</td><td class="text-right">' + l.quantity + '</td><td class="text-right">' + PM.formatCurrency(l.line_total) + '</td></tr>';
+          });
+          h += '</tbody></table>';
+          det.innerHTML = h;
+        })
+        .catch(function(err) { det.innerHTML = '<div class="text-muted">' + err.message + '</div>'; });
+    }
+  },
+
+  renderLedger: function(ledger) {
+    if (!ledger || !ledger.length) {
+      PM.html('history-ledger-panel', '<div class="empty-state"><span class="empty-state-icon">&#128176;</span><h2>Nessun movimento</h2><p>I tuoi movimenti contabili appariranno qui.</p></div>');
+      return;
+    }
+
+    var html = '';
+    ledger.forEach(function(e) {
+      var typeClass = e.type === 'topup' ? 'ledger-topup' : (e.type === 'order_charge' ? 'ledger-charge' : 'ledger-adjust');
+      var typeLabel = e.type === 'topup' ? 'Bonifico' : (e.type === 'order_charge' ? 'Ordine' : 'Rettifica');
+      var sign = e.amount >= 0 ? '+' : '';
+
+      html +=
+        '<div class="ledger-item">' +
+          '<div>' +
+            '<div class="ledger-type ' + typeClass + '">' + typeLabel + '</div>' +
+            '<div class="text-muted text-sm">' + PM.formatDate(e.entry_date) + '</div>' +
+            (e.note ? '<div class="text-sm">' + PM._esc(e.note) + '</div>' : '') +
+          '</div>' +
+          '<div style="font-weight:700;" class="' + typeClass + '">' + sign + PM.formatCurrency(e.amount) + '</div>' +
+        '</div>';
+    });
+
+    PM.html('history-ledger-panel', html);
+  }
+};
+</script>

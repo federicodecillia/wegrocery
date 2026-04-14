@@ -1,0 +1,100 @@
+<script>
+/* ───────────────────────────────────────────
+   ComponentAdminCycle — Gestione cicli
+   ─────────────────────────────────────────── */
+
+PM.components.adminCycle = {
+
+  render: function(container) {
+    PM.showLoading(container);
+    var self = PM.components.adminCycle;
+
+    PM.api('getMemberDashboard')
+      .then(function(data) {
+        var cycle = data.cycle;
+        var html = '';
+
+        if (cycle) {
+          html +=
+            '<div class="card">' +
+              '<div class="card-header"><h2>Ciclo attivo</h2><span class="badge badge-open">Aperto</span></div>' +
+              '<div style="font-weight:600;">' + PM._esc(cycle.title) + '</div>' +
+              '<div class="text-muted text-sm mt-8">Chiusura: ' + PM.formatDateTime(cycle.order_close_at) + '</div>' +
+              (cycle.pickup_date ? '<div class="text-muted text-sm">Ritiro: ' + PM.formatDate(cycle.pickup_date) + '</div>' : '') +
+              (cycle.notes ? '<div class="text-sm mt-8">' + PM._esc(cycle.notes) + '</div>' : '') +
+              '<button class="btn btn-danger btn-block mt-16" onclick="PM.components.adminCycle.closeCycle(\'' + cycle.cycle_id + '\')">Chiudi ciclo e genera addebiti</button>' +
+            '</div>';
+        } else {
+          html += '<div class="card"><div class="text-muted">Nessun ciclo aperto.</div></div>';
+        }
+
+        // Form nuovo ciclo
+        html +=
+          '<h2 class="mt-16 mb-8">Nuovo ciclo</h2>' +
+          '<div class="card">' +
+            '<div class="form-group">' +
+              '<label class="form-label">Titolo</label>' +
+              '<input class="form-input" id="cycle-title" placeholder="es. Settimana 14 aprile">' +
+            '</div>' +
+            '<div class="form-group">' +
+              '<label class="form-label">Chiusura ordine</label>' +
+              '<input class="form-input" id="cycle-close" type="datetime-local">' +
+            '</div>' +
+            '<div class="form-group">' +
+              '<label class="form-label">Data ritiro</label>' +
+              '<input class="form-input" id="cycle-pickup" type="date">' +
+            '</div>' +
+            '<div class="form-group">' +
+              '<label class="form-label">Note (opzionale)</label>' +
+              '<input class="form-input" id="cycle-notes" placeholder="es. orario diverso dal solito">' +
+            '</div>' +
+            '<button class="btn btn-primary btn-block" onclick="PM.components.adminCycle.createCycle()"' +
+              (cycle ? ' disabled title="Chiudi prima il ciclo attivo"' : '') +
+            '>Apri nuovo ciclo</button>' +
+          '</div>';
+
+        PM.html(container, html);
+      })
+      .catch(function(err) {
+        PM.html(container,
+          '<div style="text-align:center;padding:40px 0;">' +
+          '<h2>Errore di caricamento</h2>' +
+          '<p class="text-muted mt-8">' + PM._esc(err.message) + '</p>' +
+          '<button class="btn btn-primary mt-16" onclick="PM.components.adminCycle.render(\'admin-cycle-panel\')">Riprova</button></div>');
+      });
+  },
+
+  createCycle: function() {
+    var title = document.getElementById('cycle-title').value.trim();
+    var close = document.getElementById('cycle-close').value;
+    var pickup = document.getElementById('cycle-pickup').value;
+    var notes = document.getElementById('cycle-notes').value.trim();
+
+    if (!title) { PM.toast('Inserisci un titolo', 'error'); return; }
+    if (!close) { PM.toast('Inserisci la data di chiusura', 'error'); return; }
+
+    PM.api('adminCreateCycle', {
+      title: title,
+      order_close_at: new Date(close).toISOString(),
+      pickup_date: pickup || '',
+      notes: notes
+    }).then(function() {
+      PM.toast('Ciclo creato');
+      PM.components.adminCycle.render('admin-cycle-panel');
+    }).catch(function(err) { PM.toast(err.message, 'error'); });
+  },
+
+  closeCycle: function(cycleId) {
+    PM.confirm('Chiudi ciclo?', 'Verranno generati gli addebiti automatici per tutti i soci che hanno ordinato.')
+      .then(function(ok) {
+        if (!ok) return;
+        PM.api('adminCloseCycle', { cycle_id: cycleId })
+          .then(function(res) {
+            PM.toast('Ciclo chiuso. ' + res.charges_generated + ' addebiti generati.');
+            PM.components.adminCycle.render('admin-cycle-panel');
+          })
+          .catch(function(err) { PM.toast(err.message, 'error'); });
+      });
+  }
+};
+</script>

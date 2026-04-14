@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Porta Moneta GAS</title>
+    <?!= include('Styles'); ?>
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="app-header">
+        <div>
+          <h1>Porta Moneta GAS</h1>
+          <p class="subtitle">Ordini frutta/verdura e gestione cassa in modo semplice.</p>
+        </div>
+        <div id="session-pill" class="pill">Loading...</div>
+      </header>
+
+      <section id="member-view" class="hidden">
+        <section class="card intro-card">
+          <h2>Come ordinare</h2>
+          <div class="guide-steps">
+            <div class="guide-step"><span>1</span><p>Scegli quantita' nel listino settimanale.</p></div>
+            <div class="guide-step"><span>2</span><p>Premi <b>Salva ordine</b> prima della chiusura.</p></div>
+            <div class="guide-step"><span>3</span><p>Controlla saldo e movimenti nella tua area.</p></div>
+          </div>
+        </section>
+
+        <div class="cards-row">
+          <article class="card">
+            <h3>Saldo attuale</h3>
+            <p id="member-balance" class="big">EUR 0.00</p>
+          </article>
+          <article class="card">
+            <h3>Ordine aperto</h3>
+            <p id="member-cycle-status">Nessun ciclo aperto</p>
+            <p id="member-cycle-meta" class="muted"></p>
+          </article>
+        </div>
+
+        <section class="card">
+          <h2>Il mio ordine</h2>
+          <p class="muted">Compila solo le quantita' che vuoi acquistare. Lascia 0 per i prodotti non desiderati.</p>
+          <div id="member-order-table" class="table-wrap"></div>
+          <div class="order-footer">
+            <div id="member-order-total" class="big">Totale ordine: EUR 0.00</div>
+            <button id="member-save-order-btn" class="btn">Salva ordine</button>
+          </div>
+        </section>
+
+        <section class="cards-row">
+          <article class="card">
+            <h3>Ultimi ordini</h3>
+            <div id="member-history-orders"></div>
+          </article>
+          <article class="card">
+            <h3>Ultimi movimenti</h3>
+            <div id="member-history-ledger"></div>
+          </article>
+        </section>
+      </section>
+
+      <section id="admin-view" class="hidden">
+        <section class="card intro-card">
+          <h2>Pannello amministratore</h2>
+          <p class="muted">Flusso consigliato: crea ciclo, carica prodotti, poi a fine settimana chiudi ciclo e registra bonifici.</p>
+          <div class="guide-steps">
+            <div class="guide-step"><span>1</span><p>Apri il ciclo ordine con date chiare.</p></div>
+            <div class="guide-step"><span>2</span><p>Carica prodotti (formato semplice per riga).</p></div>
+            <div class="guide-step"><span>3</span><p>A chiusura, genera addebiti e registra i top-up.</p></div>
+          </div>
+        </section>
+
+        <section class="admin-layout">
+          <article class="card">
+            <h3>Ciclo ordine</h3>
+            <label class="field-label" for="cycle-title">Titolo ciclo</label>
+            <input id="cycle-title" placeholder="Es. Ordine settimana 25 marzo" />
+
+            <label class="field-label" for="cycle-pickup-date">Data ritiro</label>
+            <p class="field-help">Giorno in cui i soci ritirano il materiale.</p>
+            <input id="cycle-pickup-date" type="date" />
+
+            <label class="field-label" for="cycle-open-at">Apertura ordini</label>
+            <p class="field-help">Da questo momento i soci possono compilare l'ordine.</p>
+            <input id="cycle-open-at" type="datetime-local" />
+
+            <label class="field-label" for="cycle-close-at">Chiusura ordini</label>
+            <p class="field-help">Dopo questa data gli ordini member non sono piu' modificabili.</p>
+            <input id="cycle-close-at" type="datetime-local" />
+
+            <div class="stack-row">
+              <button id="create-cycle-btn" class="btn">Apri ordine</button>
+              <button id="close-cycle-btn" class="btn warn">Chiudi ciclo aperto</button>
+            </div>
+            <p id="admin-open-cycle-hint" class="muted"></p>
+          </article>
+
+          <article class="card">
+            <h3>Prodotti ciclo aperto</h3>
+            <p class="field-help">
+              Formato consigliato (una riga per prodotto):<br />
+              <code>Nome;Variante;Formato;Prezzo</code><br />
+              Esempio: <code>Mele;Gala;1 kg;3.20</code>
+            </p>
+            <textarea id="products-input" rows="12" placeholder="Carote;;500 g;1.80&#10;Mele;Gala;1 kg;3.20&#10;Patate;;1 kg;2.40"></textarea>
+            <button id="save-products-btn" class="btn">Salva prodotti</button>
+          </article>
+        </section>
+
+        <section class="admin-layout">
+          <article class="card">
+            <h3>Registra bonifico</h3>
+            <label class="field-label" for="topup-member-id">Socio</label>
+            <select id="topup-member-id"></select>
+
+            <label class="field-label" for="topup-date">Data bonifico</label>
+            <input id="topup-date" type="date" />
+
+            <label class="field-label" for="topup-amount">Importo EUR</label>
+            <input id="topup-amount" type="number" step="0.01" placeholder="0.00" />
+
+            <label class="field-label" for="topup-note">Nota (opzionale)</label>
+            <input id="topup-note" placeholder="Es. Bonifico marzo" />
+            <button id="record-topup-btn" class="btn">Registra</button>
+          </article>
+
+          <article class="card">
+            <h3>Crea o aggiorna membro</h3>
+            <label class="field-label" for="member-full-name">Nome completo</label>
+            <input id="member-full-name" placeholder="Nome e cognome" />
+
+            <label class="field-label" for="member-email">Email</label>
+            <input id="member-email" placeholder="nome@dominio.it" />
+
+            <label class="field-label" for="member-role">Ruolo</label>
+            <select id="member-role">
+              <option value="member">member</option>
+              <option value="admin">admin</option>
+            </select>
+            <button id="upsert-member-btn" class="btn">Salva membro</button>
+          </article>
+        </section>
+
+        <section class="card">
+          <div class="stack-row">
+            <h3>Saldi correnti</h3>
+            <button id="refresh-balances-btn" class="btn">Aggiorna saldi</button>
+          </div>
+          <div id="balances-table"></div>
+        </section>
+
+        <section class="card">
+          <h3>Vista personale admin</h3>
+          <div class="cards-row">
+            <article class="mini-card">
+              <label>Saldo personale</label>
+              <div id="admin-self-balance" class="big">EUR 0.00</div>
+            </article>
+            <article class="mini-card">
+              <label>Stato ordine</label>
+              <div id="admin-self-cycle-status">Nessun ciclo aperto</div>
+            </article>
+          </div>
+        </section>
+      </section>
+
+      <footer>
+        <div id="status-line" class="status-line muted"></div>
+      </footer>
+    </div>
+
+    <?!= include('App'); ?>
+  </body>
+</html>

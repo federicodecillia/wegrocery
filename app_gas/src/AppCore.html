@@ -1,0 +1,207 @@
+<script>
+/* ───────────────────────────────────────────
+   AppCore.html — PM namespace, API, router, UI
+   ─────────────────────────────────────────── */
+
+var PM = {
+  state: {
+    session: null,
+    dashboard: null,
+    view: 'loading'
+  },
+  components: {},
+
+  /* ── API wrapper ── */
+  api: function(action, payload) {
+    return new Promise(function(resolve, reject) {
+      google.script.run
+        .withSuccessHandler(function(response) {
+          if (response && response.ok) {
+            resolve(response.result);
+          } else {
+            var msg = (response && response.error && response.error.message) || 'Errore sconosciuto';
+            reject(new Error(msg));
+          }
+        })
+        .withFailureHandler(function(err) {
+          reject(new Error(err.message || 'Errore di connessione'));
+        })
+        .callApi(action, payload || {});
+    });
+  },
+
+  /* ── Router ── */
+  navigate: function(view) {
+    if (PM.state.view === view) return;
+    PM.state.view = view;
+    window.location.hash = view;
+    PM._updateSections();
+    PM._updateNav();
+  },
+
+  _updateSections: function() {
+    var sections = document.querySelectorAll('.section');
+    for (var i = 0; i < sections.length; i++) {
+      var s = sections[i];
+      if (s.id === 'sec-' + PM.state.view) {
+        s.classList.add('active');
+      } else {
+        s.classList.remove('active');
+      }
+    }
+    // Sticky footer solo su ordine
+    var footer = document.getElementById('sticky-footer');
+    if (footer) {
+      if (PM.state.view === 'ordine') {
+        footer.classList.add('visible');
+      } else {
+        footer.classList.remove('visible');
+      }
+    }
+  },
+
+  _updateNav: function() {
+    var items = document.querySelectorAll('.nav-item');
+    for (var i = 0; i < items.length; i++) {
+      var item = items[i];
+      if (item.dataset.view === PM.state.view) {
+        item.classList.add('active');
+      } else {
+        item.classList.remove('active');
+      }
+    }
+  },
+
+  /* ── Toast ── */
+  toast: function(message, type) {
+    var t = document.getElementById('toast');
+    t.textContent = message;
+    t.className = 'toast' + (type === 'error' ? ' toast-error' : '');
+    // Force reflow
+    void t.offsetWidth;
+    t.classList.add('show');
+    clearTimeout(PM._toastTimer);
+    PM._toastTimer = setTimeout(function() {
+      t.classList.remove('show');
+    }, 3000);
+  },
+  _toastTimer: null,
+
+  /* ── Confirm dialog ── */
+  confirm: function(title, message) {
+    return new Promise(function(resolve) {
+      var overlay = document.getElementById('modal-overlay');
+      document.getElementById('modal-title').textContent = title;
+      document.getElementById('modal-message').textContent = message;
+      overlay.classList.add('show');
+
+      document.getElementById('modal-confirm').onclick = function() {
+        overlay.classList.remove('show');
+        resolve(true);
+      };
+      document.getElementById('modal-cancel').onclick = function() {
+        overlay.classList.remove('show');
+        resolve(false);
+      };
+    });
+  },
+
+  /* ── Format helpers ── */
+  formatCurrency: function(v) {
+    return new Intl.NumberFormat('it-IT', {
+      style: 'currency', currency: 'EUR',
+      minimumFractionDigits: 2
+    }).format(v || 0);
+  },
+
+  formatDate: function(isoString) {
+    if (!isoString) return '';
+    var d = new Date(isoString);
+    if (isNaN(d.getTime())) return String(isoString);
+    return d.toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' });
+  },
+
+  formatDateTime: function(isoString) {
+    if (!isoString) return '';
+    var d = new Date(isoString);
+    if (isNaN(d.getTime())) return String(isoString);
+    return d.toLocaleDateString('it-IT', { day: '2-digit', month: 'short' }) +
+      ' ' + d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+  },
+
+  /* ── Render helper ── */
+  html: function(containerId, htmlStr) {
+    var el = document.getElementById(containerId);
+    if (el) el.innerHTML = htmlStr;
+  },
+
+  /* ── Loading ── */
+  showLoading: function(containerId) {
+    PM.html(containerId,
+      '<div class="skeleton-card"><div class="skeleton skeleton-title"></div><div class="skeleton skeleton-text" style="width:80%;"></div><div class="skeleton skeleton-text" style="width:60%;"></div></div>' +
+      '<div class="skeleton-card"><div class="skeleton skeleton-text" style="width:90%;"></div><div class="skeleton skeleton-text" style="width:70%;"></div></div>');
+  },
+
+  /* ── Init ── */
+  init: function() {
+    // Hash router
+    window.addEventListener('hashchange', function() {
+      var hash = window.location.hash.replace('#', '') || 'home';
+      PM.state.view = hash;
+      PM._updateSections();
+      PM._updateNav();
+      PM._onViewChange(hash);
+    });
+
+    // Nav click
+    document.querySelectorAll('.nav-item').forEach(function(item) {
+      item.addEventListener('click', function() {
+        PM.navigate(item.dataset.view);
+        PM._onViewChange(item.dataset.view);
+      });
+    });
+
+    // Start
+    PM._loadSession();
+  },
+
+  _loadSession: function() {
+    PM.api('getCurrentSession')
+      .then(function(session) {
+        PM.state.session = session;
+        // Show admin tab if admin
+        if (session.role === 'admin') {
+          var adminNav = document.getElementById('nav-admin');
+          if (adminNav) adminNav.classList.remove('hidden');
+        }
+        PM.navigate('home');
+        PM._onViewChange('home');
+      })
+      .catch(function(err) {
+        document.getElementById('sec-loading').innerHTML =
+          '<div class="container"><div class="empty-state">' +
+          '<span class="empty-state-icon">&#128274;</span>' +
+          '<h2>Impossibile caricare</h2>' +
+          '<p class="mt-8">' + (PM._esc ? PM._esc(err.message) : err.message) + '</p>' +
+          '<button class="btn btn-primary mt-24" onclick="PM._loadSession()">Riprova</button>' +
+          '</div></div>';
+      });
+  },
+
+  _onViewChange: function(view) {
+    if (view === 'home' && PM.components.memberHome) {
+      PM.components.memberHome.load();
+    } else if (view === 'ordine' && PM.components.orderForm) {
+      PM.components.orderForm.load();
+    } else if (view === 'storico' && PM.components.history) {
+      PM.components.history.load();
+    } else if (view === 'guida' && PM.components.guide) {
+      PM.components.guide.load();
+    } else if (view === 'admin' && PM.components.admin) {
+      PM.components.admin.load();
+    }
+  }
+};
+
+document.addEventListener('DOMContentLoaded', PM.init);
+</script>

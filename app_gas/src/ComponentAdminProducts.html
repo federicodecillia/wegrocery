@@ -1,0 +1,125 @@
+<script>
+/* ───────────────────────────────────────────
+   ComponentAdminProducts — Gestione prodotti
+   ─────────────────────────────────────────── */
+
+PM.components.adminProducts = {
+
+  render: function(container) {
+    PM.showLoading(container);
+
+    Promise.all([
+      PM.api('getMemberDashboard'),
+      PM.api('adminGetRecentCycles')
+    ]).then(function(results) {
+      var data = results[0];
+      var cycles = results[1];
+      var html = '';
+
+      if (!data.cycle) {
+        PM.html(container, '<div class="card"><div class="text-muted">Apri un ciclo prima di caricare i prodotti.</div></div>');
+        return;
+      }
+
+      var cycleId = data.cycle.cycle_id;
+
+      // Prodotti attuali
+      if (data.products && data.products.length) {
+        html += '<h2 class="mb-8">Prodotti attuali (' + data.products.length + ')</h2>';
+        html += '<div class="card"><div class="table-wrap"><table><thead><tr><th>Prodotto</th><th>Formato</th><th class="text-right">Prezzo</th></tr></thead><tbody>';
+        data.products.forEach(function(p) {
+          var name = p.name + (p.variant ? ' — ' + p.variant : '');
+          html += '<tr><td>' + PM._esc(name) + '</td><td>' + PM._esc(p.format) + '</td><td class="text-right">' + PM.formatCurrency(p.unit_price) + '</td></tr>';
+        });
+        html += '</tbody></table></div></div>';
+      }
+
+      // Duplica da ciclo precedente
+      var closedCycles = cycles.filter(function(c) { return c.cycle_id !== cycleId; });
+      if (closedCycles.length) {
+        html +=
+          '<h2 class="mt-16 mb-8">Duplica da ciclo precedente</h2>' +
+          '<div class="card">' +
+            '<div class="form-group">' +
+              '<select class="form-select" id="dup-source">';
+        closedCycles.forEach(function(c) {
+          html += '<option value="' + c.cycle_id + '">' + PM._esc(c.title) + '</option>';
+        });
+        html +=
+              '</select>' +
+            '</div>' +
+            '<button class="btn btn-outline btn-block" onclick="PM.components.adminProducts.duplicate(\'' + cycleId + '\')">Duplica prodotti</button>' +
+          '</div>';
+      }
+
+      // Caricamento testo libero
+      html +=
+        '<h2 class="mt-16 mb-8">Carica da testo</h2>' +
+        '<div class="card">' +
+          '<div class="text-muted text-sm mb-8">Un prodotto per riga: <strong>Nome;Varietà;Formato;Prezzo</strong><br>Campi opzionali: ;Fornitore;Note</div>' +
+          '<div class="form-group">' +
+            '<textarea class="form-textarea" id="products-text" rows="8" placeholder="Carota;;500 g;1.75;Az. Agr. Miglio&#10;Cavolo;verza;1 kg;3.50&#10;Patata;pasta gialla;1 kg;2.30"></textarea>' +
+          '</div>' +
+          '<button class="btn btn-primary btn-block" onclick="PM.components.adminProducts.loadFromText(\'' + cycleId + '\')">Carica prodotti</button>' +
+        '</div>';
+
+      PM.html(container, html);
+    }).catch(function(err) {
+      PM.html(container,
+        '<div style="text-align:center;padding:40px 0;">' +
+        '<h2>Errore di caricamento</h2>' +
+        '<p class="text-muted mt-8">' + PM._esc(err.message) + '</p>' +
+        '<button class="btn btn-primary mt-16" onclick="PM.components.adminProducts.render(\'admin-products-panel\')">Riprova</button></div>');
+    });
+  },
+
+  loadFromText: function(cycleId) {
+    var text = document.getElementById('products-text').value.trim();
+    if (!text) { PM.toast('Inserisci almeno un prodotto', 'error'); return; }
+
+    var lines = text.split('\n').filter(function(l) { return l.trim(); });
+    var products = [];
+    var errors = [];
+
+    lines.forEach(function(line, idx) {
+      var parts = line.split(';').map(function(s) { return s.trim(); });
+      if (!parts[0]) { errors.push('Riga ' + (idx+1) + ': nome mancante'); return; }
+      var price = parseFloat((parts[3] || '0').replace(',', '.'));
+      if (isNaN(price) || price <= 0) { errors.push('Riga ' + (idx+1) + ': prezzo non valido "' + parts[3] + '"'); return; }
+
+      products.push({
+        name:       parts[0],
+        variant:    parts[1] || '',
+        format:     parts[2] || '',
+        unit_price: price,
+        supplier:   parts[4] || '',
+        notes:      parts[5] || ''
+      });
+    });
+
+    if (errors.length) {
+      PM.toast(errors[0], 'error');
+      return;
+    }
+
+    PM.api('adminUpdateProducts', { cycle_id: cycleId, products: products })
+      .then(function(res) {
+        PM.toast(res.count + ' prodotti caricati');
+        PM.components.adminProducts.render('admin-products-panel');
+      })
+      .catch(function(err) { PM.toast(err.message, 'error'); });
+  },
+
+  duplicate: function(targetCycleId) {
+    var sourceId = document.getElementById('dup-source').value;
+    if (!sourceId) return;
+
+    PM.api('adminDuplicateProducts', { source_cycle_id: sourceId, target_cycle_id: targetCycleId })
+      .then(function(res) {
+        PM.toast(res.count + ' prodotti duplicati');
+        PM.components.adminProducts.render('admin-products-panel');
+      })
+      .catch(function(err) { PM.toast(err.message, 'error'); });
+  }
+};
+</script>

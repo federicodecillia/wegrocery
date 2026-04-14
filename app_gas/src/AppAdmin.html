@@ -1,0 +1,74 @@
+<script>
+/* ───────────────────────────────────────────
+   AppAdmin.html — Admin panel orchestrator
+   ─────────────────────────────────────────── */
+
+PM.components.admin = {
+
+  currentTab: 'cycle',
+  loaded: {},
+
+  load: function() {
+    if (!PM.state.session || PM.state.session.role !== 'admin') {
+      PM.html('admin-content', '<div class="card"><div class="text-muted">Accesso riservato agli amministratori.</div></div>');
+      return;
+    }
+
+    var self = PM.components.admin;
+    if (document.getElementById('admin-tabs-bar')) {
+      // Already rendered shell, just refresh current tab
+      self.switchTab(self.currentTab);
+      return;
+    }
+
+    var html =
+      '<h1 class="mb-8">Pannello Admin</h1>' +
+      '<div class="admin-tabs" id="admin-tabs-bar">' +
+        '<div class="admin-tab active" data-atab="cycle" onclick="PM.components.admin.switchTab(\'cycle\')">Ciclo</div>' +
+        '<div class="admin-tab" data-atab="products" onclick="PM.components.admin.switchTab(\'products\')">Prodotti</div>' +
+        '<div class="admin-tab" data-atab="orders" onclick="PM.components.admin.switchTab(\'orders\')">Ordini</div>' +
+        '<div class="admin-tab" data-atab="ledger" onclick="PM.components.admin.switchTab(\'ledger\')">Bonifici</div>' +
+        '<div class="admin-tab" data-atab="members" onclick="PM.components.admin.switchTab(\'members\')">Soci</div>' +
+      '</div>' +
+      '<div id="admin-cycle-panel" class="admin-panel active"></div>' +
+      '<div id="admin-products-panel" class="admin-panel"></div>' +
+      '<div id="admin-orders-panel" class="admin-panel"></div>' +
+      '<div id="admin-ledger-panel" class="admin-panel"></div>' +
+      '<div id="admin-members-panel" class="admin-panel"></div>';
+
+    PM.html('admin-content', html);
+    self.loaded = {};
+    self.switchTab('cycle');
+  },
+
+  switchTab: function(tab) {
+    var self = PM.components.admin;
+    self.currentTab = tab;
+
+    // Update tab styling
+    var tabs = document.querySelectorAll('#admin-tabs-bar .admin-tab');
+    for (var i = 0; i < tabs.length; i++) {
+      tabs[i].className = 'admin-tab' + (tabs[i].dataset.atab === tab ? ' active' : '');
+    }
+
+    // Show/hide panels
+    var panels = ['cycle', 'products', 'orders', 'ledger', 'members'];
+    panels.forEach(function(p) {
+      var panel = document.getElementById('admin-' + p + '-panel');
+      if (panel) panel.className = 'admin-panel' + (p === tab ? ' active' : '');
+    });
+
+    // Load component
+    var containerId = 'admin-' + tab + '-panel';
+    var comp = {
+      cycle:    PM.components.adminCycle,
+      products: PM.components.adminProducts,
+      orders:   PM.components.adminOrders,
+      ledger:   PM.components.adminLedger,
+      members:  PM.components.adminMembers
+    }[tab];
+
+    if (comp) comp.render(containerId);
+  }
+};
+</script>

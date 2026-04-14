@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#f0fdf4">
+  <title>Porta Moneta GAS</title>
+  <?!= include('Styles'); ?>
+</head>
+<body>
+
+  <!-- Toast -->
+  <div id="toast" class="toast"></div>
+
+  <!-- Modal -->
+  <div id="modal-overlay" class="modal-overlay">
+    <div class="modal">
+      <h3 id="modal-title"></h3>
+      <p id="modal-message"></p>
+      <div class="modal-actions">
+        <button id="modal-cancel" class="btn btn-outline btn-sm" style="flex:1;">Annulla</button>
+        <button id="modal-confirm" class="btn btn-primary btn-sm" style="flex:1;">Conferma</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Sections ── -->
+
+  <div id="sec-loading" class="section active">
+    <div class="container" style="padding-top:80px;">
+      <div class="skeleton-card">
+        <div class="skeleton skeleton-title"></div>
+        <div class="skeleton skeleton-hero"></div>
+        <div class="skeleton skeleton-text" style="width:80%;"></div>
+        <div class="skeleton skeleton-text" style="width:60%;"></div>
+      </div>
+      <div class="skeleton-card">
+        <div class="skeleton skeleton-text" style="width:70%;"></div>
+        <div class="skeleton skeleton-text" style="width:90%;"></div>
+        <div class="skeleton skeleton-text" style="width:50%;"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="sec-home" class="section">
+    <div class="container" id="home-content"></div>
+  </div>
+
+  <div id="sec-ordine" class="section">
+    <div class="container" id="order-content"></div>
+  </div>
+
+  <div id="sec-storico" class="section">
+    <div class="container" id="history-content"></div>
+  </div>
+
+  <div id="sec-admin" class="section">
+    <div class="container" id="admin-content"></div>
+  </div>
+
+  <div id="sec-guida" class="section">
+    <div class="container" id="guide-content"></div>
+  </div>
+
+  <!-- ── Sticky Order Footer ── -->
+  <div id="sticky-footer" class="sticky-footer">
+    <div class="footer-row">
+      <div>
+        <div class="footer-total" id="footer-total">Totale: €0,00</div>
+        <div class="footer-balance" id="footer-balance"></div>
+      </div>
+      <button id="btn-save-order" class="btn btn-primary" onclick="PM.components.orderForm.save()">
+        Salva ordine
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Bottom Nav ── -->
+  <nav class="bottom-nav">
+    <div class="nav-item" data-view="home">
+      <svg class="nav-icon-outline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <svg class="nav-icon-filled" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><rect x="9" y="12" width="6" height="10" fill="white"/></svg>
+      <span>Home</span>
+    </div>
+    <div class="nav-item" data-view="ordine">
+      <svg class="nav-icon-outline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+      <svg class="nav-icon-filled" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="9" cy="21" r="1.5"/><circle cx="20" cy="21" r="1.5"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+      <span>Ordine</span>
+      <span id="nav-badge-order" class="nav-badge hidden"></span>
+    </div>
+    <div class="nav-item" data-view="storico">
+      <svg class="nav-icon-outline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <svg class="nav-icon-filled" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+      <span>Storico</span>
+    </div>
+    <div class="nav-item" data-view="guida">
+      <svg class="nav-icon-outline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <svg class="nav-icon-filled" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="white"/></svg>
+      <span>Guida</span>
+    </div>
+    <div id="nav-admin" class="nav-item hidden" data-view="admin">
+      <svg class="nav-icon-outline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      <svg class="nav-icon-filled" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="3" fill="white"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      <span>Admin</span>
+    </div>
+  </nav>
+
+  <!-- ── Scripts ── -->
+  <?!= include('AppCore'); ?>
+  <?!= include('ComponentMemberHome'); ?>
+  <?!= include('ComponentOrderForm'); ?>
+  <?!= include('ComponentHistory'); ?>
+  <?!= include('ComponentAdminCycle'); ?>
+  <?!= include('ComponentAdminProducts'); ?>
+  <?!= include('ComponentAdminOrders'); ?>
+  <?!= include('ComponentAdminLedger'); ?>
+  <?!= include('ComponentAdminMembers'); ?>
+  <?!= include('ComponentGuide'); ?>
+  <?!= include('AppMember'); ?>
+  <?!= include('AppAdmin'); ?>
+
+</body>
+</html>
