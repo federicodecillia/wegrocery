@@ -16,7 +16,7 @@ PM.components.memberHome = {
         PM.components.memberHome.render(data);
         var badge = document.getElementById('nav-badge-order');
         if (badge) {
-          if (data.cycle) badge.classList.remove('hidden');
+          if (data.cycle && !data.cycle_restricted) badge.classList.remove('hidden');
           else badge.classList.add('hidden');
         }
       })
@@ -50,7 +50,13 @@ PM.components.memberHome = {
       '</div>';
 
     // Ciclo
-    if (d.cycle) {
+    if (d.cycle_restricted) {
+      html +=
+        '<div class="card">' +
+          '<div class="card-header"><h2>Ordine</h2><span class="badge badge-closed">Chiuso</span></div>' +
+          '<div class="text-muted">Nessun ordine aperto al momento.</div>' +
+        '</div>';
+    } else if (d.cycle) {
       var closeDate = new Date(d.cycle.order_close_at);
       var now = new Date();
       var openDate = new Date(d.cycle.order_open_at || d.cycle.created_at);

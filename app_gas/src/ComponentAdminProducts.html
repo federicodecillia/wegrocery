@@ -5,6 +5,14 @@
 
 PM.components.adminProducts = {
 
+  _TEMPLATE_HEADERS: ['Nome', 'Varietà', 'Formato', 'Prezzo', 'Fornitore', 'Note'],
+
+  _TEMPLATE_EXAMPLES: [
+    ['Carota', '', '500 g', 1.75, 'Az. Agr. Miglio', ''],
+    ['Cavolo', 'verza', '1 kg', 3.50, '', ''],
+    ['Patata', 'pasta gialla', '1 kg', 2.30, 'Az. Miglio', 'poca disponibilità']
+  ],
+
   render: function(container) {
     PM.showLoading(container);
 
@@ -34,6 +42,24 @@ PM.components.adminProducts = {
         html += '</tbody></table></div></div>';
       }
 
+      // Caricamento da file Excel
+      html +=
+        '<h2 class="mt-16 mb-8">Carica da file Excel</h2>' +
+        '<div class="card">' +
+          '<div class="text-muted text-sm mb-8">Scarica il template, compilalo in Excel o Google Sheets, poi caricalo qui. Accetta file <strong>.xlsx</strong>, <strong>.xls</strong> e <strong>.csv</strong>.</div>' +
+          '<button class="btn btn-outline btn-block mb-8" onclick="PM.components.adminProducts.downloadTemplate()">' +
+            '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:6px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>' +
+            'Scarica template Excel' +
+          '</button>' +
+          '<div class="form-group mb-8">' +
+            '<input type="file" id="excel-file" accept=".xlsx,.xls,.csv" class="form-input" style="padding:8px;" />' +
+          '</div>' +
+          '<button class="btn btn-primary btn-block" onclick="PM.components.adminProducts.uploadExcel(\'' + cycleId + '\')">' +
+            '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:6px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>' +
+            'Carica prodotti da file' +
+          '</button>' +
+        '</div>';
+
       // Duplica da ciclo precedente
       var closedCycles = cycles.filter(function(c) { return c.cycle_id !== cycleId; });
       if (closedCycles.length) {
@@ -60,7 +86,7 @@ PM.components.adminProducts = {
           '<div class="form-group">' +
             '<textarea class="form-textarea" id="products-text" rows="8" placeholder="Carota;;500 g;1.75;Az. Agr. Miglio&#10;Cavolo;verza;1 kg;3.50&#10;Patata;pasta gialla;1 kg;2.30"></textarea>' +
           '</div>' +
-          '<button class="btn btn-primary btn-block" onclick="PM.components.adminProducts.loadFromText(\'' + cycleId + '\')">Carica prodotti</button>' +
+          '<button class="btn btn-outline btn-block" onclick="PM.components.adminProducts.loadFromText(\'' + cycleId + '\')">Carica prodotti da testo</button>' +
         '</div>';
 
       PM.html(container, html);
@@ -72,6 +98,170 @@ PM.components.adminProducts = {
         '<button class="btn btn-primary mt-16" onclick="PM.components.adminProducts.render(\'admin-products-panel\')">Riprova</button></div>');
     });
   },
+
+  /* ── Download template Excel ── */
+
+  downloadTemplate: function() {
+    if (typeof XLSX === 'undefined') {
+      PM.toast('Libreria Excel non caricata. Ricarica la pagina.', 'error');
+      return;
+    }
+
+    var self = PM.components.adminProducts;
+    var data = [self._TEMPLATE_HEADERS].concat(self._TEMPLATE_EXAMPLES);
+
+    var ws = XLSX.utils.aoa_to_sheet(data);
+
+    // Imposta larghezze colonne
+    ws['!cols'] = [
+      { wch: 20 }, // Nome
+      { wch: 18 }, // Varietà
+      { wch: 12 }, // Formato
+      { wch: 10 }, // Prezzo
+      { wch: 20 }, // Fornitore
+      { wch: 25 }  // Note
+    ];
+
+    var wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Prodotti');
+    XLSX.writeFile(wb, 'template_prodotti.xlsx');
+    PM.toast('Template scaricato');
+  },
+
+  /* ── Upload da file Excel ── */
+
+  uploadExcel: function(cycleId) {
+    var self = PM.components.adminProducts;
+    var fileInput = document.getElementById('excel-file');
+    if (!fileInput || !fileInput.files || !fileInput.files.length) {
+      PM.toast('Seleziona un file Excel o CSV', 'error');
+      return;
+    }
+    if (typeof XLSX === 'undefined') {
+      PM.toast('Libreria Excel non caricata. Ricarica la pagina.', 'error');
+      return;
+    }
+
+    var file = fileInput.files[0];
+    var reader = new FileReader();
+
+    reader.onload = function(e) {
+      try {
+        var data = new Uint8Array(e.target.result);
+        var wb = XLSX.read(data, { type: 'array' });
+        var ws = wb.Sheets[wb.SheetNames[0]];
+        var rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+
+        if (rows.length < 2) {
+          PM.toast('Il file è vuoto o contiene solo l\'intestazione', 'error');
+          return;
+        }
+
+        var products = self._parseExcelRows(rows);
+        if (!products) return; // _parseExcelRows shows toast on error
+
+        PM.api('adminUpdateProducts', { cycle_id: cycleId, products: products })
+          .then(function(res) {
+            PM.toast(res.count + ' prodotti caricati da file');
+            PM.components.adminProducts.render('admin-products-panel');
+          })
+          .catch(function(err) { PM.toast(err.message, 'error'); });
+
+      } catch (ex) {
+        PM.toast('Errore lettura file: ' + ex.message, 'error');
+      }
+    };
+
+    reader.readAsArrayBuffer(file);
+  },
+
+  _parseExcelRows: function(rows) {
+    // Mappa header → indice colonna (case-insensitive, con alias comuni)
+    var headerAliases = {
+      'nome':      'name',
+      'prodotto':  'name',
+      'name':      'name',
+      'varietà':   'variant',
+      'varieta':   'variant',
+      'variant':   'variant',
+      'tipo':      'variant',
+      'formato':   'format',
+      'format':    'format',
+      'confezione':'format',
+      'prezzo':    'unit_price',
+      'price':     'unit_price',
+      'costo':     'unit_price',
+      'fornitore': 'supplier',
+      'supplier':  'supplier',
+      'note':      'notes',
+      'notes':     'notes'
+    };
+
+    var rawHeaders = rows[0];
+    var colMap = {};
+    rawHeaders.forEach(function(h, i) {
+      var key = String(h).trim().toLowerCase();
+      if (headerAliases[key]) {
+        colMap[headerAliases[key]] = i;
+      }
+    });
+
+    if (colMap.name === undefined) {
+      PM.toast('Colonna "Nome" non trovata nel file. Usa il template.', 'error');
+      return null;
+    }
+    if (colMap.unit_price === undefined) {
+      PM.toast('Colonna "Prezzo" non trovata nel file. Usa il template.', 'error');
+      return null;
+    }
+
+    var products = [];
+    var errors = [];
+
+    for (var i = 1; i < rows.length; i++) {
+      var row = rows[i];
+
+      // Salta righe completamente vuote
+      var hasContent = row.some(function(c) { return String(c).trim() !== ''; });
+      if (!hasContent) continue;
+
+      var name = String(row[colMap.name] || '').trim();
+      if (!name) {
+        errors.push('Riga ' + (i + 1) + ': nome mancante');
+        continue;
+      }
+
+      var rawPrice = row[colMap.unit_price];
+      var price = parseFloat(String(rawPrice).replace(',', '.'));
+      if (isNaN(price) || price <= 0) {
+        errors.push('Riga ' + (i + 1) + ': prezzo non valido "' + rawPrice + '"');
+        continue;
+      }
+
+      products.push({
+        name:       name,
+        variant:    colMap.variant !== undefined ? String(row[colMap.variant] || '').trim() : '',
+        format:     colMap.format !== undefined ? String(row[colMap.format] || '').trim() : '',
+        unit_price: price,
+        supplier:   colMap.supplier !== undefined ? String(row[colMap.supplier] || '').trim() : '',
+        notes:      colMap.notes !== undefined ? String(row[colMap.notes] || '').trim() : ''
+      });
+    }
+
+    if (errors.length) {
+      PM.toast(errors[0] + (errors.length > 1 ? ' (+' + (errors.length - 1) + ' altri errori)' : ''), 'error');
+      return null;
+    }
+
+    if (!products.length) {
+      PM.toast('Nessun prodotto trovato nel file', 'error');
+      return null;
+    }
+
+    return products;
+  },
+
+  /* ── Carica da testo ── */
 
   loadFromText: function(cycleId) {
     var text = document.getElementById('products-text').value.trim();
@@ -109,6 +299,8 @@ PM.components.adminProducts = {
       })
       .catch(function(err) { PM.toast(err.message, 'error'); });
   },
+
+  /* ── Duplica da ciclo precedente ── */
 
   duplicate: function(targetCycleId) {
     var sourceId = document.getElementById('dup-source').value;

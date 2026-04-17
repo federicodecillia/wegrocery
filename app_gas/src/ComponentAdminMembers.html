@@ -10,8 +10,16 @@ PM.components.adminMembers = {
 
     PM.api('adminGetMembers')
       .then(function(members) {
-        var active = members.filter(function(m) { return String(m.active) !== 'false'; });
+        var self = PM.components.adminMembers;
+        var active  = members.filter(function(m) { return String(m.active) !== 'false'; });
         var inactive = members.filter(function(m) { return String(m.active) === 'false'; });
+
+        var admins  = active.filter(function(m) { return m.role === 'admin'; });
+        var attivi  = active.filter(function(m) { return m.role === 'attivo' || m.role === 'member'; });
+        var soci    = active.filter(function(m) { return m.role === 'socio'; });
+
+        var sortName = function(a, b) { return a.full_name.localeCompare(b.full_name); };
+        admins.sort(sortName); attivi.sort(sortName); soci.sort(sortName);
 
         var html = '';
 
@@ -30,31 +38,29 @@ PM.components.adminMembers = {
             '<div class="form-group">' +
               '<label class="form-label">Ruolo</label>' +
               '<select class="form-select" id="mem-role">' +
-                '<option value="member">Socio</option>' +
+                '<option value="socio">Socio</option>' +
+                '<option value="attivo" selected>Attivo</option>' +
                 '<option value="admin">Amministratore</option>' +
               '</select>' +
             '</div>' +
             '<button class="btn btn-primary btn-block" onclick="PM.components.adminMembers.addMember()">Aggiungi</button>' +
           '</div>';
 
-        // Lista attivi
-        html += '<h2 class="mt-16 mb-8">Soci attivi (' + active.length + ')</h2>';
-        html += '<div class="card"><div class="table-wrap"><table><thead><tr><th>Nome</th><th>Ruolo</th><th></th></tr></thead><tbody>';
-        active.sort(function(a,b) { return a.full_name.localeCompare(b.full_name); }).forEach(function(m) {
-          var roleLabel = m.role === 'admin' ? '<span class="badge badge-open">Admin</span>' : 'Socio';
-          html += '<tr><td>' + PM._esc(m.full_name) + '<br><span class="text-muted text-sm">' + PM._esc(m.email) + '</span></td>' +
-            '<td>' + roleLabel + '</td>' +
-            '<td><button class="btn btn-sm btn-outline" onclick="PM.components.adminMembers.toggleActive(\'' + PM._esc(m.email) + '\',\'' + PM._esc(m.full_name) + '\',false)">Disattiva</button></td></tr>';
-        });
-        html += '</tbody></table></div></div>';
+        // Tabella soci attivi con cambio ruolo
+        html += self._renderGroup('Amministratori', admins, 'admin');
+        html += self._renderGroup('Attivi', attivi, 'attivo');
+        html += self._renderGroup('Soci', soci, 'socio');
 
         // Inattivi
         if (inactive.length) {
-          html += '<h2 class="mt-16 mb-8">Soci inattivi (' + inactive.length + ')</h2>';
+          html += '<h2 class="mt-16 mb-8">Disattivati (' + inactive.length + ')</h2>';
           html += '<div class="card"><div class="table-wrap"><table><tbody>';
           inactive.forEach(function(m) {
-            html += '<tr><td>' + PM._esc(m.full_name) + '</td>' +
-              '<td><button class="btn btn-sm btn-primary" onclick="PM.components.adminMembers.toggleActive(\'' + PM._esc(m.email) + '\',\'' + PM._esc(m.full_name) + '\',true)">Riattiva</button></td></tr>';
+            html += '<tr>' +
+              '<td>' + PM._esc(m.full_name) + '<br><span class="text-muted text-sm">' + PM._esc(m.email || '—') + '</span></td>' +
+              '<td><button class="btn btn-sm btn-primary" onclick="PM.components.adminMembers.toggleActive(\'' +
+                PM._esc(m.email) + '\',\'' + PM._esc(m.full_name) + '\',\'' + PM._esc(m.role) + '\',true)">Riattiva</button></td>' +
+            '</tr>';
           });
           html += '</tbody></table></div></div>';
         }
@@ -70,30 +76,92 @@ PM.components.adminMembers = {
       });
   },
 
+  _renderGroup: function(title, members, groupRole) {
+    var roleLabel = { admin: 'Admin', attivo: 'Attivo', member: 'Attivo', socio: 'Socio' };
+    var roleBadge = { admin: 'badge-open', attivo: 'badge-neutral', member: 'badge-neutral', socio: 'badge-closed' };
+
+    var html = '<h2 class="mt-16 mb-8">' + title + ' (' + members.length + ')</h2>';
+    if (!members.length) {
+      html += '<div class="card"><div class="text-muted">Nessuno.</div></div>';
+      return html;
+    }
+
+    html += '<div class="card"><div class="table-wrap"><table><thead><tr>' +
+      '<th>Nome</th><th>Ruolo</th><th></th>' +
+    '</tr></thead><tbody>';
+
+    members.forEach(function(m) {
+      var badge = '<span class="badge ' + (roleBadge[m.role] || 'badge-neutral') + '">' + (roleLabel[m.role] || m.role) + '</span>';
+      var emailEsc = PM._esc(m.email || '');
+      var nameEsc  = PM._esc(m.full_name);
+      var roleEsc  = PM._esc(m.role);
+
+      // Dropdown cambio ruolo
+      var roleSelect =
+        '<select class="form-select form-select-sm" onchange="PM.components.adminMembers.changeRole(\'' +
+          emailEsc + '\',\'' + nameEsc + '\',this.value,this)">' +
+          '<option value="socio"' + (m.role === 'socio' ? ' selected' : '') + '>Socio</option>' +
+          '<option value="attivo"' + (m.role === 'attivo' || m.role === 'member' ? ' selected' : '') + '>Attivo</option>' +
+          '<option value="admin"' + (m.role === 'admin' ? ' selected' : '') + '>Admin</option>' +
+        '</select>';
+
+      html += '<tr>' +
+        '<td>' + nameEsc + (m.email ? '<br><span class="text-muted text-sm">' + emailEsc + '</span>' : '') + '</td>' +
+        '<td>' + roleSelect + '</td>' +
+        '<td><button class="btn btn-sm btn-outline" onclick="PM.components.adminMembers.toggleActive(\'' +
+          emailEsc + '\',\'' + nameEsc + '\',\'' + roleEsc + '\',false)">Disattiva</button></td>' +
+      '</tr>';
+    });
+
+    html += '</tbody></table></div></div>';
+    return html;
+  },
+
   addMember: function() {
     var name  = document.getElementById('mem-name').value.trim();
     var email = document.getElementById('mem-email').value.trim();
     var role  = document.getElementById('mem-role').value;
 
-    if (!name) { PM.toast('Inserisci il nome', 'error'); return; }
+    if (!name)  { PM.toast('Inserisci il nome', 'error'); return; }
     if (!email) { PM.toast('Inserisci l\'email', 'error'); return; }
 
     PM.api('adminUpsertMember', { full_name: name, email: email, role: role, active: true })
       .then(function() {
         PM.toast('Socio aggiunto');
-        document.getElementById('mem-name').value = '';
+        document.getElementById('mem-name').value  = '';
         document.getElementById('mem-email').value = '';
         PM.components.adminMembers.render('admin-members-panel');
       })
       .catch(function(err) { PM.toast(err.message, 'error'); });
   },
 
-  toggleActive: function(email, name, active) {
+  changeRole: function(email, name, newRole, selectEl) {
+    var roleLabel = { admin: 'Amministratore', attivo: 'Attivo', socio: 'Socio' };
+    PM.confirm('Cambia ruolo?', 'Vuoi impostare ' + name + ' come ' + (roleLabel[newRole] || newRole) + '?')
+      .then(function(ok) {
+        if (!ok) {
+          // Ripristina il valore nel select
+          PM.components.adminMembers.render('admin-members-panel');
+          return;
+        }
+        PM.api('adminUpsertMember', { full_name: name, email: email, role: newRole })
+          .then(function() {
+            PM.toast(name + ' → ' + (roleLabel[newRole] || newRole));
+            PM.components.adminMembers.render('admin-members-panel');
+          })
+          .catch(function(err) {
+            PM.toast(err.message, 'error');
+            PM.components.adminMembers.render('admin-members-panel');
+          });
+      });
+  },
+
+  toggleActive: function(email, name, role, active) {
     var action = active ? 'riattivare' : 'disattivare';
     PM.confirm(action.charAt(0).toUpperCase() + action.slice(1) + '?', 'Vuoi ' + action + ' ' + name + '?')
       .then(function(ok) {
         if (!ok) return;
-        PM.api('adminUpsertMember', { full_name: name, email: email, active: active })
+        PM.api('adminUpsertMember', { full_name: name, email: email, role: role, active: active })
           .then(function() {
             PM.toast(name + (active ? ' riattivato' : ' disattivato'));
             PM.components.adminMembers.render('admin-members-panel');

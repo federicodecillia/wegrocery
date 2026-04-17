@@ -47,7 +47,6 @@ function callApi(action, payload) {
 
       // Setup
       setupDataStore:       setupDataStore,
-      seedSampleData:       seedSampleData,
       setDataSpreadsheetId: function(p) { return setDataSpreadsheetId(p.id); }
     };
 

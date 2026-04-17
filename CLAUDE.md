@@ -112,23 +112,27 @@ Storage.gs implements a **CacheService layer over Google Sheets**:
 
 ### Frontend Architecture
 
-The frontend is a **single-page app with hash-based routing** using Design System v2:
+The frontend is a **single-page app with hash-based routing** using a Mintlify-inspired design system:
 - `PM` namespace in AppCore.html — API wrapper, router, toast, confirm
 - Navigation: `#home`, `#ordine`, `#storico`, `#guida`, `#admin`
 - Components load data on view change via `PM._onViewChange()`
 - All components show error state with retry button on failure
 
-### Design System v2 (current)
+### Design System — Mintlify-inspired (current)
 
-Full design spec in `docs/design.md`. Key features:
-- **Palette**: Emerald scale (primary-50 to primary-700) with semantic colors
-- **Nav bar**: SVG icons (outline/filled states), glass effect with backdrop-blur
-- **Loading**: Skeleton shimmer animation (no spinner)
-- **Saldo hero card**: Large balance with gradient background (green=positive, red=negative)
+Full design spec in `DESIGN.md`. Key features:
+- **Palette**: Pure white canvas, near-black text (#0d0d0d), brand green (#18E299) accent
+- **Typography**: Inter font with tight display tracking, Geist Mono for code/labels
+- **Borders**: Ultra-subtle 5% opacity borders — depth through borders, not shadows
+- **Buttons**: Pill-shaped (9999px radius), dark primary, ghost secondary
+- **Nav bar**: SVG icons (outline/filled states), white glass with backdrop-blur
+- **Loading**: Skeleton shimmer animation
+- **Saldo hero card**: Brand-green-light (positive) or danger-light (negative) with pill label
+- **Badges**: Geist Mono uppercase with 0.6px tracking, pill-shaped
 - **Cycle progress bar**: Visual countdown with urgency badge when < 12h remaining
-- **Product stepper**: Bounce animation on quantity change, tinted card when qty > 0
+- **Product stepper**: Clean hover with brand-light tint, tinted card when qty > 0
 - **History**: Animated chevron expand, smooth max-height transitions
-- **Animations**: fade+slide between views, spring toast, scale modal, qty bump
+- **Animations**: Subtle fade between views, spring toast, scale modal, qty bump
 - **Accessibility**: `prefers-reduced-motion` disables all animations
 - **Empty states**: Emoji icon + message + CTA for every empty view
 
@@ -170,4 +174,4 @@ ID prefix convention: `cyc_*`, `mem_*`, `prd_*`, `ord_*`, `led_*`, `aud_*`.
 
 - `docs/blueprint-esecutivo.md` — Comprehensive functional spec: UX wireframes, data model rationale, validation rules, acceptance criteria.
 - `docs/deploy-checklist.md` — Deployment procedure and post-deploy validation steps.
-- `docs/design.md` — Design System v2: palette, typography, spacing, all component specs, wireframes, implementation checklist.
+- `DESIGN.md` — Mintlify-inspired design system: palette, typography, spacing, component specs, agent prompt guide.

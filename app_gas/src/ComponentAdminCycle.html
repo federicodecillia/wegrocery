@@ -45,6 +45,13 @@ PM.components.adminCycle = {
               '<input class="form-input" id="cycle-pickup" type="date">' +
             '</div>' +
             '<div class="form-group">' +
+              '<label class="form-label">Chi può ordinare</label>' +
+              '<select class="form-select" id="cycle-access">' +
+                '<option value="attivi">Solo attivi e admin</option>' +
+                '<option value="all">Tutti (attivi, soci e admin)</option>' +
+              '</select>' +
+            '</div>' +
+            '<div class="form-group">' +
               '<label class="form-label">Note (opzionale)</label>' +
               '<input class="form-input" id="cycle-notes" placeholder="es. orario diverso dal solito">' +
             '</div>' +
@@ -65,10 +72,11 @@ PM.components.adminCycle = {
   },
 
   createCycle: function() {
-    var title = document.getElementById('cycle-title').value.trim();
-    var close = document.getElementById('cycle-close').value;
+    var title  = document.getElementById('cycle-title').value.trim();
+    var close  = document.getElementById('cycle-close').value;
     var pickup = document.getElementById('cycle-pickup').value;
-    var notes = document.getElementById('cycle-notes').value.trim();
+    var access = document.getElementById('cycle-access').value;
+    var notes  = document.getElementById('cycle-notes').value.trim();
 
     if (!title) { PM.toast('Inserisci un titolo', 'error'); return; }
     if (!close) { PM.toast('Inserisci la data di chiusura', 'error'); return; }
@@ -77,6 +85,7 @@ PM.components.adminCycle = {
       title: title,
       order_close_at: new Date(close).toISOString(),
       pickup_date: pickup || '',
+      access_level: access,
       notes: notes
     }).then(function() {
       PM.toast('Ciclo creato');

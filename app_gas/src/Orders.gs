@@ -21,6 +21,18 @@ function getMemberDashboard(payload) {
   if (!cycle) return result;
 
   result.cycle = cycle;
+
+  // Verifica accesso: cicli 'attivi' escludono i soci
+  var canOrder = cycle.access_level === APP.ACCESS_LEVEL.ALL ||
+    !cycle.access_level ||
+    member.role === APP.ROLE.ADMIN ||
+    member.role === APP.ROLE.ATTIVO;
+
+  if (!canOrder) {
+    result.cycle_restricted = true;
+    return result;
+  }
+
   result.products = getCycleProducts_(cycle.cycle_id);
 
   var myOrders = readSheetObjectsWhere_(APP.SHEETS.ORDERS, 'cycle_id', cycle.cycle_id)
@@ -50,6 +62,13 @@ function saveMyOrder(payload) {
   var cycle = getOpenCycle_();
   assert_(cycle && cycle.cycle_id === payload.cycle_id,
     'Il ciclo non è aperto. Non è possibile modificare l\'ordine.');
+
+  if (cycle.access_level === APP.ACCESS_LEVEL.ATTIVI) {
+    assert_(
+      member.role === APP.ROLE.ADMIN || member.role === APP.ROLE.ATTIVO,
+      'Questo ciclo è riservato ai soci attivi.'
+    );
+  }
 
   var products = getCycleProducts_(cycle.cycle_id);
   var productMap = {};
