@@ -15,7 +15,7 @@ PM.components.guide = {
     // ── SEZIONE SOCI ──
     html +=
       '<div class="card">' +
-        '<h2 style="color:var(--green);">Come ordinare</h2>' +
+        '<h2 style="color:var(--brand-deep);">Come ordinare</h2>' +
         '<div class="guide-steps">' +
           '<div class="guide-step">' +
             '<div class="guide-num">1</div>' +
@@ -48,19 +48,19 @@ PM.components.guide = {
     // Saldo e pagamenti
     html +=
       '<div class="card">' +
-        '<h2 style="color:var(--green);">Saldo e pagamenti</h2>' +
+        '<h2 style="color:var(--brand-deep);">Saldo e pagamenti</h2>' +
         '<ul class="guide-list">' +
           '<li>Il tuo <strong>saldo</strong> è visibile nella Home. Rappresenta il tuo credito presso l\'associazione.</li>' +
           '<li>Quando un ciclo d\'ordine viene chiuso, il costo del tuo ordine viene <strong>addebitato automaticamente</strong> dal saldo.</li>' +
           '<li>Per ricaricare il saldo, effettua un <strong>bonifico</strong> sul conto dell\'associazione. La tesoriera lo registrerà nell\'app.</li>' +
-          '<li>Se il saldo è <span style="color:var(--red);font-weight:600;">negativo</span> (rosso), significa che devi effettuare un bonifico.</li>' +
+          '<li>Se il saldo è <span style="color:var(--danger);font-weight:600;">negativo</span> (rosso), significa che devi effettuare un bonifico.</li>' +
         '</ul>' +
       '</div>';
 
     // Storico
     html +=
       '<div class="card">' +
-        '<h2 style="color:var(--green);">Storico</h2>' +
+        '<h2 style="color:var(--brand-deep);">Storico</h2>' +
         '<ul class="guide-list">' +
           '<li>Nel tab <strong>Storico</strong> trovi due sezioni:</li>' +
           '<li><strong>Ordini</strong>: i tuoi ordini passati. Tocca un ordine per vedere il dettaglio dei prodotti.</li>' +
@@ -70,7 +70,7 @@ PM.components.guide = {
 
     // Suggerimento schermata home
     html +=
-      '<div class="card" style="background:var(--green-light);">' +
+      '<div class="card" style="background:var(--brand-light);">' +
         '<h2>Aggiungi alla schermata Home</h2>' +
         '<ul class="guide-list">' +
           '<li><strong>iPhone (Safari)</strong>: tocca l\'icona di condivisione (quadrato con freccia) → "Aggiungi a schermata Home"</li>' +
@@ -81,8 +81,8 @@ PM.components.guide = {
     // ── SEZIONE ADMIN ──
     if (isAdmin) {
       html +=
-        '<div style="margin-top:24px;padding-top:24px;border-top:3px solid var(--green);">' +
-          '<h1 class="mb-16" style="color:var(--green);">Guida Amministratore</h1>' +
+        '<div style="margin-top:24px;padding-top:24px;border-top:2px solid var(--border-solid);">' +
+          '<h1 class="mb-16" style="color:var(--brand-deep);">Guida Amministratore</h1>' +
         '</div>';
 
       html +=
@@ -97,7 +97,10 @@ PM.components.guide = {
             '<div class="guide-step">' +
               '<div class="guide-num">2</div>' +
               '<div><strong>Carica i prodotti</strong><br>' +
-                '<span class="text-muted text-sm">Admin → Prodotti. Puoi <strong>duplicare</strong> i prodotti dal ciclo precedente (il modo più veloce) oppure incollarli come testo:<br><code>Nome;Varietà;Formato;Prezzo</code></span></div>' +
+                '<span class="text-muted text-sm">Admin → Prodotti. Hai tre opzioni:<br>' +
+                '<strong>a) File Excel</strong> (consigliato): scarica il template, compilalo, e caricalo.<br>' +
+                '<strong>b) Duplica</strong> dal ciclo precedente (il più veloce se i prodotti non cambiano).<br>' +
+                '<strong>c) Testo</strong>: incolla righe con formato <code>Nome;Varietà;Formato;Prezzo</code></span></div>' +
             '</div>' +
             '<div class="guide-step">' +
               '<div class="guide-num">3</div>' +
@@ -144,6 +147,18 @@ PM.components.guide = {
           '<ul class="guide-list">' +
             '<li>Come admin puoi anche ordinare! Usa il tab <strong>Ordine</strong> (icona carrello) come un socio normale.</li>' +
             '<li>Il pannello Admin è un tab separato che non interferisce con il tuo ordine.</li>' +
+          '</ul>' +
+        '</div>';
+
+      html +=
+        '<div class="card">' +
+          '<h2>Caricamento prodotti da Excel</h2>' +
+          '<ul class="guide-list">' +
+            '<li>In Admin → Prodotti, clicca <strong>"Scarica template Excel"</strong> per ottenere il file modello.</li>' +
+            '<li>Apri il template in Excel o Google Sheets e compila una riga per prodotto.</li>' +
+            '<li>Colonne: <strong>Nome</strong>, Varietà, Formato, <strong>Prezzo</strong>, Fornitore, Note. Solo Nome e Prezzo sono obbligatori.</li>' +
+            '<li>Salva il file e caricalo con <strong>"Carica prodotti da file"</strong>.</li>' +
+            '<li>Sono accettati file .xlsx, .xls e .csv.</li>' +
           '</ul>' +
         '</div>';
 

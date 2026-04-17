@@ -34,6 +34,12 @@ function adminCreateCycle(payload) {
   var existing = getOpenCycle_();
   assert_(!existing, 'Esiste già un ciclo aperto: "' + (existing && existing.title) + '". Chiudilo prima di crearne uno nuovo.');
 
+  var accessLevel = payload.access_level || APP.ACCESS_LEVEL.ATTIVI;
+  assert_(
+    accessLevel === APP.ACCESS_LEVEL.ATTIVI || accessLevel === APP.ACCESS_LEVEL.ALL,
+    'Valore access_level non valido.'
+  );
+
   var now = nowIso_();
   var cycle = {
     cycle_id:       generateId_('cyc'),
@@ -42,6 +48,7 @@ function adminCreateCycle(payload) {
     order_open_at:  payload.order_open_at || now,
     order_close_at: payload.order_close_at,
     status:         APP.CYCLE_STATUS.OPEN,
+    access_level:   accessLevel,
     notes:          payload.notes || '',
     created_by:     admin.email,
     created_at:     now,

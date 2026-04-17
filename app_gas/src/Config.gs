@@ -15,7 +15,7 @@ var APP = {
 
   HEADERS: {
     members:        ['member_id','full_name','email','role','active','created_at','updated_at'],
-    order_cycles:   ['cycle_id','title','pickup_date','order_open_at','order_close_at','status','notes','created_by','created_at','closed_at'],
+    order_cycles:   ['cycle_id','title','pickup_date','order_open_at','order_close_at','status','access_level','notes','created_by','created_at','closed_at'],
     products:       ['product_id','cycle_id','name','variant','format','unit_price','supplier','notes','sort_order','active'],
     orders:         ['order_line_id','cycle_id','member_id','product_id','quantity','unit_price_snapshot','line_total','updated_at'],
     ledger_entries: ['entry_id','member_id','entry_date','type','amount','cycle_id','note','created_by','created_at'],
@@ -23,8 +23,15 @@ var APP = {
   },
 
   ROLE: {
-    MEMBER: 'member',
-    ADMIN:  'admin'
+    ADMIN:  'admin',
+    ATTIVO: 'attivo',
+    SOCIO:  'socio',
+    MEMBER: 'member'   // Legacy pre-v2 — equivale a ATTIVO
+  },
+
+  ACCESS_LEVEL: {
+    ATTIVI: 'attivi',  // Solo admin + attivi
+    ALL:    'all'      // Admin + attivi + soci
   },
 
   CYCLE_STATUS: {

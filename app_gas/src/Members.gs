@@ -21,13 +21,10 @@ function adminUpsertMember(payload) {
   assert_(payload.full_name, 'Nome obbligatorio.');
   assert_(payload.email, 'Email obbligatoria.');
   var email = normalizeEmail_(payload.email);
-  var role = payload.role || APP.ROLE.MEMBER;
-  assert_(role === APP.ROLE.MEMBER || role === APP.ROLE.ADMIN, 'Ruolo non valido.');
 
   var members = readSheetObjects_(APP.SHEETS.MEMBERS);
   var existing = null;
   var existingIndex = -1;
-
   for (var i = 0; i < members.length; i++) {
     if (normalizeEmail_(members[i].email) === email) {
       existing = members[i];
@@ -35,6 +32,11 @@ function adminUpsertMember(payload) {
       break;
     }
   }
+
+  // Se il ruolo non è passato, mantieni quello esistente (non resettare accidentalmente)
+  var validRoles = [APP.ROLE.ADMIN, APP.ROLE.ATTIVO, APP.ROLE.SOCIO, APP.ROLE.MEMBER];
+  var role = payload.role || (existing ? existing.role : APP.ROLE.ATTIVO);
+  assert_(validRoles.indexOf(role) !== -1, 'Ruolo non valido: ' + role);
 
   var now = nowIso_();
 

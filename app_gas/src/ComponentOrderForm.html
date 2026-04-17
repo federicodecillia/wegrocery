@@ -139,7 +139,7 @@ PM.components.orderForm = {
     var afterBalance = Math.round((of.balance - total) * 100) / 100;
     var balEl = document.getElementById('footer-balance');
     balEl.textContent = 'Saldo dopo ordine: ' + PM.formatCurrency(afterBalance);
-    balEl.style.color = afterBalance < 0 ? 'var(--red)' : 'var(--gray-500)';
+    balEl.style.color = afterBalance < 0 ? 'var(--danger)' : 'var(--text-3)';
   },
 
   save: function() {
