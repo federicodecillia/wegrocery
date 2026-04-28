@@ -1,8 +1,14 @@
 import { redirect } from "next/navigation";
 import { auth, signIn } from "@/auth";
 
-export default async function LoginPage() {
+type LoginPageProps = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export default async function LoginPage({ searchParams }: LoginPageProps) {
   const session = await auth();
+  const params = await searchParams;
+  const showAccessDenied = params.error === "AccessDenied";
 
   if (session?.user?.email) {
     redirect("/");
@@ -15,6 +21,11 @@ export default async function LoginPage() {
         <p className="mt-2 text-sm text-[var(--gray)]">
           Accedi con Google per continuare.
         </p>
+        {showAccessDenied ? (
+          <p className="mt-3 rounded-md border border-red-300 bg-red-50 p-2 text-sm text-red-700">
+            Accesso negato: la tua email non risulta tra i soci attivi.
+          </p>
+        ) : null}
         <form
           className="mt-6"
           action={async () => {

@@ -97,3 +97,33 @@
 **Note tecniche:**
 - ...
 ```
+
+---
+
+## 2026-04-28 — Fase 0 chiusa + Fase 1 (schema/migrazione) completata
+
+**Autore**: Federico + Codex  
+**Tempo**: ~3h  
+**Fase corrente**: transizione a Fase 2
+
+**Cosa fatto:**
+- Progetto Vercel creato con root `app_gas_v3/`
+- Auth Google configurata su Vercel (`AUTH_SECRET`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`)
+- Deploy v3 validato con login Google end-to-end
+- Neon configurato e `DATABASE_URL` impostata su Vercel
+- Schema Drizzle completato con 7 tabelle target:
+  - `members`, `suppliers`, `order_cycles`, `products`, `orders`, `ledger_entries`, `audit_log`
+- `db:push` eseguito con successo su Neon
+- Endpoint v2 `exportAll` creato e deployato su Apps Script web app
+- Script migrazione `scripts/migrate-from-v2.mjs` creato ed eseguito con successo
+- Import dati completato su Neon con conteggi coerenti:
+  - `members=30`, `suppliers=18`, `order_cycles=20`, `products=434`, `orders=569`, `ledger_entries=49`, `audit_log=57`
+
+**Cosa resta (next):**
+- [ ] Fase 2.1 — bloccare login ai soli membri presenti/attivi in `members`
+- [ ] Fase 2.2 — middleware auth/admin routing
+- [ ] Fase 2.3+ — shell app (header + bottom nav) e componenti base
+
+**Note tecniche:**
+- Script migrazione supporta input da file (`V2_EXPORT_FILE`) o URL (`V2_EXPORT_URL`)
+- `catalog_products` esportata da v2 ma non ancora modellata/importata in v3

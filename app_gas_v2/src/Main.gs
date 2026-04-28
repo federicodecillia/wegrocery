@@ -2,13 +2,46 @@
    Main.gs — Entry point & API dispatcher
    ─────────────────────────────────────────── */
 
-function doGet() {
+function doGet(e) {
+  if (e && e.parameter && e.parameter.action === 'exportAll') {
+    return exportAllAsJson_(e.parameter);
+  }
+
   return HtmlService
     .createTemplateFromFile('Index')
     .evaluate()
     .setTitle('Porta Moneta GAS')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
     .addMetaTag('viewport', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no');
+}
+
+function exportAllAsJson_(params) {
+  var admin = requireAdmin_({});
+
+  var payload = {
+    exported_at: nowIso_(),
+    exported_by: admin.email,
+    tables: {
+      members: readSheetObjects_(APP.SHEETS.MEMBERS),
+      suppliers: readSheetObjects_(APP.SHEETS.SUPPLIERS),
+      catalog_products: readSheetObjects_(APP.SHEETS.CATALOG_PRODUCTS),
+      order_cycles: readSheetObjects_(APP.SHEETS.ORDER_CYCLES),
+      products: readSheetObjects_(APP.SHEETS.PRODUCTS),
+      orders: readSheetObjects_(APP.SHEETS.ORDERS),
+      ledger_entries: readSheetObjects_(APP.SHEETS.LEDGER_ENTRIES),
+      audit_log: readSheetObjects_(APP.SHEETS.AUDIT_LOG)
+    }
+  };
+
+  if (params && params.pretty === '1') {
+    return ContentService
+      .createTextOutput(JSON.stringify(payload, null, 2))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  return ContentService
+    .createTextOutput(JSON.stringify(payload))
+    .setMimeType(ContentService.MimeType.JSON);
 }
 
 function callApi(action, payload) {
