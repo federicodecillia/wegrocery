@@ -114,6 +114,7 @@ type LedgerEntry = {
   amount: string;
   note: string | null;
   entryDate: Date | null;
+  cycleTitle?: string | null;
 };
 
 export function LedgerEntryRow({ entry }: { entry: LedgerEntry }) {
@@ -203,7 +204,16 @@ export function LedgerEntryRow({ entry }: { entry: LedgerEntry }) {
         >
           {isTopup ? "ricarica" : isCharge ? "addebito" : entry.type}
         </span>
-        <span className="text-[12px] text-pm-gray">{entry.note ?? "—"}</span>
+        <span className="text-[12px] text-pm-gray">
+          {entry.cycleTitle ? (
+            <span className="font-medium text-pm-near-black">{entry.cycleTitle}</span>
+          ) : (
+            entry.note ?? "—"
+          )}
+          {entry.cycleTitle && entry.note && entry.note !== "Addebito ordine" && (
+            <span className="ml-1 text-pm-gray-light">· {entry.note}</span>
+          )}
+        </span>
       </div>
       <div className="flex items-center gap-2">
         <span

@@ -286,8 +286,22 @@ export async function getAdminCycleProducts(cycleId: string) {
 export async function getAdminMemberLedger(memberId: string, limit = 100) {
   const db = getDb();
   return db
-    .select()
+    .select({
+      entryId: ledgerEntries.entryId,
+      memberId: ledgerEntries.memberId,
+      entryDate: ledgerEntries.entryDate,
+      type: ledgerEntries.type,
+      amount: ledgerEntries.amount,
+      cycleId: ledgerEntries.cycleId,
+      note: ledgerEntries.note,
+      createdBy: ledgerEntries.createdBy,
+      createdAt: ledgerEntries.createdAt,
+      updatedAt: ledgerEntries.updatedAt,
+      updatedBy: ledgerEntries.updatedBy,
+      cycleTitle: orderCycles.title,
+    })
     .from(ledgerEntries)
+    .leftJoin(orderCycles, eq(ledgerEntries.cycleId, orderCycles.cycleId))
     .where(eq(ledgerEntries.memberId, memberId))
     .orderBy(desc(ledgerEntries.entryDate), desc(ledgerEntries.createdAt))
     .limit(limit);

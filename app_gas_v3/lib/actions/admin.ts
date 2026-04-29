@@ -316,6 +316,30 @@ export async function adminDeleteLedgerEntry(entryId: string) {
   revalidatePath("/admin");
 }
 
+export async function adminDeleteMember(memberId: string) {
+  const admin = await requireAdmin();
+  const db = getDb();
+
+  const [orderCount] = await db
+    .select({ n: sql<string>`count(*)` })
+    .from(orders)
+    .where(eq(orders.memberId, memberId));
+  const [ledgerCount] = await db
+    .select({ n: sql<string>`count(*)` })
+    .from(ledgerEntries)
+    .where(eq(ledgerEntries.memberId, memberId));
+
+  if (parseInt(orderCount?.n ?? "0") > 0 || parseInt(ledgerCount?.n ?? "0") > 0) {
+    throw new Error(
+      "Non è possibile eliminare un socio con ordini o movimenti. Disattivalo invece.",
+    );
+  }
+
+  await db.delete(members).where(eq(members.memberId, memberId));
+  await writeAudit(db, admin.email, "delete_member", "member", memberId);
+  revalidatePath("/admin");
+}
+
 // ── Soci ──────────────────────────────────────────────────────────────────────
 
 export type UpsertMemberInput = {

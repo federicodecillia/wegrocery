@@ -2,7 +2,8 @@
 
 import { useState, useTransition } from "react";
 import { toast } from "@/components/ui/toast";
-import { adminUpsertMember, type UpsertMemberInput } from "@/lib/actions/admin";
+import { adminDeleteMember, adminUpsertMember, type UpsertMemberInput } from "@/lib/actions/admin";
+import { getRoleLabel } from "@/lib/utils";
 
 type Member = {
   memberId: string;
@@ -45,11 +46,7 @@ export function SociForm({ member, onClose }: { member?: Member; onClose?: () =>
           {isEdit ? `Modifica: ${member.fullName}` : "Aggiungi socio"}
         </p>
         {isEdit && onClose && (
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-[11px] text-pm-gray"
-          >
+          <button type="button" onClick={onClose} className="text-[11px] text-pm-gray">
             ✕ Annulla
           </button>
         )}
@@ -89,8 +86,8 @@ export function SociForm({ member, onClose }: { member?: Member; onClose?: () =>
               className="w-full rounded-lg border border-pm-border px-3 py-2 text-[13px] text-pm-near-black focus:outline-none focus:ring-2 focus:ring-pm-orange/30"
             >
               <option value="admin">Admin</option>
-              <option value="attivo">Attivo</option>
-              <option value="socio">Socio</option>
+              <option value="attivo">Socio</option>
+              <option value="socio">Utente</option>
             </select>
           </div>
           <div>
@@ -113,26 +110,54 @@ export function SociForm({ member, onClose }: { member?: Member; onClose?: () =>
         disabled={isPending}
         className="mt-4 w-full rounded-xl bg-pm-orange py-2 text-[13px] font-bold text-white disabled:opacity-60"
       >
-        {isPending ? "Salvataggio…" : isEdit ? "Aggiorna socio" : "Aggiungi socio"}
+        {isPending ? "Salvataggio…" : isEdit ? "Aggiorna" : "Aggiungi socio"}
       </button>
     </form>
   );
 }
 
-// ── Member list with inline edit ──────────────────────────────────────────────
+// ── Member list ───────────────────────────────────────────────────────────────
 
 export function SociList({ members }: { members: Member[] }) {
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [filter, setFilter] = useState("");
+  const [deletingId, startDeleteTransition] = useTransition();
 
-  const attivi = members.filter((m) => m.role !== "socio" || m.active);
-  const soci = members.filter((m) => m.role === "socio");
+  const query = filter.toLowerCase().trim();
+  const visible = query
+    ? members.filter(
+        (m) =>
+          m.fullName.toLowerCase().includes(query) || m.email.toLowerCase().includes(query),
+      )
+    : members;
 
-  function renderGroup(label: string, list: Member[]) {
+  const admins = visible.filter((m) => m.role === "admin");
+  const soci = visible.filter((m) => m.role === "attivo");
+  const utenti = visible.filter((m) => m.role === "socio");
+
+  function handleDelete(m: Member) {
+    if (
+      !window.confirm(
+        `Eliminare "${m.fullName}"?\n\nOperazione irreversibile. Se ha ordini o movimenti verrà mostrato un errore.`,
+      )
+    )
+      return;
+    startDeleteTransition(async () => {
+      try {
+        await adminDeleteMember(m.memberId);
+        toast.success(`${m.fullName} eliminato`);
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Errore");
+      }
+    });
+  }
+
+  function renderGroup(label: string, list: Member[], roleColor: string) {
     if (list.length === 0) return null;
     return (
       <div className="mb-4">
         <p className="mb-1 px-1 font-mono text-[10px] uppercase tracking-wider text-pm-gray-light">
-          {label}
+          {label} ({list.length})
         </p>
         <div className="divide-y divide-pm-border rounded-xl border border-pm-border bg-white shadow-sm">
           {list.map((m) =>
@@ -154,22 +179,21 @@ export function SociList({ members }: { members: Member[] }) {
                   <div className="font-mono text-[10px] text-pm-gray-light">{m.email}</div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                      m.role === "admin"
-                        ? "bg-pm-orange-light text-pm-orange"
-                        : m.role === "attivo"
-                          ? "bg-pm-teal-light text-pm-teal"
-                          : "bg-black/[0.05] text-pm-gray"
-                    }`}
-                  >
-                    {m.role}
+                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${roleColor}`}>
+                    {getRoleLabel(m.role)}
                   </span>
                   <button
                     onClick={() => setEditingId(m.memberId)}
                     className="rounded-full border border-pm-border px-2.5 py-1 text-[10px] font-semibold text-pm-gray"
                   >
                     Modifica
+                  </button>
+                  <button
+                    onClick={() => handleDelete(m)}
+                    disabled={deletingId}
+                    className="rounded-full border border-pm-red/30 px-2.5 py-1 text-[10px] font-semibold text-pm-red disabled:opacity-40"
+                  >
+                    ✕
                   </button>
                 </div>
               </div>
@@ -182,8 +206,21 @@ export function SociList({ members }: { members: Member[] }) {
 
   return (
     <div>
-      {renderGroup(`Attivi / Admin (${attivi.length})`, attivi)}
-      {renderGroup(`Soci (${soci.length})`, soci)}
+      <div className="mb-4">
+        <input
+          type="search"
+          placeholder="Cerca per nome o email…"
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          className="w-full rounded-xl border border-pm-border bg-white px-4 py-2.5 text-[13px] text-pm-near-black placeholder:text-pm-gray-light focus:outline-none focus:ring-2 focus:ring-pm-orange/30"
+        />
+      </div>
+      {renderGroup("Admin", admins, "bg-pm-orange-light text-pm-orange")}
+      {renderGroup("Soci", soci, "bg-pm-teal-light text-pm-teal")}
+      {renderGroup("Utenti", utenti, "bg-black/[0.05] text-pm-gray")}
+      {visible.length === 0 && (
+        <div className="py-6 text-center text-[12px] text-pm-gray">Nessun risultato</div>
+      )}
     </div>
   );
 }

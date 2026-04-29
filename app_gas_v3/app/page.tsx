@@ -9,7 +9,7 @@ import {
   getMemberOrderLines,
   getOpenCycle,
 } from "@/lib/db/queries";
-import { formatDateShort, formatEur, formatEurSigned } from "@/lib/utils";
+import { formatDateShort, formatEur, formatEurSigned, getProductEmoji } from "@/lib/utils";
 
 export default async function HomePage() {
   const session = await requireUserSession();
@@ -154,13 +154,18 @@ export default async function HomePage() {
                 key={line.orderLineId}
                 className="flex items-center justify-between border-b border-pm-border px-4 py-[11px] last:border-none"
               >
-                <div>
-                  <div className="text-[14px] font-medium text-pm-near-black">
-                    {p?.name ?? "?"}
+                <div className="flex items-start gap-2">
+                  <span className="mt-[1px] shrink-0 text-[18px] leading-none">
+                    {getProductEmoji(p?.name ?? "")}
+                  </span>
+                  <div>
+                    <div className="text-[14px] font-medium text-pm-near-black">
+                      {p?.name ?? "?"}
+                    </div>
+                    {meta && (
+                      <div className="mt-[1px] font-mono text-[11px] text-pm-gray">{meta}</div>
+                    )}
                   </div>
-                  {meta && (
-                    <div className="mt-[1px] font-mono text-[11px] text-pm-gray">{meta}</div>
-                  )}
                 </div>
                 <div className="font-mono text-[13px] font-semibold text-pm-near-black">
                   ×{line.quantity} · {formatEur(parseFloat(line.lineTotal))}

@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { toast } from "@/components/ui/toast";
-import { formatEur, formatDateTime } from "@/lib/utils";
+import { formatEur, formatDateTime, getProductEmoji } from "@/lib/utils";
 import type { SaveOrderLine } from "@/lib/actions/order";
 
 type Product = {
@@ -142,13 +142,18 @@ export function OrderForm({
                 key={p.productId}
                 className="flex items-center justify-between border-b border-pm-border py-3 last:border-none"
               >
-                <div className="mr-3 min-w-0 flex-1">
-                  <div className="text-[14px] font-medium text-pm-near-black">{p.name}</div>
-                  <div className="mt-[2px] flex items-center gap-2">
-                    {meta && <span className="font-mono text-[11px] text-pm-gray">{meta}</span>}
-                    <span className="font-mono text-[11px] font-semibold text-pm-orange">
-                      {formatEur(parseFloat(p.unitPrice))}
-                    </span>
+                <div className="mr-3 flex min-w-0 flex-1 items-start gap-2">
+                  <span className="mt-[1px] shrink-0 text-[22px] leading-none">
+                    {getProductEmoji(p.name)}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[14px] font-medium text-pm-near-black">{p.name}</div>
+                    <div className="mt-[2px] flex items-center gap-2">
+                      {meta && <span className="font-mono text-[11px] text-pm-gray">{meta}</span>}
+                      <span className="font-mono text-[11px] font-semibold text-pm-orange">
+                        {formatEur(parseFloat(p.unitPrice))}
+                      </span>
+                    </div>
                   </div>
                 </div>
                 {qty === 0 ? (
