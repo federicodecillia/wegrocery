@@ -6,6 +6,7 @@ import {
   orderCycles,
   orders,
   products,
+  suppliers,
 } from "./schema";
 
 export async function getMemberByEmail(email: string) {
@@ -117,4 +118,177 @@ export async function getMemberStorico(memberId: string): Promise<CycleHistoryEn
     });
   }
   return Array.from(cycleMap.values());
+}
+
+// ── Admin queries ─────────────────────────────────────────────────────────────
+
+export async function getAllCycles(limit = 30) {
+  const db = getDb();
+  return db
+    .select({
+      cycleId: orderCycles.cycleId,
+      title: orderCycles.title,
+      status: orderCycles.status,
+      accessLevel: orderCycles.accessLevel,
+      pickupDate: orderCycles.pickupDate,
+      orderCloseAt: orderCycles.orderCloseAt,
+      orderOpenAt: orderCycles.orderOpenAt,
+      createdAt: orderCycles.createdAt,
+      closedAt: orderCycles.closedAt,
+      supplierId: orderCycles.supplierId,
+      supplierName: suppliers.name,
+    })
+    .from(orderCycles)
+    .leftJoin(suppliers, eq(orderCycles.supplierId, suppliers.supplierId))
+    .orderBy(desc(orderCycles.createdAt))
+    .limit(limit);
+}
+
+export async function getOpenCycleStats(cycleId: string) {
+  const db = getDb();
+  const [result] = await db
+    .select({
+      orderCount: sql<string>`count(distinct ${orders.memberId})`,
+      grandTotal: sql<string>`coalesce(sum(${orders.lineTotal}), '0')`,
+    })
+    .from(orders)
+    .where(eq(orders.cycleId, cycleId));
+  return {
+    orderCount: parseInt(result?.orderCount ?? "0"),
+    grandTotal: parseFloat(result?.grandTotal ?? "0"),
+  };
+}
+
+export async function getAllSuppliers() {
+  const db = getDb();
+  return db
+    .select()
+    .from(suppliers)
+    .where(eq(suppliers.active, true))
+    .orderBy(asc(suppliers.name));
+}
+
+export async function getAllMembers() {
+  const db = getDb();
+  return db.select().from(members).orderBy(asc(members.fullName));
+}
+
+export type MemberWithBalance = {
+  memberId: string;
+  fullName: string;
+  email: string;
+  role: string;
+  active: boolean;
+  balance: number;
+};
+
+export async function getAllMembersWithBalances(): Promise<MemberWithBalance[]> {
+  const db = getDb();
+  const [memberList, balances] = await Promise.all([
+    db.select().from(members).orderBy(asc(members.fullName)),
+    db
+      .select({
+        memberId: ledgerEntries.memberId,
+        total: sql<string>`coalesce(sum(${ledgerEntries.amount}), '0')`,
+      })
+      .from(ledgerEntries)
+      .groupBy(ledgerEntries.memberId),
+  ]);
+  const balanceMap = new Map(balances.map((b) => [b.memberId, parseFloat(b.total)]));
+  return memberList.map((m) => ({
+    memberId: m.memberId,
+    fullName: m.fullName,
+    email: m.email,
+    role: m.role,
+    active: m.active,
+    balance: balanceMap.get(m.memberId) ?? 0,
+  }));
+}
+
+export type CycleSummary = {
+  byProduct: {
+    productId: string;
+    name: string;
+    variant: string | null;
+    totalQty: number;
+    totalAmount: number;
+  }[];
+  byMember: {
+    memberId: string;
+    fullName: string;
+    total: number;
+    lines: { productName: string; variant: string | null; quantity: number; lineTotal: number }[];
+  }[];
+  grandTotal: number;
+  orderCount: number;
+};
+
+export async function getAdminCycleSummary(cycleId: string): Promise<CycleSummary> {
+  const db = getDb();
+  const rows = await db
+    .select({
+      memberId: orders.memberId,
+      memberName: members.fullName,
+      productId: products.productId,
+      productName: products.name,
+      variant: products.variant,
+      quantity: orders.quantity,
+      lineTotal: orders.lineTotal,
+    })
+    .from(orders)
+    .innerJoin(members, eq(orders.memberId, members.memberId))
+    .innerJoin(products, eq(orders.productId, products.productId))
+    .where(eq(orders.cycleId, cycleId))
+    .orderBy(asc(products.sortOrder), asc(members.fullName));
+
+  const productMap = new Map<string, CycleSummary["byProduct"][number]>();
+  const memberMap = new Map<string, CycleSummary["byMember"][number]>();
+
+  for (const row of rows) {
+    if (!productMap.has(row.productId)) {
+      productMap.set(row.productId, {
+        productId: row.productId,
+        name: row.productName,
+        variant: row.variant,
+        totalQty: 0,
+        totalAmount: 0,
+      });
+    }
+    productMap.get(row.productId)!.totalQty += row.quantity;
+    productMap.get(row.productId)!.totalAmount += parseFloat(row.lineTotal);
+
+    if (!memberMap.has(row.memberId)) {
+      memberMap.set(row.memberId, { memberId: row.memberId, fullName: row.memberName, total: 0, lines: [] });
+    }
+    const m = memberMap.get(row.memberId)!;
+    m.total += parseFloat(row.lineTotal);
+    m.lines.push({ productName: row.productName, variant: row.variant, quantity: row.quantity, lineTotal: parseFloat(row.lineTotal) });
+  }
+
+  const byMember = Array.from(memberMap.values()).sort((a, b) => a.fullName.localeCompare(b.fullName));
+  return {
+    byProduct: Array.from(productMap.values()),
+    byMember,
+    grandTotal: byMember.reduce((s, m) => s + m.total, 0),
+    orderCount: byMember.length,
+  };
+}
+
+export async function getAdminCycleProducts(cycleId: string) {
+  const db = getDb();
+  return db
+    .select()
+    .from(products)
+    .where(eq(products.cycleId, cycleId))
+    .orderBy(asc(products.sortOrder), asc(products.name));
+}
+
+export async function getAdminMemberLedger(memberId: string, limit = 100) {
+  const db = getDb();
+  return db
+    .select()
+    .from(ledgerEntries)
+    .where(eq(ledgerEntries.memberId, memberId))
+    .orderBy(desc(ledgerEntries.entryDate), desc(ledgerEntries.createdAt))
+    .limit(limit);
 }

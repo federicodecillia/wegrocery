@@ -250,3 +250,84 @@
 **Note tecniche:**
 - Le animazioni del Dialog usano classi `data-[state=open]:animate-in ...` che richiederebbero `tailwindcss-animate`; non installato, quindi il dialog appare/scompare senza fade/zoom — sufficiente per ora, polish in Fase 5.
 - Server action `signOut` passata come prop dal Server Component (`AppShell`) al Client Component (`LogoutButton`): pattern Next.js 15 standard, build OK.
+
+---
+
+## 2026-04-28 — Fase 2.6 completata (logo PM come asset)
+
+**Autore**: Federico + Claude
+**Tempo**: ~10 min
+**Fase corrente**: Fase 2
+
+**Cosa fatto:**
+- Estratto logo PM da base64 in `AppCore.html` v2 → `public/logo.png` (12KB PNG)
+- `components/app-shell.tsx` usa `next/image` al posto del placeholder testo
+
+**Validazione**: `npm run build` ✅ (10/10 routes, 0 warning)
+
+---
+
+## 2026-04-28 — Fase 3 completata (viste membro)
+
+**Autore**: Federico + Claude
+**Tempo**: ~2h
+**Fase corrente**: Fase 4
+
+**Cosa fatto:**
+- `lib/db/queries.ts` — query Drizzle per balance, ciclo aperto, prodotti, ordini, ledger, storico
+- `lib/actions/order.ts` — Server Action `saveOrder` (delete+insert, audit log, balance warning)
+- `auth.ts` + `lib/auth/session.ts` — aggiunto `memberId`+`fullName` al JWT/session
+- `lib/utils.ts` — helper `formatEur`, `formatEurSigned`, `formatDate`, `formatDateTime`
+- **Home** (`app/page.tsx`): saldo hero card (orange/red), cycle card con `CycleCountdown` (timer live), order summary card, ultimi 4 movimenti
+- **Ordine** (`app/ordine/page.tsx` + `order-form.tsx`): lista prodotti per categoria con pill stepper, sticky footer (fixed bottom-[82px]), `saveOrder` action con warning balance
+- **Storico** (`app/storico/page.tsx` + `storico-tabs.tsx`): tab segmentato Ordini/Movimenti, ordini espandibili, balance summary, ledger con icone topup/charge
+- **Guida** (`app/guida/page.tsx` + `faq-accordion.tsx`): how-to steps teal, FAQ accordion Client Component, contact card
+
+**Validazione**: `npm run lint` + `npm run build` ✅ (14 files, 0 errori, 0 warning)
+**Commit**: `29e714d [v3] feat: phase 3 member views`
+
+**Cosa resta (next):**
+- [ ] Smoke test cloud su Vercel (login → Home → ordine → storico → guida)
+- [x] Fase 4 — Admin panel (5 tab: Ciclo, Prodotti, Ordini, Cassa, Soci) ← vedi entry successiva
+
+**Note tecniche:**
+- `cycleRestricted`: ciclo `access_level=attivi` + ruolo `socio` → stato "Nessun ordine aperto"
+- Sticky footer ordine usa `fixed bottom-[82px]` (sopra BottomNav sticky) con spacer `h-36`
+- `saveOrder` fa delete+insert (no transazione — scala GAS OK); audit_log sempre scritto
+- Date serializzate come ISO string per passaggio Server→Client Component
+- `memberId`+`fullName` ora nel JWT: evita query extra per ogni page load
+
+---
+
+## 2026-04-29 — Fase 4 completata (admin panel)
+
+**Autore**: Federico + Claude
+**Tempo**: ~2h
+**Fase corrente**: Fase 5
+
+**Cosa fatto:**
+- `lib/db/queries.ts` — query admin: `getAllCycles`, `getOpenCycleStats`, `getAllSuppliers`, `getAllMembers`, `getAllMembersWithBalances`, `getAdminCycleSummary`, `getAdminCycleProducts`, `getAdminMemberLedger`
+- `lib/actions/admin.ts` — Server Actions con `requireAdmin()` e audit log:
+  - `adminCreateCycle`, `adminCloseCycle` (con generazione addebiti idempotente), `adminUpdateCycle`
+  - `adminLoadProducts` (parser testo semicolon-delimited con validazione), `adminDuplicateProducts`
+  - `adminRecordTopup`, `adminUpdateLedgerEntry`, `adminDeleteLedgerEntry`
+  - `adminUpsertMember`
+- **Tab Ciclo** (`tab-ciclo.tsx` + `ciclo-forms.tsx`): ciclo aperto con stats + badge teal, `CreateCycleForm` (form collapsibile), `CloseCycleButton` (confirm nativo + genera addebiti), lista ultimi cicli
+- **Tab Prodotti** (`tab-prodotti.tsx` + `prodotti-forms.tsx`): `LoadProductsForm` (textarea + parser), `DuplicateProductsForm` (selettore ciclo + conferma), lista prodotti correnti
+- **Tab Ordini** (`tab-ordini.tsx` + `ordini-client.tsx`): selettore ciclo via searchParams, stats 2-col, tabella per-prodotto, `OrdiniByMember` (righe espandibili), `CsvExportButton` (genera file CSV lato client)
+- **Tab Cassa** (`tab-cassa.tsx` + `cassa-forms.tsx`): `TopupForm`, tabella saldi con link movimenti (`?tab=cassa&member=id`), `LedgerEntryRow` (edit inline + delete)
+- **Tab Soci** (`tab-soci.tsx` + `soci-form.tsx`): `SociForm` (add/edit), `SociList` (gruppi attivi/soci, edit inline)
+- `app/admin/page.tsx` — routing searchParams (`tab`, `cycle`, `member`), `<Suspense>` per ogni tab con skeleton, `<AdminNav>` (tab segmentata client-side)
+
+**Validazione**: `npm run build` ✅ (10 routes, 0 errori, 0 warning)
+
+**Cosa resta (next):**
+- [ ] Smoke test cloud su Vercel (login admin → tutti e 5 i tab, crea ciclo, carica prodotti, registra topup, aggiorna socio)
+- [ ] Fase 5 — PWA manifest + polish (skeleton, error boundaries, animazioni, Lighthouse)
+
+**Note tecniche:**
+- `adminCloseCycle` è idempotente: controlla se esistono già `order_charge` prima di inserirne di nuovi
+- `genId(prefix)` → `prefix_` + 16 chars UUID (compatibile con formato v2)
+- Tab navigation usa `?tab=XXX` searchParams: ogni tab è un RSC separato con proprio fetch
+- `OrdiniByMember`: stato espansione locale, no URL params
+- CSV export: generazione client-side da dati già fetchati (no round-trip aggiuntivo)
