@@ -12,6 +12,7 @@ export const members = pgTable("members", {
   memberId: text("member_id").primaryKey(),
   fullName: text("full_name").notNull(),
   email: text("email").notNull().unique(),
+  aliasEmail: text("alias_email"),
   role: text("role").notNull(),
   active: boolean("active").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull(),

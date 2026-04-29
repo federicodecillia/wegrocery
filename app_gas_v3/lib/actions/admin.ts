@@ -316,28 +316,32 @@ export async function adminDeleteLedgerEntry(entryId: string) {
   revalidatePath("/admin");
 }
 
-export async function adminDeleteMember(memberId: string) {
-  const admin = await requireAdmin();
-  const db = getDb();
+export async function adminDeleteMember(memberId: string): Promise<{ error?: string }> {
+  try {
+    const admin = await requireAdmin();
+    const db = getDb();
 
-  const [orderCount] = await db
-    .select({ n: sql<string>`count(*)` })
-    .from(orders)
-    .where(eq(orders.memberId, memberId));
-  const [ledgerCount] = await db
-    .select({ n: sql<string>`count(*)` })
-    .from(ledgerEntries)
-    .where(eq(ledgerEntries.memberId, memberId));
+    const [[orderCount], [ledgerCount]] = await Promise.all([
+      db.select({ n: sql<string>`count(*)` }).from(orders).where(eq(orders.memberId, memberId)),
+      db
+        .select({ n: sql<string>`count(*)` })
+        .from(ledgerEntries)
+        .where(eq(ledgerEntries.memberId, memberId)),
+    ]);
 
-  if (parseInt(orderCount?.n ?? "0") > 0 || parseInt(ledgerCount?.n ?? "0") > 0) {
-    throw new Error(
-      "Non è possibile eliminare un socio con ordini o movimenti. Disattivalo invece.",
-    );
+    if (parseInt(orderCount?.n ?? "0") > 0 || parseInt(ledgerCount?.n ?? "0") > 0) {
+      return {
+        error: "Non è possibile eliminare un socio con ordini o movimenti. Disattivalo invece.",
+      };
+    }
+
+    await db.delete(members).where(eq(members.memberId, memberId));
+    await writeAudit(db, admin.email, "delete_member", "member", memberId);
+    revalidatePath("/admin");
+    return {};
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Errore" };
   }
-
-  await db.delete(members).where(eq(members.memberId, memberId));
-  await writeAudit(db, admin.email, "delete_member", "member", memberId);
-  revalidatePath("/admin");
 }
 
 // ── Soci ──────────────────────────────────────────────────────────────────────
@@ -346,6 +350,7 @@ export type UpsertMemberInput = {
   memberId?: string;
   fullName: string;
   email: string;
+  aliasEmail?: string;
   role: string;
   active: boolean;
 };
@@ -355,6 +360,7 @@ export async function adminUpsertMember(data: UpsertMemberInput) {
   if (!data.fullName?.trim()) throw new Error("Nome obbligatorio");
   if (!data.email?.trim()) throw new Error("Email obbligatoria");
 
+  const aliasEmail = data.aliasEmail?.toLowerCase().trim() || null;
   const db = getDb();
   const now = new Date();
 
@@ -364,6 +370,7 @@ export async function adminUpsertMember(data: UpsertMemberInput) {
       .set({
         fullName: data.fullName.trim(),
         email: data.email.toLowerCase().trim(),
+        aliasEmail,
         role: data.role,
         active: data.active,
         updatedAt: now,
@@ -376,6 +383,7 @@ export async function adminUpsertMember(data: UpsertMemberInput) {
       memberId,
       fullName: data.fullName.trim(),
       email: data.email.toLowerCase().trim(),
+      aliasEmail,
       role: data.role,
       active: data.active,
       createdAt: now,

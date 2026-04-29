@@ -113,7 +113,7 @@ type LedgerEntry = {
   type: string;
   amount: string;
   note: string | null;
-  entryDate: Date | null;
+  entryDate: string | null;
   cycleTitle?: string | null;
 };
 

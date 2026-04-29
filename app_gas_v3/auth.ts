@@ -1,6 +1,6 @@
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
-import { eq } from "drizzle-orm";
+import { eq, or } from "drizzle-orm";
 import { getDb } from "@/lib/db/client";
 import { members } from "@/lib/db/schema";
 
@@ -23,7 +23,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
             active: members.active,
           })
           .from(members)
-          .where(eq(members.email, email))
+          .where(or(eq(members.email, email), eq(members.aliasEmail, email)))
           .limit(1);
 
         return Boolean(member?.active);
@@ -45,7 +45,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
             fullName: members.fullName,
           })
           .from(members)
-          .where(eq(members.email, email))
+          .where(or(eq(members.email, email), eq(members.aliasEmail, email)))
           .limit(1);
 
         token.role = member?.role ?? null;

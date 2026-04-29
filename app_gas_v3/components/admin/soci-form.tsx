@@ -9,6 +9,7 @@ type Member = {
   memberId: string;
   fullName: string;
   email: string;
+  aliasEmail: string | null;
   role: string;
   active: boolean;
 };
@@ -24,6 +25,7 @@ export function SociForm({ member, onClose }: { member?: Member; onClose?: () =>
       memberId: member?.memberId,
       fullName: fd.get("fullName") as string,
       email: fd.get("email") as string,
+      aliasEmail: (fd.get("aliasEmail") as string) || undefined,
       role: fd.get("role") as string,
       active: fd.get("active") === "true",
     };
@@ -72,6 +74,19 @@ export function SociForm({ member, onClose }: { member?: Member; onClose?: () =>
             type="email"
             required
             defaultValue={member?.email}
+            className="w-full rounded-lg border border-pm-border px-3 py-2 text-[13px] text-pm-near-black focus:outline-none focus:ring-2 focus:ring-pm-orange/30"
+          />
+        </div>
+        <div>
+          <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-pm-gray">
+            Email secondaria
+            <span className="ml-1 font-normal normal-case text-pm-gray-light">(alias login)</span>
+          </label>
+          <input
+            name="aliasEmail"
+            type="email"
+            defaultValue={member?.aliasEmail ?? ""}
+            placeholder="es. nome@gmail.com"
             className="w-full rounded-lg border border-pm-border px-3 py-2 text-[13px] text-pm-near-black focus:outline-none focus:ring-2 focus:ring-pm-orange/30"
           />
         </div>
@@ -143,11 +158,11 @@ export function SociList({ members }: { members: Member[] }) {
     )
       return;
     startDeleteTransition(async () => {
-      try {
-        await adminDeleteMember(m.memberId);
+      const result = await adminDeleteMember(m.memberId);
+      if (result?.error) {
+        toast.error(result.error);
+      } else {
         toast.success(`${m.fullName} eliminato`);
-      } catch (err) {
-        toast.error(err instanceof Error ? err.message : "Errore");
       }
     });
   }
@@ -176,7 +191,12 @@ export function SociList({ members }: { members: Member[] }) {
                       </span>
                     )}
                   </div>
-                  <div className="font-mono text-[10px] text-pm-gray-light">{m.email}</div>
+                  <div className="font-mono text-[10px] text-pm-gray-light">
+                    {m.email}
+                    {m.aliasEmail && (
+                      <span className="ml-1 text-pm-teal">· {m.aliasEmail}</span>
+                    )}
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${roleColor}`}>

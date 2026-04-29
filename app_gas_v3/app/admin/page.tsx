@@ -46,7 +46,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Search
       <Suspense key={`${tab}-${cycleId ?? ""}-${memberId ?? ""}`} fallback={<TabSkeleton />}>
         {tab === "ciclo" && <TabCiclo />}
         {tab === "prodotti" && <TabProdotti />}
-        {tab === "ordini" && <TabOrdini cycleId={cycleId} />}
+        {tab === "ordini" && <TabOrdini cycleId={cycleId} memberId={memberId} />}
         {tab === "cassa" && <TabCassa memberId={memberId} />}
         {tab === "soci" && <TabSoci />}
       </Suspense>

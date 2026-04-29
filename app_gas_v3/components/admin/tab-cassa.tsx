@@ -117,7 +117,7 @@ export async function TabCassa({ memberId }: Props) {
                       amount: entry.amount,
                       note: entry.note,
                       entryDate: entry.entryDate,
-                      cycleTitle: entry.cycleTitle,
+                      cycleTitle: entry.cycleTitle ?? null,
                     }}
                   />
                 </div>

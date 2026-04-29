@@ -1,20 +1,112 @@
 import Link from "next/link";
-import { getAllCycles, getAdminCycleSummary, getOpenCycle } from "@/lib/db/queries";
-import { formatEur } from "@/lib/utils";
+import {
+  getAllCycles,
+  getAllMembers,
+  getAdminCycleSummary,
+  getAdminMemberOrders,
+  getOpenCycle,
+} from "@/lib/db/queries";
+import { formatDate, formatEur } from "@/lib/utils";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { CsvExportButton, OrdiniByMember } from "./ordini-client";
 
-type Props = { cycleId?: string };
+type Props = { cycleId?: string; memberId?: string };
 
-export async function TabOrdini({ cycleId }: Props) {
-  const [openCycle, allCycles] = await Promise.all([getOpenCycle(), getAllCycles(20)]);
+export async function TabOrdini({ cycleId, memberId }: Props) {
+  const [openCycle, allCycles, allMembers] = await Promise.all([
+    getOpenCycle(),
+    getAllCycles(20),
+    getAllMembers(),
+  ]);
 
+  // ── Member view ───────────────────────────────────────────────────
+  if (memberId) {
+    const selectedMember = allMembers.find((m) => m.memberId === memberId);
+    const orders = await getAdminMemberOrders(memberId);
+
+    return (
+      <div className="space-y-4">
+        {/* Member selector row */}
+        <MemberSelector allMembers={allMembers} currentMemberId={memberId} />
+
+        {selectedMember && (
+          <div className="rounded-xl border border-pm-border bg-white px-4 py-3 shadow-sm">
+            <div className="text-[13px] font-bold text-pm-near-black">{selectedMember.fullName}</div>
+            <div className="mt-0.5 font-mono text-[10px] text-pm-gray-light">
+              {selectedMember.email} · {orders.length} cicl{orders.length === 1 ? "o" : "i"} ·{" "}
+              {formatEur(orders.reduce((s, o) => s + o.total, 0))} totale
+            </div>
+          </div>
+        )}
+
+        {orders.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-pm-border p-6 text-center text-[13px] text-pm-gray">
+            Nessun ordine registrato.
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {orders.map((cycle) => (
+              <Card key={cycle.cycleId}>
+                <CardHeader className="flex items-center justify-between">
+                  <div>
+                    <div className="text-[13px] font-bold text-pm-near-black">{cycle.cycleTitle}</div>
+                    {cycle.pickupDate && (
+                      <div className="mt-0.5 font-mono text-[10px] text-pm-gray-light">
+                        Ritiro: {formatDate(cycle.pickupDate)}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                        cycle.cycleStatus === "open"
+                          ? "bg-pm-teal-light text-pm-teal"
+                          : "bg-black/[0.05] text-pm-gray"
+                      }`}
+                    >
+                      {cycle.cycleStatus === "open" ? "Aperto" : "Chiuso"}
+                    </span>
+                    <span className="font-mono text-[13px] font-bold text-pm-near-black">
+                      {formatEur(cycle.total)}
+                    </span>
+                  </div>
+                </CardHeader>
+                <div className="divide-y divide-pm-border">
+                  {cycle.lines.map((line, i) => (
+                    <div key={i} className="flex items-center justify-between px-4 py-2.5">
+                      <span className="text-[13px] text-pm-near-black">
+                        {line.productName}
+                        {line.variant && (
+                          <span className="ml-1 text-pm-gray">· {line.variant}</span>
+                        )}
+                        <span className="ml-2 font-mono text-[11px] text-pm-gray-light">
+                          ×{line.quantity}
+                        </span>
+                      </span>
+                      <span className="font-mono text-[12px] text-pm-near-black">
+                        {formatEur(line.lineTotal)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // ── Cycle view (default) ─────────────────────────────────────────
   const selectedId = cycleId ?? openCycle?.cycleId ?? allCycles[0]?.cycleId;
 
   if (!selectedId) {
     return (
-      <div className="rounded-xl border border-dashed border-pm-border p-8 text-center text-[13px] text-pm-gray">
-        Nessun ciclo disponibile.
+      <div className="space-y-4">
+        <MemberSelector allMembers={allMembers} currentMemberId={undefined} />
+        <div className="rounded-xl border border-dashed border-pm-border p-8 text-center text-[13px] text-pm-gray">
+          Nessun ciclo disponibile.
+        </div>
       </div>
     );
   }
@@ -26,6 +118,9 @@ export async function TabOrdini({ cycleId }: Props) {
 
   return (
     <div className="space-y-4">
+      {/* Member selector */}
+      <MemberSelector allMembers={allMembers} currentMemberId={undefined} />
+
       {/* Cycle selector */}
       <div className="flex flex-wrap gap-1.5">
         {allCycles.slice(0, 8).map((c) => (
@@ -104,6 +199,50 @@ export async function TabOrdini({ cycleId }: Props) {
           </Card>
         </>
       )}
+    </div>
+  );
+}
+
+// ── Member selector ────────────────────────────────────────────────────────────
+
+function MemberSelector({
+  allMembers,
+  currentMemberId,
+}: {
+  allMembers: { memberId: string; fullName: string }[];
+  currentMemberId: string | undefined;
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="shrink-0 font-mono text-[10px] uppercase tracking-wide text-pm-gray-light">
+        Socio
+      </span>
+      <div className="flex flex-1 flex-wrap gap-1.5">
+        <Link
+          href="/admin?tab=ordini"
+          className={`rounded-full px-3 py-1 text-[12px] font-semibold ${
+            !currentMemberId ? "bg-pm-orange text-white" : "bg-black/[0.05] text-pm-gray"
+          }`}
+        >
+          Tutti
+        </Link>
+        {allMembers
+          .filter((m) => m.memberId)
+          .slice(0, 12)
+          .map((m) => (
+            <Link
+              key={m.memberId}
+              href={`/admin?tab=ordini&member=${m.memberId}`}
+              className={`rounded-full px-3 py-1 text-[12px] font-semibold ${
+                m.memberId === currentMemberId
+                  ? "bg-pm-orange text-white"
+                  : "bg-black/[0.05] text-pm-gray"
+              }`}
+            >
+              {m.fullName.split(" ")[0]}
+            </Link>
+          ))}
+      </div>
     </div>
   );
 }

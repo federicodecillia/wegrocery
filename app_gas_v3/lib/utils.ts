@@ -48,44 +48,68 @@ export function getRoleLabel(role: string): string {
 }
 
 const EMOJI_MAP: [RegExp, string][] = [
+  // ── Frutta ────────────────────────────────────────────────────────
   [/melanz|cocomero|anguria/i, "🍉"],
   [/melone/i, "🍈"],
   [/pesca|pesche/i, "🍑"],
   [/cilieg/i, "🍒"],
-  [/mela/i, "🍎"],
+  [/mela/i, "🍎"],          // MUST come after melanzana/melone
   [/pera/i, "🍐"],
   [/aranci/i, "🍊"],
-  [/limone/i, "🍋"],
+  [/limone|cedro/i, "🍋"],
   [/banana/i, "🍌"],
   [/ananas/i, "🍍"],
   [/mango/i, "🥭"],
   [/uva/i, "🍇"],
   [/fragol/i, "🍓"],
-  [/lampone|mirtillo/i, "🫐"],
+  [/lampone|mirtillo|ribes/i, "🫐"],
   [/kiwi/i, "🥝"],
+  [/fico|fichi/i, "🍈"],
+  [/susina|prugna/i, "🍑"],
+  [/castagna/i, "🌰"],
+  [/melagran|melogran/i, "❤️"],
+  // ── Verdura ───────────────────────────────────────────────────────
   [/tomat|pomodo/i, "🍅"],
   [/avocado/i, "🥑"],
   [/melanzana/i, "🍆"],
   [/patata/i, "🥔"],
   [/carota/i, "🥕"],
   [/mais/i, "🌽"],
+  [/peperonc/i, "🌶️"],    // peperoncino before peperone
   [/peperone/i, "🫑"],
   [/cetriolo|zucchina/i, "🥒"],
-  [/insalata|lattug|radicchio|spinac|sedano|finocchio/i, "🥬"],
-  [/broccolo|cavolo|rapa/i, "🥦"],
+  [/zucca/i, "🎃"],
+  [/insalata|lattug|radicchio|spinac|sedano|finocchio|erbett|cicoria/i, "🥬"],
+  [/broccolo|cavolo|verza|cavolfiore|cavolini/i, "🥦"],
   [/aglio/i, "🧄"],
-  [/cipolla/i, "🧅"],
-  [/fungo/i, "🍄"],
-  [/nocciola|noce|mandorla|arachide/i, "🥜"],
-  [/pane|focaccia/i, "🍞"],
+  [/cipoll/i, "🧅"],        // cipolla, cipollotto, cipollone — MUST come before pollo
+  [/porro|porrino/i, "🧅"],
+  [/fungo|porcino|champignon/i, "🍄"],
+  [/carciofo/i, "🌿"],
+  [/asparago/i, "🌿"],
+  [/bietol|rapa|barbabietol/i, "🥦"],
+  [/fagiolo|fagiolino|fava|lenticchia|pisello|cece/i, "🫘"],
+  [/patatina|topinambur/i, "🥔"],
+  // ── Cereali, pane, legumi ─────────────────────────────────────────
+  [/pane|focaccia|pizza|grano|farro|orzo|avena|riso/i, "🍞"],
+  [/pasta|spaghett|penne|rigatoni/i, "🍝"],
+  // ── Prodotti animali ──────────────────────────────────────────────
   [/uov/i, "🥚"],
-  [/latte/i, "🥛"],
-  [/formaggio/i, "🧀"],
+  [/latte|yogurt|kefir/i, "🥛"],
+  [/formaggio|ricotta|mozzarella|pecorino|parmigiano/i, "🧀"],
+  [/burro|panna|crema/i, "🧈"],
   [/miele/i, "🍯"],
+  [/pollo|gallina|tacchino|anatra/i, "🍗"],
+  [/carne|manzo|vitello|maiale|salume|salsicc|salsiccia/i, "🥩"],
+  [/pesce|salmone|tonno|merluzzo|orata|branzino/i, "🐟"],
+  // ── Condimenti ────────────────────────────────────────────────────
   [/olio/i, "🫙"],
-  [/pollo|gallina/i, "🍗"],
-  [/carne|manzo|vitello/i, "🥩"],
-  [/pesce|salmone|tonno/i, "🐟"],
+  [/aceto/i, "🫙"],
+  [/sale|pepe(?!rone|ronc)/i, "🧂"],
+  // ── Bevande ───────────────────────────────────────────────────────
+  [/vino/i, "🍷"],
+  [/birra/i, "🍺"],
+  [/succo|spremitura/i, "🧃"],
 ];
 
 export function getProductEmoji(name: string): string {

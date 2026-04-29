@@ -12,6 +12,7 @@ export async function TabSoci() {
           memberId: m.memberId,
           fullName: m.fullName,
           email: m.email,
+          aliasEmail: m.aliasEmail ?? null,
           role: m.role,
           active: m.active,
         }))}

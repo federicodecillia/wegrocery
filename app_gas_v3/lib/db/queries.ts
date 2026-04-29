@@ -1,4 +1,4 @@
-import { desc, eq, and, sql, asc } from "drizzle-orm";
+import { desc, eq, and, sql, asc, or } from "drizzle-orm";
 import { getDb } from "./client";
 import {
   ledgerEntries,
@@ -14,7 +14,7 @@ export async function getMemberByEmail(email: string) {
   const [member] = await db
     .select()
     .from(members)
-    .where(eq(members.email, email))
+    .where(or(eq(members.email, email), eq(members.aliasEmail, email)))
     .limit(1);
   return member ?? null;
 }
@@ -285,19 +285,13 @@ export async function getAdminCycleProducts(cycleId: string) {
 
 export async function getAdminMemberLedger(memberId: string, limit = 100) {
   const db = getDb();
-  return db
+  const rows = await db
     .select({
       entryId: ledgerEntries.entryId,
-      memberId: ledgerEntries.memberId,
       entryDate: ledgerEntries.entryDate,
       type: ledgerEntries.type,
       amount: ledgerEntries.amount,
-      cycleId: ledgerEntries.cycleId,
       note: ledgerEntries.note,
-      createdBy: ledgerEntries.createdBy,
-      createdAt: ledgerEntries.createdAt,
-      updatedAt: ledgerEntries.updatedAt,
-      updatedBy: ledgerEntries.updatedBy,
       cycleTitle: orderCycles.title,
     })
     .from(ledgerEntries)
@@ -305,4 +299,61 @@ export async function getAdminMemberLedger(memberId: string, limit = 100) {
     .where(eq(ledgerEntries.memberId, memberId))
     .orderBy(desc(ledgerEntries.entryDate), desc(ledgerEntries.createdAt))
     .limit(limit);
+  return rows.map((r) => ({
+    ...r,
+    entryDate: r.entryDate?.toISOString() ?? null,
+  }));
+}
+
+export type MemberOrderHistory = {
+  cycleId: string;
+  cycleTitle: string;
+  pickupDate: string | null;
+  cycleStatus: string;
+  total: number;
+  lines: { productName: string; variant: string | null; quantity: number; lineTotal: number }[];
+};
+
+export async function getAdminMemberOrders(memberId: string): Promise<MemberOrderHistory[]> {
+  const db = getDb();
+  const rows = await db
+    .select({
+      cycleId: orderCycles.cycleId,
+      cycleTitle: orderCycles.title,
+      pickupDate: orderCycles.pickupDate,
+      cycleStatus: orderCycles.status,
+      productName: products.name,
+      variant: products.variant,
+      quantity: orders.quantity,
+      lineTotal: orders.lineTotal,
+      sortOrder: products.sortOrder,
+    })
+    .from(orders)
+    .innerJoin(orderCycles, eq(orders.cycleId, orderCycles.cycleId))
+    .innerJoin(products, eq(orders.productId, products.productId))
+    .where(eq(orders.memberId, memberId))
+    .orderBy(desc(orderCycles.createdAt), asc(products.sortOrder));
+
+  const cycleMap = new Map<string, MemberOrderHistory>();
+  for (const row of rows) {
+    if (!cycleMap.has(row.cycleId)) {
+      cycleMap.set(row.cycleId, {
+        cycleId: row.cycleId,
+        cycleTitle: row.cycleTitle,
+        pickupDate: row.pickupDate?.toISOString() ?? null,
+        cycleStatus: row.cycleStatus,
+        total: 0,
+        lines: [],
+      });
+    }
+    const entry = cycleMap.get(row.cycleId)!;
+    entry.total += parseFloat(row.lineTotal);
+    entry.lines.push({
+      productName: row.productName,
+      variant: row.variant,
+      quantity: row.quantity,
+      lineTotal: parseFloat(row.lineTotal),
+    });
+  }
+  return Array.from(cycleMap.values());
 }
