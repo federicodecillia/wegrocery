@@ -140,16 +140,20 @@ export function CatalogCsvActions({ supplierId }: { supplierId: string }) {
   const [isPending, startTransition] = useTransition();
 
   function downloadTemplate() {
-    const headers = "Nome,Varietà,Formato,Unità,Prezzo,Categoria,Icona,Note";
-    const example = "Mela Rossa,Bio,Sacco 2kg,kg,2.50,Frutta,🍎,Dolce e croccante";
-    const csvContent = "data:text/csv;charset=utf-8," + headers + "\n" + example;
-    const encodedUri = encodeURI(csvContent);
+    const headers = "Nome;Varietà;Formato;Unità;Prezzo;Categoria;Icona;Note";
+    const example = "Mela Rossa;Bio;Sacco 2kg;kg;2,50;Frutta;🍎;Dolce e croccante";
+    const csvContent = headers + "\n" + example;
+    
+    // Create a blob with UTF-8 BOM for Excel compatibility
+    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
+    link.setAttribute("href", url);
     link.setAttribute("download", `template_prodotti.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   }
 
   function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {

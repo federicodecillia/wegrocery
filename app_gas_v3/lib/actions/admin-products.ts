@@ -32,9 +32,11 @@ export async function adminImportProductsCsv(supplierId: string, csvText: string
     const results = [];
 
     for (const row of rows) {
-      // Very basic CSV parsing (handles quotes if simple, but mainly comma separated)
-      // For more robust parsing, we'd use a library, but let's try a simple one first
-      const columns = row.split(",").map(c => c.trim().replace(/^"(.*)"$/, '$1'));
+      // Robust parsing: try semicolon first (common in Italian Excel), then comma
+      let columns = row.split(";").map(c => c.trim().replace(/^"(.*)"$/, '$1'));
+      if (columns.length < 5) {
+        columns = row.split(",").map(c => c.trim().replace(/^"(.*)"$/, '$1'));
+      }
       
       if (columns.length < 5) continue; // Minimum required: Nome, Varieta, Formato, Unita, Prezzo
 
