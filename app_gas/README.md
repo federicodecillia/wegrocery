@@ -1,74 +1,92 @@
-# Porta Moneta GAS — v3 (in sviluppo)
+# Porta Moneta GAS — app_gas
 
-Stack: **Next.js 15** + **Postgres (Neon)** + **Vercel** + **Auth.js** + **Drizzle ORM**.
+Web app per il GAS Porta Moneta (gruppo di acquisto solidale). Gestione ordini settimanali, saldo soci, cicli e catalogo fornitori.
 
-> 🚧 Questa cartella ospita la riscrittura v3 di Porta Moneta.
-> v2 (Apps Script + Sheets) resta in produzione su `gas.portamoneta.org` e in `../app_gas_v2/`.
+**Live:** gas.portamoneta.org → Vercel
 
-## Quick Start (riprendere il lavoro)
+## Stack
 
-1. **Leggi `PLAN.md`** — piano operativo completo a 6 fasi
-2. **Leggi `PROGRESS.md`** — cosa è stato fatto finora e qual è il prossimo task
-3. **Branch corretto**: `git checkout migration/nextjs-v3`
-4. Aggiorna `PROGRESS.md` a fine sessione
+- **Next.js 15** App Router + React 19 + TypeScript strict
+- **Postgres** (Neon serverless) + **Drizzle ORM**
+- **Auth.js** (Google OAuth) con whitelist sulla tabella `members`
+- **Tailwind CSS v4**
+- **Vercel** (deploy automatico da `main`)
 
-## Struttura attesa (a regime)
+## Struttura
 
 ```
-app_gas_v3/
-├── PLAN.md                  # piano migrazione (questo fase 0 → 6)
-├── PROGRESS.md              # changelog vivente
-├── README.md                # questo file
-├── package.json
-├── next.config.ts
-├── drizzle.config.ts
-├── tailwind.config.ts (o config in CSS per v4)
-├── auth.ts                  # Auth.js config
-├── middleware.ts            # protezione route
-├── .env.example
-├── app/                     # App Router
-│   ├── (auth)/login/
-│   ├── (member)/            # gruppo route socio
-│   │   ├── page.tsx         # home
-│   │   ├── ordine/
-│   │   ├── storico/
-│   │   └── guida/
-│   └── (admin)/admin/
-│       ├── ciclo/
-│       ├── prodotti/
-│       ├── ordini/
-│       ├── cassa/
-│       └── soci/
-├── components/              # UI primitives + composite
+app_gas/
+├── app/                   # App Router — pagine e API routes
+│   ├── page.tsx           # Home: saldo hero, ciclo aperto, ultimi movimenti
+│   ├── ordine/            # Form ordine con stepper per prodotto
+│   ├── storico/           # Storico ordini + movimenti ledger
+│   ├── notifiche/         # Lista notifiche con mark-as-read
+│   ├── guida/             # Come funziona + FAQ
+│   └── admin/             # Pannello admin: ciclo, prodotti, ordini, cassa, fornitori, soci
+├── components/
+│   ├── app-shell.tsx      # Layout wrapper con header (logo + campanella + logout) e bottom nav
+│   ├── bottom-nav.tsx     # Navigazione a tab in basso (5 voci)
+│   ├── notification-bell.tsx  # Campanella con badge non lette
+│   ├── home/              # CycleCountdown
+│   ├── admin/             # Componenti per ogni tab admin
+│   └── ui/                # Button, Card, ConfirmDialog, Toast, FaqAccordion
 ├── lib/
-│   ├── db/                  # Drizzle schema + queries
-│   ├── auth/                # helpers requireAdmin etc.
-│   └── utils/
-├── scripts/
-│   └── migrate-from-v2.ts   # one-shot import da Apps Script
-└── public/                  # icons, manifest
+│   ├── db/
+│   │   ├── schema.ts      # Drizzle schema: members, order_cycles, products, orders, ledger_entries, notifications, audit_log, suppliers, supplier_products
+│   │   ├── queries.ts     # Query di lettura
+│   │   └── client.ts      # Connessione Neon
+│   ├── actions/
+│   │   ├── admin.ts       # Server Actions admin (cicli, ledger, soci, fornitori)
+│   │   ├── admin-cycles.ts
+│   │   ├── admin-products.ts
+│   │   ├── notifications.ts  # markNotificationRead / markAllNotificationsRead
+│   │   └── order.ts       # saveOrder
+│   └── auth/session.ts    # requireUserSession(), requireAdmin(), getUserRole()
+├── drizzle/               # Migrazioni SQL
+├── middleware.ts           # Protezione route (redirect /login se non autenticato)
+├── auth.ts                # Auth.js config (Google provider + callbacks)
+└── public/logo.png        # Logo Porta Moneta
 ```
 
-## Comandi (dopo scaffold)
+## Comandi
 
 ```bash
-cd app_gas_v3
+cd app_gas
 npm install
-npm run dev            # http://localhost:3000
-npm run db:push        # apply schema su Neon
-npm run db:studio      # Drizzle Studio
-npm run build && npm run start
+npm run dev          # http://localhost:3000
+npm run db:push      # Applica schema su Neon (usa DATABASE_URL da .env.local)
+npm run db:studio    # Drizzle Studio (esplora il DB visualmente)
+npm run build        # Build di produzione
 ```
 
-## Convenzioni
+## Variabili d'ambiente
 
-- **TypeScript strict** ovunque
-- **Server Components default**, Client Components solo dove serve interattività
-- **Server Actions** per ogni mutation (no API route per CRUD interno)
-- **Drizzle queries** in `lib/db/` (non sparse nei components)
-- **Auth check server-side**: ogni Server Action wrappata in `requireSession()` o `requireAdmin()`
-- **Commit prefix**: `[v3] feat:`, `[v3] fix:`, `[v3] chore:`
+Crea `app_gas/.env.local` da `.env.example`:
 
-## Tracker decisioni
+```
+DATABASE_URL=           # Neon connection string
+AUTH_GOOGLE_ID=         # Google OAuth Client ID
+AUTH_GOOGLE_SECRET=     # Google OAuth Client Secret
+AUTH_SECRET=            # Stringa random per JWT (openssl rand -base64 32)
+NEXTAUTH_URL=           # URL base dell'app (es. http://localhost:3000 in dev)
+```
 
-Vedi sezione "Open Questions" in `PLAN.md`.
+In produzione le variabili sono su Vercel (Settings → Environment Variables).
+
+## Deploy
+
+- **Preview**: ogni push su branch crea un deployment di preview su Vercel
+- **Produzione**: merge su `main` → deploy automatico → gas.portamoneta.org
+- Root Directory su Vercel: `app_gas`
+
+## Architettura
+
+- **Server Components** di default; Client Components solo dove serve interattività
+- **Server Actions** per ogni mutazione (nessuna API route per CRUD interno)
+- **Auth check server-side**: ogni Server Action wrappata in `requireUserSession()` o `requireAdmin()`
+- **Notifiche**: emesse da `admin.ts` su chiusura ciclo e topup; lette via campanella nell'header → pagina `/notifiche`
+
+## Design system
+
+Orange/teal su sfondo warm-white. Variabili CSS in `app/globals.css`:
+`--pm-orange`, `--pm-teal`, `--pm-red`, `--pm-near-black`, `--pm-gray`, `--pm-warm-white`, `--pm-border`.
