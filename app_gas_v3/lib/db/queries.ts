@@ -165,38 +165,48 @@ export type NotificationItem = {
 
 export async function getMemberNotifications(memberId: string, limit = 6): Promise<NotificationItem[]> {
   const db = getDb();
-  return db
-    .select({
-      notificationId: notifications.notificationId,
-      type: notifications.type,
-      title: notifications.title,
-      body: notifications.body,
-      href: notifications.href,
-      readAt: notifications.readAt,
-      createdAt: notifications.createdAt,
-    })
-    .from(notifications)
-    .where(eq(notifications.memberId, memberId))
-    .orderBy(desc(notifications.createdAt))
-    .limit(limit);
+  try {
+    return await db
+      .select({
+        notificationId: notifications.notificationId,
+        type: notifications.type,
+        title: notifications.title,
+        body: notifications.body,
+        href: notifications.href,
+        readAt: notifications.readAt,
+        createdAt: notifications.createdAt,
+      })
+      .from(notifications)
+      .where(eq(notifications.memberId, memberId))
+      .orderBy(desc(notifications.createdAt))
+      .limit(limit);
+  } catch (error) {
+    console.error("Error fetching member notifications:", error);
+    return [];
+  }
 }
 
 export async function getAdminNotifications(limit = 6): Promise<NotificationItem[]> {
   const db = getDb();
-  return db
-    .select({
-      notificationId: notifications.notificationId,
-      type: notifications.type,
-      title: notifications.title,
-      body: notifications.body,
-      href: notifications.href,
-      readAt: notifications.readAt,
-      createdAt: notifications.createdAt,
-    })
-    .from(notifications)
-    .where(eq(notifications.role, "admin"))
-    .orderBy(desc(notifications.createdAt))
-    .limit(limit);
+  try {
+    return await db
+      .select({
+        notificationId: notifications.notificationId,
+        type: notifications.type,
+        title: notifications.title,
+        body: notifications.body,
+        href: notifications.href,
+        readAt: notifications.readAt,
+        createdAt: notifications.createdAt,
+      })
+      .from(notifications)
+      .where(eq(notifications.role, "admin"))
+      .orderBy(desc(notifications.createdAt))
+      .limit(limit);
+  } catch (error) {
+    console.error("Error fetching admin notifications:", error);
+    return [];
+  }
 }
 
 // ── Admin queries ─────────────────────────────────────────────────────────────

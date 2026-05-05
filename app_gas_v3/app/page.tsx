@@ -37,8 +37,8 @@ export default async function HomePage() {
     })
   );
 
-  const globalOrderTotal = cycleDataList.reduce((sum, d) => sum + d.orderTotal, 0);
-  const afterBalance = balance - globalOrderTotal;
+  const globalOrderTotal = cycleDataList.reduce((sum, d) => sum + (isNaN(d.orderTotal) ? 0 : d.orderTotal), 0);
+  const afterBalance = (balance || 0) - globalOrderTotal;
 
   const isNegative = balance < 0;
 
@@ -144,9 +144,9 @@ export default async function HomePage() {
               <div className="mb-[14px]">
                 <CycleCountdown
                   title={cycle.title}
-                  orderCloseAt={(cycle.orderCloseAt ?? new Date()).toISOString()}
-                  orderOpenAt={(cycle.orderOpenAt ?? cycle.createdAt).toISOString()}
-                  pickupDate={cycle.pickupDate?.toISOString() ?? null}
+                  orderCloseAt={new Date(cycle.orderCloseAt ?? new Date()).toISOString()}
+                  orderOpenAt={new Date(cycle.orderOpenAt ?? cycle.createdAt).toISOString()}
+                  pickupDate={cycle.pickupDate ? new Date(cycle.pickupDate).toISOString() : null}
                   pickupEndTime={cycle.pickupEndTime ?? null}
                 />
               </div>
