@@ -3,7 +3,7 @@
 import { eq, asc } from "drizzle-orm";
 import { auth } from "@/auth";
 import { getDb } from "@/lib/db/client";
-import { orders, members, products } from "@/lib/db/schema";
+import { orders, members, products, suppliers } from "@/lib/db/schema";
 
 async function requireAdmin() {
   const session = await auth();
@@ -24,6 +24,12 @@ export async function adminGetCycleOrderDetails(cycleId: string) {
         memberName: members.fullName,
         productName: products.name,
         variant: products.variant,
+        format: products.format,
+        unit: products.unit,
+        category: products.category,
+        emoji: products.emoji,
+        supplierName: suppliers.name,
+        productSupplier: products.supplier,
         quantity: orders.quantity,
         unitPrice: orders.unitPriceSnapshot,
         lineTotal: orders.lineTotal,
@@ -31,6 +37,7 @@ export async function adminGetCycleOrderDetails(cycleId: string) {
       .from(orders)
       .innerJoin(members, eq(orders.memberId, members.memberId))
       .innerJoin(products, eq(orders.productId, products.productId))
+      .leftJoin(suppliers, eq(products.supplierId, suppliers.supplierId))
       .where(eq(orders.cycleId, cycleId))
       .orderBy(asc(members.fullName), asc(products.name));
 

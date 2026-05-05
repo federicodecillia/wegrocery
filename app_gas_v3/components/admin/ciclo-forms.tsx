@@ -11,6 +11,7 @@ import {
 import { formatEur } from "@/lib/utils";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import type { CatalogProductItem } from "@/lib/db/queries";
+import { ClosedCycleDetails } from "./closed-cycle-details";
 
 type Supplier = { supplierId: string; name: string };
 
@@ -23,6 +24,7 @@ type SerializedCycle = {
   notes: string | null;
   supplierId: string | null;
   accessLevel: string;
+  isOverdue: boolean;
 };
 
 // ── Open Cycle Card ───────────────────────────────────────────────────────────
@@ -84,6 +86,11 @@ export function OpenCycleCard({
             </div>
           </div>
           <div className="mt-3 space-y-1 text-[12px] text-pm-gray">
+            {cycle.isOverdue && (
+              <div className="rounded-lg border border-pm-red/30 bg-pm-red-light p-3 text-pm-red">
+                Notifica admin: la data di chiusura e&apos; passata. Controlla il recap e chiudi il ciclo.
+              </div>
+            )}
             {cycle.orderCloseAt && (
               <div>
                 Chiusura ordini:{" "}
@@ -113,6 +120,13 @@ export function OpenCycleCard({
                 </span>
               </div>
             )}
+          </div>
+          <div className="mt-3">
+            <ClosedCycleDetails
+              cycleId={cycle.cycleId}
+              cycleTitle={cycle.title}
+              buttonLabel="Recap ordini"
+            />
           </div>
           {managingProducts && (
             <div className="mt-6 border-t border-pm-border pt-4">

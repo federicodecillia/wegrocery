@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { formatDate, formatEur, formatEurSigned } from "@/lib/utils";
+import { formatDate, formatEur, formatEurSigned, getProductEmoji } from "@/lib/utils";
 import type { CycleHistoryEntry } from "@/lib/db/queries";
 
 type LedgerEntry = {
@@ -91,16 +91,27 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
                   {isOpen && (
                     <div className="px-4 py-[10px]">
                       <div className="mb-[5px] font-mono text-[10px] text-pm-gray-light">Prodotti</div>
-                      <div className="text-[13px] leading-[1.6] text-pm-gray">
-                        {o.lines
-                          .map(
-                            (l) =>
-                              l.productName +
-                              (l.variant ? " " + l.variant : "") +
-                              " ×" +
-                              l.quantity,
-                          )
-                          .join(" · ")}
+                      <div className="divide-y divide-pm-border rounded-[12px] border border-pm-border bg-[#fdfdfd]">
+                        {o.lines.map((l, index) => (
+                          <div key={`${l.productName}-${index}`} className="flex items-start gap-3 px-3 py-2.5">
+                            <span className="shrink-0 text-[18px] leading-none">
+                              {l.emoji || getProductEmoji(l.productName)}
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <div className="text-[13px] font-semibold text-pm-near-black">
+                                {l.productName}
+                                {l.variant && <span className="ml-1 font-normal text-pm-gray">{l.variant}</span>}
+                              </div>
+                              <div className="mt-[2px] text-[11px] leading-snug text-pm-gray">
+                                {[l.supplierName, l.category].filter(Boolean).join(" · ")}
+                              </div>
+                              <div className="mt-[2px] font-mono text-[10px] text-pm-gray-light">
+                                {l.quantity} × {formatEur(l.unitPrice)}
+                                {l.unit ? `/${l.unit}` : ""} = {formatEur(l.lineTotal)}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   )}

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { adminGetCycleOrderDetails } from "@/lib/actions/admin-cycles";
-import { formatEur } from "@/lib/utils";
+import { formatEur, getProductEmoji } from "@/lib/utils";
 import { toast } from "@/components/ui/toast";
 
 type OrderDetail = {
@@ -10,12 +10,26 @@ type OrderDetail = {
   memberName: string;
   productName: string;
   variant: string | null;
+  format: string | null;
+  unit: string | null;
+  category: string | null;
+  emoji: string | null;
+  supplierName: string | null;
+  productSupplier: string | null;
   quantity: number;
   unitPrice: string;
   lineTotal: string;
 };
 
-export function ClosedCycleDetails({ cycleId, cycleTitle }: { cycleId: string, cycleTitle: string }) {
+export function ClosedCycleDetails({
+  cycleId,
+  cycleTitle,
+  buttonLabel = "Vedi ordini",
+}: {
+  cycleId: string;
+  cycleTitle: string;
+  buttonLabel?: string;
+}) {
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [orderDetails, setOrderDetails] = useState<OrderDetail[]>([]);
@@ -43,7 +57,7 @@ export function ClosedCycleDetails({ cycleId, cycleTitle }: { cycleId: string, c
         onClick={handleOpen}
         className="rounded-lg bg-pm-teal/10 px-3 py-1 text-[11px] font-bold text-pm-teal hover:bg-pm-teal/20"
       >
-        Vedi ordini
+        {buttonLabel}
       </button>
     );
   }
@@ -54,6 +68,7 @@ export function ClosedCycleDetails({ cycleId, cycleTitle }: { cycleId: string, c
     acc[ord.memberName].push(ord);
     return acc;
   }, {});
+  const grandTotal = orderDetails.reduce((s, l) => s + parseFloat(l.lineTotal), 0);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
@@ -61,7 +76,9 @@ export function ClosedCycleDetails({ cycleId, cycleTitle }: { cycleId: string, c
         <div className="flex items-center justify-between border-b border-pm-border p-5">
           <div>
             <h3 className="text-[16px] font-black text-pm-near-black">{cycleTitle}</h3>
-            <p className="text-[12px] text-pm-gray">Dettaglio ordini</p>
+            <p className="text-[12px] text-pm-gray">
+              {Object.keys(grouped).length} soci · {formatEur(grandTotal)} da addebitare
+            </p>
           </div>
           <button
             onClick={() => setIsOpen(false)}
@@ -88,12 +105,21 @@ export function ClosedCycleDetails({ cycleId, cycleTitle }: { cycleId: string, c
                     </div>
                     <div className="space-y-1 pl-2">
                       {lines.map((l, i) => (
-                        <div key={i} className="flex justify-between text-[12px] text-pm-near-black">
-                          <span className="flex-1 truncate">
-                            {l.productName} {l.variant && <span className="text-pm-gray">({l.variant})</span>}
-                          </span>
-                          <span className="ml-2 shrink-0 font-mono text-pm-gray">
-                            {l.quantity} × {formatEur(parseFloat(l.unitPrice))} = {formatEur(parseFloat(l.lineTotal))}
+                        <div key={i} className="flex items-start justify-between gap-3 text-[12px] text-pm-near-black">
+                          <div className="flex min-w-0 flex-1 gap-2">
+                            <span className="shrink-0 text-[16px]">{l.emoji || getProductEmoji(l.productName)}</span>
+                            <div className="min-w-0">
+                              <div className="truncate font-medium">
+                                {l.productName} {l.variant && <span className="text-pm-gray">({l.variant})</span>}
+                              </div>
+                              <div className="truncate text-[10px] text-pm-gray">
+                                {[l.supplierName ?? l.productSupplier, l.category, l.format].filter(Boolean).join(" · ")}
+                              </div>
+                            </div>
+                          </div>
+                          <span className="shrink-0 text-right font-mono text-pm-gray">
+                            {l.quantity} × {formatEur(parseFloat(l.unitPrice))}
+                            {l.unit ? `/${l.unit}` : ""} = {formatEur(parseFloat(l.lineTotal))}
                           </span>
                         </div>
                       ))}

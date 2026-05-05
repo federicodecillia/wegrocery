@@ -8,6 +8,7 @@ import {
   getOpenCycles,
 } from "@/lib/db/queries";
 import { saveOrder } from "@/lib/actions/order";
+import { canAccessCycle } from "@/lib/utils";
 import Link from "next/link";
 
 export default async function OrdinePage({
@@ -26,9 +27,7 @@ export default async function OrdinePage({
     getOpenCycles(),
   ]);
 
-  const activeCycles = openCycles.filter(
-    (c) => c.accessLevel === "all" || ["admin", "attivo", "member"].includes(role ?? "")
-  );
+  const activeCycles = openCycles.filter((c) => canAccessCycle(c.accessLevel, role));
 
   let openCycle = null;
   if (activeCycles.length > 0) {

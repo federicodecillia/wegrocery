@@ -1,8 +1,9 @@
-import { and, asc, desc, eq, isNotNull, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, isNotNull, isNull, or, sql } from "drizzle-orm";
 import { getDb } from "./client";
 import {
   ledgerEntries,
   members,
+  notifications,
   orderCycles,
   orders,
   products,
@@ -31,12 +32,19 @@ export async function getMemberBalance(memberId: string): Promise<number> {
   return parseFloat(row?.total ?? "0");
 }
 
-export async function getOpenCycles() {
+export async function getOpenCycles(includeExpired = false) {
   const db = getDb();
   const cycles = await db
     .select()
     .from(orderCycles)
-    .where(eq(orderCycles.status, "open"))
+    .where(
+      includeExpired
+        ? eq(orderCycles.status, "open")
+        : and(
+            eq(orderCycles.status, "open"),
+            or(isNull(orderCycles.orderCloseAt), sql`${orderCycles.orderCloseAt} > now()`),
+          ),
+    )
     .orderBy(asc(orderCycles.orderCloseAt));
   return cycles;
 }
@@ -74,7 +82,17 @@ export type CycleHistoryEntry = {
   pickupDate: Date | null;
   status: string;
   orderTotal: number;
-  lines: { productName: string; variant: string | null; quantity: number }[];
+  lines: {
+    productName: string;
+    variant: string | null;
+    quantity: number;
+    unitPrice: number;
+    lineTotal: number;
+    unit: string | null;
+    supplierName: string | null;
+    category: string | null;
+    emoji: string | null;
+  }[];
 };
 
 export async function getMemberStorico(memberId: string): Promise<CycleHistoryEntry[]> {
@@ -88,13 +106,21 @@ export async function getMemberStorico(memberId: string): Promise<CycleHistoryEn
       cycleCreatedAt: orderCycles.createdAt,
       lineTotal: orders.lineTotal,
       quantity: orders.quantity,
+      unitPrice: orders.unitPriceSnapshot,
+      lineTotalAmount: orders.lineTotal,
       productName: products.name,
       variant: products.variant,
+      unit: products.unit,
+      supplierName: suppliers.name,
+      productSupplier: products.supplier,
+      category: products.category,
+      emoji: products.emoji,
       sortOrder: products.sortOrder,
     })
     .from(orders)
     .innerJoin(orderCycles, eq(orders.cycleId, orderCycles.cycleId))
     .innerJoin(products, eq(orders.productId, products.productId))
+    .leftJoin(suppliers, eq(products.supplierId, suppliers.supplierId))
     .where(eq(orders.memberId, memberId))
     .orderBy(desc(orderCycles.createdAt), asc(products.sortOrder));
 
@@ -116,9 +142,61 @@ export async function getMemberStorico(memberId: string): Promise<CycleHistoryEn
       productName: row.productName,
       variant: row.variant,
       quantity: row.quantity,
+      unitPrice: parseFloat(row.unitPrice),
+      lineTotal: parseFloat(row.lineTotalAmount),
+      unit: row.unit,
+      supplierName: row.supplierName ?? row.productSupplier,
+      category: row.category,
+      emoji: row.emoji,
     });
   }
   return Array.from(cycleMap.values());
+}
+
+export type NotificationItem = {
+  notificationId: string;
+  type: string;
+  title: string;
+  body: string;
+  href: string | null;
+  readAt: Date | null;
+  createdAt: Date;
+};
+
+export async function getMemberNotifications(memberId: string, limit = 6): Promise<NotificationItem[]> {
+  const db = getDb();
+  return db
+    .select({
+      notificationId: notifications.notificationId,
+      type: notifications.type,
+      title: notifications.title,
+      body: notifications.body,
+      href: notifications.href,
+      readAt: notifications.readAt,
+      createdAt: notifications.createdAt,
+    })
+    .from(notifications)
+    .where(eq(notifications.memberId, memberId))
+    .orderBy(desc(notifications.createdAt))
+    .limit(limit);
+}
+
+export async function getAdminNotifications(limit = 6): Promise<NotificationItem[]> {
+  const db = getDb();
+  return db
+    .select({
+      notificationId: notifications.notificationId,
+      type: notifications.type,
+      title: notifications.title,
+      body: notifications.body,
+      href: notifications.href,
+      readAt: notifications.readAt,
+      createdAt: notifications.createdAt,
+    })
+    .from(notifications)
+    .where(eq(notifications.role, "admin"))
+    .orderBy(desc(notifications.createdAt))
+    .limit(limit);
 }
 
 // ── Admin queries ─────────────────────────────────────────────────────────────

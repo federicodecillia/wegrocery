@@ -18,7 +18,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-[480px] flex-col items-center justify-center p-6">
       <div className="w-full rounded-lg border border-pm-border bg-white p-6 shadow-sm">
-        <h1 className="text-xl font-semibold">Porta Moneta v3</h1>
+        <h1 className="text-xl font-semibold">Porta Moneta - GAS</h1>
         <p className="text-pm-gray mt-2 text-sm">
           Accedi con Google per continuare.
         </p>

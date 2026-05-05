@@ -159,6 +159,11 @@ export function CatalogCsvActions({ supplierId }: { supplierId: string }) {
   function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (!supplierId) {
+      toast.error("Seleziona prima un fornitore");
+      e.target.value = "";
+      return;
+    }
 
     const reader = new FileReader();
     reader.onload = (event) => {
@@ -170,6 +175,7 @@ export function CatalogCsvActions({ supplierId }: { supplierId: string }) {
         } else {
           toast.success(`Importati ${result.count} prodotti ✓`);
         }
+        e.target.value = "";
       });
     };
     reader.readAsText(file);
@@ -184,13 +190,13 @@ export function CatalogCsvActions({ supplierId }: { supplierId: string }) {
         📥 Scarica Template
       </button>
       <label className="cursor-pointer rounded-lg border border-pm-border bg-white px-3 py-1.5 text-[11px] font-bold text-pm-teal shadow-sm hover:bg-pm-warm-white/50">
-        {isPending ? "Caricamento..." : "📤 Carica CSV"}
+        {isPending ? "Caricamento..." : "📤 Carica CSV/Excel"}
         <input
           type="file"
-          accept=".csv"
+          accept=".csv,.txt"
           className="hidden"
           onChange={handleFileUpload}
-          disabled={isPending}
+          disabled={isPending || !supplierId}
         />
       </label>
     </div>

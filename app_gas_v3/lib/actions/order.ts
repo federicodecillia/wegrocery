@@ -11,6 +11,7 @@ import {
   getMemberByEmail,
   getOpenCycles,
 } from "@/lib/db/queries";
+import { canAccessCycle } from "@/lib/utils";
 
 export type SaveOrderLine = { productId: string; quantity: number };
 
@@ -29,6 +30,9 @@ export async function saveOrder(
   const cycle = cycles.find((c) => c.cycleId === cycleId);
   if (!cycle) {
     throw new Error("Il ciclo non è più aperto");
+  }
+  if (!canAccessCycle(cycle.accessLevel, member.role)) {
+    throw new Error("Non hai accesso a questo ciclo");
   }
 
   const cycleProducts = await getCycleProducts(cycleId);

@@ -141,3 +141,23 @@ export const auditLog = pgTable("audit_log", {
   payloadJson: text("payload_json"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
 });
+
+export const notifications = pgTable(
+  "notifications",
+  {
+    notificationId: text("notification_id").primaryKey(),
+    memberId: text("member_id").references(() => members.memberId),
+    role: text("role"),
+    type: text("type").notNull(),
+    title: text("title").notNull(),
+    body: text("body").notNull(),
+    href: text("href"),
+    readAt: timestamp("read_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+  },
+  (table) => [
+    index("notifications_member_id_idx").on(table.memberId),
+    index("notifications_role_idx").on(table.role),
+    index("notifications_created_at_idx").on(table.createdAt),
+  ],
+);

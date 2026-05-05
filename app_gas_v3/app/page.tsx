@@ -6,25 +6,25 @@ import {
   getCycleProducts,
   getMemberBalance,
   getMemberLedger,
+  getMemberNotifications,
   getMemberOrderLines,
   getOpenCycles,
 } from "@/lib/db/queries";
-import { formatDateShort, formatEur, formatEurSigned, getProductEmoji } from "@/lib/utils";
+import { canAccessCycle, formatDateShort, formatEur, formatEurSigned, getProductEmoji } from "@/lib/utils";
 
 export default async function HomePage() {
   const session = await requireUserSession();
   const role = getUserRole(session);
   const memberId = session.user.memberId!;
 
-  const [balance, openCycles, recentMovements] = await Promise.all([
+  const [balance, openCycles, recentMovements, notifications] = await Promise.all([
     getMemberBalance(memberId),
     getOpenCycles(),
     getMemberLedger(memberId, 4),
+    getMemberNotifications(memberId, 4),
   ]);
 
-  const activeCycles = openCycles.filter(
-    (c) => c.accessLevel === "all" || ["admin", "attivo", "member"].includes(role ?? "")
-  );
+  const activeCycles = openCycles.filter((c) => canAccessCycle(c.accessLevel, role));
 
   const cycleDataList = await Promise.all(
     activeCycles.map(async (cycle) => {
@@ -111,6 +111,29 @@ export default async function HomePage() {
           </div>
         )}
       </div>
+
+      {notifications.length > 0 && (
+        <div className="mb-[18px] overflow-hidden rounded-[18px] border border-pm-border bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+          <div className="border-b border-pm-border px-4 py-[12px]">
+            <span className="font-mono text-[9px] uppercase tracking-[0.1em] text-pm-gray">
+              Notifiche
+            </span>
+          </div>
+          {notifications.map((notification) => (
+            <Link
+              key={notification.notificationId}
+              href={notification.href ?? "/storico"}
+              className="block border-b border-pm-border px-4 py-[12px] last:border-none"
+            >
+              <div className="text-[13px] font-bold text-pm-near-black">{notification.title}</div>
+              <div className="mt-[3px] text-[12px] leading-snug text-pm-gray">{notification.body}</div>
+              <div className="mt-[5px] font-mono text-[10px] text-pm-gray-light">
+                {formatDateShort(notification.createdAt)}
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
 
       {/* ── Cycles loop ── */}
       {cycleDataList.length > 0 ? (

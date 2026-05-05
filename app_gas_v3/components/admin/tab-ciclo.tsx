@@ -6,12 +6,13 @@ import { ClosedCycleDetails } from "./closed-cycle-details";
 
 export async function TabCiclo() {
   const [openCycles, cycles, suppliers] = await Promise.all([
-    getOpenCycles(),
+    getOpenCycles(true),
     getAllCycles(15),
     getAllSuppliers(),
   ]);
 
   const statsMap = new Map();
+  const now = new Date();
   await Promise.all(
     openCycles.map(async (c) => {
       const stats = await getOpenCycleStats(c.cycleId);
@@ -37,6 +38,7 @@ export async function TabCiclo() {
                   notes: openCycle.notes ?? null,
                   supplierId: openCycle.supplierId ?? null,
                   accessLevel: openCycle.accessLevel,
+                  isOverdue: openCycle.orderCloseAt ? openCycle.orderCloseAt < now : false,
                 }}
                 stats={{ orderCount: stats?.orderCount ?? 0, grandTotal: stats?.grandTotal ?? 0 }}
                 suppliers={suppliers}

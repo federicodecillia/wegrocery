@@ -16,7 +16,7 @@ export async function TabProdotti() {
       <div className="rounded-xl bg-white p-4 shadow-sm border border-pm-border">
         <div>
           <h2 className="text-[16px] font-bold text-pm-near-black">Catalogo Prodotti</h2>
-          <p className="text-[12px] text-pm-gray">Gestisci i listini master per ciascun fornitore.</p>
+          <p className="text-[12px] text-pm-gray">Lista unica filtrabile per fornitore, categoria e raggruppamento.</p>
         </div>
       </div>
 

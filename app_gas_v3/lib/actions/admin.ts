@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { eq, and, sql, or, isNull, inArray } from "drizzle-orm";
 import { auth } from "@/auth";
 import { getDb } from "@/lib/db/client";
-import { auditLog, ledgerEntries, members, orderCycles, orders, products, suppliers, supplierProducts } from "@/lib/db/schema";
+import { auditLog, ledgerEntries, members, notifications, orderCycles, orders, products, suppliers, supplierProducts } from "@/lib/db/schema";
 
 async function requireAdmin(): Promise<{ email: string }> {
   const session = await auth();
@@ -34,6 +34,31 @@ async function writeAudit(
     entityId,
     payloadJson: payload != null ? JSON.stringify(payload) : null,
     createdAt: new Date(),
+  });
+}
+
+async function createNotification(
+  db: ReturnType<typeof getDb>,
+  data: {
+    memberId?: string | null;
+    role?: string | null;
+    type: string;
+    title: string;
+    body: string;
+    href?: string | null;
+    createdAt?: Date;
+  },
+) {
+  await db.insert(notifications).values({
+    notificationId: genId("not"),
+    memberId: data.memberId ?? null,
+    role: data.role ?? null,
+    type: data.type,
+    title: data.title,
+    body: data.body,
+    href: data.href ?? null,
+    readAt: null,
+    createdAt: data.createdAt ?? new Date(),
   });
 }
 
@@ -88,7 +113,7 @@ export async function adminCloseCycle(cycleId: string) {
   const db = getDb();
 
   const [cycle] = await db
-    .select({ status: orderCycles.status })
+    .select({ status: orderCycles.status, title: orderCycles.title })
     .from(orderCycles)
     .where(eq(orderCycles.cycleId, cycleId))
     .limit(1);
@@ -133,6 +158,22 @@ export async function adminCloseCycle(cycleId: string) {
           createdAt: now,
         })),
       );
+      await db.insert(notifications).values(
+        toInsert.map((r) => {
+          const total = parseFloat(r.total);
+          return {
+            notificationId: genId("not"),
+            memberId: r.memberId,
+            role: null,
+            type: "order_closed",
+            title: "Ordine chiuso",
+            body: `E' stato chiuso "${cycle.title}". Ti e' stato addebitato ${total.toFixed(2).replace(".", ",")} euro.`,
+            href: "/storico",
+            readAt: null,
+            createdAt: now,
+          };
+        }),
+      );
       chargesGenerated = toInsert.length;
     }
   }
@@ -140,6 +181,7 @@ export async function adminCloseCycle(cycleId: string) {
   await writeAudit(db, admin.email, "close_cycle", "cycle", cycleId, { chargesGenerated });
   revalidatePath("/admin");
   revalidatePath("/");
+  revalidatePath("/storico");
   return { chargesGenerated };
 }
 
@@ -212,6 +254,8 @@ async function upsertCycleProducts(
     supplier: string | null;
     notes: string | null;
     category: string | null;
+    supplierId?: string | null;
+    emoji?: string | null;
   }>
 ) {
   const existingProducts = await db
@@ -243,6 +287,8 @@ async function upsertCycleProducts(
         notes: np.notes || existing.notes,
         category: np.category || existing.category,
         supplier: np.supplier || existing.supplier,
+        supplierId: np.supplierId ?? existing.supplierId,
+        emoji: np.emoji || existing.emoji,
         active: true,
       }).where(eq(products.productId, existing.productId));
     } else {
@@ -256,10 +302,12 @@ async function upsertCycleProducts(
         unit: np.unit?.trim() || null,
         unitPrice: unitPriceStr,
         supplier: np.supplier?.trim() || null,
+        supplierId: np.supplierId?.trim() || null,
         notes: np.notes?.trim() || null,
         sortOrder: currentSort,
         active: true,
         category: np.category?.trim() || null,
+        emoji: np.emoji?.trim() || null,
       });
       // also add to map to prevent duplicates within the same batch
       existingMap.set(key, true);
@@ -377,9 +425,25 @@ export async function adminRecordTopup(
     createdAt: now,
   });
 
+  const [balanceRow] = await db
+    .select({ total: sql<string>`coalesce(sum(${ledgerEntries.amount}), '0')` })
+    .from(ledgerEntries)
+    .where(eq(ledgerEntries.memberId, memberId));
+  const newBalance = parseFloat(balanceRow?.total ?? "0");
+
+  await createNotification(db, {
+    memberId,
+    type: "topup_received",
+    title: "Bonifico ricevuto",
+    body: `Il tuo bonifico di ${amount.toFixed(2).replace(".", ",")} euro e' stato ricevuto. Il tuo nuovo credito e' ${newBalance.toFixed(2).replace(".", ",")} euro.`,
+    href: "/storico",
+    createdAt: now,
+  });
+
   await writeAudit(db, admin.email, "record_topup", "ledger", entryId, { memberId, amount });
   revalidatePath("/admin");
   revalidatePath("/");
+  revalidatePath("/storico");
 }
 
 export async function adminUpdateLedgerEntry(
@@ -611,6 +675,7 @@ export async function adminUpsertCatalogProduct(data: UpsertCatalogProductInput)
           unitPrice: data.unitPrice.toFixed(2),
           notes: data.notes || null,
           category: data.category || null,
+          emoji: data.emoji || null,
           active: true,
           createdAt: now,
         });
@@ -694,8 +759,10 @@ export async function adminLoadFromCatalog(cycleId: string, catalogProductIds: s
       unitPrice: p.unitPrice,
       unit: p.unit,
       supplier: null, // the cycle supplier is implicit
+      supplierId: p.supplierId,
       notes: p.notes,
       category: p.category,
+      emoji: p.emoji,
     })));
 
     await writeAudit(db, admin.email, "load_catalog_products", "cycle", cycleId, { count: selectedProducts.length });
@@ -762,4 +829,3 @@ export async function adminGetCycleProducts(cycleId: string) {
   const { getAdminCycleProducts } = await import("@/lib/db/queries");
   return getAdminCycleProducts(cycleId);
 }
-

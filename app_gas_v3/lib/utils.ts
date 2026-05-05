@@ -47,6 +47,16 @@ export function getRoleLabel(role: string): string {
   return role;
 }
 
+export function canAccessCycle(accessLevel: string, role: string | null | undefined): boolean {
+  if (role === "admin") return true;
+  if (accessLevel === "all" || accessLevel === "utenti") return true;
+  if (accessLevel === "admin") return false;
+  if (accessLevel === "soci" || accessLevel === "attivi" || accessLevel === "member") {
+    return role === "attivo" || role === "member" || role === "socio";
+  }
+  return false;
+}
+
 const EMOJI_MAP: [RegExp, string][] = [
   // ── Frutta ────────────────────────────────────────────────────────
   [/melanz|cocomero|anguria/i, "🍉"],
