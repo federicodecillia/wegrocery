@@ -69,9 +69,14 @@ AUTH_GOOGLE_ID=         # Google OAuth Client ID
 AUTH_GOOGLE_SECRET=     # Google OAuth Client Secret
 AUTH_SECRET=            # Stringa random per JWT (openssl rand -base64 32)
 NEXTAUTH_URL=           # URL base dell'app (es. http://localhost:3000 in dev)
+AUTH_DEV_LOGIN_EMAIL=   # opzionale: email socio attivo per login locale senza Google
 ```
 
 In produzione le variabili sono su Vercel (Settings → Environment Variables).
+
+Per testare in locale:
+- con Google: `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET` e redirect URI Google devono includere `http://localhost:3001/api/auth/callback/google` se usi la porta 3001;
+- senza Google: valorizza `AUTH_DEV_LOGIN_EMAIL` con l'email di un socio attivo nel DB. Il pulsante "Login locale" compare solo fuori produzione.
 
 ## Deploy
 
