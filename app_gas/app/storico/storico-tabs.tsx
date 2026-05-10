@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { formatDate, formatEur, formatEurSigned, getProductEmoji } from "@/lib/utils";
 import type { CycleHistoryEntry } from "@/lib/db/queries";
 
@@ -19,8 +20,22 @@ type Props = {
 };
 
 export function StoricoTabs({ orderHistory, movements, balance }: Props) {
+  const searchParams = useSearchParams();
+  const deepLinkCycleId = searchParams.get("cycleId");
+
   const [tab, setTab] = useState<"ordini" | "movimenti">("ordini");
-  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [expanded, setExpanded] = useState<Set<string>>(
+    () => (deepLinkCycleId ? new Set([deepLinkCycleId]) : new Set()),
+  );
+  const cycleRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+
+  // When arriving from a notification deep-link, scroll the targeted cycle
+  // card into view after the initial render.
+  useEffect(() => {
+    if (!deepLinkCycleId) return;
+    const el = cycleRefs.current.get(deepLinkCycleId);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [deepLinkCycleId]);
 
   function toggleExpand(cycleId: string) {
     setExpanded((prev) => {
@@ -65,6 +80,10 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
               return (
                 <div
                   key={o.cycleId}
+                  ref={(el) => {
+                    if (el) cycleRefs.current.set(o.cycleId, el);
+                    else cycleRefs.current.delete(o.cycleId);
+                  }}
                   className="mb-3 overflow-hidden rounded-[18px] border border-pm-border bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
                 >
                   <button
@@ -126,8 +145,18 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
       {tab === "movimenti" && (
         <>
           {/* Balance summary */}
-          <div className="mb-4 rounded-[16px] border border-pm-orange-mid bg-pm-orange-light p-4">
-            <div className="mb-[6px] font-mono text-[9px] uppercase tracking-[0.10em] text-pm-orange">
+          <div
+            className={`mb-4 rounded-[16px] border p-4 ${
+              balance < 0
+                ? "border-[#f9c8c8] bg-pm-red-light"
+                : "border-pm-orange-mid bg-pm-orange-light"
+            }`}
+          >
+            <div
+              className={`mb-[6px] font-mono text-[9px] uppercase tracking-[0.10em] ${
+                balance < 0 ? "text-pm-red" : "text-pm-orange"
+              }`}
+            >
               Saldo attuale
             </div>
             <div className="flex items-baseline gap-1">

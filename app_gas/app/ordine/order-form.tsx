@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "@/components/ui/toast";
 import { formatEur, formatDateTime, getProductEmoji } from "@/lib/utils";
 import type { SaveOrderLine } from "@/lib/actions/order";
@@ -39,7 +40,7 @@ const CAT_ORDER = ["Frutta", "Verdura", "Insalate"];
 function groupByCategory(products: Product[]) {
   const groups = new Map<string, Product[]>();
   for (const p of products) {
-    const cat = p.category ?? "";
+    const cat = p.category?.trim() || "";
     if (!groups.has(cat)) groups.set(cat, []);
     groups.get(cat)!.push(p);
   }
@@ -48,7 +49,13 @@ function groupByCategory(products: Product[]) {
     const bi = CAT_ORDER.indexOf(b) === -1 ? 99 : CAT_ORDER.indexOf(b);
     return ai !== bi ? ai - bi : a.localeCompare(b);
   });
-  return keys.map((k) => ({ category: k, products: groups.get(k)! }));
+  // If there are other categorized groups, show "Altro" as a header for
+  // uncategorized products instead of a silent unlabeled section.
+  const hasNamedGroups = keys.some((k) => k !== "");
+  return keys.map((k) => ({
+    category: k === "" && hasNamedGroups ? "Altro" : k,
+    products: groups.get(k)!,
+  }));
 }
 
 export function OrderForm({
@@ -64,6 +71,7 @@ export function OrderForm({
     Object.fromEntries(existingLines.filter((l) => l.quantity > 0).map((l) => [l.productId, l.quantity])),
   );
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
 
   const productMap = new Map(products.map((p) => [p.productId, p]));
 
@@ -101,7 +109,14 @@ export function OrderForm({
           toast.success("Ordine salvato ✓");
         }
       } catch (err) {
-        toast.error(err instanceof Error ? err.message : "Errore durante il salvataggio");
+        const message = err instanceof Error ? err.message : "Errore durante il salvataggio";
+        toast.error(message);
+        // If the cycle was closed while the user was editing, refresh so the
+        // page reflects the new state (the ordine page will redirect or show
+        // "Nessun ordine aperto" instead of the stale form).
+        if (/ciclo non.*?aperto|ciclo.*?chiuso/i.test(message)) {
+          router.refresh();
+        }
       }
     });
   }

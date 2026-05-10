@@ -82,7 +82,7 @@ export function BottomNav({ isAdmin }: BottomNavProps) {
   const pathname = usePathname();
 
   return (
-    <nav className="sticky bottom-0 z-20 border-t border-pm-border bg-pm-warm-white">
+    <nav className="sticky bottom-0 z-20 border-t border-pm-border bg-pm-warm-white pb-[env(safe-area-inset-bottom)]">
       <ul className="grid h-nav-h grid-cols-5">
         {navItems.map((item) => {
           const active = isItemActive(pathname, item);

@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import type { ReactNode } from "react";
 import { signOut } from "@/auth";
 import { BottomNav } from "@/components/bottom-nav";
@@ -22,14 +23,16 @@ export async function AppShell({ children, email, isAdmin, memberId }: AppShellP
         <header className="border-b border-pm-border px-5 py-4">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <Image
-                src="/logo.png"
-                alt="Porta Moneta"
-                height={26}
-                width={120}
-                priority
-                className="h-[26px] w-auto"
-              />
+              <Link href="/" aria-label="Home" className="inline-block">
+                <Image
+                  src="/logo.png"
+                  alt="Porta Moneta"
+                  height={26}
+                  width={120}
+                  priority
+                  className="h-[26px] w-auto"
+                />
+              </Link>
             </div>
             <div className="flex items-center gap-2">
               <NotificationBell unreadCount={unreadCount} />

@@ -117,25 +117,35 @@ export async function adminCreateCycle(data: CreateCycleInput): Promise<{error?:
 export async function adminCloseCycle(cycleId: string) {
   const admin = await requireAdmin();
   const db = getDb();
-
-  const [cycle] = await db
-    .select({
-      status: orderCycles.status,
-      title: orderCycles.title,
-      shippingCostPerMember: orderCycles.shippingCostPerMember,
-    })
-    .from(orderCycles)
-    .where(eq(orderCycles.cycleId, cycleId))
-    .limit(1);
-  if (!cycle) throw new Error("Ciclo non trovato");
-  if (cycle.status !== "open") throw new Error("Il ciclo non è aperto");
-
   const now = new Date();
-  await db
+
+  // Atomic compare-and-swap: only the caller that flips status open→closed
+  // proceeds. A second concurrent call gets 0 rows back and exits cleanly.
+  const closed = await db
     .update(orderCycles)
     .set({ status: "closed", closedAt: now })
-    .where(eq(orderCycles.cycleId, cycleId));
+    .where(and(eq(orderCycles.cycleId, cycleId), eq(orderCycles.status, "open")))
+    .returning({
+      cycleId: orderCycles.cycleId,
+      title: orderCycles.title,
+      shippingCostPerMember: orderCycles.shippingCostPerMember,
+    });
 
+  if (closed.length === 0) {
+    const [existing] = await db
+      .select({ status: orderCycles.status })
+      .from(orderCycles)
+      .where(eq(orderCycles.cycleId, cycleId))
+      .limit(1);
+    if (!existing) throw new Error("Ciclo non trovato");
+    throw new Error("Il ciclo non è aperto (potrebbe essere già stato chiuso)");
+  }
+
+  const cycle = closed[0];
+
+  // The CAS guarantees only one caller reaches this branch, so duplicate
+  // ledger entries can only happen if the previous attempt failed mid-way and
+  // left the cycle closed. Belt-and-suspenders: still check.
   const [existingCharge] = await db
     .select({ entryId: ledgerEntries.entryId })
     .from(ledgerEntries)
@@ -143,67 +153,85 @@ export async function adminCloseCycle(cycleId: string) {
     .limit(1);
 
   let chargesGenerated = 0;
+
   if (!existingCharge) {
-    const memberTotals = await db
-      .select({
-        memberId: orders.memberId,
-        total: sql<string>`sum(${orders.lineTotal})`,
-      })
-      .from(orders)
-      .where(eq(orders.cycleId, cycleId))
-      .groupBy(orders.memberId);
+    try {
+      const memberTotals = await db
+        .select({
+          memberId: orders.memberId,
+          total: sql<string>`sum(${orders.lineTotal})`,
+        })
+        .from(orders)
+        .where(eq(orders.cycleId, cycleId))
+        .groupBy(orders.memberId);
 
-    const toInsert = memberTotals.filter((r) => parseFloat(r.total) > 0);
-    if (toInsert.length > 0) {
-      await db.insert(ledgerEntries).values(
-        toInsert.map((r) => ({
-          entryId: genId("led"),
-          memberId: r.memberId,
-          entryDate: now,
-          type: "order_charge",
-          amount: (-parseFloat(r.total)).toFixed(2),
-          cycleId,
-          note: "Addebito ordine",
-          createdBy: admin.email,
-          createdAt: now,
-        })),
-      );
-      await db.insert(notifications).values(
-        toInsert.map((r) => {
-          const total = parseFloat(r.total);
-          return {
-            notificationId: genId("not"),
-            memberId: r.memberId,
-            role: null,
-            type: "order_closed",
-            title: "Ordine chiuso",
-            body: `E' stato chiuso "${cycle.title}". Ti e' stato addebitato ${total.toFixed(2).replace(".", ",")} euro.`,
-            href: "/storico",
-            readAt: null,
-            createdAt: now,
-          };
-        }),
-      );
-      chargesGenerated = toInsert.length;
-
+      const toInsert = memberTotals.filter((r) => parseFloat(r.total) > 0);
       const shippingAmount = cycle.shippingCostPerMember
         ? parseFloat(cycle.shippingCostPerMember)
         : 0;
-      if (shippingAmount > 0) {
+
+      if (toInsert.length > 0) {
         await db.insert(ledgerEntries).values(
           toInsert.map((r) => ({
             entryId: genId("led"),
             memberId: r.memberId,
             entryDate: now,
-            type: "shipping_charge",
-            amount: (-shippingAmount).toFixed(2),
+            type: "order_charge",
+            amount: (-parseFloat(r.total)).toFixed(2),
             cycleId,
-            note: "Spedizione",
+            note: "Addebito ordine",
             createdBy: admin.email,
             createdAt: now,
           })),
         );
+
+        if (shippingAmount > 0) {
+          await db.insert(ledgerEntries).values(
+            toInsert.map((r) => ({
+              entryId: genId("led"),
+              memberId: r.memberId,
+              entryDate: now,
+              type: "shipping_charge",
+              amount: (-shippingAmount).toFixed(2),
+              cycleId,
+              note: "Spedizione",
+              createdBy: admin.email,
+              createdAt: now,
+            })),
+          );
+        }
+
+        await db.insert(notifications).values(
+          toInsert.map((r) => {
+            const orderTotal = parseFloat(r.total);
+            const totalCharged = orderTotal + shippingAmount;
+            const body =
+              shippingAmount > 0
+                ? `E' stato chiuso "${cycle.title}". Ti e' stato addebitato ${totalCharged.toFixed(2).replace(".", ",")} euro (ordine ${orderTotal.toFixed(2).replace(".", ",")} + spedizione ${shippingAmount.toFixed(2).replace(".", ",")}).`
+                : `E' stato chiuso "${cycle.title}". Ti e' stato addebitato ${orderTotal.toFixed(2).replace(".", ",")} euro.`;
+            return {
+              notificationId: genId("not"),
+              memberId: r.memberId,
+              role: null,
+              type: "order_closed",
+              title: "Ordine chiuso",
+              body,
+              href: `/storico?cycleId=${cycleId}`,
+              readAt: null,
+              createdAt: now,
+            };
+          }),
+        );
+        chargesGenerated = toInsert.length;
       }
+    } catch (e) {
+      // Rollback the status flip so the admin can retry instead of leaving
+      // the cycle in a half-closed state with no charges.
+      await db
+        .update(orderCycles)
+        .set({ status: "open", closedAt: null })
+        .where(eq(orderCycles.cycleId, cycleId));
+      throw e;
     }
   }
 
