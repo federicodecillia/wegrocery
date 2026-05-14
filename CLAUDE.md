@@ -67,6 +67,44 @@ npm run db:studio    # Drizzle Studio (visual DB browser)
 
 **Vercel Root Directory**: `app_gas` (set in project settings)
 
+## Documentation conventions
+
+The repository is public and used as a portfolio piece. Keep contributor-
+and visitor-facing docs in English; only UI strings that the cooperative's
+members actually read should be in Italian.
+
+- **Code, identifiers, comments, JSDoc, commit messages, PR descriptions**:
+  English only.
+- **UI strings** (toasts, button labels, page copy, notification bodies):
+  Italian — these reach real Italian-speaking users.
+- **Two changelogs**: [`CHANGELOG.md`](./CHANGELOG.md) (English) and
+  [`CHANGELOG.it.md`](./CHANGELOG.it.md) (Italian) follow the
+  [Keep a Changelog](https://keepachangelog.com/) format and loose SemVer.
+
+### Updating the changelog
+
+**Whenever you ship a user-visible change** (new feature, behaviour change,
+bug fix, etc.) you must update **both** changelog files:
+
+1. Add an entry under `## [Unreleased]` in `CHANGELOG.md` (English)
+2. Add the **same** entry, translated, in the same place in `CHANGELOG.it.md`
+3. The two files must stay structurally identical: same section headings,
+   same version numbers, same dates, same number of bullets per section.
+   Only the prose language differs.
+4. Use the right section heading:
+   - `### Added` / `### Aggiunte` — new features
+   - `### Changed` / `### Modificato` — behaviour changes on existing features
+   - `### Fixed` / `### Risolto` — bug fixes
+   - `### Performance` / `### Performance` — speed/efficiency improvements
+   - `### Removed` / `### Rimosso` — features deleted
+   - `### Security` / `### Sicurezza` — vulnerability fixes
+5. Write entries from the **user's** perspective, not the developer's.
+   Explain what changes for the member or admin, not which file was edited.
+
+When cutting a release, move the `[Unreleased]` block to a new
+`## [x.y.z] — YYYY-MM-DD` heading in both files and add the matching link
+reference at the bottom.
+
 ## Architecture
 
 ### Request Flow
