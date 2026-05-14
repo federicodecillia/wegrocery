@@ -824,6 +824,85 @@ export async function getAllMembersLedger(): Promise<Record<string, LedgerEntryI
   return result;
 }
 
+// ── Admin home insights ──────────────────────────────────────────────────────
+// Quick at-a-glance metrics surfaced at the top of the admin "Ciclo" tab.
+// Each one is fast (single small aggregate) so the row stays cheap even on
+// every admin page load.
+
+export type AdminInsights = {
+  // Open cycles closing within the next 24h with at least one member who
+  // has not ordered yet. Surface = "remind people to order".
+  closingSoonCount: number;
+  // Number of members with a negative ledger balance. Surface = "follow up
+  // on top-ups".
+  negativeBalanceMembers: number;
+  // Best-selling product over the last 30 days of closed cycles.
+  topProductLast30Days: { name: string; emoji: string | null; totalQty: number } | null;
+};
+
+export async function getAdminInsights(): Promise<AdminInsights> {
+  const db = getDb();
+
+  // 1. Cycles closing in the next 24h.
+  const closingSoonRows = await db
+    .select({ cycleId: orderCycles.cycleId })
+    .from(orderCycles)
+    .where(
+      and(
+        eq(orderCycles.status, "open"),
+        isNotNull(orderCycles.orderCloseAt),
+        sql`${orderCycles.orderCloseAt} <= now() + interval '24 hours'`,
+        sql`${orderCycles.orderCloseAt} > now()`,
+      ),
+    );
+
+  // 2. Members with negative balance: a single aggregate over ledger_entries
+  // grouped by memberId.
+  const balanceRows = await db
+    .select({
+      memberId: ledgerEntries.memberId,
+      total: sql<string>`sum(${ledgerEntries.amount})`,
+    })
+    .from(ledgerEntries)
+    .groupBy(ledgerEntries.memberId);
+
+  const negativeBalanceMembers = balanceRows.filter(
+    (r) => parseFloat(r.total) < 0,
+  ).length;
+
+  // 3. Top product over the last 30 days, scoped to closed cycles.
+  const [top] = await db
+    .select({
+      name: products.name,
+      emoji: products.emoji,
+      totalQty: sql<string>`sum(${orders.quantity})`,
+    })
+    .from(orders)
+    .innerJoin(products, eq(orders.productId, products.productId))
+    .innerJoin(orderCycles, eq(orders.cycleId, orderCycles.cycleId))
+    .where(
+      and(
+        eq(orderCycles.status, "closed"),
+        sql`${orderCycles.closedAt} >= now() - interval '30 days'`,
+      ),
+    )
+    .groupBy(products.name, products.emoji)
+    .orderBy(sql`sum(${orders.quantity}) desc`)
+    .limit(1);
+
+  return {
+    closingSoonCount: closingSoonRows.length,
+    negativeBalanceMembers,
+    topProductLast30Days: top
+      ? {
+          name: top.name,
+          emoji: top.emoji ?? null,
+          totalQty: parseInt(top.totalQty as string) || 0,
+        }
+      : null,
+  };
+}
+
 // ── Analytics ────────────────────────────────────────────────────────────────
 // Aggregations used by the admin "Statistiche" tab. They all operate over
 // closed cycles only (status = 'closed') because that's when the data is

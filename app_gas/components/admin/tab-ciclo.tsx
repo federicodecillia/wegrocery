@@ -1,6 +1,7 @@
 import { getAllCycles, getAllSuppliers, getOpenCycles, getOpenCycleStats } from "@/lib/db/queries";
 import { formatDate } from "@/lib/utils";
 import { Card, CardHeader } from "@/components/ui/card";
+import { AdminInsights } from "./admin-insights";
 import { CreateCycleForm, OpenCycleCard } from "./ciclo-forms";
 import { ClosedCycleDetails } from "./closed-cycle-details";
 
@@ -22,6 +23,7 @@ export async function TabCiclo() {
 
   return (
     <div>
+      <AdminInsights />
       {openCycles.length > 0 ? (
         <div className="mb-4 space-y-4">
           {openCycles.map((openCycle) => {
