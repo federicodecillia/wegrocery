@@ -31,23 +31,52 @@ export async function adminImportProductsCsv(supplierId: string, csvText: string
     const rows = lines.slice(1);
     const results = [];
 
+    // New column layout (v1.4.3+):
+    //   Nome; Varietà; Formato; Prezzo; Prezzo/kg; Categoria; Icona; Note
+    //
+    // The "Unità" column was removed because it duplicated the format string
+    // and confused admins. Old templates that still include "Unità" are
+    // handled below by sniffing the header row.
+
+    const header = lines[0].toLowerCase();
+    const usesLegacyLayout = header.includes("unità") || header.includes("unita");
+
     for (const row of rows) {
       // Robust parsing: try semicolon first (common in Italian Excel), then comma
       let columns = row.split(";").map(c => c.trim().replace(/^"(.*)"$/, '$1'));
-      if (columns.length < 5) {
+      if (columns.length < 4) {
         columns = row.split(",").map(c => c.trim().replace(/^"(.*)"$/, '$1'));
       }
-      
-      if (columns.length < 5) continue; // Minimum required: Nome, Varieta, Formato, Unita, Prezzo
+
+      if (columns.length < 4) continue; // need at least Nome, Varietà, Formato, Prezzo
 
       const name = columns[0];
       const variant = columns[1] || null;
       const format = columns[2] || null;
-      const unit = columns[3] || null;
-      const unitPriceStr = columns[4].replace(",", ".");
-      const category = columns[5] || null;
-      const emoji = columns[6] || getProductEmoji(name);
-      const notes = columns[7] || null;
+
+      let unit: string | null = null;
+      let unitPriceStr: string;
+      let pricePerKgStr: string | null = null;
+      let category: string | null = null;
+      let emoji: string;
+      let notes: string | null = null;
+
+      if (usesLegacyLayout) {
+        // Legacy: Nome; Varietà; Formato; Unità; Prezzo; Categoria; Icona; Note
+        unit = columns[3] || null;
+        unitPriceStr = (columns[4] || "").replace(",", ".");
+        category = columns[5] || null;
+        emoji = columns[6] || getProductEmoji(name);
+        notes = columns[7] || null;
+      } else {
+        // New: Nome; Varietà; Formato; Prezzo; Prezzo/kg; Categoria; Icona; Note
+        unitPriceStr = (columns[3] || "").replace(",", ".");
+        const ppk = (columns[4] || "").replace(",", ".");
+        pricePerKgStr = ppk && !isNaN(parseFloat(ppk)) ? parseFloat(ppk).toFixed(2) : null;
+        category = columns[5] || null;
+        emoji = columns[6] || getProductEmoji(name);
+        notes = columns[7] || null;
+      }
 
       const unitPrice = parseFloat(unitPriceStr);
       if (isNaN(unitPrice)) continue;
@@ -60,6 +89,7 @@ export async function adminImportProductsCsv(supplierId: string, csvText: string
         format,
         unit,
         unitPrice: unitPrice.toString(),
+        pricePerKg: pricePerKgStr,
         category,
         emoji,
         notes,

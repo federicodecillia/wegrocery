@@ -63,6 +63,10 @@ export const supplierProducts = pgTable("supplier_products", {
   format: text("format"),
   unit: text("unit"),
   unitPrice: numeric("unit_price", { precision: 10, scale: 2 }).notNull(),
+  // Optional reference price-per-kg for weight-based items so members can
+  // compare. Distinct from `unitPrice`, which is the price actually charged
+  // for one packaged unit.
+  pricePerKg: numeric("price_per_kg", { precision: 10, scale: 2 }),
   notes: text("notes"),
   category: text("category"),
   emoji: text("emoji"),
@@ -82,6 +86,7 @@ export const products = pgTable(
     variant: text("variant"),
     format: text("format"),
     unitPrice: numeric("unit_price", { precision: 10, scale: 2 }).notNull(),
+    pricePerKg: numeric("price_per_kg", { precision: 10, scale: 2 }),
     unit: text("unit"),
     supplier: text("supplier"),
     notes: text("notes"),

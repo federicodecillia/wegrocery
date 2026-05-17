@@ -20,6 +20,19 @@ _Nothing yet._
 
 ---
 
+## [1.4.3] — 2026-05-17
+
+### Added
+- **Reference price-per-kg** on every product (optional). Admins can fill it for weight-based items (e.g. €5,00 the cestino, €15,00/kg) and members see both prices in the order form. Surfaced everywhere a price appears: catalog, order form, supplier detail.
+- **Inline help tooltips** on every field of the product form. Hover (or tap) the small "?" next to a label to get a one-line example explaining what to put in.
+
+### Changed
+- **Product form simplified**: removed the "Unità" field (it duplicated the format string and confused admins). The form now asks for Nome · Varietà · Formato · Categoria · Prezzo · Prezzo/kg (opzionale) · Note · Icona.
+- **Category is now a dropdown**: predefined list (Frutta, Verdura, Pane e cereali, Pasta e riso, Latticini, Uova, Carne, Pesce, Conserve, Olio e aceto, Bevande, Dolci, Altro) merged with whatever the supplier already uses, plus an inline "+ aggiungi nuova categoria" row for one-off additions.
+- **CSV template updated** to the new column layout `Nome; Varietà; Formato; Prezzo; Prezzo/kg; Categoria; Icona; Note`. The importer still accepts the old "Unità" layout for backward compatibility.
+
+---
+
 ## [1.4.2] — 2026-05-17
 
 ### Added
@@ -109,7 +122,8 @@ _Nothing yet._
 
 ---
 
-[Unreleased]: https://github.com/federicodecillia/porta_moneta/compare/v1.4.2...HEAD
+[Unreleased]: https://github.com/federicodecillia/porta_moneta/compare/v1.4.3...HEAD
+[1.4.3]: https://github.com/federicodecillia/porta_moneta/releases/tag/v1.4.3
 [1.4.2]: https://github.com/federicodecillia/porta_moneta/releases/tag/v1.4.2
 [1.4.1]: https://github.com/federicodecillia/porta_moneta/releases/tag/v1.4.1
 [1.4.0]: https://github.com/federicodecillia/porta_moneta/releases/tag/v1.4.0

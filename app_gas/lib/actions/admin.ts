@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { eq, and, sql, or, isNull, inArray } from "drizzle-orm";
+import { eq, and, sql, inArray } from "drizzle-orm";
 import { auth } from "@/auth";
 import { getDb } from "@/lib/db/client";
 import { auditLog, ledgerEntries, members, notifications, orderCycles, orders, products, suppliers, supplierProducts } from "@/lib/db/schema";
@@ -509,6 +509,7 @@ async function upsertCycleProducts(
     variant: string | null;
     format: string | null;
     unitPrice: string | number;
+    pricePerKg?: string | number | null;
     unit: string | null;
     supplier: string | null;
     notes: string | null;
@@ -539,10 +540,17 @@ async function upsertCycleProducts(
     const key = `${np.name.toLowerCase().trim()}|${np.variant?.toLowerCase().trim() || ""}|${np.format?.toLowerCase().trim() || ""}|${np.unit?.toLowerCase().trim() || ""}`;
     const existing = existingMap.get(key);
     const unitPriceStr = typeof np.unitPrice === "number" ? np.unitPrice.toFixed(2) : np.unitPrice;
+    const pricePerKgStr =
+      np.pricePerKg == null
+        ? null
+        : typeof np.pricePerKg === "number"
+          ? np.pricePerKg.toFixed(2)
+          : np.pricePerKg;
 
     if (existing) {
       await db.update(products).set({
         unitPrice: unitPriceStr,
+        pricePerKg: pricePerKgStr ?? existing.pricePerKg,
         notes: np.notes || existing.notes,
         category: np.category || existing.category,
         supplier: np.supplier || existing.supplier,
@@ -560,6 +568,7 @@ async function upsertCycleProducts(
         format: np.format?.trim() || null,
         unit: np.unit?.trim() || null,
         unitPrice: unitPriceStr,
+        pricePerKg: pricePerKgStr,
         supplier: np.supplier?.trim() || null,
         supplierId: np.supplierId?.trim() || null,
         notes: np.notes?.trim() || null,
@@ -623,12 +632,17 @@ export async function adminUpdateCycleProduct(
     unit?: string;
     category?: string;
     unitPrice: number;
+    pricePerKg?: number | null;
     notes?: string;
   }
 ): Promise<{ error?: string }> {
   try {
     const admin = await requireAdmin();
     const db = getDb();
+    const pricePerKg =
+      data.pricePerKg != null && !Number.isNaN(data.pricePerKg)
+        ? data.pricePerKg.toFixed(2)
+        : null;
     await db
       .update(products)
       .set({
@@ -638,6 +652,7 @@ export async function adminUpdateCycleProduct(
         unit: data.unit || null,
         category: data.category || null,
         unitPrice: data.unitPrice.toFixed(2),
+        pricePerKg,
         notes: data.notes || null,
       })
       .where(eq(products.productId, productId));
@@ -900,6 +915,7 @@ export type UpsertCatalogProductInput = {
   format?: string;
   unit?: string;
   unitPrice: number;
+  pricePerKg?: number | null;
   notes?: string;
   category?: string;
   emoji?: string;
@@ -920,6 +936,11 @@ export async function adminUpsertCatalogProduct(data: UpsertCatalogProductInput)
 
       if (!existing) return { error: "Prodotto non trovato a catalogo" };
 
+      const pricePerKg =
+        data.pricePerKg != null && !Number.isNaN(data.pricePerKg)
+          ? data.pricePerKg.toFixed(2)
+          : null;
+
       if (parseFloat(existing.unitPrice) !== data.unitPrice) {
         // Price changed -> archive old and insert new
         await db.update(supplierProducts).set({ active: false, archivedAt: now }).where(eq(supplierProducts.catalogProductId, data.catalogProductId));
@@ -932,6 +953,7 @@ export async function adminUpsertCatalogProduct(data: UpsertCatalogProductInput)
           format: data.format || null,
           unit: data.unit || null,
           unitPrice: data.unitPrice.toFixed(2),
+          pricePerKg,
           notes: data.notes || null,
           category: data.category || null,
           emoji: data.emoji || null,
@@ -951,6 +973,7 @@ export async function adminUpsertCatalogProduct(data: UpsertCatalogProductInput)
             format: data.format || null,
             unit: data.unit || null,
             unitPrice: data.unitPrice.toString(),
+            pricePerKg,
             notes: data.notes || null,
             category: data.category || null,
             emoji: data.emoji || null,
@@ -961,6 +984,10 @@ export async function adminUpsertCatalogProduct(data: UpsertCatalogProductInput)
         return {};
       }
     } else {
+      const pricePerKg =
+        data.pricePerKg != null && !Number.isNaN(data.pricePerKg)
+          ? data.pricePerKg.toFixed(2)
+          : null;
       const newId = genId("cp");
       await db.insert(supplierProducts).values({
         catalogProductId: newId,
@@ -970,6 +997,7 @@ export async function adminUpsertCatalogProduct(data: UpsertCatalogProductInput)
         format: data.format || null,
         unit: data.unit || null,
         unitPrice: data.unitPrice.toString(),
+        pricePerKg,
         notes: data.notes || null,
         category: data.category || null,
         emoji: data.emoji || null,
@@ -1016,6 +1044,7 @@ export async function adminLoadFromCatalog(cycleId: string, catalogProductIds: s
       variant: p.variant,
       format: p.format,
       unitPrice: p.unitPrice,
+      pricePerKg: p.pricePerKg,
       unit: p.unit,
       supplier: null, // the cycle supplier is implicit
       supplierId: p.supplierId,
@@ -1038,22 +1067,18 @@ export async function adminCleanupIncompleteProducts(): Promise<{error?: string}
   try {
     const admin = await requireAdmin();
     const db = getDb();
-    
-    // Incomplete in catalog
+
+    // A product is "incomplete" if its unit price is zero. We no longer
+    // treat a missing `unit` as incomplete: starting from v1.4.3 the admin
+    // form does not expose a Unità field anymore — the format string is
+    // the source of truth (e.g. "Sacco 2kg") and `price_per_kg` provides
+    // the optional reference price for weight-based items.
+
     await db.delete(supplierProducts)
-      .where(or(
-        isNull(supplierProducts.unit),
-        eq(supplierProducts.unit, ""),
-        eq(supplierProducts.unitPrice, "0")
-      ));
-    
-    // Incomplete in current cycles
+      .where(eq(supplierProducts.unitPrice, "0"));
+
     await db.delete(products)
-      .where(or(
-        isNull(products.unit),
-        eq(products.unit, ""),
-        eq(products.unitPrice, "0")
-      ));
+      .where(eq(products.unitPrice, "0"));
     
     await writeAudit(db, admin.email, "cleanup_incomplete_products", "catalog", "");
     revalidatePath("/admin");

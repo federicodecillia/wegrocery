@@ -20,6 +20,19 @@ _Niente per ora._
 
 ---
 
+## [1.4.3] — 17 maggio 2026
+
+### Aggiunte
+- **Prezzo al chilo di riferimento** su ogni prodotto (opzionale). L'admin lo può compilare per i prodotti a peso (es. €5,00 il cestino, €15,00/kg) e il socio vede entrambi i prezzi nel form ordine. Mostrato ovunque appaia il prezzo: catalogo, ordine, scheda fornitore.
+- **Tooltip di aiuto** accanto a ogni campo del form prodotto. Passa il mouse (o tocca) il "?" vicino al titolo del campo per leggere un esempio breve che spiega cosa mettere.
+
+### Modificato
+- **Form prodotto semplificato**: rimosso il campo "Unità" (duplicava il formato e confondeva). Ora i campi sono Nome · Varietà · Formato · Categoria · Prezzo · Prezzo/kg (opzionale) · Note · Icona.
+- **Categoria è ora un menu a tendina**: lista predefinita (Frutta, Verdura, Pane e cereali, Pasta e riso, Latticini, Uova, Carne, Pesce, Conserve, Olio e aceto, Bevande, Dolci, Altro) unita alle categorie già usate dal fornitore, con un'opzione "+ aggiungi nuova categoria" in fondo per casi al volo.
+- **Template CSV aggiornato** al nuovo schema colonne `Nome; Varietà; Formato; Prezzo; Prezzo/kg; Categoria; Icona; Note`. L'import continua ad accettare anche il vecchio formato con "Unità" per retrocompatibilità.
+
+---
+
 ## [1.4.2] — 17 maggio 2026
 
 ### Aggiunte
@@ -109,7 +122,8 @@ _Niente per ora._
 
 ---
 
-[Non rilasciato]: https://github.com/federicodecillia/porta_moneta/compare/v1.4.2...HEAD
+[Non rilasciato]: https://github.com/federicodecillia/porta_moneta/compare/v1.4.3...HEAD
+[1.4.3]: https://github.com/federicodecillia/porta_moneta/releases/tag/v1.4.3
 [1.4.2]: https://github.com/federicodecillia/porta_moneta/releases/tag/v1.4.2
 [1.4.1]: https://github.com/federicodecillia/porta_moneta/releases/tag/v1.4.1
 [1.4.0]: https://github.com/federicodecillia/porta_moneta/releases/tag/v1.4.0

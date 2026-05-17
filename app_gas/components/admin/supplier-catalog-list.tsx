@@ -243,6 +243,11 @@ export function SupplierCatalogList({
                         {formatEur(parseFloat(product.unitPrice))}
                         {product.unit ? `/${product.unit}` : ""}
                       </div>
+                      {product.pricePerKg && (
+                        <div className="font-mono text-[10px] text-pm-gray-light">
+                          ({formatEur(parseFloat(product.pricePerKg))}/kg)
+                        </div>
+                      )}
                       <div className="mt-2 flex justify-end gap-2">
                         <button
                           onClick={() => setEditingId(product.catalogProductId)}

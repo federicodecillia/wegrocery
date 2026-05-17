@@ -705,6 +705,7 @@ export type CatalogProductItem = {
   format: string | null;
   unit: string | null;
   unitPrice: string;
+  pricePerKg: string | null;
   notes: string | null;
   category: string | null;
   emoji: string | null;

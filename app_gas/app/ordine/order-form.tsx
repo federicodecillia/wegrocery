@@ -14,6 +14,7 @@ type Product = {
   format: string | null;
   unit: string | null;
   unitPrice: string;
+  pricePerKg: string | null;
   category: string | null;
   sortOrder: number;
 };
@@ -206,11 +207,16 @@ export function OrderForm({
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="text-[14px] font-medium text-pm-near-black">{p.name}</div>
-                    <div className="mt-[2px] flex items-center gap-2">
+                    <div className="mt-[2px] flex flex-wrap items-center gap-x-2 gap-y-0.5">
                       {meta && <span className="font-mono text-[11px] text-pm-gray">{meta}</span>}
                       <span className="font-mono text-[11px] font-semibold text-pm-orange">
                         {formatEur(parseFloat(p.unitPrice))}{p.unit ? `/${p.unit}` : ""}
                       </span>
+                      {p.pricePerKg && (
+                        <span className="font-mono text-[10px] text-pm-gray-light">
+                          ({formatEur(parseFloat(p.pricePerKg))}/kg)
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>

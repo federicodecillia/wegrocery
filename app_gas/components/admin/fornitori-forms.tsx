@@ -1,7 +1,9 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { toast } from "@/components/ui/toast";
+import { FieldHelp } from "@/components/ui/field-help";
+import { CategorySelect } from "@/components/ui/category-select";
 import {
   adminArchiveSupplier,
   adminDeleteSupplier,
@@ -13,6 +15,16 @@ import {
 } from "@/lib/actions/admin";
 import type { CatalogProductItem } from "@/lib/db/queries";
 import { formatEur } from "@/lib/utils";
+
+const HELP_FIELDS = {
+  nome: "Es: Mela rossa, Insalata, Pane integrale. È quello che vede il socio nel form ordine.",
+  varieta: "Es: Bio, Stark, Granny Smith. Aggiungilo se ne esiste più di una variante.",
+  formato: 'Cosa porti al socio per quel prezzo. Es: "Sacco 2kg", "Cestino", "Mazzo".',
+  prezzo: "Quanto paga il socio per UN formato. Decimali con virgola o punto.",
+  prezzoKg: "Opzionale: prezzo al chilo come riferimento. Comodo per prodotti a peso.",
+  categoria: "Serve a raggruppare i prodotti nel form ordine. Scegli o aggiungi una nuova.",
+  note: "Note libere, mostrate al socio.",
+} as const;
 
 type Supplier = {
   supplierId: string;
@@ -162,10 +174,12 @@ export function FornitoriForm({
 export function CatalogProductForm({
   supplierId,
   product,
+  knownCategories = [],
   onClose,
 }: {
   supplierId: string;
   product?: CatalogProductItem;
+  knownCategories?: ReadonlyArray<string>;
   onClose: () => void;
 }) {
   const [isPending, startTransition] = useTransition();
@@ -173,14 +187,18 @@ export function CatalogProductForm({
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
+    const ppkRaw = (fd.get("pricePerKg") as string | null)?.replace(",", ".").trim();
+    const pricePerKg = ppkRaw ? parseFloat(ppkRaw) : null;
     const data: UpsertCatalogProductInput = {
       catalogProductId: product?.catalogProductId,
       supplierId,
       name: fd.get("name") as string,
       variant: (fd.get("variant") as string) || undefined,
       format: (fd.get("format") as string) || undefined,
-      unit: (fd.get("unit") as string) || undefined,
+      // unit no longer surfaced in UI — preserve existing value on edits.
+      unit: product?.unit ?? undefined,
       unitPrice: parseFloat((fd.get("unitPrice") as string).replace(",", ".")),
+      pricePerKg: pricePerKg != null && !Number.isNaN(pricePerKg) ? pricePerKg : null,
       notes: (fd.get("notes") as string) || undefined,
       category: (fd.get("category") as string) || undefined,
     };
@@ -220,31 +238,56 @@ export function CatalogProductForm({
 
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <div className="col-span-2 sm:col-span-4">
-          <label className={labelCls}>Nome *</label>
-          <input name="name" required defaultValue={product?.name} className={inputCls} />
+          <label className={labelCls}>
+            Nome *<FieldHelp text={HELP_FIELDS.nome} />
+          </label>
+          <input name="name" required defaultValue={product?.name} placeholder="es. Mela rossa" className={inputCls} />
         </div>
         <div className="col-span-2 sm:col-span-2">
-          <label className={labelCls}>Varietà</label>
-          <input name="variant" defaultValue={product?.variant ?? ""} className={inputCls} />
+          <label className={labelCls}>
+            Varietà<FieldHelp text={HELP_FIELDS.varieta} />
+          </label>
+          <input name="variant" defaultValue={product?.variant ?? ""} placeholder="es. Bio" className={inputCls} />
         </div>
-        <div className="col-span-1">
-          <label className={labelCls}>Formato</label>
-          <input name="format" placeholder="es. 1 kg" defaultValue={product?.format ?? ""} className={inputCls} />
-        </div>
-        <div className="col-span-1">
-          <label className={labelCls}>Unità</label>
-          <input name="unit" placeholder="es. kg" defaultValue={product?.unit ?? ""} className={inputCls} />
-        </div>
-        <div className="col-span-2">
-          <label className={labelCls}>Categoria</label>
-          <input name="category" placeholder="es. Frutta" defaultValue={product?.category ?? ""} className={inputCls} />
-        </div>
-        <div className="col-span-2">
-          <label className={labelCls}>Prezzo *</label>
-          <input name="unitPrice" type="number" step="0.01" required defaultValue={product?.unitPrice} className={inputCls} />
+        <div className="col-span-2 sm:col-span-2">
+          <label className={labelCls}>
+            Formato<FieldHelp text={HELP_FIELDS.formato} />
+          </label>
+          <input name="format" placeholder="es. Sacco 2kg" defaultValue={product?.format ?? ""} className={inputCls} />
         </div>
         <div className="col-span-2 sm:col-span-4">
-          <label className={labelCls}>Note</label>
+          <label className={labelCls}>
+            Categoria<FieldHelp text={HELP_FIELDS.categoria} />
+          </label>
+          <CategorySelect
+            name="category"
+            value={product?.category ?? ""}
+            extra={knownCategories}
+          />
+        </div>
+        <div className="col-span-1 sm:col-span-2">
+          <label className={labelCls}>
+            Prezzo *<FieldHelp text={HELP_FIELDS.prezzo} />
+          </label>
+          <input name="unitPrice" type="number" step="0.01" required defaultValue={product?.unitPrice} placeholder="es. 5,00" className={inputCls} />
+        </div>
+        <div className="col-span-1 sm:col-span-2">
+          <label className={labelCls}>
+            Prezzo / kg<FieldHelp text={HELP_FIELDS.prezzoKg} />
+          </label>
+          <input
+            name="pricePerKg"
+            type="number"
+            step="0.01"
+            defaultValue={product?.pricePerKg ?? ""}
+            placeholder="opzionale"
+            className={inputCls}
+          />
+        </div>
+        <div className="col-span-2 sm:col-span-4">
+          <label className={labelCls}>
+            Note<FieldHelp text={HELP_FIELDS.note} />
+          </label>
           <input name="notes" defaultValue={product?.notes ?? ""} className={inputCls} />
         </div>
       </div>
@@ -275,6 +318,22 @@ export function FornitoriList({
   const [addingCatalogFor, setAddingCatalogFor] = useState<string | null>(null);
   const [editingCatalogId, setEditingCatalogId] = useState<string | null>(null);
   const [, startTransition] = useTransition();
+
+  // Per-supplier list of categories already in use — passed to the dropdown
+  // so admins see their own labels alongside the generic defaults.
+  const knownCategoriesBySupplier = useMemo<Record<string, string[]>>(() => {
+    const result: Record<string, string[]> = {};
+    for (const [supplierId, list] of Object.entries(catalogBySupplier)) {
+      result[supplierId] = Array.from(
+        new Set(
+          list
+            .map((p) => p.category?.trim())
+            .filter((c): c is string => Boolean(c)),
+        ),
+      );
+    }
+    return result;
+  }, [catalogBySupplier]);
 
   function handleArchive(s: Supplier) {
     startTransition(async () => {
@@ -412,7 +471,11 @@ export function FornitoriList({
                           </button>
                         </div>
                         {addingCatalogFor === s.supplierId && (
-                          <CatalogProductForm supplierId={s.supplierId} onClose={() => setAddingCatalogFor(null)} />
+                          <CatalogProductForm
+                            supplierId={s.supplierId}
+                            knownCategories={knownCategoriesBySupplier[s.supplierId] ?? []}
+                            onClose={() => setAddingCatalogFor(null)}
+                          />
                         )}
                         <div className="space-y-1">
                           {(catalogBySupplier[s.supplierId] ?? []).filter((p) => p.active).map((cp) => (
@@ -421,6 +484,7 @@ export function FornitoriList({
                                 <CatalogProductForm
                                   supplierId={s.supplierId}
                                   product={cp}
+                                  knownCategories={knownCategoriesBySupplier[s.supplierId] ?? []}
                                   onClose={() => setEditingCatalogId(null)}
                                 />
                               ) : (
@@ -434,6 +498,11 @@ export function FornitoriList({
                                   <div className="flex items-center gap-3">
                                     <span className="font-mono text-[12px] font-semibold text-pm-near-black">
                                       {formatEur(parseFloat(cp.unitPrice))}
+                                      {cp.pricePerKg && (
+                                        <span className="ml-1 text-[10px] text-pm-gray-light">
+                                          ({formatEur(parseFloat(cp.pricePerKg))}/kg)
+                                        </span>
+                                      )}
                                     </span>
                                     <div className="flex items-center gap-1.5">
                                       <button
