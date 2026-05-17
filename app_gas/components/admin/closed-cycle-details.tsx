@@ -118,8 +118,7 @@ export function ClosedCycleDetails({
                             </div>
                           </div>
                           <span className="shrink-0 text-right font-mono text-pm-gray">
-                            {l.quantity} × {formatEur(parseFloat(l.unitPrice))}
-                            {l.unit ? `/${l.unit}` : ""} = {formatEur(parseFloat(l.lineTotal))}
+                            {l.quantity} × {formatEur(parseFloat(l.unitPrice))} = {formatEur(parseFloat(l.lineTotal))}
                           </span>
                         </div>
                       ))}

@@ -20,6 +20,13 @@ _Niente per ora._
 
 ---
 
+## [1.4.4] — 17 maggio 2026
+
+### Risolto
+- **Rimosso il suffisso "/1" residuo accanto ai prezzi dei prodotti** ovunque: riepilogo ordini in home, form ordine, storico, catalogo admin, viste cicli. Veniva fuori dal vecchio campo "Unità" (per molti prodotti compilato letteralmente con "1") che la v1.4.3 aveva tolto dal form ma continuava a stampare nei dettagli prodotto come `/1`. Ora i prezzi sono `€2,00` (o `€2,00 (€4,00/kg)` quando è impostato il prezzo al chilo), senza barra finale.
+
+---
+
 ## [1.4.3] — 17 maggio 2026
 
 ### Aggiunte
@@ -122,7 +129,8 @@ _Niente per ora._
 
 ---
 
-[Non rilasciato]: https://github.com/federicodecillia/porta_moneta/compare/v1.4.3...HEAD
+[Non rilasciato]: https://github.com/federicodecillia/porta_moneta/compare/v1.4.4...HEAD
+[1.4.4]: https://github.com/federicodecillia/porta_moneta/releases/tag/v1.4.4
 [1.4.3]: https://github.com/federicodecillia/porta_moneta/releases/tag/v1.4.3
 [1.4.2]: https://github.com/federicodecillia/porta_moneta/releases/tag/v1.4.2
 [1.4.1]: https://github.com/federicodecillia/porta_moneta/releases/tag/v1.4.1

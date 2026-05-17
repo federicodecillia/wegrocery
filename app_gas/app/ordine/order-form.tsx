@@ -210,7 +210,7 @@ export function OrderForm({
                     <div className="mt-[2px] flex flex-wrap items-center gap-x-2 gap-y-0.5">
                       {meta && <span className="font-mono text-[11px] text-pm-gray">{meta}</span>}
                       <span className="font-mono text-[11px] font-semibold text-pm-orange">
-                        {formatEur(parseFloat(p.unitPrice))}{p.unit ? `/${p.unit}` : ""}
+                        {formatEur(parseFloat(p.unitPrice))}
                       </span>
                       {p.pricePerKg && (
                         <span className="font-mono text-[10px] text-pm-gray-light">

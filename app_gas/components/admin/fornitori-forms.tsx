@@ -493,7 +493,6 @@ export function FornitoriList({
                                     <span className="font-semibold text-pm-near-black">{cp.name}</span>
                                     {cp.variant && <span className="ml-1 text-pm-gray">· {cp.variant}</span>}
                                     {cp.format && <span className="ml-1 font-mono text-[10px] text-pm-gray-light">({cp.format})</span>}
-                                    {cp.unit && <span className="ml-1 font-mono text-[10px] text-pm-gray-light">/{cp.unit}</span>}
                                   </div>
                                   <div className="flex items-center gap-3">
                                     <span className="font-mono text-[12px] font-semibold text-pm-near-black">

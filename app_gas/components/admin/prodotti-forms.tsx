@@ -361,7 +361,6 @@ export function CatalogLoadForm({
             </div>
             <div className="font-mono text-[12px] font-semibold text-pm-near-black">
               {formatEur(parseFloat(p.unitPrice))}
-              {p.unit ? `/${p.unit}` : ""}
             </div>
           </label>
         ))}
@@ -573,7 +572,6 @@ export function ProductListItem({
         <div className="shrink-0 text-right">
           <div className="font-mono text-[13px] font-bold text-pm-near-black">
             {formatEur(parseFloat(product.unitPrice))}
-            {product.unit ? `/${product.unit}` : ""}
           </div>
           {product.pricePerKg && (
             <div className="font-mono text-[10px] text-pm-gray-light">
@@ -685,7 +683,6 @@ export function CatalogManager({
               <div className="text-right">
                 <div className="font-mono text-[13px] font-bold text-pm-near-black">
                   {formatEur(parseFloat(p.unitPrice))}
-                  {p.unit ? `/${p.unit}` : ""}
                 </div>
                 {p.pricePerKg && (
                   <div className="font-mono text-[10px] text-pm-gray-light">

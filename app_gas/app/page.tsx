@@ -169,7 +169,7 @@ export default async function HomePage() {
                           </div>
                         </div>
                         <div className="font-mono text-[13px] font-semibold text-pm-near-black">
-                          ×{line.quantity} · {formatEur(parseFloat(line.lineTotal))}{p?.unit ? `/${p.unit}` : ""}
+                          ×{line.quantity} · {formatEur(parseFloat(line.lineTotal))}
                         </div>
                       </div>
                     );

@@ -708,7 +708,7 @@ export function CycleProductPicker({
                       <div className="flex items-center gap-2 text-[10px] text-pm-gray">
                         <span>{p.variant} {p.format && `(${p.format})`}</span>
                         <span className="font-mono font-bold text-pm-orange">
-                          {formatEur(parseFloat(p.unitPrice))}{p.unit ? `/${p.unit}` : ""}
+                          {formatEur(parseFloat(p.unitPrice))}
                         </span>
                       </div>
                     </div>
@@ -758,7 +758,7 @@ export function CycleProductPicker({
                       <div className="flex items-center gap-2 text-[10px] text-pm-gray">
                         <span>{cp.variant} {cp.format && `(${cp.format})`}</span>
                         <span className="font-mono font-bold text-pm-orange">
-                          {formatEur(parseFloat(cp.unitPrice))}{cp.unit ? `/${cp.unit}` : ""}
+                          {formatEur(parseFloat(cp.unitPrice))}
                         </span>
                       </div>
                     </div>

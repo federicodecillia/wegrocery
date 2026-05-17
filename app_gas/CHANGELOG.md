@@ -20,6 +20,13 @@ _Nothing yet._
 
 ---
 
+## [1.4.4] — 2026-05-17
+
+### Fixed
+- **Removed the dangling "/1" suffix next to product prices** everywhere — home order summary, order form, history, admin catalog and cycle views. The suffix came from the legacy "Unità" field (often set to the literal string "1") which v1.4.3 removed from the UI but kept rendering as a noisy `/1`. Now prices read as `€2,00` (or `€2,00 (€4,00/kg)` when a kg reference is set), without the trailing slash.
+
+---
+
 ## [1.4.3] — 2026-05-17
 
 ### Added
@@ -122,7 +129,8 @@ _Nothing yet._
 
 ---
 
-[Unreleased]: https://github.com/federicodecillia/porta_moneta/compare/v1.4.3...HEAD
+[Unreleased]: https://github.com/federicodecillia/porta_moneta/compare/v1.4.4...HEAD
+[1.4.4]: https://github.com/federicodecillia/porta_moneta/releases/tag/v1.4.4
 [1.4.3]: https://github.com/federicodecillia/porta_moneta/releases/tag/v1.4.3
 [1.4.2]: https://github.com/federicodecillia/porta_moneta/releases/tag/v1.4.2
 [1.4.1]: https://github.com/federicodecillia/porta_moneta/releases/tag/v1.4.1

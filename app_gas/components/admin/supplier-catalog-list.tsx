@@ -241,7 +241,6 @@ export function SupplierCatalogList({
                     <div className="shrink-0 text-right">
                       <div className="font-mono text-[13px] font-bold text-pm-near-black">
                         {formatEur(parseFloat(product.unitPrice))}
-                        {product.unit ? `/${product.unit}` : ""}
                       </div>
                       {product.pricePerKg && (
                         <div className="font-mono text-[10px] text-pm-gray-light">

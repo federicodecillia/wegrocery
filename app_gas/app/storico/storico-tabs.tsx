@@ -125,8 +125,7 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
                                 {[l.supplierName, l.category].filter(Boolean).join(" · ")}
                               </div>
                               <div className="mt-[2px] font-mono text-[10px] text-pm-gray-light">
-                                {l.quantity} × {formatEur(l.unitPrice)}
-                                {l.unit ? `/${l.unit}` : ""} = {formatEur(l.lineTotal)}
+                                {l.quantity} × {formatEur(l.unitPrice)} = {formatEur(l.lineTotal)}
                               </div>
                             </div>
                           </div>

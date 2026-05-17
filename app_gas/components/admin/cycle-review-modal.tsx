@@ -207,7 +207,6 @@ function CycleReviewModal({
                             Ordinato:{" "}
                             <span className="font-mono font-bold text-pm-near-black">
                               {r.totalQty}
-                              {r.unit ? ` ${r.unit}` : ""}
                             </span>
                           </span>
                           <span>
@@ -220,7 +219,7 @@ function CycleReviewModal({
                       </div>
                       <div className="shrink-0 text-right">
                         <label className="block text-[9px] uppercase tracking-wide text-pm-gray-light">
-                          {r.unit ? `€/${r.unit}` : "€/u"}
+                          € finale
                         </label>
                         <input
                           type="number"
