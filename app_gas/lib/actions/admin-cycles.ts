@@ -20,6 +20,7 @@ export async function adminGetCycleOrderDetails(cycleId: string) {
     
     const rows = await db
       .select({
+        orderLineId: orders.orderLineId,
         memberId: members.memberId,
         memberName: members.fullName,
         productName: products.name,
@@ -33,6 +34,8 @@ export async function adminGetCycleOrderDetails(cycleId: string) {
         quantity: orders.quantity,
         unitPrice: orders.unitPriceSnapshot,
         lineTotal: orders.lineTotal,
+        actualQuantity: orders.actualQuantity,
+        actualLineTotal: orders.actualLineTotal,
       })
       .from(orders)
       .innerJoin(members, eq(orders.memberId, members.memberId))

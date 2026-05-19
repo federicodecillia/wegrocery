@@ -118,6 +118,10 @@ export const orders = pgTable(
       scale: 2,
     }).notNull(),
     lineTotal: numeric("line_total", { precision: 10, scale: 2 }).notNull(),
+    // Recorded after delivery when the weight/quantity differs from what
+    // was ordered. NULL = delivered exactly as ordered.
+    actualQuantity: numeric("actual_quantity", { precision: 10, scale: 3 }),
+    actualLineTotal: numeric("actual_line_total", { precision: 10, scale: 2 }),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
   },
   (table) => [

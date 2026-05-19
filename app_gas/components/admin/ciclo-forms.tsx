@@ -853,7 +853,7 @@ export function SupplierEmailButton({
     if (disabledReason) return;
     const ok = await confirm({
       title: `Invia ordine a ${supplierName}?`,
-      message: `Destinatario: ${supplierEmail}\nOggetto: Ordine GAS Porta Moneta — ${cycleTitle}\n\nRiceverai una copia in CC.`,
+      message: `Destinatario: ${supplierEmail}\nOggetto: Ordine GAS Porta Moneta — ${cycleTitle}\n\nIn CC: tu + gas@portamoneta.org.`,
       confirmLabel: "Invia ora",
       cancelLabel: "Annulla",
     });

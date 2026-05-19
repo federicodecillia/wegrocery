@@ -7,7 +7,7 @@ type Attachment = {
 
 type SendMailOpts = {
   to: string;
-  cc?: string;
+  cc?: string | string[];
   subject: string;
   text: string;
   attachments?: Attachment[];
@@ -27,10 +27,11 @@ export async function sendMail(
 
   try {
     const resend = new Resend(apiKey);
+    const ccList = opts.cc == null ? [] : Array.isArray(opts.cc) ? opts.cc : [opts.cc];
     const { data, error } = await resend.emails.send({
       from,
       to: [opts.to],
-      ...(opts.cc ? { cc: [opts.cc] } : {}),
+      ...(ccList.length > 0 ? { cc: ccList } : {}),
       subject: opts.subject,
       text: opts.text,
       ...(opts.attachments ? { attachments: opts.attachments } : {}),

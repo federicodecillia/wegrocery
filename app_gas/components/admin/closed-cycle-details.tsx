@@ -1,12 +1,14 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useState, useTransition } from "react";
 import { adminGetCycleOrderDetails } from "@/lib/actions/admin-cycles";
+import { adminUpdateOrderLineActuals } from "@/lib/actions/admin";
 import { formatEur, getProductEmoji } from "@/lib/utils";
 import { toast } from "@/components/ui/toast";
 import { EditClosedOrderModal } from "./edit-closed-order-modal";
 
 type OrderDetail = {
+  orderLineId: string;
   memberId: string;
   memberName: string;
   productName: string;
@@ -20,6 +22,8 @@ type OrderDetail = {
   quantity: number;
   unitPrice: string;
   lineTotal: string;
+  actualQuantity: string | null;
+  actualLineTotal: string | null;
 };
 
 export function ClosedCycleDetails({
@@ -76,7 +80,9 @@ export function ClosedCycleDetails({
     acc[ord.memberName].push(ord);
     return acc;
   }, {});
-  const grandTotal = orderDetails.reduce((s, l) => s + parseFloat(l.lineTotal), 0);
+  const effectiveTotal = (l: OrderDetail) =>
+    parseFloat(l.actualLineTotal ?? l.lineTotal);
+  const grandTotal = orderDetails.reduce((s, l) => s + effectiveTotal(l), 0);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
@@ -104,7 +110,7 @@ export function ClosedCycleDetails({
           ) : (
             <div className="space-y-8">
               {Object.entries(grouped).map(([memberName, lines]) => {
-                const total = lines.reduce((s, l) => s + parseFloat(l.lineTotal), 0);
+                const total = lines.reduce((s, l) => s + effectiveTotal(l), 0);
                 const memberId = lines[0]?.memberId;
                 return (
                   <div key={memberName} className="space-y-2">
@@ -125,23 +131,8 @@ export function ClosedCycleDetails({
                       </div>
                     </div>
                     <div className="space-y-1 pl-2">
-                      {lines.map((l, i) => (
-                        <div key={i} className="flex items-start justify-between gap-3 text-[12px] text-pm-near-black">
-                          <div className="flex min-w-0 flex-1 gap-2">
-                            <span className="shrink-0 text-[16px]">{l.emoji || getProductEmoji(l.productName)}</span>
-                            <div className="min-w-0">
-                              <div className="truncate font-medium">
-                                {l.productName} {l.variant && <span className="text-pm-gray">({l.variant})</span>}
-                              </div>
-                              <div className="truncate text-[10px] text-pm-gray">
-                                {[l.supplierName ?? l.productSupplier, l.category, l.format].filter(Boolean).join(" · ")}
-                              </div>
-                            </div>
-                          </div>
-                          <span className="shrink-0 text-right font-mono text-pm-gray">
-                            {l.quantity} × {formatEur(parseFloat(l.unitPrice))} = {formatEur(parseFloat(l.lineTotal))}
-                          </span>
-                        </div>
+                      {lines.map((l) => (
+                        <OrderLineRow key={l.orderLineId} line={l} onSaved={refetch} />
                       ))}
                     </div>
                   </div>
@@ -185,6 +176,210 @@ export function ClosedCycleDetails({
           onSaved={() => refetch()}
         />
       )}
+    </div>
+  );
+}
+
+// Renders a single order line. Click anywhere on the row to open an inline
+// edit form that lets the admin record the *actually delivered* quantity
+// and cost (the bietola/800g use case). Saving posts a `correction` ledger
+// entry with the delta vs the previous effective total.
+function OrderLineRow({ line, onSaved }: { line: OrderDetail; onSaved: () => void | Promise<void> }) {
+  const [editing, setEditing] = useState(false);
+  const [isPending, startTransition] = useTransition();
+
+  const orderedTotal = parseFloat(line.lineTotal);
+  const effective = parseFloat(line.actualLineTotal ?? line.lineTotal);
+  const adjusted =
+    line.actualQuantity != null || line.actualLineTotal != null;
+  const unit = line.unit ?? "";
+
+  if (!editing) {
+    return (
+      <button
+        type="button"
+        onClick={() => setEditing(true)}
+        className="group flex w-full items-start justify-between gap-3 rounded-lg px-1.5 py-1 text-left text-[12px] text-pm-near-black hover:bg-pm-orange/5"
+        title="Clicca per rettificare la quantita ricevuta"
+      >
+        <div className="flex min-w-0 flex-1 gap-2">
+          <span className="shrink-0 text-[16px]">{line.emoji || getProductEmoji(line.productName)}</span>
+          <div className="min-w-0">
+            <div className="truncate font-medium">
+              {line.productName} {line.variant && <span className="text-pm-gray">({line.variant})</span>}
+              {adjusted && (
+                <span className="ml-1 rounded-full bg-pm-orange/15 px-1.5 py-px text-[9px] font-bold uppercase tracking-wide text-pm-orange">
+                  rettificato
+                </span>
+              )}
+            </div>
+            <div className="truncate text-[10px] text-pm-gray">
+              {[line.supplierName ?? line.productSupplier, line.category, line.format].filter(Boolean).join(" · ")}
+            </div>
+          </div>
+        </div>
+        <span className="shrink-0 text-right font-mono text-[11px] text-pm-gray">
+          {adjusted ? (
+            <>
+              <span className="block text-pm-gray-light line-through">
+                {line.quantity}
+                {unit ? ` ${unit}` : ""} = {formatEur(orderedTotal)}
+              </span>
+              <span className="block font-bold text-pm-near-black">
+                {line.actualQuantity != null
+                  ? `${parseFloat(line.actualQuantity)
+                      .toFixed(3)
+                      .replace(/0+$/, "")
+                      .replace(/\.$/, "")
+                      .replace(".", ",")}${unit ? ` ${unit}` : ""}`
+                  : `${line.quantity}${unit ? ` ${unit}` : ""}`}{" "}
+                = {formatEur(effective)}
+              </span>
+            </>
+          ) : (
+            <>
+              {line.quantity}
+              {unit ? ` ${unit}` : ""} × {formatEur(parseFloat(line.unitPrice))} = {formatEur(orderedTotal)}
+            </>
+          )}
+        </span>
+      </button>
+    );
+  }
+
+  return (
+    <OrderLineEditForm
+      line={line}
+      isPending={isPending}
+      onCancel={() => setEditing(false)}
+      onSave={(actualQuantity, actualLineTotal) => {
+        startTransition(async () => {
+          const result = await adminUpdateOrderLineActuals({
+            orderLineId: line.orderLineId,
+            actualQuantity,
+            actualLineTotal,
+          });
+          if ("error" in result) {
+            toast.error(result.error);
+            return;
+          }
+          if (Math.abs(result.correctionAmount) >= 0.005) {
+            const dir = result.correctionAmount > 0 ? "rimborso" : "addebito";
+            toast.success(`Rettifica salvata: ${dir} di ${formatEur(Math.abs(result.correctionAmount))}`);
+          } else {
+            toast.success("Rettifica salvata");
+          }
+          setEditing(false);
+          await onSaved();
+        });
+      }}
+    />
+  );
+}
+
+function OrderLineEditForm({
+  line,
+  isPending,
+  onCancel,
+  onSave,
+}: {
+  line: OrderDetail;
+  isPending: boolean;
+  onCancel: () => void;
+  onSave: (actualQuantity: string | null, actualLineTotal: string | null) => void;
+}) {
+  const unitPrice = parseFloat(line.unitPrice);
+  const initialQty = (line.actualQuantity ?? String(line.quantity)).replace(".", ",");
+  const initialTotal = (line.actualLineTotal ?? line.lineTotal).replace(".", ",");
+  const [qty, setQty] = useState(initialQty);
+  const [total, setTotal] = useState(initialTotal);
+  const [totalTouched, setTotalTouched] = useState(false);
+
+  // Keep total auto-derived from qty unless the admin explicitly edits it.
+  function onQtyChange(v: string) {
+    setQty(v);
+    if (totalTouched) return;
+    const n = parseFloat(v.replace(",", "."));
+    if (Number.isFinite(n) && n >= 0) {
+      setTotal((Math.round(n * unitPrice * 100) / 100).toFixed(2).replace(".", ","));
+    }
+  }
+
+  function handleSave() {
+    const qtyNum = parseFloat(qty.replace(",", "."));
+    const totalNum = parseFloat(total.replace(",", "."));
+    const sameAsOrdered =
+      Number.isFinite(qtyNum) &&
+      qtyNum === line.quantity &&
+      Math.abs(totalNum - parseFloat(line.lineTotal)) < 0.005;
+    if (sameAsOrdered) {
+      // Reset to "delivered as ordered" — clears any previous correction
+      // by passing nulls (the server posts a reverse delta).
+      onSave(null, null);
+      return;
+    }
+    onSave(
+      Number.isFinite(qtyNum) ? qtyNum.toFixed(3) : null,
+      Number.isFinite(totalNum) ? totalNum.toFixed(2) : null,
+    );
+  }
+
+  const unit = line.unit ?? "";
+
+  return (
+    <div className="space-y-2 rounded-lg border border-pm-orange/30 bg-pm-orange-light px-2.5 py-2">
+      <div className="flex items-center gap-2 text-[11px] text-pm-near-black">
+        <span className="text-[14px]">{line.emoji || getProductEmoji(line.productName)}</span>
+        <span className="font-bold">{line.productName}</span>
+        <span className="font-mono text-pm-gray">
+          ordinato: {line.quantity}{unit ? ` ${unit}` : ""} = {formatEur(parseFloat(line.lineTotal))}
+        </span>
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <label className="flex flex-col gap-0.5 text-[10px] font-semibold uppercase tracking-wide text-pm-gray">
+          Qta ricevuta{unit ? ` (${unit})` : ""}
+          <input
+            type="text"
+            inputMode="decimal"
+            value={qty}
+            onChange={(e) => onQtyChange(e.target.value)}
+            disabled={isPending}
+            className="rounded-md border border-pm-border bg-white px-2 py-1.5 text-[13px] font-mono text-pm-near-black focus:outline-none focus:ring-2 focus:ring-pm-orange/40"
+          />
+        </label>
+        <label className="flex flex-col gap-0.5 text-[10px] font-semibold uppercase tracking-wide text-pm-gray">
+          Totale (EUR)
+          <input
+            type="text"
+            inputMode="decimal"
+            value={total}
+            onChange={(e) => {
+              setTotal(e.target.value);
+              setTotalTouched(true);
+            }}
+            disabled={isPending}
+            className="rounded-md border border-pm-border bg-white px-2 py-1.5 text-[13px] font-mono text-pm-near-black focus:outline-none focus:ring-2 focus:ring-pm-orange/40"
+          />
+        </label>
+      </div>
+      <div className="flex gap-1.5">
+        <button
+          type="button"
+          onClick={handleSave}
+          disabled={isPending}
+          className="flex-1 rounded-md bg-pm-orange px-2 py-1.5 text-[11px] font-bold text-white disabled:opacity-60"
+        >
+          {isPending ? "Salvataggio…" : "Salva"}
+        </button>
+        <button
+          type="button"
+          onClick={onCancel}
+          disabled={isPending}
+          className="rounded-md border border-pm-border bg-white px-2 py-1.5 text-[11px] font-bold text-pm-gray"
+        >
+          Annulla
+        </button>
+      </div>
     </div>
   );
 }
@@ -253,6 +448,14 @@ function downloadSupplierCsv(orders: OrderDetail[], cycleTitle: string) {
       currentSupplier = supplier;
     }
 
+    const effectiveQty =
+      r.actualQuantity != null
+        ? parseFloat(r.actualQuantity).toString().replace(".", ",")
+        : String(r.quantity);
+    const effectiveTotalEur =
+      r.actualLineTotal != null
+        ? parseFloat(r.actualLineTotal).toFixed(2).replace(".", ",")
+        : parseFloat(r.lineTotal).toFixed(2).replace(".", ",");
     lines.push(
       join([
         supplier,
@@ -261,9 +464,9 @@ function downloadSupplierCsv(orders: OrderDetail[], cycleTitle: string) {
         r.format,
         r.unit,
         r.memberName,
-        r.quantity,
+        effectiveQty,
         parseFloat(r.unitPrice).toFixed(2).replace(".", ","),
-        parseFloat(r.lineTotal).toFixed(2).replace(".", ","),
+        effectiveTotalEur,
       ]),
     );
   }
