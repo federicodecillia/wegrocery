@@ -26,6 +26,8 @@ type OrderDetail = {
   actualLineTotal: string | null;
 };
 
+type MemberShipping = { memberId: string; memberName: string; amount: number };
+
 export function ClosedCycleDetails({
   cycleId,
   cycleTitle,
@@ -38,6 +40,7 @@ export function ClosedCycleDetails({
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [orderDetails, setOrderDetails] = useState<OrderDetail[]>([]);
+  const [shipping, setShipping] = useState<MemberShipping[]>([]);
   const [editTarget, setEditTarget] = useState<
     { kind: "edit"; memberId: string; memberName: string } | { kind: "create" } | null
   >(null);
@@ -50,6 +53,7 @@ export function ClosedCycleDetails({
         toast.error(result.error);
       } else {
         setOrderDetails(result.orders || []);
+        setShipping(result.shipping || []);
       }
     } catch {
       toast.error("Errore nel caricamento dettagli");
@@ -82,7 +86,10 @@ export function ClosedCycleDetails({
   }, {});
   const effectiveTotal = (l: OrderDetail) =>
     parseFloat(l.actualLineTotal ?? l.lineTotal);
-  const grandTotal = orderDetails.reduce((s, l) => s + effectiveTotal(l), 0);
+  const shippingByMember = new Map(shipping.map((s) => [s.memberId, s.amount]));
+  const linesTotal = orderDetails.reduce((s, l) => s + effectiveTotal(l), 0);
+  const shippingTotal = shipping.reduce((s, m) => s + m.amount, 0);
+  const grandTotal = linesTotal + shippingTotal;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
@@ -110,8 +117,10 @@ export function ClosedCycleDetails({
           ) : (
             <div className="space-y-8">
               {Object.entries(grouped).map(([memberName, lines]) => {
-                const total = lines.reduce((s, l) => s + effectiveTotal(l), 0);
+                const productsTotal = lines.reduce((s, l) => s + effectiveTotal(l), 0);
                 const memberId = lines[0]?.memberId;
+                const memberShipping = memberId ? shippingByMember.get(memberId) ?? 0 : 0;
+                const total = productsTotal + memberShipping;
                 return (
                   <div key={memberName} className="space-y-2">
                     <div className="flex flex-wrap items-center justify-between gap-2 border-b border-pm-teal/20 pb-1">
@@ -134,6 +143,22 @@ export function ClosedCycleDetails({
                       {lines.map((l) => (
                         <OrderLineRow key={l.orderLineId} line={l} onSaved={refetch} />
                       ))}
+                      {memberShipping > 0 && (
+                        <div className="flex items-start justify-between gap-3 rounded-lg px-1.5 py-1 text-[12px] text-pm-near-black">
+                          <div className="flex min-w-0 flex-1 gap-2">
+                            <span className="shrink-0 text-[16px]">🚚</span>
+                            <div className="min-w-0">
+                              <div className="font-medium">Spedizione</div>
+                              <div className="text-[10px] text-pm-gray">
+                                Quota fissa per socio
+                              </div>
+                            </div>
+                          </div>
+                          <span className="shrink-0 font-mono text-[11px] font-bold text-pm-near-black">
+                            {formatEur(memberShipping)}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 );

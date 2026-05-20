@@ -133,6 +133,11 @@ export async function TabOrdini({ cycleId, memberId }: Props) {
           <div className="text-[24px] font-bold text-pm-near-black">
             {formatEur(summary.grandTotal)}
           </div>
+          {summary.shippingTotal > 0 && (
+            <div className="mt-0.5 font-mono text-[10px] text-pm-gray-light">
+              prodotti {formatEur(summary.productsTotal)} + spedizione {formatEur(summary.shippingTotal)}
+            </div>
+          )}
         </div>
       </div>
 
@@ -142,10 +147,29 @@ export async function TabOrdini({ cycleId, memberId }: Props) {
         </div>
       ) : (
         <>
+          {/* By member */}
+          <Card>
+            <CardHeader className="flex items-center justify-between">
+              <h3 className="text-[13px] font-bold text-pm-near-black">Per socio</h3>
+              <CsvExportButton summary={summary} cycleTitle={selectedCycle?.title ?? selectedId} />
+            </CardHeader>
+            <OrdiniByMember byMember={summary.byMember} />
+            <CardBody className="border-t border-pm-border py-2.5">
+              <div className="flex justify-between text-[13px] font-bold text-pm-near-black">
+                <span>Totale</span>
+                <span className="font-mono">{formatEur(summary.grandTotal)}</span>
+              </div>
+            </CardBody>
+          </Card>
+
           {/* By product */}
           <Card>
             <CardHeader>
               <h3 className="text-[13px] font-bold text-pm-near-black">Per prodotto</h3>
+              <p className="mt-0.5 text-[11px] text-pm-gray">
+                Totali al netto delle rettifiche di peso. La spedizione è esclusa
+                perché non è legata a un prodotto.
+              </p>
             </CardHeader>
             <div className="divide-y divide-pm-border">
               {summary.byProduct.map((p) => (
@@ -171,19 +195,10 @@ export async function TabOrdini({ cycleId, memberId }: Props) {
             </div>
             <CardBody className="border-t border-pm-border py-2.5">
               <div className="flex justify-between text-[13px] font-bold text-pm-near-black">
-                <span>Totale</span>
-                <span className="font-mono">{formatEur(summary.grandTotal)}</span>
+                <span>Totale prodotti</span>
+                <span className="font-mono">{formatEur(summary.productsTotal)}</span>
               </div>
             </CardBody>
-          </Card>
-
-          {/* By member */}
-          <Card>
-            <CardHeader className="flex items-center justify-between">
-              <h3 className="text-[13px] font-bold text-pm-near-black">Per socio</h3>
-              <CsvExportButton summary={summary} cycleTitle={selectedCycle?.title ?? selectedId} />
-            </CardHeader>
-            <OrdiniByMember byMember={summary.byMember} />
           </Card>
         </>
       )}

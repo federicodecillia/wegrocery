@@ -103,12 +103,28 @@ export function OrdiniByMember({ byMember }: { byMember: CycleSummary["byMember"
                     <span className="ml-1 font-mono text-[11px] text-pm-gray-light">
                       ×{line.quantity}
                     </span>
+                    {line.adjusted && (
+                      <span className="ml-1 rounded-full bg-pm-orange/15 px-1.5 py-px text-[9px] font-bold uppercase tracking-wide text-pm-orange">
+                        rettificato
+                      </span>
+                    )}
                   </span>
                   <span className="font-mono text-[12px] text-pm-near-black">
                     {formatEur(line.lineTotal)}
                   </span>
                 </div>
               ))}
+              {m.shipping > 0 && (
+                <div className="flex items-center justify-between py-1">
+                  <span className="flex items-center gap-1.5 text-[12px] text-pm-gray">
+                    <span className="text-[14px] leading-none">🚚</span>
+                    Spedizione
+                  </span>
+                  <span className="font-mono text-[12px] text-pm-near-black">
+                    {formatEur(m.shipping)}
+                  </span>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -137,6 +153,9 @@ export function CsvExportButton({
           String(line.quantity),
           line.lineTotal.toFixed(2),
         ]);
+      }
+      if (m.shipping > 0) {
+        rows.push([m.fullName, "Spedizione", "", "1", m.shipping.toFixed(2)]);
       }
     }
     const csv = rows.map((r) => r.map((c) => `"${c.replace(/"/g, '""')}"`).join(",")).join("\n");

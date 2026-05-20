@@ -463,36 +463,76 @@ export type CycleSummary = {
   byMember: {
     memberId: string;
     fullName: string;
+    productsTotal: number;
+    shipping: number;
     total: number;
-    lines: { productName: string; variant: string | null; quantity: number; lineTotal: number }[];
+    lines: {
+      productName: string;
+      variant: string | null;
+      quantity: number;
+      lineTotal: number;
+      adjusted: boolean;
+    }[];
   }[];
+  productsTotal: number;
+  shippingTotal: number;
   grandTotal: number;
   orderCount: number;
 };
 
 export async function getAdminCycleSummary(cycleId: string): Promise<CycleSummary> {
   const db = getDb();
-  const rows = await db
-    .select({
-      memberId: orders.memberId,
-      memberName: members.fullName,
-      productId: products.productId,
-      productName: products.name,
-      variant: products.variant,
-      unit: products.unit,
-      quantity: orders.quantity,
-      lineTotal: orders.lineTotal,
-    })
-    .from(orders)
-    .innerJoin(members, eq(orders.memberId, members.memberId))
-    .innerJoin(products, eq(orders.productId, products.productId))
-    .where(eq(orders.cycleId, cycleId))
-    .orderBy(asc(products.sortOrder), asc(members.fullName));
+  const [rows, shippingRows] = await Promise.all([
+    db
+      .select({
+        memberId: orders.memberId,
+        memberName: members.fullName,
+        productId: products.productId,
+        productName: products.name,
+        variant: products.variant,
+        unit: products.unit,
+        quantity: orders.quantity,
+        lineTotal: orders.lineTotal,
+        actualQuantity: orders.actualQuantity,
+        actualLineTotal: orders.actualLineTotal,
+      })
+      .from(orders)
+      .innerJoin(members, eq(orders.memberId, members.memberId))
+      .innerJoin(products, eq(orders.productId, products.productId))
+      .where(eq(orders.cycleId, cycleId))
+      .orderBy(asc(products.sortOrder), asc(members.fullName)),
+    db
+      .select({
+        memberId: ledgerEntries.memberId,
+        amount: sql<string>`coalesce(sum(${ledgerEntries.amount}), '0')`,
+      })
+      .from(ledgerEntries)
+      .where(
+        and(
+          eq(ledgerEntries.cycleId, cycleId),
+          eq(ledgerEntries.type, "shipping_charge"),
+        ),
+      )
+      .groupBy(ledgerEntries.memberId),
+  ]);
+
+  // Shipping is recorded as a negative ledger entry (a charge); we report it
+  // as a positive cost so it adds up cleanly with the product spend.
+  const shippingByMember = new Map<string, number>();
+  for (const r of shippingRows) {
+    shippingByMember.set(r.memberId, Math.abs(parseFloat(r.amount)));
+  }
 
   const productMap = new Map<string, CycleSummary["byProduct"][number]>();
   const memberMap = new Map<string, CycleSummary["byMember"][number]>();
 
   for (const row of rows) {
+    const effective =
+      row.actualLineTotal != null
+        ? parseFloat(row.actualLineTotal)
+        : parseFloat(row.lineTotal);
+    const adjusted = row.actualLineTotal != null || row.actualQuantity != null;
+
     if (!productMap.has(row.productId)) {
       productMap.set(row.productId, {
         productId: row.productId,
@@ -504,21 +544,65 @@ export async function getAdminCycleSummary(cycleId: string): Promise<CycleSummar
       });
     }
     productMap.get(row.productId)!.totalQty += row.quantity;
-    productMap.get(row.productId)!.totalAmount += parseFloat(row.lineTotal);
+    productMap.get(row.productId)!.totalAmount += effective;
 
     if (!memberMap.has(row.memberId)) {
-      memberMap.set(row.memberId, { memberId: row.memberId, fullName: row.memberName, total: 0, lines: [] });
+      memberMap.set(row.memberId, {
+        memberId: row.memberId,
+        fullName: row.memberName,
+        productsTotal: 0,
+        shipping: 0,
+        total: 0,
+        lines: [],
+      });
     }
     const m = memberMap.get(row.memberId)!;
-    m.total += parseFloat(row.lineTotal);
-    m.lines.push({ productName: row.productName, variant: row.variant, quantity: row.quantity, lineTotal: parseFloat(row.lineTotal) });
+    m.productsTotal += effective;
+    m.lines.push({
+      productName: row.productName,
+      variant: row.variant,
+      quantity: row.quantity,
+      lineTotal: effective,
+      adjusted,
+    });
   }
 
-  const byMember = Array.from(memberMap.values()).sort((a, b) => a.fullName.localeCompare(b.fullName));
+  // Attach shipping to every member who has it (even if they had no order
+  // lines — unlikely but possible after an admin edit).
+  for (const [mid, amount] of shippingByMember) {
+    if (!memberMap.has(mid)) {
+      const [m] = await db
+        .select({ fullName: members.fullName })
+        .from(members)
+        .where(eq(members.memberId, mid));
+      memberMap.set(mid, {
+        memberId: mid,
+        fullName: m?.fullName ?? "—",
+        productsTotal: 0,
+        shipping: 0,
+        total: 0,
+        lines: [],
+      });
+    }
+    const entry = memberMap.get(mid)!;
+    entry.shipping = amount;
+  }
+
+  for (const m of memberMap.values()) {
+    m.total = m.productsTotal + m.shipping;
+  }
+
+  const byMember = Array.from(memberMap.values()).sort((a, b) =>
+    a.fullName.localeCompare(b.fullName),
+  );
+  const productsTotal = byMember.reduce((s, m) => s + m.productsTotal, 0);
+  const shippingTotal = byMember.reduce((s, m) => s + m.shipping, 0);
   return {
     byProduct: Array.from(productMap.values()),
     byMember,
-    grandTotal: byMember.reduce((s, m) => s + m.total, 0),
+    productsTotal,
+    shippingTotal,
+    grandTotal: productsTotal + shippingTotal,
     orderCount: byMember.length,
   };
 }
@@ -962,27 +1046,88 @@ export type SupplierStat = {
 
 const ACTIVE_LOOKBACK_CYCLES = 3;
 
-export async function getAnalyticsOverview(): Promise<AnalyticsOverview> {
+// Filters reused across the analytics dashboard. Each one is optional and
+// applied as an additional AND clause; passing none yields the unfiltered
+// rollup over all closed cycles.
+export type AnalyticsFilters = {
+  cycleId?: string;
+  supplierId?: string;
+  memberId?: string;
+};
+
+// Effective per-line amount: use the actual delivered total when the admin
+// recorded a weight/price rectification, otherwise the ordered total.
+const effectiveLineTotal = sql<string>`coalesce(${orders.actualLineTotal}, ${orders.lineTotal})`;
+
+function orderScopeWhere(f: AnalyticsFilters | undefined) {
+  const clauses = [eq(orderCycles.status, "closed")];
+  if (f?.cycleId) clauses.push(eq(orders.cycleId, f.cycleId));
+  if (f?.supplierId) clauses.push(eq(products.supplierId, f.supplierId));
+  if (f?.memberId) clauses.push(eq(orders.memberId, f.memberId));
+  return and(...clauses);
+}
+
+export async function getAnalyticsOverview(
+  filters?: AnalyticsFilters,
+): Promise<AnalyticsOverview> {
   const db = getDb();
 
-  const [closedCount] = await db
-    .select({ n: sql<string>`count(*)` })
-    .from(orderCycles)
-    .where(eq(orderCycles.status, "closed"));
-
-  const [revenueRow] = await db
-    .select({ total: sql<string>`coalesce(sum(${orders.lineTotal}), '0')` })
+  // Closed cycles that match the filters. We count via DISTINCT over the
+  // orders table so member/supplier filters narrow the count, then cross-
+  // check against the orderCycles table to honor a cycleId filter even
+  // when it has no orders.
+  const cycleCountRows = await db
+    .select({ cycleId: sql<string>`distinct ${orders.cycleId}` })
     .from(orders)
     .innerJoin(orderCycles, eq(orders.cycleId, orderCycles.cycleId))
-    .where(eq(orderCycles.status, "closed"));
+    .innerJoin(products, eq(orders.productId, products.productId))
+    .where(orderScopeWhere(filters));
+  let closedCycles = cycleCountRows.length;
+  if (filters?.cycleId && closedCycles === 0) {
+    const [exists] = await db
+      .select({ n: sql<string>`count(*)` })
+      .from(orderCycles)
+      .where(and(eq(orderCycles.status, "closed"), eq(orderCycles.cycleId, filters.cycleId)));
+    closedCycles = parseInt(exists?.n ?? "0");
+  }
+
+  const [revenueRow, shippingRow] = await Promise.all([
+    db
+      .select({ total: sql<string>`coalesce(sum(${effectiveLineTotal}), '0')` })
+      .from(orders)
+      .innerJoin(orderCycles, eq(orders.cycleId, orderCycles.cycleId))
+      .innerJoin(products, eq(orders.productId, products.productId))
+      .where(orderScopeWhere(filters))
+      .then((r) => r[0]),
+    db
+      .select({ total: sql<string>`coalesce(sum(abs(${ledgerEntries.amount})), '0')` })
+      .from(ledgerEntries)
+      .innerJoin(orderCycles, eq(ledgerEntries.cycleId, orderCycles.cycleId))
+      .where(
+        and(
+          eq(orderCycles.status, "closed"),
+          eq(ledgerEntries.type, "shipping_charge"),
+          ...(filters?.cycleId ? [eq(ledgerEntries.cycleId, filters.cycleId)] : []),
+          ...(filters?.memberId ? [eq(ledgerEntries.memberId, filters.memberId)] : []),
+          ...(filters?.supplierId ? [eq(orderCycles.supplierId, filters.supplierId)] : []),
+        ),
+      )
+      .then((r) => r[0]),
+  ]);
 
   // Active members: distinct memberIds with at least one order in the
-  // ACTIVE_LOOKBACK_CYCLES most recently closed cycles. Computed via a
-  // subquery for portability instead of window functions.
+  // ACTIVE_LOOKBACK_CYCLES most recently closed cycles that match the
+  // current filters.
   const recentCycles = await db
     .select({ cycleId: orderCycles.cycleId })
     .from(orderCycles)
-    .where(eq(orderCycles.status, "closed"))
+    .where(
+      and(
+        eq(orderCycles.status, "closed"),
+        ...(filters?.cycleId ? [eq(orderCycles.cycleId, filters.cycleId)] : []),
+        ...(filters?.supplierId ? [eq(orderCycles.supplierId, filters.supplierId)] : []),
+      ),
+    )
     .orderBy(desc(orderCycles.closedAt))
     .limit(ACTIVE_LOOKBACK_CYCLES);
 
@@ -992,13 +1137,15 @@ export async function getAnalyticsOverview(): Promise<AnalyticsOverview> {
     const [activeRow] = await db
       .select({ n: sql<string>`count(distinct ${orders.memberId})` })
       .from(orders)
-      .where(inArray(orders.cycleId, recentCycleIds));
+      .where(
+        and(
+          inArray(orders.cycleId, recentCycleIds),
+          ...(filters?.memberId ? [eq(orders.memberId, filters.memberId)] : []),
+        ),
+      );
     activeMembers = parseInt(activeRow?.n ?? "0");
   }
 
-  // Top product by quantity ordered across all closed cycles. We group by
-  // name (case-insensitive) so the same product appearing in multiple
-  // cycles is aggregated even if recreated with a different productId.
   const [topProduct] = await db
     .select({
       name: products.name,
@@ -1007,21 +1154,25 @@ export async function getAnalyticsOverview(): Promise<AnalyticsOverview> {
     .from(orders)
     .innerJoin(products, eq(orders.productId, products.productId))
     .innerJoin(orderCycles, eq(orders.cycleId, orderCycles.cycleId))
-    .where(eq(orderCycles.status, "closed"))
+    .where(orderScopeWhere(filters))
     .groupBy(products.name)
     .orderBy(sql`sum(${orders.quantity}) desc`)
     .limit(1);
 
   return {
-    closedCycles: parseInt(closedCount?.n ?? "0"),
-    totalRevenue: parseFloat(revenueRow?.total ?? "0"),
+    closedCycles,
+    totalRevenue:
+      parseFloat(revenueRow?.total ?? "0") + parseFloat(shippingRow?.total ?? "0"),
     activeMembers,
     topProductName: topProduct?.name ?? null,
     topProductQty: topProduct ? parseInt(topProduct.totalQty as string) : 0,
   };
 }
 
-export async function getProductRankings(limit = 10): Promise<ProductRanking[]> {
+export async function getProductRankings(
+  limit = 10,
+  filters?: AnalyticsFilters,
+): Promise<ProductRanking[]> {
   const db = getDb();
   const rows = await db
     .select({
@@ -1030,13 +1181,13 @@ export async function getProductRankings(limit = 10): Promise<ProductRanking[]> 
       unit: products.unit,
       emoji: products.emoji,
       totalQty: sql<string>`sum(${orders.quantity})`,
-      totalAmount: sql<string>`sum(${orders.lineTotal})`,
+      totalAmount: sql<string>`sum(${effectiveLineTotal})`,
       cyclesCount: sql<string>`count(distinct ${orders.cycleId})`,
     })
     .from(orders)
     .innerJoin(products, eq(orders.productId, products.productId))
     .innerJoin(orderCycles, eq(orders.cycleId, orderCycles.cycleId))
-    .where(eq(orderCycles.status, "closed"))
+    .where(orderScopeWhere(filters))
     .groupBy(products.name, products.variant, products.unit, products.emoji)
     .orderBy(sql`sum(${orders.quantity}) desc`)
     .limit(limit);
@@ -1052,59 +1203,118 @@ export async function getProductRankings(limit = 10): Promise<ProductRanking[]> 
   }));
 }
 
-export async function getCycleRevenueTrend(limit = 12): Promise<CycleRevenuePoint[]> {
+export async function getCycleRevenueTrend(
+  limit = 12,
+  filters?: AnalyticsFilters,
+): Promise<CycleRevenuePoint[]> {
   const db = getDb();
-  const rows = await db
+  // Per-cycle products spend. We join through products so the supplier
+  // filter applies to product rows, not the cycle-level supplier — keeps
+  // the chart consistent with the other cards.
+  const productRows = await db
     .select({
       cycleId: orderCycles.cycleId,
       title: orderCycles.title,
       closedAt: orderCycles.closedAt,
       pickupDate: orderCycles.pickupDate,
-      total: sql<string>`coalesce(sum(${orders.lineTotal}), '0')`,
+      total: sql<string>`coalesce(sum(${effectiveLineTotal}), '0')`,
       orderCount: sql<string>`count(distinct ${orders.memberId})`,
     })
     .from(orderCycles)
     .leftJoin(orders, eq(orders.cycleId, orderCycles.cycleId))
-    .where(eq(orderCycles.status, "closed"))
+    .leftJoin(products, eq(orders.productId, products.productId))
+    .where(
+      and(
+        eq(orderCycles.status, "closed"),
+        ...(filters?.cycleId ? [eq(orderCycles.cycleId, filters.cycleId)] : []),
+        ...(filters?.supplierId
+          ? [
+              or(
+                isNull(products.supplierId),
+                eq(products.supplierId, filters.supplierId),
+              )!,
+            ]
+          : []),
+        ...(filters?.memberId
+          ? [or(isNull(orders.memberId), eq(orders.memberId, filters.memberId))!]
+          : []),
+      ),
+    )
     .groupBy(orderCycles.cycleId, orderCycles.title, orderCycles.closedAt, orderCycles.pickupDate)
     .orderBy(desc(orderCycles.closedAt))
     .limit(limit);
 
-  // Reverse so the chart reads left-to-right oldest→newest, which is what
-  // a human expects when looking at a trend.
-  return rows
+  // Shipping spend per cycle, scoped by the same filters.
+  const shippingRows = await db
+    .select({
+      cycleId: ledgerEntries.cycleId,
+      total: sql<string>`coalesce(sum(abs(${ledgerEntries.amount})), '0')`,
+    })
+    .from(ledgerEntries)
+    .where(
+      and(
+        eq(ledgerEntries.type, "shipping_charge"),
+        ...(filters?.cycleId ? [eq(ledgerEntries.cycleId, filters.cycleId)] : []),
+        ...(filters?.memberId ? [eq(ledgerEntries.memberId, filters.memberId)] : []),
+      ),
+    )
+    .groupBy(ledgerEntries.cycleId);
+  const shippingByCycle = new Map(
+    shippingRows.map((r) => [r.cycleId ?? "", parseFloat(r.total)]),
+  );
+
+  return productRows
     .map((r) => ({
       cycleId: r.cycleId,
       title: r.title,
       closedAt: r.closedAt?.toISOString() ?? null,
       pickupDate: r.pickupDate?.toISOString() ?? null,
-      total: parseFloat(r.total),
+      total: parseFloat(r.total) + (shippingByCycle.get(r.cycleId) ?? 0),
       orderCount: parseInt(r.orderCount as string) || 0,
     }))
     .reverse();
 }
 
-export async function getMemberParticipation(): Promise<MemberParticipation[]> {
+export async function getMemberParticipation(
+  filters?: AnalyticsFilters,
+): Promise<MemberParticipation[]> {
   const db = getDb();
+  // Build the closed-cycle scope for the order subquery so the supplier/
+  // cycle filters narrow what counts as "participation".
+  const memberOrderJoin = and(
+    eq(orders.memberId, members.memberId),
+    sql`${orders.cycleId} in (
+      select ${orderCycles.cycleId} from ${orderCycles}
+      where ${orderCycles.status} = 'closed'
+      ${filters?.cycleId ? sql`and ${orderCycles.cycleId} = ${filters.cycleId}` : sql``}
+      ${filters?.supplierId ? sql`and ${orderCycles.supplierId} = ${filters.supplierId}` : sql``}
+    )`,
+    ...(filters?.supplierId
+      ? [
+          sql`${orders.productId} in (
+            select ${products.productId} from ${products}
+            where ${products.supplierId} = ${filters.supplierId}
+          )`,
+        ]
+      : []),
+  );
+
   const rows = await db
     .select({
       memberId: members.memberId,
       fullName: members.fullName,
       cyclesOrdered: sql<string>`count(distinct ${orders.cycleId})`,
-      totalSpent: sql<string>`coalesce(sum(${orders.lineTotal}), '0')`,
+      totalSpent: sql<string>`coalesce(sum(${effectiveLineTotal}), '0')`,
       lastOrderAt: sql<Date | null>`max(${orders.updatedAt})`,
     })
     .from(members)
-    .leftJoin(
-      orders,
+    .leftJoin(orders, memberOrderJoin)
+    .where(
       and(
-        eq(orders.memberId, members.memberId),
-        // Only count orders from closed cycles; an in-progress order in an
-        // open cycle is not yet "participation".
-        sql`${orders.cycleId} in (select ${orderCycles.cycleId} from ${orderCycles} where ${orderCycles.status} = 'closed')`,
+        eq(members.active, true),
+        ...(filters?.memberId ? [eq(members.memberId, filters.memberId)] : []),
       ),
     )
-    .where(eq(members.active, true))
     .groupBy(members.memberId, members.fullName)
     .orderBy(sql`count(distinct ${orders.cycleId}) desc`, asc(members.fullName));
 
@@ -1117,23 +1327,33 @@ export async function getMemberParticipation(): Promise<MemberParticipation[]> {
   }));
 }
 
-export async function getSupplierStats(): Promise<SupplierStat[]> {
+export async function getSupplierStats(
+  filters?: AnalyticsFilters,
+): Promise<SupplierStat[]> {
   const db = getDb();
   const rows = await db
     .select({
       supplierId: suppliers.supplierId,
       name: suppliers.name,
       cyclesCount: sql<string>`count(distinct ${orderCycles.cycleId})`,
-      totalRevenue: sql<string>`coalesce(sum(${orders.lineTotal}), '0')`,
+      totalRevenue: sql<string>`coalesce(sum(${effectiveLineTotal}), '0')`,
     })
     .from(suppliers)
     .leftJoin(orderCycles, eq(orderCycles.supplierId, suppliers.supplierId))
     .leftJoin(
       orders,
-      and(eq(orders.cycleId, orderCycles.cycleId), eq(orderCycles.status, "closed")),
+      and(
+        eq(orders.cycleId, orderCycles.cycleId),
+        eq(orderCycles.status, "closed"),
+        ...(filters?.cycleId ? [eq(orders.cycleId, filters.cycleId)] : []),
+        ...(filters?.memberId ? [eq(orders.memberId, filters.memberId)] : []),
+      ),
+    )
+    .where(
+      filters?.supplierId ? eq(suppliers.supplierId, filters.supplierId) : sql`true`,
     )
     .groupBy(suppliers.supplierId, suppliers.name)
-    .orderBy(sql`coalesce(sum(${orders.lineTotal}), 0) desc`);
+    .orderBy(sql`coalesce(sum(${effectiveLineTotal}), 0) desc`);
 
   const stats = rows.map((r) => ({
     supplierId: r.supplierId,
@@ -1143,8 +1363,6 @@ export async function getSupplierStats(): Promise<SupplierStat[]> {
     topProductName: null as string | null,
   }));
 
-  // Top product per supplier in a single follow-up query (small N, no
-  // need for a window function here).
   for (const s of stats) {
     if (s.cyclesCount === 0) continue;
     const [top] = await db
@@ -1152,7 +1370,14 @@ export async function getSupplierStats(): Promise<SupplierStat[]> {
       .from(orders)
       .innerJoin(products, eq(orders.productId, products.productId))
       .innerJoin(orderCycles, eq(orders.cycleId, orderCycles.cycleId))
-      .where(and(eq(orderCycles.supplierId, s.supplierId), eq(orderCycles.status, "closed")))
+      .where(
+        and(
+          eq(orderCycles.supplierId, s.supplierId),
+          eq(orderCycles.status, "closed"),
+          ...(filters?.cycleId ? [eq(orders.cycleId, filters.cycleId)] : []),
+          ...(filters?.memberId ? [eq(orders.memberId, filters.memberId)] : []),
+        ),
+      )
       .groupBy(products.name)
       .orderBy(sql`sum(${orders.quantity}) desc`)
       .limit(1);

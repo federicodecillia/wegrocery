@@ -15,6 +15,7 @@ type SearchParams = Promise<{
   tab?: string;
   cycle?: string;
   member?: string;
+  supplier?: string;
 }>;
 
 function TabSkeleton() {
@@ -36,7 +37,12 @@ export default async function AdminPage({ searchParams }: { searchParams: Search
   const role = getUserRole(session);
   if (role !== "admin") redirect("/");
 
-  const { tab: tabParam, cycle: cycleId, member: filterMemberId } = await searchParams;
+  const {
+    tab: tabParam,
+    cycle: cycleId,
+    member: filterMemberId,
+    supplier: filterSupplierId,
+  } = await searchParams;
   const tab = tabParam ?? "ciclo";
 
   return (
@@ -45,14 +51,23 @@ export default async function AdminPage({ searchParams }: { searchParams: Search
         <AdminNav />
       </Suspense>
 
-      <Suspense key={`${tab}-${cycleId ?? ""}-${filterMemberId ?? ""}`} fallback={<TabSkeleton />}>
+      <Suspense
+        key={`${tab}-${cycleId ?? ""}-${filterMemberId ?? ""}-${filterSupplierId ?? ""}`}
+        fallback={<TabSkeleton />}
+      >
         {tab === "ciclo" && <TabCiclo />}
         {tab === "prodotti" && <TabProdotti />}
         {tab === "ordini" && <TabOrdini cycleId={cycleId} memberId={filterMemberId} />}
         {tab === "cassa" && <TabCassa />}
         {tab === "fornitori" && <TabFornitori />}
         {tab === "soci" && <TabSoci />}
-        {tab === "statistiche" && <TabStatistiche />}
+        {tab === "statistiche" && (
+          <TabStatistiche
+            cycleId={cycleId}
+            supplierId={filterSupplierId}
+            memberId={filterMemberId}
+          />
+        )}
       </Suspense>
     </AppShell>
   );

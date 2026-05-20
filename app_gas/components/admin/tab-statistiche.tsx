@@ -1,4 +1,7 @@
 import {
+  getAllCycles,
+  getAllMembers,
+  getAllSuppliersAdmin,
   getAnalyticsOverview,
   getCycleRevenueTrend,
   getMemberParticipation,
@@ -7,41 +10,67 @@ import {
 } from "@/lib/db/queries";
 import { formatEur, getProductEmoji } from "@/lib/utils";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
+import { StatsFilters } from "./statistiche-client";
+
+type Props = {
+  cycleId?: string;
+  supplierId?: string;
+  memberId?: string;
+};
 
 // Admin analytics dashboard. All charts are rendered with pure CSS and
 // inline SVG — no third-party charting library — so the bundle stays
 // lean and the visual style matches the rest of the app perfectly.
-export async function TabStatistiche() {
-  const [overview, products, trend, members, suppliers] = await Promise.all([
-    getAnalyticsOverview(),
-    getProductRankings(10),
-    getCycleRevenueTrend(12),
-    getMemberParticipation(),
-    getSupplierStats(),
-  ]);
+export async function TabStatistiche({ cycleId, supplierId, memberId }: Props) {
+  const filters = { cycleId, supplierId, memberId };
+  const [overview, products, trend, members, suppliers, allCycles, allSuppliers, allMembers] =
+    await Promise.all([
+      getAnalyticsOverview(filters),
+      getProductRankings(10, filters),
+      getCycleRevenueTrend(12, filters),
+      getMemberParticipation(filters),
+      getSupplierStats(filters),
+      getAllCycles(50),
+      getAllSuppliersAdmin(),
+      getAllMembers(),
+    ]);
+
+  const filterOptions = {
+    cycles: allCycles.map((c) => ({ cycleId: c.cycleId, title: c.title })),
+    suppliers: allSuppliers.map((s) => ({ supplierId: s.supplierId, name: s.name })),
+    members: allMembers.map((m) => ({ memberId: m.memberId, fullName: m.fullName })),
+  };
+
+  const hasFilters = Boolean(cycleId || supplierId || memberId);
 
   // Empty-state: no closed cycles yet means there is literally nothing to
-  // analyze. Render a friendly placeholder instead of empty charts.
+  // analyze. Still render the filter bar so the admin can clear/change it.
   if (overview.closedCycles === 0) {
     return (
-      <Card>
-        <CardBody>
-          <div className="py-12 text-center">
-            <div className="mb-2 text-4xl">📊</div>
-            <h2 className="text-[15px] font-bold text-pm-near-black">
-              Nessun dato disponibile
-            </h2>
-            <p className="mt-1 text-[12px] text-pm-gray">
-              Le statistiche compariranno qui dopo la chiusura del primo ciclo.
-            </p>
-          </div>
-        </CardBody>
-      </Card>
+      <div className="space-y-4">
+        <StatsFilters {...filterOptions} />
+        <Card>
+          <CardBody>
+            <div className="py-12 text-center">
+              <div className="mb-2 text-4xl">📊</div>
+              <h2 className="text-[15px] font-bold text-pm-near-black">
+                {hasFilters ? "Nessun dato per questo filtro" : "Nessun dato disponibile"}
+              </h2>
+              <p className="mt-1 text-[12px] text-pm-gray">
+                {hasFilters
+                  ? "Prova a cambiare o rimuovere i filtri in alto."
+                  : "Le statistiche compariranno qui dopo la chiusura del primo ciclo."}
+              </p>
+            </div>
+          </CardBody>
+        </Card>
+      </div>
     );
   }
 
   return (
     <div className="space-y-4">
+      <StatsFilters {...filterOptions} />
       <OverviewCards overview={overview} />
       <ProductRankingsCard rankings={products} />
       <RevenueTrendCard trend={trend} />
@@ -73,10 +102,11 @@ function OverviewCards({
       hint: "ordine negli ultimi 3 cicli",
     },
     {
-      label: "Fatturato totale",
+      label: "Spesa totale",
       value: formatEur(overview.totalRevenue),
       icon: "💰",
       tone: "orange" as const,
+      hint: "prodotti + spedizione",
     },
     {
       label: "Top prodotto",
@@ -232,7 +262,7 @@ function RevenueTrendCard({
         <div className="flex items-start justify-between gap-3">
           <div>
             <h3 className="text-[13px] font-bold text-pm-near-black">
-              Trend fatturato per ciclo
+              Trend spesa per ciclo
             </h3>
             <p className="mt-0.5 text-[11px] text-pm-gray">
               Ultimi {trend.length} cicli chiusi
@@ -259,7 +289,7 @@ function RevenueTrendCard({
           style={{ height: H }}
           preserveAspectRatio="none"
           role="img"
-          aria-label="Trend fatturato"
+          aria-label="Trend spesa"
         >
           <defs>
             <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
@@ -333,7 +363,7 @@ function SupplierStatsCard({
   return (
     <Card>
       <CardHeader>
-        <h3 className="text-[13px] font-bold text-pm-near-black">Fornitori per fatturato</h3>
+        <h3 className="text-[13px] font-bold text-pm-near-black">Fornitori per spesa</h3>
         <p className="mt-0.5 text-[11px] text-pm-gray">Cicli chiusi · prodotto più richiesto</p>
       </CardHeader>
       <CardBody>
