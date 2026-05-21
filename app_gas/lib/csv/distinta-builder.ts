@@ -108,8 +108,9 @@ export async function buildSupplierDistinta(cycleId: string): Promise<DistintaBu
   if (!cycle) throw new Error("Ciclo non trovato");
 
   // All order lines for the cycle, joined with member and product metadata.
-  // Sorted by product (sortOrder, name) then member full name so the matrix
-  // reads naturally.
+  // Sorted alphabetically by product name (with variant as tiebreaker) then
+  // by member full name so the matrix is easy to scan for a given product
+  // regardless of any per-cycle sortOrder the admin may have set.
   const rows = (await db
     .select({
       orderLineId: orders.orderLineId,
@@ -131,7 +132,7 @@ export async function buildSupplierDistinta(cycleId: string): Promise<DistintaBu
     .innerJoin(members, eq(orders.memberId, members.memberId))
     .innerJoin(products, eq(orders.productId, products.productId))
     .where(eq(orders.cycleId, cycleId))
-    .orderBy(asc(products.sortOrder), asc(products.name), asc(members.fullName))) as Row[];
+    .orderBy(asc(products.name), asc(products.variant), asc(members.fullName))) as Row[];
 
   if (rows.length === 0) {
     throw new Error("Nessun ordine in questo ciclo");

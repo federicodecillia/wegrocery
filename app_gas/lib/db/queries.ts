@@ -1259,19 +1259,24 @@ export async function getMemberParticipation(
   const db = getDb();
   // Build the closed-cycle scope for the order subquery so the supplier/
   // cycle filters narrow what counts as "participation".
+  // Embed drizzle's inArray() inside the raw subquery template — using
+  // Postgres `= ANY($1::text[])` would require the driver to round-trip
+  // the JS array as a text[] which the Neon HTTP driver does NOT do (it
+  // sends each parameter as text). `inArray()` instead expands to
+  // `IN ($1, $2, ...)` with one placeholder per element, which works.
   const memberOrderJoin = and(
     eq(orders.memberId, members.memberId),
     sql`${orders.cycleId} in (
       select ${orderCycles.cycleId} from ${orderCycles}
       where ${orderCycles.status} = 'closed'
-      ${nonEmpty(filters?.cycleIds) ? sql`and ${orderCycles.cycleId} = ANY(${filters!.cycleIds!})` : sql``}
-      ${nonEmpty(filters?.supplierIds) ? sql`and ${orderCycles.supplierId} = ANY(${filters!.supplierIds!})` : sql``}
+      ${nonEmpty(filters?.cycleIds) ? sql`and ${inArray(orderCycles.cycleId, filters!.cycleIds!)}` : sql``}
+      ${nonEmpty(filters?.supplierIds) ? sql`and ${inArray(orderCycles.supplierId, filters!.supplierIds!)}` : sql``}
     )`,
     ...(nonEmpty(filters?.supplierIds)
       ? [
           sql`${orders.productId} in (
             select ${products.productId} from ${products}
-            where ${products.supplierId} = ANY(${filters!.supplierIds!})
+            where ${inArray(products.supplierId, filters!.supplierIds!)}
           )`,
         ]
       : []),
