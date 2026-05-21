@@ -407,10 +407,11 @@ export async function buildSupplierDistinta(cycleId: string): Promise<DistintaBu
     pivotTables: false,
   });
 
-  // ── Riepilogo ordini sheet ──
+  // ── Riepilogo Ordini Soci sheet ──
   // Read-only itemized list — one row per (socio, prodotto). Same rows we
-  // built the matrix from, sorted Socio → Prodotto for human reading.
-  const riep = wb.addWorksheet("Riepilogo ordini");
+  // built the matrix from, sorted alphabetically Socio → Prodotto → Varietà
+  // so the supplier can scan everything a single member ordered in one block.
+  const riep = wb.addWorksheet("Riepilogo Ordini Soci");
   const riepHeaders = [
     "Socio",
     "Prodotto",
@@ -435,6 +436,8 @@ export async function buildSupplierDistinta(cycleId: string): Promise<DistintaBu
   riep.getColumn(6).width = 16;
   riep.getColumn(7).width = 18;
   const riepRows = [...rows].sort((a, b) => {
+    const m = a.memberName.localeCompare(b.memberName);
+    if (m !== 0) return m;
     const p = a.productName.localeCompare(b.productName);
     if (p !== 0) return p;
     return (a.variant ?? "").localeCompare(b.variant ?? "");
