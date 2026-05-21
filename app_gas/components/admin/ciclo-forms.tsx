@@ -853,26 +853,27 @@ export function CycleProductPicker({
 // ── Supplier Actions Button ──────────────────────────────────────────────────
 
 // Opens the SupplierActionsDialog hub with three sections: scarica xlsx,
-// invia mail, carica distinta compilata. Disabled (with explanatory
-// tooltip) when the cycle has no supplier or no supplier email on file —
-// download still works without an email but the mail section needs both.
+// invia mail, carica distinta compilata. The button is enabled even when
+// the supplier email is missing — the admin can type it directly into the
+// dialog for that single send, and the download + carica distinta sections
+// are useful regardless of email configuration. Disabled only when there
+// is no supplier at all on the cycle, since most of the dialog's defaults
+// derive from the supplier record.
 export function SupplierActionsButton({
   cycleId,
   cycleTitle,
   supplierName,
-  supplierEmail,
 }: {
   cycleId: string;
   cycleTitle: string;
   supplierName: string | null;
-  supplierEmail: string | null;
+  // Kept on the call-site for parity with the previous API but no longer
+  // gating the button — the dialog itself surfaces a missing-email case
+  // by leaving the field empty for the admin to fill in.
+  supplierEmail?: string | null;
 }) {
   const [open, setOpen] = useState(false);
-  const disabledReason = !supplierName
-    ? "Ciclo senza fornitore"
-    : !supplierEmail
-      ? "Fornitore senza email"
-      : null;
+  const disabledReason = !supplierName ? "Ciclo senza fornitore" : null;
 
   return (
     <>

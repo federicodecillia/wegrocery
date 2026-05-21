@@ -903,14 +903,16 @@ export async function adminGetSupplierEmailDefaults(cycleId: string): Promise<
     if (cycle.status !== "closed") return { error: "Il ciclo non e' chiuso" };
     if (!cycle.supplierId || !cycle.supplierName)
       return { error: "Il ciclo non ha un fornitore associato" };
-    if (!cycle.supplierEmail) return { error: "Il fornitore non ha un indirizzo email" };
+    // A missing supplier email is NOT an error: the admin can type the
+    // recipient directly in the dialog. We just leave the `to` field empty
+    // so they know what's missing.
 
     const { getMailFromDefault } = await import("@/lib/email/resend");
     const from = getMailFromDefault() ?? "";
 
     return {
       ok: true,
-      to: cycle.supplierEmail,
+      to: cycle.supplierEmail ?? "",
       from,
       cc: Array.from(new Set([admin.email, ARCHIVE_CC])),
       subject: `Ordine GAS Porta Moneta — ${cycle.title}`,
