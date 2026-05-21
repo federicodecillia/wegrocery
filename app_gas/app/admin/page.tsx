@@ -16,7 +16,16 @@ type SearchParams = Promise<{
   cycle?: string;
   member?: string;
   supplier?: string;
+  balance?: string;
 }>;
+
+function parseCsvParam(raw: string | undefined): string[] {
+  if (!raw) return [];
+  return raw
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
 
 function TabSkeleton() {
   return (
@@ -42,8 +51,10 @@ export default async function AdminPage({ searchParams }: { searchParams: Search
     cycle: cycleId,
     member: filterMemberId,
     supplier: filterSupplierId,
+    balance: balanceParam,
   } = await searchParams;
   const tab = tabParam ?? "ciclo";
+  const balanceFilter = balanceParam === "negative" ? "negative" : undefined;
 
   return (
     <AppShell email={session.user.email} isAdmin memberId={session.user.memberId!}>
@@ -52,20 +63,20 @@ export default async function AdminPage({ searchParams }: { searchParams: Search
       </Suspense>
 
       <Suspense
-        key={`${tab}-${cycleId ?? ""}-${filterMemberId ?? ""}-${filterSupplierId ?? ""}`}
+        key={`${tab}-${cycleId ?? ""}-${filterMemberId ?? ""}-${filterSupplierId ?? ""}-${balanceFilter ?? ""}`}
         fallback={<TabSkeleton />}
       >
         {tab === "ciclo" && <TabCiclo />}
         {tab === "prodotti" && <TabProdotti />}
         {tab === "ordini" && <TabOrdini cycleId={cycleId} memberId={filterMemberId} />}
-        {tab === "cassa" && <TabCassa />}
+        {tab === "cassa" && <TabCassa balanceFilter={balanceFilter} />}
         {tab === "fornitori" && <TabFornitori />}
         {tab === "soci" && <TabSoci />}
         {tab === "statistiche" && (
           <TabStatistiche
-            cycleId={cycleId}
-            supplierId={filterSupplierId}
-            memberId={filterMemberId}
+            cycleIds={parseCsvParam(cycleId)}
+            supplierIds={parseCsvParam(filterSupplierId)}
+            memberIds={parseCsvParam(filterMemberId)}
           />
         )}
       </Suspense>

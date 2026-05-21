@@ -220,29 +220,43 @@ export function CatalogProductForm({
 
 // ── CSV Import/Export ────────────────────────────────────────────────────────
 
-import { adminImportProductsCsv } from "@/lib/actions/admin-products";
+import {
+  adminBuildProductTemplate,
+  adminImportProductsCsv,
+  adminImportProductsXlsx,
+} from "@/lib/actions/admin-products";
+
+function decodeBase64ToBlob(base64: string, mimeType: string): Blob {
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return new Blob([bytes], { type: mimeType });
+}
 
 export function CatalogCsvActions({ supplierId }: { supplierId: string }) {
   const [isPending, startTransition] = useTransition();
+  const [downloading, startDownload] = useTransition();
 
   function downloadTemplate() {
-    // Column order matches `adminImportProductsCsv`. Prezzo/kg is optional —
-    // leave the cell empty for items that are not weight-priced.
-    const headers = "Nome;Varietà;Formato;Prezzo;Prezzo/kg;Categoria;Icona;Note";
-    const example1 = "Insalata mista;Bio;Cestino 200g;3,00;15,00;Verdura;🥬;Raccolta del mattino";
-    const example2 = "Pasta integrale;;Pacco 500g;1,80;;Pasta e riso;🍝;";
-    const csvContent = headers + "\n" + example1 + "\n" + example2;
-    
-    // Create a blob with UTF-8 BOM for Excel compatibility
-    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", `template_prodotti.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    startDownload(async () => {
+      const r = await adminBuildProductTemplate();
+      if ("error" in r) {
+        toast.error(r.error);
+        return;
+      }
+      const blob = decodeBase64ToBlob(
+        r.base64,
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      );
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = r.filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    });
   }
 
   function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -254,35 +268,56 @@ export function CatalogCsvActions({ supplierId }: { supplierId: string }) {
       return;
     }
 
+    const isXlsx = /\.xlsx$/i.test(file.name);
     const reader = new FileReader();
     reader.onload = (event) => {
-      const text = event.target?.result as string;
+      const result = event.target?.result;
+      if (result == null) {
+        toast.error("Impossibile leggere il file");
+        e.target.value = "";
+        return;
+      }
       startTransition(async () => {
-        const result = await adminImportProductsCsv(supplierId, text);
-        if (result.error) {
-          toast.error(result.error);
+        if (isXlsx) {
+          const dataUrl = result as string;
+          const idx = dataUrl.indexOf(",");
+          const base64 = idx >= 0 ? dataUrl.slice(idx + 1) : dataUrl;
+          const res = await adminImportProductsXlsx(supplierId, base64);
+          if ("error" in res) {
+            toast.error(res.error);
+          } else {
+            toast.success(`Importati ${res.count} prodotti ✓`);
+          }
         } else {
-          toast.success(`Importati ${result.count} prodotti ✓`);
+          const text = result as string;
+          const res = await adminImportProductsCsv(supplierId, text);
+          if (res.error) {
+            toast.error(res.error);
+          } else {
+            toast.success(`Importati ${res.count} prodotti ✓`);
+          }
         }
         e.target.value = "";
       });
     };
-    reader.readAsText(file);
+    if (isXlsx) reader.readAsDataURL(file);
+    else reader.readAsText(file);
   }
 
   return (
     <div className="flex flex-wrap gap-2">
       <button
         onClick={downloadTemplate}
-        className="rounded-lg border border-pm-border bg-white px-3 py-1.5 text-[11px] font-bold text-pm-teal shadow-sm hover:bg-pm-warm-white/50"
+        disabled={downloading}
+        className="rounded-lg border border-pm-border bg-white px-3 py-1.5 text-[11px] font-bold text-pm-teal shadow-sm hover:bg-pm-warm-white/50 disabled:opacity-60"
       >
-        📥 Scarica Template
+        {downloading ? "Generazione…" : "📥 Scarica Template Excel"}
       </button>
       <label className="cursor-pointer rounded-lg border border-pm-border bg-white px-3 py-1.5 text-[11px] font-bold text-pm-teal shadow-sm hover:bg-pm-warm-white/50">
-        {isPending ? "Caricamento..." : "📤 Carica CSV/Excel"}
+        {isPending ? "Caricamento..." : "📤 Carica Excel/CSV"}
         <input
           type="file"
-          accept=".csv,.txt"
+          accept=".xlsx,.csv,.txt"
           className="hidden"
           onChange={handleFileUpload}
           disabled={isPending || !supplierId}

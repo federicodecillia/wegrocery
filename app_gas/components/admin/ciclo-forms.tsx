@@ -915,7 +915,7 @@ export function ClosedCycleEditButton({
         onClick={() => setOpen(true)}
         className="rounded-lg bg-pm-orange/10 px-3 py-1 text-[11px] font-bold text-pm-orange hover:bg-pm-orange/20"
       >
-        ✎ Modifica ciclo
+        ✎ Modifica
       </button>
     );
   }

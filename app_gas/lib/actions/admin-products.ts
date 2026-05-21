@@ -5,6 +5,7 @@ import { auth } from "@/auth";
 import { getDb } from "@/lib/db/client";
 import { supplierProducts, auditLog } from "@/lib/db/schema";
 import { getProductEmoji } from "@/lib/utils";
+import { buildProductTemplate, parseProductTemplate } from "@/lib/csv/product-template";
 
 async function requireAdmin() {
   const session = await auth();
@@ -116,6 +117,64 @@ export async function adminImportProductsCsv(supplierId: string, csvText: string
     }
 
     return { error: "Nessun prodotto valido trovato nel CSV." };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Errore durante l'importazione" };
+  }
+}
+
+export async function adminBuildProductTemplate(): Promise<
+  | { base64: string; filename: string }
+  | { error: string }
+> {
+  try {
+    await requireAdmin();
+    const buf = await buildProductTemplate();
+    return { base64: buf.toString("base64"), filename: "template_prodotti.xlsx" };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Errore generazione template" };
+  }
+}
+
+export async function adminImportProductsXlsx(supplierId: string, base64: string) {
+  try {
+    const admin = await requireAdmin();
+    const db = getDb();
+    const now = new Date();
+
+    if (!supplierId) return { error: "Fornitore mancante." };
+    const buf = Buffer.from(base64, "base64");
+    const rows = await parseProductTemplate(buf);
+    if (rows.length === 0) return { error: "Nessun prodotto valido trovato nel file Excel." };
+
+    const values = rows.map((r) => ({
+      catalogProductId: genId("cp"),
+      supplierId,
+      name: r.name,
+      variant: r.variant,
+      format: r.format,
+      unit: null as string | null,
+      unitPrice: r.unitPrice,
+      pricePerKg: r.pricePerKg,
+      category: r.category,
+      emoji: r.emoji ?? getProductEmoji(r.name),
+      notes: r.notes,
+      active: true,
+      createdAt: now,
+    }));
+
+    await db.insert(supplierProducts).values(values);
+    await db.insert(auditLog).values({
+      auditId: crypto.randomUUID(),
+      userEmail: admin.email,
+      action: "import_products_xlsx",
+      entityType: "supplier",
+      entityId: supplierId,
+      payloadJson: JSON.stringify({ count: values.length }),
+      createdAt: now,
+    });
+
+    revalidatePath("/admin");
+    return { success: true, count: values.length };
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Errore durante l'importazione" };
   }

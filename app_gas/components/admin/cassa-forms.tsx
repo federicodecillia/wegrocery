@@ -1,12 +1,117 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "@/components/ui/toast";
 import { adminDeleteLedgerEntry, adminRecordTopup, adminUpdateLedgerEntry } from "@/lib/actions/admin";
-import { formatDate } from "@/lib/utils";
+import { formatDate, formatEur } from "@/lib/utils";
 import type { LedgerEntryItem, MemberWithBalance } from "@/lib/db/queries";
 
 type Member = { memberId: string; fullName: string };
+
+// ── Summary Cards ─────────────────────────────────────────────────────────────
+
+export function CassaSummaryCards({
+  totalBalance,
+  avgBalance,
+  negativeCount,
+  activeFilter,
+}: {
+  totalBalance: number;
+  avgBalance: number;
+  negativeCount: number;
+  activeFilter: "negative" | null;
+}) {
+  const router = useRouter();
+  const sp = useSearchParams();
+
+  function toggleNegative() {
+    const params = new URLSearchParams({ tab: "cassa" });
+    if (activeFilter !== "negative") params.set("balance", "negative");
+    // Preserve no other params — the cassa tab only honors `balance`.
+    router.push(`/admin?${params}`);
+    void sp; // referenced to make the hook participate in re-render on URL change
+  }
+
+  const total = (
+    <div className="rounded-xl border border-pm-teal/20 bg-pm-teal-light p-3">
+      <div className="mb-0.5 flex items-center justify-between">
+        <span className="font-mono text-[9px] uppercase tracking-wide text-pm-gray">
+          Saldo totale
+        </span>
+        <span className="text-[14px] leading-none">💰</span>
+      </div>
+      <div
+        className={`text-[18px] font-black tracking-[-0.02em] ${
+          totalBalance >= 0 ? "text-pm-near-black" : "text-pm-red"
+        }`}
+      >
+        {formatEur(totalBalance)}
+      </div>
+      <div className="mt-0.5 font-mono text-[9px] text-pm-gray-light">
+        soci attivi
+      </div>
+    </div>
+  );
+
+  const avg = (
+    <div className="rounded-xl border border-pm-border bg-white p-3">
+      <div className="mb-0.5 flex items-center justify-between">
+        <span className="font-mono text-[9px] uppercase tracking-wide text-pm-gray">
+          Saldo medio
+        </span>
+        <span className="text-[14px] leading-none">📊</span>
+      </div>
+      <div
+        className={`text-[18px] font-black tracking-[-0.02em] ${
+          avgBalance >= 0 ? "text-pm-near-black" : "text-pm-red"
+        }`}
+      >
+        {formatEur(avgBalance)}
+      </div>
+      <div className="mt-0.5 font-mono text-[9px] text-pm-gray-light">
+        per socio attivo
+      </div>
+    </div>
+  );
+
+  const isActive = activeFilter === "negative";
+  const negative = (
+    <button
+      type="button"
+      onClick={toggleNegative}
+      aria-pressed={isActive}
+      className={`text-left rounded-xl border p-3 transition-transform active:scale-[0.98] ${
+        isActive
+          ? "border-pm-red bg-pm-red-light ring-2 ring-pm-red/40"
+          : negativeCount > 0
+            ? "border-pm-red/30 bg-pm-red-light"
+            : "border-pm-border bg-white"
+      }`}
+    >
+      <div className="mb-0.5 flex items-center justify-between">
+        <span className="font-mono text-[9px] uppercase tracking-wide text-pm-gray">
+          Saldo &lt; 0
+        </span>
+        <span className="text-[14px] leading-none">💸</span>
+      </div>
+      <div className="text-[18px] font-black tracking-[-0.02em] text-pm-near-black">
+        {negativeCount}
+      </div>
+      <div className="mt-0.5 font-mono text-[9px] text-pm-gray-light">
+        {isActive ? "filtro attivo · tocca per togliere" : "tocca per filtrare"}
+      </div>
+    </button>
+  );
+
+  return (
+    <div className="grid grid-cols-3 gap-2">
+      {total}
+      {avg}
+      {negative}
+    </div>
+  );
+}
 
 // ── Topup Form ────────────────────────────────────────────────────────────────
 
@@ -247,18 +352,23 @@ export function LedgerEntryRow({ entry }: { entry: LedgerEntry }) {
 export function CassaInlineList({
   members,
   ledgerByMember,
+  balanceFilter = null,
 }: {
   members: MemberWithBalance[];
   ledgerByMember: Record<string, LedgerEntryItem[]>;
+  balanceFilter?: "negative" | null;
 }) {
   const [filter, setFilter] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const filtered = members.filter(
-    (m) =>
-      m.fullName.toLowerCase().includes(filter.toLowerCase()) ||
-      m.email.toLowerCase().includes(filter.toLowerCase()),
-  );
+  const filtered = members.filter((m) => {
+    if (balanceFilter === "negative" && m.balance >= 0) return false;
+    const q = filter.toLowerCase();
+    return (
+      m.fullName.toLowerCase().includes(q) ||
+      m.email.toLowerCase().includes(q)
+    );
+  });
 
   return (
     <div>

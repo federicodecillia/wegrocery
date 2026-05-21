@@ -13,16 +13,16 @@ import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { StatsFilters } from "./statistiche-client";
 
 type Props = {
-  cycleId?: string;
-  supplierId?: string;
-  memberId?: string;
+  cycleIds?: string[];
+  supplierIds?: string[];
+  memberIds?: string[];
 };
 
 // Admin analytics dashboard. All charts are rendered with pure CSS and
 // inline SVG — no third-party charting library — so the bundle stays
 // lean and the visual style matches the rest of the app perfectly.
-export async function TabStatistiche({ cycleId, supplierId, memberId }: Props) {
-  const filters = { cycleId, supplierId, memberId };
+export async function TabStatistiche({ cycleIds, supplierIds, memberIds }: Props) {
+  const filters = { cycleIds, supplierIds, memberIds };
   const [overview, products, trend, members, suppliers, allCycles, allSuppliers, allMembers] =
     await Promise.all([
       getAnalyticsOverview(filters),
@@ -41,7 +41,11 @@ export async function TabStatistiche({ cycleId, supplierId, memberId }: Props) {
     members: allMembers.map((m) => ({ memberId: m.memberId, fullName: m.fullName })),
   };
 
-  const hasFilters = Boolean(cycleId || supplierId || memberId);
+  const hasFilters = Boolean(
+    (cycleIds && cycleIds.length > 0) ||
+      (supplierIds && supplierIds.length > 0) ||
+      (memberIds && memberIds.length > 0),
+  );
 
   // Empty-state: no closed cycles yet means there is literally nothing to
   // analyze. Still render the filter bar so the admin can clear/change it.

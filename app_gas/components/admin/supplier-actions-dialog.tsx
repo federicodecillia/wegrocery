@@ -235,7 +235,7 @@ export function SupplierActionsDialog({
                 disabled={downloading}
                 className="w-full rounded-xl border border-pm-teal/30 bg-pm-teal-light py-2.5 text-[13px] font-bold text-pm-teal active:scale-95 disabled:opacity-50"
               >
-                {downloading ? "Generazione…" : "Scarica .xlsx"}
+                {downloading ? "Generazione…" : "Scarica Excel"}
               </button>
             </section>
 

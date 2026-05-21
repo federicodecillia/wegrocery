@@ -923,76 +923,49 @@ export async function getAllMembersLedger(): Promise<Record<string, LedgerEntryI
 // every admin page load.
 
 export type AdminInsights = {
-  // Open cycles closing within the next 24h with at least one member who
-  // has not ordered yet. Surface = "remind people to order".
+  // Open cycles right now. Surface = "what's live for members".
+  openCyclesCount: number;
+  // Open cycles closing within the next 7 days. Surface = "imminent deadlines".
   closingSoonCount: number;
-  // Number of members with a negative ledger balance. Surface = "follow up
-  // on top-ups".
-  negativeBalanceMembers: number;
-  // Best-selling product over the last 30 days of closed cycles.
-  topProductLast30Days: { name: string; emoji: string | null; totalQty: number } | null;
+  // Cycles closed in the last 7 days. Surface = "recently wrapped up".
+  recentlyClosedCount: number;
 };
 
 export async function getAdminInsights(): Promise<AdminInsights> {
   const db = getDb();
 
-  // 1. Cycles closing in the next 24h.
-  const closingSoonRows = await db
-    .select({ cycleId: orderCycles.cycleId })
-    .from(orderCycles)
-    .where(
-      and(
-        eq(orderCycles.status, "open"),
-        isNotNull(orderCycles.orderCloseAt),
-        sql`${orderCycles.orderCloseAt} <= now() + interval '24 hours'`,
-        sql`${orderCycles.orderCloseAt} > now()`,
+  const [openRows, closingSoonRows, recentlyClosedRows] = await Promise.all([
+    db
+      .select({ cycleId: orderCycles.cycleId })
+      .from(orderCycles)
+      .where(eq(orderCycles.status, "open")),
+    db
+      .select({ cycleId: orderCycles.cycleId })
+      .from(orderCycles)
+      .where(
+        and(
+          eq(orderCycles.status, "open"),
+          isNotNull(orderCycles.orderCloseAt),
+          sql`${orderCycles.orderCloseAt} <= now() + interval '7 days'`,
+          sql`${orderCycles.orderCloseAt} > now()`,
+        ),
       ),
-    );
-
-  // 2. Members with negative balance: a single aggregate over ledger_entries
-  // grouped by memberId.
-  const balanceRows = await db
-    .select({
-      memberId: ledgerEntries.memberId,
-      total: sql<string>`sum(${ledgerEntries.amount})`,
-    })
-    .from(ledgerEntries)
-    .groupBy(ledgerEntries.memberId);
-
-  const negativeBalanceMembers = balanceRows.filter(
-    (r) => parseFloat(r.total) < 0,
-  ).length;
-
-  // 3. Top product over the last 30 days, scoped to closed cycles.
-  const [top] = await db
-    .select({
-      name: products.name,
-      emoji: products.emoji,
-      totalQty: sql<string>`sum(${orders.quantity})`,
-    })
-    .from(orders)
-    .innerJoin(products, eq(orders.productId, products.productId))
-    .innerJoin(orderCycles, eq(orders.cycleId, orderCycles.cycleId))
-    .where(
-      and(
-        eq(orderCycles.status, "closed"),
-        sql`${orderCycles.closedAt} >= now() - interval '30 days'`,
+    db
+      .select({ cycleId: orderCycles.cycleId })
+      .from(orderCycles)
+      .where(
+        and(
+          eq(orderCycles.status, "closed"),
+          isNotNull(orderCycles.closedAt),
+          sql`${orderCycles.closedAt} >= now() - interval '7 days'`,
+        ),
       ),
-    )
-    .groupBy(products.name, products.emoji)
-    .orderBy(sql`sum(${orders.quantity}) desc`)
-    .limit(1);
+  ]);
 
   return {
+    openCyclesCount: openRows.length,
     closingSoonCount: closingSoonRows.length,
-    negativeBalanceMembers,
-    topProductLast30Days: top
-      ? {
-          name: top.name,
-          emoji: top.emoji ?? null,
-          totalQty: parseInt(top.totalQty as string) || 0,
-        }
-      : null,
+    recentlyClosedCount: recentlyClosedRows.length,
   };
 }
 
@@ -1046,14 +1019,19 @@ export type SupplierStat = {
 
 const ACTIVE_LOOKBACK_CYCLES = 3;
 
-// Filters reused across the analytics dashboard. Each one is optional and
+// Filters reused across the analytics dashboard. Each list is optional and
 // applied as an additional AND clause; passing none yields the unfiltered
-// rollup over all closed cycles.
+// rollup over all closed cycles. Empty arrays are treated the same as
+// undefined (no filter), so callers can pass [] safely.
 export type AnalyticsFilters = {
-  cycleId?: string;
-  supplierId?: string;
-  memberId?: string;
+  cycleIds?: string[];
+  supplierIds?: string[];
+  memberIds?: string[];
 };
+
+function nonEmpty<T>(arr: T[] | undefined): arr is T[] {
+  return Array.isArray(arr) && arr.length > 0;
+}
 
 // Effective per-line amount: use the actual delivered total when the admin
 // recorded a weight/price rectification, otherwise the ordered total.
@@ -1061,9 +1039,9 @@ const effectiveLineTotal = sql<string>`coalesce(${orders.actualLineTotal}, ${ord
 
 function orderScopeWhere(f: AnalyticsFilters | undefined) {
   const clauses = [eq(orderCycles.status, "closed")];
-  if (f?.cycleId) clauses.push(eq(orders.cycleId, f.cycleId));
-  if (f?.supplierId) clauses.push(eq(products.supplierId, f.supplierId));
-  if (f?.memberId) clauses.push(eq(orders.memberId, f.memberId));
+  if (nonEmpty(f?.cycleIds)) clauses.push(inArray(orders.cycleId, f!.cycleIds!));
+  if (nonEmpty(f?.supplierIds)) clauses.push(inArray(products.supplierId, f!.supplierIds!));
+  if (nonEmpty(f?.memberIds)) clauses.push(inArray(orders.memberId, f!.memberIds!));
   return and(...clauses);
 }
 
@@ -1083,11 +1061,11 @@ export async function getAnalyticsOverview(
     .innerJoin(products, eq(orders.productId, products.productId))
     .where(orderScopeWhere(filters));
   let closedCycles = cycleCountRows.length;
-  if (filters?.cycleId && closedCycles === 0) {
+  if (nonEmpty(filters?.cycleIds) && closedCycles === 0) {
     const [exists] = await db
       .select({ n: sql<string>`count(*)` })
       .from(orderCycles)
-      .where(and(eq(orderCycles.status, "closed"), eq(orderCycles.cycleId, filters.cycleId)));
+      .where(and(eq(orderCycles.status, "closed"), inArray(orderCycles.cycleId, filters!.cycleIds!)));
     closedCycles = parseInt(exists?.n ?? "0");
   }
 
@@ -1107,9 +1085,9 @@ export async function getAnalyticsOverview(
         and(
           eq(orderCycles.status, "closed"),
           eq(ledgerEntries.type, "shipping_charge"),
-          ...(filters?.cycleId ? [eq(ledgerEntries.cycleId, filters.cycleId)] : []),
-          ...(filters?.memberId ? [eq(ledgerEntries.memberId, filters.memberId)] : []),
-          ...(filters?.supplierId ? [eq(orderCycles.supplierId, filters.supplierId)] : []),
+          ...(nonEmpty(filters?.cycleIds) ? [inArray(ledgerEntries.cycleId, filters!.cycleIds!)] : []),
+          ...(nonEmpty(filters?.memberIds) ? [inArray(ledgerEntries.memberId, filters!.memberIds!)] : []),
+          ...(nonEmpty(filters?.supplierIds) ? [inArray(orderCycles.supplierId, filters!.supplierIds!)] : []),
         ),
       )
       .then((r) => r[0]),
@@ -1124,8 +1102,8 @@ export async function getAnalyticsOverview(
     .where(
       and(
         eq(orderCycles.status, "closed"),
-        ...(filters?.cycleId ? [eq(orderCycles.cycleId, filters.cycleId)] : []),
-        ...(filters?.supplierId ? [eq(orderCycles.supplierId, filters.supplierId)] : []),
+        ...(nonEmpty(filters?.cycleIds) ? [inArray(orderCycles.cycleId, filters!.cycleIds!)] : []),
+        ...(nonEmpty(filters?.supplierIds) ? [inArray(orderCycles.supplierId, filters!.supplierIds!)] : []),
       ),
     )
     .orderBy(desc(orderCycles.closedAt))
@@ -1140,7 +1118,7 @@ export async function getAnalyticsOverview(
       .where(
         and(
           inArray(orders.cycleId, recentCycleIds),
-          ...(filters?.memberId ? [eq(orders.memberId, filters.memberId)] : []),
+          ...(nonEmpty(filters?.memberIds) ? [inArray(orders.memberId, filters!.memberIds!)] : []),
         ),
       );
     activeMembers = parseInt(activeRow?.n ?? "0");
@@ -1226,17 +1204,17 @@ export async function getCycleRevenueTrend(
     .where(
       and(
         eq(orderCycles.status, "closed"),
-        ...(filters?.cycleId ? [eq(orderCycles.cycleId, filters.cycleId)] : []),
-        ...(filters?.supplierId
+        ...(nonEmpty(filters?.cycleIds) ? [inArray(orderCycles.cycleId, filters!.cycleIds!)] : []),
+        ...(nonEmpty(filters?.supplierIds)
           ? [
               or(
                 isNull(products.supplierId),
-                eq(products.supplierId, filters.supplierId),
+                inArray(products.supplierId, filters!.supplierIds!),
               )!,
             ]
           : []),
-        ...(filters?.memberId
-          ? [or(isNull(orders.memberId), eq(orders.memberId, filters.memberId))!]
+        ...(nonEmpty(filters?.memberIds)
+          ? [or(isNull(orders.memberId), inArray(orders.memberId, filters!.memberIds!))!]
           : []),
       ),
     )
@@ -1254,8 +1232,8 @@ export async function getCycleRevenueTrend(
     .where(
       and(
         eq(ledgerEntries.type, "shipping_charge"),
-        ...(filters?.cycleId ? [eq(ledgerEntries.cycleId, filters.cycleId)] : []),
-        ...(filters?.memberId ? [eq(ledgerEntries.memberId, filters.memberId)] : []),
+        ...(nonEmpty(filters?.cycleIds) ? [inArray(ledgerEntries.cycleId, filters!.cycleIds!)] : []),
+        ...(nonEmpty(filters?.memberIds) ? [inArray(ledgerEntries.memberId, filters!.memberIds!)] : []),
       ),
     )
     .groupBy(ledgerEntries.cycleId);
@@ -1286,14 +1264,14 @@ export async function getMemberParticipation(
     sql`${orders.cycleId} in (
       select ${orderCycles.cycleId} from ${orderCycles}
       where ${orderCycles.status} = 'closed'
-      ${filters?.cycleId ? sql`and ${orderCycles.cycleId} = ${filters.cycleId}` : sql``}
-      ${filters?.supplierId ? sql`and ${orderCycles.supplierId} = ${filters.supplierId}` : sql``}
+      ${nonEmpty(filters?.cycleIds) ? sql`and ${orderCycles.cycleId} = ANY(${filters!.cycleIds!})` : sql``}
+      ${nonEmpty(filters?.supplierIds) ? sql`and ${orderCycles.supplierId} = ANY(${filters!.supplierIds!})` : sql``}
     )`,
-    ...(filters?.supplierId
+    ...(nonEmpty(filters?.supplierIds)
       ? [
           sql`${orders.productId} in (
             select ${products.productId} from ${products}
-            where ${products.supplierId} = ${filters.supplierId}
+            where ${products.supplierId} = ANY(${filters!.supplierIds!})
           )`,
         ]
       : []),
@@ -1312,7 +1290,7 @@ export async function getMemberParticipation(
     .where(
       and(
         eq(members.active, true),
-        ...(filters?.memberId ? [eq(members.memberId, filters.memberId)] : []),
+        ...(nonEmpty(filters?.memberIds) ? [inArray(members.memberId, filters!.memberIds!)] : []),
       ),
     )
     .groupBy(members.memberId, members.fullName)
@@ -1345,12 +1323,14 @@ export async function getSupplierStats(
       and(
         eq(orders.cycleId, orderCycles.cycleId),
         eq(orderCycles.status, "closed"),
-        ...(filters?.cycleId ? [eq(orders.cycleId, filters.cycleId)] : []),
-        ...(filters?.memberId ? [eq(orders.memberId, filters.memberId)] : []),
+        ...(nonEmpty(filters?.cycleIds) ? [inArray(orders.cycleId, filters!.cycleIds!)] : []),
+        ...(nonEmpty(filters?.memberIds) ? [inArray(orders.memberId, filters!.memberIds!)] : []),
       ),
     )
     .where(
-      filters?.supplierId ? eq(suppliers.supplierId, filters.supplierId) : sql`true`,
+      nonEmpty(filters?.supplierIds)
+        ? inArray(suppliers.supplierId, filters!.supplierIds!)
+        : sql`true`,
     )
     .groupBy(suppliers.supplierId, suppliers.name)
     .orderBy(sql`coalesce(sum(${effectiveLineTotal}), 0) desc`);
@@ -1374,8 +1354,8 @@ export async function getSupplierStats(
         and(
           eq(orderCycles.supplierId, s.supplierId),
           eq(orderCycles.status, "closed"),
-          ...(filters?.cycleId ? [eq(orders.cycleId, filters.cycleId)] : []),
-          ...(filters?.memberId ? [eq(orders.memberId, filters.memberId)] : []),
+          ...(nonEmpty(filters?.cycleIds) ? [inArray(orders.cycleId, filters!.cycleIds!)] : []),
+          ...(nonEmpty(filters?.memberIds) ? [inArray(orders.memberId, filters!.memberIds!)] : []),
         ),
       )
       .groupBy(products.name)

@@ -1,44 +1,38 @@
 import Link from "next/link";
 import { getAdminInsights } from "@/lib/db/queries";
-import { getProductEmoji } from "@/lib/utils";
 
-// Three at-a-glance mini-cards shown above the open-cycles list. The
-// component is async (server) so it doesn't ship JS for what is purely
-// read-only data. Cards become Links to the relevant admin tab so the
-// admin can drill in with one click.
+// Three at-a-glance mini-cards shown above the open-cycles list. They form
+// a left-to-right timeline of the cycle lifecycle: open → closing soon →
+// recently closed. Each card links to the relevant section so the admin
+// can drill in with one click.
 export async function AdminInsights() {
   const insights = await getAdminInsights();
 
   return (
     <div className="mb-4 grid grid-cols-3 gap-2">
       <InsightCard
+        tone={insights.openCyclesCount > 0 ? "info" : "neutral"}
+        href="/admin?tab=ciclo"
+        icon="🟢"
+        label="Aperti"
+        value={insights.openCyclesCount.toString()}
+        hint="cicli attivi"
+      />
+      <InsightCard
         tone={insights.closingSoonCount > 0 ? "warning" : "neutral"}
         href="/admin?tab=ciclo"
         icon="⏰"
         label="In scadenza"
         value={insights.closingSoonCount.toString()}
-        hint="≤24h"
+        hint="≤7gg"
       />
       <InsightCard
-        tone={insights.negativeBalanceMembers > 0 ? "danger" : "neutral"}
-        href="/admin?tab=cassa"
-        icon="💸"
-        label={<>Saldo {"<"} 0</>}
-        value={insights.negativeBalanceMembers.toString()}
-        hint="soci"
-      />
-      <InsightCard
-        tone="info"
-        href="/admin?tab=statistiche"
-        icon={insights.topProductLast30Days?.emoji || getProductEmoji(insights.topProductLast30Days?.name ?? "")}
-        label="Top 30gg"
-        value={insights.topProductLast30Days?.name ?? "—"}
-        hint={
-          insights.topProductLast30Days
-            ? `${insights.topProductLast30Days.totalQty} ordinati`
-            : undefined
-        }
-        truncate
+        tone={insights.recentlyClosedCount > 0 ? "info" : "neutral"}
+        href="/admin?tab=ciclo"
+        icon="✅"
+        label="Chiusi"
+        value={insights.recentlyClosedCount.toString()}
+        hint="ultimi 7gg"
       />
     </div>
   );

@@ -185,7 +185,7 @@ export function CsvExportButton({
       disabled={isPending}
       className="rounded-xl border border-pm-border px-4 py-2 text-[12px] font-semibold text-pm-gray disabled:opacity-60"
     >
-      {isPending ? "Generazione…" : "📥 Scarica .xlsx"}
+      {isPending ? "Generazione…" : "📥 Scarica Excel"}
     </button>
   );
 }

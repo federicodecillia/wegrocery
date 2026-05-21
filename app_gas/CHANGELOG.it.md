@@ -16,6 +16,10 @@ e il versionamento è basato su [Semantic Versioning](https://semver.org/spec/v2
 
 ## [Non rilasciato]
 
+---
+
+## [1.6.0] — 2026-05-21
+
 ### Aggiunte
 - **Distinta fornitore `.xlsx` con flusso di andata e ritorno.** Quando premi 📧 Fornitore la mail allega ora un foglio Excel con lo stesso layout che i fornitori già usano: prodotti come righe, soci come colonne, celle gialle pre-compilate con i prezzi originali, una riga "Spedizione" in fondo e formule `=SUM(...)` live per i totali per socio e per prodotto. Le colonne di riferimento (prodotto/varietà/formato/€/pz/€/kg/note) sono bloccate per evitare che la struttura venga rotta. Un foglio nascosto `_meta` porta cycleId + le mappe prodotti/soci, così il file si può ricaricare senza dover incrociare i nomi. Quando il fornitore ha pesato tutto e ti rimanda il file, il nuovo bottone **📤 Carica distinta fornitore** dentro "Vedi ordini" lo legge, mostra un'anteprima dei cambiamenti (rettifiche riga, spedizione per socio, eventuali avvisi) e in un click applica tutto — le correzioni riga passano dalle stesse voci `correction` nel saldo delle rettifiche manuali, mentre la spedizione per socio viene scritta direttamente nel ledger e il ciclo passa a `shippingMode = "manual"` per evitare che future modifiche la sovrascrivano. In modalità manuale il form del ciclo mostra un banner arancione al posto del campo spedizione. Il formato si apre con Excel, LibreOffice e Google Sheets senza conversioni.
 - **Spedizione visibile nel modale "Vedi ordini".** Nella sezione di ogni socio dentro Admin → Ciclo → Recap ordini compare ora una riga 🚚 Spedizione sotto le righe prodotto, e il subtotale per socio in alto la include. Prima il modale mostrava solo i prodotti, quindi i totali a schermo non tornavano con l'addebito reale (`order_charge + shipping_charge`).
@@ -27,6 +31,13 @@ e il versionamento è basato su [Semantic Versioning](https://semver.org/spec/v2
 - **Registrazione di quanto effettivamente consegnato, riga per riga.** Dentro al modale "Recap ordini" ogni riga d'ordine è ora cliccabile: l'admin può inserire quantità reale ricevuta e costo effettivo (es. ordinato 1 kg di bietola, arrivati 800 g → €1,60 invece di €2,00). La differenza viene scritta come voce `correction` nel saldo, il totale del socio si aggiorna subito e arriva una notifica `order_adjusted` con il dettaglio. Le righe rettificate sono marcate "rettificato" e mostrano ordinato vs ricevuto fianco a fianco.
 
 ### Modificato
+- **Admin → Cassa apre con tre card riassuntive.** Saldo totale dei soci attivi, saldo medio per socio attivo e una card "Saldo < 0" cliccabile che attiva un filtro sulla lista sotto per vedere solo i soci in rosso. La card del saldo negativo prima viveva in Admin → Ciclo dove era facile mancarla; ora sta accanto alle altre cifre di saldo a cui appartiene.
+- **Le card in alto in Admin → Ciclo sono ora una timeline dei cicli.** Tre contatori al volo — Aperti / In scadenza (≤7 giorni) / Chiusi (ultimi 7 giorni) — sostituiscono le vecchie "Saldo < 0" e "Top 30 giorni". La finestra "in scadenza" passa da 24 h a 7 giorni così la card serve per pianificare, non solo per andare nel panico.
+- **I filtri in Admin → Statistiche ora supportano la selezione multipla.** Ogni menu (cicli, fornitori, soci) consente di spuntare più voci con una casella di ricerca integrata; nessuna selezione = "tutti". Card, grafici e classifiche si adattano al filtro combinato. I parametri URL passano da singolo id a lista separata da virgole, così una vista filtrata resta condivisibile per link.
+- **Il template di Admin → Prodotti è ora un file Excel (`.xlsx`).** Un esempio per ogni categoria GAS comune — Frutta, Verdura, Pane e cereali, Pasta e riso, Latticini, Uova, Carne, Conserve, Olio e aceto — arriva pre-compilato in corsivo così da poterli adattare in loco. Il bottone di import ora accetta sia `.xlsx` che il vecchio `.csv`.
+- **"Riepilogo ordini" nell'xlsx del fornitore è ora ordinato per prodotto, poi varietà.** Prima le righe erano raggruppate per socio, rendendo difficile leggere i totali di un singolo prodotto. La matrice (foglio Distinta) è invariata.
+- **Layout più pulito di "Ultimi cicli" da mobile.** La pillola "Chiuso" è passata a sinistra del titolo del ciclo così si legge come etichetta di stato, non come bottone. I tre bottoni d'azione (Modifica, Fornitore, Ordini) vanno a capo su una loro riga sotto, invece di schiacciarsi accanto al titolo. "Modifica ciclo" rinominato in solo "Modifica".
+- **I bottoni di download Excel ora dicono "Scarica Excel"** ovunque (admin → Fornitore hub e admin → Ordini), al posto del tecnico "Scarica .xlsx".
 - **Tutte le azioni fornitore raccolte in un unico dialog 🤝 Fornitore.** La riga del ciclo chiuso ora ha tre bottoni, in quest'ordine: `✎ Modifica ciclo`, `🤝 Fornitore`, `✎ Ordini`. Il nuovo dialog hub raggruppa in un solo punto: 📥 Scarica riepilogo ordini (l'xlsx canonico), 📧 Invia per email (gli stessi 4 campi editabili — Destinatario/Mittente/CC/Oggetto), 📤 Carica distinta compilata (upload + anteprima diff + apply). I vecchi bottoni "Carica distinta" e "CSV fornitore" dentro Recap ordini sono spariti — non era il posto giusto. L'export "Esporta CSV" in Admin → Ordini ora scarica lo stesso xlsx del hub (un solo file in giro, niente più formati che divergono).
 - **Un unico xlsx canonico** circola: l'allegato della mail, il download dal hub e l'export in Admin → Ordini producono lo stesso workbook. Ora ha tre sheet: `Distinta` (la matrice editabile, invariata), `Riepilogo ordini` (read-only, una riga per socio×prodotto con Qta ordinata · Prezzo unitario · Totale) e `Totali per prodotto` (read-only, aggregato). Il foglio nascosto `_meta` per il re-import è invariato.
 - **Quantità ordinata come nota sulla cella nell'xlsx.** Passando il mouse su una cella gialla nello sheet `Distinta` compare ora "Ordinato: 2 pz" (o l'unità rilevante), così il fornitore vede la quantità di riferimento senza inquinare il valore numerico della cella editabile.
@@ -166,7 +177,8 @@ e il versionamento è basato su [Semantic Versioning](https://semver.org/spec/v2
 
 ---
 
-[Non rilasciato]: https://github.com/federicodecillia/porta_moneta/compare/v1.5.0...HEAD
+[Non rilasciato]: https://github.com/federicodecillia/porta_moneta/compare/v1.6.0...HEAD
+[1.6.0]: https://github.com/federicodecillia/porta_moneta/releases/tag/v1.6.0
 [1.5.0]: https://github.com/federicodecillia/porta_moneta/releases/tag/v1.5.0
 [1.4.5]: https://github.com/federicodecillia/porta_moneta/releases/tag/v1.4.5
 [1.4.4]: https://github.com/federicodecillia/porta_moneta/releases/tag/v1.4.4

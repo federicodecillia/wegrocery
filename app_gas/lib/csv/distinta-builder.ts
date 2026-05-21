@@ -434,9 +434,9 @@ export async function buildSupplierDistinta(cycleId: string): Promise<DistintaBu
   riep.getColumn(6).width = 16;
   riep.getColumn(7).width = 18;
   const riepRows = [...rows].sort((a, b) => {
-    const m = a.memberName.localeCompare(b.memberName);
-    if (m !== 0) return m;
-    return a.productName.localeCompare(b.productName);
+    const p = a.productName.localeCompare(b.productName);
+    if (p !== 0) return p;
+    return (a.variant ?? "").localeCompare(b.variant ?? "");
   });
   let riepR = 2;
   for (const row of riepRows) {

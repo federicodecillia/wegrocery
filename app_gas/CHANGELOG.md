@@ -16,6 +16,10 @@ and this project loosely follows [Semantic Versioning](https://semver.org/spec/v
 
 ## [Unreleased]
 
+---
+
+## [1.6.0] — 2026-05-21
+
 ### Added
 - **Round-trip "distinta fornitore" `.xlsx`.** When you press 📧 Fornitore the email now carries an Excel workbook laid out exactly the way suppliers already use: products as rows, members as columns, yellow cells pre-filled with the original prices, a "Spedizione" row at the bottom and live `=SUM(...)` totals per member and per product. Reference columns (prodotto/varietà/formato/€/pz/€/kg/note) are locked so the structure can't be broken accidentally. A hidden `_meta` sheet carries the cycleId + product/member mappings so the file can be re-imported without name matching. After the supplier weighs everything and returns the file, the new **📤 Carica distinta fornitore** button inside "Vedi ordini" reads it, shows a diff preview (rettifiche riga, spedizione per socio, eventuali avvisi) and on confirm applies everything — line corrections go through the same `correction` ledger flow as the manual rectification, while per-member shipping is written directly to the ledger and the cycle is flipped to `shippingMode = "manual"` so future edits don't overwrite it. The cycle form shows an orange banner instead of the shipping inputs when in manual mode. Format opens in Excel, LibreOffice, and Google Sheets without conversion.
 - **Shipping is now visible in the "Vedi ordini" modal.** Each member's section in Admin → Ciclo → Recap ordini now shows a 🚚 Spedizione row under their product lines, and the per-member subtotal at the top includes it. Before this, the modal only listed product lines, so the totals on screen didn't match the actual `order_charge + shipping_charge` the member was billed.
@@ -27,6 +31,13 @@ and this project loosely follows [Semantic Versioning](https://semver.org/spec/v
 - **Record what was actually delivered, per line.** Inside the "Recap ordini" modal each order line is now clickable: the admin can enter the real delivered quantity and cost (e.g. ordered 1 kg of beetroot, received 800 g → €1.60 instead of €2.00). The delta is posted as a `correction` ledger entry, the member's saldo updates immediately, and they get an `order_adjusted` notification with the diff. Lines that have been rectified are tagged "rettificato" and show ordered-vs-actual side by side.
 
 ### Changed
+- **Admin → Cassa now leads with three summary cards.** Total balance across active members, average balance per active member, and a clickable "Saldo < 0" card that toggles a filter on the list below so you only see members in the red. The negative-balance card used to live in Admin → Ciclo where it was easy to miss; it now sits next to the other balance figures it belongs with.
+- **Admin → Ciclo top-row cards are now a cycle timeline.** Three at-a-glance counters — Aperti / In scadenza (≤7 days) / Chiusi (last 7 days) — replace the old "Saldo < 0" and "Top 30 giorni" cards. The closing-soon window grew from 24 h to 7 days so the card is useful for planning, not just panicking.
+- **Filters in Admin → Statistiche are now multi-select.** Each dropdown (cicli, fornitori, soci) lets you tick several entries at once with a built-in search box; selecting nothing means "tutti". All cards, charts and rankings adapt to the combined filter. URL params switch from a single id to a comma-separated list, so a filtered view is still shareable by link.
+- **Admin → Prodotti template is now an Excel file (`.xlsx`).** One example per common GAS category — Frutta, Verdura, Pane e cereali, Pasta e riso, Latticini, Uova, Carne, Conserve, Olio e aceto — comes pre-filled in italic so you can adapt them in place. The import button now accepts both `.xlsx` and the older `.csv` format.
+- **"Riepilogo ordini" in the supplier `.xlsx` is now sorted by product, then variant.** Previously rows were grouped by member, which made it harder for the supplier to scan the totals for a given product. The matrix (Distinta sheet) is unchanged.
+- **Cleaner "Ultimi cicli" layout on mobile.** The "Chiuso" pill moved to the left of the cycle name so it reads as a status label, not a button. The three action buttons (Modifica, Fornitore, Ordini) now wrap on their own row underneath instead of squeezing next to the title. "Modifica ciclo" renamed to just "Modifica".
+- **Excel download buttons all say "Scarica Excel"** now (admin → Fornitore hub and admin → Ordini), instead of the technical "Scarica .xlsx".
 - **All supplier actions consolidated into a single 🤝 Fornitore dialog.** The closed-cycle row now has three buttons, in this order: `✎ Modifica ciclo`, `🤝 Fornitore`, `✎ Ordini`. The new hub dialog hosts every supplier interaction in one place: 📥 Scarica riepilogo ordini (the canonical xlsx), 📧 Invia per email (the same 4 editable fields as before — Destinatario/Mittente/CC/Oggetto), 📤 Carica distinta compilata (the file upload + diff preview + apply). The old "Carica distinta" and "CSV fornitore" buttons inside Recap ordini are gone — they lived in the wrong place. The Admin → Ordini "Esporta CSV" now downloads the same xlsx as the hub (one file circulates, no more divergent formats).
 - **One canonical xlsx file** circulates: the email attachment, the hub download, and the Admin → Ordini export all produce the same workbook. It now has three sheets: `Distinta` (the editable matrix, unchanged), `Riepilogo ordini` (read-only, one row per socio×prodotto with Qta ordinata · Prezzo unitario · Totale), and `Totali per prodotto` (read-only aggregation). Hidden `_meta` sheet for round-trip import is unchanged.
 - **Ordered quantity shown as cell note in the supplier xlsx.** Hovering over a yellow cell in the `Distinta` sheet now shows "Ordinato: 2 pz" (or the relevant unit), so the supplier knows the reference quantity without polluting the editable cell value.
@@ -166,7 +177,8 @@ and this project loosely follows [Semantic Versioning](https://semver.org/spec/v
 
 ---
 
-[Unreleased]: https://github.com/federicodecillia/porta_moneta/compare/v1.5.0...HEAD
+[Unreleased]: https://github.com/federicodecillia/porta_moneta/compare/v1.6.0...HEAD
+[1.6.0]: https://github.com/federicodecillia/porta_moneta/releases/tag/v1.6.0
 [1.5.0]: https://github.com/federicodecillia/porta_moneta/releases/tag/v1.5.0
 [1.4.5]: https://github.com/federicodecillia/porta_moneta/releases/tag/v1.4.5
 [1.4.4]: https://github.com/federicodecillia/porta_moneta/releases/tag/v1.4.4
