@@ -282,8 +282,18 @@ export function EditCycleForm({
   isClosed?: boolean;
 }) {
   const [isPending, startTransition] = useTransition();
-  const [shippingMode, setShippingMode] = useState<"fixed_per_member" | "proportional">(
-    cycle.shippingMode === "proportional" ? "proportional" : "fixed_per_member",
+  // "manual" means the cycle is being driven by a supplier-distinta import:
+  // shipping_charge ledger entries are per-member and the recompute is
+  // suppressed (see adminUpdateCycle / recomputeShippingForClosedCycle).
+  // The toggle is hidden in that mode — the admin sees a banner instead.
+  const [shippingMode, setShippingMode] = useState<
+    "fixed_per_member" | "proportional" | "manual"
+  >(
+    cycle.shippingMode === "proportional"
+      ? "proportional"
+      : cycle.shippingMode === "manual"
+      ? "manual"
+      : "fixed_per_member",
   );
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -363,12 +373,27 @@ export function EditCycleForm({
         </div>
       )}
 
-      <ShippingModeFields
-        mode={shippingMode}
-        onModeChange={setShippingMode}
-        defaultPerMember={cycle.shippingCostPerMember ?? ""}
-        defaultTotal={cycle.shippingTotal ?? ""}
-      />
+      {shippingMode === "manual" ? (
+        <div>
+          <label className={labelCls}>Spedizione</label>
+          <div className="rounded-xl border border-pm-orange/30 bg-pm-orange-light p-3 text-[12px] text-pm-near-black">
+            <div className="font-bold text-pm-orange">Gestita manualmente per socio</div>
+            <p className="mt-1 text-pm-gray">
+              Le quote di spedizione sono state importate dalla distinta fornitore e variano per socio.
+              Le voci nel saldo dei soci restano invariate finché non carichi una nuova distinta.
+            </p>
+          </div>
+          <input type="hidden" name="shippingCostPerMember" value="" />
+          <input type="hidden" name="shippingTotal" value="" />
+        </div>
+      ) : (
+        <ShippingModeFields
+          mode={shippingMode}
+          onModeChange={setShippingMode}
+          defaultPerMember={cycle.shippingCostPerMember ?? ""}
+          defaultTotal={cycle.shippingTotal ?? ""}
+        />
+      )}
 
 
       {/* Ritiri: due righe allineate verticalmente */}

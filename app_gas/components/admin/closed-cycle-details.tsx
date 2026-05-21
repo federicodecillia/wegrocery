@@ -6,6 +6,7 @@ import { adminUpdateOrderLineActuals } from "@/lib/actions/admin";
 import { downloadSupplierCsv } from "@/lib/csv/supplier-csv-client";
 import { formatEur, getProductEmoji } from "@/lib/utils";
 import { toast } from "@/components/ui/toast";
+import { DistintaModal } from "./distinta-modal";
 import { EditClosedOrderModal } from "./edit-closed-order-modal";
 
 type OrderDetail = {
@@ -55,6 +56,7 @@ export function ClosedCycleDetails({
   const [editTarget, setEditTarget] = useState<
     { kind: "edit"; memberId: string; memberName: string } | { kind: "create" } | null
   >(null);
+  const [distintaOpen, setDistintaOpen] = useState(false);
 
   const refetch = useCallback(async () => {
     setLoading(true);
@@ -185,6 +187,13 @@ export function ClosedCycleDetails({
           >
             + Aggiungi ordine per un socio
           </button>
+          <button
+            onClick={() => setDistintaOpen(true)}
+            disabled={orderDetails.length === 0}
+            className="w-full rounded-xl border border-pm-orange/30 bg-pm-orange-light py-2 text-[12px] font-bold text-pm-orange hover:bg-pm-orange/15 disabled:opacity-50"
+          >
+            📤 Carica distinta fornitore
+          </button>
           <div className="flex gap-2">
             <button
               onClick={() => downloadSupplierCsv(orderDetails, cycleTitle)}
@@ -210,6 +219,18 @@ export function ClosedCycleDetails({
           mode={editTarget}
           onClose={() => setEditTarget(null)}
           onSaved={() => refetch()}
+        />
+      )}
+
+      {distintaOpen && (
+        <DistintaModal
+          cycleId={cycleId}
+          cycleTitle={cycleTitle}
+          onClose={() => setDistintaOpen(false)}
+          onApplied={() => {
+            setDistintaOpen(false);
+            void refetch();
+          }}
         />
       )}
     </div>

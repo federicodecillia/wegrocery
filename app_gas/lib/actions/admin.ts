@@ -424,6 +424,10 @@ async function recomputeShippingForClosedCycle(
     .where(eq(orderCycles.cycleId, cycleId))
     .limit(1);
   if (!cycle) return { adjustedMembers: [] };
+  // Manual mode: per-member shipping was set by a supplier-distinta import.
+  // Skip recompute so an unrelated cycle edit doesn't blow away the
+  // per-member values.
+  if (cycle.shippingMode === "manual") return { adjustedMembers: [] };
 
   const memberTotals = await db
     .select({
@@ -897,16 +901,21 @@ export async function adminSendSupplierEmail(
     if (!cycle.supplierEmail)
       return { error: "Il fornitore non ha un indirizzo email" };
 
-    const { buildSupplierAggregateCsv } = await import("@/lib/csv/supplier-export");
-    const csv = await buildSupplierAggregateCsv(cycleId, cycle.title);
-    if (csv.rowCount === 0) return { error: "Nessun ordine in questo ciclo" };
+    const { buildSupplierDistinta } = await import("@/lib/csv/distinta-builder");
+    let distinta: Awaited<ReturnType<typeof buildSupplierDistinta>>;
+    try {
+      distinta = await buildSupplierDistinta(cycleId);
+    } catch (e) {
+      return { error: e instanceof Error ? e.message : "Errore costruzione distinta" };
+    }
 
     const { supplierOrderEmail } = await import("@/lib/email/templates");
     const { subject, text } = supplierOrderEmail({
       cycleTitle: cycle.title,
       pickupDate: cycle.pickupDate,
-      grandTotal: csv.grandTotal,
-      itemCount: csv.rowCount,
+      grandTotal: distinta.grandTotal,
+      productCount: distinta.productCount,
+      memberCount: distinta.memberCount,
     });
 
     // Always keep the GAS shared archive in CC so the cooperative has a
@@ -922,7 +931,7 @@ export async function adminSendSupplierEmail(
       cc,
       subject,
       text,
-      attachments: [{ filename: csv.filename, content: csv.content }],
+      attachments: [{ filename: distinta.filename, content: distinta.content }],
     });
     if ("error" in result) return { error: result.error };
 
@@ -930,13 +939,14 @@ export async function adminSendSupplierEmail(
       supplierId: cycle.supplierId,
       recipient: cycle.supplierEmail,
       cc,
-      filename: csv.filename,
-      rowCount: csv.rowCount,
-      grandTotal: csv.grandTotal,
+      filename: distinta.filename,
+      productCount: distinta.productCount,
+      memberCount: distinta.memberCount,
+      grandTotal: distinta.grandTotal,
       messageId: result.id ?? null,
     });
 
-    return { ok: true, recipient: cycle.supplierEmail, rowCount: csv.rowCount };
+    return { ok: true, recipient: cycle.supplierEmail, rowCount: distinta.productCount };
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Errore nell'invio email" };
   }
@@ -1700,4 +1710,221 @@ export async function adminGetCycleProductsForReview(cycleId: string) {
   await requireAdmin();
   const { getCycleProductsForReview } = await import("@/lib/db/queries");
   return getCycleProductsForReview(cycleId);
+}
+
+// ── Supplier distinta import ─────────────────────────────────────────────────
+
+// Builds the distinta workbook for an admin who wants to download it (or
+// re-download after sending). Returns the bytes as a base64 string so the
+// client can wrap it in a Blob and trigger a download — keeps the wire
+// JSON-safe.
+export async function adminBuildSupplierDistinta(
+  cycleId: string,
+): Promise<{ ok: true; filename: string; base64: string } | { error: string }> {
+  try {
+    await requireAdmin();
+    const { buildSupplierDistinta } = await import("@/lib/csv/distinta-builder");
+    const r = await buildSupplierDistinta(cycleId);
+    return { ok: true, filename: r.filename, base64: r.content.toString("base64") };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Errore generazione distinta" };
+  }
+}
+
+// Reads a supplier-filled distinta and returns a diff preview WITHOUT
+// touching the DB. The client renders it; the admin confirms; then
+// adminApplyDistintaImport actually writes.
+export async function adminPreviewDistintaImport(input: {
+  cycleId: string;
+  fileBase64: string;
+}): Promise<
+  | { ok: true; preview: import("@/lib/csv/distinta-parser").DistintaImportPreview }
+  | { error: string }
+> {
+  try {
+    await requireAdmin();
+    const buf = Buffer.from(input.fileBase64, "base64");
+    const { parseSupplierDistinta } = await import("@/lib/csv/distinta-parser");
+    const preview = await parseSupplierDistinta(buf, input.cycleId);
+    return { ok: true, preview };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Errore lettura distinta" };
+  }
+}
+
+// Applies the diff: re-parses the file (paranoia / state could have shifted),
+// then for every line correction reuses adminUpdateOrderLineActuals so the
+// existing correction-ledger + notification flow is honored. Shipping
+// changes go straight to the ledger (upsert) so we can support per-member
+// custom values; the cycle's shippingMode is flipped to "manual" so the
+// automatic recompute leaves them alone.
+export async function adminApplyDistintaImport(input: {
+  cycleId: string;
+  fileBase64: string;
+}): Promise<
+  | {
+      ok: true;
+      corrections: number;
+      shippingChanges: number;
+      warnings: string[];
+      affectedMembers: number;
+    }
+  | { error: string; warnings?: string[]; errors?: string[] }
+> {
+  try {
+    const admin = await requireAdmin();
+    const buf = Buffer.from(input.fileBase64, "base64");
+    const { parseSupplierDistinta } = await import("@/lib/csv/distinta-parser");
+    const preview = await parseSupplierDistinta(buf, input.cycleId);
+    if (preview.errors.length > 0) {
+      return {
+        error: preview.errors[0],
+        errors: preview.errors,
+        warnings: preview.warnings,
+      };
+    }
+
+    const db = getDb();
+    const now = new Date();
+    const affected = new Set<string>();
+
+    // Per-member summary so the single notification we emit at the end is
+    // useful (lists the relevant changes for that socio).
+    type ChangeSummary = { product: string; oldTotal: number; newTotal: number };
+    const linesByMember = new Map<string, ChangeSummary[]>();
+    const shippingByMember = new Map<string, { oldShipping: number; newShipping: number }>();
+
+    // 1) Line corrections — reuse the per-line action so the correction
+    // ledger entry + per-line notification model stays identical to manual
+    // edits. We swallow individual notifications by NOT relying on them in
+    // the summary — but we keep them on, since they carry the per-line
+    // diff which is also useful.
+    for (const c of preview.corrections) {
+      const res = await adminUpdateOrderLineActuals({
+        orderLineId: c.orderLineId,
+        actualQuantity: null,
+        actualLineTotal: c.newTotal.toFixed(2),
+      });
+      if ("error" in res) {
+        return { error: `Errore su ${c.memberName} · ${c.productName}: ${res.error}` };
+      }
+      affected.add(c.memberId);
+      const arr = linesByMember.get(c.memberId) ?? [];
+      arr.push({ product: c.productName, oldTotal: c.oldTotal, newTotal: c.newTotal });
+      linesByMember.set(c.memberId, arr);
+    }
+
+    // 2) Shipping changes — upsert ledger entries per member, then flip the
+    // cycle to manual mode.
+    if (preview.shippingChanges.length > 0) {
+      const existing = await db
+        .select({
+          entryId: ledgerEntries.entryId,
+          memberId: ledgerEntries.memberId,
+        })
+        .from(ledgerEntries)
+        .where(
+          and(
+            eq(ledgerEntries.cycleId, input.cycleId),
+            eq(ledgerEntries.type, "shipping_charge"),
+          ),
+        );
+      const existingByMember = new Map(existing.map((e) => [e.memberId, e.entryId]));
+
+      for (const s of preview.shippingChanges) {
+        const newAmount = -s.newShipping; // ledger stores it as negative charge
+        const prev = existingByMember.get(s.memberId);
+        if (prev) {
+          await db
+            .update(ledgerEntries)
+            .set({
+              amount: newAmount.toFixed(2),
+              note: "Spedizione da distinta fornitore",
+              updatedAt: now,
+              updatedBy: admin.email,
+            })
+            .where(eq(ledgerEntries.entryId, prev));
+        } else if (s.newShipping > 0) {
+          await db.insert(ledgerEntries).values({
+            entryId: genId("led"),
+            memberId: s.memberId,
+            entryDate: now,
+            type: "shipping_charge",
+            amount: newAmount.toFixed(2),
+            cycleId: input.cycleId,
+            note: "Spedizione da distinta fornitore",
+            createdBy: admin.email,
+            createdAt: now,
+          });
+        }
+        affected.add(s.memberId);
+        shippingByMember.set(s.memberId, {
+          oldShipping: s.oldShipping,
+          newShipping: s.newShipping,
+        });
+      }
+
+      await db
+        .update(orderCycles)
+        .set({ shippingMode: "manual" })
+        .where(eq(orderCycles.cycleId, input.cycleId));
+    }
+
+    // 3) Per-member roll-up notification (one extra notification on top of
+    // the per-line ones from step 1 — gives the socio the full picture).
+    const fmt = (n: number) => n.toFixed(2).replace(".", ",");
+    for (const memberId of affected) {
+      const lineChanges = linesByMember.get(memberId) ?? [];
+      const shipChange = shippingByMember.get(memberId);
+      const bits: string[] = [];
+      if (lineChanges.length > 0) {
+        const subset = lineChanges.slice(0, 3).map(
+          (l) => `${l.product}: ${fmt(l.oldTotal)} → ${fmt(l.newTotal)} €`,
+        );
+        const more = lineChanges.length > 3 ? ` (+${lineChanges.length - 3} altre)` : "";
+        bits.push(`Prodotti aggiornati dal fornitore: ${subset.join("; ")}${more}.`);
+      }
+      if (shipChange) {
+        bits.push(
+          `Spedizione: ${fmt(shipChange.oldShipping)} → ${fmt(shipChange.newShipping)} €.`,
+        );
+      }
+      if (bits.length === 0) continue;
+      await createNotification(db, {
+        memberId,
+        type: "order_adjusted",
+        title: "Pesata fornitore registrata",
+        body: bits.join(" "),
+        href: "/storico",
+      });
+    }
+
+    await writeAudit(
+      db,
+      admin.email,
+      "supplier_distinta_imported",
+      "cycle",
+      input.cycleId,
+      {
+        corrections: preview.corrections.length,
+        shippingChanges: preview.shippingChanges.length,
+        affectedMembers: affected.size,
+        warnings: preview.warnings,
+      },
+    );
+
+    revalidatePath("/admin");
+    revalidatePath("/storico");
+    revalidatePath("/");
+
+    return {
+      ok: true,
+      corrections: preview.corrections.length,
+      shippingChanges: preview.shippingChanges.length,
+      warnings: preview.warnings,
+      affectedMembers: affected.size,
+    };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Errore applicazione distinta" };
+  }
 }

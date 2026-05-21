@@ -174,19 +174,20 @@ ID prefix convention: `cyc_*`, `mem_*`, `prd_*`, `ord_*`, `led_*`, `not_*`, `aud
 
 ### Post-closure adjustments
 
-The admin has three independent ways to correct a closed cycle:
+The admin has four independent ways to correct a closed cycle:
 
 1. **Edit cycle metadata** (`adminUpdateCycle` on a `status='closed'` cycle) — change title/notes/pickup dates freely; changing shipping mode or amount **recomputes `shipping_charge` ledger entries in place** for every member with orders and emits `order_adjusted` notifications. `orderCloseAt`, `supplierId`, `accessLevel` are locked. UI: ✎ Modifica button in admin → Ultimi cicli.
 2. **Edit a member's whole order** (`adminEditClosedOrder`) — change integer quantities, add or remove products, or create an order from scratch for a member who didn't originally participate. Posts a single `correction` ledger entry with the delta vs the original total. Original `order_charge` row is left intact. UI: ✎ Modifica button on each member row inside Recap ordini.
 3. **Record actual delivered weight/cost per line** (`adminUpdateOrderLineActuals`) — for the case where 1 kg of beetroot weighed 800 g. Writes the actuals to `orders.actual_quantity` / `orders.actual_line_total` and posts a `correction` ledger entry with the delta. Composes with #2 because both use the same correction-ledger model. UI: click any order line inside Recap ordini.
+4. **Import a supplier-filled distinta (`.xlsx`)** (`adminApplyDistintaImport`) — round-trip flow: `📧 Fornitore` sends an Excel sheet built by `lib/csv/distinta-builder.ts` (products × members matrix with formulas + locked refs + hidden `_meta` sheet carrying cycleId/productId/memberId). The supplier overwrites the yellow cells after weighing, sends the file back, the admin uploads it via `📤 Carica distinta`. The parser (`lib/csv/distinta-parser.ts`) shows a diff preview; on apply, every product correction goes through `adminUpdateOrderLineActuals` (#3 above), while the shipping row writes `shipping_charge` ledger entries directly per member and flips `orderCycles.shippingMode` to **`"manual"`**. The `manual` sentinel causes `recomputeShippingForClosedCycle` to early-return, so a later admin edit to the shipping field won't overwrite the per-member values (the cycle form shows an orange banner instead of the shipping inputs).
 
-All three emit `order_adjusted` or `order_corrected` notifications and `audit_log` entries.
+All four emit `order_adjusted` or `order_corrected` notifications and `audit_log` entries.
 
 ### Email (Resend)
 
 - Sending the closed-cycle order to the supplier (`adminSendSupplierEmail`) uses Resend. The acting admin **and `gas@portamoneta.org`** (shared GAS archive) are always in CC.
 - Env vars: `RESEND_API_KEY`, `MAIL_FROM`. Without them the button toasts the missing-config error and the rest of the app keeps working.
-- Modules: `lib/email/resend.ts` (thin SDK wrapper, lazy env read), `lib/email/templates.ts` (Italian body), `lib/csv/supplier-export.ts` (aggregated-per-product CSV, BOM + `sep=;` for Excel IT).
+- Modules: `lib/email/resend.ts` (thin SDK wrapper, lazy env read), `lib/email/templates.ts` (Italian body), `lib/csv/distinta-builder.ts` (round-trip `.xlsx` distinta — products × members matrix with formulas, hidden `_meta` for re-import), `lib/csv/distinta-parser.ts` (reads the supplier-filled file, returns a diff preview). `lib/csv/supplier-export.ts` is kept as a legacy per-product CSV but no longer the default attachment.
 - Resend SDK detail: the `content` field on attachments base64-decodes strings — always pass a `Buffer`.
 
 ### Backup & Restore
