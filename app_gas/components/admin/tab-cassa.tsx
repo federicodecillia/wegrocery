@@ -1,5 +1,6 @@
 import { getAllMembers, getAllMembersLedger, getAllMembersWithBalances } from "@/lib/db/queries";
 import { Card, CardHeader } from "@/components/ui/card";
+import { t } from "@/lib/i18n";
 import { CassaInlineList, CassaSummaryCards, TopupForm } from "./cassa-forms";
 
 type Props = {
@@ -38,7 +39,7 @@ export async function TabCassa({ balanceFilter }: Props) {
       <Card>
         <CardHeader>
           <h3 className="text-[13px] font-bold text-brand-near-black">
-            Saldi soci ({membersWithBalances.length})
+            {t.admin.treasury.balancesTitle(membersWithBalances.length)}
           </h3>
         </CardHeader>
         <CassaInlineList

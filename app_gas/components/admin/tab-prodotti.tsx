@@ -1,4 +1,5 @@
 import { getAllSuppliers, getCatalogBySupplier } from "@/lib/db/queries";
+import { t } from "@/lib/i18n";
 import { SupplierCatalogList } from "./supplier-catalog-list";
 
 export async function TabProdotti() {
@@ -15,8 +16,8 @@ export async function TabProdotti() {
     <div className="space-y-6">
       <div className="rounded-xl bg-white p-4 shadow-sm border border-brand-border">
         <div>
-          <h2 className="text-[16px] font-bold text-brand-near-black">Catalogo Prodotti</h2>
-          <p className="text-[12px] text-brand-gray">Lista unica filtrabile per fornitore, categoria e raggruppamento.</p>
+          <h2 className="text-[16px] font-bold text-brand-near-black">{t.admin.products.catalogTitle}</h2>
+          <p className="text-[12px] text-brand-gray">{t.admin.products.catalogSubtitle}</p>
         </div>
       </div>
 

@@ -12,6 +12,7 @@ import {
 import type { DistintaImportPreview } from "@/lib/csv/distinta-parser";
 import { formatEur } from "@/lib/utils";
 import { toast } from "@/components/ui/toast";
+import { t } from "@/lib/i18n";
 
 // Single hub dialog for every supplier action on a closed cycle:
 //   1. 📥 Scarica riepilogo ordini (.xlsx download)
@@ -106,18 +107,18 @@ export function SupplierActionsDialog({
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      toast.success("Riepilogo scaricato");
+      toast.success(t.admin.supplierActions.downloadSuccess);
     });
   }
 
   function handleSendMail() {
     const ccList = cc.split(/[,;\n]/).map((s) => s.trim()).filter(Boolean);
     if (!to.trim()) {
-      toast.error("Indirizzo destinatario obbligatorio");
+      toast.error(t.admin.supplierActions.recipientRequired);
       return;
     }
     if (!subject.trim()) {
-      toast.error("Oggetto obbligatorio");
+      toast.error(t.admin.supplierActions.subjectRequired);
       return;
     }
     startSending(async () => {
@@ -131,7 +132,7 @@ export function SupplierActionsDialog({
         toast.error(r.error);
         return;
       }
-      toast.success(`Mail inviata a ${r.recipient}`);
+      toast.success(t.admin.supplierActions.mailSent(r.recipient));
       onChanged?.();
     });
   }
@@ -145,13 +146,13 @@ export function SupplierActionsDialog({
     reader.onload = () => {
       const result = reader.result;
       if (typeof result !== "string") {
-        toast.error("Impossibile leggere il file");
+        toast.error(t.admin.supplierActions.cannotReadFile);
         return;
       }
       const idx = result.indexOf(",");
       setFileBase64(idx >= 0 ? result.slice(idx + 1) : result);
     };
-    reader.onerror = () => toast.error("Errore lettura file");
+    reader.onerror = () => toast.error(t.admin.supplierActions.errorReadingFile);
     reader.readAsDataURL(file);
   }, []);
 
@@ -172,7 +173,7 @@ export function SupplierActionsDialog({
     if (!fileBase64 || !preview) return;
     if (preview.errors.length > 0) return;
     if (preview.corrections.length === 0 && preview.shippingChanges.length === 0) {
-      toast.error("Nessuna modifica da applicare");
+      toast.error(t.admin.supplierActions.nothingToApply);
       return;
     }
     startApply(async () => {
@@ -181,12 +182,7 @@ export function SupplierActionsDialog({
         toast.error(r.error);
         return;
       }
-      const parts: string[] = [];
-      if (r.corrections > 0) parts.push(`${r.corrections} rettifiche`);
-      if (r.shippingChanges > 0) parts.push(`${r.shippingChanges} spedizioni`);
-      toast.success(
-        `Distinta applicata: ${parts.join(", ")} — ${r.affectedMembers} soci aggiornati`,
-      );
+      toast.success(t.admin.supplierActions.appliedSuccess(r.corrections, r.shippingChanges, r.affectedMembers));
       setPreview(null);
       setFileBase64(null);
       setFileName(null);
@@ -211,9 +207,9 @@ export function SupplierActionsDialog({
           <div className="flex items-center justify-between border-b border-brand-border p-5">
             <div>
               <Dialog.Title className="text-[15px] font-bold text-brand-near-black">
-                Fornitore{supplierName ? ` — ${supplierName}` : ""}
+                {t.admin.supplierActions.dialogTitle(supplierName)}
               </Dialog.Title>
-              <p className="mt-0.5 text-[11px] text-brand-gray">Ciclo: {cycleTitle}</p>
+              <p className="mt-0.5 text-[11px] text-brand-gray">{t.admin.supplierActions.cycleLabel(cycleTitle)}</p>
             </div>
             <button
               onClick={() => onOpenChange(false)}
@@ -226,16 +222,16 @@ export function SupplierActionsDialog({
           <div className="flex-1 space-y-5 overflow-y-auto p-5">
             {/* ── Scarica ────────────────────────────────────── */}
             <section>
-              <div className={sectionTitleCls}>📥 Scarica riepilogo ordini</div>
+              <div className={sectionTitleCls}>{t.admin.supplierActions.downloadSection}</div>
               <p className={sectionDescCls}>
-                Excel pre-compilato con prodotti e importi per socio (Distinta + Riepilogo + Totali). Lo stesso file che viene allegato alla mail.
+                {t.admin.supplierActions.downloadDescription}
               </p>
               <button
                 onClick={handleDownload}
                 disabled={downloading}
                 className="w-full rounded-xl border border-brand-teal/30 bg-brand-teal-light py-2.5 text-[13px] font-bold text-brand-teal active:scale-95 disabled:opacity-50"
               >
-                {downloading ? "Generazione…" : "Scarica Excel"}
+                {downloading ? t.admin.supplierActions.downloading : t.admin.supplierActions.downloadButton}
               </button>
             </section>
 
@@ -243,16 +239,16 @@ export function SupplierActionsDialog({
 
             {/* ── Invia mail ────────────────────────────────── */}
             <section>
-              <div className={sectionTitleCls}>📧 Invia per email al fornitore</div>
+              <div className={sectionTitleCls}>{t.admin.supplierActions.emailSection}</div>
               <p className={sectionDescCls}>
-                Manda l&apos;Excel via Resend. Modifica i campi qui sotto se serve per questa singola spedizione.
+                {t.admin.supplierActions.emailDescription}
               </p>
               {defaultsLoading ? (
-                <div className="py-4 text-center text-[12px] text-brand-gray">Caricamento default…</div>
+                <div className="py-4 text-center text-[12px] text-brand-gray">{t.admin.supplierActions.loadingDefaults}</div>
               ) : (
                 <div className="space-y-2.5">
                   <div>
-                    <label className={labelCls}>Destinatario</label>
+                    <label className={labelCls}>{t.admin.supplierActions.recipientLabel}</label>
                     <input
                       type="email"
                       value={to}
@@ -262,21 +258,21 @@ export function SupplierActionsDialog({
                     />
                   </div>
                   <div>
-                    <label className={labelCls}>Mittente</label>
+                    <label className={labelCls}>{t.admin.supplierActions.senderLabel}</label>
                     <input
                       type="email"
                       value={from}
                       onChange={(e) => setFrom(e.target.value)}
                       disabled={sending}
-                      placeholder="default da MAIL_FROM"
+                      placeholder={t.admin.supplierActions.senderPlaceholder}
                       className={inputCls}
                     />
                     <p className="mt-0.5 text-[10px] text-brand-gray-light">
-                      Deve essere un indirizzo di un dominio verificato in Resend.
+                      {t.admin.supplierActions.senderHint}
                     </p>
                   </div>
                   <div>
-                    <label className={labelCls}>CC (separati da virgola)</label>
+                    <label className={labelCls}>{t.admin.supplierActions.ccLabel}</label>
                     <textarea
                       value={cc}
                       onChange={(e) => setCc(e.target.value)}
@@ -286,7 +282,7 @@ export function SupplierActionsDialog({
                     />
                   </div>
                   <div>
-                    <label className={labelCls}>Oggetto</label>
+                    <label className={labelCls}>{t.admin.supplierActions.subjectLabel}</label>
                     <input
                       type="text"
                       value={subject}
@@ -300,7 +296,7 @@ export function SupplierActionsDialog({
                     disabled={defaultsLoading || sending}
                     className="w-full rounded-xl bg-brand-near-black py-2.5 text-[13px] font-bold text-white shadow-lg active:scale-95 disabled:opacity-50"
                   >
-                    {sending ? "Invio…" : "Invia ora"}
+                    {sending ? t.admin.common.sending : t.admin.supplierActions.sendButton}
                   </button>
                 </div>
               )}
@@ -310,9 +306,9 @@ export function SupplierActionsDialog({
 
             {/* ── Carica distinta ───────────────────────────── */}
             <section>
-              <div className={sectionTitleCls}>📤 Carica distinta compilata</div>
+              <div className={sectionTitleCls}>{t.admin.supplierActions.uploadSection}</div>
               <p className={sectionDescCls}>
-                Quando il fornitore ti rimanda il file con le pesate, caricalo qui per applicare le rettifiche.
+                {t.admin.supplierActions.uploadDescription}
               </p>
               <input
                 type="file"
@@ -322,7 +318,7 @@ export function SupplierActionsDialog({
               />
               {fileName && (
                 <p className="mt-1 text-[11px] text-brand-gray">
-                  File: <span className="font-mono text-brand-near-black">{fileName}</span>
+                  {t.admin.importWizard.fileInfo(fileName)}
                 </p>
               )}
               <button
@@ -330,14 +326,14 @@ export function SupplierActionsDialog({
                 disabled={!fileBase64 || previewing}
                 className="mt-2 w-full rounded-xl bg-brand-orange py-2.5 text-[13px] font-bold text-white disabled:opacity-50"
               >
-                {previewing ? "Lettura in corso…" : "Anteprima modifiche"}
+                {previewing ? t.admin.supplierActions.previewing : t.admin.supplierActions.previewButton}
               </button>
 
               {preview && (
                 <div className="mt-3 space-y-3">
                   {preview.errors.length > 0 && (
                     <div className="rounded-lg border border-brand-red/30 bg-brand-red-light p-3 text-[12px] text-brand-red">
-                      <div className="mb-1 font-bold">Errori — niente verrà salvato:</div>
+                      <div className="mb-1 font-bold">{t.admin.supplierActions.errorsTitle}</div>
                       <ul className="list-disc pl-4">
                         {preview.errors.map((e, i) => (
                           <li key={i}>{e}</li>
@@ -347,8 +343,8 @@ export function SupplierActionsDialog({
                   )}
 
                   <PreviewSection
-                    title="Rettifiche righe"
-                    empty="Nessuna riga modificata."
+                    title={t.admin.supplierActions.previewCorrections}
+                    empty={t.admin.supplierActions.noCorrections}
                     rows={preview.corrections.map((c) => ({
                       key: c.orderLineId,
                       left: `${c.memberName} · ${c.productName}`,
@@ -359,8 +355,8 @@ export function SupplierActionsDialog({
                   />
 
                   <PreviewSection
-                    title="Spedizione per socio"
-                    empty="Nessuna modifica spedizione."
+                    title={t.admin.supplierActions.previewShipping}
+                    empty={t.admin.supplierActions.noShippingChanges}
                     rows={preview.shippingChanges.map((s) => ({
                       key: s.memberId,
                       left: s.memberName,
@@ -372,7 +368,7 @@ export function SupplierActionsDialog({
 
                   {preview.warnings.length > 0 && (
                     <div className="rounded-lg border border-brand-orange/30 bg-brand-orange-light p-3 text-[12px] text-brand-near-black">
-                      <div className="mb-1 font-bold text-brand-orange">Avvisi</div>
+                      <div className="mb-1 font-bold text-brand-orange">{t.admin.supplierActions.warningsTitle}</div>
                       <ul className="list-disc pl-4">
                         {preview.warnings.map((w, i) => (
                           <li key={i}>{w}</li>
@@ -390,7 +386,7 @@ export function SupplierActionsDialog({
                     }
                     className="w-full rounded-xl bg-brand-near-black py-2.5 text-[13px] font-bold text-white shadow-lg active:scale-95 disabled:opacity-50"
                   >
-                    {applying ? "Applicazione in corso…" : "Applica modifiche"}
+                    {applying ? t.admin.supplierActions.applying : t.admin.supplierActions.applyButton}
                   </button>
                 </div>
               )}

@@ -7,6 +7,7 @@ import {
 } from "@/lib/db/queries";
 import { formatDate, formatEur, getProductEmoji } from "@/lib/utils";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
+import { t } from "@/lib/i18n";
 import { CsvExportButton, OrdiniByMember, OrdiniFilters } from "./ordini-client";
 
 type Props = { cycleId?: string; memberId?: string };
@@ -42,7 +43,7 @@ export async function TabOrdini({ cycleId, memberId }: Props) {
 
         {orders.length === 0 ? (
           <div className="rounded-xl border border-dashed border-brand-border p-6 text-center text-[13px] text-brand-gray">
-            Nessun ordine registrato.
+            {t.admin.orders.noMemberOrders}
           </div>
         ) : (
           <div className="space-y-3">
@@ -53,7 +54,7 @@ export async function TabOrdini({ cycleId, memberId }: Props) {
                     <div className="text-[13px] font-bold text-brand-near-black">{cycle.cycleTitle}</div>
                     {cycle.pickupDate && (
                       <div className="mt-0.5 font-mono text-[10px] text-brand-gray-light">
-                        Ritiro: {formatDate(cycle.pickupDate)}
+                        {t.admin.orders.pickupLabel} {formatDate(cycle.pickupDate)}
                       </div>
                     )}
                   </div>
@@ -65,7 +66,7 @@ export async function TabOrdini({ cycleId, memberId }: Props) {
                           : "bg-black/[0.05] text-brand-gray"
                       }`}
                     >
-                      {cycle.cycleStatus === "open" ? "Aperto" : "Chiuso"}
+                      {cycle.cycleStatus === "open" ? t.admin.orders.openBadge : t.admin.orders.closedBadge}
                     </span>
                     <span className="font-mono text-[13px] font-bold text-brand-near-black">
                       {formatEur(cycle.total)}
@@ -107,7 +108,7 @@ export async function TabOrdini({ cycleId, memberId }: Props) {
       <div className="space-y-4">
         <OrdiniFilters allCycles={filterCycles} allMembers={filterMembers} />
         <div className="rounded-xl border border-dashed border-brand-border p-8 text-center text-[13px] text-brand-gray">
-          Nessun ciclo disponibile.
+          {t.admin.orders.noCycleAvailable}
         </div>
       </div>
     );
@@ -125,17 +126,17 @@ export async function TabOrdini({ cycleId, memberId }: Props) {
       {/* Stats */}
       <div className="grid grid-cols-2 gap-3">
         <div className="rounded-xl bg-brand-orange-light px-4 py-3">
-          <div className="font-mono text-[10px] uppercase text-brand-gray">Soci</div>
+          <div className="font-mono text-[10px] uppercase text-brand-gray">{t.admin.orders.membersLabel}</div>
           <div className="text-[24px] font-bold text-brand-near-black">{summary.orderCount}</div>
         </div>
         <div className="rounded-xl bg-brand-teal-light px-4 py-3">
-          <div className="font-mono text-[10px] uppercase text-brand-gray">Totale</div>
+          <div className="font-mono text-[10px] uppercase text-brand-gray">{t.admin.orders.totalLabel}</div>
           <div className="text-[24px] font-bold text-brand-near-black">
             {formatEur(summary.grandTotal)}
           </div>
           {summary.shippingTotal > 0 && (
             <div className="mt-0.5 font-mono text-[10px] text-brand-gray-light">
-              prodotti {formatEur(summary.productsTotal)} + spedizione {formatEur(summary.shippingTotal)}
+              {t.admin.orders.productsBreakdown(formatEur(summary.productsTotal), formatEur(summary.shippingTotal))}
             </div>
           )}
         </div>
@@ -143,20 +144,20 @@ export async function TabOrdini({ cycleId, memberId }: Props) {
 
       {summary.orderCount === 0 ? (
         <div className="rounded-xl border border-dashed border-brand-border p-6 text-center text-[13px] text-brand-gray">
-          Nessun ordine per questo ciclo.
+          {t.admin.orders.noOrdersInCycle}
         </div>
       ) : (
         <>
           {/* By member */}
           <Card>
             <CardHeader className="flex items-center justify-between">
-              <h3 className="text-[13px] font-bold text-brand-near-black">Per socio</h3>
+              <h3 className="text-[13px] font-bold text-brand-near-black">{t.admin.orders.perMemberTitle}</h3>
               <CsvExportButton cycleId={selectedId} cycleTitle={selectedCycle?.title ?? selectedId} />
             </CardHeader>
             <OrdiniByMember byMember={summary.byMember} />
             <CardBody className="border-t border-brand-border py-2.5">
               <div className="flex justify-between text-[13px] font-bold text-brand-near-black">
-                <span>Totale</span>
+                <span>{t.admin.orders.totalRow}</span>
                 <span className="font-mono">{formatEur(summary.grandTotal)}</span>
               </div>
             </CardBody>
@@ -165,10 +166,9 @@ export async function TabOrdini({ cycleId, memberId }: Props) {
           {/* By product */}
           <Card>
             <CardHeader>
-              <h3 className="text-[13px] font-bold text-brand-near-black">Per prodotto</h3>
+              <h3 className="text-[13px] font-bold text-brand-near-black">{t.admin.orders.perProductTitle}</h3>
               <p className="mt-0.5 text-[11px] text-brand-gray">
-                Totali al netto delle rettifiche di peso. La spedizione è esclusa
-                perché non è legata a un prodotto.
+                {t.admin.orders.perProductSubtitle}
               </p>
             </CardHeader>
             <div className="divide-y divide-brand-border">
@@ -195,7 +195,7 @@ export async function TabOrdini({ cycleId, memberId }: Props) {
             </div>
             <CardBody className="border-t border-brand-border py-2.5">
               <div className="flex justify-between text-[13px] font-bold text-brand-near-black">
-                <span>Totale prodotti</span>
+                <span>{t.admin.orders.totalProducts}</span>
                 <span className="font-mono">{formatEur(summary.productsTotal)}</span>
               </div>
             </CardBody>

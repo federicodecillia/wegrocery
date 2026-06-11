@@ -6,6 +6,7 @@ import { adminUpdateOrderLineActuals } from "@/lib/actions/admin";
 import { formatEur, getProductEmoji } from "@/lib/utils";
 import { toast } from "@/components/ui/toast";
 import { EditClosedOrderModal } from "./edit-closed-order-modal";
+import { t } from "@/lib/i18n";
 
 type OrderDetail = {
   orderLineId: string;
@@ -66,7 +67,7 @@ export function ClosedCycleDetails({
         setShipping(result.shipping || []);
       }
     } catch {
-      toast.error("Errore nel caricamento dettagli");
+      toast.error(t.admin.closedCycleDetails.errorLoading);
     } finally {
       setLoading(false);
     }
@@ -108,7 +109,7 @@ export function ClosedCycleDetails({
           <div>
             <h3 className="text-[16px] font-black text-brand-near-black">{cycleTitle}</h3>
             <p className="text-[12px] text-brand-gray">
-              {Object.keys(grouped).length} soci · {formatEur(grandTotal)} da addebitare
+              {t.admin.closedCycleDetails.membersAndTotal(Object.keys(grouped).length, formatEur(grandTotal))}
             </p>
           </div>
           <button
@@ -121,9 +122,9 @@ export function ClosedCycleDetails({
 
         <div className="flex-1 overflow-y-auto p-5">
           {loading ? (
-            <div className="py-20 text-center text-brand-gray">Caricamento in corso...</div>
+            <div className="py-20 text-center text-brand-gray">{t.admin.closedCycleDetails.loading}</div>
           ) : orderDetails.length === 0 ? (
-            <div className="py-20 text-center text-brand-gray">Nessun ordine trovato per questo ciclo.</div>
+            <div className="py-20 text-center text-brand-gray">{t.admin.closedCycleDetails.noOrders}</div>
           ) : (
             <div className="space-y-8">
               {Object.entries(grouped).map(([memberName, lines]) => {
@@ -158,9 +159,9 @@ export function ClosedCycleDetails({
                           <div className="flex min-w-0 flex-1 gap-2">
                             <span className="shrink-0 text-[16px]">🚚</span>
                             <div className="min-w-0">
-                              <div className="font-medium">Spedizione</div>
+                              <div className="font-medium">{t.admin.closedCycleDetails.shippingLine}</div>
                               <div className="text-[10px] text-brand-gray">
-                                Quota fissa per socio
+                                {t.admin.closedCycleDetails.shippingQuota}
                               </div>
                             </div>
                           </div>
@@ -182,13 +183,13 @@ export function ClosedCycleDetails({
             onClick={() => setEditTarget({ kind: "create" })}
             className="w-full rounded-xl border border-dashed border-brand-orange/40 bg-brand-orange-light py-2 text-[12px] font-bold text-brand-orange hover:bg-brand-orange/15"
           >
-            + Aggiungi ordine per un socio
+            {t.admin.closedCycleDetails.addOrder}
           </button>
           <button
             onClick={() => setIsOpen(false)}
             className="w-full rounded-xl bg-brand-near-black py-3 text-[14px] font-bold text-white shadow-lg active:scale-95"
           >
-            Chiudi
+            {t.admin.common.close}
           </button>
         </div>
       </div>
@@ -228,7 +229,7 @@ function OrderLineRow({ line, onSaved }: { line: OrderDetail; onSaved: () => voi
         type="button"
         onClick={() => setEditing(true)}
         className="group flex w-full items-start justify-between gap-3 rounded-lg px-1.5 py-1 text-left text-[12px] text-brand-near-black hover:bg-brand-orange/5"
-        title="Clicca per rettificare la quantita ricevuta"
+        title={t.admin.closedCycleDetails.rectifyTitle}
       >
         <div className="flex min-w-0 flex-1 gap-2">
           <span className="shrink-0 text-[16px]">{line.emoji || getProductEmoji(line.productName)}</span>
@@ -237,7 +238,7 @@ function OrderLineRow({ line, onSaved }: { line: OrderDetail; onSaved: () => voi
               {line.productName} {line.variant && <span className="text-brand-gray">({line.variant})</span>}
               {adjusted && (
                 <span className="ml-1 rounded-full bg-brand-orange/15 px-1.5 py-px text-[9px] font-bold uppercase tracking-wide text-brand-orange">
-                  rettificato
+                  {t.admin.closedCycleDetails.adjustedBadge}
                 </span>
               )}
             </div>
@@ -323,10 +324,10 @@ function OrderLineRow({ line, onSaved }: { line: OrderDetail; onSaved: () => voi
             return;
           }
           if (Math.abs(result.correctionAmount) >= 0.005) {
-            const dir = result.correctionAmount > 0 ? "rimborso" : "addebito";
-            toast.success(`Rettifica salvata: ${dir} di ${formatEur(Math.abs(result.correctionAmount))}`);
+            const dir = result.correctionAmount > 0 ? t.admin.closedCycleDetails.refund : t.admin.closedCycleDetails.charge;
+            toast.success(t.admin.closedCycleDetails.correctionSavedWithDelta(dir, formatEur(Math.abs(result.correctionAmount))));
           } else {
-            toast.success("Rettifica salvata");
+            toast.success(t.admin.closedCycleDetails.correctionSaved);
           }
           setEditing(false);
           await onSaved();
@@ -392,12 +393,12 @@ function OrderLineEditForm({
         <span className="text-[14px]">{line.emoji || getProductEmoji(line.productName)}</span>
         <span className="font-bold">{line.productName}</span>
         <span className="font-mono text-brand-gray">
-          ordinato: {line.quantity}{unitSuffix} = {formatEur(parseFloat(line.lineTotal))}
+          {t.admin.closedCycleDetails.orderedLabel} {line.quantity}{unitSuffix} = {formatEur(parseFloat(line.lineTotal))}
         </span>
       </div>
       <div className="grid grid-cols-2 gap-2">
         <label className="flex flex-col gap-0.5 text-[10px] font-semibold uppercase tracking-wide text-brand-gray">
-          Qta ricevuta{unit ? ` (${unit})` : ""}
+          {t.admin.closedCycleDetails.qtyReceived(unit)}
           <input
             type="text"
             inputMode="decimal"
@@ -408,7 +409,7 @@ function OrderLineEditForm({
           />
         </label>
         <label className="flex flex-col gap-0.5 text-[10px] font-semibold uppercase tracking-wide text-brand-gray">
-          Totale (EUR)
+          {t.admin.closedCycleDetails.totalEur}
           <input
             type="text"
             inputMode="decimal"
@@ -429,7 +430,7 @@ function OrderLineEditForm({
           disabled={isPending}
           className="flex-1 rounded-md bg-brand-orange px-2 py-1.5 text-[11px] font-bold text-white disabled:opacity-60"
         >
-          {isPending ? "Salvataggio…" : "Salva"}
+          {isPending ? t.admin.common.saving : t.admin.common.save}
         </button>
         <button
           type="button"
@@ -437,7 +438,7 @@ function OrderLineEditForm({
           disabled={isPending}
           className="rounded-md border border-brand-border bg-white px-2 py-1.5 text-[11px] font-bold text-brand-gray"
         >
-          Annulla
+          {t.admin.common.cancel}
         </button>
       </div>
     </div>

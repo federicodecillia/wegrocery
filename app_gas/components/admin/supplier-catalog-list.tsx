@@ -6,6 +6,7 @@ import type { CatalogProductItem } from "@/lib/db/queries";
 import { formatEur, getProductEmoji } from "@/lib/utils";
 import { toast } from "@/components/ui/toast";
 import { CatalogCsvActions, CatalogProductForm } from "./prodotti-forms";
+import { t } from "@/lib/i18n";
 
 type SupplierWithCatalog = {
   supplier: {
@@ -75,11 +76,11 @@ export function SupplierCatalogList({
   const editingProduct = allProducts.find((p) => p.catalogProductId === editingId);
 
   function handleArchive(id: string, active: boolean) {
-    if (!window.confirm(active ? "Riattivare il prodotto?" : "Archiviare il prodotto?")) return;
+    if (!window.confirm(active ? t.admin.products.reactivateConfirm : t.admin.products.archiveConfirm)) return;
     startTransition(async () => {
       const result = await adminArchiveCatalogProduct(id, active);
       if (result.error) toast.error(result.error);
-      else toast.success(active ? "Prodotto riattivato" : "Prodotto archiviato");
+      else toast.success(active ? t.admin.products.productUpdated : t.admin.suppliers.productArchivedSuccess);
     });
   }
 
@@ -91,16 +92,16 @@ export function SupplierCatalogList({
       <section className="rounded-xl border border-brand-border bg-white p-4 shadow-sm">
         <div className="mb-3 flex items-start justify-between gap-3">
           <div>
-            <h3 className="text-[14px] font-bold text-brand-near-black">Carica prodotti</h3>
+            <h3 className="text-[14px] font-bold text-brand-near-black">{t.admin.products.uploadTitle}</h3>
             <p className="text-[11px] text-brand-gray">
-              Importa un listino una sola volta scegliendo il fornitore di destinazione.
+              {t.admin.products.uploadSubtitle}
             </p>
           </div>
         </div>
         <div className="space-y-3">
           <label className="block">
             <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-brand-gray">
-              Fornitore di destinazione
+              {t.admin.products.uploadSupplierLabel}
             </span>
             <select
               value={uploadSupplierId}
@@ -108,7 +109,7 @@ export function SupplierCatalogList({
               className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-brand-teal/30"
             >
               {suppliers.length === 0 ? (
-                <option value="">Nessun fornitore disponibile</option>
+                <option value="">{t.admin.products.noSupplierAvailable}</option>
               ) : (
                 suppliers.map((supplier) => (
                   <option key={supplier.supplierId} value={supplier.supplierId}>
@@ -125,9 +126,9 @@ export function SupplierCatalogList({
       <section className="rounded-xl border border-brand-border bg-white p-4 shadow-sm">
         <div className="mb-3 flex items-start justify-between gap-3">
           <div>
-            <h3 className="text-[14px] font-bold text-brand-near-black">Catalogo prodotti</h3>
+            <h3 className="text-[14px] font-bold text-brand-near-black">{t.admin.products.catalogSectionTitle}</h3>
             <p className="text-[11px] text-brand-gray">
-              {filtered.length} prodotti visibili su {allProducts.length}
+              {t.admin.products.filteredCount(filtered.length, allProducts.length)}
             </p>
           </div>
           <button
@@ -135,21 +136,21 @@ export function SupplierCatalogList({
             disabled={suppliers.length === 0}
             className="rounded-lg bg-brand-teal px-3 py-1.5 text-[11px] font-bold text-white disabled:opacity-50"
           >
-            + Aggiungi
+            {t.admin.products.addButton}
           </button>
         </div>
 
         <div className="grid gap-3">
           <label className="block">
             <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-brand-gray">
-              Fornitore
+              {t.admin.products.supplierFilter}
             </span>
             <select
               value={supplierFilter}
               onChange={(e) => setSupplierFilter(e.target.value)}
               className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-brand-teal/30"
             >
-              <option value={ALL}>Tutti i fornitori</option>
+              <option value={ALL}>{t.admin.products.allSuppliers}</option>
               {suppliers.map((supplier) => (
                 <option key={supplier.supplierId} value={supplier.supplierId}>
                   {supplier.name}
@@ -161,14 +162,14 @@ export function SupplierCatalogList({
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="block">
               <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-brand-gray">
-                Categoria
+                {t.admin.products.categoryFilter}
               </span>
               <select
                 value={categoryFilter}
                 onChange={(e) => setCategoryFilter(e.target.value)}
                 className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-brand-teal/30"
               >
-                <option value={ALL}>Tutte le categorie</option>
+                <option value={ALL}>{t.admin.products.allCategories}</option>
                 {categories.map((category) => (
                   <option key={category} value={category}>
                     {category}
@@ -179,15 +180,15 @@ export function SupplierCatalogList({
 
             <label className="block">
               <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-brand-gray">
-                Raggruppa per
+                {t.admin.products.groupBy}
               </span>
               <select
                 value={groupBy}
                 onChange={(e) => setGroupBy(e.target.value as GroupBy)}
                 className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-brand-teal/30"
               >
-                <option value="category">Categoria</option>
-                <option value="supplier">Fornitore</option>
+                <option value="category">{t.admin.products.groupByCategory}</option>
+                <option value="supplier">{t.admin.products.groupBySupplier}</option>
               </select>
             </label>
           </div>
@@ -229,7 +230,7 @@ export function SupplierCatalogList({
                         <span className="text-[13px] font-bold text-brand-near-black">{product.name}</span>
                         {!product.active && (
                           <span className="rounded bg-brand-gray-light px-1 py-0.5 text-[9px] font-bold uppercase text-brand-gray">
-                            Archiviato
+                            {t.admin.products.archivedBadge}
                           </span>
                         )}
                       </div>
@@ -257,13 +258,13 @@ export function SupplierCatalogList({
                           onClick={() => setEditingId(product.catalogProductId)}
                           className="text-[10px] font-bold text-brand-teal hover:underline"
                         >
-                          Modifica
+                          {t.admin.common.edit}
                         </button>
                         <button
                           onClick={() => handleArchive(product.catalogProductId, !product.active)}
                           className="text-[10px] font-bold text-brand-gray hover:text-brand-near-black hover:underline"
                         >
-                          {product.active ? "Archivia" : "Ripristina"}
+                          {product.active ? t.admin.common.archive : t.admin.common.restore}
                         </button>
                       </div>
                     </div>
@@ -275,7 +276,7 @@ export function SupplierCatalogList({
         </div>
       ) : (
         <div className="rounded-xl border border-dashed border-brand-border p-8 text-center text-[13px] text-brand-gray">
-          Nessun prodotto trovato con questi filtri.
+          {t.admin.products.noProductsFiltered}
         </div>
       )}
     </div>

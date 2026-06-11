@@ -2,6 +2,8 @@
 
 import { useState, useTransition, useEffect, useCallback } from "react";
 import { toast } from "@/components/ui/toast";
+import { t } from "@/lib/i18n";
+import { formatMoney, formatDateTime } from "@/lib/i18n/format";
 import {
   adminCloseCycle,
   adminCreateCycle,
@@ -60,7 +62,7 @@ export function OpenCycleCard({
         <div>
           <span className="mb-1 inline-flex items-center gap-1.5 rounded-full bg-brand-teal-light px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-brand-teal">
             <span className="h-1.5 w-1.5 rounded-full bg-brand-teal" />
-            Aperto
+            {t.admin.cycle.openBadge}
           </span>
           <h3 className="mt-1 text-[15px] font-bold text-brand-near-black">{cycle.title}</h3>
         </div>
@@ -69,19 +71,19 @@ export function OpenCycleCard({
             onClick={() => setManagingProducts((v) => !v)}
             className="rounded-xl border border-brand-teal/30 bg-brand-teal-light px-3 py-1.5 text-[11px] font-bold text-brand-teal"
           >
-            {managingProducts ? "Chiudi Prodotti" : "Gestisci Prodotti"}
+            {managingProducts ? t.admin.cycle.closeProducts : t.admin.cycle.manageProducts}
           </button>
           <button
             onClick={() => setImportingListing(true)}
             className="rounded-xl border border-brand-orange/30 bg-brand-orange-light px-3 py-1.5 text-[11px] font-bold text-brand-orange"
           >
-            📥 Importa listino
+            {t.admin.cycle.importListing}
           </button>
           <button
             onClick={() => setEditing((v) => !v)}
             className="rounded-xl border border-brand-border px-3 py-1.5 text-[11px] font-semibold text-brand-gray"
           >
-            {editing ? "Annulla" : "Modifica"}
+            {editing ? t.admin.common.cancel : t.admin.common.edit}
           </button>
           <CycleReviewCloseButton cycleId={cycle.cycleId} cycleTitle={cycle.title} />
           <CloseCycleButton cycleId={cycle.cycleId} cycleTitle={cycle.title} />
@@ -95,11 +97,11 @@ export function OpenCycleCard({
         <CardBody>
           <div className="grid grid-cols-2 gap-3">
             <div className="rounded-lg bg-brand-orange-light px-3 py-2">
-              <div className="font-mono text-[11px] text-brand-gray">Ordini</div>
+              <div className="font-mono text-[11px] text-brand-gray">{t.admin.cycle.ordersCount}</div>
               <div className="text-[20px] font-bold text-brand-near-black">{stats.orderCount}</div>
             </div>
             <div className="rounded-lg bg-brand-teal-light px-3 py-2">
-              <div className="font-mono text-[11px] text-brand-gray">Totale</div>
+              <div className="font-mono text-[11px] text-brand-gray">{t.admin.cycle.totalAmount}</div>
               <div className="text-[20px] font-bold text-brand-near-black">
                 {formatEur(stats.grandTotal)}
               </div>
@@ -108,14 +110,14 @@ export function OpenCycleCard({
           <div className="mt-3 space-y-1 text-[12px] text-brand-gray">
             {cycle.isOverdue && (
               <div className="rounded-lg border border-brand-red/30 bg-brand-red-light p-3 text-brand-red">
-                Notifica admin: la data di chiusura e&apos; passata. Controlla il recap e chiudi il ciclo.
+                {t.admin.cycle.overdueWarning}
               </div>
             )}
             {cycle.orderCloseAt && (
               <div>
-                Chiusura ordini:{" "}
+                {t.admin.cycle.orderCloseAt}:{" "}
                 <span className="font-semibold text-brand-near-black">
-                  {new Date(cycle.orderCloseAt).toLocaleString("it-IT", {
+                  {formatDateTime(new Date(cycle.orderCloseAt), {
                     day: "numeric",
                     month: "short",
                     hour: "2-digit",
@@ -126,9 +128,9 @@ export function OpenCycleCard({
             )}
             {cycle.pickupDate && (
               <div>
-                {cycle.pickup2Date ? "Ritiro 1: " : "Ritiro: "}
+                {cycle.pickup2Date ? t.admin.cycle.pickupFirst : t.admin.cycle.pickupSingle}{" "}
                 <span className="font-semibold text-brand-near-black">
-                  {new Date(cycle.pickupDate).toLocaleString("it-IT", {
+                  {formatDateTime(new Date(cycle.pickupDate), {
                     day: "numeric",
                     month: "short",
                     hour: "2-digit",
@@ -140,9 +142,9 @@ export function OpenCycleCard({
             )}
             {cycle.pickup2Date && (
               <div>
-                Ritiro 2:{" "}
+                {t.admin.cycle.pickupSecond}{" "}
                 <span className="font-semibold text-brand-near-black">
-                  {new Date(cycle.pickup2Date).toLocaleString("it-IT", {
+                  {formatDateTime(new Date(cycle.pickup2Date), {
                     day: "numeric",
                     month: "short",
                     hour: "2-digit",
@@ -156,9 +158,9 @@ export function OpenCycleCard({
               cycle.shippingTotal &&
               parseFloat(cycle.shippingTotal) > 0 && (
                 <div>
-                  Spedizione:{" "}
+                  {t.admin.cycle.shippingLabel}:{" "}
                   <span className="font-semibold text-brand-near-black">
-                    {parseFloat(cycle.shippingTotal).toFixed(2).replace(".", ",")} € totali (proporzionale al valore ordine)
+                    {t.admin.cycle.shippingProportionalDisplay(formatMoney(cycle.shippingTotal))}
                   </span>
                 </div>
               )}
@@ -166,9 +168,9 @@ export function OpenCycleCard({
               cycle.shippingCostPerMember &&
               parseFloat(cycle.shippingCostPerMember) > 0 && (
                 <div>
-                  Spedizione:{" "}
+                  {t.admin.cycle.shippingLabel}:{" "}
                   <span className="font-semibold text-brand-near-black">
-                    {parseFloat(cycle.shippingCostPerMember).toFixed(2).replace(".", ",")} €/socio
+                    {t.admin.cycle.shippingPerMemberDisplay(formatMoney(cycle.shippingCostPerMember))}
                   </span>
                 </div>
               )}
@@ -177,7 +179,7 @@ export function OpenCycleCard({
             <ClosedCycleDetails
               cycleId={cycle.cycleId}
               cycleTitle={cycle.title}
-              buttonLabel="✎ Recap ordini"
+              buttonLabel={t.admin.cycle.recapOrders}
             />
           </div>
           {managingProducts && (
@@ -263,9 +265,9 @@ function PickupRow({
         className={`w-[140px] shrink-0 ${inputCls}`}
       />
       <div className="flex min-w-[190px] flex-1 items-center gap-1.5">
-        <span className={miniLabelCls}>Dalle</span>
+        <span className={miniLabelCls}>{t.admin.cycle.timeFrom}</span>
         <TimeSlotSelect name={`${prefix}StartTime`} defValue={defStart} />
-        <span className={miniLabelCls}>Alle</span>
+        <span className={miniLabelCls}>{t.admin.cycle.timeTo}</span>
         <TimeSlotSelect name={`${prefix}EndTime`} defValue={defEnd} />
       </div>
     </div>
@@ -295,10 +297,10 @@ function PickupSection({
   const [showPickup2, setShowPickup2] = useState(Boolean(defPickup2Date));
   return (
     <div>
-      <label className={labelCls}>Ritiri (opzionale)</label>
+      <label className={labelCls}>{t.admin.cycle.pickupSection}</label>
       <div className="space-y-2">
         <PickupRow
-          label="Ritiro 1"
+          label={t.admin.cycle.pickup1Label}
           prefix="pickup"
           defDate={defPickup1Date}
           defStart={defPickup1Start}
@@ -307,7 +309,7 @@ function PickupSection({
         {showPickup2 ? (
           <>
             <PickupRow
-              label="Ritiro 2"
+              label={t.admin.cycle.pickup2Label}
               prefix="pickup2"
               defDate={defPickup2Date}
               defStart={defPickup2Start}
@@ -318,7 +320,7 @@ function PickupSection({
               onClick={() => setShowPickup2(false)}
               className="text-[11px] font-semibold text-brand-gray hover:text-brand-red"
             >
-              ✕ Rimuovi secondo ritiro
+              {t.admin.cycle.removePickup2}
             </button>
           </>
         ) : (
@@ -327,7 +329,7 @@ function PickupSection({
             onClick={() => setShowPickup2(true)}
             className="text-[12px] font-semibold text-brand-orange hover:underline"
           >
-            ➕ Aggiungi secondo ritiro
+            {t.admin.cycle.addPickup2}
           </button>
         )}
       </div>
@@ -350,12 +352,12 @@ function ShippingModeFields({
 }) {
   return (
     <div>
-      <label className={labelCls}>Spedizione</label>
+      <label className={labelCls}>{t.admin.cycle.shippingLabel}</label>
       <div className="mb-2 flex rounded-lg bg-black/[0.05] p-0.5">
         {(
           [
-            { v: "fixed_per_member", label: "Fissa €/socio" },
-            { v: "proportional", label: "Proporzionale" },
+            { v: "fixed_per_member", label: t.admin.cycle.shippingFixed },
+            { v: "proportional", label: t.admin.cycle.shippingProportional },
           ] as const
         ).map((opt) => (
           <button
@@ -384,7 +386,7 @@ function ShippingModeFields({
             className={`w-full ${inputCls}`}
           />
           <p className="mt-1 text-[10px] text-brand-gray-light">
-            Importo addebitato a ogni socio con un ordine.
+            {t.admin.cycle.shippingFixedHint}
           </p>
           {/* Hidden so the form data shape stays uniform across modes. */}
           <input type="hidden" name="shippingTotal" value="" />
@@ -401,7 +403,7 @@ function ShippingModeFields({
             className={`w-full ${inputCls}`}
           />
           <p className="mt-1 text-[10px] text-brand-gray-light">
-            Costo totale spedizione: viene diviso tra i soci in proporzione al valore del loro ordine.
+            {t.admin.cycle.shippingProportionalHint}
           </p>
           <input type="hidden" name="shippingCostPerMember" value="" />
         </div>
@@ -470,11 +472,9 @@ export function EditCycleForm({
         return;
       }
       if (isClosed && result.adjustedMembers && result.adjustedMembers > 0) {
-        toast.success(
-          `Ciclo aggiornato — ricalcolata spedizione per ${result.adjustedMembers} soci`,
-        );
+        toast.success(t.admin.cycle.cycleUpdatedShipping(result.adjustedMembers));
       } else {
-        toast.success("Ciclo aggiornato");
+        toast.success(t.admin.cycle.cycleUpdated);
       }
       onClose();
     });
@@ -484,14 +484,11 @@ export function EditCycleForm({
     <form onSubmit={handleSubmit} className="space-y-3">
       {isClosed && (
         <div className="rounded-lg border border-brand-orange/30 bg-brand-orange-light px-3 py-2 text-[12px] leading-snug text-brand-near-black">
-          <strong>Stai modificando un ciclo gia&apos; chiuso.</strong> Le modifiche
-          alle spese di spedizione ricalcoleranno gli addebiti dei soci e
-          invieranno una notifica di rettifica. Chiusura ordini, fornitore e
-          livello di accesso non sono modificabili a ciclo chiuso.
+          {t.admin.cycle.editClosedBanner}
         </div>
       )}
       <div>
-        <label className={labelCls}>Titolo *</label>
+        <label className={labelCls}>{t.admin.cycle.titleLabel}</label>
         <input
           name="title"
           required
@@ -502,7 +499,7 @@ export function EditCycleForm({
 
       {!isClosed && (
         <div>
-          <label className={labelCls}>Chiusura ordini *</label>
+          <label className={labelCls}>{t.admin.cycle.orderCloseAtLabel}</label>
           <input
             name="orderCloseAt"
             type="datetime-local"
@@ -515,12 +512,11 @@ export function EditCycleForm({
 
       {shippingMode === "manual" ? (
         <div>
-          <label className={labelCls}>Spedizione</label>
+          <label className={labelCls}>{t.admin.cycle.shippingLabel}</label>
           <div className="rounded-xl border border-brand-orange/30 bg-brand-orange-light p-3 text-[12px] text-brand-near-black">
-            <div className="font-bold text-brand-orange">Gestita manualmente per socio</div>
+            <div className="font-bold text-brand-orange">{t.admin.cycle.shippingManualTitle}</div>
             <p className="mt-1 text-brand-gray">
-              Le quote di spedizione sono state importate dalla distinta fornitore e variano per socio.
-              Le voci nel saldo dei soci restano invariate finché non carichi una nuova distinta.
+              {t.admin.cycle.shippingManualDescription}
             </p>
           </div>
           <input type="hidden" name="shippingCostPerMember" value="" />
@@ -548,13 +544,13 @@ export function EditCycleForm({
       {!isClosed && (
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className={labelCls}>Fornitore</label>
+            <label className={labelCls}>{t.admin.cycle.supplierLabel}</label>
             <select
               name="supplierId"
               defaultValue={cycle.supplierId ?? ""}
               className={`w-full ${inputCls}`}
             >
-              <option value="">— nessuno —</option>
+              <option value="">{t.admin.common.noSupplier}</option>
               {suppliers.map((s) => (
                 <option key={s.supplierId} value={s.supplierId}>
                   {s.name}
@@ -563,21 +559,21 @@ export function EditCycleForm({
             </select>
           </div>
           <div>
-            <label className={labelCls}>Accesso</label>
+            <label className={labelCls}>{t.admin.cycle.accessLabel}</label>
             <select
               name="accessLevel"
               defaultValue={cycle.accessLevel}
               className={`w-full ${inputCls}`}
             >
-              <option value="admin">Solo Admin</option>
-              <option value="soci">Soci Attivi</option>
-              <option value="utenti">Tutti gli utenti</option>
+              <option value="admin">{t.admin.cycle.accessAdminOnly}</option>
+              <option value="soci">{t.admin.cycle.accessActiveSoci}</option>
+              <option value="utenti">{t.admin.cycle.accessAllUsers}</option>
             </select>
           </div>
         </div>
       )}
       <div>
-        <label className={labelCls}>Note</label>
+        <label className={labelCls}>{t.admin.common.notes}</label>
         <textarea
           name="notes"
           rows={2}
@@ -590,7 +586,7 @@ export function EditCycleForm({
         disabled={isPending}
         className="w-full rounded-xl bg-brand-orange py-2 text-[13px] font-bold text-white disabled:opacity-60"
       >
-        {isPending ? "Salvataggio…" : "Salva modifiche"}
+        {isPending ? t.admin.common.saving : t.admin.common.saveChanges}
       </button>
     </form>
   );
@@ -628,7 +624,7 @@ export function CreateCycleForm({ suppliers }: { suppliers: Supplier[] }) {
         toast.error(result.error);
         return;
       }
-      toast.success("Ciclo creato");
+      toast.success(t.admin.cycle.cycleCreated);
       setOpen(false);
     });
   }
@@ -639,27 +635,27 @@ export function CreateCycleForm({ suppliers }: { suppliers: Supplier[] }) {
         onClick={() => setOpen(true)}
         className="w-full rounded-xl border-2 border-dashed border-brand-orange/40 py-3 text-[13px] font-semibold text-brand-orange"
       >
-        + Crea nuovo ciclo
+        {t.admin.cycle.createButton}
       </button>
     );
   }
 
   return (
     <form onSubmit={handleSubmit} className="rounded-xl border border-brand-border bg-white p-4 shadow-sm">
-      <p className="mb-3 text-[13px] font-bold text-brand-near-black">Crea nuovo ciclo</p>
+      <p className="mb-3 text-[13px] font-bold text-brand-near-black">{t.admin.cycle.createTitle}</p>
       <div className="space-y-3">
         <div>
-          <label className={labelCls}>Titolo *</label>
+          <label className={labelCls}>{t.admin.cycle.titleLabel}</label>
           <input
             name="title"
             required
-            placeholder="es. Ordine frutta 03/05"
+            placeholder={t.admin.cycle.titlePlaceholder}
             className={`w-full ${inputCls}`}
           />
         </div>
 
         <div>
-          <label className={labelCls}>Chiusura ordini *</label>
+          <label className={labelCls}>{t.admin.cycle.orderCloseAtLabel}</label>
           <input
             name="orderCloseAt"
             type="datetime-local"
@@ -679,9 +675,9 @@ export function CreateCycleForm({ suppliers }: { suppliers: Supplier[] }) {
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className={labelCls}>Fornitore</label>
+            <label className={labelCls}>{t.admin.cycle.supplierLabel}</label>
             <select name="supplierId" className={`w-full ${inputCls}`}>
-              <option value="">— nessuno —</option>
+              <option value="">{t.admin.common.noSupplier}</option>
               {suppliers.map((s) => (
                 <option key={s.supplierId} value={s.supplierId}>
                   {s.name}
@@ -690,16 +686,16 @@ export function CreateCycleForm({ suppliers }: { suppliers: Supplier[] }) {
             </select>
           </div>
           <div>
-            <label className={labelCls}>Accesso</label>
+            <label className={labelCls}>{t.admin.cycle.accessLabel}</label>
             <select name="accessLevel" defaultValue="soci" className={`w-full ${inputCls}`}>
-              <option value="admin">Solo Admin</option>
-              <option value="soci">Soci Attivi</option>
-              <option value="utenti">Tutti gli utenti</option>
+              <option value="admin">{t.admin.cycle.accessAdminOnly}</option>
+              <option value="soci">{t.admin.cycle.accessActiveSoci}</option>
+              <option value="utenti">{t.admin.cycle.accessAllUsers}</option>
             </select>
           </div>
         </div>
         <div>
-          <label className={labelCls}>Note</label>
+          <label className={labelCls}>{t.admin.common.notes}</label>
           <textarea
             name="notes"
             rows={2}
@@ -713,14 +709,14 @@ export function CreateCycleForm({ suppliers }: { suppliers: Supplier[] }) {
           disabled={isPending}
           className="flex-1 rounded-xl bg-brand-orange py-2 text-[13px] font-bold text-white disabled:opacity-60"
         >
-          {isPending ? "Creazione…" : "Crea ciclo"}
+          {isPending ? t.admin.cycle.creating : t.admin.cycle.createSubmit}
         </button>
         <button
           type="button"
           onClick={() => setOpen(false)}
           className="rounded-xl border border-brand-border px-4 py-2 text-[13px] font-semibold text-brand-gray"
         >
-          Annulla
+          {t.admin.common.cancel}
         </button>
       </div>
     </form>
@@ -733,18 +729,13 @@ export function CloseCycleButton({ cycleId, cycleTitle }: { cycleId: string; cyc
   const [isPending, startTransition] = useTransition();
 
   function handleClose() {
-    if (
-      !window.confirm(
-        `Chiudere "${cycleTitle}"?\n\nVerranno generati gli addebiti per tutti i soci con ordini.`,
-      )
-    )
-      return;
+    if (!window.confirm(t.admin.cycle.closeCycleConfirm(cycleTitle))) return;
     startTransition(async () => {
       try {
         const result = await adminCloseCycle(cycleId);
-        toast.success(`Ciclo chiuso. ${result.chargesGenerated} addebiti generati.`);
+        toast.success(t.admin.cycle.cycleClosed(result.chargesGenerated));
       } catch (err) {
-        toast.error(err instanceof Error ? err.message : "Errore");
+        toast.error(err instanceof Error ? err.message : t.admin.common.error);
       }
     });
   }
@@ -755,7 +746,7 @@ export function CloseCycleButton({ cycleId, cycleTitle }: { cycleId: string; cyc
       disabled={isPending}
       className="rounded-xl border border-brand-red/30 bg-brand-red-light px-4 py-2 text-[12px] font-bold text-brand-red disabled:opacity-60"
     >
-      {isPending ? "Chiusura…" : "Chiudi ciclo"}
+      {isPending ? t.admin.cycle.closingCycle : t.admin.cycle.closeCycle}
     </button>
   );
 }
@@ -798,7 +789,7 @@ export function CycleProductPicker({
         setCatalog(cat as CatalogProductItem[]);
       }
     } catch {
-      toast.error("Errore nel caricamento prodotti");
+      toast.error(t.admin.products.errorLoadingProducts);
     } finally {
       setLoading(false);
     }
@@ -813,19 +804,19 @@ export function CycleProductPicker({
       const result = await adminLoadFromCatalog(cycleId, [catalogProductId]);
       if (result.error) toast.error(result.error);
       else {
-        toast.success("Prodotto aggiunto");
+        toast.success(t.admin.products.productAdded);
         refresh();
       }
     });
   }
 
   function handleRemove(productId: string) {
-    if (!window.confirm("Rimuovere questo prodotto dal ciclo?")) return;
+    if (!window.confirm(t.admin.products.removeFromCycleConfirm)) return;
     startTransition(async () => {
       const result = await adminRemoveProductFromCycle(productId);
       if (result.error) toast.error(result.error);
       else {
-        toast.success("Prodotto rimosso");
+        toast.success(t.admin.products.productRemoved);
         refresh();
       }
     });
@@ -834,8 +825,8 @@ export function CycleProductPicker({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h4 className="text-[13px] font-bold text-brand-near-black">Prodotti in questo ciclo</h4>
-        <div className="text-[11px] text-brand-gray">{currentProducts.length} prodotti</div>
+        <h4 className="text-[13px] font-bold text-brand-near-black">{t.admin.products.cycleProductsTitle}</h4>
+        <div className="text-[11px] text-brand-gray">{t.admin.products.cycleProductsCount(currentProducts.length)}</div>
       </div>
 
       {currentProducts.length > 0 ? (
@@ -861,7 +852,7 @@ export function CycleProductPicker({
                       onClick={() => handleRemove(p.productId)}
                       className="ml-2 rounded-lg bg-red-50 px-2 py-1 text-[10px] font-bold text-red-600 hover:bg-red-100"
                     >
-                      Rimuovi
+                      {t.admin.products.removeFromCycle}
                     </button>
                   </div>
                 ))}
@@ -871,18 +862,18 @@ export function CycleProductPicker({
         </div>
       ) : (
         <div className="rounded-lg border border-dashed border-brand-border py-4 text-center text-[12px] text-brand-gray">
-          Nessun prodotto selezionato per questo ciclo.
+          {t.admin.products.noCycleProducts}
         </div>
       )}
 
       <div className="mt-6 border-t border-brand-border pt-4">
-        <h4 className="mb-3 text-[13px] font-bold text-brand-near-black">Aggiungi dal Catalogo</h4>
+        <h4 className="mb-3 text-[13px] font-bold text-brand-near-black">{t.admin.products.addFromCatalog}</h4>
         <select
           value={selectedSupplierId}
           onChange={(e) => setSelectedSupplierId(e.target.value)}
           className="mb-4 w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-brand-teal/30"
         >
-          <option value="">— seleziona fornitore —</option>
+          <option value="">{t.admin.products.selectSupplierOption}</option>
           {suppliers.map((s) => (
             <option key={s.supplierId} value={s.supplierId}>
               {s.name}
@@ -893,7 +884,7 @@ export function CycleProductPicker({
         {selectedSupplierId && (
           <div className="space-y-2">
             {loading ? (
-              <div className="text-center py-4 text-brand-gray text-[12px]">Caricamento catalogo...</div>
+              <div className="text-center py-4 text-brand-gray text-[12px]">{t.admin.products.loadingCatalog}</div>
             ) : catalog.length > 0 ? (
               <div className="max-h-[300px] overflow-y-auto divide-y divide-brand-border rounded-lg border border-brand-border bg-[#fdfdfd]">
                 {catalog.filter(cp => !currentProducts.some(p => p.name === cp.name && p.variant === cp.variant && p.format === cp.format)).map((cp) => (
@@ -911,13 +902,13 @@ export function CycleProductPicker({
                       onClick={() => handleAdd(cp.catalogProductId)}
                       className="ml-2 rounded-lg bg-brand-teal px-3 py-1 text-[10px] font-bold text-white hover:bg-brand-teal-dark"
                     >
-                      Aggiungi
+                      {t.admin.products.addButton}
                     </button>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="text-center py-4 text-brand-gray text-[12px]">Nessun prodotto trovato a catalogo per questo fornitore.</div>
+              <div className="text-center py-4 text-brand-gray text-[12px]">{t.admin.products.noSupplierCatalog}</div>
             )}
           </div>
         )}
@@ -949,7 +940,7 @@ export function SupplierActionsButton({
   supplierEmail?: string | null;
 }) {
   const [open, setOpen] = useState(false);
-  const disabledReason = !supplierName ? "Ciclo senza fornitore" : null;
+  const disabledReason = !supplierName ? t.admin.cycle.noSupplierDisabled : null;
 
   return (
     <>
@@ -959,7 +950,7 @@ export function SupplierActionsButton({
         title={disabledReason ?? undefined}
         className="rounded-lg bg-brand-teal/10 px-3 py-1 text-[11px] font-bold text-brand-teal hover:bg-brand-teal/20 disabled:cursor-not-allowed disabled:opacity-50"
       >
-        🤝 Fornitore
+        {t.admin.cycle.supplierButton}
       </button>
       {open && (
         <SupplierActionsDialog
@@ -992,7 +983,7 @@ export function ClosedCycleEditButton({
         onClick={() => setOpen(true)}
         className="rounded-lg bg-brand-orange/10 px-3 py-1 text-[11px] font-bold text-brand-orange hover:bg-brand-orange/20"
       >
-        ✎ Modifica
+        {t.admin.cycle.editClosedButton}
       </button>
     );
   }
@@ -1002,14 +993,14 @@ export function ClosedCycleEditButton({
         <div className="flex items-center justify-between border-b border-brand-border p-5">
           <div>
             <div className="font-mono text-[10px] uppercase tracking-[0.13em] text-brand-orange">
-              Ciclo chiuso
+              {t.admin.cycle.editClosedLabel}
             </div>
             <h3 className="mt-1 text-[16px] font-black text-brand-near-black">{cycle.title}</h3>
           </div>
           <button
             onClick={() => setOpen(false)}
             className="rounded-full bg-brand-border p-2 text-brand-gray hover:bg-brand-gray-light"
-            aria-label="Chiudi"
+            aria-label={t.admin.common.close}
           >
             ✕
           </button>

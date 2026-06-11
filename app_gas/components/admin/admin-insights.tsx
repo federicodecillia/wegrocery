@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getAdminInsights } from "@/lib/db/queries";
+import { t } from "@/lib/i18n";
 
 // Three at-a-glance mini-cards shown above the open-cycles list. They form
 // a left-to-right timeline of the cycle lifecycle: open → closing soon →
@@ -14,25 +15,25 @@ export async function AdminInsights() {
         tone={insights.openCyclesCount > 0 ? "info" : "neutral"}
         href="/admin?tab=ciclo"
         icon="🟢"
-        label="Aperti"
+        label={t.admin.stats.insightOpen}
         value={insights.openCyclesCount.toString()}
-        hint="cicli attivi"
+        hint={t.admin.stats.insightOpenHint}
       />
       <InsightCard
         tone={insights.closingSoonCount > 0 ? "warning" : "neutral"}
         href="/admin?tab=ciclo"
         icon="⏰"
-        label="In scadenza"
+        label={t.admin.stats.insightExpiring}
         value={insights.closingSoonCount.toString()}
-        hint="≤7gg"
+        hint={t.admin.stats.insightExpiringHint}
       />
       <InsightCard
         tone={insights.recentlyClosedCount > 0 ? "info" : "neutral"}
         href="/admin?tab=ciclo"
         icon="✅"
-        label="Chiusi"
+        label={t.admin.stats.insightClosed}
         value={insights.recentlyClosedCount.toString()}
-        hint="ultimi 7gg"
+        hint={t.admin.stats.insightClosedHint}
       />
     </div>
   );

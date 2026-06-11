@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "@/components/ui/toast";
 import { adminDeleteLedgerEntry, adminRecordTopup, adminUpdateLedgerEntry } from "@/lib/actions/admin";
 import { formatDate, formatEur } from "@/lib/utils";
+import { t } from "@/lib/i18n";
+import { formatMoney } from "@/lib/i18n/format";
 import type { LedgerEntryItem, MemberWithBalance } from "@/lib/db/queries";
 
 type Member = { memberId: string; fullName: string };
@@ -37,7 +39,7 @@ export function CassaSummaryCards({
     <div className="rounded-xl border border-brand-teal/20 bg-brand-teal-light p-3">
       <div className="mb-0.5 flex items-center justify-between">
         <span className="font-mono text-[9px] uppercase tracking-wide text-brand-gray">
-          Saldo totale
+          {t.admin.treasury.totalBalance}
         </span>
         <span className="text-[14px] leading-none">💰</span>
       </div>
@@ -49,7 +51,7 @@ export function CassaSummaryCards({
         {formatEur(totalBalance)}
       </div>
       <div className="mt-0.5 font-mono text-[9px] text-brand-gray-light">
-        soci attivi
+        {t.admin.treasury.activeMembersHint}
       </div>
     </div>
   );
@@ -58,7 +60,7 @@ export function CassaSummaryCards({
     <div className="rounded-xl border border-brand-border bg-white p-3">
       <div className="mb-0.5 flex items-center justify-between">
         <span className="font-mono text-[9px] uppercase tracking-wide text-brand-gray">
-          Saldo medio
+          {t.admin.treasury.avgBalance}
         </span>
         <span className="text-[14px] leading-none">📊</span>
       </div>
@@ -70,7 +72,7 @@ export function CassaSummaryCards({
         {formatEur(avgBalance)}
       </div>
       <div className="mt-0.5 font-mono text-[9px] text-brand-gray-light">
-        per socio attivo
+        {t.admin.treasury.perActiveMember}
       </div>
     </div>
   );
@@ -91,7 +93,7 @@ export function CassaSummaryCards({
     >
       <div className="mb-0.5 flex items-center justify-between">
         <span className="font-mono text-[9px] uppercase tracking-wide text-brand-gray">
-          Saldo &lt; 0
+          {t.admin.treasury.negativeBalance}
         </span>
         <span className="text-[14px] leading-none">💸</span>
       </div>
@@ -99,7 +101,7 @@ export function CassaSummaryCards({
         {negativeCount}
       </div>
       <div className="mt-0.5 font-mono text-[9px] text-brand-gray-light">
-        {isActive ? "filtro attivo · tocca per togliere" : "tocca per filtrare"}
+        {isActive ? t.admin.treasury.filterActive : t.admin.treasury.filterHint}
       </div>
     </button>
   );
@@ -128,28 +130,28 @@ export function TopupForm({ members }: { members: Member[] }) {
     const entryDate = fd.get("entryDate") as string;
 
     if (!memberId || isNaN(amount) || amount <= 0) {
-      toast.error("Seleziona un socio e inserisci un importo valido");
+      toast.error(t.admin.treasury.invalidTopup);
       return;
     }
 
     startTransition(async () => {
       try {
         await adminRecordTopup(memberId, amount, note, entryDate);
-        toast.success(`Ricarica di €${amount.toFixed(2)} registrata`);
+        toast.success(t.admin.treasury.topupRegistered(formatMoney(amount)));
         (e.target as HTMLFormElement).reset();
       } catch (err) {
-        toast.error(err instanceof Error ? err.message : "Errore");
+        toast.error(err instanceof Error ? err.message : t.admin.treasury.errorUpdating);
       }
     });
   }
 
   return (
     <form onSubmit={handleSubmit} className="rounded-xl border border-brand-border bg-white p-4 shadow-sm">
-      <p className="mb-3 text-[13px] font-bold text-brand-near-black">Nuova ricarica</p>
+      <p className="mb-3 text-[13px] font-bold text-brand-near-black">{t.admin.treasury.newTopup}</p>
       <div className="space-y-3">
         <div>
           <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-brand-gray">
-            Socio *
+            {t.admin.treasury.memberLabel}
           </label>
           <select
             name="memberId"
@@ -167,7 +169,7 @@ export function TopupForm({ members }: { members: Member[] }) {
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-brand-gray">
-              Importo € *
+              {t.admin.treasury.amountLabel}
             </label>
             <input
               name="amount"
@@ -175,13 +177,13 @@ export function TopupForm({ members }: { members: Member[] }) {
               min="0.01"
               step="0.01"
               required
-              placeholder="0,00"
+              placeholder={t.admin.treasury.amountPlaceholder}
               className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-brand-teal/30"
             />
           </div>
           <div>
             <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-brand-gray">
-              Data
+              {t.admin.treasury.dateLabel}
             </label>
             <input
               name="entryDate"
@@ -193,11 +195,11 @@ export function TopupForm({ members }: { members: Member[] }) {
         </div>
         <div>
           <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-brand-gray">
-            Nota
+            {t.admin.treasury.noteLabel}
           </label>
           <input
             name="note"
-            placeholder="Ricarica"
+            placeholder={t.admin.treasury.notePlaceholder}
             className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-brand-teal/30"
           />
         </div>
@@ -207,7 +209,7 @@ export function TopupForm({ members }: { members: Member[] }) {
         disabled={isPending}
         className="mt-4 w-full rounded-xl bg-brand-teal py-2 text-[13px] font-bold text-white disabled:opacity-60"
       >
-        {isPending ? "Registrazione…" : "Registra ricarica"}
+        {isPending ? t.admin.treasury.registeringTopup : t.admin.treasury.registerTopup}
       </button>
     </form>
   );
@@ -238,22 +240,22 @@ export function LedgerEntryRow({ entry }: { entry: LedgerEntry }) {
     startTransition(async () => {
       try {
         await adminUpdateLedgerEntry(entry.entryId, { amount: newAmount, note });
-        toast.success("Voce aggiornata");
+        toast.success(t.admin.treasury.entryUpdated);
         setEditing(false);
       } catch (err) {
-        toast.error(err instanceof Error ? err.message : "Errore");
+        toast.error(err instanceof Error ? err.message : t.admin.treasury.errorUpdating);
       }
     });
   }
 
   function handleDelete() {
-    if (!window.confirm("Eliminare questa voce del ledger?")) return;
+    if (!window.confirm(t.admin.treasury.deleteConfirm)) return;
     startTransition(async () => {
       try {
         await adminDeleteLedgerEntry(entry.entryId);
-        toast.success("Voce eliminata");
+        toast.success(t.admin.treasury.entryDeleted);
       } catch (err) {
-        toast.error(err instanceof Error ? err.message : "Errore");
+        toast.error(err instanceof Error ? err.message : t.admin.treasury.errorUpdating);
       }
     });
   }
@@ -284,7 +286,7 @@ export function LedgerEntryRow({ entry }: { entry: LedgerEntry }) {
             disabled={isPending}
             className="rounded-lg bg-brand-teal px-3 py-1 text-[11px] font-bold text-white disabled:opacity-60"
           >
-            Salva
+            {t.admin.common.save}
           </button>
           <button
             onClick={() => setEditing(false)}
@@ -309,7 +311,7 @@ export function LedgerEntryRow({ entry }: { entry: LedgerEntry }) {
                 : "bg-black/[0.05] text-brand-gray"
           }`}
         >
-          {isTopup ? "ricarica" : isCharge ? "addebito" : entry.type}
+          {isTopup ? t.admin.treasury.topupBadge : isCharge ? t.admin.treasury.chargeBadge : entry.type}
         </span>
         <span className="text-[12px] text-brand-gray">
           {entry.cycleTitle ? (
@@ -327,7 +329,7 @@ export function LedgerEntryRow({ entry }: { entry: LedgerEntry }) {
           className={`font-mono text-[13px] font-bold ${amountNum >= 0 ? "text-brand-teal" : "text-brand-red"}`}
         >
           {amountNum >= 0 ? "+" : ""}
-          {amountNum.toFixed(2).replace(".", ",")}
+          {formatMoney(Math.abs(amountNum))}
         </span>
         <button
           onClick={() => setEditing(true)}
@@ -377,7 +379,7 @@ export function CassaInlineList({
           type="search"
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
-          placeholder="Cerca socio…"
+          placeholder={t.admin.treasury.searchMember}
           className="w-full rounded-lg border border-brand-border px-3 py-1.5 text-[12px] text-brand-near-black placeholder:text-brand-gray-light focus:outline-none focus:ring-2 focus:ring-brand-orange/30"
         />
       </div>
@@ -395,7 +397,7 @@ export function CassaInlineList({
                   <div className="text-[13px] font-medium text-brand-near-black">{m.fullName}</div>
                   <div className="font-mono text-[10px] text-brand-gray-light">
                     {m.role}
-                    {m.active ? "" : " · inattivo"} · {entries.length} movimenti
+                    {m.active ? "" : ` ${t.admin.treasury.inactiveHint}`} · {t.admin.treasury.movementsCount(entries.length)}
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -405,7 +407,7 @@ export function CassaInlineList({
                     }`}
                   >
                     {m.balance >= 0 ? "+" : ""}
-                    {m.balance.toFixed(2).replace(".", ",")}
+                    {formatMoney(Math.abs(m.balance))}
                   </span>
                   <span className="text-[11px] text-brand-gray-light">{isExpanded ? "▲" : "▼"}</span>
                 </div>
@@ -415,7 +417,7 @@ export function CassaInlineList({
                 <div className="border-t border-brand-border bg-black/[0.01]">
                   {entries.length === 0 ? (
                     <p className="px-4 py-3 text-center text-[12px] text-brand-gray">
-                      Nessun movimento
+                      {t.admin.treasury.noMovements}
                     </p>
                   ) : (
                     entries.map((entry) => (
@@ -434,7 +436,7 @@ export function CassaInlineList({
         })}
         {filtered.length === 0 && (
           <p className="px-4 py-6 text-center text-[12px] text-brand-gray">
-            Nessun socio trovato
+            {t.admin.treasury.noMemberFound}
           </p>
         )}
       </div>

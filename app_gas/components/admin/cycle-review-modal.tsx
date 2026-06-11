@@ -7,6 +7,8 @@ import {
   adminCloseCycleWithAdjustments,
   adminGetCycleProductsForReview,
 } from "@/lib/actions/admin";
+import { t } from "@/lib/i18n";
+import { formatMoney } from "@/lib/i18n/format";
 
 type ProductRow = {
   productId: string;
@@ -39,7 +41,7 @@ export function CycleReviewCloseButton({ cycleId, cycleTitle }: Props) {
         onClick={() => setOpen(true)}
         className="rounded-xl border border-brand-orange/30 bg-brand-orange-light px-4 py-2 text-[12px] font-bold text-brand-orange disabled:opacity-60"
       >
-        Chiudi con rettifiche
+        {t.admin.cycleReview.openButton}
       </button>
       {open && (
         <CycleReviewModal
@@ -73,7 +75,7 @@ function CycleReviewModal({
           Object.fromEntries(data.map((r) => [r.productId, r.unitPrice.toFixed(2)])),
         );
       } catch (err) {
-        if (!cancelled) toast.error(err instanceof Error ? err.message : "Errore caricamento");
+        if (!cancelled) toast.error(err instanceof Error ? err.message : t.admin.cycleReview.errorLoading);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -122,9 +124,8 @@ function CycleReviewModal({
     if (!rows) return;
     const message =
       adjustments.length === 0
-        ? `Nessuna rettifica. Chiudere "${cycleTitle}" con i prezzi attuali?`
-        : `Applicare ${adjustments.length} rettifica/e e chiudere "${cycleTitle}"?\n\n` +
-          `Variazione totale: ${totalDelta >= 0 ? "+" : ""}${totalDelta.toFixed(2).replace(".", ",")} €`;
+        ? t.admin.cycleReview.confirmNoAdjustments(cycleTitle)
+        : t.admin.cycleReview.confirmWithAdjustments(cycleTitle, adjustments.length, totalDelta >= 0 ? `+${formatMoney(totalDelta)}` : `-${formatMoney(-totalDelta)}`);
     if (!window.confirm(message)) return;
 
     startTransition(async () => {
@@ -133,12 +134,10 @@ function CycleReviewModal({
           cycleId,
           adjustments.map((a) => ({ productId: a.productId, finalUnitPrice: a.finalUnitPrice })),
         );
-        toast.success(
-          `Ciclo chiuso. ${result.chargesGenerated} addebiti, ${result.productsAdjusted} rettifiche.`,
-        );
+        toast.success(t.admin.cycleReview.closedSuccess(result.chargesGenerated, result.productsAdjusted));
         onClose();
       } catch (err) {
-        toast.error(err instanceof Error ? err.message : "Errore");
+        toast.error(err instanceof Error ? err.message : t.admin.common.error);
       }
     });
   }
@@ -154,12 +153,12 @@ function CycleReviewModal({
       >
         <header className="flex items-center justify-between border-b border-brand-border px-5 py-4">
           <div>
-            <h2 className="text-[15px] font-bold text-brand-near-black">Rettifica e chiudi</h2>
+            <h2 className="text-[15px] font-bold text-brand-near-black">{t.admin.cycleReview.modalTitle}</h2>
             <p className="mt-0.5 text-[11px] text-brand-gray">{cycleTitle}</p>
           </div>
           <button
             onClick={onClose}
-            aria-label="Chiudi"
+            aria-label={t.admin.common.close}
             className="rounded-lg px-2 py-1 text-brand-gray hover:bg-black/5"
           >
             ✕
@@ -167,14 +166,12 @@ function CycleReviewModal({
         </header>
 
         <p className="border-b border-brand-border bg-brand-orange-light/40 px-5 py-2 text-[11px] text-brand-gray">
-          Modifica il prezzo unitario dei prodotti per cui il peso effettivo
-          differisce da quello ordinato. Il totale degli ordini di ogni socio
-          verrà ricalcolato e gli addebiti generati con i nuovi prezzi.
+          {t.admin.cycleReview.modalDescription}
         </p>
 
         <div className="flex-1 overflow-y-auto px-3 py-3">
           {loading ? (
-            <div className="py-12 text-center text-[12px] text-brand-gray">Caricamento prodotti…</div>
+            <div className="py-12 text-center text-[12px] text-brand-gray">{t.admin.cycleReview.loadingProducts}</div>
           ) : rows && rows.length > 0 ? (
             <ul className="space-y-1">
               {rows.map((r) => {
@@ -204,13 +201,13 @@ function CycleReviewModal({
                         {meta && <div className="text-[11px] text-brand-gray">{meta}</div>}
                         <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-brand-gray">
                           <span>
-                            Ordinato:{" "}
+                            {t.admin.cycleReview.orderedLabel}{" "}
                             <span className="font-mono font-bold text-brand-near-black">
                               {r.totalQty}
                             </span>
                           </span>
                           <span>
-                            Tot. attuale:{" "}
+                            {t.admin.cycleReview.currentTotalLabel}{" "}
                             <span className="font-mono font-bold text-brand-near-black">
                               {formatEur(r.totalAmount)}
                             </span>
@@ -219,7 +216,7 @@ function CycleReviewModal({
                       </div>
                       <div className="shrink-0 text-right">
                         <label className="block text-[9px] uppercase tracking-wide text-brand-gray-light">
-                          € finale
+                          {t.admin.cycleReview.finalPriceLabel}
                         </label>
                         <input
                           type="number"
@@ -238,8 +235,7 @@ function CycleReviewModal({
                               delta >= 0 ? "text-brand-orange" : "text-brand-teal"
                             }`}
                           >
-                            {delta >= 0 ? "+" : ""}
-                            {delta.toFixed(2).replace(".", ",")} €
+                            {delta >= 0 ? "+" : "-"}{formatMoney(Math.abs(delta))}
                           </div>
                         )}
                       </div>
@@ -250,7 +246,7 @@ function CycleReviewModal({
             </ul>
           ) : (
             <div className="py-12 text-center text-[12px] text-brand-gray">
-              Nessun prodotto in questo ciclo.
+              {t.admin.cycleReview.noProducts}
             </div>
           )}
         </div>
@@ -259,7 +255,7 @@ function CycleReviewModal({
           <div className="mb-3 flex items-end justify-between text-[12px]">
             <div>
               <div className="font-mono text-[9px] uppercase tracking-wide text-brand-gray-light">
-                Totale ordini
+                {t.admin.cycleReview.ordersTotalLabel}
               </div>
               <div className="font-mono text-[15px] font-bold text-brand-near-black">
                 {formatEur(newGrandTotal)}
@@ -268,15 +264,14 @@ function CycleReviewModal({
             {Math.abs(totalDelta) > 0.005 && (
               <div className="text-right">
                 <div className="font-mono text-[9px] uppercase tracking-wide text-brand-gray-light">
-                  Variazione
+                  {t.admin.cycleReview.variationLabel}
                 </div>
                 <div
                   className={`font-mono text-[13px] font-bold ${
                     totalDelta >= 0 ? "text-brand-orange" : "text-brand-teal"
                   }`}
                 >
-                  {totalDelta >= 0 ? "+" : ""}
-                  {totalDelta.toFixed(2).replace(".", ",")} €
+                  {totalDelta >= 0 ? "+" : "-"}{formatMoney(Math.abs(totalDelta))}
                 </div>
               </div>
             )}
@@ -286,7 +281,7 @@ function CycleReviewModal({
               onClick={onClose}
               className="flex-1 rounded-xl border border-brand-border bg-white px-4 py-2.5 text-[13px] font-semibold text-brand-gray"
             >
-              Annulla
+              {t.admin.common.cancel}
             </button>
             <button
               onClick={handleConfirm}
@@ -294,10 +289,10 @@ function CycleReviewModal({
               className="flex-[2] rounded-xl bg-brand-orange px-4 py-2.5 text-[13px] font-bold text-white disabled:opacity-60"
             >
               {isPending
-                ? "Chiusura…"
+                ? t.admin.cycleReview.closing
                 : adjustments.length > 0
-                  ? `Applica ${adjustments.length} rettifica/e e chiudi`
-                  : "Chiudi senza rettifiche"}
+                  ? t.admin.cycleReview.closeWithAdjustments(adjustments.length)
+                  : t.admin.cycleReview.closeWithoutAdjustments}
             </button>
           </div>
         </footer>

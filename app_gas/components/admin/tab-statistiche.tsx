@@ -11,6 +11,7 @@ import {
 import { formatEur, getProductEmoji } from "@/lib/utils";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { StatsFilters } from "./statistiche-client";
+import { t } from "@/lib/i18n";
 
 type Props = {
   cycleIds?: string[];
@@ -58,12 +59,10 @@ export async function TabStatistiche({ cycleIds, supplierIds, memberIds }: Props
             <div className="py-12 text-center">
               <div className="mb-2 text-4xl">📊</div>
               <h2 className="text-[15px] font-bold text-brand-near-black">
-                {hasFilters ? "Nessun dato per questo filtro" : "Nessun dato disponibile"}
+                {hasFilters ? t.admin.stats.noDataFiltered : t.admin.stats.noDataTitle}
               </h2>
               <p className="mt-1 text-[12px] text-brand-gray">
-                {hasFilters
-                  ? "Prova a cambiare o rimuovere i filtri in alto."
-                  : "Le statistiche compariranno qui dopo la chiusura del primo ciclo."}
+                {hasFilters ? t.admin.stats.noDataFilterHint : t.admin.stats.noDataHint}
               </p>
             </div>
           </CardBody>
@@ -93,31 +92,31 @@ function OverviewCards({
 }) {
   const cards = [
     {
-      label: "Cicli chiusi",
+      label: t.admin.stats.overviewClosedCycles,
       value: overview.closedCycles.toString(),
       icon: "🛒",
       tone: "orange" as const,
     },
     {
-      label: "Soci attivi",
+      label: t.admin.stats.overviewActiveMembers,
       value: overview.activeMembers.toString(),
       icon: "👥",
       tone: "teal" as const,
-      hint: "ordine negli ultimi 3 cicli",
+      hint: t.admin.stats.overviewActiveMembersHint,
     },
     {
-      label: "Spesa totale",
+      label: t.admin.stats.overviewTotalSpend,
       value: formatEur(overview.totalRevenue),
       icon: "💰",
       tone: "orange" as const,
-      hint: "prodotti + spedizione",
+      hint: t.admin.stats.overviewTotalSpendHint,
     },
     {
-      label: "Top prodotto",
+      label: t.admin.stats.overviewTopProduct,
       value: overview.topProductName ?? "—",
       icon: getProductEmoji(overview.topProductName ?? ""),
       tone: "teal" as const,
-      hint: overview.topProductQty > 0 ? `${overview.topProductQty} totali` : undefined,
+      hint: overview.topProductQty > 0 ? t.admin.stats.cyclesCountLabel(overview.topProductQty) : undefined,
     },
   ];
 
@@ -165,16 +164,16 @@ function ProductRankingsCard({
     <Card>
       <CardHeader>
         <h3 className="text-[13px] font-bold text-brand-near-black">
-          Top 10 prodotti più ordinati
+          {t.admin.stats.topProductsTitle}
         </h3>
         <p className="mt-0.5 text-[11px] text-brand-gray">
-          Aggregato su tutti i cicli chiusi
+          {t.admin.stats.topProductsSubtitle}
         </p>
       </CardHeader>
       <CardBody>
         {rankings.length === 0 ? (
           <p className="py-4 text-center text-[12px] text-brand-gray">
-            Nessun prodotto ordinato.
+            {t.admin.stats.noProductsOrdered}
           </p>
         ) : (
           <ul className="space-y-2">
@@ -210,7 +209,7 @@ function ProductRankingsCard({
                       />
                     </div>
                     <div className="mt-0.5 flex justify-between font-mono text-[9px] text-brand-gray-light">
-                      <span>{r.cyclesCount} cicli</span>
+                      <span>{t.admin.stats.cyclesCountLabel(r.cyclesCount)}</span>
                       <span>{formatEur(r.totalAmount)}</span>
                     </div>
                   </div>
@@ -266,10 +265,10 @@ function RevenueTrendCard({
         <div className="flex items-start justify-between gap-3">
           <div>
             <h3 className="text-[13px] font-bold text-brand-near-black">
-              Trend spesa per ciclo
+              {t.admin.stats.trendTitle}
             </h3>
             <p className="mt-0.5 text-[11px] text-brand-gray">
-              Ultimi {trend.length} cicli chiusi
+              {t.admin.stats.trendSubtitle(trend.length)}
             </p>
           </div>
           {trendDelta !== null && (
@@ -293,7 +292,7 @@ function RevenueTrendCard({
           style={{ height: H }}
           preserveAspectRatio="none"
           role="img"
-          aria-label="Trend spesa"
+          aria-label={t.admin.stats.trendAriaLabel}
         >
           <defs>
             <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
@@ -319,7 +318,7 @@ function RevenueTrendCard({
               fill="var(--color-brand-orange)"
             >
               <title>
-                {p.title}: {formatEur(p.total)} ({p.orderCount} soci)
+                {p.title}: {formatEur(p.total)} ({p.orderCount} {t.admin.stats.filterMembers})
               </title>
             </circle>
           ))}
@@ -330,19 +329,19 @@ function RevenueTrendCard({
         </div>
         <div className="mt-2 grid grid-cols-3 gap-2 text-center">
           <div>
-            <div className="font-mono text-[9px] uppercase text-brand-gray-light">Ultimo</div>
+            <div className="font-mono text-[9px] uppercase text-brand-gray-light">{t.admin.stats.trendLast}</div>
             <div className="font-mono text-[12px] font-bold text-brand-near-black">
               {formatEur(lastPoint.total)}
             </div>
           </div>
           <div>
-            <div className="font-mono text-[9px] uppercase text-brand-gray-light">Massimo</div>
+            <div className="font-mono text-[9px] uppercase text-brand-gray-light">{t.admin.stats.trendMax}</div>
             <div className="font-mono text-[12px] font-bold text-brand-near-black">
               {formatEur(maxVal)}
             </div>
           </div>
           <div>
-            <div className="font-mono text-[9px] uppercase text-brand-gray-light">Media</div>
+            <div className="font-mono text-[9px] uppercase text-brand-gray-light">{t.admin.stats.trendAvg}</div>
             <div className="font-mono text-[12px] font-bold text-brand-near-black">
               {formatEur(trend.reduce((s, p) => s + p.total, 0) / trend.length)}
             </div>
@@ -367,8 +366,8 @@ function SupplierStatsCard({
   return (
     <Card>
       <CardHeader>
-        <h3 className="text-[13px] font-bold text-brand-near-black">Fornitori per spesa</h3>
-        <p className="mt-0.5 text-[11px] text-brand-gray">Cicli chiusi · prodotto più richiesto</p>
+        <h3 className="text-[13px] font-bold text-brand-near-black">{t.admin.stats.supplierStatsTitle}</h3>
+        <p className="mt-0.5 text-[11px] text-brand-gray">{t.admin.stats.supplierStatsSubtitle}</p>
       </CardHeader>
       <CardBody>
         <ul className="space-y-2">
@@ -391,8 +390,8 @@ function SupplierStatsCard({
                   />
                 </div>
                 <div className="mt-0.5 flex justify-between font-mono text-[9px] text-brand-gray-light">
-                  <span>{s.cyclesCount} cicli</span>
-                  {s.topProductName && <span>Top: {s.topProductName}</span>}
+                  <span>{t.admin.stats.cyclesCountLabel(s.cyclesCount)}</span>
+                  {s.topProductName && <span>{t.admin.stats.supplierTopProduct(s.topProductName)}</span>}
                 </div>
               </li>
             );
@@ -420,33 +419,33 @@ function MemberParticipationCard({
   return (
     <Card>
       <CardHeader>
-        <h3 className="text-[13px] font-bold text-brand-near-black">Partecipazione soci</h3>
+        <h3 className="text-[13px] font-bold text-brand-near-black">{t.admin.stats.memberParticipationTitle}</h3>
         <p className="mt-0.5 text-[11px] text-brand-gray">
-          Solo soci attivi · {members.length} totali
+          {t.admin.stats.memberParticipationSubtitle(members.length)}
         </p>
       </CardHeader>
       <CardBody>
         <div className="mb-3 grid grid-cols-3 gap-2 text-center">
           <div className="rounded-lg bg-brand-teal-light p-2">
-            <div className="font-mono text-[9px] uppercase text-brand-teal">Attivi</div>
+            <div className="font-mono text-[9px] uppercase text-brand-teal">{t.admin.stats.participationActive}</div>
             <div className="text-[18px] font-black text-brand-near-black">{heavy.length}</div>
-            <div className="font-mono text-[9px] text-brand-gray-light">≥3 cicli</div>
+            <div className="font-mono text-[9px] text-brand-gray-light">{t.admin.stats.participationActiveHint}</div>
           </div>
           <div className="rounded-lg bg-brand-orange-light p-2">
-            <div className="font-mono text-[9px] uppercase text-brand-orange">Occasionali</div>
+            <div className="font-mono text-[9px] uppercase text-brand-orange">{t.admin.stats.participationOccasional}</div>
             <div className="text-[18px] font-black text-brand-near-black">{occasional.length}</div>
-            <div className="font-mono text-[9px] text-brand-gray-light">1-2 cicli</div>
+            <div className="font-mono text-[9px] text-brand-gray-light">{t.admin.stats.participationOccasionalHint}</div>
           </div>
           <div className="rounded-lg bg-black/[0.05] p-2">
-            <div className="font-mono text-[9px] uppercase text-brand-gray">Dormienti</div>
+            <div className="font-mono text-[9px] uppercase text-brand-gray">{t.admin.stats.participationDormant}</div>
             <div className="text-[18px] font-black text-brand-near-black">{dormant.length}</div>
-            <div className="font-mono text-[9px] text-brand-gray-light">0 cicli</div>
+            <div className="font-mono text-[9px] text-brand-gray-light">{t.admin.stats.participationDormantHint}</div>
           </div>
         </div>
 
         <details className="text-[12px]">
           <summary className="cursor-pointer font-semibold text-brand-gray hover:text-brand-near-black">
-            Dettaglio per socio
+            {t.admin.stats.memberDetail}
           </summary>
           <ul className="mt-2 divide-y divide-brand-border rounded-lg border border-brand-border bg-white">
             {members.map((m) => (
@@ -458,7 +457,7 @@ function MemberParticipationCard({
                   {m.fullName}
                 </span>
                 <span className="shrink-0 font-mono text-[10px] text-brand-gray">
-                  {m.cyclesOrdered} cicli
+                  {t.admin.stats.memberCyclesLabel(m.cyclesOrdered)}
                 </span>
                 <span className="shrink-0 font-mono text-[11px] font-bold text-brand-near-black">
                   {formatEur(m.totalSpent)}

@@ -1,6 +1,7 @@
 import { getAllCycles, getAllSuppliers, getOpenCycles, getOpenCycleStats } from "@/lib/db/queries";
 import { formatDate } from "@/lib/utils";
 import { Card, CardHeader } from "@/components/ui/card";
+import { t } from "@/lib/i18n";
 import { AdminInsights } from "./admin-insights";
 import {
   ClosedCycleEditButton,
@@ -60,7 +61,7 @@ export async function TabCiclo() {
         </div>
       ) : (
         <div className="mb-4 rounded-xl border border-dashed border-brand-border p-4 text-center text-[13px] text-brand-gray">
-          Nessun ciclo aperto
+          {t.admin.cycle.noCycleOpen}
         </div>
       )}
 
@@ -69,7 +70,7 @@ export async function TabCiclo() {
       {cycles.length > 0 && (
         <Card className="mt-4">
           <CardHeader>
-            <h3 className="text-[13px] font-bold text-brand-near-black">Ultimi cicli</h3>
+            <h3 className="text-[13px] font-bold text-brand-near-black">{t.admin.cycle.recentCycles}</h3>
           </CardHeader>
           <div className="divide-y divide-brand-border">
             {cycles.map((c) => (
@@ -84,7 +85,7 @@ export async function TabCiclo() {
                         : "bg-black/[0.05] text-brand-gray"
                     }`}
                   >
-                    {c.status === "open" ? "Aperto" : "Chiuso"}
+                    {c.status === "open" ? t.admin.cycle.openBadge : t.admin.cycle.closedBadge}
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-[13px] font-medium text-brand-near-black">{c.title}</div>

@@ -15,6 +15,7 @@ import {
 } from "@/lib/actions/admin";
 import type { CatalogProductItem } from "@/lib/db/queries";
 import { formatEur } from "@/lib/utils";
+import { t } from "@/lib/i18n";
 
 const HELP_FIELDS = {
   nome: "Es: Mela rossa, Insalata, Pane integrale. È quello che vede il socio nel form ordine.",
@@ -68,11 +69,11 @@ export function FornitoriForm({
     startTransition(async () => {
       try {
         await adminUpsertSupplier(data);
-        toast.success(isEdit ? "Fornitore aggiornato" : "Fornitore aggiunto");
+        toast.success(isEdit ? t.admin.suppliers.supplierUpdated : t.admin.suppliers.supplierAdded);
         onClose?.();
         if (!isEdit) (e.target as HTMLFormElement).reset();
       } catch (err) {
-        toast.error(err instanceof Error ? err.message : "Errore");
+        toast.error(err instanceof Error ? err.message : t.admin.common.error);
       }
     });
   }
@@ -88,11 +89,11 @@ export function FornitoriForm({
     >
       <div className="mb-3 flex items-center justify-between">
         <p className="text-[13px] font-bold text-brand-near-black">
-          {isEdit ? `Modifica: ${supplier.name}` : "Aggiungi fornitore"}
+          {isEdit ? t.admin.suppliers.editSupplier(supplier.name) : t.admin.suppliers.addSupplier}
         </p>
         {isEdit && onClose && (
           <button type="button" onClick={onClose} className="text-[11px] text-brand-gray">
-            ✕ Annulla
+            ✕ {t.admin.common.cancel}
           </button>
         )}
       </div>
@@ -100,20 +101,20 @@ export function FornitoriForm({
       <div className="space-y-3">
         <div className="grid grid-cols-2 gap-3">
           <div className="col-span-2">
-            <label className={labelCls}>Nome *</label>
+            <label className={labelCls}>{t.admin.suppliers.nameLabel}</label>
             <input name="name" required defaultValue={supplier?.name} className={inputCls} />
           </div>
           <div>
-            <label className={labelCls}>Categoria</label>
+            <label className={labelCls}>{t.admin.suppliers.categoryLabel}</label>
             <input
               name="macroCategory"
-              placeholder="es. Frutta e Verdura"
+              placeholder={t.admin.suppliers.categoryPlaceholder}
               defaultValue={supplier?.macroCategory ?? ""}
               className={inputCls}
             />
           </div>
           <div>
-            <label className={labelCls}>Referente</label>
+            <label className={labelCls}>{t.admin.suppliers.contactLabel}</label>
             <input
               name="contactName"
               defaultValue={supplier?.contactName ?? ""}
@@ -121,7 +122,7 @@ export function FornitoriForm({
             />
           </div>
           <div>
-            <label className={labelCls}>Telefono</label>
+            <label className={labelCls}>{t.admin.suppliers.phoneLabel}</label>
             <input
               name="phone"
               type="tel"
@@ -130,7 +131,7 @@ export function FornitoriForm({
             />
           </div>
           <div>
-            <label className={labelCls}>Email</label>
+            <label className={labelCls}>{t.admin.suppliers.emailLabel}</label>
             <input
               name="email"
               type="email"
@@ -139,7 +140,7 @@ export function FornitoriForm({
             />
           </div>
           <div className="col-span-2">
-            <label className={labelCls}>Indirizzo</label>
+            <label className={labelCls}>{t.admin.suppliers.addressLabel}</label>
             <input
               name="address"
               defaultValue={supplier?.address ?? ""}
@@ -147,7 +148,7 @@ export function FornitoriForm({
             />
           </div>
           <div className="col-span-2">
-            <label className={labelCls}>Note</label>
+            <label className={labelCls}>{t.admin.suppliers.notesLabel}</label>
             <textarea
               name="notes"
               rows={2}
@@ -163,7 +164,7 @@ export function FornitoriForm({
         disabled={isPending}
         className="mt-4 w-full rounded-xl bg-brand-orange py-2 text-[13px] font-bold text-white disabled:opacity-60"
       >
-        {isPending ? "Salvataggio…" : isEdit ? "Aggiorna" : "Aggiungi fornitore"}
+        {isPending ? t.admin.common.saving : isEdit ? t.admin.suppliers.submitEdit : t.admin.suppliers.submitAdd}
       </button>
     </form>
   );
@@ -210,13 +211,13 @@ export function CatalogProductForm({
           return;
         }
         if (result.archived) {
-          toast.success("Prezzo aggiornato — versione precedente archiviata");
+          toast.success(t.admin.products.priceUpdatedArchived);
         } else {
-          toast.success(product ? "Prodotto aggiornato" : "Prodotto aggiunto al catalogo");
+          toast.success(product ? t.admin.products.productUpdated : t.admin.products.productAddedToCatalog);
         }
         onClose();
       } catch (err) {
-        toast.error(err instanceof Error ? err.message : "Errore");
+        toast.error(err instanceof Error ? err.message : t.admin.common.error);
       }
     });
   }
@@ -229,35 +230,35 @@ export function CatalogProductForm({
     <form onSubmit={handleSubmit} className="mb-3 rounded-lg border border-brand-border bg-white p-3 shadow-sm">
       <div className="mb-2 flex items-center justify-between">
         <p className="text-[12px] font-bold text-brand-near-black">
-          {product ? "Modifica prodotto" : "Nuovo prodotto a catalogo"}
+          {product ? t.admin.products.editCatalogProduct : t.admin.products.newCatalogProduct}
         </p>
         <button type="button" onClick={onClose} className="text-[11px] text-brand-gray">
-          ✕ Annulla
+          ✕ {t.admin.common.cancel}
         </button>
       </div>
 
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <div className="col-span-2 sm:col-span-4">
           <label className={labelCls}>
-            Nome *<FieldHelp text={HELP_FIELDS.nome} />
+            {t.admin.products.nameLabel}<FieldHelp text={HELP_FIELDS.nome} />
           </label>
-          <input name="name" required defaultValue={product?.name} placeholder="es. Mela rossa" className={inputCls} />
+          <input name="name" required defaultValue={product?.name} placeholder={t.admin.products.namePlaceholder} className={inputCls} />
         </div>
         <div className="col-span-2 sm:col-span-2">
           <label className={labelCls}>
-            Varietà<FieldHelp text={HELP_FIELDS.varieta} />
+            {t.admin.products.variantLabel}<FieldHelp text={HELP_FIELDS.varieta} />
           </label>
           <input name="variant" defaultValue={product?.variant ?? ""} placeholder="es. Bio" className={inputCls} />
         </div>
         <div className="col-span-2 sm:col-span-2">
           <label className={labelCls}>
-            Formato<FieldHelp text={HELP_FIELDS.formato} />
+            {t.admin.products.formatLabel}<FieldHelp text={HELP_FIELDS.formato} />
           </label>
-          <input name="format" placeholder="es. Sacco 2kg" defaultValue={product?.format ?? ""} className={inputCls} />
+          <input name="format" placeholder={t.admin.products.formatPlaceholder} defaultValue={product?.format ?? ""} className={inputCls} />
         </div>
         <div className="col-span-2 sm:col-span-4">
           <label className={labelCls}>
-            Categoria<FieldHelp text={HELP_FIELDS.categoria} />
+            {t.admin.products.categoryFilter}<FieldHelp text={HELP_FIELDS.categoria} />
           </label>
           <CategorySelect
             name="category"
@@ -267,26 +268,26 @@ export function CatalogProductForm({
         </div>
         <div className="col-span-1 sm:col-span-2">
           <label className={labelCls}>
-            Prezzo *<FieldHelp text={HELP_FIELDS.prezzo} />
+            {t.admin.products.priceLabel}<FieldHelp text={HELP_FIELDS.prezzo} />
           </label>
-          <input name="unitPrice" type="number" step="0.01" required defaultValue={product?.unitPrice} placeholder="es. 5,00" className={inputCls} />
+          <input name="unitPrice" type="number" step="0.01" required defaultValue={product?.unitPrice} placeholder={t.admin.products.pricePlaceholder} className={inputCls} />
         </div>
         <div className="col-span-1 sm:col-span-2">
           <label className={labelCls}>
-            Prezzo / kg<FieldHelp text={HELP_FIELDS.prezzoKg} />
+            {t.admin.products.priceKgLabel}<FieldHelp text={HELP_FIELDS.prezzoKg} />
           </label>
           <input
             name="pricePerKg"
             type="number"
             step="0.01"
             defaultValue={product?.pricePerKg ?? ""}
-            placeholder="opzionale"
+            placeholder={t.admin.products.priceKgOptional}
             className={inputCls}
           />
         </div>
         <div className="col-span-2 sm:col-span-4">
           <label className={labelCls}>
-            Note<FieldHelp text={HELP_FIELDS.note} />
+            {t.admin.products.notesLabel}<FieldHelp text={HELP_FIELDS.note} />
           </label>
           <input name="notes" defaultValue={product?.notes ?? ""} className={inputCls} />
         </div>
@@ -297,7 +298,7 @@ export function CatalogProductForm({
         disabled={isPending}
         className="mt-3 w-full rounded-lg bg-brand-teal py-1.5 text-[12px] font-bold text-white disabled:opacity-60"
       >
-        {isPending ? "Salvataggio…" : "Salva"}
+        {isPending ? t.admin.common.saving : t.admin.common.save}
       </button>
     </form>
   );
@@ -339,19 +340,19 @@ export function FornitoriList({
     startTransition(async () => {
       try {
         await adminArchiveSupplier(s.supplierId, !s.active);
-        toast.success(s.active ? "Fornitore archiviato" : "Fornitore riattivato");
+        toast.success(s.active ? t.admin.suppliers.supplierArchived : t.admin.suppliers.supplierReactivated);
       } catch (err) {
-        toast.error(err instanceof Error ? err.message : "Errore");
+        toast.error(err instanceof Error ? err.message : t.admin.common.error);
       }
     });
   }
 
   function handleDelete(s: Supplier) {
-    if (!window.confirm(`Eliminare "${s.name}"?`)) return;
+    if (!window.confirm(t.admin.suppliers.deleteConfirm(s.name))) return;
     startTransition(async () => {
       const result = await adminDeleteSupplier(s.supplierId);
       if (result?.error) toast.error(result.error);
-      else toast.success(`${s.name} eliminato`);
+      else toast.success(t.admin.suppliers.supplierDeleted(s.name));
     });
   }
 
@@ -369,11 +370,11 @@ export function FornitoriList({
   const archived = filtered.filter((s) => !s.active);
 
   function handleArchiveCatalogProduct(catalogProductId: string) {
-    if (!window.confirm("Archiviare questo prodotto dal catalogo?")) return;
+    if (!window.confirm(t.admin.suppliers.archiveCatalogConfirm)) return;
     startTransition(async () => {
       const result = await adminArchiveCatalogProduct(catalogProductId, false);
       if (result.error) toast.error(result.error);
-      else toast.success("Prodotto archiviato");
+      else toast.success(t.admin.suppliers.productArchivedSuccess);
     });
   }
 
@@ -417,14 +418,14 @@ export function FornitoriList({
                         <span className="text-[13px] font-semibold text-brand-near-black">{s.name}</span>
                         {!s.active && (
                           <span className="rounded-full bg-black/[0.05] px-1.5 py-0.5 text-[9px] font-bold text-brand-gray">
-                            archiviato
+                            {t.admin.suppliers.archivedBadge}
                           </span>
                         )}
                       </div>
                       <div className="mt-0.5 font-mono text-[10px] text-brand-gray-light">
                         {s.macroCategory && `${s.macroCategory} · `}
                         {s.contactName && `${s.contactName} · `}
-                        {s.cycleCount} cicl{s.cycleCount === 1 ? "o" : "i"}
+                        {t.admin.suppliers.cyclesCount(s.cycleCount)}
                       </div>
                     </div>
                     <div className="ml-3 flex shrink-0 items-center gap-1.5">
@@ -432,13 +433,13 @@ export function FornitoriList({
                         onClick={(e) => { e.stopPropagation(); setEditingId(s.supplierId); }}
                         className="rounded-full border border-brand-border px-2.5 py-1 text-[10px] font-semibold text-brand-gray"
                       >
-                        Modifica
+                        {t.admin.common.edit}
                       </button>
                       <button
                         onClick={(e) => { e.stopPropagation(); handleArchive(s); }}
                         className="rounded-full border border-brand-border px-2.5 py-1 text-[10px] font-semibold text-brand-gray"
                       >
-                        {s.active ? "Archivia" : "Riattiva"}
+                        {s.active ? t.admin.common.archive : t.admin.common.restore}
                       </button>
                       {s.cycleCount === 0 && (
                         <button
@@ -470,7 +471,7 @@ export function FornitoriList({
                       <div className="mb-4">
                         <div className="mb-2 flex items-center justify-between">
                           <p className="font-mono text-[9px] uppercase tracking-wider text-brand-gray-light">
-                            Catalogo
+                            {t.admin.suppliers.catalogLabel}
                           </p>
                           <button
                             onClick={() => {
@@ -479,7 +480,7 @@ export function FornitoriList({
                             }}
                             className="text-[11px] font-semibold text-brand-teal"
                           >
-                            + Aggiungi
+                            {t.admin.suppliers.addCatalogProduct}
                           </button>
                         </div>
                         {addingCatalogFor === s.supplierId && (
@@ -523,13 +524,13 @@ export function FornitoriList({
                                         }}
                                         className="text-[10px] font-semibold text-brand-gray"
                                       >
-                                        Modifica
+                                        {t.admin.common.edit}
                                       </button>
                                       <button
                                         onClick={() => handleArchiveCatalogProduct(cp.catalogProductId)}
                                         className="text-[10px] font-semibold text-brand-gray"
                                       >
-                                        Archivia
+                                        {t.admin.common.archive}
                                       </button>
                                     </div>
                                   </div>
@@ -538,7 +539,7 @@ export function FornitoriList({
                             </div>
                           ))}
                           {(catalogBySupplier[s.supplierId] ?? []).filter((p) => p.active).length === 0 && !addingCatalogFor && (
-                            <p className="text-[12px] text-brand-gray">Nessun prodotto a catalogo</p>
+                            <p className="text-[12px] text-brand-gray">{t.admin.suppliers.noProductsInCatalog}</p>
                           )}
                         </div>
                       </div>
@@ -558,17 +559,17 @@ export function FornitoriList({
       <div className="mb-4">
         <input
           type="text"
-          placeholder="Cerca fornitore (nome, categoria, email)..."
+          placeholder={t.admin.suppliers.searchPlaceholder}
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
           className="w-full rounded-xl border border-brand-border px-4 py-2.5 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-brand-orange/30"
         />
       </div>
-      {renderGroup("Attivi", active)}
-      {renderGroup("Archiviati", archived)}
+      {renderGroup(t.admin.suppliers.groupActive, active)}
+      {renderGroup(t.admin.suppliers.groupArchived, archived)}
       {suppliers.length === 0 && (
         <div className="rounded-xl border border-dashed border-brand-border p-6 text-center text-[13px] text-brand-gray">
-          Nessun fornitore ancora. Aggiungine uno qui sopra.
+          {t.admin.suppliers.noSuppliers}
         </div>
       )}
     </div>

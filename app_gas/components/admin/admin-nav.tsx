@@ -2,15 +2,16 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { t } from "@/lib/i18n";
 
 const TABS = [
-  { id: "ciclo", label: "Ciclo" },
-  { id: "prodotti", label: "Prodotti" },
-  { id: "ordini", label: "Ordini" },
-  { id: "cassa", label: "Cassa" },
-  { id: "soci", label: "Soci" },
-  { id: "fornitori", label: "Fornit." },
-  { id: "statistiche", label: "Stats" },
+  { id: "ciclo", label: t.admin.cycle.tabLabel },
+  { id: "prodotti", label: t.admin.products.tabLabel },
+  { id: "ordini", label: t.admin.orders.tabLabel },
+  { id: "cassa", label: t.admin.treasury.tabLabel },
+  { id: "soci", label: t.admin.members.tabLabel },
+  { id: "fornitori", label: t.admin.suppliers.tabLabel },
+  { id: "statistiche", label: t.admin.stats.tabLabel },
 ] as const;
 
 export function AdminNav() {

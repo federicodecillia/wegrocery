@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { adminBuildSupplierDistinta } from "@/lib/actions/admin";
 import { toast } from "@/components/ui/toast";
 import { formatEur, getProductEmoji } from "@/lib/utils";
+import { t } from "@/lib/i18n";
 import type { CycleSummary } from "@/lib/db/queries";
 
 function decodeBase64ToBlob(base64: string, mimeType: string): Blob {
@@ -51,7 +52,7 @@ export function OrdiniFilters({
   return (
     <div className="flex gap-2">
       <select className={selectCls} value={currentMember} onChange={onMemberChange}>
-        <option value="">Tutti i soci</option>
+        <option value="">{t.admin.orders.allMembers}</option>
         {allMembers.map((m) => (
           <option key={m.memberId} value={m.memberId}>
             {m.fullName}
@@ -60,7 +61,7 @@ export function OrdiniFilters({
       </select>
       {!currentMember && (
         <select className={selectCls} value={currentCycle} onChange={onCycleChange}>
-          <option value="">Ciclo corrente</option>
+          <option value="">{t.admin.orders.currentCycle}</option>
           {allCycles.map((c) => (
             <option key={c.cycleId} value={c.cycleId}>
               {c.title}
@@ -114,7 +115,7 @@ export function OrdiniByMember({ byMember }: { byMember: CycleSummary["byMember"
                     </span>
                     {line.adjusted && (
                       <span className="ml-1 rounded-full bg-brand-orange/15 px-1.5 py-px text-[9px] font-bold uppercase tracking-wide text-brand-orange">
-                        rettificato
+                        {t.admin.orders.adjustedBadge}
                       </span>
                     )}
                   </span>
@@ -127,7 +128,7 @@ export function OrdiniByMember({ byMember }: { byMember: CycleSummary["byMember"
                 <div className="flex items-center justify-between py-1">
                   <span className="flex items-center gap-1.5 text-[12px] text-brand-gray">
                     <span className="text-[14px] leading-none">🚚</span>
-                    Spedizione
+                    {t.admin.orders.shippingLine}
                   </span>
                   <span className="font-mono text-[12px] text-brand-near-black">
                     {formatEur(m.shipping)}
@@ -185,7 +186,7 @@ export function CsvExportButton({
       disabled={isPending}
       className="rounded-xl border border-brand-border px-4 py-2 text-[12px] font-semibold text-brand-gray disabled:opacity-60"
     >
-      {isPending ? "Generazione…" : "📥 Scarica Excel"}
+      {isPending ? t.admin.orders.generatingExcel : t.admin.orders.downloadExcel}
     </button>
   );
 }

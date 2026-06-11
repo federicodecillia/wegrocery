@@ -17,6 +17,7 @@ import {
   type TargetField,
 } from "@/lib/csv/header-heuristics";
 import { getProductEmojiOrNull, guessProductCategory } from "@/lib/utils";
+import { t } from "@/lib/i18n";
 
 type Props = {
   open: boolean;
@@ -88,7 +89,7 @@ export function ImportListingWizard({ open, onClose, cycleId, cycleTitle }: Prop
     reader.onload = () => {
       const result = reader.result;
       if (typeof result !== "string") {
-        toast.error("Impossibile leggere il file");
+        toast.error(t.admin.importWizard.cannotReadFile);
         return;
       }
       const base64 = result.split(",")[1] ?? "";
@@ -99,7 +100,7 @@ export function ImportListingWizard({ open, onClose, cycleId, cycleTitle }: Prop
           return;
         }
         if (!res.data) {
-          toast.error("Risposta vuota dal server");
+          toast.error(t.admin.importWizard.emptyResponse);
           return;
         }
         setFilename(file.name);
@@ -145,13 +146,13 @@ export function ImportListingWizard({ open, onClose, cycleId, cycleTitle }: Prop
       }
       const d = res.data!;
       const bits = [
-        d.added ? `${d.added} nuovi` : null,
-        d.updated ? `${d.updated} aggiornati` : null,
-        d.skipped ? `${d.skipped} invariati` : null,
-        d.invalid ? `${d.invalid} scartati` : null,
-        d.addedToCycle ? `${d.addedToCycle} nel ciclo` : null,
+        d.added ? t.admin.importWizard.importAdded(d.added) : null,
+        d.updated ? t.admin.importWizard.importUpdated(d.updated) : null,
+        d.skipped ? t.admin.importWizard.importSkipped(d.skipped) : null,
+        d.invalid ? t.admin.importWizard.importInvalid(d.invalid) : null,
+        d.addedToCycle ? t.admin.importWizard.importAddedToCycle(d.addedToCycle) : null,
       ].filter(Boolean);
-      toast.success(`Import completato: ${bits.join(", ")}`);
+      toast.success(t.admin.importWizard.importSuccess(bits.join(", ")));
       onClose();
     });
   }
@@ -164,23 +165,23 @@ export function ImportListingWizard({ open, onClose, cycleId, cycleTitle }: Prop
         <header className="flex items-start justify-between gap-3 border-b border-brand-border p-5">
           <div>
             <div className="font-mono text-[10px] uppercase tracking-[0.13em] text-brand-orange">
-              {cycleTitle ? `${cycleTitle} · ` : ""}Importa listino fornitore · Passo {step}/3
+              {cycleTitle ? `${cycleTitle} · ` : ""}{t.admin.cycle.importListing} · {t.admin.importWizard.stepIndicator(step, 3)}
             </div>
             <h3 className="mt-1 text-[16px] font-black text-brand-near-black">
-              {step === 1 && "Carica il file del fornitore"}
-              {step === 2 && "Mappa le colonne"}
-              {step === 3 && "Conferma prodotti e icone"}
+              {step === 1 && t.admin.importWizard.step1Title}
+              {step === 2 && t.admin.importWizard.step2Title}
+              {step === 3 && t.admin.importWizard.step3Title}
             </h3>
             <p className="mt-1 text-[11px] leading-snug text-brand-gray">
-              {step === 1 && "Excel o CSV con una riga per prodotto. Il sistema riconoscerà automaticamente colonne e fornitore."}
-              {step === 2 && "Abbina le colonne del file ai campi della scheda prodotto. Nome e Prezzo sono obbligatori."}
-              {step === 3 && "Controlla le righe da importare e l’icona suggerita. Le voci senza match automatico sono evidenziate."}
+              {step === 1 && t.admin.importWizard.step1Description}
+              {step === 2 && t.admin.importWizard.step2Description}
+              {step === 3 && t.admin.importWizard.step3Description}
             </p>
           </div>
           <button
             onClick={onClose}
             className="rounded-full bg-brand-border p-2 text-brand-gray"
-            aria-label="Chiudi"
+            aria-label={t.admin.common.close}
           >
             ✕
           </button>
@@ -225,18 +226,18 @@ export function ImportListingWizard({ open, onClose, cycleId, cycleTitle }: Prop
 
         <footer className="flex items-center justify-between gap-3 border-t border-brand-border p-4">
           <div className="text-[11px] text-brand-gray">
-            {step === 1 && filename && `File: ${filename}`}
+            {step === 1 && filename && t.admin.importWizard.fileInfo(filename)}
             {step === 2 && !requiredMapped && (
-              <span className="text-brand-red">Mappa almeno Nome e Prezzo per continuare.</span>
+              <span className="text-brand-red">{t.admin.importWizard.requiredMissingWarning}</span>
             )}
             {step === 3 && (
-              <>Selezionati {selectedIndexes.size} / {sheet?.rows.length ?? 0} prodotti.</>
+              <>{t.admin.importWizard.selectedCount(selectedIndexes.size, sheet?.rows.length ?? 0)}</>
             )}
           </div>
           <div className="flex gap-2">
             {step > 1 && (
               <Button variant="outline" onClick={() => setStep((s) => (s - 1) as Step)}>
-                ← Indietro
+                {t.admin.importWizard.back}
               </Button>
             )}
             {step < 3 && (
@@ -249,7 +250,7 @@ export function ImportListingWizard({ open, onClose, cycleId, cycleTitle }: Prop
                 }
                 onClick={() => setStep((s) => (s + 1) as Step)}
               >
-                Avanti →
+                {t.admin.importWizard.next}
               </Button>
             )}
             {step === 3 && (
@@ -258,7 +259,7 @@ export function ImportListingWizard({ open, onClose, cycleId, cycleTitle }: Prop
                 disabled={pending || selectedIndexes.size === 0 || !supplierResolved}
                 onClick={handleApply}
               >
-                {pending ? "Importazione…" : "Importa"}
+                {pending ? t.admin.importWizard.importing : t.admin.importWizard.import}
               </Button>
             )}
           </div>
@@ -312,17 +313,17 @@ function Step1Upload({
           }}
         />
         <div className="text-[13px] font-semibold text-brand-near-black">
-          {pending ? "Lettura in corso…" : filename ? `📄 ${filename} (clicca per cambiare)` : "📎 Clicca qui o trascina un .xlsx / .csv"}
+          {pending ? t.admin.importWizard.readingFile : filename ? t.admin.importWizard.fileSelected(filename) : t.admin.importWizard.fileDropLabel}
         </div>
         <div className="mt-1 text-[11px] text-brand-gray">
-          Una riga per prodotto. Non importa l’ordine delle colonne, lo mappiamo al passo successivo.
+          {t.admin.importWizard.fileDropHint}
         </div>
       </label>
 
       {inspection && inspection.inspection.sheets.length > 1 && (
         <div>
           <div className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-brand-gray">
-            Foglio da importare
+            {t.admin.importWizard.sheetLabel}
           </div>
           <div className="flex flex-wrap gap-2">
             {inspection.inspection.sheets.map((s, i) => (
@@ -345,7 +346,7 @@ function Step1Upload({
       {inspection && (
         <div>
           <div className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-brand-gray">
-            Fornitore
+            {t.admin.importWizard.supplierLabel}
           </div>
           <div className="flex gap-2">
             <button
@@ -356,7 +357,7 @@ function Step1Upload({
                   : "border-brand-border bg-white"
               }`}
             >
-              Esistente
+              {t.admin.importWizard.supplierExisting}
             </button>
             <button
               onClick={() => setSupplierMode("new")}
@@ -366,7 +367,7 @@ function Step1Upload({
                   : "border-brand-border bg-white"
               }`}
             >
-              Crea nuovo
+              {t.admin.importWizard.supplierNew}
             </button>
           </div>
           {supplierMode === "existing" ? (
@@ -375,7 +376,7 @@ function Step1Upload({
               onChange={(e) => setExistingSupplierId(e.target.value)}
               className="mt-2 w-full rounded-lg border border-brand-border bg-white px-3 py-2 text-[13px]"
             >
-              <option value="">— seleziona —</option>
+              <option value="">{t.admin.importWizard.supplierSelectPlaceholder}</option>
               {inspection.suppliers.map((s) => (
                 <option key={s.supplierId} value={s.supplierId}>
                   {s.name}
@@ -387,15 +388,15 @@ function Step1Upload({
               type="text"
               value={newSupplierName}
               onChange={(e) => setNewSupplierName(e.target.value)}
-              placeholder="Nome del nuovo fornitore"
+              placeholder={t.admin.importWizard.supplierNewPlaceholder}
               className="mt-2 w-full rounded-lg border border-brand-border bg-white px-3 py-2 text-[13px]"
             />
           )}
           {inspection.inspection.supplierHints.length > 0 && supplierMode === "existing" && (
             <div className="mt-2 text-[11px] text-brand-gray">
-              💡 Suggerito dal file: <strong>{inspection.inspection.supplierHints[0].text}</strong>
+              {t.admin.importWizard.supplierSuggestedHint(inspection.inspection.supplierHints[0].text)}
               {inspection.suggestedSupplierId === "" || !inspection.suggestedSupplierId
-                ? " — nessun match. Considera “Crea nuovo”."
+                ? t.admin.importWizard.supplierNoMatch
                 : ""}
             </div>
           )}
@@ -405,7 +406,7 @@ function Step1Upload({
       {inspection && (
         <div>
           <div className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-brand-gray">
-            Anteprima ({inspection.inspection.sheets[sheetIdx]?.rows.length ?? 0} righe)
+            {t.admin.importWizard.previewLabel(inspection.inspection.sheets[sheetIdx]?.rows.length ?? 0)}
           </div>
           <PreviewTable
             columns={inspection.inspection.sheets[sheetIdx]?.columns ?? []}
@@ -456,7 +457,7 @@ function Step2Mapping({
                 <option value="">(ignora)</option>
                 {sheet.columns.map((c, i) => (
                   <option key={i} value={i}>
-                    {c || `Colonna ${i + 1}`}
+                    {c || t.admin.importWizard.columnPlaceholder(i + 1)}
                   </option>
                 ))}
               </select>
@@ -466,7 +467,7 @@ function Step2Mapping({
       </div>
       <div>
         <div className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-brand-gray">
-          Anteprima
+          {t.admin.importWizard.step2PreviewLabel}
         </div>
         <PreviewTable columns={sheet.columns} rows={sheet.rows.slice(0, 5)} highlightMap={mapping} />
       </div>
@@ -541,7 +542,7 @@ function Step3Review({
             checked={updatePriceOnDup}
             onChange={(e) => setUpdatePriceOnDup(e.target.checked)}
           />
-          Aggiorna il prezzo dei prodotti già in catalogo
+          {t.admin.importWizard.updatePriceOnDup}
         </label>
         {hasCycle && (
           <label className="flex items-center gap-2">
@@ -550,12 +551,12 @@ function Step3Review({
               checked={addToCycle}
               onChange={(e) => setAddToCycle(e.target.checked)}
             />
-            Aggiungi anche al ciclo aperto
+            {t.admin.importWizard.addToCycle}
           </label>
         )}
         {unmatchedEmojiCount > 0 && (
           <span className="ml-auto text-brand-red">
-            ⚠ {unmatchedEmojiCount} icone non riconosciute — scegline una qui sotto
+            {t.admin.importWizard.unmatchedEmojis(unmatchedEmojiCount)}
           </span>
         )}
       </div>
@@ -571,13 +572,13 @@ function Step3Review({
                   onChange={toggleAll}
                 />
               </th>
-              <th className="p-2 text-left">Icona</th>
-              <th className="p-2 text-left">Nome</th>
-              <th className="p-2 text-left">Varietà</th>
-              <th className="p-2 text-left">Categoria</th>
-              <th className="p-2 text-left">Formato</th>
-              <th className="p-2 text-right">Prezzo</th>
-              <th className="p-2 text-right">€/kg</th>
+              <th className="p-2 text-left">{t.admin.importWizard.colIconHeader}</th>
+              <th className="p-2 text-left">{t.admin.importWizard.colNameHeader}</th>
+              <th className="p-2 text-left">{t.admin.importWizard.colVariantHeader}</th>
+              <th className="p-2 text-left">{t.admin.importWizard.colCategoryHeader}</th>
+              <th className="p-2 text-left">{t.admin.importWizard.colFormatHeader}</th>
+              <th className="p-2 text-right">{t.admin.importWizard.colPriceHeader}</th>
+              <th className="p-2 text-right">{t.admin.importWizard.colPriceKgHeader}</th>
             </tr>
           </thead>
           <tbody>
@@ -601,16 +602,16 @@ function Step3Review({
                       onChange={(v) => setEmojiOverrides({ ...emojiOverrides, [i]: v })}
                     />
                     {!override && !auto && (
-                      <div className="text-[9px] text-brand-red">non auto</div>
+                      <div className="text-[9px] text-brand-red">{t.admin.importWizard.emojiNotAuto}</div>
                     )}
                   </td>
-                  <td className="p-2 align-middle font-semibold">{name || <em className="text-brand-red">vuoto</em>}</td>
+                  <td className="p-2 align-middle font-semibold">{name || <em className="text-brand-red">{t.admin.importWizard.emptyName}</em>}</td>
                   <td className="p-2 align-middle text-brand-gray">{cell(i, "variant")}</td>
                   <td className="p-2 align-middle text-brand-gray">
                     {guessedCategory ? (
                       <span>
                         {guessedCategory}
-                        {!fileCategory && <span className="ml-1 text-[9px] text-brand-orange">auto</span>}
+                        {!fileCategory && <span className="ml-1 text-[9px] text-brand-orange">{t.admin.importWizard.autoCategory}</span>}
                       </span>
                     ) : (
                       <span className="text-brand-gray-light">—</span>
@@ -651,7 +652,7 @@ function PreviewTable({
     return m;
   }, [highlightMap]);
 
-  if (!columns.length) return <div className="text-[11px] text-brand-gray">Nessuna colonna rilevata.</div>;
+  if (!columns.length) return <div className="text-[11px] text-brand-gray">{t.admin.importWizard.noColumnsDetected}</div>;
 
   return (
     <div className="overflow-x-auto rounded-lg border border-brand-border bg-white">
@@ -662,7 +663,7 @@ function PreviewTable({
               const hi = highlights.get(i);
               return (
                 <th key={i} className="p-2 text-left">
-                  <div className="font-semibold text-brand-near-black">{c || `Col ${i + 1}`}</div>
+                  <div className="font-semibold text-brand-near-black">{c || t.admin.importWizard.columnPlaceholder(i + 1)}</div>
                   {hi && (
                     <div className="font-mono text-[9px] uppercase text-brand-orange">
                       → {TARGET_LABEL[hi as TargetField]}

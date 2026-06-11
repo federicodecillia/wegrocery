@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { t } from "@/lib/i18n";
 
 type FilterCycle = { cycleId: string; title: string };
 type FilterSupplier = { supplierId: string; name: string };
@@ -55,22 +56,22 @@ export function StatsFilters({
     <div className="space-y-2">
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
         <MultiSelect
-          label="Cicli"
-          allLabel="Tutti i cicli"
+          label={t.admin.stats.filterCycles}
+          allLabel={t.admin.stats.filterAllCycles}
           selected={currentCycles}
           options={cycles.map((c) => ({ id: c.cycleId, label: c.title }))}
           onChange={(ids) => pushWith({ cycles: ids })}
         />
         <MultiSelect
-          label="Fornitori"
-          allLabel="Tutti i fornitori"
+          label={t.admin.stats.filterSuppliers}
+          allLabel={t.admin.stats.filterAllSuppliers}
           selected={currentSuppliers}
           options={suppliers.map((s) => ({ id: s.supplierId, label: s.name }))}
           onChange={(ids) => pushWith({ suppliers: ids })}
         />
         <MultiSelect
-          label="Soci"
-          allLabel="Tutti i soci"
+          label={t.admin.stats.filterMembers}
+          allLabel={t.admin.stats.filterAllMembers}
           selected={currentMembers}
           options={members.map((m) => ({ id: m.memberId, label: m.fullName }))}
           onChange={(ids) => pushWith({ members: ids })}
@@ -81,7 +82,7 @@ export function StatsFilters({
           onClick={() => pushWith({ cycles: [], suppliers: [], members: [] })}
           className="text-[11px] font-semibold text-brand-orange hover:underline"
         >
-          ✕ Rimuovi filtri
+          {t.admin.stats.removeFilters}
         </button>
       )}
     </div>
@@ -139,7 +140,7 @@ function MultiSelect({
       ? allLabel
       : selected.length === 1
         ? options.find((o) => o.id === selected[0])?.label ?? `1 ${label.toLowerCase()}`
-        : `${selected.length} ${label.toLowerCase()} selezionati`;
+        : t.admin.stats.selectedCount(selected.length, label.toLowerCase());
 
   return (
     <div className="relative" ref={wrapperRef}>
@@ -174,13 +175,13 @@ function MultiSelect({
                 onClick={() => onChange([])}
                 className="mt-1 text-[11px] font-semibold text-brand-orange hover:underline"
               >
-                Deseleziona tutti
+                {t.admin.stats.deselectAll}
               </button>
             )}
           </div>
           <div className="max-h-[220px] overflow-y-auto py-1">
             {visibleOptions.length === 0 ? (
-              <p className="px-3 py-2 text-[11px] text-brand-gray">Nessun risultato</p>
+              <p className="px-3 py-2 text-[11px] text-brand-gray">{t.admin.stats.noFilterResults}</p>
             ) : (
               visibleOptions.map((o) => {
                 const checked = selectedSet.has(o.id);
