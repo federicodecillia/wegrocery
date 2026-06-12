@@ -1,13 +1,13 @@
 # Operating two environments: production + demo
 
-Porta Moneta runs as **two Vercel deployments from this single repository and the
+wegrocery runs as **two Vercel deployments from this single repository and the
 same `main` branch**. They share 100% of the code and differ only in environment
 variables.
 
 | | Production | Demo |
 |---|---|---|
-| URL | `gas.portamoneta.org` | `porta-moneta-demo.vercel.app` |
-| Vercel project | `porta-moneta` | `porta-moneta-demo` |
+| URL | `gas.portamoneta.org` | `wegrocery-demo.vercel.app` |
+| Vercel project | `porta-moneta` (client: Porta Moneta) | `wegrocery-demo` |
 | Database | production Neon (real members) | separate demo Neon (fake data) |
 | `DEMO_MODE` | unset | `true` |
 | Auth | Google OAuth + member whitelist | one-click Socio/Admin demo login |
@@ -74,6 +74,6 @@ in the demo changelog.
 - **`gas.portamoneta.org` is private.** Login is whitelisted and the data is
   real. Share it only with cooperative members. Never use it for screenshots,
   demos, or public links.
-- **`porta-moneta-demo.vercel.app` is the public showcase.** Use it in the
+- **`wegrocery-demo.vercel.app` is the public showcase.** Use it in the
   README, in any demo, and for all screenshots/GIFs (the `docs/demo.gif`
   walkthrough was recorded here).

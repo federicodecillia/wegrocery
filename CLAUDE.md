@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Porta Moneta GAS** is a web app for managing a community food cooperative (GAS — Gruppo di Acquisto Solidale frutta e verdura). Members log in with Google, place weekly produce orders, and track their balance. Admins manage cycles, products, suppliers, and member topups.
+**wegrocery** is an open-source, white-label web app for food co-ops and buying groups (born as the Porta Moneta GAS app, now its first client deployment). Members log in with Google, place weekly orders, and track their balance. Admins manage cycles, products, suppliers, and member topups. Branding/locale per deployment via `NEXT_PUBLIC_BRAND_JSON` (see `lib/brand` and `lib/i18n`).
 
 **Stack**: Next.js 15 App Router · Postgres (Neon serverless) · Auth.js (Google OAuth) · Drizzle ORM · Tailwind CSS v4 · Vercel
 
@@ -73,7 +73,7 @@ This repo deploys to **two** Vercel projects from the same `main` branch,
 differing only by environment variables:
 
 - **Production** — `gas.portamoneta.org`, real members, no `DEMO_MODE`.
-- **Public demo** — `porta-moneta-demo.vercel.app`, fake data, `DEMO_MODE=true`,
+- **Public demo** — `wegrocery-demo.vercel.app`, fake data, `DEMO_MODE=true`,
   reseeded nightly.
 
 Demo behaviour lives behind the `DEMO_MODE` flag (the `demo-login` provider in

@@ -1,57 +1,64 @@
-# Porta Moneta GAS
+<img src="./public/logo.png" alt="wegrocery" width="80" align="right" />
 
-A production web app that runs the weekly purchasing cycle of a real Italian
-food cooperative (GAS — *Gruppo di Acquisto Solidale*). Members log in with
-Google, place orders inside a time-boxed cycle, and track a running ledger
-balance. Admins manage cycles, products, suppliers, top-ups, and analytics.
+# wegrocery
+
+**Open-source, white-label platform for food co-ops and buying groups.**
+Members place orders inside weekly cycles and track a prepaid ledger balance;
+admins manage cycles, products, suppliers, top-ups, and analytics. One
+codebase, MIT licensed — every group gets its own deployment with its own
+name, logo, colors, and language, configured by a single environment variable.
 
 | | |
 |---|---|
-| 🧪 **Try the public demo** | **[porta-moneta-demo.vercel.app](https://porta-moneta-demo.vercel.app)** — one-click login, fake data |
-| 🟢 **Live site (members only)** | [gas.portamoneta.org](https://gas.portamoneta.org) |
+| 🧪 **Try the public demo** | **[wegrocery-demo.vercel.app](https://wegrocery-demo.vercel.app)** — one-click login, fake data |
+| 🟢 **In production** | [gas.portamoneta.org](https://gas.portamoneta.org) — a Rome food co-op, members only |
 | 📋 **Changelog** | [English](./CHANGELOG.md) · [Italiano](./CHANGELOG.it.md) |
 
-![Porta Moneta GAS — member and admin walkthrough](./docs/demo.gif)
+![wegrocery — member and admin walkthrough](./docs/demo.gif)
 
 ---
 
 ## What is this?
 
-Porta Moneta GAS is the real tool a Rome-based food co-op uses **every week** to
-run group orders of fruit and vegetables: members place orders within a weekly
-window, the system tracks each member's prepaid balance like a ledger, and an
-admin closes the cycle, charges everyone, splits shipping, and emails the order
-to the supplier.
+wegrocery runs the weekly purchasing cycle of a buying group: members order
+within a time-boxed window, the system tracks each member's prepaid balance
+like a ledger, and an admin closes the cycle, charges everyone, splits
+shipping, and emails the order to the supplier.
 
-It is also a complete, real-world **reference implementation** of a modern
-Next.js app: App Router, React Server Components, Server Actions, Auth.js v5,
-Drizzle ORM on serverless Postgres, deployed on Vercel — with real concurrency
-control and money math, not a toy demo.
+It is **not a toy demo**: it has been in production since 2025 for
+[Porta Moneta](https://www.portamoneta.org), a Rome-based food co-op (GAS,
+*Gruppo di Acquisto Solidale*) that uses it every week — real money math,
+real concurrency control, real members. Porta Moneta is the first white-label
+deployment of this codebase.
+
+It is also a complete **reference implementation** of a modern Next.js app:
+App Router, React Server Components, Server Actions, Auth.js v5, Drizzle ORM
+on serverless Postgres, deployed on Vercel.
 
 **Who it's for:**
 
-- **Co-ops, GAS groups, buying clubs** that need a simple ordering + balance tool
-  and want to run, fork, or commission their own instance.
+- **Co-ops, GAS groups, buying clubs** that need an ordering + balance tool:
+  run it yourself for free, or [get a turnkey instance](#want-this-for-your-group).
 - **Developers** looking for a production-grade Next.js 15 / Server Actions /
-  Drizzle / Neon example to learn from.
+  Drizzle / Neon example to learn from — contributions welcome.
 - **Anyone evaluating the work** — recruiters, collaborators, potential clients.
 
-The UI is in Italian (the co-op's members are Italian); all code, identifiers,
-comments, and docs are in English.
+The app ships in **English and Italian** (one language per deployment, picked
+by the brand config); code, identifiers, comments, and docs are all in English.
 
 ---
 
 ## Try the demo
 
-[**porta-moneta-demo.vercel.app**](https://porta-moneta-demo.vercel.app) is a
-fully interactive demo running on fake data:
+[**wegrocery-demo.vercel.app**](https://wegrocery-demo.vercel.app) is a fully
+interactive demo running on fake data:
 
-1. **One-click login, no signup.** Choose **"Entra come Socio"** for the member
-   view, or **"Entra come Admin"** for the admin panel.
+1. **One-click login, no signup.** Choose **"Enter as Member"** for the member
+   view, or **"Enter as Admin"** for the admin panel.
 2. **As a member:** place an order in the open cycle, then browse your balance,
    order history, ledger movements, and notifications.
-3. **As an admin:** manage the cycle and products, record a top-up in the Cassa
-   tab, review members, and open the analytics dashboard.
+3. **As an admin:** manage the cycle and products, record a top-up in the
+   Treasury tab, review members, and open the analytics dashboard.
 
 Data is **fake and reset automatically every night**, so click around freely —
 nothing you do is permanent.
@@ -59,6 +66,31 @@ nothing you do is permanent.
 > The production site ([gas.portamoneta.org](https://gas.portamoneta.org)) is
 > **private**: login is restricted to the co-op's members and holds real data.
 > Use the demo to explore the app.
+
+---
+
+## White-label: run it for YOUR group
+
+Every deployment is branded by one env var, `NEXT_PUBLIC_BRAND_JSON`. No env
+var = the neutral wegrocery brand you see in the demo. Example:
+
+```json
+{
+  "appName": "Riverside Buying Club",
+  "shortName": "Riverside",
+  "locale": "en",
+  "currency": "EUR",
+  "logoUrl": "https://example.org/logo.png",
+  "supportEmail": "hello@riverside.example",
+  "theme": { "primary": "#2f9e44", "accent": "#1971c2" }
+}
+```
+
+Onboarding a new group = one Vercel project + one Neon database + one brand
+JSON. Same `main` branch serves every deployment, so a bug fix or feature
+lands everywhere with a single merge — no forks, no per-client branches.
+The full operating model is documented in
+[docs/operating-two-environments.md](./docs/operating-two-environments.md).
 
 ---
 
@@ -181,10 +213,14 @@ The admin analytics tab draws four chart types — horizontal bar, area+line
 trend, bar ranking, and a categorical split — using only Tailwind utilities
 and inline SVG with a `viewBox`. Total bundle cost: zero.
 
-### Italian localization
-UI strings are in Italian because the users speak Italian. The codebase
-itself (identifiers, comments, commit messages, PR descriptions, docs) is
-in English, so the repo is readable by anyone.
+### Brand layer and i18n
+All user-facing strings live in typed language packs (`lib/i18n/it.ts` /
+`en.ts` — the English pack is type-checked against the Italian source, so a
+missing translation fails the build). Branding (name, logo, colors, locale,
+currency, support emails) comes from `NEXT_PUBLIC_BRAND_JSON`, validated
+fail-fast at build time in `lib/brand`. Dates and money are formatted with
+`Intl` using the deployment's locale and currency. The codebase itself
+(identifiers, comments, commits, docs) is in English.
 
 ---
 
@@ -223,19 +259,35 @@ breaking changes, so the database is always one step ahead of the live code.
 
 ---
 
-## License
+## Contributing
 
-Code is [MIT licensed](./LICENSE) — fork it, adapt it, run it for your own
-GAS or co-op. The brand assets (`logo.png`, `icon.png`, the `portamoneta.org`
-domain and the "Porta Moneta" name) belong to APS Porta Moneta and are **not**
-covered by the license: replace them in your fork.
+Contributions are welcome — this is a real product used weekly by real
+groups, and improvements ship to every deployment. Open an
+[issue](https://github.com/federicodecillia/wegrocery/issues) for bugs or
+feature ideas, or send a PR (keep it focused; `npm test && npm run build`
+must stay green). If you run wegrocery for your own group, a star and a note
+about your setup help a lot.
 
 ---
 
-## Want this for your GAS / co-op / association?
+## License
 
-Fork it and run it yourself — it's MIT. If you'd rather have someone set it
-up, adapt it, or build something similar for your organization, that's what
-I do: [gptchatbot.it](https://www.gptchatbot.it) ·
+Code is [MIT licensed](./LICENSE) — fork it, adapt it, run it for your own
+group. The "Porta Moneta" name, logo, and the `portamoneta.org` domain belong
+to APS Porta Moneta and are **not** covered by the license; client brand
+configurations are private to each deployment.
+
+---
+
+<a name="want-this-for-your-group"></a>
+## Want this for your group?
+
+**Run it yourself** — it's free and MIT licensed: clone, deploy, set your
+brand JSON.
+
+**Or get it done for you.** I set up turnkey, white-label instances — your
+logo, colors, language, and domain, like the Porta Moneta deployment — and
+build custom features on top. That's what I do:
+[gptchatbot.it](https://www.gptchatbot.it) ·
 [LinkedIn](https://www.linkedin.com/in/federicodecillia) ·
 [GitHub](https://github.com/federicodecillia)
