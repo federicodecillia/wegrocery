@@ -43,12 +43,13 @@ type MemberShipping = { memberId: string; memberName: string; amount: number };
 export function ClosedCycleDetails({
   cycleId,
   cycleTitle,
-  buttonLabel = "✎ Ordini",
+  buttonLabel,
 }: {
   cycleId: string;
   cycleTitle: string;
   buttonLabel?: string;
 }) {
+  const label = buttonLabel ?? t.admin.closedCycleDetails.defaultButtonLabel;
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [orderDetails, setOrderDetails] = useState<OrderDetail[]>([]);
@@ -85,7 +86,7 @@ export function ClosedCycleDetails({
         onClick={handleOpen}
         className="rounded-lg bg-brand-teal/10 px-3 py-1 text-[11px] font-bold text-brand-teal hover:bg-brand-teal/20"
       >
-        {buttonLabel}
+        {label}
       </button>
     );
   }
@@ -128,6 +129,10 @@ export function ClosedCycleDetails({
             <div className="py-20 text-center text-brand-gray">{t.admin.closedCycleDetails.noOrders}</div>
           ) : (
             <div className="space-y-8">
+              <div className="flex items-center gap-2 rounded-lg bg-brand-orange/5 px-3 py-2 text-[11px] text-brand-gray">
+                <span className="text-[13px]">👆</span>
+                <span>{t.admin.closedCycleDetails.rectifyHint}</span>
+              </div>
               {Object.entries(grouped).map(([memberName, lines]) => {
                 const productsTotal = lines.reduce((s, l) => s + effectiveTotal(l), 0);
                 const memberId = lines[0]?.memberId;
@@ -146,7 +151,7 @@ export function ClosedCycleDetails({
                             }
                             className="rounded-full bg-brand-orange/10 px-2.5 py-0.5 text-[10px] font-bold text-brand-orange hover:bg-brand-orange/20"
                           >
-                            ✎ Modifica
+                            {t.admin.closedCycleDetails.editQtyButton}
                           </button>
                         )}
                       </div>
@@ -229,7 +234,7 @@ function OrderLineRow({ line, onSaved }: { line: OrderDetail; onSaved: () => voi
       <button
         type="button"
         onClick={() => setEditing(true)}
-        className="group flex w-full items-start justify-between gap-3 rounded-lg px-1.5 py-1 text-left text-[12px] text-brand-near-black hover:bg-brand-orange/5"
+        className="group flex w-full items-start justify-between gap-2 rounded-lg px-1.5 py-1 text-left text-[12px] text-brand-near-black hover:bg-brand-orange/5"
         title={t.admin.closedCycleDetails.rectifyTitle}
       >
         <div className="flex min-w-0 flex-1 gap-2">
@@ -299,6 +304,12 @@ function OrderLineRow({ line, onSaved }: { line: OrderDetail; onSaved: () => voi
               )}
             </>
           )}
+        </span>
+        <span
+          aria-hidden
+          className="shrink-0 self-center text-[12px] text-brand-orange/40 group-hover:text-brand-orange"
+        >
+          ✎
         </span>
       </button>
     );

@@ -148,6 +148,9 @@ export function EditClosedOrderModal({ cycleId, cycleTitle, mode, onClose, onSav
             <p className="mt-1 text-[11px] leading-snug text-brand-gray">
               {t.admin.editClosedOrder.correctionNote}
             </p>
+            <p className="mt-2 rounded-lg bg-brand-teal/10 px-2.5 py-1.5 text-[11px] leading-snug text-brand-teal">
+              {t.admin.editClosedOrder.priceWeightBridge}
+            </p>
           </div>
           <button
             onClick={onClose}

@@ -620,6 +620,9 @@ export const it = {
       shippingQuota: "Quota fissa per socio",
       addOrder: "+ Aggiungi ordine per un socio",
       rectifyTitle: "Clicca per rettificare la quantita ricevuta",
+      rectifyHint: "Tocca un prodotto per correggere peso o prezzo effettivo",
+      rectifyPill: "prezzo/peso",
+      editQtyButton: "✎ Prodotti",
       adjustedBadge: "rettificato",
       qtyReceived: (unit: string) => `Qta ricevuta${unit ? ` (${unit})` : ""}`,
       totalEur: "Totale (EUR)",
@@ -637,6 +640,8 @@ export const it = {
       addOrderTitle: "Aggiungi ordine per un socio",
       correctionNote:
         "Le modifiche generano una voce di correzione nel saldo del socio e una notifica con il dettaglio. L'ordine originale e l'addebito esistente non vengono toccati.",
+      priceWeightBridge:
+        "Devi correggere il prezzo o il peso effettivo (es. 1 kg → 800 g)? Chiudi e tocca il prodotto nel recap ordini.",
       memberLabel: "Socio",
       selectMember: "— Scegli un socio —",
       noProducts:

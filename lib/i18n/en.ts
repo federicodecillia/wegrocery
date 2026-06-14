@@ -619,6 +619,9 @@ export const en: Strings = {
       shippingQuota: "Fixed share per member",
       addOrder: "+ Add order for a member",
       rectifyTitle: "Click to adjust the quantity received",
+      rectifyHint: "Tap a product to correct delivered weight or price",
+      rectifyPill: "price/weight",
+      editQtyButton: "✎ Products",
       adjustedBadge: "adjusted",
       qtyReceived: (unit: string) => `Qty received${unit ? ` (${unit})` : ""}`,
       totalEur: "Total (EUR)",
@@ -636,6 +639,8 @@ export const en: Strings = {
       addOrderTitle: "Add order for a member",
       correctionNote:
         "Changes generate a correction entry in the member's balance and a notification with the details. The original order and existing charge are not touched.",
+      priceWeightBridge:
+        "Need to correct the actual price or weight (e.g. 1 kg → 800 g)? Close and tap the product in the order recap.",
       memberLabel: "Member",
       selectMember: "— Choose a member —",
       noProducts:
