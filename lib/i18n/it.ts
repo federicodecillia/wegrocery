@@ -684,7 +684,7 @@ export const it = {
       subjectRequired: "Oggetto obbligatorio",
       uploadSection: "📤 Carica distinta compilata",
       uploadDescription:
-        "Quando il fornitore ti rimanda il file con le pesate, caricalo qui per applicare le rettifiche.",
+        "Quando il fornitore ti rimanda il file con le pesate, caricalo qui per applicare le rettifiche. Accetta .xlsx, .ods e .csv (col CSV il riconoscimento è per nome socio/prodotto).",
       previewButton: "Anteprima modifiche",
       previewing: "Lettura in corso…",
       errorsTitle: "Errori — niente verrà salvato:",
@@ -854,6 +854,18 @@ export const it = {
     emailSendFailed: "Errore invio email",
     distintaWarningNoOrder: (memberName: string, productName: string, amount: string) =>
       `${memberName} · ${productName}: ${amount} inserito ma non c'era un ordine — ignorato.`,
+    distintaOpenError: (detail: string) =>
+      `Impossibile aprire il file: ${detail}. Carica un .xlsx, .ods o .csv generato dall'app.`,
+    distintaCsvHeaderMissing:
+      "Intestazione non trovata nel CSV: assicurati di aver salvato la distinta dell'app (deve esserci la colonna \"Prodotto\" e \"Totale prodotto\").",
+    distintaCsvMemberUnmatched: (name: string) =>
+      `Colonna socio "${name}" non riconosciuta — saltata. (Nel CSV il match è per nome: verifica che corrisponda a un socio.)`,
+    distintaCsvMemberAmbiguous: (name: string) =>
+      `Colonna socio "${name}" ambigua (più soci con lo stesso nome) — saltata.`,
+    distintaCsvProductUnmatched: (name: string) =>
+      `Prodotto "${name}" non riconosciuto — riga saltata. (Nel CSV il match è per nome: verifica che non sia stato rinominato.)`,
+    distintaCsvProductAmbiguous: (name: string) =>
+      `Prodotto "${name}" ambiguo (più prodotti con lo stesso nome) — riga saltata.`,
   },
   email: {
     supplierOrderSubject: (appName: string, cycleTitle: string) => `${appName} — ${cycleTitle}`,
