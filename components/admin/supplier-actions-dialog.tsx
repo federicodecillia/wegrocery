@@ -159,7 +159,7 @@ export function SupplierActionsDialog({
   function handlePreview() {
     if (!fileBase64) return;
     startPreview(async () => {
-      const r = await adminPreviewDistintaImport({ cycleId, fileBase64 });
+      const r = await adminPreviewDistintaImport({ cycleId, fileBase64, fileName: fileName ?? undefined });
       if ("error" in r) {
         toast.error(r.error);
         return;
@@ -177,7 +177,7 @@ export function SupplierActionsDialog({
       return;
     }
     startApply(async () => {
-      const r = await adminApplyDistintaImport({ cycleId, fileBase64 });
+      const r = await adminApplyDistintaImport({ cycleId, fileBase64, fileName: fileName ?? undefined });
       if ("error" in r) {
         toast.error(r.error);
         return;
@@ -312,7 +312,7 @@ export function SupplierActionsDialog({
               </p>
               <input
                 type="file"
-                accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                accept=".xlsx,.ods,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.oasis.opendocument.spreadsheet,text/csv"
                 onChange={onFileChange}
                 className="block w-full cursor-pointer rounded-xl border border-dashed border-brand-orange/40 bg-white px-3 py-2 text-[12px] file:mr-3 file:rounded-lg file:border-0 file:bg-brand-orange file:px-3 file:py-1.5 file:text-[11px] file:font-bold file:text-white"
               />

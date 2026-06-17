@@ -1722,6 +1722,7 @@ export async function adminBuildSupplierDistinta(
 export async function adminPreviewDistintaImport(input: {
   cycleId: string;
   fileBase64: string;
+  fileName?: string;
 }): Promise<
   | { ok: true; preview: import("@/lib/csv/distinta-parser").DistintaImportPreview }
   | { error: string }
@@ -1730,7 +1731,7 @@ export async function adminPreviewDistintaImport(input: {
     await requireAdmin();
     const buf = Buffer.from(input.fileBase64, "base64");
     const { parseSupplierDistinta } = await import("@/lib/csv/distinta-parser");
-    const preview = await parseSupplierDistinta(buf, input.cycleId);
+    const preview = await parseSupplierDistinta(buf, input.cycleId, input.fileName);
     return { ok: true, preview };
   } catch (e) {
     return { error: e instanceof Error ? e.message : t.errors.distintaReadError };
@@ -1746,6 +1747,7 @@ export async function adminPreviewDistintaImport(input: {
 export async function adminApplyDistintaImport(input: {
   cycleId: string;
   fileBase64: string;
+  fileName?: string;
 }): Promise<
   | {
       ok: true;
@@ -1760,7 +1762,7 @@ export async function adminApplyDistintaImport(input: {
     const admin = await requireAdmin();
     const buf = Buffer.from(input.fileBase64, "base64");
     const { parseSupplierDistinta } = await import("@/lib/csv/distinta-parser");
-    const preview = await parseSupplierDistinta(buf, input.cycleId);
+    const preview = await parseSupplierDistinta(buf, input.cycleId, input.fileName);
     if (preview.errors.length > 0) {
       return {
         error: preview.errors[0],
