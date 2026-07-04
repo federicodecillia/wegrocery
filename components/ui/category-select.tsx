@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { t } from "@/lib/i18n";
+import { canonicalizeCategory, normalizeCategory } from "@/lib/utils";
 
 /**
  * Built-in suggestions, ordered by typical GAS-shopping prevalence.
@@ -50,14 +51,14 @@ export function CategorySelect({ name, value, extra = [], placeholder = t.common
   const [sessionAdded, setSessionAdded] = useState<string[]>([]);
 
   const options = useMemo(() => {
-    const merged = new Set<string>([
-      ...DEFAULT_CATEGORIES,
-      ...extra,
-      ...sessionAdded,
-    ]);
-    // Make sure the current value, even if exotic, is visible at the top.
-    if (selected && !merged.has(selected)) merged.add(selected);
-    return Array.from(merged).filter(Boolean).sort((a, b) => a.localeCompare(b, "it"));
+    // Merge case-insensitively: the first spelling wins (defaults first), so
+    // an admin-typed "verdura" folds into the built-in "Verdura".
+    const merged = new Map<string, string>();
+    for (const c of [...DEFAULT_CATEGORIES, ...extra, ...sessionAdded, selected]) {
+      const key = normalizeCategory(c);
+      if (key && !merged.has(key)) merged.set(key, c.trim());
+    }
+    return Array.from(merged.values()).sort((a, b) => a.localeCompare(b, "it"));
   }, [extra, sessionAdded, selected]);
 
   useEffect(() => {
@@ -96,10 +97,11 @@ export function CategorySelect({ name, value, extra = [], placeholder = t.common
   }
 
   function confirmAdd() {
-    const trimmed = newCat.trim();
-    if (!trimmed) return;
-    setSessionAdded((prev) => (prev.includes(trimmed) ? prev : [...prev, trimmed]));
-    pick(trimmed);
+    // Fold a re-typed existing category (any casing) into its known spelling.
+    const canonical = canonicalizeCategory(newCat, options);
+    if (!canonical) return;
+    setSessionAdded((prev) => (prev.includes(canonical) ? prev : [...prev, canonical]));
+    pick(canonical);
   }
 
   const triggerCls =
@@ -132,14 +134,14 @@ export function CategorySelect({ name, value, extra = [], placeholder = t.common
               key={opt}
               type="button"
               role="option"
-              aria-selected={opt === selected}
+              aria-selected={normalizeCategory(opt) === normalizeCategory(selected)}
               onClick={() => pick(opt)}
               className={`flex w-full items-center justify-between px-3 py-1.5 text-left text-[13px] transition hover:bg-brand-teal-light ${
-                opt === selected ? "bg-brand-teal-light font-semibold text-brand-teal" : "text-brand-near-black"
+                normalizeCategory(opt) === normalizeCategory(selected) ? "bg-brand-teal-light font-semibold text-brand-teal" : "text-brand-near-black"
               }`}
             >
               <span>{opt}</span>
-              {opt === selected && <span className="text-[11px] text-brand-teal">✓</span>}
+              {normalizeCategory(opt) === normalizeCategory(selected) && <span className="text-[11px] text-brand-teal">✓</span>}
             </button>
           ))}
 

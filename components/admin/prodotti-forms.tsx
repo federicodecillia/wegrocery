@@ -10,7 +10,7 @@ import {
   adminLoadFromCatalog,
   adminArchiveCatalogProduct
 } from "@/lib/actions/admin";
-import { formatEur, getProductEmoji } from "@/lib/utils";
+import { formatEur, getProductEmoji, normalizeCategory } from "@/lib/utils";
 import type { CatalogProductItem } from "@/lib/db/queries";
 import { ImportListingWizard } from "./import-listing-wizard";
 import { t } from "@/lib/i18n";
@@ -666,17 +666,18 @@ export function CatalogManager({
 
   // Categories already used by this supplier — surfaced in the dropdown so
   // admins don't see only the generic defaults when they know what fits.
-  const knownCategories = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          products
-            .map((p) => p.category?.trim())
-            .filter((c): c is string => Boolean(c)),
-        ),
-      ),
-    [products],
-  );
+  const knownCategories = useMemo(() => {
+    // Dedup case-insensitively, keeping the first-seen casing, so the
+    // dropdown never offers "Verdura" and "verdura" side by side.
+    const seen = new Map<string, string>();
+    for (const p of products) {
+      const label = p.category?.trim();
+      if (!label) continue;
+      const key = normalizeCategory(label);
+      if (!seen.has(key)) seen.set(key, label);
+    }
+    return Array.from(seen.values());
+  }, [products]);
 
   function handleArchive(id: string, active: boolean) {
     if (!window.confirm(active ? t.admin.products.reactivateConfirm : t.admin.products.archiveConfirm)) return;

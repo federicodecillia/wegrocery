@@ -165,3 +165,20 @@ export function guessProductCategory(name: string): string | null {
   }
   return null;
 }
+
+// Category names are free text typed by different admins over time, so
+// "Verdura" and "verdura" drift into separate groups. Compare through this
+// normalization everywhere; keep the stored value (first-seen casing) for
+// display.
+export function normalizeCategory(value: string | null | undefined): string {
+  return (value ?? "").trim().toLowerCase();
+}
+
+// Returns the already-known spelling of `value` when one exists (ignoring
+// case/whitespace), so new entries merge into an existing category instead
+// of creating a duplicate that differs only in casing.
+export function canonicalizeCategory(value: string, known: ReadonlyArray<string>): string {
+  const norm = normalizeCategory(value);
+  if (!norm) return value.trim();
+  return known.find((k) => normalizeCategory(k) === norm) ?? value.trim();
+}
