@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "@/components/ui/toast";
 import { t } from "@/lib/i18n";
 import { formatDateTime } from "@/lib/i18n/format";
-import { formatEur, getProductEmoji } from "@/lib/utils";
+import { formatEur, getProductEmoji, normalizeCategory } from "@/lib/utils";
 import type { SaveOrderLine } from "@/lib/actions/order";
 import { loadLastOrderForPrefill } from "@/lib/actions/order";
 
@@ -39,14 +39,19 @@ type Props = {
   }>;
 };
 
-const CAT_ORDER = ["Frutta", "Verdura", "Insalate"];
+// Normalized (see normalizeCategory): grouping keys are case-insensitive.
+const CAT_ORDER = ["frutta", "verdura", "insalate"];
 
 function groupByCategory(products: Product[]) {
-  const groups = new Map<string, Product[]>();
+  // Group case-insensitively so "Verdura" and "verdura" render as one
+  // section; the first-seen casing becomes the group label.
+  const groups = new Map<string, { label: string; products: Product[] }>();
   for (const p of products) {
-    const cat = p.category?.trim() || "";
-    if (!groups.has(cat)) groups.set(cat, []);
-    groups.get(cat)!.push(p);
+    const label = p.category?.trim() || "";
+    const key = normalizeCategory(label);
+    const group = groups.get(key);
+    if (group) group.products.push(p);
+    else groups.set(key, { label, products: [p] });
   }
   const keys = Array.from(groups.keys()).sort((a, b) => {
     const ai = CAT_ORDER.indexOf(a) === -1 ? 99 : CAT_ORDER.indexOf(a);
@@ -57,8 +62,8 @@ function groupByCategory(products: Product[]) {
   // uncategorized products instead of a silent unlabeled section.
   const hasNamedGroups = keys.some((k) => k !== "");
   return keys.map((k) => ({
-    category: k === "" && hasNamedGroups ? "Altro" : k,
-    products: groups.get(k)!,
+    category: k === "" && hasNamedGroups ? "Altro" : groups.get(k)!.label,
+    products: groups.get(k)!.products,
   }));
 }
 
