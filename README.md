@@ -291,3 +291,7 @@ logo, colors, language, and domain, like the Porta Moneta deployment — and
 build custom features on top. Get in touch:
 [LinkedIn](https://www.linkedin.com/in/federicodecillia) ·
 [GitHub](https://github.com/federicodecillia)
+
+---
+
+Built with [Claude Code](https://claude.com/claude-code) — architected and reviewed by a human, executed by an agent.
