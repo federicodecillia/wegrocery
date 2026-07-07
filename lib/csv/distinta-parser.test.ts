@@ -1,7 +1,45 @@
 import { describe, it as test, expect } from "vitest";
 import { zipSync, strToU8 } from "fflate";
-import { parseCsv, collectViaMeta } from "./distinta-parser";
+import { parseCsv, collectViaMeta, readNumber } from "./distinta-parser";
 import { parseOds } from "./ods-reader";
+
+// readNumber silently feeds supplier price corrections: a wrong parse here
+// corrupts real invoicing amounts, so every documented edge case is pinned.
+describe("readNumber", () => {
+  test("treats empty/missing cells as zero", () => {
+    expect(readNumber(null)).toBe(0);
+    expect(readNumber(undefined)).toBe(0);
+    expect(readNumber("")).toBe(0);
+    expect(readNumber("   ")).toBe(0);
+    expect(readNumber("-")).toBe(0);
+  });
+
+  test("passes finite numbers through and rejects NaN/Infinity", () => {
+    expect(readNumber(12.5)).toBe(12.5);
+    expect(readNumber(0)).toBe(0);
+    expect(readNumber(NaN)).toBeNull();
+    expect(readNumber(Infinity)).toBeNull();
+  });
+
+  test("parses comma-decimal and €-prefixed strings", () => {
+    expect(readNumber("12,50")).toBe(12.5);
+    expect(readNumber("12.50")).toBe(12.5);
+    expect(readNumber("€ 12,50")).toBe(12.5);
+    expect(readNumber("€12.50")).toBe(12.5);
+    expect(readNumber(" 3 ")).toBe(3);
+  });
+
+  test("unwraps exceljs formula-result objects, recursively", () => {
+    expect(readNumber({ result: 5 })).toBe(5);
+    expect(readNumber({ value: "3,2" })).toBe(3.2);
+    expect(readNumber({ result: { value: 7 } })).toBe(7);
+    expect(readNumber({ formula: "=A1+B1" })).toBeNull();
+  });
+
+  test("returns null for text that is not a number", () => {
+    expect(readNumber("abc")).toBeNull();
+  });
+});
 
 // Only the pure CSV text → grid helper is unit-tested here. The DB-backed
 // matching (collectViaCsv / buildPreviewFromRaw) is exercised against a live
