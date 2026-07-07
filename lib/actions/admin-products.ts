@@ -508,17 +508,23 @@ export async function adminApplySupplierListingImport(
         })),
       );
     }
-    for (const u of updates) {
-      await db
-        .update(supplierProducts)
-        .set({
-          unitPrice: u.row.unitPrice,
-          pricePerKg: u.row.pricePerKg,
-          category: u.row.category,
-          emoji: u.row.emoji,
-          notes: u.row.notes,
-        })
-        .where(eq(supplierProducts.catalogProductId, u.catalogProductId));
+    // One UPDATE per row, but batched into a single HTTP round trip (and a
+    // single transaction) instead of one await per row — same pattern as
+    // saveOrder. Statement count is unchanged; round trips go N → 1.
+    if (updates.length > 0) {
+      const updateStatements = updates.map((u) =>
+        db
+          .update(supplierProducts)
+          .set({
+            unitPrice: u.row.unitPrice,
+            pricePerKg: u.row.pricePerKg,
+            category: u.row.category,
+            emoji: u.row.emoji,
+            notes: u.row.notes,
+          })
+          .where(eq(supplierProducts.catalogProductId, u.catalogProductId)),
+      );
+      await db.batch(updateStatements as [(typeof updateStatements)[number], ...typeof updateStatements]);
     }
 
     // 4. optionally push the same rows into the chosen cycle
