@@ -106,7 +106,7 @@ function extractSupplierHintFromFilename(filename: string): SupplierHint | null 
   return { text: base, source: "filename" };
 }
 
-export async function inspectXlsx(buf: Buffer, filename: string): Promise<ListingInspection> {
+async function inspectXlsx(buf: Buffer, filename: string): Promise<ListingInspection> {
   const wb = new ExcelJS.Workbook();
   const ab = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) as ArrayBuffer;
   await wb.xlsx.load(ab);
@@ -163,7 +163,7 @@ function splitCsvLine(line: string, delim: string): string[] {
   return out.map((s) => s.trim());
 }
 
-export function inspectCsv(text: string, filename: string): ListingInspection {
+function inspectCsv(text: string, filename: string): ListingInspection {
   const lines = text.split(/\r?\n/).filter((l) => l.trim() !== "");
   if (!lines.length) return { sheets: [], supplierHints: [] };
 

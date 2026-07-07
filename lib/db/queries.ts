@@ -322,29 +322,6 @@ export async function getMemberNotifications(memberId: string, limit = 6): Promi
   }
 }
 
-export async function getAdminNotifications(limit = 6): Promise<NotificationItem[]> {
-  const db = getDb();
-  try {
-    return await db
-      .select({
-        notificationId: notifications.notificationId,
-        type: notifications.type,
-        title: notifications.title,
-        body: notifications.body,
-        href: notifications.href,
-        readAt: notifications.readAt,
-        createdAt: notifications.createdAt,
-      })
-      .from(notifications)
-      .where(eq(notifications.role, "admin"))
-      .orderBy(desc(notifications.createdAt))
-      .limit(limit);
-  } catch (error) {
-    console.error("Error fetching admin notifications:", error);
-    return [];
-  }
-}
-
 export async function getUnreadNotificationCount(memberId: string): Promise<number> {
   const db = getDb();
   try {
@@ -690,28 +667,6 @@ export async function getAdminCycleProducts(cycleId: string) {
     .orderBy(asc(suppliers.name), asc(products.name));
 }
 
-export async function getAdminMemberLedger(memberId: string, limit = 100) {
-  const db = getDb();
-  const rows = await db
-    .select({
-      entryId: ledgerEntries.entryId,
-      entryDate: ledgerEntries.entryDate,
-      type: ledgerEntries.type,
-      amount: ledgerEntries.amount,
-      note: ledgerEntries.note,
-      cycleTitle: orderCycles.title,
-    })
-    .from(ledgerEntries)
-    .leftJoin(orderCycles, eq(ledgerEntries.cycleId, orderCycles.cycleId))
-    .where(eq(ledgerEntries.memberId, memberId))
-    .orderBy(desc(ledgerEntries.entryDate), desc(ledgerEntries.createdAt))
-    .limit(limit);
-  return rows.map((r) => ({
-    ...r,
-    entryDate: r.entryDate?.toISOString() ?? null,
-  }));
-}
-
 export type MemberOrderHistory = {
   cycleId: string;
   cycleTitle: string;
@@ -826,51 +781,6 @@ export async function getAllCatalogProducts(): Promise<Record<string, CatalogPro
   for (const row of rows) {
     if (!result[row.supplierId]) result[row.supplierId] = [];
     result[row.supplierId].push(row);
-  }
-  return result;
-}
-
-export type SupplierProductItem = {
-  name: string;
-  variant: string | null;
-  format: string | null;
-  unit: string | null;
-  unitPrice: string;
-  cycleTitle: string;
-  pickupDate: string | null;
-};
-
-export async function getAllProductsWithSupplier(): Promise<Record<string, SupplierProductItem[]>> {
-  const db = getDb();
-  const rows = await db
-    .select({
-      supplierId: products.supplierId,
-      name: products.name,
-      variant: products.variant,
-      format: products.format,
-      unit: products.unit,
-      unitPrice: products.unitPrice,
-      cycleTitle: orderCycles.title,
-      pickupDate: orderCycles.pickupDate,
-    })
-    .from(products)
-    .innerJoin(orderCycles, eq(products.cycleId, orderCycles.cycleId))
-    .where(isNotNull(products.supplierId))
-    .orderBy(desc(orderCycles.createdAt), asc(products.sortOrder));
-
-  const result: Record<string, SupplierProductItem[]> = {};
-  for (const row of rows) {
-    const sid = row.supplierId!;
-    if (!result[sid]) result[sid] = [];
-    result[sid].push({
-      name: row.name,
-      variant: row.variant,
-      format: row.format,
-      unit: row.unit,
-      unitPrice: row.unitPrice,
-      cycleTitle: row.cycleTitle,
-      pickupDate: row.pickupDate?.toISOString() ?? null,
-    });
   }
   return result;
 }
@@ -1340,34 +1250,34 @@ export async function getSupplierStats(
     .groupBy(suppliers.supplierId, suppliers.name)
     .orderBy(sql`coalesce(sum(${effectiveLineTotal}), 0) desc`);
 
-  const stats = rows.map((r) => ({
+  // Top product per supplier in ONE grouped query instead of one query per
+  // supplier: DISTINCT ON keeps the first row per supplier under the ORDER
+  // BY, i.e. the product with the highest total quantity.
+  const topRows = await db
+    .selectDistinctOn([orderCycles.supplierId], {
+      supplierId: orderCycles.supplierId,
+      name: products.name,
+    })
+    .from(orders)
+    .innerJoin(products, eq(orders.productId, products.productId))
+    .innerJoin(orderCycles, eq(orders.cycleId, orderCycles.cycleId))
+    .where(
+      and(
+        isNotNull(orderCycles.supplierId),
+        eq(orderCycles.status, "closed"),
+        ...(nonEmpty(filters?.cycleIds) ? [inArray(orders.cycleId, filters!.cycleIds!)] : []),
+        ...(nonEmpty(filters?.memberIds) ? [inArray(orders.memberId, filters!.memberIds!)] : []),
+      ),
+    )
+    .groupBy(orderCycles.supplierId, products.name)
+    .orderBy(orderCycles.supplierId, sql`sum(${orders.quantity}) desc`);
+  const topBySupplier = new Map(topRows.map((r) => [r.supplierId, r.name]));
+
+  return rows.map((r) => ({
     supplierId: r.supplierId,
     name: r.name,
     cyclesCount: parseInt(r.cyclesCount as string) || 0,
     totalRevenue: parseFloat(r.totalRevenue as string) || 0,
-    topProductName: null as string | null,
+    topProductName: topBySupplier.get(r.supplierId) ?? null,
   }));
-
-  for (const s of stats) {
-    if (s.cyclesCount === 0) continue;
-    const [top] = await db
-      .select({ name: products.name, qty: sql<string>`sum(${orders.quantity})` })
-      .from(orders)
-      .innerJoin(products, eq(orders.productId, products.productId))
-      .innerJoin(orderCycles, eq(orders.cycleId, orderCycles.cycleId))
-      .where(
-        and(
-          eq(orderCycles.supplierId, s.supplierId),
-          eq(orderCycles.status, "closed"),
-          ...(nonEmpty(filters?.cycleIds) ? [inArray(orders.cycleId, filters!.cycleIds!)] : []),
-          ...(nonEmpty(filters?.memberIds) ? [inArray(orders.memberId, filters!.memberIds!)] : []),
-        ),
-      )
-      .groupBy(products.name)
-      .orderBy(sql`sum(${orders.quantity}) desc`)
-      .limit(1);
-    s.topProductName = top?.name ?? null;
-  }
-
-  return stats;
 }

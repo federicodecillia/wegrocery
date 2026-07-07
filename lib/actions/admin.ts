@@ -9,6 +9,7 @@ import { brand } from "@/lib/brand";
 import { getDb } from "@/lib/db/client";
 import { auditLog, ledgerEntries, members, notifications, orderCycles, orders, products, suppliers, supplierProducts } from "@/lib/db/schema";
 import { upsertCycleProducts } from "@/lib/db/cycle-products";
+import { computeShippingShares, normalizeShippingMode, type ShippingMode } from "@/lib/shipping";
 
 async function requireAdmin(): Promise<{ email: string }> {
   const session = await auth();
@@ -68,7 +69,7 @@ async function createNotification(
 
 // ── Ciclo ─────────────────────────────────────────────────────────────────────
 
-export type ShippingMode = "fixed_per_member" | "proportional";
+export type { ShippingMode };
 
 export type CreateCycleInput = {
   title: string;
@@ -84,64 +85,6 @@ export type CreateCycleInput = {
   shippingCostPerMember: string;
   shippingTotal: string;
 };
-
-function normalizeShippingMode(mode: string | undefined): ShippingMode {
-  return mode === "proportional" ? "proportional" : "fixed_per_member";
-}
-
-// Returns each member's shipping share in euros, keyed by memberId.
-// - fixed_per_member: every member pays shippingCostPerMember.
-// - proportional: shippingTotal is split weighted by each member's order total,
-//   each share rounded to 2 decimals. Any cent left over by the rounding (so
-//   that sum-of-shares equals shippingTotal exactly) is added to the member
-//   with the largest order — picking deterministically so reruns match.
-function computeShippingShares(
-  memberTotals: ReadonlyArray<{ memberId: string; total: string }>,
-  cycle: {
-    shippingMode: string;
-    shippingCostPerMember: string | null;
-    shippingTotal: string | null;
-  },
-): Map<string, number> {
-  const shares = new Map<string, number>();
-  if (memberTotals.length === 0) return shares;
-
-  if (cycle.shippingMode === "proportional") {
-    const shippingTotal = cycle.shippingTotal ? parseFloat(cycle.shippingTotal) : 0;
-    if (shippingTotal <= 0) return shares;
-
-    const grand = memberTotals.reduce((sum, r) => sum + parseFloat(r.total), 0);
-    if (grand <= 0) return shares;
-
-    let allocatedCents = 0;
-    const targetCents = Math.round(shippingTotal * 100);
-
-    for (const r of memberTotals) {
-      const memberTotal = parseFloat(r.total);
-      const cents = Math.round((memberTotal / grand) * targetCents);
-      shares.set(r.memberId, cents / 100);
-      allocatedCents += cents;
-    }
-
-    const drift = targetCents - allocatedCents;
-    if (drift !== 0) {
-      // Pick the member with the largest order; ties broken by memberId for
-      // determinism so two reruns produce the same allocation.
-      const heaviest = [...memberTotals].sort((a, b) => {
-        const diff = parseFloat(b.total) - parseFloat(a.total);
-        return diff !== 0 ? diff : a.memberId.localeCompare(b.memberId);
-      })[0];
-      const current = shares.get(heaviest.memberId) ?? 0;
-      shares.set(heaviest.memberId, current + drift / 100);
-    }
-    return shares;
-  }
-
-  const flat = cycle.shippingCostPerMember ? parseFloat(cycle.shippingCostPerMember) : 0;
-  if (flat <= 0) return shares;
-  for (const r of memberTotals) shares.set(r.memberId, flat);
-  return shares;
-}
 
 export async function adminCreateCycle(data: CreateCycleInput): Promise<{error?: string}> {
   try {
@@ -628,67 +571,6 @@ export async function adminUpdateCycle(
 }
 
 // ── Prodotti ──────────────────────────────────────────────────────────────────
-
-function parseProductsText(text: string) {
-  return text
-    .split("\n")
-    .map((l) => l.trim())
-    .filter((l) => l && !l.startsWith("#"))
-    .map((line, idx) => {
-      const parts = line.split(";").map((p) => p.trim());
-      const name = parts[0] ?? "";
-      const rawPrice = (parts[3] ?? "0").replace(",", ".");
-      const unitPrice = parseFloat(rawPrice);
-      if (!name) throw new Error(`Riga ${idx + 1}: nome mancante`);
-      if (isNaN(unitPrice) || unitPrice < 0) throw new Error(`Riga ${idx + 1}: prezzo non valido`);
-      return {
-        name,
-        variant: parts[1] ?? "",
-        format: parts[2] ?? "",
-        unitPrice: unitPrice.toFixed(2),
-        supplier: parts[4] ?? "",
-        notes: parts[5] ?? "",
-        category: parts[6] ?? "",
-        unit: parts[7] ?? "",
-      };
-    });
-}
-
-export async function adminLoadProducts(cycleId: string, text: string) {
-  const admin = await requireAdmin();
-  const parsed = parseProductsText(text);
-  if (parsed.length === 0) throw new Error(t.errors.noProductsInText);
-
-  const db = getDb();
-  await upsertCycleProducts(db, cycleId, parsed);
-
-  await writeAudit(db, admin.email, "load_products", "cycle", cycleId, { count: parsed.length });
-  revalidatePath("/admin");
-  revalidatePath("/ordine");
-  return { count: parsed.length };
-}
-
-export async function adminDuplicateProducts(fromCycleId: string, toCycleId: string) {
-  const admin = await requireAdmin();
-  const db = getDb();
-
-  const source = await db
-    .select()
-    .from(products)
-    .where(eq(products.cycleId, fromCycleId))
-    .orderBy(products.sortOrder);
-  if (source.length === 0) throw new Error(t.errors.noProductsInSourceCycle);
-
-  await upsertCycleProducts(db, toCycleId, source);
-
-  await writeAudit(db, admin.email, "duplicate_products", "cycle", toCycleId, {
-    source: fromCycleId,
-    count: source.length,
-  });
-  revalidatePath("/admin");
-  revalidatePath("/ordine");
-  return { count: source.length };
-}
 
 export async function adminUpdateCycleProduct(
   productId: string,
@@ -1640,31 +1522,6 @@ export async function adminLoadFromCatalog(cycleId: string, catalogProductIds: s
   }
 }
 
-export async function adminCleanupIncompleteProducts(): Promise<{error?: string}> {
-  try {
-    const admin = await requireAdmin();
-    const db = getDb();
-
-    // A product is "incomplete" if its unit price is zero. We no longer
-    // treat a missing `unit` as incomplete: starting from v1.4.3 the admin
-    // form does not expose a Unità field anymore — the format string is
-    // the source of truth (e.g. "Sacco 2kg") and `price_per_kg` provides
-    // the optional reference price for weight-based items.
-
-    await db.delete(supplierProducts)
-      .where(eq(supplierProducts.unitPrice, "0"));
-
-    await db.delete(products)
-      .where(eq(products.unitPrice, "0"));
-    
-    await writeAudit(db, admin.email, "cleanup_incomplete_products", "catalog", "");
-    revalidatePath("/admin");
-    return {};
-  } catch (e) {
-    return { error: e instanceof Error ? e.message : t.errors.genericError };
-  }
-}
-
 export async function adminRemoveProductFromCycle(productId: string): Promise<{error?: string}> {
   try {
     const admin = await requireAdmin();
@@ -1729,7 +1586,8 @@ export async function adminPreviewDistintaImport(input: {
 > {
   try {
     await requireAdmin();
-    const buf = Buffer.from(input.fileBase64, "base64");
+    const { decodeUploadBase64 } = await import("@/lib/upload-limit");
+    const buf = decodeUploadBase64(input.fileBase64);
     const { parseSupplierDistinta } = await import("@/lib/csv/distinta-parser");
     const preview = await parseSupplierDistinta(buf, input.cycleId, input.fileName);
     return { ok: true, preview };
@@ -1760,7 +1618,8 @@ export async function adminApplyDistintaImport(input: {
 > {
   try {
     const admin = await requireAdmin();
-    const buf = Buffer.from(input.fileBase64, "base64");
+    const { decodeUploadBase64 } = await import("@/lib/upload-limit");
+    const buf = decodeUploadBase64(input.fileBase64);
     const { parseSupplierDistinta } = await import("@/lib/csv/distinta-parser");
     const preview = await parseSupplierDistinta(buf, input.cycleId, input.fileName);
     if (preview.errors.length > 0) {

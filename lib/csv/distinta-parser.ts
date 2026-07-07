@@ -61,7 +61,8 @@ type Collected = {
 // Reads a number out of a spreadsheet cell. Accepts native numbers, formula
 // results, strings with comma/dot decimals, and treats empty/null/missing
 // as 0. Returns null only when the value isn't parseable as a number.
-function readNumber(value: unknown): number | null {
+// Exported for testing.
+export function readNumber(value: unknown): number | null {
   if (value == null || value === "") return 0;
   if (typeof value === "number") return Number.isFinite(value) ? value : null;
   if (typeof value === "object" && value !== null) {
