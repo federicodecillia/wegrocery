@@ -836,6 +836,7 @@ export const it = {
     productsNotFoundOrInactive: "Prodotti non trovati o non attivi",
     fileMissing: "File mancante",
     fileEmptyOrUnreadable: "File vuoto o illeggibile",
+    fileTooLarge: (maxMb: number) => `Il file supera il limite di ${maxMb} MB.`,
     selectOrCreateSupplier: "Seleziona o crea un fornitore",
     mapNameAndPrice: "Mappa almeno le colonne Nome e Prezzo",
     supplierNameMissing: "Nome fornitore mancante",
