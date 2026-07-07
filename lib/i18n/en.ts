@@ -839,6 +839,7 @@ export const en: Strings = {
     productsNotFoundOrInactive: "Products not found or inactive",
     fileMissing: "File missing",
     fileEmptyOrUnreadable: "File empty or unreadable",
+    fileTooLarge: (maxMb: number) => `The file exceeds the ${maxMb} MB limit.`,
     selectOrCreateSupplier: "Select or create a supplier",
     mapNameAndPrice: "Map at least Name and Price columns",
     supplierNameMissing: "Supplier name missing",

@@ -11,6 +11,7 @@ import { buildProductTemplate, parseProductTemplate } from "@/lib/csv/product-te
 import { inspectListing, pickSupplierMatch, type ListingInspection } from "@/lib/csv/supplier-listing-parser";
 import { suggestMapping, TARGET_FIELDS, type TargetField } from "@/lib/csv/header-heuristics";
 import { upsertCycleProducts } from "@/lib/db/cycle-products";
+import { decodeUploadBase64 } from "@/lib/upload-limit";
 
 async function requireAdmin() {
   const session = await auth();
@@ -147,7 +148,7 @@ export async function adminImportProductsXlsx(supplierId: string, base64: string
     const now = new Date();
 
     if (!supplierId) return { error: t.errors.fieldRequired(t.fields.supplier) };
-    const buf = Buffer.from(base64, "base64");
+    const buf = decodeUploadBase64(base64);
     const rows = await parseProductTemplate(buf);
     if (rows.length === 0) return { error: t.errors.csvInvalid };
 
@@ -209,7 +210,7 @@ export async function adminInspectSupplierListing(
     await requireAdmin();
     if (!filename || !base64) return { error: t.errors.fileMissing };
 
-    const buf = Buffer.from(base64, "base64");
+    const buf = decodeUploadBase64(base64);
     const inspection = await inspectListing(buf, filename);
     if (!inspection.sheets.length) return { error: t.errors.fileEmptyOrUnreadable };
 

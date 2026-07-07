@@ -1672,7 +1672,8 @@ export async function adminPreviewDistintaImport(input: {
 > {
   try {
     await requireAdmin();
-    const buf = Buffer.from(input.fileBase64, "base64");
+    const { decodeUploadBase64 } = await import("@/lib/upload-limit");
+    const buf = decodeUploadBase64(input.fileBase64);
     const { parseSupplierDistinta } = await import("@/lib/csv/distinta-parser");
     const preview = await parseSupplierDistinta(buf, input.cycleId, input.fileName);
     return { ok: true, preview };
@@ -1703,7 +1704,8 @@ export async function adminApplyDistintaImport(input: {
 > {
   try {
     const admin = await requireAdmin();
-    const buf = Buffer.from(input.fileBase64, "base64");
+    const { decodeUploadBase64 } = await import("@/lib/upload-limit");
+    const buf = decodeUploadBase64(input.fileBase64);
     const { parseSupplierDistinta } = await import("@/lib/csv/distinta-parser");
     const preview = await parseSupplierDistinta(buf, input.cycleId, input.fileName);
     if (preview.errors.length > 0) {

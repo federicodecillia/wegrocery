@@ -108,8 +108,15 @@ export class OdsWorkbook {
   }
 }
 
+// Decompression-bomb guard: a tiny crafted .ods can declare a huge
+// content.xml. Any legit distinta re-save is well under this; entries over
+// the cap are skipped, which surfaces as "content.xml not found" below.
+const MAX_UNZIPPED_ENTRY_BYTES = 64 * 1024 * 1024;
+
 export function parseOds(buffer: Buffer): OdsWorkbook {
-  const files = unzipSync(new Uint8Array(buffer));
+  const files = unzipSync(new Uint8Array(buffer), {
+    filter: (f) => f.originalSize <= MAX_UNZIPPED_ENTRY_BYTES,
+  });
   const contentU8 = files["content.xml"];
   if (!contentU8) {
     throw new Error("content.xml not found — not a valid .ods file");
