@@ -1250,34 +1250,34 @@ export async function getSupplierStats(
     .groupBy(suppliers.supplierId, suppliers.name)
     .orderBy(sql`coalesce(sum(${effectiveLineTotal}), 0) desc`);
 
-  const stats = rows.map((r) => ({
+  // Top product per supplier in ONE grouped query instead of one query per
+  // supplier: DISTINCT ON keeps the first row per supplier under the ORDER
+  // BY, i.e. the product with the highest total quantity.
+  const topRows = await db
+    .selectDistinctOn([orderCycles.supplierId], {
+      supplierId: orderCycles.supplierId,
+      name: products.name,
+    })
+    .from(orders)
+    .innerJoin(products, eq(orders.productId, products.productId))
+    .innerJoin(orderCycles, eq(orders.cycleId, orderCycles.cycleId))
+    .where(
+      and(
+        isNotNull(orderCycles.supplierId),
+        eq(orderCycles.status, "closed"),
+        ...(nonEmpty(filters?.cycleIds) ? [inArray(orders.cycleId, filters!.cycleIds!)] : []),
+        ...(nonEmpty(filters?.memberIds) ? [inArray(orders.memberId, filters!.memberIds!)] : []),
+      ),
+    )
+    .groupBy(orderCycles.supplierId, products.name)
+    .orderBy(orderCycles.supplierId, sql`sum(${orders.quantity}) desc`);
+  const topBySupplier = new Map(topRows.map((r) => [r.supplierId, r.name]));
+
+  return rows.map((r) => ({
     supplierId: r.supplierId,
     name: r.name,
     cyclesCount: parseInt(r.cyclesCount as string) || 0,
     totalRevenue: parseFloat(r.totalRevenue as string) || 0,
-    topProductName: null as string | null,
+    topProductName: topBySupplier.get(r.supplierId) ?? null,
   }));
-
-  for (const s of stats) {
-    if (s.cyclesCount === 0) continue;
-    const [top] = await db
-      .select({ name: products.name, qty: sql<string>`sum(${orders.quantity})` })
-      .from(orders)
-      .innerJoin(products, eq(orders.productId, products.productId))
-      .innerJoin(orderCycles, eq(orders.cycleId, orderCycles.cycleId))
-      .where(
-        and(
-          eq(orderCycles.supplierId, s.supplierId),
-          eq(orderCycles.status, "closed"),
-          ...(nonEmpty(filters?.cycleIds) ? [inArray(orders.cycleId, filters!.cycleIds!)] : []),
-          ...(nonEmpty(filters?.memberIds) ? [inArray(orders.memberId, filters!.memberIds!)] : []),
-        ),
-      )
-      .groupBy(products.name)
-      .orderBy(sql`sum(${orders.quantity}) desc`)
-      .limit(1);
-    s.topProductName = top?.name ?? null;
-  }
-
-  return stats;
 }
