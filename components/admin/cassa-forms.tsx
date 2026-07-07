@@ -278,7 +278,7 @@ export function LedgerEntryRow({ entry }: { entry: LedgerEntry }) {
             type="text"
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            placeholder="nota"
+            placeholder={t.admin.treasury.noteLabel}
             className="flex-1 rounded-lg border border-brand-border px-2 py-1 text-[12px]"
           />
           <button

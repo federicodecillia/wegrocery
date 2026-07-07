@@ -248,7 +248,7 @@ export function CatalogProductForm({
           <label className={labelCls}>
             {t.admin.products.variantLabel}<FieldHelp text={HELP_FIELDS.varieta} />
           </label>
-          <input name="variant" defaultValue={product?.variant ?? ""} placeholder="es. Bio" className={inputCls} />
+          <input name="variant" defaultValue={product?.variant ?? ""} placeholder={t.admin.products.variantPlaceholder} className={inputCls} />
         </div>
         <div className="col-span-2 sm:col-span-2">
           <label className={labelCls}>

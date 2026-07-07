@@ -547,6 +547,7 @@ export const it = {
       filterAllSuppliers: "Tutti i fornitori",
       filterMembers: "Soci",
       filterAllMembers: "Tutti i soci",
+      searchFilter: (what: string) => `Cerca ${what}…`,
       removeFilters: "✕ Rimuovi filtri",
       deselectAll: "Deseleziona tutti",
       noFilterResults: "Nessun risultato",
