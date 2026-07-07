@@ -56,11 +56,12 @@ export function canAccessCycle(accessLevel: string, role: string | null | undefi
 
 const EMOJI_MAP: [RegExp, string][] = [
   // ── Frutta ────────────────────────────────────────────────────────
-  [/melanz|cocomero|anguria/i, "🍉"],
+  [/cocomero|anguria/i, "🍉"],
   [/melone/i, "🍈"],
   [/pesca|pesche/i, "🍑"],
   [/cilieg/i, "🍒"],
-  [/mela/i, "🍎"],          // MUST come after melanzana/melone
+  [/melanz/i, "🍆"],        // MUST come before mela (substring match); covers melanzana/melanzane
+  [/mela/i, "🍎"],
   [/pera/i, "🍐"],
   [/aranci/i, "🍊"],
   [/limone|cedro/i, "🍋"],
@@ -78,12 +79,11 @@ const EMOJI_MAP: [RegExp, string][] = [
   // ── Verdura ───────────────────────────────────────────────────────
   [/tomat|pomodo/i, "🍅"],
   [/avocado/i, "🥑"],
-  [/melanzana/i, "🍆"],
   [/patata/i, "🥔"],
   [/carota/i, "🥕"],
   [/mais/i, "🌽"],
   [/peperonc/i, "🌶️"],    // peperoncino before peperone
-  [/peperone/i, "🫑"],
+  [/peperon(?!c)/i, "🫑"], // peperone/peperoni/peperonata; excludes peperoncino
   [/cetriolo|zucchina/i, "🥒"],
   [/zucca/i, "🎃"],
   [/insalata|lattug|radicchio|spinac|sedano|finocchio|erbett|cicoria/i, "🥬"],
@@ -98,7 +98,8 @@ const EMOJI_MAP: [RegExp, string][] = [
   [/fagiolo|fagiolino|fava|lenticchia|pisello|cece/i, "🫘"],
   [/patatina|topinambur/i, "🥔"],
   // ── Cereali, pane, legumi ─────────────────────────────────────────
-  [/pane|focaccia|pizza|grano|farro|orzo|avena|riso/i, "🍞"],
+  [/riso\b|risotto/i, "🍚"],   // MUST come before pane's bare "riso" substring match
+  [/pane|focaccia|pizza|grano|farro|orzo|avena/i, "🍞"],
   [/pasta|spaghett|penne|rigatoni/i, "🍝"],
   // ── Prodotti animali ──────────────────────────────────────────────
   [/uov/i, "🥚"],
