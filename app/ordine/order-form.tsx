@@ -169,9 +169,19 @@ export function OrderForm({
         </p>
       </div>
 
+      {/* Empty catalog: the cycle is open but the admin hasn't loaded any
+          products yet. Same visual as page.tsx's no-open-cycle empty state. */}
+      {products.length === 0 && (
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <span className="mb-4 text-4xl">📦</span>
+          <h2 className="text-[18px] font-bold text-brand-near-black">{t.order.emptyCatalog}</h2>
+          <p className="mt-2 text-[14px] text-brand-gray">{t.order.emptyCatalogHint}</p>
+        </div>
+      )}
+
       {/* "Riproponi ultimo ordine" — visible only when the cart is empty
           so we never silently overwrite an in-progress order. */}
-      {!hasOrder && (
+      {products.length > 0 && !hasOrder && (
         <button
           type="button"
           onClick={handlePrefillFromLast}
