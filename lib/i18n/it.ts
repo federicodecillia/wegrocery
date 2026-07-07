@@ -800,8 +800,6 @@ export const it = {
     supplier: "Fornitore",
   },
   errors: {
-    noProductsInText: "Nessun prodotto trovato nel testo",
-    noProductsInSourceCycle: "Nessun prodotto nel ciclo sorgente",
     memberNotFound: "Socio non trovato",
     cycleNotOpen: "Il ciclo non è più aperto",
     accessDenied: "Non hai accesso a questo ciclo",
@@ -847,7 +845,6 @@ export const it = {
     supplierNameMissing: "Nome fornitore mancante",
     distintaReadError: "Errore lettura distinta",
     distintaGenerationError: "Errore generazione distinta",
-    importPreviewError: "Errore generazione anteprima",
     importApplyError: "Errore importazione",
     cannotDeleteMemberWithData: "Non è possibile eliminare un socio con ordini o movimenti. Disattivalo invece.",
     distintaSheetMissing: "Foglio Distinta mancante: verifica di aver caricato il file giusto.",

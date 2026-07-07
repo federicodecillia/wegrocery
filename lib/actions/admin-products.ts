@@ -9,7 +9,7 @@ import { supplierProducts, auditLog, suppliers } from "@/lib/db/schema";
 import { getProductEmoji, getProductEmojiOrNull, guessProductCategory } from "@/lib/utils";
 import { buildProductTemplate, parseProductTemplate } from "@/lib/csv/product-template";
 import { inspectListing, pickSupplierMatch, type ListingInspection } from "@/lib/csv/supplier-listing-parser";
-import { suggestMapping, TARGET_FIELDS, type TargetField } from "@/lib/csv/header-heuristics";
+import { suggestMapping, type TargetField } from "@/lib/csv/header-heuristics";
 import { upsertCycleProducts } from "@/lib/db/cycle-products";
 import { decodeUploadBase64 } from "@/lib/upload-limit";
 
@@ -189,7 +189,8 @@ export async function adminImportProductsXlsx(supplierId: string, base64: string
 // ────────────────────────────────────────────────────────────────────────────
 // Supplier listing wizard (free-form .xlsx / .csv → catalogue + optional cycle)
 //
-// Three actions: inspect (step 1), preview-diff (step 3 preview), apply (commit).
+// Two actions: inspect (step 1) and apply (commit); the diff preview between
+// the two is computed client-side by the wizard component.
 // The wizard component owns the UI state across the three steps; the server is
 // stateless and the client passes back whatever it needs (selected sheet,
 // mapping, supplier, emoji overrides).
@@ -250,12 +251,6 @@ export type WizardRow = {
   emojiAutoMatched: boolean;
   notes: string | null;
 };
-
-export type WizardDiffRow =
-  | { kind: "new"; row: WizardRow }
-  | { kind: "update_price"; row: WizardRow; oldPrice: string; catalogProductId: string }
-  | { kind: "skip_unchanged"; row: WizardRow; catalogProductId: string }
-  | { kind: "invalid"; index: number; raw: string[]; reason: string };
 
 export type WizardApplyInput = {
   supplier: { existingId?: string; newName?: string };
@@ -360,54 +355,6 @@ async function loadExistingCatalogForSupplier(supplierId: string) {
   const map = new Map<string, (typeof rows)[number]>();
   for (const r of rows) map.set(dedupKey(r.name, r.variant, r.format), r);
   return map;
-}
-
-export async function adminPreviewSupplierListingImport(
-  input: WizardApplyInput,
-): Promise<{ data?: { diff: WizardDiffRow[] }; error?: string }> {
-  try {
-    await requireAdmin();
-    if (!input.supplier.existingId && !input.supplier.newName?.trim()) {
-      return { error: t.errors.selectOrCreateSupplier };
-    }
-    if (input.mapping.name === undefined || input.mapping.unitPrice === undefined) {
-      return { error: t.errors.mapNameAndPrice };
-    }
-
-    const existing = input.supplier.existingId
-      ? await loadExistingCatalogForSupplier(input.supplier.existingId)
-      : new Map<string, { catalogProductId: string; unitPrice: string; name: string; variant: string | null; format: string | null }>();
-
-    const selected = new Set(input.selectedIndexes);
-    const diff: WizardDiffRow[] = [];
-    for (let i = 0; i < input.rows.length; i++) {
-      if (!selected.has(i)) continue;
-      const raw = input.rows[i];
-      const resolved = resolveRow(raw, i, input.columns, input.mapping, input.emojiOverrides[i]);
-      if (!resolved.ok) {
-        diff.push({ kind: "invalid", index: i, raw, reason: resolved.reason });
-        continue;
-      }
-      const row = resolved.row;
-      const key = dedupKey(row.name, row.variant, row.format);
-      const hit = existing.get(key);
-      if (!hit) {
-        diff.push({ kind: "new", row });
-      } else if (hit.unitPrice === row.unitPrice) {
-        diff.push({ kind: "skip_unchanged", row, catalogProductId: hit.catalogProductId });
-      } else {
-        diff.push({
-          kind: "update_price",
-          row,
-          oldPrice: hit.unitPrice,
-          catalogProductId: hit.catalogProductId,
-        });
-      }
-    }
-    return { data: { diff } };
-  } catch (e) {
-    return { error: e instanceof Error ? e.message : t.errors.importPreviewError };
-  }
 }
 
 export async function adminApplySupplierListingImport(
@@ -605,10 +552,4 @@ export async function adminApplySupplierListingImport(
   } catch (e) {
     return { error: e instanceof Error ? e.message : t.errors.importApplyError };
   }
-}
-
-// Helper used by the wizard UI to keep TARGET_FIELDS in sync without the
-// client having to import the heuristics module directly.
-export async function adminListImportTargetFields(): Promise<TargetField[]> {
-  return TARGET_FIELDS;
 }

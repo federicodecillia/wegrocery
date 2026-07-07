@@ -572,67 +572,6 @@ export async function adminUpdateCycle(
 
 // ── Prodotti ──────────────────────────────────────────────────────────────────
 
-function parseProductsText(text: string) {
-  return text
-    .split("\n")
-    .map((l) => l.trim())
-    .filter((l) => l && !l.startsWith("#"))
-    .map((line, idx) => {
-      const parts = line.split(";").map((p) => p.trim());
-      const name = parts[0] ?? "";
-      const rawPrice = (parts[3] ?? "0").replace(",", ".");
-      const unitPrice = parseFloat(rawPrice);
-      if (!name) throw new Error(`Riga ${idx + 1}: nome mancante`);
-      if (isNaN(unitPrice) || unitPrice < 0) throw new Error(`Riga ${idx + 1}: prezzo non valido`);
-      return {
-        name,
-        variant: parts[1] ?? "",
-        format: parts[2] ?? "",
-        unitPrice: unitPrice.toFixed(2),
-        supplier: parts[4] ?? "",
-        notes: parts[5] ?? "",
-        category: parts[6] ?? "",
-        unit: parts[7] ?? "",
-      };
-    });
-}
-
-export async function adminLoadProducts(cycleId: string, text: string) {
-  const admin = await requireAdmin();
-  const parsed = parseProductsText(text);
-  if (parsed.length === 0) throw new Error(t.errors.noProductsInText);
-
-  const db = getDb();
-  await upsertCycleProducts(db, cycleId, parsed);
-
-  await writeAudit(db, admin.email, "load_products", "cycle", cycleId, { count: parsed.length });
-  revalidatePath("/admin");
-  revalidatePath("/ordine");
-  return { count: parsed.length };
-}
-
-export async function adminDuplicateProducts(fromCycleId: string, toCycleId: string) {
-  const admin = await requireAdmin();
-  const db = getDb();
-
-  const source = await db
-    .select()
-    .from(products)
-    .where(eq(products.cycleId, fromCycleId))
-    .orderBy(products.sortOrder);
-  if (source.length === 0) throw new Error(t.errors.noProductsInSourceCycle);
-
-  await upsertCycleProducts(db, toCycleId, source);
-
-  await writeAudit(db, admin.email, "duplicate_products", "cycle", toCycleId, {
-    source: fromCycleId,
-    count: source.length,
-  });
-  revalidatePath("/admin");
-  revalidatePath("/ordine");
-  return { count: source.length };
-}
-
 export async function adminUpdateCycleProduct(
   productId: string,
   data: {
@@ -1578,31 +1517,6 @@ export async function adminLoadFromCatalog(cycleId: string, catalogProductIds: s
     revalidatePath("/ordine");
 
     return { count: selectedProducts.length };
-  } catch (e) {
-    return { error: e instanceof Error ? e.message : t.errors.genericError };
-  }
-}
-
-export async function adminCleanupIncompleteProducts(): Promise<{error?: string}> {
-  try {
-    const admin = await requireAdmin();
-    const db = getDb();
-
-    // A product is "incomplete" if its unit price is zero. We no longer
-    // treat a missing `unit` as incomplete: starting from v1.4.3 the admin
-    // form does not expose a Unità field anymore — the format string is
-    // the source of truth (e.g. "Sacco 2kg") and `price_per_kg` provides
-    // the optional reference price for weight-based items.
-
-    await db.delete(supplierProducts)
-      .where(eq(supplierProducts.unitPrice, "0"));
-
-    await db.delete(products)
-      .where(eq(products.unitPrice, "0"));
-    
-    await writeAudit(db, admin.email, "cleanup_incomplete_products", "catalog", "");
-    revalidatePath("/admin");
-    return {};
   } catch (e) {
     return { error: e instanceof Error ? e.message : t.errors.genericError };
   }
