@@ -65,6 +65,8 @@ export const en: Strings = {
     yourOrder: "Your order",
     noOpenOrders: "No open orders",
     noOpenOrdersHint: "Come back when the order is open.",
+    emptyCatalog: "Catalog in preparation",
+    emptyCatalogHint: "The order is open but products haven't been added yet. Check back soon.",
     reproposeLastOrder: "Repeat last order",
     totalOrder: "Order total",
     balanceAfter: "Balance after",

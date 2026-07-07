@@ -65,6 +65,8 @@ export const it = {
     yourOrder: "Il tuo ordine",
     noOpenOrders: "Nessun ordine aperto",
     noOpenOrdersHint: "Torna quando l'ordine sarà aperto.",
+    emptyCatalog: "Catalogo in preparazione",
+    emptyCatalogHint: "L'ordine è aperto ma i prodotti non sono ancora stati caricati. Riprova tra poco.",
     reproposeLastOrder: "Riproponi ultimo ordine",
     totalOrder: "Totale ordine",
     balanceAfter: "Saldo dopo",
