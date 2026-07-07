@@ -166,7 +166,7 @@ function MultiSelect({
               autoFocus
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder={`Cerca ${label.toLowerCase()}…`}
+              placeholder={t.admin.stats.searchFilter(label.toLowerCase())}
               className="w-full rounded-lg border border-brand-border px-2 py-1 text-[12px] focus:outline-none focus:ring-2 focus:ring-brand-orange/30"
             />
             {selected.length > 0 && (

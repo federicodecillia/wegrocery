@@ -551,6 +551,7 @@ export const en: Strings = {
       filterAllSuppliers: "All suppliers",
       filterMembers: "Members",
       filterAllMembers: "All members",
+      searchFilter: (what: string) => `Search ${what}…`,
       removeFilters: "✕ Remove filters",
       deselectAll: "Deselect all",
       noFilterResults: "No results",

@@ -212,7 +212,17 @@ export async function adminInspectSupplierListing(
     if (!filename || !base64) return { error: t.errors.fileMissing };
 
     const buf = decodeUploadBase64(base64);
-    const inspection = await inspectListing(buf, filename);
+    // A corrupted/mis-typed file makes ExcelJS throw with a raw English
+    // message; the wizard shows server errors as-is, so translate parse
+    // failures here instead of leaking the library string to the admin.
+    // (decodeUploadBase64 stays OUTSIDE the try: its size-cap error is
+    // already localized and must not be masked as "unreadable".)
+    let inspection: ListingInspection;
+    try {
+      inspection = await inspectListing(buf, filename);
+    } catch {
+      return { error: t.errors.fileEmptyOrUnreadable };
+    }
     if (!inspection.sheets.length) return { error: t.errors.fileEmptyOrUnreadable };
 
     const db = getDb();
