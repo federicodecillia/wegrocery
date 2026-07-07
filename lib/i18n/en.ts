@@ -794,8 +794,6 @@ export const en: Strings = {
     supplier: "Supplier",
   },
   errors: {
-    noProductsInText: "No products found in the text",
-    noProductsInSourceCycle: "No products in the source cycle",
     memberNotFound: "Member not found",
     cycleNotOpen: "The cycle is no longer open",
     accessDenied: "You don't have access to this cycle",
@@ -839,7 +837,6 @@ export const en: Strings = {
     supplierNameMissing: "Supplier name missing",
     distintaReadError: "Error reading order sheet",
     distintaGenerationError: "Error generating order sheet",
-    importPreviewError: "Error generating preview",
     importApplyError: "Import error",
     cannotDeleteMemberWithData: "Cannot delete a member with orders or movements. Deactivate instead.",
     distintaSheetMissing: "Order Sheet tab missing: make sure you uploaded the right file.",
