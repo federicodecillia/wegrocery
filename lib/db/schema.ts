@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   boolean,
   index,
@@ -6,6 +7,7 @@ import {
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 
 export const members = pgTable("members", {
@@ -96,7 +98,20 @@ export const products = pgTable(
     category: text("category"),
     emoji: text("emoji"),
   },
-  (table) => [index("products_cycle_id_idx").on(table.cycleId)],
+  (table) => [
+    index("products_cycle_id_idx").on(table.cycleId),
+    // DB-level twin of the app-side dedup in upsertCycleProducts: same
+    // identity key (lower/trimmed name|variant|format|unit, NULL ≡ ''),
+    // so two concurrent imports can't both pass the SELECT-then-INSERT
+    // check and land duplicate rows in the same cycle (issue #65).
+    uniqueIndex("products_cycle_identity_uniq").on(
+      table.cycleId,
+      sql`lower(trim(${table.name}))`,
+      sql`lower(trim(coalesce(${table.variant}, '')))`,
+      sql`lower(trim(coalesce(${table.format}, '')))`,
+      sql`lower(trim(coalesce(${table.unit}, '')))`,
+    ),
+  ],
 );
 
 export const orders = pgTable(
@@ -127,6 +142,14 @@ export const orders = pgTable(
   (table) => [
     index("orders_cycle_id_idx").on(table.cycleId),
     index("orders_member_id_idx").on(table.memberId),
+    // saveOrder writes at most one line per (member, cycle, product); this
+    // makes the DB reject any future write path that breaks that invariant
+    // instead of silently accumulating duplicate lines (issue #65).
+    uniqueIndex("orders_member_cycle_product_uniq").on(
+      table.memberId,
+      table.cycleId,
+      table.productId,
+    ),
   ],
 );
 
