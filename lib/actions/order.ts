@@ -45,12 +45,17 @@ export async function saveOrder(
   const now = new Date();
   const newLines = lines.filter((l) => l.quantity > 0);
 
-  await db
+  // The Neon HTTP driver has no session to hold BEGIN...COMMIT across separate
+  // round-trips, so delete + insert as two awaits could be interrupted between
+  // the two, silently leaving the member's order empty. db.batch() ships both
+  // statements in one HTTP request and Neon runs them in a single transaction,
+  // so they succeed or fail together.
+  const deleteExisting = db
     .delete(orders)
     .where(and(eq(orders.memberId, member.memberId), eq(orders.cycleId, cycleId)));
 
   if (newLines.length > 0) {
-    await db.insert(orders).values(
+    const insertNew = db.insert(orders).values(
       newLines.map((l) => {
         const product = productMap.get(l.productId);
         if (!product) throw new Error(t.errors.productNotFound(l.productId));
@@ -67,6 +72,9 @@ export async function saveOrder(
         };
       }),
     );
+    await db.batch([deleteExisting, insertNew]);
+  } else {
+    await deleteExisting;
   }
 
   const total = newLines.reduce((sum, l) => {
