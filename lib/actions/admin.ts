@@ -511,6 +511,7 @@ export async function adminUpdateCycle(
     const [before] = await db
       .select({
         status: orderCycles.status,
+        orderCloseAt: orderCycles.orderCloseAt,
         shippingMode: orderCycles.shippingMode,
         shippingCostPerMember: orderCycles.shippingCostPerMember,
         shippingTotal: orderCycles.shippingTotal,
@@ -519,6 +520,14 @@ export async function adminUpdateCycle(
       .where(eq(orderCycles.cycleId, cycleId))
       .limit(1);
     if (!before) return { error: t.errors.cycleNotFound };
+
+    // Re-arm the closing reminder only when the deadline actually moves — the
+    // open-cycle edit form re-sends orderCloseAt even for unrelated edits, so
+    // resetting unconditionally would re-fire an already-sent reminder.
+    const newCloseAt = data.orderCloseAt !== undefined ? new Date(data.orderCloseAt) : undefined;
+    const closeAtChanged =
+      newCloseAt !== undefined &&
+      newCloseAt.getTime() !== (before.orderCloseAt ? before.orderCloseAt.getTime() : NaN);
 
     const isClosed = before.status === "closed";
     const shippingTouched =
@@ -562,9 +571,8 @@ export async function adminUpdateCycle(
         }),
         ...(data.pickup2EndTime !== undefined && { pickup2EndTime: data.pickup2EndTime || null }),
         ...(data.orderCloseAt !== undefined && {
-          orderCloseAt: new Date(data.orderCloseAt),
-          // Moving the deadline re-arms the closing reminder for the new time.
-          closingReminderSentAt: null,
+          orderCloseAt: newCloseAt,
+          ...(closeAtChanged ? { closingReminderSentAt: null } : {}),
         }),
         ...(data.notes !== undefined && { notes: data.notes || null }),
         ...(data.supplierId !== undefined && { supplierId: data.supplierId || null }),

@@ -4,20 +4,10 @@
 
 import { canAccessCycle } from "@/lib/utils";
 
+// Length of the "closing soon" window. The cron route expresses the same
+// bound as a SQL predicate (order_close_at BETWEEN now and now + this); keeping
+// the constant here means both refer to a single source for the 2h.
 export const REMINDER_WINDOW_MS = 2 * 60 * 60 * 1000; // 2 hours
-
-// True when `orderCloseAt` is still in the future but within the reminder
-// window from `now` (i.e. (now, now + windowMs]). Null close → never.
-export function isInReminderWindow(
-  orderCloseAt: Date | null | undefined,
-  now: Date,
-  windowMs: number = REMINDER_WINDOW_MS,
-): boolean {
-  if (!orderCloseAt) return false;
-  const close = orderCloseAt.getTime();
-  const t = now.getTime();
-  return close > t && close <= t + windowMs;
-}
 
 export type MemberForTargeting = {
   memberId: string;

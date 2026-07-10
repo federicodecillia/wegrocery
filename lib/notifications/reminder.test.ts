@@ -1,39 +1,9 @@
 import { describe, it, expect } from "vitest";
 import {
-  REMINDER_WINDOW_MS,
-  isInReminderWindow,
   selectCycleAccessMembers,
   selectReminderTargets,
   type MemberForTargeting,
 } from "./reminder";
-
-const NOW = new Date("2026-07-09T12:00:00.000Z");
-
-describe("isInReminderWindow", () => {
-  it("is false for a null close date", () => {
-    expect(isInReminderWindow(null, NOW)).toBe(false);
-  });
-
-  it("is false when the cycle has already closed (close in the past)", () => {
-    expect(isInReminderWindow(new Date(NOW.getTime() - 60_000), NOW)).toBe(false);
-  });
-
-  it("is false at exactly now (close === now, not strictly future)", () => {
-    expect(isInReminderWindow(new Date(NOW.getTime()), NOW)).toBe(false);
-  });
-
-  it("is true for a close 90 minutes out", () => {
-    expect(isInReminderWindow(new Date(NOW.getTime() + 90 * 60_000), NOW)).toBe(true);
-  });
-
-  it("is true at exactly the window edge (close === now + window)", () => {
-    expect(isInReminderWindow(new Date(NOW.getTime() + REMINDER_WINDOW_MS), NOW)).toBe(true);
-  });
-
-  it("is false just beyond the window", () => {
-    expect(isInReminderWindow(new Date(NOW.getTime() + REMINDER_WINDOW_MS + 1), NOW)).toBe(false);
-  });
-});
 
 const members: MemberForTargeting[] = [
   { memberId: "m_admin", email: "a@x.it", role: "admin", active: true },
