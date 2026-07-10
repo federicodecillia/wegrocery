@@ -151,8 +151,12 @@ analytics dashboard is rendered with pure CSS and inline SVG.
   admin recreates products per cycle).
 - **"Next pickup" card** — promotes the most-asked information ("when do I
   pick up?") to a prominent home card with a days-until counter.
-- **In-app notifications** — bell icon with unread badge. Cycle-close
-  notifications deep-link straight to the relevant cycle in the history.
+- **Notifications with per-member preferences** — bell icon with unread
+  badge, deep links to the relevant cycle, and a settings page where each
+  member toggles app and email delivery per category (cycle opened, closing
+  reminder, order charge, order updates, wallet top-up). A scheduled job
+  emails a reminder two hours before a cycle closes to members who haven't
+  ordered yet.
 
 ### For admins
 - **Atomic cycle close** — uses a compare-and-swap `UPDATE ... RETURNING`
@@ -200,6 +204,7 @@ direct DB access and never receives sensitive credentials.
 | `orders` | Line items: `(memberId, cycleId, productId) → quantity` |
 | `ledger_entries` | Append-only balance log: top-ups, order charges, shipping |
 | `notifications` | Per-member or per-role messages with read-at timestamp |
+| `notification_preferences` | Sparse per-member channel toggles (absent row = code default) |
 | `audit_log` | Append-only trace of admin actions |
 | `suppliers` | Supplier registry |
 

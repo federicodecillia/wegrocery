@@ -218,6 +218,23 @@ All four emit `order_adjusted` or `order_corrected` notifications and `audit_log
 - Env vars added for notifications: `APP_BASE_URL` (email links) and `CRON_SECRET` (reminder cron auth). See `.env.example`.
 - **Email compliance**: these are low-volume service messages to a small private group, so the manage-preferences link in the footer is the opt-out; we intentionally do **not** set a `List-Unsubscribe` header. Revisit if the audience ever grows or messages become promotional.
 
+### Database environments & access (since 2026-07-10)
+
+- **Local dev runs on the Neon branch `dev`** (project `porta-moneta-app-gas`,
+  a copy-on-write child of `production`): `.env.local`'s `DATABASE_URL` points
+  there. The prod connection string lives ONLY in `.env.prod.local`, reserved
+  for migrations the user explicitly confirmed. Never point local dev at prod.
+- **Agent access**: Neon MCP (registered in `.mcp.json`, OAuth on first use)
+  or `neonctl` (machine-wide OAuth token). Agents operate autonomously on
+  non-prod branches; anything touching `production` needs Federico's explicit
+  per-operation confirmation.
+- **Refresh dev data on demand** (resets the branch to current prod — destroys
+  any test data on `dev`):
+  `npx -y neonctl branches reset dev --parent --project-id small-breeze-14972344 --org-id org-gentle-violet-55538692`
+- Vercel Preview deployments still use the **prod** `DATABASE_URL` (env set on
+  Production *and* Preview) — PR previews hit the live DB. Known gap until a
+  Neon↔Vercel branch-per-PR integration is set up.
+
 ### Production database access
 
 - **`vercel env pull` returns an empty string for `DATABASE_URL`, `AUTH_SECRET`,
