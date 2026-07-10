@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to the Porta Moneta GAS app are documented here.
+All notable changes to the WeGrocery app are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project loosely follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html):
@@ -15,6 +15,10 @@ and this project loosely follows [Semantic Versioning](https://semver.org/spec/v
 ---
 
 ## [Unreleased]
+
+---
+
+## [1.7.0] — 2026-07-10
 
 ### Added
 - **Notification preferences with an optional email channel.** A new settings page (bell → ⚙) lets each member choose, per category, whether to be notified in the app and/or by email: cycle opened, closing reminder, order charge, order updates, wallet top-up. In-app stays on by default for everything; email is off by default except for cycle openings. Two new notifications were added: one when a cycle opens (to everyone who can see that cycle) and a reminder two hours before a cycle closes (only to members who can see it and haven't ordered yet), the reminder sent by a scheduled job that runs every 15 minutes. Migrations `drizzle/0009_notification_preferences.sql` and `drizzle/0010_cycle_reminder.sql` (both additive) must be applied to the production and demo databases; the reminder job needs `CRON_SECRET` set on Vercel and as a GitHub Actions secret.
@@ -200,7 +204,8 @@ and this project loosely follows [Semantic Versioning](https://semver.org/spec/v
 
 ---
 
-[Unreleased]: https://github.com/federicodecillia/porta_moneta/compare/v1.6.0...HEAD
+[Unreleased]: https://github.com/federicodecillia/wegrocery/compare/v1.7.0...HEAD
+[1.7.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.7.0
 [1.6.0]: https://github.com/federicodecillia/porta_moneta/releases/tag/v1.6.0
 [1.5.0]: https://github.com/federicodecillia/porta_moneta/releases/tag/v1.5.0
 [1.4.5]: https://github.com/federicodecillia/porta_moneta/releases/tag/v1.4.5

@@ -1,6 +1,6 @@
 # Cosa è cambiato
 
-Tutte le modifiche importanti all'app Porta Moneta GAS sono elencate qui.
+Tutte le modifiche importanti all'app WeGrocery sono elencate qui.
 
 Il formato segue [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 e il versionamento è basato su [Semantic Versioning](https://semver.org/spec/v2.0.0.html):
@@ -15,6 +15,10 @@ e il versionamento è basato su [Semantic Versioning](https://semver.org/spec/v2
 ---
 
 ## [Non rilasciato]
+
+---
+
+## [1.7.0] — 10 luglio 2026
 
 ### Aggiunte
 - **Preferenze notifiche con canale email opzionale.** Una nuova pagina impostazioni (campanella → ⚙) permette a ogni socio di scegliere, per categoria, se essere avvisato nell'app e/o via email: apertura ciclo, promemoria chiusura, addebito ordine, modifiche all'ordine, accredito cassa. L'avviso in-app resta attivo di default per tutto; l'email è disattivata di default tranne che per l'apertura dei cicli. Sono state aggiunte due notifiche nuove: una all'apertura di un ciclo (a chi può vederlo) e un promemoria due ore prima della chiusura (solo ai soci che possono vederlo e non hanno ancora ordinato), inviato da un job schedulato che gira ogni 15 minuti. Le migrazioni `drizzle/0009_notification_preferences.sql` e `drizzle/0010_cycle_reminder.sql` (entrambe additive) vanno applicate al database di produzione e a quello demo; il job del promemoria richiede `CRON_SECRET` impostato su Vercel e come secret di GitHub Actions.
@@ -200,7 +204,8 @@ e il versionamento è basato su [Semantic Versioning](https://semver.org/spec/v2
 
 ---
 
-[Non rilasciato]: https://github.com/federicodecillia/porta_moneta/compare/v1.6.0...HEAD
+[Non rilasciato]: https://github.com/federicodecillia/wegrocery/compare/v1.7.0...HEAD
+[1.7.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.7.0
 [1.6.0]: https://github.com/federicodecillia/porta_moneta/releases/tag/v1.6.0
 [1.5.0]: https://github.com/federicodecillia/porta_moneta/releases/tag/v1.5.0
 [1.4.5]: https://github.com/federicodecillia/porta_moneta/releases/tag/v1.4.5

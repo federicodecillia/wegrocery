@@ -54,3 +54,6 @@ next-env.d.ts
 
 # Old clasp config backup
 .clasp.json.old
+
+# project-local MCP config (per-machine, not for the public repo)
+.mcp.json
