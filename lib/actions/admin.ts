@@ -4,12 +4,20 @@ import { revalidatePath } from "next/cache";
 import { eq, and, sql, inArray } from "drizzle-orm";
 import { auth } from "@/auth";
 import { t } from "@/lib/i18n";
-import { formatMoney } from "@/lib/i18n/format";
+import { formatMoney, formatDateTime } from "@/lib/i18n/format";
 import { brand } from "@/lib/brand";
 import { getDb } from "@/lib/db/client";
-import { auditLog, ledgerEntries, members, notifications, orderCycles, orders, products, suppliers, supplierProducts } from "@/lib/db/schema";
+import { auditLog, ledgerEntries, members, orderCycles, orders, products, suppliers, supplierProducts } from "@/lib/db/schema";
 import { upsertCycleProducts } from "@/lib/db/cycle-products";
 import { computeShippingShares, normalizeShippingMode, type ShippingMode } from "@/lib/shipping";
+import {
+  dispatchNotification,
+  dispatchToMembers,
+  dispatchWithBodies,
+  getMemberEmails,
+  getResolvedPreferences,
+} from "@/lib/notifications/dispatch";
+import { selectCycleAccessMembers } from "@/lib/notifications/reminder";
 
 async function requireAdmin(): Promise<{ email: string }> {
   const session = await auth();
@@ -39,31 +47,6 @@ async function writeAudit(
     entityId,
     payloadJson: payload != null ? JSON.stringify(payload) : null,
     createdAt: new Date(),
-  });
-}
-
-async function createNotification(
-  db: ReturnType<typeof getDb>,
-  data: {
-    memberId?: string | null;
-    role?: string | null;
-    type: string;
-    title: string;
-    body: string;
-    href?: string | null;
-    createdAt?: Date;
-  },
-) {
-  await db.insert(notifications).values({
-    notificationId: genId("not"),
-    memberId: data.memberId ?? null,
-    role: data.role ?? null,
-    type: data.type,
-    title: data.title,
-    body: data.body,
-    href: data.href ?? null,
-    readAt: null,
-    createdAt: data.createdAt ?? new Date(),
   });
 }
 
@@ -122,8 +105,43 @@ export async function adminCreateCycle(data: CreateCycleInput): Promise<{error?:
     });
 
     await writeAudit(db, admin.email, "create_cycle", "cycle", cycleId, data);
+
+    // Notify members who can see this cycle that it's open. Cycles are always
+    // created already-open (no scheduled opens), so this is the single emit
+    // point for cycle_opened. Kept independent of cycle creation: a delivery
+    // failure must not report the (already committed) cycle as failed.
+    try {
+      const accessLevel = data.accessLevel || "attivi";
+      const allMembers = await db
+        .select({
+          memberId: members.memberId,
+          email: members.email,
+          role: members.role,
+          active: members.active,
+        })
+        .from(members);
+      const recipients = selectCycleAccessMembers(allMembers, accessLevel);
+      await dispatchToMembers(
+        db,
+        recipients.map((m) => ({ memberId: m.memberId, email: m.email })),
+        {
+          type: "cycle_opened",
+          title: t.notificationsServer.cycleOpenedTitle,
+          body: t.notificationsServer.cycleOpenedBody(
+            data.title.trim(),
+            formatDateTime(new Date(data.orderCloseAt)),
+          ),
+          href: "/ordine",
+        },
+        now,
+      );
+    } catch (notifyError) {
+      console.error("[cycle_opened] dispatch failed:", notifyError);
+    }
+
     revalidatePath("/admin");
     revalidatePath("/");
+    revalidatePath("/notifiche");
     return {};
   } catch (e) {
     return { error: e instanceof Error ? e.message : t.errors.cycleCreationError };
@@ -232,33 +250,35 @@ async function performCycleClose(
           );
         }
 
-        await db.insert(notifications).values(
-          toInsert.map((r) => {
-            const orderTotal = parseFloat(r.total);
-            const shippingShare = shippingShares.get(r.memberId) ?? 0;
-            const totalCharged = orderTotal + shippingShare;
-            const body =
-              shippingShare > 0
-                ? t.notificationsServer.orderClosedBodyWithShipping(
-                    cycle.title,
-                    formatMoney(totalCharged),
-                    formatMoney(orderTotal),
-                    formatMoney(shippingShare),
-                  )
-                : t.notificationsServer.orderClosedBody(cycle.title, formatMoney(orderTotal));
-            return {
-              notificationId: genId("not"),
-              memberId: r.memberId,
-              role: null,
-              type: "order_closed",
-              title: t.notificationsServer.orderClosedTitle,
-              body,
-              href: `/storico?cycleId=${cycleId}`,
-              readAt: null,
-              createdAt: now,
-            };
-          }),
+        // One notification per charged member. Bodies differ per member (order
+        // + optional shipping), so dispatchWithBodies filters each member by
+        // their app/email channels for order_charge and batches both sends.
+        const emailByMember = await getMemberEmails(
+          db,
+          toInsert.map((r) => r.memberId),
         );
+        const items = toInsert.map((r) => {
+          const orderTotal = parseFloat(r.total);
+          const shippingShare = shippingShares.get(r.memberId) ?? 0;
+          const totalCharged = orderTotal + shippingShare;
+          const body =
+            shippingShare > 0
+              ? t.notificationsServer.orderClosedBodyWithShipping(
+                  cycle.title,
+                  formatMoney(totalCharged),
+                  formatMoney(orderTotal),
+                  formatMoney(shippingShare),
+                )
+              : t.notificationsServer.orderClosedBody(cycle.title, formatMoney(orderTotal));
+          return {
+            memberId: r.memberId,
+            email: emailByMember.get(r.memberId) ?? null,
+            title: t.notificationsServer.orderClosedTitle,
+            body,
+            href: `/storico?cycleId=${cycleId}`,
+          };
+        });
+        await dispatchWithBodies(db, items, "order_closed", now);
         chargesGenerated = toInsert.length;
       }
     } catch (e) {
@@ -408,6 +428,14 @@ async function recomputeShippingForClosedCycle(
   const now = new Date();
   const adjusted: string[] = [];
 
+  // Pre-fetch channels + emails once for every eligible member so the loop
+  // doesn't issue a preference query per member.
+  const eligibleIds = eligible.map((r) => r.memberId);
+  const [emailByMember, prefsByMember] = await Promise.all([
+    getMemberEmails(db, eligibleIds),
+    getResolvedPreferences(db, eligibleIds),
+  ]);
+
   for (const r of eligible) {
     const newShare = newShares.get(r.memberId) ?? 0;
     const prev = existingByMember.get(r.memberId);
@@ -438,13 +466,18 @@ async function recomputeShippingForClosedCycle(
       });
     }
 
-    await createNotification(db, {
-      memberId: r.memberId,
-      type: "order_adjusted",
-      title: `Spedizione "${cycle.title}" aggiornata`,
-      body: `Le spese di spedizione del ciclo "${cycle.title}" sono state aggiornate: la tua quota e' passata da ${formatMoney(oldShare)} a ${formatMoney(newShare)}.`,
-      href: "/storico",
-    });
+    await dispatchNotification(
+      db,
+      {
+        memberId: r.memberId,
+        memberEmail: emailByMember.get(r.memberId) ?? null,
+        type: "order_adjusted",
+        title: `Spedizione "${cycle.title}" aggiornata`,
+        body: `Le spese di spedizione del ciclo "${cycle.title}" sono state aggiornate: la tua quota e' passata da ${formatMoney(oldShare)} a ${formatMoney(newShare)}.`,
+        href: "/storico",
+      },
+      prefsByMember.get(r.memberId),
+    );
 
     adjusted.push(r.memberId);
   }
@@ -528,7 +561,11 @@ export async function adminUpdateCycle(
           pickup2Date: data.pickup2Date ? new Date(data.pickup2Date) : null,
         }),
         ...(data.pickup2EndTime !== undefined && { pickup2EndTime: data.pickup2EndTime || null }),
-        ...(data.orderCloseAt !== undefined && { orderCloseAt: new Date(data.orderCloseAt) }),
+        ...(data.orderCloseAt !== undefined && {
+          orderCloseAt: new Date(data.orderCloseAt),
+          // Moving the deadline re-arms the closing reminder for the new time.
+          closingReminderSentAt: null,
+        }),
         ...(data.notes !== undefined && { notes: data.notes || null }),
         ...(data.supplierId !== undefined && { supplierId: data.supplierId || null }),
         ...(data.accessLevel !== undefined && { accessLevel: data.accessLevel }),
@@ -628,7 +665,7 @@ export async function adminRecordTopup(
 
   const db = getDb();
   const [member] = await db
-    .select({ memberId: members.memberId })
+    .select({ memberId: members.memberId, email: members.email })
     .from(members)
     .where(eq(members.memberId, memberId))
     .limit(1);
@@ -654,8 +691,9 @@ export async function adminRecordTopup(
     .where(eq(ledgerEntries.memberId, memberId));
   const newBalance = parseFloat(balanceRow?.total ?? "0");
 
-  await createNotification(db, {
+  await dispatchNotification(db, {
     memberId,
+    memberEmail: member.email,
     type: "topup_received",
     title: t.notificationsServer.topupReceivedTitle,
     body: t.notificationsServer.topupReceivedBody(formatMoney(amount), formatMoney(newBalance)),
@@ -850,6 +888,7 @@ export async function adminUpdateOrderLineActuals(input: {
         orderLineId: orders.orderLineId,
         cycleId: orders.cycleId,
         memberId: orders.memberId,
+        memberEmail: members.email,
         quantity: orders.quantity,
         unitPriceSnapshot: orders.unitPriceSnapshot,
         lineTotal: orders.lineTotal,
@@ -863,6 +902,7 @@ export async function adminUpdateOrderLineActuals(input: {
       .from(orders)
       .innerJoin(products, eq(orders.productId, products.productId))
       .innerJoin(orderCycles, eq(orders.cycleId, orderCycles.cycleId))
+      .innerJoin(members, eq(orders.memberId, members.memberId))
       .where(eq(orders.orderLineId, input.orderLineId))
       .limit(1);
     if (!line) return { error: t.errors.orderLineNotFound };
@@ -950,8 +990,9 @@ export async function adminUpdateOrderLineActuals(input: {
       correctionAmount = delta;
 
       const direction = delta > 0 ? "rimborso" : "addebito aggiuntivo";
-      await createNotification(db, {
+      await dispatchNotification(db, {
         memberId: line.memberId,
+        memberEmail: line.memberEmail,
         type: "order_adjusted",
         title: `Ordine "${line.cycleTitle}" rettificato`,
         body: `${noteParts.join(" · ")} · ${direction} di ${formatMoney(Math.abs(delta))} EUR sul tuo saldo.`,
@@ -1026,7 +1067,7 @@ export async function adminEditClosedOrder(input: EditClosedOrderInput) {
   }
 
   const [member] = await db
-    .select({ memberId: members.memberId, fullName: members.fullName })
+    .select({ memberId: members.memberId, fullName: members.fullName, email: members.email })
     .from(members)
     .where(eq(members.memberId, input.memberId))
     .limit(1);
@@ -1146,8 +1187,9 @@ export async function adminEditClosedOrder(input: EditClosedOrderInput) {
         ? t.notificationsServer.orderModifiedBodyCharge(cycle.title, formatMoney(delta))
         : t.notificationsServer.orderModifiedBodyRefund(cycle.title, formatMoney(-delta));
 
-  await createNotification(db, {
+  await dispatchNotification(db, {
     memberId: input.memberId,
+    memberEmail: member.email,
     type: "order_corrected",
     title: t.notificationsServer.orderModifiedTitle,
     body: t.notificationsServer.orderModifiedBody(dirSentence, formatMoney(newBalance)),
@@ -1718,6 +1760,11 @@ export async function adminApplyDistintaImport(input: {
 
     // 3) Per-member roll-up notification (one extra notification on top of
     // the per-line ones from step 1 — gives the socio the full picture).
+    const affectedIds = [...affected];
+    const [distintaEmails, distintaPrefs] = await Promise.all([
+      getMemberEmails(db, affectedIds),
+      getResolvedPreferences(db, affectedIds),
+    ]);
     for (const memberId of affected) {
       const lineChanges = linesByMember.get(memberId) ?? [];
       const shipChange = shippingByMember.get(memberId);
@@ -1735,13 +1782,18 @@ export async function adminApplyDistintaImport(input: {
         );
       }
       if (bits.length === 0) continue;
-      await createNotification(db, {
-        memberId,
-        type: "order_adjusted",
-        title: t.notificationsServer.pesataRegistrataTitle,
-        body: bits.join(" "),
-        href: "/storico",
-      });
+      await dispatchNotification(
+        db,
+        {
+          memberId,
+          memberEmail: distintaEmails.get(memberId) ?? null,
+          type: "order_adjusted",
+          title: t.notificationsServer.pesataRegistrataTitle,
+          body: bits.join(" "),
+          href: "/storico",
+        },
+        distintaPrefs.get(memberId),
+      );
     }
 
     await writeAudit(

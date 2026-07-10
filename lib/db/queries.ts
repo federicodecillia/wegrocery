@@ -3,6 +3,7 @@ import { getDb } from "./client";
 import {
   ledgerEntries,
   members,
+  notificationPreferences,
   notifications,
   orderCycles,
   orders,
@@ -318,6 +319,28 @@ export async function getMemberNotifications(memberId: string, limit = 6): Promi
       .limit(limit);
   } catch (error) {
     console.error("Error fetching member notifications:", error);
+    return [];
+  }
+}
+
+// Raw stored preference rows for a member. Absent categories fall back to the
+// code defaults (see lib/notifications/categories.ts → resolvePreferences), so
+// this returns only the rows the member has explicitly changed.
+export async function getNotificationPreferences(
+  memberId: string,
+): Promise<{ category: string; appEnabled: boolean; emailEnabled: boolean }[]> {
+  const db = getDb();
+  try {
+    return await db
+      .select({
+        category: notificationPreferences.category,
+        appEnabled: notificationPreferences.appEnabled,
+        emailEnabled: notificationPreferences.emailEnabled,
+      })
+      .from(notificationPreferences)
+      .where(eq(notificationPreferences.memberId, memberId));
+  } catch (error) {
+    console.error("Error fetching notification preferences:", error);
     return [];
   }
 }

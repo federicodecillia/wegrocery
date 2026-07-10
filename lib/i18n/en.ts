@@ -108,6 +108,38 @@ export const en: Strings = {
     noNotificationsHint: "We'll notify you when there are updates on your order or balance.",
     unreadLabel: "Unread",
     unreadCountLabel: (n: number) => `${n} unread notifications`,
+    settings: {
+      title: "Notification preferences",
+      link: "Notification preferences",
+      intro: "Choose how you want to be notified for each type of notification.",
+      channelApp: "App",
+      channelEmail: "Email",
+      saved: "Preferences updated",
+      error: "Couldn't save preferences",
+      back: "Notifications",
+      categories: {
+        cycle_opened: {
+          label: "Cycle opened",
+          hint: "When a new order cycle opens.",
+        },
+        cycle_closing_reminder: {
+          label: "Closing reminder",
+          hint: "Two hours before a cycle closes, if you haven't ordered yet.",
+        },
+        order_charge: {
+          label: "Order charge",
+          hint: "When the cycle closes and your order is charged.",
+        },
+        order_updates: {
+          label: "Order updates",
+          hint: "When the admin adjusts your order or shipping.",
+        },
+        wallet_topup: {
+          label: "Wallet top-up",
+          hint: "When a top-up is recorded on your balance.",
+        },
+      },
+    },
   },
   login: {
     demoMessage: "Public demo: enter with one click, no registration required.",
@@ -786,6 +818,12 @@ export const en: Strings = {
     orderModifiedBody: (sentence: string, balance: string) =>
       `${sentence} New balance: ${balance}.`,
     pesataRegistrataTitle: "Supplier weighing recorded",
+    cycleOpenedTitle: "New cycle open",
+    cycleOpenedBody: (title: string, closeAt: string) =>
+      `A new order cycle is open: "${title}". It closes on ${closeAt}.`,
+    cycleClosingReminderTitle: "Cycle closing soon",
+    cycleClosingReminderBody: (title: string, closeAt: string) =>
+      `Cycle "${title}" closes on ${closeAt} and you haven't ordered yet. If you'd like to take part, do it now.`,
   },
   ledger: {
     orderCharge: "Order charge",
@@ -871,6 +909,10 @@ export const en: Strings = {
       `Product "${name}" is ambiguous (several products share the name) — row skipped.`,
   },
   email: {
+    notificationSubject: (appName: string, title: string) => `${appName} — ${title}`,
+    notificationCta: (url: string) => `Open in the app: ${url}`,
+    notificationManagePrefs: (url: string) => `Manage your notification preferences: ${url}`,
+    notificationFooter: (orgName: string) => orgName,
     supplierOrderSubject: (appName: string, cycleTitle: string) => `${appName} — ${cycleTitle}`,
     supplierOrderBody: (input: {
       appName: string;
