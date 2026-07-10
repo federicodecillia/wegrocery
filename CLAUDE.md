@@ -150,11 +150,17 @@ User interaction → Server Action ("use server") → auth check → DB mutation
 ### Notifications
 
 - Table `notifications`: `member_id | role | type | title | body | href | read_at | created_at`
-- Notification types emitted by `admin.ts`:
+- Notification types emitted by `admin.ts` / the cron route:
   - `order_closed` — cycle closure
   - `topup_received` — admin records a topup
   - `order_corrected` — admin edits a member's order via `adminEditClosedOrder`
   - `order_adjusted` — closed-cycle shipping recompute OR per-line "actual delivered" rectification
+  - `cycle_opened` — a cycle is created (always created already-open, so this is the single emit point, in `adminCreateCycle`)
+  - `cycle_closing_reminder` — sent ~2h before close by the reminder cron
+- **All emission goes through `lib/notifications/dispatch.ts`** (`dispatchNotification` for single members, `dispatchWithBodies` for per-member bodies like cycle close, `dispatchToMembers` for broadcasts). Never insert into `notifications` directly — dispatch is where channel preferences are honoured.
+- **Preferences** (`notification_preferences`, sparse: absent row = code default). Categories + defaults live in `lib/notifications/categories.ts`: `cycle_opened` (app+email on), and `cycle_closing_reminder` / `order_charge` / `order_updates` / `wallet_topup` (app on, email off). Members edit them at `/notifiche/impostazioni` (bell → ⚙) via `updateNotificationPreference`. Raw `type` values are unchanged in the DB; `categoryForType` maps them (unknown type → in-app only, never email).
+- **Cycle-open / reminder audience** is gated by `canAccessCycle(accessLevel, role)` (an admin-only cycle only notifies admins); balance-change notifications (charge/updates/top-up) are personal. The reminder excludes members who already ordered.
+- **Reminder cron**: `app/api/cron/cycle-reminders/route.ts` (bearer `CRON_SECRET`, bypasses the session middleware via the `api/cron` matcher exclusion), triggered by `.github/workflows/cycle-reminders.yml` every 15 min. Dedup via a compare-and-swap on `order_cycles.closing_reminder_sent_at`; `adminUpdateCycle` resets that column to NULL when the close deadline moves, re-arming the reminder.
 - `AppShell` fetches `getUnreadNotificationCount(memberId)` and passes it to `NotificationBell`
 - Bell in header → `/notifiche` page → `markNotificationRead` / `markAllNotificationsRead` Server Actions
 
@@ -208,6 +214,34 @@ All four emit `order_adjusted` or `order_corrected` notifications and `audit_log
 - Env vars: `RESEND_API_KEY`, `MAIL_FROM`. Without them the button toasts the missing-config error and the rest of the app keeps working.
 - Modules: `lib/email/resend.ts` (thin SDK wrapper, lazy env read), `lib/email/templates.ts` (Italian body), `lib/csv/distinta-builder.ts` (round-trip `.xlsx` distinta — products × members matrix with formulas, hidden `_meta` for re-import), `lib/csv/distinta-parser.ts` (reads the supplier-filled file, returns a diff preview). `lib/csv/supplier-export.ts` is kept as a legacy per-product CSV but no longer the default attachment.
 - Resend SDK detail: the `content` field on attachments base64-decodes strings — always pass a `Buffer`.
+- **Notification emails** reuse the same wrapper. `sendMailBatch` (in `resend.ts`) sends up to 100 one-off messages per Resend `batch.send` call (chunked internally) — used for cycle-close and broadcasts to sidestep the 2 req/s limit. `notificationEmail` (in `templates.ts`) wraps a notification's already-localized title/body with a CTA + a manage-preferences link; links need a base URL from `lib/email/base-url.ts` (`APP_BASE_URL`, falling back to `VERCEL_PROJECT_PRODUCTION_URL`; links omitted if neither is set). All notification email is fire-and-forget — a send failure is logged, never rolled back onto the caller's DB work — and `DEMO_MODE` blocks it like every other send.
+- Env vars added for notifications: `APP_BASE_URL` (email links) and `CRON_SECRET` (reminder cron auth). See `.env.example`.
+- **Email compliance**: these are low-volume service messages to a small private group, so the manage-preferences link in the footer is the opt-out; we intentionally do **not** set a `List-Unsubscribe` header. Revisit if the audience ever grows or messages become promotional.
+
+### Production database access
+
+- **`vercel env pull` returns an empty string for `DATABASE_URL`, `AUTH_SECRET`,
+  `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`.** These are marked *Sensitive* in the
+  Vercel project (not just *Encrypted*), and Sensitive values are unreadable
+  via CLI/API/dashboard after creation, by Vercel's own design — this is not a
+  permission problem to work around. Get the prod connection string from
+  **console.neon.tech** → the right project → *Connection Details* instead.
+- Both `porta-moneta` (prod) and `wegrocery-demo` live under the same Vercel
+  team/scope already used by the local CLI login (`vercel project ls` lists
+  both). `vercel link --project porta-moneta --yes` from a throwaway directory
+  (not this repo checkout, to avoid leaving the working copy linked to prod)
+  is enough if you need `vercel env ls` / non-Sensitive vars.
+- For a **surgical prod schema change** (e.g. adding a constraint), prefer a
+  small one-off script against `@neondatabase/serverless` with an explicit
+  pre-flight check over `npm run db:push` — `db:push` diffs the *entire*
+  schema against `schema.ts` and can pick up unintended drift on a DB you
+  haven't touched in a while. Real example (2026-07-07,
+  `drizzle/0008_unique_constraints.sql`): the pre-flight query in the
+  migration's header found a genuine duplicate (two "Kiwi" products in one
+  closed cycle, with real order lines attached) — resolved by merging the
+  order lines onto the surviving product row and deleting the duplicate
+  *before* creating the unique index. Never delete conflicting rows blindly;
+  a pre-flight hit is an app-level bug worth understanding first.
 
 ### Backup & Restore
 

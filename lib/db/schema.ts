@@ -5,6 +5,7 @@ import {
   integer,
   numeric,
   pgTable,
+  primaryKey,
   text,
   timestamp,
   uniqueIndex,
@@ -53,6 +54,10 @@ export const orderCycles = pgTable("order_cycles", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
   closedAt: timestamp("closed_at", { withTimezone: true }),
   supplierId: text("supplier_id").references(() => suppliers.supplierId),
+  // Set by the reminder cron (CAS from NULL) once the "closing soon" reminder
+  // has been sent for this cycle, so a later run doesn't resend it. Reset to
+  // NULL when the close deadline is moved, to re-arm the reminder.
+  closingReminderSentAt: timestamp("closing_reminder_sent_at", { withTimezone: true }),
 });
 
 export const supplierProducts = pgTable("supplier_products", {
@@ -204,4 +209,21 @@ export const notifications = pgTable(
     index("notifications_role_idx").on(table.role),
     index("notifications_created_at_idx").on(table.createdAt),
   ],
+);
+
+// Per-member, per-category notification channel preferences. Sparse: a missing
+// row means "use the default from lib/notifications/categories.ts". `category`
+// holds a NotificationCategory value; app/email gate the two delivery channels.
+export const notificationPreferences = pgTable(
+  "notification_preferences",
+  {
+    memberId: text("member_id")
+      .notNull()
+      .references(() => members.memberId, { onDelete: "cascade" }),
+    category: text("category").notNull(),
+    appEnabled: boolean("app_enabled").notNull(),
+    emailEnabled: boolean("email_enabled").notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.memberId, table.category] })],
 );

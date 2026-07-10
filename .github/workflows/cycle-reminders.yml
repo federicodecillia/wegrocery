@@ -1,0 +1,29 @@
+name: Cycle Closing Reminders
+
+# Pings the production reminder endpoint every 15 minutes. The endpoint sends
+# the "closing soon" notification for open cycles that close within the next
+# 2 hours (once per cycle, deduped server-side). Also runnable on demand.
+#
+# GitHub cron is best-effort (can lag several minutes and pauses after ~60 days
+# of repo inactivity); the endpoint's window predicate self-heals, so a delayed
+# run still delivers the reminder, just closer to the deadline.
+#
+# Required GitHub repository secret:
+#   - CRON_SECRET  must match CRON_SECRET on the Vercel production project.
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+jobs:
+  remind:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Trigger cycle-reminders endpoint
+        run: |
+          curl -fsS -X GET \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            https://gas.portamoneta.org/api/cron/cycle-reminders

@@ -108,6 +108,38 @@ export const it = {
     noNotificationsHint: "Ti avviseremo quando ci sono novità sull'ordine o sul saldo.",
     unreadLabel: "Non letta",
     unreadCountLabel: (n: number) => `${n} notifiche non lette`,
+    settings: {
+      title: "Preferenze notifiche",
+      link: "Preferenze notifiche",
+      intro: "Scegli come vuoi essere avvisato per ogni tipo di notifica.",
+      channelApp: "App",
+      channelEmail: "Email",
+      saved: "Preferenze aggiornate",
+      error: "Impossibile salvare le preferenze",
+      back: "Notifiche",
+      categories: {
+        cycle_opened: {
+          label: "Apertura ciclo",
+          hint: "Quando apre un nuovo ciclo d'ordine.",
+        },
+        cycle_closing_reminder: {
+          label: "Promemoria chiusura",
+          hint: "Due ore prima che chiuda un ciclo, se non hai ancora ordinato.",
+        },
+        order_charge: {
+          label: "Addebito ordine",
+          hint: "Quando il ciclo si chiude e ti viene addebitato l'ordine.",
+        },
+        order_updates: {
+          label: "Modifiche all'ordine",
+          hint: "Quando l'admin rettifica il tuo ordine o la spedizione.",
+        },
+        wallet_topup: {
+          label: "Accredito cassa",
+          hint: "Quando viene registrato un accredito sul tuo saldo.",
+        },
+      },
+    },
   },
   login: {
     demoMessage: "Demo pubblica: entra con un click, senza registrazione.",
@@ -787,6 +819,12 @@ export const it = {
     orderModifiedBody: (sentence: string, balance: string) =>
       `${sentence} Nuovo saldo: ${balance}.`,
     pesataRegistrataTitle: "Pesata fornitore registrata",
+    cycleOpenedTitle: "Nuovo ciclo aperto",
+    cycleOpenedBody: (title: string, closeAt: string) =>
+      `È aperto un nuovo ciclo d'ordine: "${title}". Chiude il ${closeAt}.`,
+    cycleClosingReminderTitle: "Il ciclo sta per chiudere",
+    cycleClosingReminderBody: (title: string, closeAt: string) =>
+      `Il ciclo "${title}" chiude il ${closeAt} e non hai ancora ordinato. Se vuoi partecipare, fallo ora.`,
   },
   ledger: {
     orderCharge: "Addebito ordine",
@@ -872,6 +910,10 @@ export const it = {
       `Prodotto "${name}" ambiguo (più prodotti con lo stesso nome) — riga saltata.`,
   },
   email: {
+    notificationSubject: (appName: string, title: string) => `${appName} — ${title}`,
+    notificationCta: (url: string) => `Apri nell'app: ${url}`,
+    notificationManagePrefs: (url: string) => `Gestisci le tue preferenze di notifica: ${url}`,
+    notificationFooter: (orgName: string) => orgName,
     supplierOrderSubject: (appName: string, cycleTitle: string) => `${appName} — ${cycleTitle}`,
     supplierOrderBody: (input: {
       appName: string;
