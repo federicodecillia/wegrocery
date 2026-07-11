@@ -21,6 +21,7 @@ e il versionamento è basato su [Semantic Versioning](https://semver.org/spec/v2
 - **Il promemoria di chiusura ora può arrivare fino a ~3 ore prima della chiusura del ciclo** (prima erano esattamente 2). La finestra più ampia garantisce che il job schedulato, che non gira a intervalli perfettamente regolari, non possa saltare il promemoria di un ciclo.
 
 ### Risolto
+- **Un ordine confermato nello stesso istante in cui l'admin chiude il ciclo non può più passare senza addebito.** Il salvataggio dell'ordine ora blocca il ciclo dentro la stessa transazione: una chiusura simultanea aspetta il salvataggio (e lo addebita) oppure il salvataggio viene rifiutato pulito con "il ciclo non è più aperto".
 - **Gli account disattivati non possono più operare con una sessione ancora aperta.** Salvare o precompilare un ordine e ogni azione admin ora ri-verificano il flag attivo a ogni richiesta invece di fidarsi del valore al momento del login. Le quantità dell'ordine vengono inoltre validate (numeri interi, limiti sensati) prima di scrivere qualsiasi cosa.
 - **Il riquadro "Novità" della Guida ora segue la lingua dell'app.** I deploy in inglese mostravano l'anteprima del changelog italiano; la pagina changelog dedicata col selettore IT/EN è invariata.
 - **La pagina 404 ora è tradotta e usa i colori del gruppo.** Entrambe le pagine di errore avevano colori fissi (e la 404 era solo in italiano), quindi i deploy white-label con un accent diverso avevano l'aspetto sbagliato proprio sulle pagine che scavalcano il tema.
