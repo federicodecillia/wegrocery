@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "db:push": "node --env-file=.env.local node_modules/drizzle-kit/bin.cjs push",
+    "db:migrate": "node --env-file=.env.local scripts/db-migrate.mjs",
     "db:studio": "node --env-file=.env.local node_modules/drizzle-kit/bin.cjs studio",
     "db:seed:demo": "node --env-file=.env.demo.local node_modules/tsx/dist/cli.mjs scripts/seed-demo.ts",
     "test": "vitest run"

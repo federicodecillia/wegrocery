@@ -231,9 +231,24 @@ All four emit `order_adjusted` or `order_corrected` notifications and `audit_log
 - **Refresh dev data on demand** (resets the branch to current prod — destroys
   any test data on `dev`):
   `npx -y neonctl branches reset dev --parent --project-id small-breeze-14972344 --org-id org-gentle-violet-55538692`
-- Vercel Preview deployments still use the **prod** `DATABASE_URL` (env set on
-  Production *and* Preview) — PR previews hit the live DB. Known gap until a
-  Neon↔Vercel branch-per-PR integration is set up.
+- **Vercel Preview deployments use the `dev` Neon branch** (since 2026-07-11:
+  `DATABASE_URL` has two entries on the porta-moneta project — Preview → dev
+  branch, Production → prod). PR previews share the dev branch with local dev;
+  both are throwaway (reset on demand). A per-PR Neon branch integration would
+  be a further upgrade, not required.
+- **Migrations** (since 2026-07-11, issue #85): `scripts/db-migrate.mjs` tracks
+  applied files in a `_migrations` table — the ledger is baselined on prod,
+  demo and dev. Flow for a schema change: write the next `drizzle/NNNN_*.sql`
+  (additive, idempotent), then run `npm run db:migrate` per environment
+  (defaults to `.env.local` = dev branch; target another DB with
+  `DATABASE_URL=… node scripts/db-migrate.mjs`). `--status` lists
+  applied/pending, `--baseline` records without executing. This replaces the
+  one-off-script convention; `db:push` remains for local schema iteration only.
+- **Integration tests against a real DB** (recipe, not wired into CI): create
+  a throwaway Neon branch, point the test run at it, delete it after —
+  `npx -y neonctl branches create --name test-x --parent production --project-id small-breeze-14972344 --org-id org-gentle-violet-55538692`
+  then `npx -y neonctl branches delete test-x …`. Cheap (copy-on-write) and
+  safe; the vitest suite itself stays pure by design.
 
 ### Production database access
 
