@@ -18,6 +18,8 @@ export const en: Strings = {
     emojiSearchPlaceholder: "Search: e.g. pomodoro, miele…", // catalog keywords stay Italian-only (lib/emoji-catalog.ts), so the example terms must too
     noEmojiFound: (query: string) => `No emoji found for "${query}".`,
     emojiCountOf: (shown: number, total: number) => `${shown} of ${total}`,
+    pageNotFound: "Page not found",
+    backToHome: "Back to Home",
   },
   nav: {
     home: "Home",
