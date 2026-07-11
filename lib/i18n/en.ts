@@ -128,7 +128,7 @@ export const en: Strings = {
         },
         cycle_closing_reminder: {
           label: "Closing reminder",
-          hint: "Two hours before a cycle closes, if you haven't ordered yet.",
+          hint: "When a cycle is about to close and you haven't ordered yet.",
         },
         order_charge: {
           label: "Order charge",

@@ -128,7 +128,7 @@ export const it = {
         },
         cycle_closing_reminder: {
           label: "Promemoria chiusura",
-          hint: "Due ore prima che chiuda un ciclo, se non hai ancora ordinato.",
+          hint: "Quando un ciclo sta per chiudere e non hai ancora ordinato.",
         },
         order_charge: {
           label: "Addebito ordine",
