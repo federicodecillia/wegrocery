@@ -11,9 +11,9 @@ export default async function GuidaPage() {
   const role = getUserRole(session);
 
   // Pull the most recent released version (skip the [Unreleased] block) for
-  // the teaser. The full history lives on /changelog. Italian is the default
-  // for the in-app surface; users can switch language on the dedicated page.
-  const versions = await loadChangelog("it");
+  // the teaser, in the deploy's locale — same default as /changelog, where
+  // users can still switch language explicitly.
+  const versions = await loadChangelog(brand.locale);
   const latest = versions.find((v) => v.date !== null) ?? null;
 
   return (
