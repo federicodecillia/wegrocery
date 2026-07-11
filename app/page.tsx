@@ -56,7 +56,7 @@ export default async function HomePage() {
         }`}
       >
         <div
-          className={`mb-[10px] font-mono text-[9px] font-semibold uppercase tracking-[0.13em] ${
+          className={`mb-[10px] font-mono text-[10px] font-semibold uppercase tracking-[0.13em] ${
             isNegative ? "text-brand-red" : "text-brand-orange"
           }`}
         >
@@ -77,7 +77,7 @@ export default async function HomePage() {
           }`}
         >
           <div className="flex-1 bg-white/60 p-[9px_13px]">
-            <div className="mb-[3px] font-mono text-[9px] uppercase tracking-[0.07em] text-[#a07020]">
+            <div className="mb-[3px] font-mono text-[10px] uppercase tracking-[0.07em] text-[#a07020]">
               {t.home.thisOrder}
             </div>
             <div className="font-mono text-[13px] font-bold text-brand-near-black">
@@ -89,7 +89,7 @@ export default async function HomePage() {
               isNegative ? "border-l border-[#f9c8c8]" : "border-l border-brand-orange-mid"
             }`}
           >
-            <div className="mb-[3px] font-mono text-[9px] uppercase tracking-[0.07em] text-[#a07020]">
+            <div className="mb-[3px] font-mono text-[10px] uppercase tracking-[0.07em] text-[#a07020]">
               {t.home.afterOrder}
             </div>
             <div
@@ -138,7 +138,7 @@ export default async function HomePage() {
               {myLines.length > 0 ? (
                 <div className="overflow-hidden rounded-[18px] border border-brand-border bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
                   <div className="flex items-center justify-between border-b border-brand-border px-4 py-[14px]">
-                    <span className="font-mono text-[9px] uppercase tracking-[0.1em] text-brand-gray">
+                    <span className="font-mono text-[10px] uppercase tracking-[0.1em] text-brand-gray">
                       {t.home.yourOrder}
                     </span>
                     <Link
@@ -214,7 +214,7 @@ export default async function HomePage() {
       {recentMovements.length > 0 && (
         <div className="mt-[4px]">
           <div className="mb-[10px] flex items-center justify-between">
-            <span className="font-mono text-[9px] uppercase tracking-[0.1em] text-brand-gray">
+            <span className="font-mono text-[10px] uppercase tracking-[0.1em] text-brand-gray">
               {t.home.recentMovements}
             </span>
             <Link

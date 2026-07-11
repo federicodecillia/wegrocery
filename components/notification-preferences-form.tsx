@@ -91,7 +91,7 @@ function ChannelToggle({
 }) {
   return (
     <label className="flex w-[52px] cursor-pointer flex-col items-center gap-1 py-1">
-      <span className="font-mono text-[9px] font-bold uppercase tracking-wider text-brand-gray-light">
+      <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-brand-gray-light">
         {label}
       </span>
       <input

@@ -97,7 +97,7 @@ export function CycleCountdown({ title, orderCloseAt, orderOpenAt, pickupDate, p
             <div className="font-mono text-[22px] font-semibold leading-none text-brand-near-black">
               {num}
             </div>
-            <div className="mt-[3px] font-mono text-[9px] uppercase tracking-[0.08em] text-brand-gray-light">
+            <div className="mt-[3px] font-mono text-[10px] uppercase tracking-[0.08em] text-brand-gray-light">
               {unit}
             </div>
           </div>

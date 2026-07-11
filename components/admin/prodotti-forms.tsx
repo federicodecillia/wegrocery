@@ -730,7 +730,7 @@ export function CatalogManager({
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <span className="truncate text-[13px] font-medium text-brand-near-black">{p.name}</span>
-                  {!p.active && <span className="rounded bg-brand-gray-light px-1 py-0.5 text-[9px] font-bold uppercase text-brand-gray">{t.admin.products.archivedBadge}</span>}
+                  {!p.active && <span className="rounded bg-brand-gray-light px-1 py-0.5 text-[10px] font-bold uppercase text-brand-gray">{t.admin.products.archivedBadge}</span>}
                 </div>
                 <div className="flex items-center gap-2 text-[11px] text-brand-gray">
                   {p.variant && <span>{p.variant}</span>}

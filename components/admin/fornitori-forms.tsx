@@ -417,7 +417,7 @@ export function FornitoriList({
                       <div className="flex items-center gap-2">
                         <span className="text-[13px] font-semibold text-brand-near-black">{s.name}</span>
                         {!s.active && (
-                          <span className="rounded-full bg-black/[0.05] px-1.5 py-0.5 text-[9px] font-bold text-brand-gray">
+                          <span className="rounded-full bg-black/[0.05] px-1.5 py-0.5 text-[10px] font-bold text-brand-gray">
                             {t.admin.suppliers.archivedBadge}
                           </span>
                         )}
@@ -470,7 +470,7 @@ export function FornitoriList({
                       {/* Catalog Section */}
                       <div className="mb-4">
                         <div className="mb-2 flex items-center justify-between">
-                          <p className="font-mono text-[9px] uppercase tracking-wider text-brand-gray-light">
+                          <p className="font-mono text-[10px] uppercase tracking-wider text-brand-gray-light">
                             {t.admin.suppliers.catalogLabel}
                           </p>
                           <button

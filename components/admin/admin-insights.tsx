@@ -71,7 +71,7 @@ function InsightCard({
       className={`block rounded-xl border p-2.5 transition-transform active:scale-[0.98] ${toneClasses}`}
     >
       <div className="mb-0.5 flex items-center justify-between gap-1">
-        <span className="font-mono text-[8px] uppercase tracking-wide text-brand-gray">
+        <span className="font-mono text-[10px] uppercase tracking-wide text-brand-gray">
           {label}
         </span>
         <span className="text-[13px] leading-none">{icon}</span>
@@ -82,7 +82,7 @@ function InsightCard({
         {value}
       </div>
       {hint && (
-        <div className="mt-0.5 truncate font-mono text-[8px] text-brand-gray-light">
+        <div className="mt-0.5 truncate font-mono text-[10px] text-brand-gray-light">
           {hint}
         </div>
       )}

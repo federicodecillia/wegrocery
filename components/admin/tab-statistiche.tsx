@@ -132,7 +132,7 @@ function OverviewCards({
           }`}
         >
           <div className="mb-1 flex items-center justify-between">
-            <span className="font-mono text-[9px] uppercase tracking-wide text-brand-gray">
+            <span className="font-mono text-[10px] uppercase tracking-wide text-brand-gray">
               {c.label}
             </span>
             <span className="text-[16px] leading-none">{c.icon}</span>
@@ -141,7 +141,7 @@ function OverviewCards({
             {c.value}
           </div>
           {c.hint && (
-            <div className="mt-0.5 truncate font-mono text-[9px] text-brand-gray-light">
+            <div className="mt-0.5 truncate font-mono text-[10px] text-brand-gray-light">
               {c.hint}
             </div>
           )}
@@ -208,7 +208,7 @@ function ProductRankingsCard({
                         style={{ width: `${widthPct}%` }}
                       />
                     </div>
-                    <div className="mt-0.5 flex justify-between font-mono text-[9px] text-brand-gray-light">
+                    <div className="mt-0.5 flex justify-between font-mono text-[10px] text-brand-gray-light">
                       <span>{t.admin.stats.cyclesCountLabel(r.cyclesCount)}</span>
                       <span>{formatEur(r.totalAmount)}</span>
                     </div>
@@ -323,25 +323,25 @@ function RevenueTrendCard({
             </circle>
           ))}
         </svg>
-        <div className="mt-2 flex justify-between font-mono text-[9px] text-brand-gray-light">
+        <div className="mt-2 flex justify-between font-mono text-[10px] text-brand-gray-light">
           <span>{trend[0].title}</span>
           <span>{trend[trend.length - 1].title}</span>
         </div>
         <div className="mt-2 grid grid-cols-3 gap-2 text-center">
           <div>
-            <div className="font-mono text-[9px] uppercase text-brand-gray-light">{t.admin.stats.trendLast}</div>
+            <div className="font-mono text-[10px] uppercase text-brand-gray-light">{t.admin.stats.trendLast}</div>
             <div className="font-mono text-[12px] font-bold text-brand-near-black">
               {formatEur(lastPoint.total)}
             </div>
           </div>
           <div>
-            <div className="font-mono text-[9px] uppercase text-brand-gray-light">{t.admin.stats.trendMax}</div>
+            <div className="font-mono text-[10px] uppercase text-brand-gray-light">{t.admin.stats.trendMax}</div>
             <div className="font-mono text-[12px] font-bold text-brand-near-black">
               {formatEur(maxVal)}
             </div>
           </div>
           <div>
-            <div className="font-mono text-[9px] uppercase text-brand-gray-light">{t.admin.stats.trendAvg}</div>
+            <div className="font-mono text-[10px] uppercase text-brand-gray-light">{t.admin.stats.trendAvg}</div>
             <div className="font-mono text-[12px] font-bold text-brand-near-black">
               {formatEur(trend.reduce((s, p) => s + p.total, 0) / trend.length)}
             </div>
@@ -389,7 +389,7 @@ function SupplierStatsCard({
                     style={{ width: `${widthPct}%` }}
                   />
                 </div>
-                <div className="mt-0.5 flex justify-between font-mono text-[9px] text-brand-gray-light">
+                <div className="mt-0.5 flex justify-between font-mono text-[10px] text-brand-gray-light">
                   <span>{t.admin.stats.cyclesCountLabel(s.cyclesCount)}</span>
                   {s.topProductName && <span>{t.admin.stats.supplierTopProduct(s.topProductName)}</span>}
                 </div>
@@ -427,19 +427,19 @@ function MemberParticipationCard({
       <CardBody>
         <div className="mb-3 grid grid-cols-3 gap-2 text-center">
           <div className="rounded-lg bg-brand-teal-light p-2">
-            <div className="font-mono text-[9px] uppercase text-brand-teal">{t.admin.stats.participationActive}</div>
+            <div className="font-mono text-[10px] uppercase text-brand-teal">{t.admin.stats.participationActive}</div>
             <div className="text-[18px] font-black text-brand-near-black">{heavy.length}</div>
-            <div className="font-mono text-[9px] text-brand-gray-light">{t.admin.stats.participationActiveHint}</div>
+            <div className="font-mono text-[10px] text-brand-gray-light">{t.admin.stats.participationActiveHint}</div>
           </div>
           <div className="rounded-lg bg-brand-orange-light p-2">
-            <div className="font-mono text-[9px] uppercase text-brand-orange">{t.admin.stats.participationOccasional}</div>
+            <div className="font-mono text-[10px] uppercase text-brand-orange">{t.admin.stats.participationOccasional}</div>
             <div className="text-[18px] font-black text-brand-near-black">{occasional.length}</div>
-            <div className="font-mono text-[9px] text-brand-gray-light">{t.admin.stats.participationOccasionalHint}</div>
+            <div className="font-mono text-[10px] text-brand-gray-light">{t.admin.stats.participationOccasionalHint}</div>
           </div>
           <div className="rounded-lg bg-black/[0.05] p-2">
-            <div className="font-mono text-[9px] uppercase text-brand-gray">{t.admin.stats.participationDormant}</div>
+            <div className="font-mono text-[10px] uppercase text-brand-gray">{t.admin.stats.participationDormant}</div>
             <div className="text-[18px] font-black text-brand-near-black">{dormant.length}</div>
-            <div className="font-mono text-[9px] text-brand-gray-light">{t.admin.stats.participationDormantHint}</div>
+            <div className="font-mono text-[10px] text-brand-gray-light">{t.admin.stats.participationDormantHint}</div>
           </div>
         </div>
 

@@ -287,7 +287,7 @@ export function EditClosedOrderModal({ cycleId, cycleTitle, mode, onClose, onSav
         <div className="border-t border-brand-border bg-white p-4">
           <div className="mb-3 grid grid-cols-3 gap-2 text-center">
             <div>
-              <div className="font-mono text-[9px] uppercase tracking-wide text-brand-gray-light">
+              <div className="font-mono text-[10px] uppercase tracking-wide text-brand-gray-light">
                 {t.admin.editClosedOrder.beforeLabel}
               </div>
               <div className="font-mono text-[13px] font-bold text-brand-gray">
@@ -295,7 +295,7 @@ export function EditClosedOrderModal({ cycleId, cycleTitle, mode, onClose, onSav
               </div>
             </div>
             <div>
-              <div className="font-mono text-[9px] uppercase tracking-wide text-brand-gray-light">
+              <div className="font-mono text-[10px] uppercase tracking-wide text-brand-gray-light">
                 {t.admin.editClosedOrder.afterLabel}
               </div>
               <div className="font-mono text-[13px] font-bold text-brand-near-black">
@@ -303,7 +303,7 @@ export function EditClosedOrderModal({ cycleId, cycleTitle, mode, onClose, onSav
               </div>
             </div>
             <div>
-              <div className="font-mono text-[9px] uppercase tracking-wide text-brand-gray-light">
+              <div className="font-mono text-[10px] uppercase tracking-wide text-brand-gray-light">
                 {t.admin.editClosedOrder.deltaLabel}
               </div>
               <div

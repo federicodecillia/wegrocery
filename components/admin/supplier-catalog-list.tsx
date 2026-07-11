@@ -229,7 +229,7 @@ export function SupplierCatalogList({
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="text-[13px] font-bold text-brand-near-black">{product.name}</span>
                         {!product.active && (
-                          <span className="rounded bg-brand-gray-light px-1 py-0.5 text-[9px] font-bold uppercase text-brand-gray">
+                          <span className="rounded bg-brand-gray-light px-1 py-0.5 text-[10px] font-bold uppercase text-brand-gray">
                             {t.admin.products.archivedBadge}
                           </span>
                         )}

@@ -38,7 +38,7 @@ export function CassaSummaryCards({
   const total = (
     <div className="rounded-xl border border-brand-teal/20 bg-brand-teal-light p-3">
       <div className="mb-0.5 flex items-center justify-between">
-        <span className="font-mono text-[9px] uppercase tracking-wide text-brand-gray">
+        <span className="font-mono text-[10px] uppercase tracking-wide text-brand-gray">
           {t.admin.treasury.totalBalance}
         </span>
         <span className="text-[14px] leading-none">💰</span>
@@ -50,7 +50,7 @@ export function CassaSummaryCards({
       >
         {formatEur(totalBalance)}
       </div>
-      <div className="mt-0.5 font-mono text-[9px] text-brand-gray-light">
+      <div className="mt-0.5 font-mono text-[10px] text-brand-gray-light">
         {t.admin.treasury.activeMembersHint}
       </div>
     </div>
@@ -59,7 +59,7 @@ export function CassaSummaryCards({
   const avg = (
     <div className="rounded-xl border border-brand-border bg-white p-3">
       <div className="mb-0.5 flex items-center justify-between">
-        <span className="font-mono text-[9px] uppercase tracking-wide text-brand-gray">
+        <span className="font-mono text-[10px] uppercase tracking-wide text-brand-gray">
           {t.admin.treasury.avgBalance}
         </span>
         <span className="text-[14px] leading-none">📊</span>
@@ -71,7 +71,7 @@ export function CassaSummaryCards({
       >
         {formatEur(avgBalance)}
       </div>
-      <div className="mt-0.5 font-mono text-[9px] text-brand-gray-light">
+      <div className="mt-0.5 font-mono text-[10px] text-brand-gray-light">
         {t.admin.treasury.perActiveMember}
       </div>
     </div>
@@ -92,7 +92,7 @@ export function CassaSummaryCards({
       }`}
     >
       <div className="mb-0.5 flex items-center justify-between">
-        <span className="font-mono text-[9px] uppercase tracking-wide text-brand-gray">
+        <span className="font-mono text-[10px] uppercase tracking-wide text-brand-gray">
           {t.admin.treasury.negativeBalance}
         </span>
         <span className="text-[14px] leading-none">💸</span>
@@ -100,7 +100,7 @@ export function CassaSummaryCards({
       <div className="text-[18px] font-black tracking-[-0.02em] text-brand-near-black">
         {negativeCount}
       </div>
-      <div className="mt-0.5 font-mono text-[9px] text-brand-gray-light">
+      <div className="mt-0.5 font-mono text-[10px] text-brand-gray-light">
         {isActive ? t.admin.treasury.filterActive : t.admin.treasury.filterHint}
       </div>
     </button>
@@ -303,7 +303,7 @@ export function LedgerEntryRow({ entry }: { entry: LedgerEntry }) {
     <div className="flex items-center justify-between px-4 py-2.5">
       <div className="min-w-0 flex-1">
         <span
-          className={`mr-2 rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase ${
+          className={`mr-2 rounded-full px-1.5 py-0.5 text-[10px] font-bold uppercase ${
             isTopup
               ? "bg-brand-teal-light text-brand-teal"
               : isCharge

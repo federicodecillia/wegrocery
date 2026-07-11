@@ -602,7 +602,7 @@ function Step3Review({
                       onChange={(v) => setEmojiOverrides({ ...emojiOverrides, [i]: v })}
                     />
                     {!override && !auto && (
-                      <div className="text-[9px] text-brand-red">{t.admin.importWizard.emojiNotAuto}</div>
+                      <div className="text-[10px] text-brand-red">{t.admin.importWizard.emojiNotAuto}</div>
                     )}
                   </td>
                   <td className="p-2 align-middle font-semibold">{name || <em className="text-brand-red">{t.admin.importWizard.emptyName}</em>}</td>
@@ -611,7 +611,7 @@ function Step3Review({
                     {guessedCategory ? (
                       <span>
                         {guessedCategory}
-                        {!fileCategory && <span className="ml-1 text-[9px] text-brand-orange">{t.admin.importWizard.autoCategory}</span>}
+                        {!fileCategory && <span className="ml-1 text-[10px] text-brand-orange">{t.admin.importWizard.autoCategory}</span>}
                       </span>
                     ) : (
                       <span className="text-brand-gray-light">—</span>
@@ -665,7 +665,7 @@ function PreviewTable({
                 <th key={i} className="p-2 text-left">
                   <div className="font-semibold text-brand-near-black">{c || t.admin.importWizard.columnPlaceholder(i + 1)}</div>
                   {hi && (
-                    <div className="font-mono text-[9px] uppercase text-brand-orange">
+                    <div className="font-mono text-[10px] uppercase text-brand-orange">
                       → {TARGET_LABEL[hi as TargetField]}
                     </div>
                   )}

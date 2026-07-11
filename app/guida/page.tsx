@@ -46,7 +46,7 @@ export default async function GuidaPage() {
         <section className="mb-6 overflow-hidden rounded-[18px] border border-brand-orange-mid bg-brand-orange-light">
           <div className="flex items-baseline justify-between gap-2 border-b border-brand-orange-mid/40 px-[18px] py-3">
             <div>
-              <div className="font-mono text-[9px] uppercase tracking-[0.13em] text-brand-orange">
+              <div className="font-mono text-[10px] uppercase tracking-[0.13em] text-brand-orange">
                 {t.guide.newsTitle} · v{latest.version}
               </div>
               <h2 className="mt-0.5 text-[15px] font-black tracking-[-0.01em] text-brand-near-black">

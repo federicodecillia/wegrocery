@@ -200,7 +200,7 @@ export function OrderForm({
       {groups.map(({ category, products: prods }) => (
         <div key={category}>
           {category && (
-            <div className="pt-4 pb-2 font-mono text-[9px] uppercase tracking-[0.10em] text-brand-gray-light">
+            <div className="pt-4 pb-2 font-mono text-[10px] uppercase tracking-[0.10em] text-brand-gray-light">
               {category === "Altro" ? t.order.otherCategory : category}
             </div>
           )}
@@ -276,7 +276,7 @@ export function OrderForm({
           <div className="border-t border-brand-border bg-brand-warm-white/97 px-5 py-3.5 backdrop-blur-sm">
             <div className="mb-3 flex items-end justify-between">
               <div>
-                <div className="font-mono text-[9px] uppercase tracking-[0.09em] text-brand-gray-light">
+                <div className="font-mono text-[10px] uppercase tracking-[0.09em] text-brand-gray-light">
                   {t.order.totalOrder}
                 </div>
                 <div className="mt-[2px] text-[24px] font-black tracking-[-0.03em] text-brand-near-black">
@@ -284,7 +284,7 @@ export function OrderForm({
                 </div>
               </div>
               <div className="text-right">
-                <div className="font-mono text-[9px] uppercase tracking-[0.09em] text-brand-gray-light">
+                <div className="font-mono text-[10px] uppercase tracking-[0.09em] text-brand-gray-light">
                   {t.order.balanceAfter}
                 </div>
                 <div

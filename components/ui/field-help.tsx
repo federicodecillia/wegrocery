@@ -40,7 +40,7 @@ export function FieldHelp({ text }: { text: string }) {
         onMouseEnter={() => setOpen(true)}
         aria-label={t.common.showHelp}
         aria-expanded={open}
-        className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full border border-brand-border bg-white text-[9px] font-bold leading-none text-brand-gray hover:border-brand-teal hover:text-brand-teal focus:outline-none focus:ring-2 focus:ring-brand-teal/30"
+        className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full border border-brand-border bg-white text-[10px] font-bold leading-none text-brand-gray hover:border-brand-teal hover:text-brand-teal focus:outline-none focus:ring-2 focus:ring-brand-teal/30"
       >
         ?
       </button>

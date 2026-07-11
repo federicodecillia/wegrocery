@@ -215,7 +215,7 @@ function CycleReviewModal({
                         </div>
                       </div>
                       <div className="shrink-0 text-right">
-                        <label className="block text-[9px] uppercase tracking-wide text-brand-gray-light">
+                        <label className="block text-[10px] uppercase tracking-wide text-brand-gray-light">
                           {t.admin.cycleReview.finalPriceLabel}
                         </label>
                         <input
@@ -254,7 +254,7 @@ function CycleReviewModal({
         <footer className="border-t border-brand-border bg-white px-5 py-3.5">
           <div className="mb-3 flex items-end justify-between text-[12px]">
             <div>
-              <div className="font-mono text-[9px] uppercase tracking-wide text-brand-gray-light">
+              <div className="font-mono text-[10px] uppercase tracking-wide text-brand-gray-light">
                 {t.admin.cycleReview.ordersTotalLabel}
               </div>
               <div className="font-mono text-[15px] font-bold text-brand-near-black">
@@ -263,7 +263,7 @@ function CycleReviewModal({
             </div>
             {Math.abs(totalDelta) > 0.005 && (
               <div className="text-right">
-                <div className="font-mono text-[9px] uppercase tracking-wide text-brand-gray-light">
+                <div className="font-mono text-[10px] uppercase tracking-wide text-brand-gray-light">
                   {t.admin.cycleReview.variationLabel}
                 </div>
                 <div
