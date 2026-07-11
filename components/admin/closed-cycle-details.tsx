@@ -243,7 +243,7 @@ function OrderLineRow({ line, onSaved }: { line: OrderDetail; onSaved: () => voi
             <div className="truncate font-medium">
               {line.productName} {line.variant && <span className="text-brand-gray">({line.variant})</span>}
               {adjusted && (
-                <span className="ml-1 rounded-full bg-brand-orange/15 px-1.5 py-px text-[9px] font-bold uppercase tracking-wide text-brand-orange">
+                <span className="ml-1 rounded-full bg-brand-orange/15 px-1.5 py-px text-[10px] font-bold uppercase tracking-wide text-brand-orange">
                   {t.admin.closedCycleDetails.adjustedBadge}
                 </span>
               )}

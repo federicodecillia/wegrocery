@@ -183,7 +183,7 @@ export function SociList({ members }: { members: Member[] }) {
                   <div className="flex items-center gap-2">
                     <span className="text-[13px] font-medium text-brand-near-black">{m.fullName}</span>
                     {!m.active && (
-                      <span className="rounded-full bg-brand-red-light px-1.5 py-0.5 text-[9px] font-bold text-brand-red">
+                      <span className="rounded-full bg-brand-red-light px-1.5 py-0.5 text-[10px] font-bold text-brand-red">
                         {t.admin.members.inactiveBadge}
                       </span>
                     )}

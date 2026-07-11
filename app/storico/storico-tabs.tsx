@@ -154,7 +154,7 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
             }`}
           >
             <div
-              className={`mb-[6px] font-mono text-[9px] uppercase tracking-[0.10em] ${
+              className={`mb-[6px] font-mono text-[10px] uppercase tracking-[0.10em] ${
                 balance < 0 ? "text-brand-red" : "text-brand-orange"
               }`}
             >

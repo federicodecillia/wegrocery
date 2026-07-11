@@ -114,7 +114,7 @@ export function OrdiniByMember({ byMember }: { byMember: CycleSummary["byMember"
                       ×{line.quantity}
                     </span>
                     {line.adjusted && (
-                      <span className="ml-1 rounded-full bg-brand-orange/15 px-1.5 py-px text-[9px] font-bold uppercase tracking-wide text-brand-orange">
+                      <span className="ml-1 rounded-full bg-brand-orange/15 px-1.5 py-px text-[10px] font-bold uppercase tracking-wide text-brand-orange">
                         {t.admin.orders.adjustedBadge}
                       </span>
                     )}
