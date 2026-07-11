@@ -206,15 +206,3 @@ e il versionamento è basato su [Semantic Versioning](https://semver.org/spec/v2
 
 [Non rilasciato]: https://github.com/federicodecillia/wegrocery/compare/v1.7.0...HEAD
 [1.7.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.7.0
-[1.6.0]: https://github.com/federicodecillia/porta_moneta/releases/tag/v1.6.0
-[1.5.0]: https://github.com/federicodecillia/porta_moneta/releases/tag/v1.5.0
-[1.4.5]: https://github.com/federicodecillia/porta_moneta/releases/tag/v1.4.5
-[1.4.4]: https://github.com/federicodecillia/porta_moneta/releases/tag/v1.4.4
-[1.4.3]: https://github.com/federicodecillia/porta_moneta/releases/tag/v1.4.3
-[1.4.2]: https://github.com/federicodecillia/porta_moneta/releases/tag/v1.4.2
-[1.4.1]: https://github.com/federicodecillia/porta_moneta/releases/tag/v1.4.1
-[1.4.0]: https://github.com/federicodecillia/porta_moneta/releases/tag/v1.4.0
-[1.3.0]: https://github.com/federicodecillia/porta_moneta/releases/tag/v1.3.0
-[1.2.0]: https://github.com/federicodecillia/porta_moneta/releases/tag/v1.2.0
-[1.1.0]: https://github.com/federicodecillia/porta_moneta/releases/tag/v1.1.0
-[1.0.0]: https://github.com/federicodecillia/porta_moneta/releases/tag/v1.0.0
