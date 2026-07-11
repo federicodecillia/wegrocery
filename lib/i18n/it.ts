@@ -85,6 +85,8 @@ export const it = {
     otherCategory: "Altro",
     genericError: "Errore",
     saveError: "Errore durante il salvataggio",
+    balanceWarning: (amount: string) =>
+      `Attenzione: dopo l'ordine il tuo saldo sarà ${amount} negativo.`,
   },
   history: {
     orders: "Ordini",
@@ -825,6 +827,16 @@ export const it = {
     cycleClosingReminderTitle: "Il ciclo sta per chiudere",
     cycleClosingReminderBody: (title: string, closeAt: string) =>
       `Il ciclo "${title}" chiude il ${closeAt} e non hai ancora ordinato. Se vuoi partecipare, fallo ora.`,
+    orderLineAdjustedTitle: (cycleTitle: string) => `Ordine "${cycleTitle}" rettificato`,
+    orderLineAdjustedNoteReceived: (product: string, ordered: string, received: string) =>
+      `${product}: ${ordered} ordinati, ${received} ricevuti`,
+    orderLineAdjustedNoteCost: (product: string, cost: string) =>
+      `${product}: costo aggiornato a ${cost} EUR`,
+    orderLineAdjustedNoteReverted: (product: string) => `${product}: rettifica annullata`,
+    orderLineAdjustedBodyRefund: (notes: string, amount: string) =>
+      `${notes} · rimborso di ${amount} EUR sul tuo saldo.`,
+    orderLineAdjustedBodyCharge: (notes: string, amount: string) =>
+      `${notes} · addebito aggiuntivo di ${amount} EUR sul tuo saldo.`,
   },
   ledger: {
     orderCharge: "Addebito ordine",

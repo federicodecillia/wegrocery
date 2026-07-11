@@ -98,9 +98,7 @@ export async function saveOrder(
   return {
     success: true,
     balanceWarning:
-      afterBalance < 0
-        ? `Attenzione: dopo l'ordine il tuo saldo sarà ${formatMoney(Math.abs(afterBalance))} negativo.`
-        : null,
+      afterBalance < 0 ? t.order.balanceWarning(formatMoney(Math.abs(afterBalance))) : null,
   };
 }
 
