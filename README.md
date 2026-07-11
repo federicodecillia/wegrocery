@@ -155,7 +155,7 @@ analytics dashboard is rendered with pure CSS and inline SVG.
   badge, deep links to the relevant cycle, and a settings page where each
   member toggles app and email delivery per category (cycle opened, closing
   reminder, order charge, order updates, wallet top-up). A scheduled job
-  emails a reminder two hours before a cycle closes to members who haven't
+  emails a reminder shortly before a cycle closes to members who haven't
   ordered yet.
 
 ### For admins

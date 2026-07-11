@@ -6,8 +6,11 @@ import { canAccessCycle } from "@/lib/utils";
 
 // Length of the "closing soon" window. The cron route expresses the same
 // bound as a SQL predicate (order_close_at BETWEEN now and now + this); keeping
-// the constant here means both refer to a single source for the 2h.
-export const REMINDER_WINDOW_MS = 2 * 60 * 60 * 1000; // 2 hours
+// the constant here means both refer to a single source.
+// 3h, not 2h: GitHub throttles the */15 cron to real gaps of up to ~2h on
+// low-activity repos (observed 2026-07-10), and a gap longer than the window
+// skips the reminder entirely. The CAS dedup still guarantees a single send.
+export const REMINDER_WINDOW_MS = 3 * 60 * 60 * 1000; // 3 hours
 
 export type MemberForTargeting = {
   memberId: string;

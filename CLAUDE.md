@@ -156,7 +156,7 @@ User interaction → Server Action ("use server") → auth check → DB mutation
   - `order_corrected` — admin edits a member's order via `adminEditClosedOrder`
   - `order_adjusted` — closed-cycle shipping recompute OR per-line "actual delivered" rectification
   - `cycle_opened` — a cycle is created (always created already-open, so this is the single emit point, in `adminCreateCycle`)
-  - `cycle_closing_reminder` — sent ~2h before close by the reminder cron
+  - `cycle_closing_reminder` — sent up to ~3h before close by the reminder cron (window sized in `REMINDER_WINDOW_MS` to survive GitHub's cron throttling, which stretches the */15 schedule to real gaps of up to ~2h)
 - **All emission goes through `lib/notifications/dispatch.ts`** (`dispatchNotification` for single members, `dispatchWithBodies` for per-member bodies like cycle close, `dispatchToMembers` for broadcasts). Never insert into `notifications` directly — dispatch is where channel preferences are honoured.
 - **Preferences** (`notification_preferences`, sparse: absent row = code default). Categories + defaults live in `lib/notifications/categories.ts`: `cycle_opened` (app+email on), and `cycle_closing_reminder` / `order_charge` / `order_updates` / `wallet_topup` (app on, email off). Members edit them at `/notifiche/impostazioni` (bell → ⚙) via `updateNotificationPreference`. Raw `type` values are unchanged in the DB; `categoryForType` maps them (unknown type → in-app only, never email).
 - **Cycle-open / reminder audience** is gated by `canAccessCycle(accessLevel, role)` (an admin-only cycle only notifies admins); balance-change notifications (charge/updates/top-up) are personal. The reminder excludes members who already ordered.
