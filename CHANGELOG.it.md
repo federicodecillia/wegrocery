@@ -16,6 +16,16 @@ e il versionamento è basato su [Semantic Versioning](https://semver.org/spec/v2
 
 ## [Non rilasciato]
 
+### Modificato
+- **Le etichette piccole sono più leggibili da telefono.** Tutte le micro-etichette a 8-9px (card timeline admin, badge campanella, interruttori App/Email, note cassa e statistiche) sono state portate a un minimo di 10px. Verificato a 375px: niente sborda né va a capo male.
+- **Il promemoria di chiusura ora può arrivare fino a ~3 ore prima della chiusura del ciclo** (prima erano esattamente 2). La finestra più ampia garantisce che il job schedulato, che non gira a intervalli perfettamente regolari, non possa saltare il promemoria di un ciclo.
+
+### Risolto
+- **Gli account disattivati non possono più operare con una sessione ancora aperta.** Salvare o precompilare un ordine e ogni azione admin ora ri-verificano il flag attivo a ogni richiesta invece di fidarsi del valore al momento del login. Le quantità dell'ordine vengono inoltre validate (numeri interi, limiti sensati) prima di scrivere qualsiasi cosa.
+- **Il riquadro "Novità" della Guida ora segue la lingua dell'app.** I deploy in inglese mostravano l'anteprima del changelog italiano; la pagina changelog dedicata col selettore IT/EN è invariata.
+- **La pagina 404 ora è tradotta e usa i colori del gruppo.** Entrambe le pagine di errore avevano colori fissi (e la 404 era solo in italiano), quindi i deploy white-label con un accent diverso avevano l'aspetto sbagliato proprio sulle pagine che scavalcano il tema.
+- **Gli ultimi testi italiani sui deploy in inglese** — la notifica di rettifica ordine (in app e via email) e l'avviso di saldo negativo dopo il salvataggio di un ordine — ora seguono la lingua dell'app.
+
 ---
 
 ## [1.7.0] — 10 luglio 2026

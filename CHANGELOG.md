@@ -16,6 +16,16 @@ and this project loosely follows [Semantic Versioning](https://semver.org/spec/v
 
 ## [Unreleased]
 
+### Changed
+- **Small labels are easier to read on phones.** All the 8–9px micro-labels (admin timeline cards, bell badge, App/Email toggles, treasury and stats hints) were raised to a 10px minimum. Verified at 375px: nothing overflows or wraps badly.
+- **The closing reminder can now arrive up to ~3 hours before a cycle closes** (was exactly 2). The wider window makes sure the scheduled job, which does not run at perfectly regular intervals, cannot skip a cycle's reminder.
+
+### Fixed
+- **Deactivated accounts can no longer keep acting through a still-open session.** Placing or prefilling an order and every admin action now re-check the member's active flag on each request instead of trusting the login-time value. Order quantities are also validated (whole numbers, sane bounds) before anything is written.
+- **The Guide's "What's new" box now follows the app language.** English deployments showed the Italian changelog teaser; the dedicated changelog page and its IT/EN switch are unchanged.
+- **The 404 page is now translated and uses the group's colors.** Both error pages had fixed colors (and the 404 was Italian-only), so white-label deployments with a different accent color got the wrong look exactly on the pages that bypass the themed layout.
+- **The last Italian texts on English deployments** — the order-rectification notification (in app and email) and the negative-balance warning after saving an order — now follow the app language.
+
 ---
 
 ## [1.7.0] — 2026-07-10
