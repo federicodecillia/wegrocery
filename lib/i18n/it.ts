@@ -18,6 +18,8 @@ export const it = {
     emojiSearchPlaceholder: "Cerca: es. pomodoro, miele…", // catalog keywords are Italian-only by design (lib/emoji-catalog.ts)
     noEmojiFound: (query: string) => `Nessuna emoji trovata per "${query}".`,
     emojiCountOf: (shown: number, total: number) => `${shown} di ${total}`,
+    pageNotFound: "Pagina non trovata",
+    backToHome: "Torna alla Home",
   },
   nav: {
     home: "Home",
