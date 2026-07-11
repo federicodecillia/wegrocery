@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { t } from "@/lib/i18n";
@@ -59,31 +59,49 @@ export async function saveOrder(
   // the two, silently leaving the member's order empty. db.batch() ships both
   // statements in one HTTP request and Neon runs them in a single transaction,
   // so they succeed or fail together.
+  //
+  // The guard statement closes the race with performCycleClose (issue #84):
+  // it row-locks the cycle inside this transaction, so a concurrent close CAS
+  // waits until our write commits (and then charges these fresh rows), and if
+  // the close committed first the CASE yields 0 and the division error rolls
+  // back the whole batch — no order row can land on a closed cycle uncharged.
+  const guardCycleStillOpen = db.execute(
+    sql`SELECT 1 / (CASE WHEN status = 'open' THEN 1 ELSE 0 END) AS open_guard
+        FROM order_cycles WHERE cycle_id = ${cycleId} FOR UPDATE`,
+  );
   const deleteExisting = db
     .delete(orders)
     .where(and(eq(orders.memberId, member.memberId), eq(orders.cycleId, cycleId)));
 
-  if (newLines.length > 0) {
-    const insertNew = db.insert(orders).values(
-      newLines.map((l) => {
-        const product = productMap.get(l.productId);
-        if (!product) throw new Error(t.errors.productNotFound(l.productId));
-        const lineTotal = (parseFloat(product.unitPrice) * l.quantity).toFixed(2);
-        return {
-          orderLineId: crypto.randomUUID(),
-          cycleId,
-          memberId: member.memberId,
-          productId: l.productId,
-          quantity: l.quantity,
-          unitPriceSnapshot: product.unitPrice,
-          lineTotal,
-          updatedAt: now,
-        };
-      }),
-    );
-    await db.batch([deleteExisting, insertNew]);
-  } else {
-    await deleteExisting;
+  try {
+    if (newLines.length > 0) {
+      const insertNew = db.insert(orders).values(
+        newLines.map((l) => {
+          const product = productMap.get(l.productId);
+          if (!product) throw new Error(t.errors.productNotFound(l.productId));
+          const lineTotal = (parseFloat(product.unitPrice) * l.quantity).toFixed(2);
+          return {
+            orderLineId: crypto.randomUUID(),
+            cycleId,
+            memberId: member.memberId,
+            productId: l.productId,
+            quantity: l.quantity,
+            unitPriceSnapshot: product.unitPrice,
+            lineTotal,
+            updatedAt: now,
+          };
+        }),
+      );
+      await db.batch([guardCycleStillOpen, deleteExisting, insertNew]);
+    } else {
+      await db.batch([guardCycleStillOpen, deleteExisting]);
+    }
+  } catch (err) {
+    // 22012 = division_by_zero, i.e. the guard found the cycle closed.
+    if (err instanceof Error && /22012|division by zero/i.test(err.message)) {
+      throw new Error(t.errors.cycleNotOpen);
+    }
+    throw err;
   }
 
   const total = newLines.reduce((sum, l) => {
