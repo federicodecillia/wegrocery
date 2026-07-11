@@ -10,7 +10,8 @@ import { t } from "@/lib/i18n";
 
 export async function markNotificationRead(notificationId: string) {
   const session = await requireUserSession();
-  const memberId = session.user.memberId!;
+  const memberId = session.user.memberId;
+  if (!memberId) return;
   const db = getDb();
   await db
     .update(notifications)
@@ -22,7 +23,8 @@ export async function markNotificationRead(notificationId: string) {
 
 export async function markAllNotificationsRead() {
   const session = await requireUserSession();
-  const memberId = session.user.memberId!;
+  const memberId = session.user.memberId;
+  if (!memberId) return;
   const db = getDb();
   await db
     .update(notifications)

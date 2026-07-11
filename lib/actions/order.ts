@@ -28,6 +28,15 @@ export async function saveOrder(
 
   const member = await getMemberByEmail(email);
   if (!member) throw new Error(t.errors.memberNotFound);
+  if (!member.active) throw new Error(t.errors.accountInactive);
+
+  // The schema stores quantities as integers; reject anything the DB would
+  // choke on (fractions, negatives, absurd values) before touching the order.
+  for (const l of lines) {
+    if (!Number.isInteger(l.quantity) || l.quantity < 0 || l.quantity > 9999) {
+      throw new Error(t.errors.invalidQuantity);
+    }
+  }
 
   const cycles = await getOpenCycles();
   const cycle = cycles.find((c) => c.cycleId === cycleId);
@@ -116,6 +125,7 @@ export async function loadLastOrderForPrefill(
 
   const member = await getMemberByEmail(email);
   if (!member) throw new Error(t.errors.memberNotFound);
+  if (!member.active) throw new Error(t.errors.accountInactive);
 
   const result = await getLastMemberOrderForPrefill(member.memberId, cycleId);
   return { ...result, matched: Object.keys(result.quantities).length };

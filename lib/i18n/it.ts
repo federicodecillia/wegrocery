@@ -840,6 +840,8 @@ export const it = {
   },
   errors: {
     memberNotFound: "Socio non trovato",
+    accountInactive: "Account disattivato: contatta un amministratore.",
+    invalidQuantity: "Quantità non valida",
     cycleNotOpen: "Il ciclo non è più aperto",
     accessDenied: "Non hai accesso a questo ciclo",
     productNotFound: (id: string) => `Prodotto non trovato: ${id}`,
