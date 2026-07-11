@@ -839,6 +839,8 @@ export const en: Strings = {
   },
   errors: {
     memberNotFound: "Member not found",
+    accountInactive: "Account deactivated: contact an administrator.",
+    invalidQuantity: "Invalid quantity",
     cycleNotOpen: "The cycle is no longer open",
     accessDenied: "You don't have access to this cycle",
     productNotFound: (id: string) => `Product not found: ${id}`,

@@ -22,8 +22,11 @@ import { selectCycleAccessMembers } from "@/lib/notifications/reminder";
 async function requireAdmin(): Promise<{ email: string }> {
   const session = await auth();
   const email = session?.user?.email;
-  const role = (session?.user as { role?: string } | undefined)?.role;
-  if (!email || role !== "admin") throw new Error(t.errors.unauthorized);
+  const u = session?.user as { role?: string; active?: boolean } | undefined;
+  // `active` is refreshed from the members table on every request by the jwt
+  // callback, so a deactivated admin loses access immediately, not at token
+  // expiry.
+  if (!email || u?.role !== "admin" || !u?.active) throw new Error(t.errors.unauthorized);
   return { email };
 }
 
