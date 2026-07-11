@@ -979,12 +979,18 @@ export async function adminUpdateOrderLineActuals(input: {
           : newActualQty.toFixed(3).replace(/0+$/, "").replace(/\.$/, "");
         const unit = line.productUnit ?? "";
         noteParts.push(
-          `${line.productName}: ${line.quantity}${unit ? ` ${unit}` : ""} ordinati, ${qtyText}${unit ? ` ${unit}` : ""} ricevuti`,
+          t.notificationsServer.orderLineAdjustedNoteReceived(
+            line.productName,
+            `${line.quantity}${unit ? ` ${unit}` : ""}`,
+            `${qtyText}${unit ? ` ${unit}` : ""}`,
+          ),
         );
       } else if (newActualTotal !== null) {
-        noteParts.push(`${line.productName}: costo aggiornato a ${formatMoney(newEffective)} EUR`);
+        noteParts.push(
+          t.notificationsServer.orderLineAdjustedNoteCost(line.productName, formatMoney(newEffective)),
+        );
       } else {
-        noteParts.push(`${line.productName}: rettifica annullata`);
+        noteParts.push(t.notificationsServer.orderLineAdjustedNoteReverted(line.productName));
       }
 
       await db.insert(ledgerEntries).values({
@@ -1000,13 +1006,16 @@ export async function adminUpdateOrderLineActuals(input: {
       });
       correctionAmount = delta;
 
-      const direction = delta > 0 ? "rimborso" : "addebito aggiuntivo";
+      const adjustedBody =
+        delta > 0
+          ? t.notificationsServer.orderLineAdjustedBodyRefund
+          : t.notificationsServer.orderLineAdjustedBodyCharge;
       await dispatchNotification(db, {
         memberId: line.memberId,
         memberEmail: line.memberEmail,
         type: "order_adjusted",
-        title: `Ordine "${line.cycleTitle}" rettificato`,
-        body: `${noteParts.join(" · ")} · ${direction} di ${formatMoney(Math.abs(delta))} EUR sul tuo saldo.`,
+        title: t.notificationsServer.orderLineAdjustedTitle(line.cycleTitle),
+        body: adjustedBody(noteParts.join(" · "), formatMoney(Math.abs(delta))),
         href: "/storico",
       });
     }

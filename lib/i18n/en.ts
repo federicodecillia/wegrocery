@@ -85,6 +85,8 @@ export const en: Strings = {
     otherCategory: "Other",
     genericError: "Error",
     saveError: "Error while saving",
+    balanceWarning: (amount: string) =>
+      `Warning: after this order your balance will be ${amount} negative.`,
   },
   history: {
     orders: "Orders",
@@ -824,6 +826,16 @@ export const en: Strings = {
     cycleClosingReminderTitle: "Cycle closing soon",
     cycleClosingReminderBody: (title: string, closeAt: string) =>
       `Cycle "${title}" closes on ${closeAt} and you haven't ordered yet. If you'd like to take part, do it now.`,
+    orderLineAdjustedTitle: (cycleTitle: string) => `Order "${cycleTitle}" adjusted`,
+    orderLineAdjustedNoteReceived: (product: string, ordered: string, received: string) =>
+      `${product}: ${ordered} ordered, ${received} received`,
+    orderLineAdjustedNoteCost: (product: string, cost: string) =>
+      `${product}: cost updated to ${cost} EUR`,
+    orderLineAdjustedNoteReverted: (product: string) => `${product}: adjustment reverted`,
+    orderLineAdjustedBodyRefund: (notes: string, amount: string) =>
+      `${notes} · refund of ${amount} EUR to your balance.`,
+    orderLineAdjustedBodyCharge: (notes: string, amount: string) =>
+      `${notes} · additional charge of ${amount} EUR on your balance.`,
   },
   ledger: {
     orderCharge: "Order charge",
