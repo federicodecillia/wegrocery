@@ -20,7 +20,11 @@ e il versionamento è basato su [Semantic Versioning](https://semver.org/spec/v2
 - **Le etichette piccole sono più leggibili da telefono.** Tutte le micro-etichette a 8-9px (card timeline admin, badge campanella, interruttori App/Email, note cassa e statistiche) sono state portate a un minimo di 10px. Verificato a 375px: niente sborda né va a capo male.
 - **Il promemoria di chiusura ora può arrivare fino a ~3 ore prima della chiusura del ciclo** (prima erano esattamente 2). La finestra più ampia garantisce che il job schedulato, che non gira a intervalli perfettamente regolari, non possa saltare il promemoria di un ciclo.
 
+### Modificato
+- **Scegliere un fornitore ora è obbligatorio quando si apre un ciclo.** Prima era facoltativo, quindi un ciclo poteva chiudersi senza fornitore collegato — e a quel punto non c'era modo di correggerlo, perché il campo spariva dal form di modifica una volta chiuso.
+
 ### Risolto
+- **Ora è possibile impostare o correggere il fornitore su un ciclo già chiuso**, dallo stesso form ✎ Modifica usato per le altre correzioni post-chiusura. Prima il campo spariva alla chiusura, quindi un ciclo creato senza fornitore restava bloccato per sempre con il pulsante "Fornitore" disattivato ("Ciclo senza fornitore") e nessun modo di inviare l'ordine o la distinta.
 - **Un ordine confermato nello stesso istante in cui l'admin chiude il ciclo non può più passare senza addebito.** Il salvataggio dell'ordine ora blocca il ciclo dentro la stessa transazione: una chiusura simultanea aspetta il salvataggio (e lo addebita) oppure il salvataggio viene rifiutato pulito con "il ciclo non è più aperto".
 - **Gli account disattivati non possono più operare con una sessione ancora aperta.** Salvare o precompilare un ordine e ogni azione admin ora ri-verificano il flag attivo a ogni richiesta invece di fidarsi del valore al momento del login. Le quantità dell'ordine vengono inoltre validate (numeri interi, limiti sensati) prima di scrivere qualsiasi cosa.
 - **Il riquadro "Novità" della Guida ora segue la lingua dell'app.** I deploy in inglese mostravano l'anteprima del changelog italiano; la pagina changelog dedicata col selettore IT/EN è invariata.
