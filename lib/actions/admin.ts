@@ -77,6 +77,7 @@ export async function adminCreateCycle(data: CreateCycleInput): Promise<{error?:
     const admin = await requireAdmin();
     if (!data.title?.trim()) return { error: t.errors.fieldRequired(t.fields.title) };
     if (!data.orderCloseAt) return { error: t.errors.fieldRequired(t.fields.orderCloseDate) };
+    if (!data.supplierId) return { error: t.errors.fieldRequired(t.fields.supplier) };
 
     const db = getDb();
 

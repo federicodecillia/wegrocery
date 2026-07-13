@@ -355,7 +355,7 @@ export const it = {
         `Chiudere "${title}"?\n\nVerranno generati gli addebiti per tutti i soci con ordini.`,
       cycleClosed: (n: number) => `Ciclo chiuso. ${n} addebiti generati.`,
       editClosedBanner:
-        "Stai modificando un ciclo gia' chiuso. Le modifiche alle spese di spedizione ricalcoleranno gli addebiti dei soci e invieranno una notifica di rettifica. Chiusura ordini, fornitore e livello di accesso non sono modificabili a ciclo chiuso.",
+        "Stai modificando un ciclo gia' chiuso. Le modifiche alle spese di spedizione ricalcoleranno gli addebiti dei soci e invieranno una notifica di rettifica. Chiusura ordini e livello di accesso non sono modificabili a ciclo chiuso.",
       editClosedLabel: "Ciclo chiuso",
       editClosedButton: "✎ Modifica",
       noSupplierDisabled: "Ciclo senza fornitore",

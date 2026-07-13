@@ -20,7 +20,11 @@ and this project loosely follows [Semantic Versioning](https://semver.org/spec/v
 - **Small labels are easier to read on phones.** All the 8–9px micro-labels (admin timeline cards, bell badge, App/Email toggles, treasury and stats hints) were raised to a 10px minimum. Verified at 375px: nothing overflows or wraps badly.
 - **The closing reminder can now arrive up to ~3 hours before a cycle closes** (was exactly 2). The wider window makes sure the scheduled job, which does not run at perfectly regular intervals, cannot skip a cycle's reminder.
 
+### Changed
+- **Choosing a supplier is now required when opening a cycle.** It used to be optional, which meant a cycle could close with no supplier attached — and then have no way to fix it, since the field disappeared from the edit form once closed.
+
 ### Fixed
+- **The supplier can now be set or corrected on an already-closed cycle**, via the same ✎ Modifica form used for other post-closure edits. It used to be hidden once a cycle closed, so a cycle created without one was permanently stuck with the "Fornitore" button grayed out ("Cycle has no supplier") and no way to send the order or the distinta to anyone.
 - **An order confirmed in the same instant the admin closes the cycle can no longer slip through uncharged.** Saving an order now locks the cycle inside the same transaction, so a simultaneous close waits for the save (and charges it) or the save is cleanly rejected with "the cycle is no longer open".
 - **Deactivated accounts can no longer keep acting through a still-open session.** Placing or prefilling an order and every admin action now re-check the member's active flag on each request instead of trusting the login-time value. Order quantities are also validated (whole numbers, sane bounds) before anything is written.
 - **The Guide's "What's new" box now follows the app language.** English deployments showed the Italian changelog teaser; the dedicated changelog page and its IT/EN switch are unchanged.

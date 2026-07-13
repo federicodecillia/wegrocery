@@ -442,8 +442,11 @@ export function EditCycleForm({
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
     // On a closed cycle we deliberately skip fields that don't make sense to
-    // change post-closure (orderCloseAt, supplierId, accessLevel). Those inputs
-    // are also disabled visually so the user doesn't expect them to apply.
+    // change post-closure (orderCloseAt, accessLevel). Those inputs are also
+    // disabled visually so the user doesn't expect them to apply. supplierId
+    // stays editable after closure — a cycle can be closed before the supplier
+    // was ever set, and that's the one field the admin still needs to fix
+    // (it gates the "Fornitore" send/import actions on the closed cycle).
     const basePatch = {
       title: fd.get("title") as string,
       pickupDate: buildDateTime(fd.get("pickupDateOnly") as string, fd.get("pickupStartTime") as string),
@@ -451,6 +454,7 @@ export function EditCycleForm({
       pickup2Date: buildDateTime(fd.get("pickup2DateOnly") as string, fd.get("pickup2StartTime") as string),
       pickup2EndTime: fd.get("pickup2EndTime") as string,
       notes: fd.get("notes") as string,
+      supplierId: fd.get("supplierId") as string,
       shippingMode,
       shippingCostPerMember: fd.get("shippingCostPerMember") as string,
       shippingTotal: fd.get("shippingTotal") as string,
@@ -459,7 +463,6 @@ export function EditCycleForm({
       ? {}
       : {
           orderCloseAt: fd.get("orderCloseAt") as string,
-          supplierId: fd.get("supplierId") as string,
           accessLevel: fd.get("accessLevel") as string,
         };
     startTransition(async () => {
@@ -541,23 +544,23 @@ export function EditCycleForm({
         defPickup2End={cycle.pickup2EndTime ?? ""}
       />
 
-      {!isClosed && (
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className={labelCls}>{t.admin.cycle.supplierLabel}</label>
-            <select
-              name="supplierId"
-              defaultValue={cycle.supplierId ?? ""}
-              className={`w-full ${inputCls}`}
-            >
-              <option value="">{t.admin.common.noSupplier}</option>
-              {suppliers.map((s) => (
-                <option key={s.supplierId} value={s.supplierId}>
-                  {s.name}
-                </option>
-              ))}
-            </select>
-          </div>
+      <div className={isClosed ? "" : "grid grid-cols-2 gap-3"}>
+        <div>
+          <label className={labelCls}>{t.admin.cycle.supplierLabel}</label>
+          <select
+            name="supplierId"
+            defaultValue={cycle.supplierId ?? ""}
+            className={`w-full ${inputCls}`}
+          >
+            <option value="">{t.admin.common.noSupplier}</option>
+            {suppliers.map((s) => (
+              <option key={s.supplierId} value={s.supplierId}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        {!isClosed && (
           <div>
             <label className={labelCls}>{t.admin.cycle.accessLabel}</label>
             <select
@@ -570,8 +573,8 @@ export function EditCycleForm({
               <option value="utenti">{t.admin.cycle.accessAllUsers}</option>
             </select>
           </div>
-        </div>
-      )}
+        )}
+      </div>
       <div>
         <label className={labelCls}>{t.admin.common.notes}</label>
         <textarea
@@ -676,8 +679,8 @@ export function CreateCycleForm({ suppliers }: { suppliers: Supplier[] }) {
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className={labelCls}>{t.admin.cycle.supplierLabel}</label>
-            <select name="supplierId" className={`w-full ${inputCls}`}>
-              <option value="">{t.admin.common.noSupplier}</option>
+            <select name="supplierId" required defaultValue="" className={`w-full ${inputCls}`}>
+              <option value="" disabled>{t.admin.common.selectPlaceholder}</option>
               {suppliers.map((s) => (
                 <option key={s.supplierId} value={s.supplierId}>
                   {s.name}
@@ -703,6 +706,9 @@ export function CreateCycleForm({ suppliers }: { suppliers: Supplier[] }) {
           />
         </div>
       </div>
+      {suppliers.length === 0 && (
+        <p className="mt-2 text-[11px] text-brand-red">{t.admin.products.noSupplierAvailable}</p>
+      )}
       <div className="mt-4 flex gap-2">
         <button
           type="submit"

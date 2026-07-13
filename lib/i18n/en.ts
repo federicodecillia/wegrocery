@@ -355,7 +355,7 @@ export const en: Strings = {
         `Close "${title}"?\n\nCharges will be generated for all members with orders.`,
       cycleClosed: (n: number) => `Cycle closed. ${n} charges generated.`,
       editClosedBanner:
-        "You are editing a closed cycle. Shipping cost changes will recalculate member charges and send adjustment notifications. Order closing date, supplier, and access level cannot be changed after closure.",
+        "You are editing a closed cycle. Shipping cost changes will recalculate member charges and send adjustment notifications. Order closing date and access level cannot be changed after closure.",
       editClosedLabel: "Closed cycle",
       editClosedButton: "✎ Edit",
       noSupplierDisabled: "Cycle has no supplier",
