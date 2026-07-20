@@ -83,12 +83,28 @@ export const en: Strings = {
         : "You have no previous orders to repeat.",
     reproposeSuccess: (count: number, title: string) =>
       `Repeated ${count} products from "${title}". Edit and confirm.`,
-    savedSuccess: "Order saved ✓",
     otherCategory: "Other",
     genericError: "Error",
     saveError: "Error while saving",
     balanceWarning: (amount: string) =>
       `Warning: after this order your balance will be ${amount} negative.`,
+    sentTitle: "Order sent!",
+    sentBody: "Your order has been recorded. You'll find it here whenever you come back.",
+    gotIt: "Got it",
+    confirmed: "Order confirmed",
+    confirmedSummary: (count: number, total: string) =>
+      `${count === 1 ? "1 item" : `${count} items`} · ${total}`,
+    editableUntil: (date: string) => `You can edit or cancel it until ${date}.`,
+    editableUntilClose: "You can edit or cancel it for as long as the cycle stays open.",
+    editOrder: "Edit order",
+    cancelOrder: "Cancel order",
+    cancelOrderTitle: "Cancel the order?",
+    cancelOrderMessage:
+      "The order will be removed and you won't be charged at closing. You can always place it again while the cycle is open.",
+    cancelOrderConfirm: "Yes, cancel it",
+    cancelledSuccess: "Order cancelled",
+    removeOrder: "Remove order",
+    backToOrder: "Back to order",
   },
   history: {
     orders: "Orders",
@@ -180,7 +196,7 @@ export const en: Strings = {
       {
         n: 3,
         title: "Confirm your order",
-        body: 'Press "Confirm order" at the bottom. You can modify it as long as the order is open.',
+        body: 'Press "Confirm order" at the bottom. You\'ll get a confirmation, and the order stays editable until the cycle closes.',
       },
       {
         n: 4,
@@ -220,8 +236,8 @@ export const en: Strings = {
         a: "Your balance is your credit with the buying group. When an order closes, the cost is automatically deducted. To recharge, make a bank transfer to the group's account: whoever manages the treasury will register it and your balance will update.",
       },
       {
-        q: "Can I edit my order after confirming it?",
-        a: 'Yes, as long as the order is open. Go to the Order tab, change quantities, and press "Confirm order" again. The last save replaces the previous one.',
+        q: "Can I edit or cancel my order after confirming it?",
+        a: 'Yes, as long as the order is open. The Order tab shows your confirmed order: press "Edit order" to change quantities and confirm again, or "Cancel order" to remove it entirely so nothing is charged at closing.',
       },
       {
         q: "What happens if my balance is negative?",

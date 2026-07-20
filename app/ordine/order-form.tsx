@@ -3,11 +3,14 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "@/components/ui/toast";
+import { confirm } from "@/components/ui/confirm-dialog";
 import { t } from "@/lib/i18n";
 import { formatDateTime } from "@/lib/i18n/format";
 import { formatEur, getProductEmoji, normalizeCategory } from "@/lib/utils";
 import type { SaveOrderLine } from "@/lib/actions/order";
 import { loadLastOrderForPrefill } from "@/lib/actions/order";
+import { OrderSentDialog } from "./order-sent-dialog";
+import { OrderSummary, type ConfirmedLine } from "./order-summary";
 
 type Product = {
   productId: string;
@@ -76,20 +79,53 @@ export function OrderForm({
   balance,
   saveAction,
 }: Props) {
-  const [draft, setDraft] = useState<Record<string, number>>(
-    Object.fromEntries(existingLines.filter((l) => l.quantity > 0).map((l) => [l.productId, l.quantity])),
+  const productMap = new Map(products.map((p) => [p.productId, p]));
+
+  // A product can be pulled from the cycle after someone ordered it; such a
+  // line has no price to show, so it never reaches the draft or the recap.
+  const savedOnMount = Object.fromEntries(
+    existingLines
+      .filter((l) => l.quantity > 0 && productMap.has(l.productId))
+      .map((l) => [l.productId, l.quantity]),
   );
+
+  const [savedQty, setSavedQty] = useState<Record<string, number>>(savedOnMount);
+  const [draft, setDraft] = useState<Record<string, number>>(savedOnMount);
+  // Members with an order already in land on the recap; everyone else on the
+  // product list, which is the only thing they can act on.
+  const [isEditing, setIsEditing] = useState(Object.keys(savedOnMount).length === 0);
+  const [sent, setSent] = useState<{
+    itemCount: number;
+    total: number;
+    balanceWarning: string | null;
+  } | null>(null);
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
-  const productMap = new Map(products.map((p) => [p.productId, p]));
+  function totalOf(quantities: Record<string, number>) {
+    return Object.entries(quantities).reduce((sum, [pid, qty]) => {
+      const p = productMap.get(pid);
+      return sum + (p ? parseFloat(p.unitPrice) * qty : 0);
+    }, 0);
+  }
 
-  const orderTotal = Object.entries(draft).reduce((sum, [pid, qty]) => {
-    const p = productMap.get(pid);
-    return sum + (p ? parseFloat(p.unitPrice) * qty : 0);
-  }, 0);
+  const orderTotal = totalOf(draft);
   const afterBalance = balance - orderTotal;
   const hasOrder = orderTotal > 0;
+  const hasSavedOrder = Object.keys(savedQty).length > 0;
+
+  // Built from the catalogue rather than from savedQty so the recap lists
+  // products in the same order as the form above it.
+  const confirmedLines: ConfirmedLine[] = products
+    .filter((p) => (savedQty[p.productId] ?? 0) > 0)
+    .map((p) => ({
+      productId: p.productId,
+      name: p.name,
+      meta: [p.variant, p.format].filter(Boolean).join(" · "),
+      quantity: savedQty[p.productId],
+      unitPrice: parseFloat(p.unitPrice),
+    }));
+  const savedTotal = totalOf(savedQty);
 
   function changeQty(productId: string, delta: number) {
     setDraft((prev) => {
@@ -122,19 +158,30 @@ export function OrderForm({
     });
   }
 
-  function handleSave() {
+  function persist(quantities: Record<string, number>, isRemoval: boolean) {
     startTransition(async () => {
       try {
-        const lines: SaveOrderLine[] = Object.entries(draft).map(([productId, quantity]) => ({
+        const lines: SaveOrderLine[] = Object.entries(quantities).map(([productId, quantity]) => ({
           productId,
           quantity,
         }));
         const result = await saveAction(cycleId, lines);
-        if (result.balanceWarning) {
-          toast.warning(result.balanceWarning);
+        setSavedQty(quantities);
+        setDraft(quantities);
+        if (isRemoval) {
+          setIsEditing(true);
+          toast.success(t.order.cancelledSuccess);
         } else {
-          toast.success(t.order.savedSuccess);
+          setIsEditing(false);
+          setSent({
+            itemCount: Object.keys(quantities).length,
+            total: totalOf(quantities),
+            balanceWarning: result.balanceWarning,
+          });
         }
+        // Invalidate the client Router Cache so navigating back here (or to
+        // the home card) can't paint the pre-save order from a stale payload.
+        router.refresh();
       } catch (err) {
         const message = err instanceof Error ? err.message : t.order.saveError;
         toast.error(message);
@@ -146,6 +193,27 @@ export function OrderForm({
         }
       }
     });
+  }
+
+  async function handleCancelOrder() {
+    const ok = await confirm({
+      title: t.order.cancelOrderTitle,
+      message: t.order.cancelOrderMessage,
+      confirmLabel: t.order.cancelOrderConfirm,
+      cancelLabel: t.common.cancel,
+      danger: true,
+    });
+    if (ok) persist({}, true);
+  }
+
+  function handleSave() {
+    // Emptying the cart of an order that was already confirmed is a deletion,
+    // not a save — it goes through the same confirmation as the recap button.
+    if (!hasOrder && hasSavedOrder) {
+      void handleCancelOrder();
+      return;
+    }
+    persist(draft, false);
   }
 
   const groups = groupByCategory(products);
@@ -179,9 +247,38 @@ export function OrderForm({
         </div>
       )}
 
+      {/* Recap of the order already on file. Replaces the product list until
+          the member explicitly chooses to edit it. */}
+      {!isEditing && (
+        <OrderSummary
+          lines={confirmedLines}
+          total={savedTotal}
+          balanceAfter={balance - savedTotal}
+          orderCloseAt={orderCloseAt}
+          isPending={isPending}
+          onEdit={() => setIsEditing(true)}
+          onCancel={handleCancelOrder}
+        />
+      )}
+
+      {/* Way out of edit mode without saving: the confirmed order is still
+          on file, so this discards the pending tweaks and shows it again. */}
+      {isEditing && hasSavedOrder && (
+        <button
+          type="button"
+          onClick={() => {
+            setDraft(savedQty);
+            setIsEditing(false);
+          }}
+          className="mt-3 inline-flex items-center gap-1 text-[12px] font-semibold text-brand-teal"
+        >
+          ← {t.order.backToOrder}
+        </button>
+      )}
+
       {/* "Riproponi ultimo ordine" — visible only when the cart is empty
           so we never silently overwrite an in-progress order. */}
-      {products.length > 0 && !hasOrder && (
+      {isEditing && products.length > 0 && !hasOrder && !hasSavedOrder && (
         <button
           type="button"
           onClick={handlePrefillFromLast}
@@ -197,7 +294,7 @@ export function OrderForm({
       )}
 
       {/* Product list */}
-      {groups.map(({ category, products: prods }) => (
+      {isEditing && groups.map(({ category, products: prods }) => (
         <div key={category}>
           {category && (
             <div className="pt-4 pb-2 font-mono text-[10px] uppercase tracking-[0.10em] text-brand-gray-light">
@@ -271,7 +368,7 @@ export function OrderForm({
       {/* Sticky footer — rides above the (sticky) bottom nav. In-flow sticky
           inherits the card width at every breakpoint; -mx-5 bleeds it across
           main's padding to the card edges. */}
-      {hasOrder && (
+      {isEditing && (hasOrder || hasSavedOrder) && (
         <div className="sticky z-10 -mx-5 mt-4 -mb-[calc(var(--spacing-nav-h)+1rem)] bottom-[calc(var(--spacing-nav-h)+env(safe-area-inset-bottom))]">
           <div className="border-t border-brand-border bg-brand-warm-white/97 px-5 py-3.5 backdrop-blur-sm">
             <div className="mb-3 flex items-end justify-between">
@@ -299,13 +396,28 @@ export function OrderForm({
             <button
               onClick={handleSave}
               disabled={isPending}
-              className="w-full rounded-full bg-brand-orange px-[22px] py-[14px] text-sm font-bold text-white transition-[opacity,transform] duration-150 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
+              className={`w-full rounded-full px-[22px] py-[14px] text-sm font-bold text-white transition-[opacity,transform] duration-150 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed ${
+                hasOrder ? "bg-brand-orange" : "bg-brand-red"
+              }`}
             >
-              {isPending ? t.order.saving : t.order.confirmOrder}
+              {isPending
+                ? t.order.saving
+                : hasOrder
+                  ? t.order.confirmOrder
+                  : t.order.removeOrder}
             </button>
           </div>
         </div>
       )}
+
+      <OrderSentDialog
+        open={sent !== null}
+        itemCount={sent?.itemCount ?? 0}
+        total={sent?.total ?? 0}
+        balanceWarning={sent?.balanceWarning ?? null}
+        orderCloseAt={orderCloseAt}
+        onClose={() => setSent(null)}
+      />
     </>
   );
 }

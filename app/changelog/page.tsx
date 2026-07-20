@@ -74,22 +74,30 @@ function VersionBlock({
 
   return (
     <article className="overflow-hidden rounded-[18px] border border-brand-border bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-      <header className="flex items-baseline justify-between gap-2 border-b border-brand-border bg-brand-warm-white px-4 py-3">
-        <h2 className="text-[15px] font-black tracking-[-0.01em] text-brand-near-black">
-          {isUnreleased ? t.unreleased : `v${version.version}`}
-        </h2>
-        {version.date && (
-          <span className="font-mono text-[10px] uppercase tracking-wide text-brand-gray-light">
-            {version.date}
-          </span>
+      <header className="border-b border-brand-border bg-brand-warm-white px-4 py-3">
+        <div className="flex items-baseline justify-between gap-2">
+          <h2 className="text-[15px] font-black tracking-[-0.01em] text-brand-near-black">
+            {isUnreleased ? t.unreleased : `v${version.version}`}
+          </h2>
+          {version.date && (
+            <span className="font-mono text-[10px] uppercase tracking-wide text-brand-gray-light">
+              {version.date}
+            </span>
+          )}
+        </div>
+        {version.tagline && (
+          <p className="mt-1.5 text-[12px] italic leading-[1.45] text-brand-gray">
+            {version.tagline}
+          </p>
         )}
       </header>
       <div className="space-y-4 px-4 py-4">
         {version.sections.map((s) => (
           <section key={s.heading}>
             <h3
-              className={`mb-2 inline-flex rounded-full px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wide ${toneFor(s.heading)}`}
+              className={`mb-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wide ${toneFor(s.heading)}`}
             >
+              <span aria-hidden="true">{emojiFor(s.heading)}</span>
               {s.heading}
             </h3>
             <ul className="space-y-2">
@@ -115,6 +123,20 @@ function VersionBlock({
   );
 }
 
+// The category icon on the chip. Bullets carry their own topical emoji, so
+// this one only has to say which kind of change the section groups.
+function emojiFor(heading: string): string {
+  const h = heading.toLowerCase();
+  if (h === "added" || h === "aggiunte") return "✨";
+  if (h === "fixed" || h === "risolto") return "🐛";
+  if (h === "changed" || h === "modificato") return "🔄";
+  if (h === "performance") return "⚡";
+  if (h === "removed" || h === "rimosso") return "🗑️";
+  if (h === "security" || h === "sicurezza") return "🔒";
+  if (h === "documentation" || h === "documentazione") return "📚";
+  return "•";
+}
+
 // Maps the section heading (in either language) to a tone class. Keeps the
 // vocabulary in sync between languages without duplicating the mapping per
 // language.
@@ -128,6 +150,8 @@ function toneFor(heading: string): string {
   if (h === "removed" || h === "rimosso") return "bg-black/[0.08] text-brand-gray";
   if (h === "security" || h === "sicurezza")
     return "bg-brand-red-light text-brand-red";
+  if (h === "documentation" || h === "documentazione")
+    return "bg-brand-teal-light text-brand-teal";
   return "bg-brand-warm-white text-brand-gray";
 }
 

@@ -24,6 +24,8 @@ export type ChangelogVersion = {
   version: string;
   /** Raw date string from the heading, or null if absent (Unreleased). */
   date: string | null;
+  /** One-line italic summary under the heading, when the release has one. */
+  tagline: string | null;
   sections: ChangelogSection[];
 };
 
@@ -69,8 +71,11 @@ export function parseChangelog(md: string): ChangelogVersion[] {
     const sepIdx = body.search(/\n---\s*\n/);
     if (sepIdx >= 0) body = body.slice(0, sepIdx);
 
-    // Split on "### " section headings.
-    const sectionBlocks = body.split(/\n### /).slice(1);
+    // Split on "### " section headings. Whatever precedes the first one is
+    // the version's preamble, which may carry a one-line italic tagline.
+    const parts = body.split(/\n### /);
+    const tagline = parseTagline(parts[0]);
+    const sectionBlocks = parts.slice(1);
     const sections: ChangelogSection[] = [];
     for (const sb of sectionBlocks) {
       const nl = sb.indexOf("\n");
@@ -81,10 +86,25 @@ export function parseChangelog(md: string): ChangelogVersion[] {
     }
 
     if (sections.length > 0) {
-      versions.push({ version, date, sections });
+      versions.push({ version, date, tagline, sections });
     }
   }
   return versions;
+}
+
+// A tagline is the first non-empty line under the version heading, wrapped in
+// single asterisks or underscores. Anything else there (a note, a link) is not
+// a tagline and is left out of the rendered page.
+const TAGLINE = /^(?:\*([^*].*[^*])\*|_([^_].*[^_])_)$/;
+
+function parseTagline(preamble: string): string | null {
+  for (const line of preamble.split("\n")) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    const match = trimmed.match(TAGLINE);
+    return match ? (match[1] ?? match[2]).trim() : null;
+  }
+  return null;
 }
 
 // Parses a section body into items + subitems. Bullets are recognised as
