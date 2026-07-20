@@ -9,215 +9,235 @@ e il versionamento è basato su [Semantic Versioning](https://semver.org/spec/v2
 - **Minor** — funzionalità nuove, nessuna rottura
 - **Patch** — correzioni di bug, piccoli miglioramenti UI, documentazione
 
+Come si scrivono le voci: una tagline in corsivo sotto il titolo di versione,
+poi un punto per ogni modifica coerente — un'emoji a tema, un **titolo in
+grassetto** e al massimo due righe su cosa vede l'utente. I dettagli tecnici
+stanno nella PR.
+
 > 🇬🇧 The English version of this file is [CHANGELOG.md](./CHANGELOG.md).
 > Le due versioni devono restare sincronizzate.
 
 ---
 
-## [Non rilasciato]
+## [1.8.0] — 20 luglio 2026
+
+*Confermare un ordine ora si vede, e puoi ripensarci fino alla chiusura del ciclo.*
+
+### Aggiunte
+- ✅ **Confermare un ordine apre una conferma vera.** Un riquadro riepiloga cosa è stato inviato e fino a quando puoi cambiarlo, al posto del messaggino che spariva dopo un secondo.
+- 📋 **Al rientro trovi il tuo ordine confermato.** La pagina ordine si apre sul riepilogo di quello che hai in archivio — prodotti, quantità, totale, saldo dopo — invece di riportarti nella lista prodotti.
+- ✏️ **Modifica o cancella quando vuoi, fino alla chiusura del ciclo.** Entrambe le azioni stanno sotto il riepilogo; la cancellazione chiede conferma e rimuove l'ordine, così alla chiusura non ti viene addebitato nulla.
 
 ### Modificato
-- **Le etichette piccole sono più leggibili da telefono.** Tutte le micro-etichette a 8-9px (card timeline admin, badge campanella, interruttori App/Email, note cassa e statistiche) sono state portate a un minimo di 10px. Verificato a 375px: niente sborda né va a capo male.
-- **Il promemoria di chiusura ora può arrivare fino a ~3 ore prima della chiusura del ciclo** (prima erano esattamente 2). La finestra più ampia garantisce che il job schedulato, che non gira a intervalli perfettamente regolari, non possa saltare il promemoria di un ciclo.
-
-### Modificato
-- **Scegliere un fornitore ora è obbligatorio quando si apre un ciclo.** Prima era facoltativo, quindi un ciclo poteva chiudersi senza fornitore collegato — e a quel punto non c'era modo di correggerlo, perché il campo spariva dal form di modifica una volta chiuso.
+- 📰 **Il changelog si legge come delle note di rilascio, non come un rapporto.** Punti brevi con emoji a tema, una riga di sintesi per ogni versione e categorie a colpo d'occhio.
+- 🔔 **Il promemoria di chiusura può arrivare fino a ~3 ore prima** (prima erano esattamente 2). Il job schedulato non gira a intervalli perfettamente regolari, e la finestra più larga evita che salti un ciclo.
+- 🤝 **Scegliere un fornitore è obbligatorio all'apertura del ciclo**, così un ciclo non può più chiudersi senza.
+- 🔤 **Niente testo sotto i 10px.** 55 micro-etichette nelle viste admin e socio sono state alzate. Verificato a 375px: nessuno sbordo.
 
 ### Risolto
-- **Ora è possibile impostare o correggere il fornitore su un ciclo già chiuso**, dallo stesso form ✎ Modifica usato per le altre correzioni post-chiusura. Prima il campo spariva alla chiusura, quindi un ciclo creato senza fornitore restava bloccato per sempre con il pulsante "Fornitore" disattivato ("Ciclo senza fornitore") e nessun modo di inviare l'ordine o la distinta.
-- **Un ordine confermato nello stesso istante in cui l'admin chiude il ciclo non può più passare senza addebito.** Il salvataggio dell'ordine ora blocca il ciclo dentro la stessa transazione: una chiusura simultanea aspetta il salvataggio (e lo addebita) oppure il salvataggio viene rifiutato pulito con "il ciclo non è più aperto".
-- **Gli account disattivati non possono più operare con una sessione ancora aperta.** Salvare o precompilare un ordine e ogni azione admin ora ri-verificano il flag attivo a ogni richiesta invece di fidarsi del valore al momento del login. Le quantità dell'ordine vengono inoltre validate (numeri interi, limiti sensati) prima di scrivere qualsiasi cosa.
-- **Il riquadro "Novità" della Guida ora segue la lingua dell'app.** I deploy in inglese mostravano l'anteprima del changelog italiano; la pagina changelog dedicata col selettore IT/EN è invariata.
-- **La pagina 404 ora è tradotta e usa i colori del gruppo.** Entrambe le pagine di errore avevano colori fissi (e la 404 era solo in italiano), quindi i deploy white-label con un accent diverso avevano l'aspetto sbagliato proprio sulle pagine che scavalcano il tema.
-- **Gli ultimi testi italiani sui deploy in inglese** — la notifica di rettifica ordine (in app e via email) e l'avviso di saldo negativo dopo il salvataggio di un ordine — ora seguono la lingua dell'app.
+- 🤝 **Il fornitore ora si può impostare o correggere su un ciclo chiuso.** Il campo spariva alla chiusura, lasciando bloccato per sempre un ciclo creato senza.
+- 🔒 **Un ordine confermato nell'istante in cui l'admin chiude il ciclo non può più passare senza addebito.** Il salvataggio blocca il ciclo nella stessa transazione: o la chiusura aspetta il salvataggio, o il salvataggio viene rifiutato in modo pulito.
+- 🛡️ **Gli account disattivati non possono più agire con una sessione ancora aperta.** Ordini e azioni admin ricontrollano il flag attivo a ogni richiesta, e le quantità sono validate prima di scrivere.
+- 🌍 **Il riquadro "Novità" nella Guida segue la lingua dell'app.** Sui deploy inglesi mostrava il teaser italiano.
+- 🎨 **La pagina 404 è tradotta e usa i colori del gruppo.** Entrambe le pagine di errore avevano colori fissi, proprio sulle pagine che saltano il layout tematizzato.
+- 🗣️ **Le ultime stringhe italiane sui deploy inglesi** — la notifica di rettifica ordine e l'avviso di saldo negativo — ora seguono la lingua dell'app.
 
 ---
 
 ## [1.7.0] — 10 luglio 2026
 
+*Preferenze notifiche con canale email, e import guidato del listino del fornitore.*
+
 ### Aggiunte
-- **Preferenze notifiche con canale email opzionale.** Una nuova pagina impostazioni (campanella → ⚙) permette a ogni socio di scegliere, per categoria, se essere avvisato nell'app e/o via email: apertura ciclo, promemoria chiusura, addebito ordine, modifiche all'ordine, accredito cassa. L'avviso in-app resta attivo di default per tutto; l'email è disattivata di default tranne che per l'apertura dei cicli. Sono state aggiunte due notifiche nuove: una all'apertura di un ciclo (a chi può vederlo) e un promemoria due ore prima della chiusura (solo ai soci che possono vederlo e non hanno ancora ordinato), inviato da un job schedulato che gira ogni 15 minuti. Le migrazioni `drizzle/0009_notification_preferences.sql` e `drizzle/0010_cycle_reminder.sql` (entrambe additive) vanno applicate al database di produzione e a quello demo; il job del promemoria richiede `CRON_SECRET` impostato su Vercel e come secret di GitHub Actions.
-- **Messaggio "Catalogo in preparazione" nel form ordine.** Quando un ciclo è aperto ma i prodotti non sono ancora stati caricati, i soci vedono un messaggio 📦 amichevole invece di un form vuoto che sembrava rotto.
-- **Limite esplicito di 10 MB sui file caricati dall'admin** (import listino, template prodotti, distinta), verificato prima ancora di decodificare il file, più una protezione anti "decompression bomb" nella lettura degli `.ods`. Il limite di 1 MB di Next.js bloccava già payload più grandi; ora la protezione è intenzionale invece che accidentale.
-- **Indici unici a livello di database** sulle righe ordine (una sola per socio × ciclo × prodotto) e sull'identità dei prodotti per ciclo (la stessa chiave lower/trim nome|varietà|formato|unità usata dalla dedup dell'import), così import concorrenti non possono infilare duplicati oltre i controlli applicativi. Migrazione `drizzle/0008_unique_constraints.sql` — eseguire i check pre-flight nell'header, poi `npm run db:push`.
-- **Test unitari per le funzioni pure che toccano i soldi**: riparto proporzionale spedizione (esatto al centesimo sotto deriva di arrotondamento), parser changelog, euristiche intestazioni fornitore, parsing numeri da foglio di calcolo, più copertura per accesso ai cicli e categoria indovinata. La suite sale a 78 test.
-- **Import guidato del listino fornitore dentro un ciclo.** Nuovo pulsante **📥 Importa listino** su ogni ciclo aperto: apre una procedura a tre passi che accetta direttamente il file `.xlsx` o `.csv` del fornitore (formato libero, una riga per prodotto). La procedura rileva la riga di intestazione, propone il fornitore (cercando match nel nome del file o in una cella tipo "Fornitore:", oppure offrendo di crearne uno nuovo al volo), poi chiede di mappare a mano solo le colonne non riconosciute (Nome e Prezzo sono obbligatori, il resto opzionale). All'ultimo passo si vede l'anteprima riga per riga: si possono deselezionare prodotti, sostituire l'icona suggerita (le righe senza match automatico sono evidenziate in rosso) e vedere la categoria di ogni prodotto — presa dal file se presente, altrimenti indovinata dal nome tra le categorie preimpostate (Frutta, Verdura, Carne, …) e marcata "auto". Si può inoltre decidere se aggiornare il prezzo dei prodotti già a catalogo e se mettere gli stessi prodotti anche dentro il ciclo aperto. Lo stesso wizard è raggiungibile anche da Admin → Fornitori → Catalogo, dove però importa solo nel catalogo del fornitore.
+- 🔔 **Preferenze notifiche per socio, con l'email come canale opzionale.** Campanella → ⚙ permette a ognuno di scegliere app e/o email per categoria. Arrivano due eventi nuovi: apertura del ciclo e promemoria prima della chiusura per chi non ha ancora ordinato.
+- 📥 **Import guidato del listino fornitore.** Una procedura in tre passi legge l'`.xlsx` o il `.csv` del fornitore, riconosce la riga di intestazione e il fornitore, ti fa mappare quello che non ha capito e mostra un'anteprima riga per riga prima di scrivere.
+- 📦 **Stato "Catalogo in preparazione" nel form ordine**, così un ciclo aperto senza prodotti non sembra più rotto.
+- 🔒 **Limite di 10 MB sugli upload admin**, controllato prima ancora di decodificare il file, più una protezione contro le bombe di decompressione sui `.ods`.
+- 🗄️ **Indici unici su righe d'ordine e prodotti per ciclo**, così import concorrenti non possono infilare duplicati oltre i controlli applicativi (migrazione `0008`).
+- 🧪 **Test sulle funzioni pure che toccano i soldi** — riparto spedizione, parser del changelog, euristiche di intestazione, lettura numeri da foglio. Suite a 78 test.
 
 ### Modificato
-- **Inserimento ritiri più semplice nel form del ciclo.** Il secondo ritiro ora è facoltativo e nascosto di default dietro un pulsante **➕ Aggiungi secondo ritiro**: lo compili solo quando serve davvero. Gli orari di ritiro si scelgono da un menù a slot di 15 minuti invece che da un campo orario libero, così orari con la mezz'ora come 19:30 sono sempre selezionabili e non vengono più rifiutati come "non validi".
-- **Bottoni "Carica prodotti" più chiari in Admin → Prodotti.** Il menù del fornitore di destinazione ora sta su una riga propria con etichetta, invece di essere schiacciato fino a sparire dai bottoni accanto. Le tre azioni sono state accorciate e dotate di icone coerenti — "↓ Template", "↑ Carica file", "✨ Import guidato" — e restano leggibili sia da computer sia da telefono.
-- **Più facile capire dove correggere prezzi/pesi effettivi nel recap ordini.** Le due strade di modifica in Admin → Ciclo → Recap ordini ora sono distinte: il pulsante per socio si chiama **✎ Prodotti** (aggiungi/togli prodotti, cambia le quantità intere), mentre ogni riga prodotto porta un piccolo ✎ e un avviso in cima — "Tocca un prodotto per correggere peso o prezzo effettivo" — così la rettifica del prezzo/peso reale (il caso 1 kg → 800 g) è visibile dal telefono, dove non esistono hover né tooltip. L'editor delle quantità mostra inoltre una nota verde acqua che rimanda al tocco sulla riga quando serve solo correggere un prezzo o un peso.
-- **Puoi caricare la distinta compilata anche in .ods o .csv.** Admin → Ciclo → 📤 Carica distinta prima accettava solo il file `.xlsx` originale. Ora accetta anche la stessa distinta ri-salvata in `.ods` (es. da LibreOffice) o esportata in `.csv`. Con `.xlsx` e `.ods` la mappatura nascosta del file resta intatta, quindi il riconoscimento è esatto; con `.csv` (che non può contenere quella mappatura) soci e prodotti vengono riconosciuti per nome, e qualsiasi colonna o riga non riconosciuta viene segnalata nell'anteprima e saltata — mai indovinata — così puoi comunque controllare ogni modifica prima di applicarla.
+- 📅 **Ritiri più facili da inserire.** Il secondo ritiro è opzionale dietro un interruttore, e gli orari si scelgono da un menu a slot di 15 minuti: le 19:30 sono sempre selezionabili invece di essere rifiutate come non valide.
+- 📤 **La distinta compilata si può caricare anche in `.ods` o `.csv`.** Con il `.csv`, che non può portare la mappatura nascosta, i nomi vengono abbinati e tutto ciò che è ambiguo viene segnalato e saltato, mai indovinato.
+- ✏️ **Le due strade di rettifica nel recap ordini ora sono distinte** — ✎ Prodotti per le quantità, una ✎ su ogni riga per peso o prezzo effettivo — con un suggerimento che funziona anche su telefono, dove non c'è il passaggio del mouse.
+- 🖥️ **Riga "Carica prodotti" più ordinata** in Admin → Prodotti: il menu del fornitore di destinazione ha una riga sua ed etichettata, e le tre azioni restano leggibili su mobile.
 
 ### Risolto
-- **Icone prodotto suggerite sbagliate.** "Melanzana/Melanzane" mostrava 🍉 (anguria) invece di 🍆; "Riso/Risotto" prendeva 🍞 (pane) invece di 🍚; "Peperoni" finiva su 🧂 (sale) invece di 🫑. Tutti e tre erano bug di ordinamento/sovrapposizione nella tabella di pattern first-match-wins, ora bloccati da test di regressione.
-- **Il salvataggio dell'ordine è ora atomico.** Il vecchio cancella-poi-inserisci girava come due richieste indipendenti: un'interruzione nel mezzo (rete che salta, tab chiusa durante l'invio) poteva lasciare l'ordine del socio silenziosamente vuoto. Ora i due statement viaggiano in un'unica transazione batch; inoltre un prodotto non valido blocca tutto *prima* che l'ordine esistente venga toccato.
-- **I file corrotti caricati mostrano un errore localizzato** ("File vuoto o illeggibile") nell'import guidato, invece del messaggio inglese grezzo della libreria di parsing. Anche gli ultimi tre placeholder italiani fissi nell'interfaccia admin (nota cassa, varietà fornitore, ricerca filtri statistiche) ora seguono la lingua dell'app.
-- **I bottoni del ciclo aperto non escono più dallo schermo.** In Admin → Ciclo la fila di azioni di un ciclo aperto (Gestisci Prodotti, Importa listino, Modifica, Chiudi con rettifiche, Chiudi ciclo) poteva sforare oltre il bordo destro; ora va a capo ordinatamente sotto il titolo. Anche le righe data/ora dei ritiri nei form di creazione/modifica ciclo sforavano sui telefoni stretti e ora mandano gli orari "Dalle/Alle" su una riga propria. Verificato fino a 320px di larghezza.
+- 🍆 **Emoji suggerite sbagliate** per melanzana, riso e peperoni — sovrapposizioni nella tabella "vince il primo che combacia", ora fissate da test di regressione.
+- 🛒 **Il salvataggio dell'ordine è atomico.** Cancellazione e inserimento erano due richieste separate: un'interruzione nel mezzo poteva lasciare l'ordine vuoto senza dirlo.
+- 🌍 **I file caricati corrotti mostrano un errore tradotto** invece del messaggio inglese della libreria, e le ultime tre stringhe italiane fisse nell'admin seguono la lingua.
+- 📱 **I pulsanti del ciclo aperto non escono più dallo schermo**, e le righe data/ora dei ritiri vanno a capo sui telefoni stretti. Verificato fino a 320px.
 
 ---
 
-## [1.6.0] — 2026-05-21
+## [1.6.0] — 21 maggio 2026
+
+*Distinte fornitore che fanno andata e ritorno, rettifiche riga per riga e statistiche vere.*
 
 ### Aggiunte
-- **Distinta fornitore `.xlsx` con flusso di andata e ritorno.** Quando premi 📧 Fornitore la mail allega ora un foglio Excel con lo stesso layout che i fornitori già usano: prodotti come righe, soci come colonne, celle gialle pre-compilate con i prezzi originali, una riga "Spedizione" in fondo e formule `=SUM(...)` live per i totali per socio e per prodotto. Le colonne di riferimento (prodotto/varietà/formato/€/pz/€/kg/note) sono bloccate per evitare che la struttura venga rotta. Un foglio nascosto `_meta` porta cycleId + le mappe prodotti/soci, così il file si può ricaricare senza dover incrociare i nomi. Quando il fornitore ha pesato tutto e ti rimanda il file, il nuovo bottone **📤 Carica distinta fornitore** dentro "Vedi ordini" lo legge, mostra un'anteprima dei cambiamenti (rettifiche riga, spedizione per socio, eventuali avvisi) e in un click applica tutto — le correzioni riga passano dalle stesse voci `correction` nel saldo delle rettifiche manuali, mentre la spedizione per socio viene scritta direttamente nel ledger e il ciclo passa a `shippingMode = "manual"` per evitare che future modifiche la sovrascrivano. In modalità manuale il form del ciclo mostra un banner arancione al posto del campo spedizione. Il formato si apre con Excel, LibreOffice e Google Sheets senza conversioni.
-- **Spedizione visibile nel modale "Vedi ordini".** Nella sezione di ogni socio dentro Admin → Ciclo → Recap ordini compare ora una riga 🚚 Spedizione sotto le righe prodotto, e il subtotale per socio in alto la include. Prima il modale mostrava solo i prodotti, quindi i totali a schermo non tornavano con l'addebito reale (`order_charge + shipping_charge`).
-- **Filtri in Admin → Statistiche.** Tre tendine in alto nella dashboard permettono di filtrare ogni card e grafico per ciclo, fornitore o socio (combinabili). Un link "Rimuovi filtri" li azzera con un click. Utile per rispondere a "quanto ci ha fatturato il fornitore X negli ultimi 3 cicli?" o "cosa ha ordinato Chiara quest'anno?".
-- **Backup settimanale del database su Google Drive.** Una GitHub Action gira ogni domenica alle 03:00 UTC, fa il dump del database Neon di produzione con `pg_dump`, lo comprime in gzip e lo carica su `gdrive:PortaMoneta/GAS-Backups/` via rclone. Si aggiunge alla finestra di restore di 7 ore offerta dal piano free di Neon, così possiamo ripristinare anche da uno snapshot vecchio di una settimana in caso di perdita o corruzione dati. La procedura di setup e di restore è documentata nel `CLAUDE.md` del progetto.
-- **Modifica di un ciclo anche dopo la chiusura.** I cicli chiusi nella lista "Ultimi cicli" hanno ora un pulsante ✎ Modifica accanto a "Recap ordini". L'admin può correggere titolo, note, date di ritiro e spese di spedizione senza riaprire il ciclo. Il form disabilita esplicitamente i campi che non ha senso toccare a ciclo chiuso (chiusura ordini, fornitore, livello di accesso).
-- **Ricalcolo automatico della spedizione sui cicli chiusi.** Quando l'admin cambia modalità o importo della spedizione su un ciclo chiuso, le voci `shipping_charge` nel saldo dei soci vengono aggiornate in posto per ogni socio con ordine. Ogni socio coinvolto riceve una notifica `order_adjusted` con la vecchia e la nuova quota, e una voce `cycle_shipping_recomputed` viene scritta nell'audit log con il prima/dopo.
-- **Invio dell'ordine al fornitore via email.** Nuovo pulsante 📧 Fornitore su ogni ciclo chiuso. Manda una mail (via Resend) al fornitore del ciclo, con l'admin che ha cliccato **e `gas@portamoneta.org` (l'archivio condiviso del GAS)** in CC, e in allegato un CSV aggregato per prodotto (una riga per articolo con quantità e totale sommati). Disabilitato con tooltip esplicativo se il ciclo non ha un fornitore o se il fornitore non ha un'email. La configurazione di Resend è documentata in `SETUP.md`.
-- **Registrazione di quanto effettivamente consegnato, riga per riga.** Dentro al modale "Recap ordini" ogni riga d'ordine è ora cliccabile: l'admin può inserire quantità reale ricevuta e costo effettivo (es. ordinato 1 kg di bietola, arrivati 800 g → €1,60 invece di €2,00). La differenza viene scritta come voce `correction` nel saldo, il totale del socio si aggiorna subito e arriva una notifica `order_adjusted` con il dettaglio. Le righe rettificate sono marcate "rettificato" e mostrano ordinato vs ricevuto fianco a fianco.
+- 🔄 **Una distinta fornitore che torna indietro.** 📧 Fornitore invia un `.xlsx` fatto come i fornitori già lavorano — prodotti in riga, soci in colonna, totali automatici — e 📤 Carica distinta rilegge il file restituito, mostra l'anteprima delle differenze e applica sia le correzioni di riga sia la spedizione per socio.
+- ⚖️ **Registra cosa è stato consegnato davvero, riga per riga.** Tocca una riga d'ordine per inserire quantità e costo reali (ordinato 1 kg, ricevuti 800 g): la differenza diventa una correzione e il socio viene avvisato.
+- 📊 **Filtri in Admin → Statistiche** per ciclo, fornitore o socio, combinabili, con azzeramento in un clic.
+- ✏️ **Modifica un ciclo dopo la chiusura** — titolo, note, date di ritiro, spedizione — senza riaprirlo.
+- 🚚 **La spedizione si ricalcola da sola sui cicli chiusi**, e ogni socio coinvolto riceve una notifica con la quota vecchia e nuova.
+- 📧 **Invia l'ordine al fornitore via email**, con l'admin che agisce e l'archivio GAS condiviso in CC e un CSV per prodotto allegato.
+- 🧾 **La spedizione è visibile nel recap ordini**, così i totali a schermo coincidono con quello che è stato addebitato ai soci.
+- 💾 **Backup settimanale del database su Google Drive**, a complemento delle 7 ore di storico point-in-time di Neon.
 
 ### Modificato
-- **Admin → Cassa apre con tre card riassuntive.** Saldo totale dei soci attivi, saldo medio per socio attivo e una card "Saldo < 0" cliccabile che attiva un filtro sulla lista sotto per vedere solo i soci in rosso. La card del saldo negativo prima viveva in Admin → Ciclo dove era facile mancarla; ora sta accanto alle altre cifre di saldo a cui appartiene.
-- **Le card in alto in Admin → Ciclo sono ora una timeline dei cicli.** Tre contatori al volo — Aperti / In scadenza (≤7 giorni) / Chiusi (ultimi 7 giorni) — sostituiscono le vecchie "Saldo < 0" e "Top 30 giorni". La finestra "in scadenza" passa da 24 h a 7 giorni così la card serve per pianificare, non solo per andare nel panico.
-- **I filtri in Admin → Statistiche ora supportano la selezione multipla.** Ogni menu (cicli, fornitori, soci) consente di spuntare più voci con una casella di ricerca integrata; nessuna selezione = "tutti". Card, grafici e classifiche si adattano al filtro combinato. I parametri URL passano da singolo id a lista separata da virgole, così una vista filtrata resta condivisibile per link.
-- **Il template di Admin → Prodotti è ora un file Excel (`.xlsx`).** Un esempio per ogni categoria GAS comune — Frutta, Verdura, Pane e cereali, Pasta e riso, Latticini, Uova, Carne, Conserve, Olio e aceto — arriva pre-compilato in corsivo così da poterli adattare in loco. Il bottone di import ora accetta sia `.xlsx` che il vecchio `.csv`.
-- **"Riepilogo ordini" nell'xlsx del fornitore è ora ordinato per prodotto, poi varietà.** Prima le righe erano raggruppate per socio, rendendo difficile leggere i totali di un singolo prodotto. La matrice (foglio Distinta) è invariata.
-- **Layout più pulito di "Ultimi cicli" da mobile.** La pillola "Chiuso" è passata a sinistra del titolo del ciclo così si legge come etichetta di stato, non come bottone. I tre bottoni d'azione (Modifica, Fornitore, Ordini) vanno a capo su una loro riga sotto, invece di schiacciarsi accanto al titolo. "Modifica ciclo" rinominato in solo "Modifica".
-- **I bottoni di download Excel ora dicono "Scarica Excel"** ovunque (admin → Fornitore hub e admin → Ordini), al posto del tecnico "Scarica .xlsx".
-- **Il bottone 🤝 Fornitore non è più disabilitato quando il fornitore non ha email registrata.** Anche senza destinatario pre-compilato il dialog è utile — l'admin può scrivere l'indirizzo a mano per quel singolo invio, e le sezioni "Scarica Excel" e "Carica distinta" sono indipendenti dalla configurazione email. Il bottone resta disabilitato solo quando il ciclo non ha proprio un fornitore associato.
-- **Tutte le azioni fornitore raccolte in un unico dialog 🤝 Fornitore.** La riga del ciclo chiuso ora ha tre bottoni, in quest'ordine: `✎ Modifica ciclo`, `🤝 Fornitore`, `✎ Ordini`. Il nuovo dialog hub raggruppa in un solo punto: 📥 Scarica riepilogo ordini (l'xlsx canonico), 📧 Invia per email (gli stessi 4 campi editabili — Destinatario/Mittente/CC/Oggetto), 📤 Carica distinta compilata (upload + anteprima diff + apply). I vecchi bottoni "Carica distinta" e "CSV fornitore" dentro Recap ordini sono spariti — non era il posto giusto. L'export "Esporta CSV" in Admin → Ordini ora scarica lo stesso xlsx del hub (un solo file in giro, niente più formati che divergono).
-- **Un unico xlsx canonico** circola: l'allegato della mail, il download dal hub e l'export in Admin → Ordini producono lo stesso workbook. Ora ha tre sheet: `Distinta` (la matrice editabile, invariata), `Riepilogo ordini` (read-only, una riga per socio×prodotto con Qta ordinata · Prezzo unitario · Totale) e `Totali per prodotto` (read-only, aggregato). Il foglio nascosto `_meta` per il re-import è invariato.
-- **Quantità ordinata come nota sulla cella nell'xlsx.** Passando il mouse su una cella gialla nello sheet `Distinta` compare ora "Ordinato: 2 pz" (o l'unità rilevante), così il fornitore vede la quantità di riferimento senza inquinare il valore numerico della cella editabile.
-- **Formato coerente per le righe dentro Recap ordini.** Le righe rettificate prima leggevano `1 = €2,55` mentre quelle non rettificate `1 × €1,50 = €1,50`. Ora entrambe usano il formato `qty × prezzo_unitario = totale`; le righe rettificate mostrano una riga struck "ordinato" sopra una riga bold "effettivo", con il prezzo unitario effettivo ricavato da totale_effettivo / qta_effettiva.
-- **La conferma di 📧 Fornitore diventa un dialog modificabile.** Prima si apriva un confirm con un unico paragrafo dove Destinatario / Oggetto / CC erano tutti attaccati. Ora si apre un form compatto: ciascun campo dell'intestazione (Destinatario, Mittente, CC, Oggetto) sta su una riga propria, in monospace a 12 px, ed è modificabile per quel singolo invio. Default pre-compilati con l'email del fornitore del ciclo + `MAIL_FROM` + l'admin che ha cliccato + `gas@portamoneta.org`. CC accetta indirizzi separati da virgola. Il Mittente ha una nota che ricorda che deve essere un dominio verificato in Resend.
-- **I totali in Admin → Ordini ora includono rettifiche e spedizione.** La cifra per socio mostrava il subtotale prodotti originale anche dopo che l'admin aveva rettificato i pesi o aggiunto la spedizione — la riga di Chiara segnava €3,75 quando in realtà le era stato addebitato di più. La sezione "Per socio" è ora la prima (è la vista più utile) e i totali riflettono l'importo effettivo: `actual_line_total` dove presente, più le voci `shipping_charge` del socio. Sotto c'è "Per prodotto" con i subtotali a prezzo post-rettifica (la spedizione è esclusa lì, perché non è legata a un prodotto).
-- **"Fatturato" rinominato in "Spesa"** in tutta Admin → Statistiche — etichetta della card in alto, titolo del grafico trend, intestazione del ranking fornitori. "Spesa totale" include ora anche la spedizione, così corrisponde a quanto i soci hanno effettivamente pagato, non solo ai subtotali prodotti.
-- **Il CSV esportato da Admin → Ordini è ora identico al "CSV fornitore"** che si scarica dal modale "Vedi ordini": stessa intestazione (`Fornitore;Prodotto;Varietà;Formato;Unità;Socio;Quantità;Prezzo unitario;Totale (€)`), stesso raggruppamento per fornitore, stessa virgola decimale italiana e BOM UTF-8 per Excel. Un unico builder client condiviso, così i due punti di export non possono più divergere.
+- 🤝 **Tutte le azioni fornitore in un unico riquadro 🤝 Fornitore** — scarica, invia, carica — e da qui circola un solo file ufficiale invece di formati divergenti.
+- 💰 **Admin → Cassa si apre con tre schede riassuntive**, inclusa una "Saldo < 0" cliccabile che prima era sepolta in Admin → Ciclo.
+- 📈 **Le schede di Admin → Ciclo sono diventate una linea del tempo**: Aperti / In scadenza (≤7 giorni) / Chiusi (ultimi 7 giorni).
+- 📊 **I filtri delle statistiche sono a selezione multipla** con casella di ricerca, e una vista filtrata resta condivisibile via link.
+- 📄 **Il template prodotti è un file Excel** con un esempio già compilato per ogni categoria comune; l'import accetta ancora il `.csv`.
+- 🧾 **I totali in Admin → Ordini includono rettifiche e spedizione**, così la riga di ogni socio corrisponde a quanto gli è stato addebitato.
+- 📱 **"Ultimi cicli" più pulito su mobile** — la pillola di stato è passata a sinistra così si legge come etichetta, e le azioni vanno a capo sotto.
+- 🏷️ **"Fatturato" rinominato "Spesa"** in tutte le statistiche, e ora comprende anche la spedizione.
+- 📋 **Un solo formato riga `qta × prezzo = totale`** nel recap, con le righe rettificate che mostrano ordinato ed effettivo.
 
 ### Risolto
-- **Errore server in Admin → Statistiche quando si filtrava per ciclo o fornitore.** Selezionare un filtro ciclo o fornitore faceva crashare la pagina con un generico "Qualcosa è andato storto" perché la SQL sottostante usava `= ANY($1::text[])` per bindare gli array dei multi-select — ma il driver Neon HTTP non serializza gli array JS come array Postgres, quindi il parametro non veniva mai legato. Il filtro per socio per puro caso evitava il path rotto. Ora la query usa ovunque `inArray()` di Drizzle, che espande in un classico `IN (?, ?, ...)` con un placeholder per elemento.
-- **L'xlsx del fornitore è ora alfabetico in tutti i fogli, ognuno con la sua chiave di sort — e case-insensitive.** La matrice `Distinta` e `Totali per prodotto` seguivano il campo `sortOrder` di ogni prodotto, che poteva essere impostato arbitrariamente e raramente corrispondeva all'ordine atteso dai fornitori. I tre fogli read-only sono ora ordinati come ognuno viene effettivamente letto: `Distinta` e `Totali per prodotto` per nome prodotto poi varietà, `Riepilogo Ordini Soci` (rinominato, prima era "Riepilogo ordini") per socio poi prodotto poi varietà, così tutto quello che un singolo socio ha ordinato sta in un unico blocco. Il sort è case-insensitive (`LOWER()` in Postgres, `sensitivity: "base"` in JS), così un prodotto chiamato "aglio" non finisce più in fondo dopo "Zucchina". Stesso workbook ovunque venga scaricato — hub 🤝 Fornitore, allegato della mail o Admin → Ordini.
-- **Righe d'ordine più chiare nel modale "Vedi ordini".** Le righe apparivano come `1 1 × €2,00 = €2,00` perché il vecchio campo "Unità" era salvato come la stringa letterale `"1"` su molti prodotti e finiva accodato alla quantità. La `"1"` ora viene trattata come "nessuna unità" in tutto il modale (anche nella vista rettifica), quindi si legge `1 × €2,00 = €2,00`. Quando il prodotto ha un prezzo al kg di riferimento, viene mostrato sotto al prezzo unitario (es. `€5,00/kg`).
+- 📊 **Le statistiche andavano in errore filtrando per ciclo o fornitore.** Il driver HTTP di Neon non converte gli array JS in array Postgres, quindi il filtro non si legava mai; ora la query usa `inArray()` ovunque.
+- 🔤 **Le distinte fornitore sono in ordine alfabetico e senza distinzione tra maiuscole e minuscole**, ogni foglio ordinato con la chiave che rispecchia come viene letto.
+- 📋 **Le righe d'ordine non si leggono più `1 1 × €2,00`.** Il vecchio campo "Unità" salvato come stringa "1" ora è trattato come "nessuna unità".
 
 ---
 
 ## [1.5.0] — 17 maggio 2026
 
+*Sistemare l'ordine di un socio dopo la chiusura del ciclo.*
+
 ### Aggiunte
-- **Modifica ordine di un socio anche a ciclo chiuso.** Dentro al modale "Recap ordini" ogni socio ha un pulsante ✎ Modifica che apre lo stesso stepper del form ordine: si possono cambiare quantità, aggiungere prodotti del catalogo del ciclo, rimuovere righe, o creare un ordine da zero per un socio che non aveva ordinato (pulsante "+ Aggiungi ordine per un socio" in fondo al modale). Pensato per il classico caso "ah, dimenticato di mettere le uova nella sua borsa".
-- **Voci di correzione nel saldo.** Le modifiche non toccano mai l'addebito originale: la differenza fra il totale vecchio e il totale nuovo viene scritta come voce `correction` separata (negativa = addebito aggiuntivo, positiva = rimborso). Lo storico resta tracciabile e ogni modifica è reversibile pubblicando una correzione opposta.
-- **Notifica al socio in automatico.** Il socio riceve una notifica `order_corrected` con il dettaglio del cambiamento e il nuovo saldo, con link diretto al ciclo dentro `/storico`.
+- ✏️ **Modifica l'ordine di un socio dopo la chiusura** — cambia quantità, aggiungi prodotti o crea da zero un ordine per chi non aveva partecipato. Pensata per il caso "mi sono dimenticato di metterti le uova".
+- 🧾 **Le correzioni non toccano l'addebito originale.** La differenza viene registrata come voce `correction` separata, così la tracciabilità resta intatta e ogni modifica è reversibile.
+- 🔔 **Il socio riceve una notifica** con la differenza leggibile e il nuovo saldo.
 
 ---
 
 ## [1.4.5] — 17 maggio 2026
 
+*Una correzione mobile.*
+
 ### Risolto
-- **I pulsanti del ciclo aperto in admin non escono più dalla card su mobile**. La fila "Gestisci Prodotti / Modifica / Chiudi con rettifiche / Chiudi ciclo" prima sforava sui telefoni e l'ultimo ("Chiudi ciclo") veniva tagliato. Sotto i 640px ora i pulsanti vanno a capo sotto il titolo del ciclo e si dispongono su più righe se serve; su tablet/desktop il layout resta uguale a prima.
+- 📱 **I pulsanti del ciclo aperto non sbordano più sui telefoni.** Sotto i 640px si dispongono sotto al titolo invece di far sparire l'ultima azione.
 
 ---
 
 ## [1.4.4] — 17 maggio 2026
 
+*Una correzione estetica.*
+
 ### Risolto
-- **Rimosso il suffisso "/1" residuo accanto ai prezzi dei prodotti** ovunque: riepilogo ordini in home, form ordine, storico, catalogo admin, viste cicli. Veniva fuori dal vecchio campo "Unità" (per molti prodotti compilato letteralmente con "1") che la v1.4.3 aveva tolto dal form ma continuava a stampare nei dettagli prodotto come `/1`. Ora i prezzi sono `€2,00` (o `€2,00 (€4,00/kg)` quando è impostato il prezzo al chilo), senza barra finale.
+- 🏷️ **Tolto il "/1" appeso ai prezzi** ovunque. Veniva da un vecchio campo "Unità" nascosto dal form ma ancora stampato a schermo.
 
 ---
 
 ## [1.4.3] — 17 maggio 2026
 
+*Un form prodotto più semplice e più spiegato.*
+
 ### Aggiunte
-- **Prezzo al chilo di riferimento** su ogni prodotto (opzionale). L'admin lo può compilare per i prodotti a peso (es. €5,00 il cestino, €15,00/kg) e il socio vede entrambi i prezzi nel form ordine. Mostrato ovunque appaia il prezzo: catalogo, ordine, scheda fornitore.
-- **Tooltip di aiuto** accanto a ogni campo del form prodotto. Passa il mouse (o tocca) il "?" vicino al titolo del campo per leggere un esempio breve che spiega cosa mettere.
+- ⚖️ **Prezzo al kg di riferimento** su ogni prodotto (opzionale), mostrato ai soci accanto al prezzo unitario ovunque compaia un prezzo.
+- ❓ **Aiuto in linea su ogni campo del form prodotto**, una riga e un esempio ciascuno.
 
 ### Modificato
-- **Form prodotto semplificato**: rimosso il campo "Unità" (duplicava il formato e confondeva). Ora i campi sono Nome · Varietà · Formato · Categoria · Prezzo · Prezzo/kg (opzionale) · Note · Icona.
-- **Categoria è ora un menu a tendina**: lista predefinita (Frutta, Verdura, Pane e cereali, Pasta e riso, Latticini, Uova, Carne, Pesce, Conserve, Olio e aceto, Bevande, Dolci, Altro) unita alle categorie già usate dal fornitore, con un'opzione "+ aggiungi nuova categoria" in fondo per casi al volo.
-- **Template CSV aggiornato** al nuovo schema colonne `Nome; Varietà; Formato; Prezzo; Prezzo/kg; Categoria; Icona; Note`. L'import continua ad accettare anche il vecchio formato con "Unità" per retrocompatibilità.
+- 📝 **Il form prodotto ha perso il campo "Unità".** Duplicava il formato e confondeva gli admin.
+- 🗂️ **La categoria ora è un menu a tendina** — categorie predefinite unite a quelle già usate dal fornitore, più un "aggiungi nuova" in linea.
+- 📄 **Il template CSV segue il nuovo ordine di colonne**; l'import accetta ancora il vecchio.
 
 ---
 
 ## [1.4.2] — 17 maggio 2026
 
+*Scegli un'emoji, e parti dai saldi veri.*
+
 ### Aggiunte
-- **Selettore emoji con ricerca** nel campo "Icona" dei prodotti. Cliccando sull'icona si apre un menù con circa 80 emoji legate al cibo: basta scrivere "pomodoro", "miele", "carciofo" per filtrare. Niente più digitazione manuale dell'emoji.
+- 😀 **Un selettore di emoji con ricerca** per l'icona del prodotto, filtrabile con parole italiane, al posto del campo di testo libero.
 
 ### Modificato
-- **Saldi soci allineati al foglio CASSA** in vista del lancio ufficiale. Tutte le vecchie voci ledger (dati di test) sono state cancellate e sostituite con una voce iniziale di tipo `adjustment` per ciascun socio, con il saldo finale del foglio "FRUTTA E VERDURA 2025-2026 → CASSA". I soci non presenti nel foglio partono da zero.
+- 💰 **Saldi dei soci allineati al vecchio foglio CASSA** prima di andare in produzione, una voce iniziale per socio.
 
 ---
 
 ## [1.4.1] — 14 maggio 2026
 
+*Il changelog entra nell'app.*
+
 ### Aggiunte
-- **Pagina "Cosa è cambiato"** dentro l'app all'indirizzo `/changelog`. Linkata in fondo alla pagina Guida. Ha un selettore IT/EN, così la pagina stessa è bilingue.
-- **Sezione "Novità" nella Guida** che mostra un'anteprima dell'ultima release (le prime due sezioni, massimo quattro voci per sezione) con un link al changelog completo.
+- 📰 **Una pagina "Cosa è cambiato" su `/changelog`**, collegata dalla Guida, con il suo selettore IT/EN.
+- 👀 **Un'anteprima dell'ultima versione dentro la Guida**, con il link alla pagina completa.
 
 ### Modificato
-- L'export CSV per il fornitore ora è dettagliato per socio: una riga per ogni combinazione (fornitore × prodotto × socio). Ordinato per fornitore → prodotto → socio così il fornitore può preparare la borsa di ogni socio direttamente dal file.
-- Rimosse le righe di subtotale dal CSV per il fornitore — ora ogni riga è una vera riga d'ordine, così il fornitore non rischia di contare due volte un prodotto sommando le righe per socio e poi il subtotale.
+- 📄 **Il CSV fornitore è dettagliato per socio** e ordinato fornitore → prodotto → socio, così si può usare direttamente per preparare le borse.
+- 🧮 **Tolte le righe di subtotale dal CSV fornitore**, così non si può contare due volte sommando entrambe.
 
 ---
 
 ## [1.4.0] — 14 maggio 2026
 
+*Numeri per l'admin.*
+
 ### Aggiunte
-- **Dashboard statistiche admin** — nuova tab "Stats" nel pannello admin con:
-  - Top 10 prodotti più ordinati (barre orizzontali)
-  - Trend del fatturato negli ultimi 12 cicli chiusi (grafico a linea + area, con percentuale di variazione rispetto al ciclo precedente)
-  - Classifica fornitori per fatturato, con il prodotto più richiesto per ciascun fornitore
-  - Partecipazione dei soci divisa in tre fasce: attivi / occasionali / dormienti
-  - Quattro card di sintesi in alto: cicli chiusi, soci attivi, fatturato totale, prodotto top
-- **Card "Insights" sulla home admin** — tre metriche a colpo d'occhio sopra la lista cicli:
-  - "In scadenza" (cicli che chiudono entro 24h)
-  - "Saldo < 0" (soci con saldo negativo)
-  - "Top 30gg" (prodotto più venduto negli ultimi 30 giorni)
-  - Ogni card è cliccabile e ti porta direttamente alla tab admin corrispondente
-- **Export CSV per il fornitore** — bottone "⬇ CSV fornitore" nel modale "Recap ordini". Scarica un file CSV compatibile con Excel italiano (UTF-8 con BOM, punto-e-virgola come separatore, virgola decimale)
-- **README in inglese** — descrizione del progetto pronta per essere mostrata pubblicamente sul repo GitHub, con note di architettura
+- 📊 **Una dashboard di statistiche** nel pannello admin: prodotti più ordinati, andamento della spesa sugli ultimi 12 cicli chiusi, classifica fornitori, partecipazione dei soci e quattro schede di sintesi.
+- 📈 **Schede di sintesi sulla home admin** per i cicli in scadenza, i saldi negativi e il più venduto degli ultimi 30 giorni, ognuna collegata al tab giusto.
+- 📄 **Esportazione CSV fornitore** dal riquadro del ciclo chiuso, nel formato che Excel italiano si aspetta.
+- 📚 **Un README in inglese** con le note di architettura.
 
 ---
 
 ## [1.3.0] — 10 maggio 2026
 
+*Riproponi l'ultimo ordine con un tocco.*
+
 ### Aggiunte
-- **Bottone "Riproponi ultimo ordine"** nel form ordine — un click precarica il carrello con l'ultimo ordine del socio, abbinando i prodotti per nome/varietà. Visibile solo quando il carrello è vuoto, così non si rischia mai di sovrascrivere modifiche in corso
-- **Card "Prossimo ritiro"** sulla home, tra il saldo e i cicli. Mostra giorno, orario, fornitore e un contatore "tra X giorni" (visibile se mancano 14 giorni o meno)
+- 🔁 **"Riproponi ultimo ordine"** riempie il carrello partendo dal tuo ordine più recente, abbinando i prodotti per identità. Compare solo a carrello vuoto, così non può sovrascrivere il lavoro in corso.
+- 📅 **Una scheda "Prossimo ritiro"** in home con giorno, fascia oraria, fornitore e conteggio dei giorni mancanti.
 
 ### Performance
-- Aggiunti indici DB mancanti su `products.cycle_id` e `ledger_entries.cycle_id` — colonne usate ad ogni caricamento della home admin e del form ordine
+- ⚡ **Indici su `products.cycle_id` e `ledger_entries.cycle_id`**, interrogati a ogni caricamento delle pagine admin e ordine.
 
 ---
 
 ## [1.2.0] — 10 maggio 2026
 
+*Riparto della spedizione e rettifiche a peso.*
+
 ### Aggiunte
-- **Spedizione proporzionale all'ordine** — alla chiusura del ciclo, l'admin sceglie tra spedizione fissa per socio (come prima) o proporzionale al valore di ogni ordine. In modalità proporzionale il totale spedizione viene diviso con arrotondamento a 2 decimali; il centesimo eventualmente residuo finisce sull'ordine più grande così la somma resta esatta
-- **Chiusura ciclo con rettifica prezzi** — nuovo flusso per i prodotti a peso (es. 1 kg di insalata pesato 1,2 kg). Apre un modale dove l'admin modifica il prezzo unitario finale dei prodotti che servono; il sistema ricalcola ogni riga d'ordine e gli addebiti sul ledger prima di confermare
-- **SETUP.md** — guida passo-passo per configurare l'ambiente di sviluppo in locale
+- 🚚 **Riparto proporzionale della spedizione** come alternativa alla quota fissa per socio, con lo scarto di arrotondamento assorbito in modo deterministico perché il totale resti esatto al centesimo.
+- ⚖️ **Chiudi un ciclo con rettifiche di prezzo** per i prodotti a peso: modifichi ogni prezzo finale e il sistema ricalcola tutte le righe e le voci di cassa prima di addebitare.
+- 📚 **SETUP.md**, la guida passo passo allo sviluppo locale con le insidie di `vercel env pull`.
 
 ### Risolto
-- `drizzle-kit push` ora legge correttamente `.env.local` tramite il flag `--env-file` di Node — prima caricava solo `.env` e falliva silenziosamente con `url: ''`
+- 🗄️ **`drizzle-kit push` legge `.env.local`** tramite `--env-file` di Node. Prima caricava solo `.env` e falliva in silenzio con url vuoto.
 
 ---
 
 ## [1.1.0] — 10 maggio 2026
 
+*Irrobustita la chiusura del ciclo.*
+
 ### Risolto
-- **Race condition sulla chiusura ciclo (critico)** — `adminCloseCycle` ora usa un compare-and-swap atomico (`UPDATE ... WHERE status='open' RETURNING`) invece di un check + update separati. Due admin che cliccano "Chiudi" contemporaneamente non possono più produrre doppi addebiti. Se gli insert sul ledger falliscono a metà flusso, lo stato del ciclo viene riportato indietro così l'admin può riprovare in modo pulito
-- **Errore silenzioso quando il ciclo viene chiuso durante un ordine** — se un admin chiude il ciclo mentre un socio sta compilando il form, ora il form viene rinfrescato subito con un messaggio chiaro, invece di fallire senza feedback
-- **Saldo negativo ora rosso anche nel tab Movimenti** dello storico, coerente con la home
-- **La notifica di chiusura ciclo** ora menziona la spedizione nel testo e linka direttamente al ciclo specifico nello storico (`/storico?cycleId=...`)
-- **Il logo in alto** è ora cliccabile (torna alla home)
-- **La barra di navigazione in fondo** rispetta la safe area dell'iPhone (non viene coperta dalla home indicator)
-- **Sezione "categoria vuota" nel form ordine**: i prodotti senza categoria sono ora raggruppati sotto "Altro" se ci sono altre categorie definite, invece di apparire in una sezione senza titolo
+- 🔒 **Race condition sulla chiusura del ciclo (critica).** La chiusura ora è un confronta-e-scambia atomico: due admin che cliccano insieme non possono più generare addebiti doppi.
+- 🛒 **Chiudere un ciclo mentre qualcuno ordina dà un riscontro.** Il form ordine si aggiorna con un messaggio invece di fallire in silenzio.
+- 🧾 **I saldi negativi sono rossi nel tab Movimenti**, come in home.
+- 🔔 **La notifica di chiusura ciclo cita la spedizione** e porta direttamente a quel ciclo nello storico.
+- 🖼️ **Il logo in alto riporta alla home.**
+- 📱 **La barra in basso rispetta l'area sicura del tasto home dell'iPhone.**
+- 🗂️ **I prodotti senza categoria finiscono sotto "Altro"** invece di formare una sezione senza titolo.
 
 ---
 
 ## [1.0.0] — 5 maggio 2026
 
+*Primo rilascio in produzione della riscrittura Next.js.*
+
 ### Aggiunte
-- Prima release in produzione della riscrittura in Next.js 15 (migrazione Apps Script → Next.js)
-- Funzionalità per i soci: card saldo, form ordine con stepper per ogni prodotto, storico ordini e movimenti, notifiche in-app, guida con FAQ
-- Pannello admin con 6 tab: cicli, prodotti, ordini, cassa, soci, fornitori
-- Login con Google tramite Auth.js, con whitelist email sulla tabella `members`
-- Database Neon Postgres + Drizzle ORM
-- Deploy automatico su Vercel da `main`
+- 🚀 **La riscrittura in Next.js 15 va in produzione**, portando il gruppo fuori da Apps Script.
+- 🛒 **L'app per i soci**: saldo, form ordine con contatori per prodotto, storico ordini e movimenti, notifiche in app, guida con le domande frequenti.
+- 🛠️ **Il pannello admin** con sei tab — cicli, prodotti, ordini, cassa, soci, fornitori.
+- 🔒 **Login Google via Auth.js**, con lista di email autorizzate sulla tabella soci.
+- 🗄️ **Neon Postgres e Drizzle ORM**, in produzione su Vercel con deploy automatico da `main`.
 
 ---
 
-[Non rilasciato]: https://github.com/federicodecillia/wegrocery/compare/v1.7.0...HEAD
+[1.8.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.8.0
 [1.7.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.7.0

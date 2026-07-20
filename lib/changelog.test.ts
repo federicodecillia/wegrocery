@@ -18,6 +18,8 @@ Project preamble that must be dropped.
 
 ## [1.2.0] — 2026-05-14
 
+*A one-line summary of the release.*
+
 ### Fixed
 
 - **Bold** fix here
@@ -53,6 +55,16 @@ describe("parseChangelog", () => {
     expect(added.items[0].text).toBe("New thing");
     expect(added.items[0].subitems).toEqual(["detail one", "detail two"]);
     expect(added.items[1].subitems).toEqual([]);
+  });
+
+  it("reads the italic tagline under the heading, null when absent", () => {
+    expect(versions[1].tagline).toBe("A one-line summary of the release.");
+    expect(versions[0].tagline).toBeNull();
+  });
+
+  it("does not mistake a bold line for a tagline", () => {
+    const md = "# Changelog\n\n## [3.0.0] — 2026-02-01\n\n**Not a tagline.**\n\n### Added\n\n- Thing\n";
+    expect(parseChangelog(md)[0].tagline).toBeNull();
   });
 
   it("drops sections without items", () => {

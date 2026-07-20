@@ -83,12 +83,28 @@ export const it = {
         : "Non hai ordini precedenti da riproporre.",
     reproposeSuccess: (count: number, title: string) =>
       `Riproposti ${count} prodotti da "${title}". Modifica e conferma.`,
-    savedSuccess: "Ordine salvato ✓",
     otherCategory: "Altro",
     genericError: "Errore",
     saveError: "Errore durante il salvataggio",
     balanceWarning: (amount: string) =>
       `Attenzione: dopo l'ordine il tuo saldo sarà ${amount} negativo.`,
+    sentTitle: "Ordine inviato!",
+    sentBody: "L'ordine è stato registrato. Lo trovi qui ogni volta che rientri.",
+    gotIt: "Ho capito",
+    confirmed: "Ordine confermato",
+    confirmedSummary: (count: number, total: string) =>
+      `${count === 1 ? "1 prodotto" : `${count} prodotti`} · ${total}`,
+    editableUntil: (date: string) => `Puoi modificarlo o cancellarlo fino al ${date}.`,
+    editableUntilClose: "Puoi modificarlo o cancellarlo finché il ciclo resta aperto.",
+    editOrder: "Modifica ordine",
+    cancelOrder: "Cancella ordine",
+    cancelOrderTitle: "Cancellare l'ordine?",
+    cancelOrderMessage:
+      "L'ordine verrà rimosso e non ti sarà addebitato nulla alla chiusura. Puoi sempre rifarlo finché il ciclo è aperto.",
+    cancelOrderConfirm: "Sì, cancella",
+    cancelledSuccess: "Ordine cancellato",
+    removeOrder: "Rimuovi ordine",
+    backToOrder: "Torna all'ordine",
   },
   history: {
     orders: "Ordini",
@@ -180,7 +196,7 @@ export const it = {
       {
         n: 3,
         title: "Conferma l'ordine",
-        body: 'Premi "Conferma ordine" in basso. Puoi modificarlo finché l\'ordine è aperto.',
+        body: 'Premi "Conferma ordine" in basso. Ricevi una conferma e l\'ordine resta modificabile fino alla chiusura del ciclo.',
       },
       {
         n: 4,
@@ -221,7 +237,7 @@ export const it = {
       },
       {
         q: "Posso modificare l'ordine dopo averlo confermato?",
-        a: 'Sì, finché l\'ordine è aperto. Vai al tab Ordine, modifica le quantità e ri-premi "Conferma ordine". L\'ultimo salvataggio sostituisce il precedente.',
+        a: 'Sì, finché l\'ordine è aperto. Il tab Ordine mostra il tuo ordine confermato: premi "Modifica ordine" per cambiare le quantità e riconfermare, oppure "Cancella ordine" per rimuoverlo del tutto, così alla chiusura non ti viene addebitato nulla.',
       },
       {
         q: "Cosa succede se il saldo è negativo?",

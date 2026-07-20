@@ -58,6 +58,11 @@ export default async function GuidaPage() {
             )}
           </div>
           <div className="space-y-3 px-[18px] py-4">
+            {latest.tagline && (
+              <p className="text-[12px] italic leading-[1.45] text-brand-gray">
+                {latest.tagline}
+              </p>
+            )}
             {latest.sections.slice(0, 2).map((s) => (
               <div key={s.heading}>
                 <div className="mb-1 font-mono text-[10px] font-bold uppercase tracking-wide text-brand-orange">

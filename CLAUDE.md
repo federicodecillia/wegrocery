@@ -15,7 +15,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```
 ├── app/                        # Next.js App Router pages
 │   ├── page.tsx                # Home: saldo hero, ciclo aperto, ultimi movimenti
-│   ├── ordine/page.tsx         # Order form with per-product steppers
+│   ├── ordine/page.tsx         # Order: confirmed recap (edit/cancel) or the stepper form
 │   ├── storico/page.tsx        # Order history + ledger movements tabs
 │   ├── notifiche/page.tsx      # Notification list with mark-as-read
 │   ├── guida/page.tsx          # How-to steps + FAQ accordion
@@ -125,10 +125,20 @@ bug fix, etc.) you must update **both** changelog files:
    - `### Security` / `### Sicurezza` — vulnerability fixes
 5. Write entries from the **user's** perspective, not the developer's.
    Explain what changes for the member or admin, not which file was edited.
+6. House style, enforced by eye (the `/changelog` page renders it):
+   - One **italic tagline** on its own line under the version heading, saying
+     what the release is about. The parser reads it; `**bold**` is not a tagline.
+   - Every bullet opens with a **topical** emoji (🔔 notifications, 🚚 shipping,
+     🗄️ database, 📱 mobile, …) — not the section's own icon, which the chip
+     already shows. Avoid three identical ones in a row.
+   - Then a **bold headline**, then at most two lines. One bullet per coherent
+     change; collapse micro-fixes instead of listing them. Migration names and
+     env vars are fine, longer implementation detail belongs in the PR.
 
 When cutting a release, move the `[Unreleased]` block to a new
-`## [x.y.z] — YYYY-MM-DD` heading in both files and add the matching link
-reference at the bottom.
+`## [x.y.z] — YYYY-MM-DD` heading in both files (Italian dates are written out:
+`20 luglio 2026`), add the matching link reference at the bottom, and bump
+`package.json`. Verify the two files still parse in parallel before merging.
 
 ## Architecture
 
