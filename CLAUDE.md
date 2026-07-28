@@ -67,6 +67,36 @@ npm run db:studio    # Drizzle Studio (visual DB browser)
 
 **Vercel Root Directory**: repo root (empty / not set)
 
+## Dependencies and security advisories
+
+Dependabot security updates are on, and `.github/dependabot.yml` schedules a
+weekly grouped run. Advisories therefore arrive as pull requests with CI
+attached — nobody has to act on an email. A scheduled agent triages them on
+Monday mornings; it may open PRs and issues but never merges and never pushes
+to `main`, because merging deploys straight to production.
+
+When handling an advisory:
+
+- **Judge reachability before severity.** Most advisories list preconditions in
+  their "Am I affected?" section. Check them against the source. In July 2026
+  four *critical* Auth.js advisories were all inert here: no magic-link
+  provider, `getToken()` never called, one OAuth provider with no account
+  linking, and every access check reads `session.user.email` rather than the
+  truthiness of the auth object — so the fail-open bug denies instead. Say so
+  in the changelog; "critical but not reachable" is the useful information.
+- **Verify an override before adding one.** Forcing a transitive major can
+  break its consumer: `brace-expansion` 5.x exports an object from its
+  CommonJS entry while `minimatch` does `const expand = require(...)` and calls
+  it as a function. `sharp` is a safe override — Next.js still declares
+  `^0.34.5` even on 16.2.12, so there is no upstream fix coming.
+- **Confirm the fix landed** by comparing each alert's `first_patched_version`
+  against the resolved tree, not by trusting the bump.
+- **`next-auth` is pinned to an exact beta on purpose.** A caret on a
+  prerelease accepts breaking betas, so it sits in Dependabot's `ignore` list
+  and upgrades there are a deliberate decision.
+- If an alert is genuinely unreachable and has no safe fix, dismiss it with
+  `not_used` and open a tracking issue naming the condition to revisit it.
+
 ## Two environments: production + demo
 
 This repo deploys to **two** Vercel projects from the same `main` branch,
