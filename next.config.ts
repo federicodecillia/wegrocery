@@ -1,10 +1,10 @@
 import type { NextConfig } from "next";
+import { brandImagePatterns } from "./lib/brand/image-patterns";
 
 const nextConfig: NextConfig = {
   images: {
-    // Brand logos are per-deployment and may be hosted anywhere (e.g. a
-    // pinned raw.githubusercontent URL for Porta Moneta).
-    remotePatterns: [{ protocol: "https", hostname: "**" }],
+    // Only the brand logo's own host, never a wildcard — see image-patterns.ts.
+    remotePatterns: brandImagePatterns(process.env.NEXT_PUBLIC_BRAND_JSON),
   },
   // Next.js does not automatically include arbitrary fs.readFileSync targets
   // in the serverless build artifact. The /changelog and /guida pages read

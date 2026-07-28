@@ -1,0 +1,36 @@
+version: 2
+
+# Security advisories arrive as GitHub alerts either way; this config is what
+# turns them into reviewable PRs with CI attached, instead of an email that
+# someone has to act on by hand.
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Europe/Rome
+    # One PR per group rather than a dozen singles: the app is a single Next.js
+    # deploy, so these move together anyway and reviewing them together is how
+    # you actually spot a breaking combination.
+    groups:
+      next:
+        patterns: ["next", "@next/*", "eslint-config-next", "next-auth", "@auth/*"]
+      react:
+        patterns: ["react", "react-dom", "@types/react", "@types/react-dom"]
+      dev-tooling:
+        dependency-type: development
+    open-pull-requests-limit: 5
+    labels: ["dependencies"]
+    commit-message:
+      prefix: chore
+      include: scope
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    labels: ["dependencies"]
+    commit-message:
+      prefix: chore

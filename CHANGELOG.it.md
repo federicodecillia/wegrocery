@@ -19,6 +19,18 @@ stanno nella PR.
 
 ---
 
+## [1.8.1] — 28 luglio 2026
+
+*Aggiornamenti di sicurezza per il login e per la gestione delle immagini.*
+
+### Sicurezza
+- 🔒 **Auth.js aggiornato alla versione che corregge quattro vulnerabilità**, due delle quali critiche (`next-auth` 5.0.0-beta.32, `@auth/core` 0.41.3). Nessuna era sfruttabile qui — l'app non ha login via link email, non chiama mai `getToken()`, ha un solo provider OAuth senza collegamento di account, e ogni controllo di accesso legge `session.user.email` invece della semplice esistenza dell'oggetto di sessione — ma la correzione è un aggiornamento minimo, quindi non c'era motivo di rimandare.
+- 🖼️ **L'endpoint delle immagini non accetta più qualsiasi indirizzo su internet.** Prima consentiva `https://**`, che in un'installazione self-hosted trasforma `/_next/image` in un proxy aperto: chiunque poteva far scaricare al server immagini arbitrarie e darle in pasto alla libreria di elaborazione. Ora è ammesso esattamente l'indirizzo del logo del gruppo, preso dalla configurazione del deploy stesso.
+- ⚡ **Next.js aggiornato alla 15.5.22** per una correzione su un blocco del servizio nell'ottimizzazione delle immagini, e la libreria di elaborazione forzata a una versione con `libvips` corretto (`sharp` 0.35.3), che a monte non è ancora stata adottata.
+- 🧹 **Due dipendenze di solo sviluppo** con vulnerabilità di blocco del servizio (`js-yaml`, `brace-expansion`) aggiornate. Non sono mai arrivate agli utenti.
+
+---
+
 ## [1.8.0] — 20 luglio 2026
 
 *Confermare un ordine ora si vede, e puoi ripensarci fino alla chiusura del ciclo.*
@@ -239,5 +251,6 @@ stanno nella PR.
 
 ---
 
+[1.8.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.8.1
 [1.8.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.8.0
 [1.7.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.7.0

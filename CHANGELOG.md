@@ -18,6 +18,18 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ---
 
+## [1.8.1] — 2026-07-28
+
+*Security patches for the login layer and the image pipeline.*
+
+### Security
+- 🔒 **Auth.js updated to the version that patches four advisories**, two of them critical (`next-auth` 5.0.0-beta.32, `@auth/core` 0.41.3). None were exploitable here — the app has no magic-link provider, never calls `getToken()`, has a single OAuth provider with no account linking, and every access check reads `session.user.email` rather than the truthiness of the auth object — but the fix is a patch-level bump, so there's no reason to sit on it.
+- 🖼️ **The image endpoint no longer accepts any host on the internet.** It used to allow `https://**`, which in a self-hosted deployment turns `/_next/image` into an open proxy: anyone could have the server fetch arbitrary remote images and run them through the image library. It now allows exactly the brand logo's own URL, taken from the deployment's own configuration.
+- ⚡ **Next.js updated to 15.5.22** for a denial-of-service fix in image optimization, and the image library forced to a build with the patched `libvips` (`sharp` 0.35.3), which upstream has not yet picked up.
+- 🧹 **Two development-only dependencies** with denial-of-service advisories (`js-yaml`, `brace-expansion`) refreshed. They never shipped to users.
+
+---
+
 ## [1.8.0] — 2026-07-20
 
 *Confirming an order now says so, and you can change your mind until the cycle closes.*
@@ -238,5 +250,6 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ---
 
+[1.8.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.8.1
 [1.8.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.8.0
 [1.7.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.7.0
