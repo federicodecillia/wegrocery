@@ -33,15 +33,15 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.14",
-    "@types/node": "^20.19.22",
+    "@types/node": "^26.1.2",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.1.9",
     "drizzle-kit": "^0.31.10",
-    "eslint": "^9.38.0",
+    "eslint": "^10.8.0",
     "eslint-config-next": "^15.5.6",
     "tailwindcss": "^4.1.14",
     "tsx": "^4.22.4",
-    "typescript": "^5.9.3",
+    "typescript": "^7.0.2",
     "vitest": "^4.1.8"
   },
   "overrides": {
