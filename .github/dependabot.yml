@@ -3,6 +3,12 @@ version: 2
 # Security advisories arrive as GitHub alerts either way; this config is what
 # turns them into reviewable PRs with CI attached, instead of an email that
 # someone has to act on by hand.
+#
+# Majors are deliberately split from minors and patches. Grouping them together
+# produces one PR that can never merge — the first run bundled Next 15→16 and
+# TypeScript 5→7 with routine patches, and both PRs failed the build as a whole.
+# Routine updates should flow on their own; a major deserves its own PR, its own
+# red build, and a decision.
 updates:
   - package-ecosystem: npm
     directory: /
@@ -11,16 +17,28 @@ updates:
       day: monday
       time: "06:00"
       timezone: Europe/Rome
-    # One PR per group rather than a dozen singles: the app is a single Next.js
-    # deploy, so these move together anyway and reviewing them together is how
-    # you actually spot a breaking combination.
     groups:
-      next:
-        patterns: ["next", "@next/*", "eslint-config-next", "next-auth", "@auth/*"]
-      react:
+      # One PR for everything routine: these move together on a single Next.js
+      # deploy anyway, and reviewing them together is how you spot a bad
+      # combination that each bump alone would pass.
+      routine:
+        update-types: ["minor", "patch"]
+      # Majors still group, but separately and one ecosystem at a time, so a
+      # failing React major never blocks a working tooling major.
+      major-react:
         patterns: ["react", "react-dom", "@types/react", "@types/react-dom"]
-      dev-tooling:
+        update-types: ["major"]
+      major-next:
+        patterns: ["next", "@next/*", "eslint-config-next"]
+        update-types: ["major"]
+      major-tooling:
         dependency-type: development
+        update-types: ["major"]
+    ignore:
+      # next-auth is intentionally pinned to an exact beta: on a prerelease line
+      # a caret would accept breaking betas. Upgrades here are a manual decision,
+      # and security advisories reach us through Dependabot alerts regardless.
+      - dependency-name: next-auth
     open-pull-requests-limit: 5
     labels: ["dependencies"]
     commit-message:
