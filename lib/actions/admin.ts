@@ -55,7 +55,11 @@ async function writeAudit(
 
 // ── Ciclo ─────────────────────────────────────────────────────────────────────
 
-export type { ShippingMode };
+// ShippingMode is not re-exported from here on purpose: this is a "use server"
+// module, and a type-only export leaves nothing behind at runtime for the
+// actions manifest to point at. Next 15 tolerates it; Next 16's Turbopack build
+// fails with "Export ShippingMode doesn't exist in target module". Import the
+// type from @/lib/shipping, which is where it is declared.
 
 export type CreateCycleInput = {
   title: string;
