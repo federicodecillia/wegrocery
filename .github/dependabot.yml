@@ -39,6 +39,26 @@ updates:
       # a caret would accept breaking betas. Upgrades here are a manual decision,
       # and security advisories reach us through Dependabot alerts regardless.
       - dependency-name: next-auth
+      # The majors below are already triaged and tracked: Next 16 in #110, the
+      # dev toolchain in #111. Closing their PRs is not enough — Dependabot
+      # recreates a closed PR on the next weekly run, and each one costs two red
+      # Vercel preview builds and the failure emails that come with them. Lifting
+      # these entries is part of doing the upgrade, not a separate decision.
+      #
+      # eslint and eslint-config-next are peer-coupled and must move together:
+      # eslint-config-next@15 requires eslint ^9, so bumping eslint alone fails
+      # at npm install, before the build even starts. That is why they cannot be
+      # left to two different major groups.
+      - dependency-name: next
+        update-types: ["version-update:semver-major"]
+      - dependency-name: eslint-config-next
+        update-types: ["version-update:semver-major"]
+      - dependency-name: eslint
+        update-types: ["version-update:semver-major"]
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
     open-pull-requests-limit: 5
     labels: ["dependencies"]
     commit-message:
