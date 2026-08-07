@@ -142,10 +142,6 @@ export const it = {
           label: "Apertura ciclo",
           hint: "Quando apre un nuovo ciclo d'ordine.",
         },
-        cycle_closing_reminder: {
-          label: "Promemoria chiusura",
-          hint: "Quando un ciclo sta per chiudere e non hai ancora ordinato.",
-        },
         order_charge: {
           label: "Addebito ordine",
           hint: "Quando il ciclo si chiude e ti viene addebitato l'ordine.",
@@ -842,9 +838,6 @@ export const it = {
     cycleOpenedTitle: "Nuovo ciclo aperto",
     cycleOpenedBody: (title: string, closeAt: string) =>
       `È aperto un nuovo ciclo d'ordine: "${title}". Chiude il ${closeAt}.`,
-    cycleClosingReminderTitle: "Il ciclo sta per chiudere",
-    cycleClosingReminderBody: (title: string, closeAt: string) =>
-      `Il ciclo "${title}" chiude il ${closeAt} e non hai ancora ordinato. Se vuoi partecipare, fallo ora.`,
     orderLineAdjustedTitle: (cycleTitle: string) => `Ordine "${cycleTitle}" rettificato`,
     orderLineAdjustedNoteReceived: (product: string, ordered: string, received: string) =>
       `${product}: ${ordered} ordinati, ${received} ricevuti`,

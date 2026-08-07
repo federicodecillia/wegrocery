@@ -9,7 +9,6 @@
 
 export const NOTIFICATION_CATEGORIES = [
   "cycle_opened",
-  "cycle_closing_reminder",
   "order_charge",
   "order_updates",
   "wallet_topup",
@@ -24,7 +23,6 @@ export type ChannelPrefs = { app: boolean; email: boolean };
 // category is email-off until the member turns it on in the panel.
 export const CATEGORY_DEFAULTS: Record<NotificationCategory, ChannelPrefs> = {
   cycle_opened: { app: true, email: true },
-  cycle_closing_reminder: { app: true, email: false },
   order_charge: { app: true, email: false },
   order_updates: { app: true, email: false },
   wallet_topup: { app: true, email: false },
@@ -34,13 +32,18 @@ export const CATEGORY_DEFAULTS: Record<NotificationCategory, ChannelPrefs> = {
 // kept unchanged (historical rows and the demo seed keep working); this only
 // classifies them. Unknown types return null: dispatch treats that as
 // "deliver in-app, never email" so a new type can never silently email people.
+//
+// `cycle_closing_reminder` is deliberately absent. The feature was removed, but
+// notifications sent before that stay in members' inboxes; they now fall
+// through to the unknown-type branch, which renders them in-app and never
+// emails. Stored preference rows for the retired category are ignored by
+// resolvePreferences the same way.
 const TYPE_TO_CATEGORY: Record<string, NotificationCategory> = {
   order_closed: "order_charge",
   topup_received: "wallet_topup",
   order_corrected: "order_updates",
   order_adjusted: "order_updates",
   cycle_opened: "cycle_opened",
-  cycle_closing_reminder: "cycle_closing_reminder",
 };
 
 export function categoryForType(type: string): NotificationCategory | null {

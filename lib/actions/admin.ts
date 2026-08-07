@@ -529,13 +529,7 @@ export async function adminUpdateCycle(
       .limit(1);
     if (!before) return { error: t.errors.cycleNotFound };
 
-    // Re-arm the closing reminder only when the deadline actually moves — the
-    // open-cycle edit form re-sends orderCloseAt even for unrelated edits, so
-    // resetting unconditionally would re-fire an already-sent reminder.
     const newCloseAt = data.orderCloseAt !== undefined ? new Date(data.orderCloseAt) : undefined;
-    const closeAtChanged =
-      newCloseAt !== undefined &&
-      newCloseAt.getTime() !== (before.orderCloseAt ? before.orderCloseAt.getTime() : NaN);
 
     const isClosed = before.status === "closed";
     const shippingTouched =
@@ -578,10 +572,7 @@ export async function adminUpdateCycle(
           pickup2Date: data.pickup2Date ? new Date(data.pickup2Date) : null,
         }),
         ...(data.pickup2EndTime !== undefined && { pickup2EndTime: data.pickup2EndTime || null }),
-        ...(data.orderCloseAt !== undefined && {
-          orderCloseAt: newCloseAt,
-          ...(closeAtChanged ? { closingReminderSentAt: null } : {}),
-        }),
+        ...(data.orderCloseAt !== undefined && { orderCloseAt: newCloseAt }),
         ...(data.notes !== undefined && { notes: data.notes || null }),
         ...(data.supplierId !== undefined && { supplierId: data.supplierId || null }),
         ...(data.accessLevel !== undefined && { accessLevel: data.accessLevel }),

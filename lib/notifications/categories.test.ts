@@ -38,12 +38,19 @@ describe("categoryForType", () => {
 
   it("maps the new event types to their category", () => {
     expect(categoryForType("cycle_opened")).toBe("cycle_opened");
-    expect(categoryForType("cycle_closing_reminder")).toBe("cycle_closing_reminder");
   });
 
   it("returns null for unknown types", () => {
     expect(categoryForType("shipping_charge")).toBeNull();
     expect(categoryForType("something_new")).toBeNull();
+  });
+
+  // The closing-reminder feature was removed, but notifications sent while it
+  // existed are still in members' inboxes. They must keep rendering, which the
+  // unknown-type branch guarantees: in-app yes, email never.
+  it("treats the retired closing reminder as an unknown type", () => {
+    expect(categoryForType("cycle_closing_reminder")).toBeNull();
+    expect(isNotificationCategory("cycle_closing_reminder")).toBe(false);
   });
 });
 
