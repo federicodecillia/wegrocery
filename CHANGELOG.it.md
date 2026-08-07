@@ -19,6 +19,16 @@ stanno nella PR.
 
 ---
 
+## [1.9.0] — 7 agosto 2026
+
+*Una notifica in meno, e un ingranaggio in meno dietro le quinte.*
+
+### Rimosse
+- 🔕 **Il promemoria "il ciclo sta per chiudere" non c'è più.** Arrivava nelle notifiche quando un ciclo stava per chiudere e non avevi ancora ordinato; la notifica di apertura ciclo dice già la data di chiusura, quindi era in gran parte la stessa informazione ripetuta.
+- ⚙️ **Il suo interruttore è sparito dalle impostazioni notifiche.** Una riga in meno da leggere; i promemoria ricevuti in passato restano nell'elenco delle notifiche.
+
+---
+
 ## [1.8.1] — 28 luglio 2026
 
 *Aggiornamenti di sicurezza per il login e per la gestione delle immagini.*
@@ -251,6 +261,7 @@ stanno nella PR.
 
 ---
 
+[1.9.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.9.0
 [1.8.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.8.1
 [1.8.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.8.0
 [1.7.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.7.0

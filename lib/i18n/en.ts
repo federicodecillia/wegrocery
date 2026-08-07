@@ -142,10 +142,6 @@ export const en: Strings = {
           label: "Cycle opened",
           hint: "When a new order cycle opens.",
         },
-        cycle_closing_reminder: {
-          label: "Closing reminder",
-          hint: "When a cycle is about to close and you haven't ordered yet.",
-        },
         order_charge: {
           label: "Order charge",
           hint: "When the cycle closes and your order is charged.",
@@ -841,9 +837,6 @@ export const en: Strings = {
     cycleOpenedTitle: "New cycle open",
     cycleOpenedBody: (title: string, closeAt: string) =>
       `A new order cycle is open: "${title}". It closes on ${closeAt}.`,
-    cycleClosingReminderTitle: "Cycle closing soon",
-    cycleClosingReminderBody: (title: string, closeAt: string) =>
-      `Cycle "${title}" closes on ${closeAt} and you haven't ordered yet. If you'd like to take part, do it now.`,
     orderLineAdjustedTitle: (cycleTitle: string) => `Order "${cycleTitle}" adjusted`,
     orderLineAdjustedNoteReceived: (product: string, ordered: string, received: string) =>
       `${product}: ${ordered} ordered, ${received} received`,

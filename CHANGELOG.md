@@ -18,6 +18,16 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ---
 
+## [1.9.0] — 2026-08-07
+
+*One notification fewer, and one moving part fewer behind it.*
+
+### Removed
+- 🔕 **The "cycle closing soon" reminder is gone.** It arrived in your notifications when a cycle was about to close and you hadn't ordered; the cycle-opened notification already tells you the closing date, so this was mostly a second copy of the same information.
+- ⚙️ **Its toggle has left the notification settings.** One row fewer to read through; reminders you received in the past stay in your notification list.
+
+---
+
 ## [1.8.1] — 2026-07-28
 
 *Security patches for the login layer and the image pipeline.*
@@ -250,6 +260,7 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ---
 
+[1.9.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.9.0
 [1.8.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.8.1
 [1.8.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.8.0
 [1.7.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.7.0

@@ -54,10 +54,6 @@ export const orderCycles = pgTable("order_cycles", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
   closedAt: timestamp("closed_at", { withTimezone: true }),
   supplierId: text("supplier_id").references(() => suppliers.supplierId),
-  // Set by the reminder cron (CAS from NULL) once the "closing soon" reminder
-  // has been sent for this cycle, so a later run doesn't resend it. Reset to
-  // NULL when the close deadline is moved, to re-arm the reminder.
-  closingReminderSentAt: timestamp("closing_reminder_sent_at", { withTimezone: true }),
 });
 
 export const supplierProducts = pgTable("supplier_products", {
