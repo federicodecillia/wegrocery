@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
+  REMINDER_WINDOW_MS,
   selectCycleAccessMembers,
   selectReminderTargets,
   type MemberForTargeting,
@@ -53,5 +54,19 @@ describe("selectReminderTargets", () => {
   it("respects the access gate before the ordered filter", () => {
     const result = selectReminderTargets(members, "admin", new Set());
     expect(ids(result)).toEqual(["m_admin"]);
+  });
+});
+
+describe("REMINDER_WINDOW_MS", () => {
+  // The window is not a taste decision: a cycle closing in a gap between two
+  // successful cron pings gets no reminder at all, so the window has to be
+  // wider than the longest gap the scheduler actually produces. Measured over
+  // 2026-07-30 to 2026-08-07, the longest ordinary gap was 3.9h. This test
+  // fails if someone narrows the window back under that ceiling without
+  // re-measuring or moving off GitHub cron.
+  const LONGEST_OBSERVED_GAP_MS = 3.9 * 60 * 60 * 1000;
+
+  it("stays wider than the longest observed gap between cron pings", () => {
+    expect(REMINDER_WINDOW_MS).toBeGreaterThan(LONGEST_OBSERVED_GAP_MS);
   });
 });

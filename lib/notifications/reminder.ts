@@ -7,10 +7,24 @@ import { canAccessCycle } from "@/lib/utils";
 // Length of the "closing soon" window. The cron route expresses the same
 // bound as a SQL predicate (order_close_at BETWEEN now and now + this); keeping
 // the constant here means both refer to a single source.
-// 3h, not 2h: GitHub throttles the */15 cron to real gaps of up to ~2h on
-// low-activity repos (observed 2026-07-10), and a gap longer than the window
-// skips the reminder entirely. The CAS dedup still guarantees a single send.
-export const REMINDER_WINDOW_MS = 3 * 60 * 60 * 1000; // 3 hours
+//
+// The window has to be wider than the longest gap between two successful cron
+// pings, or a cycle closing inside that gap is never reminded at all. It is
+// sized from measurement, not from what the schedule claims. Over 2026-07-30 to
+// 2026-08-07 the `*/15` schedule (~744 runs due) actually fired 100 times — 13%
+// — because GitHub throttles scheduled workflows on low-activity repos. Median
+// gap 1.5h, longest ordinary gap 3.9h, so the previous 3h window was already
+// too tight and had been silently dropping reminders.
+//
+// 6h covers the observed worst case with headroom. It does not cover a GitHub
+// incident: on 2026-08-06 two queued jobs were cancelled without running a
+// single step, leaving a 10.2h hole. Removing that failure mode means moving
+// off GitHub cron entirely — tracked separately.
+//
+// Widening is safe on both sides: the CAS on closing_reminder_sent_at still
+// guarantees exactly one send per cycle, and the copy names the closing time
+// explicitly rather than promising "in N hours".
+export const REMINDER_WINDOW_MS = 6 * 60 * 60 * 1000; // 6 hours
 
 export type MemberForTargeting = {
   memberId: string;

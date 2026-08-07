@@ -1,15 +1,23 @@
 name: Cycle Closing Reminders
 
-# Pings the production reminder endpoint every 15 minutes. The endpoint sends
-# the "closing soon" notification for open cycles that close within the next
-# 3 hours (once per cycle, deduped server-side). Also runnable on demand.
-# The window was widened from 2h in v1.8.0: GitHub throttles this cron to real
-# gaps of up to ~2h on a low-activity repo, and a gap wider than the window
-# skips a cycle's reminder entirely. REMINDER_WINDOW_MS is the source of truth.
+# Pings the production reminder endpoint. The endpoint sends the "closing soon"
+# notification for open cycles closing within REMINDER_WINDOW_MS (the source of
+# truth, in lib/notifications/reminder.ts), once per cycle, deduped server-side.
+# Also runnable on demand.
 #
-# GitHub cron is best-effort (can lag several minutes and pauses after ~60 days
-# of repo inactivity); the endpoint's window predicate self-heals, so a delayed
-# run still delivers the reminder, just closer to the deadline.
+# Read the schedule below as an upper bound, not a promise. Measured 2026-07-30
+# to 2026-08-07: of the ~744 runs this `*/15` schedule was due, GitHub ran 100.
+# That is 13%, with a median gap of 1.5h between successful pings and ordinary
+# gaps reaching 3.9h. GitHub throttles scheduled workflows on repos with little
+# push activity, and all four quarter-hour slots are throttled about equally, so
+# there is no better minute to move to. This is why the reminder window is 6h.
+#
+# Twice on 2026-08-06 a queued job was cancelled after ~15 minutes without
+# running a single step — no runner was ever assigned. Those are the "Run
+# failed" emails; nothing in this file caused them and a rerun is pointless,
+# since the endpoint's predicate self-heals on the next successful ping.
+# Eliminating this class of failure means scheduling from somewhere other than
+# GitHub Actions, which is a separate decision (see the tracking issue).
 #
 # Required GitHub repository secret:
 #   - CRON_SECRET  must match CRON_SECRET on the Vercel production project.
