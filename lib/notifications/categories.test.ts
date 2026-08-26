@@ -38,6 +38,7 @@ describe("categoryForType", () => {
 
   it("maps the new event types to their category", () => {
     expect(categoryForType("cycle_opened")).toBe("cycle_opened");
+    expect(categoryForType("cycle_cancelled")).toBe("order_updates");
   });
 
   it("returns null for unknown types", () => {

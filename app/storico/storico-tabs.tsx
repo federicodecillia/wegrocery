@@ -104,8 +104,18 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
                       <span className="font-mono text-[15px] font-bold text-brand-near-black">
                         {formatEur(o.orderTotal)}
                       </span>
-                      <span className="rounded-full bg-brand-teal-light px-2.5 py-0.5 font-mono text-[10px] text-brand-teal">
-                        {o.status === "open" ? t.history.open : t.history.pickedUp}
+                      <span
+                        className={`rounded-full px-2.5 py-0.5 font-mono text-[10px] ${
+                          o.status === "cancelled"
+                            ? "bg-brand-red-light text-brand-red"
+                            : "bg-brand-teal-light text-brand-teal"
+                        }`}
+                      >
+                        {o.status === "open"
+                          ? t.history.open
+                          : o.status === "cancelled"
+                            ? t.history.cancelled
+                            : t.history.pickedUp}
                       </span>
                     </div>
                   </button>

@@ -44,6 +44,7 @@ const TYPE_TO_CATEGORY: Record<string, NotificationCategory> = {
   order_corrected: "order_updates",
   order_adjusted: "order_updates",
   cycle_opened: "cycle_opened",
+  cycle_cancelled: "order_updates",
 };
 
 export function categoryForType(type: string): NotificationCategory | null {

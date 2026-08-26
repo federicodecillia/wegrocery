@@ -116,6 +116,7 @@ export const it = {
     products: "Prodotti",
     open: "Aperto",
     pickedUp: "Ritirato",
+    cancelled: "Annullato",
     currentBalance: "Saldo attuale",
     transfer: "Bonifico",
     orderCharge: "Ordine",
@@ -319,6 +320,7 @@ export const it = {
       noCycleOpen: "Nessun ciclo aperto",
       openBadge: "Aperto",
       closedBadge: "Chiuso",
+      cancelledBadge: "Annullato",
       ordersCount: "Ordini",
       totalAmount: "Totale",
       overdueWarning: "Notifica admin: la data di chiusura e' passata. Controlla il recap e chiudi il ciclo.",
@@ -665,6 +667,18 @@ export const it = {
         `Ciclo chiuso. ${charges} addebiti, ${adjustments} rettifiche.`,
       errorLoading: "Errore caricamento",
     },
+    cycleCancel: {
+      openButton: "🚫 Annulla ciclo",
+      modalTitle: "Annulla ciclo e rimborsa",
+      modalDescription:
+        "Il ciclo verrà segnato come annullato e ogni socio verrà riaccreditato dell'importo che gli è stato addebitato.",
+      reasonLabel: "Motivo *",
+      reasonPlaceholder: "es. Il fornitore non ha consegnato",
+      refundShippingLabel: "Rimborsa anche la spedizione",
+      confirmButton: "Annulla e rimborsa",
+      cancelling: "Annullamento…",
+      cancelledSuccess: (n: number, total: string) => `Ciclo annullato. Rimborsati ${n} soci per ${total}.`,
+    },
     closedCycleDetails: {
       defaultButtonLabel: "✎ Ordini",
       membersAndTotal: (n: number, total: string) => `${n} soci · ${total} da addebitare`,
@@ -848,11 +862,15 @@ export const it = {
       `${notes} · rimborso di ${amount} EUR sul tuo saldo.`,
     orderLineAdjustedBodyCharge: (notes: string, amount: string) =>
       `${notes} · addebito aggiuntivo di ${amount} EUR sul tuo saldo.`,
+    cycleCancelledTitle: "Ordine annullato",
+    cycleCancelledBody: (title: string, amount: string, reason: string) =>
+      `Il ciclo "${title}" è stato annullato: ${reason}. Ti abbiamo riaccreditato ${amount}.`,
   },
   ledger: {
     orderCharge: "Addebito ordine",
     shippingAdjusted: "Spedizione rettificata",
     shippingFromSupplier: "Spedizione da distinta fornitore",
+    cycleCancelled: "Annullamento ciclo",
   },
   fields: {
     title: "Titolo",
@@ -933,6 +951,7 @@ export const it = {
       `Prodotto "${name}" non riconosciuto — riga saltata. (Nel CSV il match è per nome: verifica che non sia stato rinominato.)`,
     distintaCsvProductAmbiguous: (name: string) =>
       `Prodotto "${name}" ambiguo (più prodotti con lo stesso nome) — riga saltata.`,
+    cancelReasonRequired: "Il motivo dell'annullamento è obbligatorio",
   },
   email: {
     notificationSubject: (appName: string, title: string) => `${appName} — ${title}`,
