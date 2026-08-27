@@ -19,6 +19,15 @@ stanno nella PR.
 
 ---
 
+## [1.10.0] — 27 agosto 2026
+
+*Una via d'uscita quando un ciclo va storto dopo che è già stato chiuso.*
+
+### Aggiunte
+- 🚫 **Annulla un ciclo chiuso e rimborsa tutti.** Quando un fornitore non consegna un ordine già addebitato, un admin può ora annullare quel ciclo: ogni socio addebitato viene riaccreditato per intero (prodotti, e spedizione a meno che tu non la escluda), con un motivo obbligatorio e una traccia completa — un badge "annullato" sul ciclo, un movimento segnalato nello storico di ogni socio, una riga di audit log e una notifica a ogni socio rimborsato.
+
+---
+
 ## [1.9.0] — 7 agosto 2026
 
 *Una notifica in meno, e un ingranaggio in meno dietro le quinte.*

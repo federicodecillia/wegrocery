@@ -18,6 +18,15 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ---
 
+## [1.10.0] — 2026-08-27
+
+*A way back when a cycle goes wrong after it's already closed.*
+
+### Added
+- 🚫 **Cancel a closed cycle and refund everyone.** When a supplier fails to deliver on an order that's already been charged, an admin can now cancel that cycle: every member who was charged gets refunded in full (products, and shipping unless you opt out), with a mandatory reason and a full trail — a "cancelled" badge on the cycle, a marked movement in each member's history, an audit log entry, and a notification to each refunded member.
+
+---
+
 ## [1.9.0] — 2026-08-07
 
 *One notification fewer, and one moving part fewer behind it.*
