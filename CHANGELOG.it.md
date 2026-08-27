@@ -19,6 +19,15 @@ stanno nella PR.
 
 ---
 
+## [1.10.1] — 27 agosto 2026
+
+*Fare in modo che la casella del fornitore la veda davvero.*
+
+### Correzioni
+- 📬 **L'email dell'ordine al fornitore finisce meno spesso nello spam.** Le risposte arrivano ora direttamente all'admin che l'ha inviata, l'oggetto parte dal nome della tua cooperativa invece che dall'app, e il messaggio viene inviato in HTML oltre che in testo semplice — tre segnali che i filtri antispam usano per fidarsi di un messaggio.
+
+---
+
 ## [1.10.0] — 27 agosto 2026
 
 *Una via d'uscita quando un ciclo va storto dopo che è già stato chiuso.*

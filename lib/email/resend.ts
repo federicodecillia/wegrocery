@@ -13,8 +13,17 @@ type SendMailOpts = {
   // MAIL_FROM. Note that Resend requires the From domain to be verified
   // on the account, so passing an arbitrary email may fail at send time.
   from?: string;
+  // Where replies should land. Improves deliverability (a real reply-able
+  // address is a trust signal to spam filters) and means "reply" on the
+  // recipient's side actually reaches someone, even if `from` is a no-reply
+  // archive address.
+  replyTo?: string;
   subject: string;
   text: string;
+  // Optional HTML alternative. When present, the message is sent as a
+  // text/html multipart instead of text-only — some spam filters penalize
+  // plain-text emails carrying an attachment.
+  html?: string;
   attachments?: Attachment[];
 };
 
@@ -46,8 +55,10 @@ export async function sendMail(
       from,
       to: [opts.to],
       ...(ccList.length > 0 ? { cc: ccList } : {}),
+      ...(opts.replyTo ? { replyTo: opts.replyTo } : {}),
       subject: opts.subject,
       text: opts.text,
+      ...(opts.html ? { html: opts.html } : {}),
       ...(opts.attachments ? { attachments: opts.attachments } : {}),
     });
     if (error) return { error: error.message || t.errors.emailSendFailed };

@@ -18,6 +18,15 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ---
 
+## [1.10.1] — 2026-08-27
+
+*Making sure the supplier's inbox actually sees it.*
+
+### Fixed
+- 📬 **The supplier order email is less likely to land in spam.** Replies now go straight to the admin who sent it, the subject leads with your cooperative's name instead of the app's, and the message is sent as proper HTML alongside plain text — three signals spam filters use to trust a message.
+
+---
+
 ## [1.10.0] — 2026-08-27
 
 *A way back when a cycle goes wrong after it's already closed.*

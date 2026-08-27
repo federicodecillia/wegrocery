@@ -957,7 +957,7 @@ export const en: Strings = {
     notificationCta: (url: string) => `Open in the app: ${url}`,
     notificationManagePrefs: (url: string) => `Manage your notification preferences: ${url}`,
     notificationFooter: (orgName: string) => orgName,
-    supplierOrderSubject: (appName: string, cycleTitle: string) => `${appName} — ${cycleTitle}`,
+    supplierOrderSubject: (orgName: string, cycleTitle: string) => `Order ${orgName} — ${cycleTitle}`,
     supplierOrderBody: (input: {
       appName: string;
       orgName: string;

@@ -873,7 +873,7 @@ export async function adminGetSupplierEmailDefaults(cycleId: string): Promise<
       to: cycle.supplierEmail ?? "",
       from,
       cc: Array.from(new Set([admin.email, ...(brand.archiveCcEmail ? [brand.archiveCcEmail] : [])])),
-      subject: `${brand.appName} — ${cycle.title}`,
+      subject: `Ordine ${brand.orgName} — ${cycle.title}`,
       supplierName: cycle.supplierName,
     };
   } catch (e) {
@@ -952,8 +952,13 @@ export async function adminSendSupplierEmail(
       to,
       cc,
       from: overrides?.from?.trim() || undefined,
+      // Replies land with the acting admin even when `from` is a shared
+      // no-reply archive address — also a deliverability signal to spam
+      // filters (a real, reply-able sender behind the message).
+      replyTo: admin.email,
       subject,
       text: defaults.text,
+      html: defaults.html,
       attachments: [{ filename: distinta.filename, content: distinta.content }],
     });
     if ("error" in result) return { error: result.error };

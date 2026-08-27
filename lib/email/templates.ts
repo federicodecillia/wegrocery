@@ -23,9 +23,10 @@ const formatPickup = (d: Date): string =>
 export function supplierOrderEmail(input: SupplierEmailInput): {
   subject: string;
   text: string;
+  html: string;
 } {
   const { cycleTitle, pickupDate, grandTotal, productCount, memberCount } = input;
-  const subject = t.email.supplierOrderSubject(brand.appName, cycleTitle);
+  const subject = t.email.supplierOrderSubject(brand.orgName, cycleTitle);
   const pickupStr = pickupDate ? formatPickup(pickupDate) : null;
   const grandTotalStr = formatMoney(grandTotal);
   const text = t.email.supplierOrderBody({
@@ -37,7 +38,23 @@ export function supplierOrderEmail(input: SupplierEmailInput): {
     productCount,
     memberCount,
   });
-  return { subject, text };
+  return { subject, text, html: textToHtml(text) };
+}
+
+// Renders a plain-text email body as simple HTML: blank-line-separated
+// paragraphs, single newlines within a paragraph become <br>. Derived from
+// the same text instead of a separately-written HTML copy, so the two
+// versions can never drift apart. Escapes HTML special chars since the
+// source text embeds admin-provided free text (cycle title).
+function textToHtml(text: string): string {
+  const escapeHtml = (s: string) =>
+    s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const paragraphs = text
+    .trim()
+    .split(/\n{2,}/)
+    .map((p) => `<p>${escapeHtml(p).replace(/\n/g, "<br>")}</p>`)
+    .join("\n");
+  return `<!DOCTYPE html><html><body style="font-family: -apple-system, Arial, sans-serif; font-size: 14px; line-height: 1.5; color: #1a1a1a;">\n${paragraphs}\n</body></html>`;
 }
 
 // Generic member-facing notification email. Reuses the already-localized
