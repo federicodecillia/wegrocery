@@ -958,7 +958,7 @@ export const it = {
     notificationCta: (url: string) => `Apri nell'app: ${url}`,
     notificationManagePrefs: (url: string) => `Gestisci le tue preferenze di notifica: ${url}`,
     notificationFooter: (orgName: string) => orgName,
-    supplierOrderSubject: (appName: string, cycleTitle: string) => `${appName} — ${cycleTitle}`,
+    supplierOrderSubject: (orgName: string, cycleTitle: string) => `Ordine ${orgName} — ${cycleTitle}`,
     supplierOrderBody: (input: {
       appName: string;
       orgName: string;
