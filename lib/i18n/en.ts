@@ -116,6 +116,7 @@ export const en: Strings = {
     products: "Products",
     open: "Open",
     pickedUp: "Picked up",
+    cancelled: "Cancelled",
     currentBalance: "Current balance",
     transfer: "Bank transfer",
     orderCharge: "Order",
@@ -319,6 +320,7 @@ export const en: Strings = {
       noCycleOpen: "No open cycle",
       openBadge: "Open",
       closedBadge: "Closed",
+      cancelledBadge: "Cancelled",
       ordersCount: "Orders",
       totalAmount: "Total",
       overdueWarning: "Admin alert: order closing date has passed. Check the recap and close the cycle.",
@@ -664,6 +666,18 @@ export const en: Strings = {
         `Cycle closed. ${charges} charges, ${adjustments} adjustments.`,
       errorLoading: "Load error",
     },
+    cycleCancel: {
+      openButton: "🚫 Cancel cycle",
+      modalTitle: "Cancel cycle and refund",
+      modalDescription:
+        "The cycle will be marked as cancelled and every member will be refunded the amount they were charged.",
+      reasonLabel: "Reason *",
+      reasonPlaceholder: "e.g. The supplier didn't deliver",
+      refundShippingLabel: "Also refund shipping",
+      confirmButton: "Cancel and refund",
+      cancelling: "Cancelling…",
+      cancelledSuccess: (n: number, total: string) => `Cycle cancelled. Refunded ${n} members for ${total}.`,
+    },
     closedCycleDetails: {
       defaultButtonLabel: "✎ Orders",
       membersAndTotal: (n: number, total: string) => `${n} members · ${total} to charge`,
@@ -847,11 +861,15 @@ export const en: Strings = {
       `${notes} · refund of ${amount} EUR to your balance.`,
     orderLineAdjustedBodyCharge: (notes: string, amount: string) =>
       `${notes} · additional charge of ${amount} EUR on your balance.`,
+    cycleCancelledTitle: "Order cancelled",
+    cycleCancelledBody: (title: string, amount: string, reason: string) =>
+      `The cycle "${title}" was cancelled: ${reason}. We refunded you ${amount}.`,
   },
   ledger: {
     orderCharge: "Order charge",
     shippingAdjusted: "Shipping adjusted",
     shippingFromSupplier: "Shipping from supplier sheet",
+    cycleCancelled: "Cycle cancellation",
   },
   fields: {
     title: "Title",
@@ -932,6 +950,7 @@ export const en: Strings = {
       `Product "${name}" not recognized — row skipped. (CSV matches by name: check it wasn't renamed.)`,
     distintaCsvProductAmbiguous: (name: string) =>
       `Product "${name}" is ambiguous (several products share the name) — row skipped.`,
+    cancelReasonRequired: "The cancellation reason is required",
   },
   email: {
     notificationSubject: (appName: string, title: string) => `${appName} — ${title}`,

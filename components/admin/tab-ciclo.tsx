@@ -9,6 +9,7 @@ import {
   OpenCycleCard,
   SupplierActionsButton,
 } from "./ciclo-forms";
+import { CancelCycleButton } from "./cancel-cycle-dialog";
 import { ClosedCycleDetails } from "./closed-cycle-details";
 
 export async function TabCiclo() {
@@ -82,10 +83,16 @@ export async function TabCiclo() {
                     className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
                       c.status === "open"
                         ? "bg-brand-teal-light text-brand-teal"
-                        : "bg-black/[0.05] text-brand-gray"
+                        : c.status === "cancelled"
+                          ? "bg-brand-red-light text-brand-red"
+                          : "bg-black/[0.05] text-brand-gray"
                     }`}
                   >
-                    {c.status === "open" ? t.admin.cycle.openBadge : t.admin.cycle.closedBadge}
+                    {c.status === "open"
+                      ? t.admin.cycle.openBadge
+                      : c.status === "cancelled"
+                        ? t.admin.cycle.cancelledBadge
+                        : t.admin.cycle.closedBadge}
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-[13px] font-medium text-brand-near-black">{c.title}</div>
@@ -95,7 +102,7 @@ export async function TabCiclo() {
                     </div>
                   </div>
                 </div>
-                {c.status !== "open" && (
+                {c.status === "closed" && (
                   <div className="mt-2 flex flex-wrap items-center gap-1.5">
                     <ClosedCycleEditButton
                       cycle={{
@@ -123,6 +130,12 @@ export async function TabCiclo() {
                       supplierName={c.supplierName ?? null}
                       supplierEmail={c.supplierEmail ?? null}
                     />
+                    <ClosedCycleDetails cycleId={c.cycleId} cycleTitle={c.title} />
+                    <CancelCycleButton cycleId={c.cycleId} cycleTitle={c.title} />
+                  </div>
+                )}
+                {c.status === "cancelled" && (
+                  <div className="mt-2 flex flex-wrap items-center gap-1.5">
                     <ClosedCycleDetails cycleId={c.cycleId} cycleTitle={c.title} />
                   </div>
                 )}

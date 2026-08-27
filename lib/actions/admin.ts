@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { eq, and, sql, inArray } from "drizzle-orm";
+import { eq, and, ne, sql, inArray } from "drizzle-orm";
 import { auth } from "@/auth";
 import { t } from "@/lib/i18n";
 import { formatMoney, formatDateTime } from "@/lib/i18n/format";
@@ -312,6 +312,117 @@ export async function adminCloseCycle(cycleId: string) {
   revalidatePath("/");
   revalidatePath("/storico");
   return result;
+}
+
+// Cancels an already-closed cycle (e.g. the supplier failed to deliver) and
+// refunds every affected member. The refund is computed from each member's
+// CURRENT net ledger balance for this cycle — order_charge + shipping_charge
+// + any later correction — not just the original charge, so it stays exact
+// even if the order was already partially corrected via adminEditClosedOrder
+// before the cancel. Shipping can be excluded from the refund when the co-op
+// already paid the courier regardless of the failed delivery.
+export async function adminCancelClosedCycle(
+  cycleId: string,
+  input: { refundShipping: boolean; reason: string },
+): Promise<{ refundedMembers: number; totalRefunded: number }> {
+  const admin = await requireAdmin();
+  const db = getDb();
+  const now = new Date();
+
+  const reason = input.reason.trim();
+  if (!reason) throw new Error(t.errors.cancelReasonRequired);
+
+  const [cycle] = await db
+    .select({ status: orderCycles.status, title: orderCycles.title })
+    .from(orderCycles)
+    .where(eq(orderCycles.cycleId, cycleId))
+    .limit(1);
+  if (!cycle) throw new Error(t.errors.cycleNotFound);
+  if (cycle.status !== "closed") throw new Error(t.errors.cycleNotClosed);
+
+  // Atomic compare-and-swap, same guard as performCycleClose: only the
+  // caller that flips closed→cancelled proceeds. A concurrent second call
+  // gets 0 rows back and fails cleanly instead of double-refunding.
+  const cancelledRows = await db
+    .update(orderCycles)
+    .set({ status: "cancelled" })
+    .where(and(eq(orderCycles.cycleId, cycleId), eq(orderCycles.status, "closed")))
+    .returning({ cycleId: orderCycles.cycleId });
+  if (cancelledRows.length === 0) throw new Error(t.errors.cycleNotClosed);
+
+  let refundedMembers = 0;
+  let totalRefunded = 0;
+
+  try {
+    const netByMember = await db
+      .select({ memberId: ledgerEntries.memberId, net: sql<string>`sum(${ledgerEntries.amount})` })
+      .from(ledgerEntries)
+      .where(
+        input.refundShipping
+          ? eq(ledgerEntries.cycleId, cycleId)
+          : and(eq(ledgerEntries.cycleId, cycleId), ne(ledgerEntries.type, "shipping_charge")),
+      )
+      .groupBy(ledgerEntries.memberId);
+
+    const toRefund = netByMember
+      .map((r) => ({ memberId: r.memberId, net: parseFloat(r.net) }))
+      .filter((r) => Math.abs(r.net) > 0.005);
+
+    if (toRefund.length > 0) {
+      await db.insert(ledgerEntries).values(
+        toRefund.map((r) => ({
+          entryId: genId("led"),
+          memberId: r.memberId,
+          entryDate: now,
+          type: "correction",
+          amount: (-r.net).toFixed(2),
+          cycleId,
+          note: `${t.ledger.cycleCancelled} — ${reason}`,
+          createdBy: admin.email,
+          createdAt: now,
+        })),
+      );
+
+      const emailByMember = await getMemberEmails(
+        db,
+        toRefund.map((r) => r.memberId),
+      );
+      await dispatchWithBodies(
+        db,
+        toRefund.map((r) => ({
+          memberId: r.memberId,
+          email: emailByMember.get(r.memberId) ?? null,
+          title: t.notificationsServer.cycleCancelledTitle,
+          body: t.notificationsServer.cycleCancelledBody(cycle.title, formatMoney(-r.net), reason),
+          href: `/storico?cycleId=${cycleId}`,
+        })),
+        "cycle_cancelled",
+        now,
+      );
+
+      refundedMembers = toRefund.length;
+      totalRefunded = toRefund.reduce((sum, r) => sum + -r.net, 0);
+    }
+  } catch (e) {
+    // Roll back the status flip so the admin can retry instead of leaving
+    // the cycle cancelled with a partial or missing refund.
+    await db.update(orderCycles).set({ status: "closed" }).where(eq(orderCycles.cycleId, cycleId));
+    throw e;
+  }
+
+  await writeAudit(db, admin.email, "cancel_cycle", "cycle", cycleId, {
+    reason,
+    refundShipping: input.refundShipping,
+    refundedMembers,
+    totalRefunded: totalRefunded.toFixed(2),
+  });
+
+  revalidatePath("/admin");
+  revalidatePath("/storico");
+  revalidatePath("/notifiche");
+  revalidatePath("/");
+
+  return { refundedMembers, totalRefunded };
 }
 
 // Applies per-product price adjustments (typically because the actual weight
