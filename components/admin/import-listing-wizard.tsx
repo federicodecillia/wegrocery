@@ -16,7 +16,7 @@ import {
   TARGET_LABEL,
   type TargetField,
 } from "@/lib/csv/header-heuristics";
-import { getProductEmojiOrNull, guessProductCategory } from "@/lib/utils";
+import { getProductEmojiOrNull, guessProductCategory, isGenericCategoryLabel } from "@/lib/utils";
 import { t } from "@/lib/i18n";
 
 type Props = {
@@ -588,8 +588,13 @@ function Step3Review({
               const override = emojiOverrides[i];
               const currentEmoji = override || auto || "🛒";
               const selected = selectedIndexes.has(i);
-              const fileCategory = cell(i, "category");
-              const guessedCategory = fileCategory || (name ? guessProductCategory(name) : null);
+              const fileCategoryRaw = cell(i, "category");
+              // A generic catch-all ("Altro", "Varie"...) doesn't count as a
+              // real file category — let the guess win, mirrors resolveRow.
+              const fileCategory =
+                fileCategoryRaw && !isGenericCategoryLabel(fileCategoryRaw) ? fileCategoryRaw : "";
+              const guessedCategory =
+                fileCategory || (name ? guessProductCategory(name) : null) || fileCategoryRaw;
               return (
                 <tr key={i} className={`border-b border-brand-border ${selected ? "" : "opacity-40"}`}>
                   <td className="p-2 align-middle">

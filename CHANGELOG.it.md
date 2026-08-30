@@ -19,6 +19,16 @@ stanno nella PR.
 
 ---
 
+## [1.10.2] — 30 agosto 2026
+
+*Meno verdure perse dentro "Altro".*
+
+### Correzioni
+- 🥬 **I prodotti finiscono più spesso nella categoria giusta.** Un file fornitore che etichetta quasi tutto come "Altro"/"Varie" non sovrascrive più un riconoscimento sicuro — una zucchina, una melanzana, una patata finiscono ora in Verdura anche se il foglio del fornitore non si è preso la briga di specificarlo.
+- 🌿 **Più prodotti ottengono un'icona automatica.** Basilico, prezzemolo e altre erbe aromatiche — anche in nomi composti come "Basilico viola da trapiantare" — ottengono ora un'icona coerente invece del carrello generico. Vengono riconosciuti anche i plurali (zucchine, carote, funghi, asparagi...) e alcuni prodotti prima senza icona (pancetta, gamberi, calamari, mandarino, olive) ora ne hanno una.
+
+---
+
 ## [1.10.1] — 27 agosto 2026
 
 *Fare in modo che la casella del fornitore la veda davvero.*
