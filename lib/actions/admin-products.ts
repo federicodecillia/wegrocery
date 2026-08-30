@@ -6,7 +6,12 @@ import { auth } from "@/auth";
 import { t } from "@/lib/i18n";
 import { getDb } from "@/lib/db/client";
 import { supplierProducts, auditLog, suppliers } from "@/lib/db/schema";
-import { getProductEmoji, getProductEmojiOrNull, guessProductCategory } from "@/lib/utils";
+import {
+  getProductEmoji,
+  getProductEmojiOrNull,
+  guessProductCategory,
+  isGenericCategoryLabel,
+} from "@/lib/utils";
 import { buildProductTemplate, parseProductTemplate } from "@/lib/csv/product-template";
 import { inspectListing, pickSupplierMatch, type ListingInspection } from "@/lib/csv/supplier-listing-parser";
 import { suggestMapping, type TargetField } from "@/lib/csv/header-heuristics";
@@ -322,9 +327,14 @@ function resolveRow(
   const emoji = (emojiOverride && emojiOverride.trim()) || autoEmoji || "🛒";
 
   // Category: prefer the file column; when absent, guess from the name among
-  // the preset categories (null when unsure, so we never mislabel).
-  const fileCategory = pickCell(raw, mapping.category) || null;
-  const category = fileCategory ?? guessProductCategory(name);
+  // the preset categories (null when unsure, so we never mislabel). A file
+  // column that just says "Altro"/"Varie" (a catch-all the supplier used for
+  // anything it didn't sub-categorize) is treated as absent too, so a
+  // confident guess (e.g. "Zucchina" → Verdura) isn't overridden by it.
+  const fileCategoryRaw = pickCell(raw, mapping.category) || null;
+  const fileCategory =
+    fileCategoryRaw && !isGenericCategoryLabel(fileCategoryRaw) ? fileCategoryRaw : null;
+  const category = fileCategory ?? guessProductCategory(name) ?? fileCategoryRaw;
 
   return {
     ok: true,

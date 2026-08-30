@@ -61,55 +61,62 @@ const EMOJI_MAP: [RegExp, string][] = [
   [/pesca|pesche/i, "🍑"],
   [/cilieg/i, "🍒"],
   [/melanz/i, "🍆"],        // MUST come before mela (substring match); covers melanzana/melanzane
-  [/mela/i, "🍎"],
-  [/pera/i, "🍐"],
-  [/aranci/i, "🍊"],
+  [/mela\b|mele\b/i, "🍎"],
+  [/pera|pere\b/i, "🍐"],
+  [/aranci|mandarin|clementin/i, "🍊"],
   [/limone|cedro/i, "🍋"],
-  [/banana/i, "🍌"],
+  [/banana|banane/i, "🍌"],
   [/ananas/i, "🍍"],
   [/mango/i, "🥭"],
+  [/cocco/i, "🥥"],
   [/uva/i, "🍇"],
   [/fragol/i, "🍓"],
-  [/lampone|mirtillo|ribes/i, "🫐"],
+  [/lampone|mirtillo|ribes|\bmore\b/i, "🫐"],
   [/kiwi/i, "🥝"],
   [/fico|fichi/i, "🍈"],
-  [/susina|prugna/i, "🍑"],
-  [/castagna/i, "🌰"],
+  [/susina|prugna|albicocc/i, "🍑"],
+  [/castagn/i, "🌰"],
   [/melagran|melogran/i, "❤️"],
+  [/oliv/i, "🫒"],
   // ── Verdura ───────────────────────────────────────────────────────
   [/tomat|pomodo/i, "🍅"],
   [/avocado/i, "🥑"],
-  [/patata/i, "🥔"],
-  [/carota/i, "🥕"],
+  [/patat|topinambur/i, "🥔"],
+  [/carota|carote/i, "🥕"],
   [/mais/i, "🌽"],
   [/peperonc/i, "🌶️"],    // peperoncino before peperone
   [/peperon(?!c)/i, "🫑"], // peperone/peperoni/peperonata; excludes peperoncino
-  [/cetriolo|zucchina/i, "🥒"],
-  [/zucca/i, "🎃"],
+  [/cetriol|zucchin/i, "🥒"], // stems cover cetriolo/cetrioli and zucchina/zucchine
+  [/zucca|zucche/i, "🎃"],
   [/insalata|lattug|radicchio|spinac|sedano|finocchio|erbett|cicoria/i, "🥬"],
-  [/broccolo|cavolo|verza|cavolfiore|cavolini/i, "🥦"],
+  [/broccol|cavolo|cavoli|verza|cavolfiore|cavolini/i, "🥦"],
   [/aglio/i, "🧄"],
   [/cipoll/i, "🧅"],        // cipolla, cipollotto, cipollone — MUST come before pollo
   [/porro|porrino/i, "🧅"],
-  [/fungo|porcino|champignon/i, "🍄"],
-  [/carciofo/i, "🌿"],
-  [/asparago/i, "🌿"],
+  [/carciof/i, "🌿"],
+  [/asparag/i, "🌿"],
+  [/basilico|prezzemolo|\bmenta\b|rosmarino|salvia|timo|origano|aromatic/i, "🌿"],
   [/bietol|rapa|barbabietol/i, "🥦"],
-  [/fagiolo|fagiolino|fava|lenticchia|pisello|cece/i, "🫘"],
-  [/patatina|topinambur/i, "🥔"],
-  // ── Cereali, pane, legumi ─────────────────────────────────────────
+  [/fagiol|fava|fave|lenticchi|pisello|piselli|cece|ceci/i, "🫘"],
+  // ── Cereali, pane, pasta ──────────────────────────────────────────
   [/riso\b|risotto/i, "🍚"],   // MUST come before pane's bare "riso" substring match
   [/pane|focaccia|pizza|grano|farro|orzo|avena/i, "🍞"],
   [/pasta|spaghett|penne|rigatoni/i, "🍝"],
+  // Raw ingredient last, so a dish name ("risotto ai funghi") keeps matching
+  // the dish above instead of the mushroom underneath it.
+  [/fungo|funghi|porcino|porcini|champignon/i, "🍄"],
   // ── Prodotti animali ──────────────────────────────────────────────
   [/uov/i, "🥚"],
   [/latte|yogurt|kefir/i, "🥛"],
-  [/formaggio|ricotta|mozzarella|pecorino|parmigiano/i, "🧀"],
+  [/formagg|ricotta|mozzarella|pecorino|parmigian/i, "🧀"],
   [/burro|panna|crema/i, "🧈"],
   [/miele/i, "🍯"],
-  [/pollo|gallina|tacchino|anatra/i, "🍗"],
-  [/carne|manzo|vitello|maiale|salume|salsicc|salsiccia/i, "🥩"],
-  [/pesce|salmone|tonno|merluzzo|orata|branzino/i, "🐟"],
+  [/poll|gallin|tacchin|anatr/i, "🍗"],
+  [/carne|manzo|vitello|maiale|salume|salsicc/i, "🥩"],
+  [/pancetta|bacon|guanciale|lardo/i, "🥓"],
+  [/pesce|salmone|tonno|merluzzo|orata|branzino|alici|acciug|sgombro|sardin|baccal/i, "🐟"],
+  [/gamber|scampi|cozze|vongole|crostace/i, "🦐"],
+  [/calamar|totano|seppia|polpo|mollusc/i, "🦑"],
   // ── Condimenti ────────────────────────────────────────────────────
   [/olio/i, "🫙"],
   [/aceto/i, "🫙"],
@@ -117,7 +124,7 @@ const EMOJI_MAP: [RegExp, string][] = [
   // ── Bevande ───────────────────────────────────────────────────────
   [/vino/i, "🍷"],
   [/birra/i, "🍺"],
-  [/succo|spremitura/i, "🧃"],
+  [/succo|sprem/i, "🧃"],
 ];
 
 export function getProductEmoji(name: string): string {
@@ -154,9 +161,9 @@ const CATEGORY_MAP: [RegExp, string][] = [
   [/miele|marmellat|confettur|biscott|torta|dolce|cioccolat|cacao|nutella|crostata|merendin|zucchero/i, "Dolci"],
   [/passat|pomodor[oi] pelat|conserv|sottolio|sottaceto|pesto|sugo|ragù|ragu\b|legumi in barattolo/i, "Conserve"],
   // Frutta — mirror the emoji-map fruit area.
-  [/mela\b|mele\b|pera|pere\b|aranc|limone|cedro|banana|ananas|mango|uva\b|fragol|lampone|mirtillo|ribes|kiwi|fico|fichi|susina|prugna|pesca|pesche|cilieg|castagna|melagran|melogran|cocomero|anguria|melone|albicocc|mandarin|clementin|lime\b|frutt/i, "Frutta"],
+  [/mela\b|mele\b|pera|pere\b|aranc|limone|cedro|banana|banane|ananas|mango|uva\b|fragol|lampone|mirtillo|ribes|kiwi|fico|fichi|susina|prugna|pesca|pesche|cilieg|castagn|melagran|melogran|cocomero|anguria|melone|albicocc|mandarin|clementin|lime\b|frutt/i, "Frutta"],
   // Verdura — mirror the emoji-map vegetable area.
-  [/pomodor|melanz|patat|carota|carote|mais|peperon|cetriolo|zucchin|zucca|insalata|lattug|radicchio|spinac|sedano|finocchio|erbett|cicoria|broccol|cavolo|cavoli|verza|cavolfiore|aglio|cipoll|porro|porrino|fungo|funghi|porcino|champignon|carciofo|asparago|biet[ao]|bietol|rapa|barbabietol|fagiolo|fagiolin|fava|fave\b|lenticchia|pisello|piselli|cece|ceci\b|topinambur|ravanell|rucola|verdur|ortagg/i, "Verdura"],
+  [/pomodor|melanz|patat|carota|carote|mais|peperon|cetriol|zucchin|zucca|zucche|insalata|lattug|radicchio|spinac|sedano|finocchio|erbett|cicoria|broccol|cavolo|cavoli|verza|cavolfiore|aglio|cipoll|porro|porrino|fungo|funghi|porcino|champignon|carciof|asparag|biet[ao]|bietol|rapa|barbabietol|fagiol|fava|fave\b|lenticchi|pisello|piselli|cece|ceci\b|topinambur|ravanell|rucola|verdur|ortagg/i, "Verdura"],
 ];
 
 export function guessProductCategory(name: string): string | null {
@@ -182,4 +189,28 @@ export function canonicalizeCategory(value: string, known: ReadonlyArray<string>
   const norm = normalizeCategory(value);
   if (!norm) return value.trim();
   return known.find((k) => normalizeCategory(k) === norm) ?? value.trim();
+}
+
+// Labels a supplier file uses as a catch-all for "nothing more specific"
+// (many fornitori literally write "Altro" against every row they didn't
+// bother sub-categorizing). Trusting that verbatim would ship an otherwise
+// guessable product ("Zucchina" → Verdura) straight into "Altro" — treat
+// these the same as a blank category column so the guess gets a chance.
+const GENERIC_CATEGORY_LABELS = new Set([
+  "altro",
+  "altri",
+  "altre",
+  "vario",
+  "vari",
+  "varie",
+  "misto",
+  "mista",
+  "misti",
+  "miste",
+  "generico",
+  "generica",
+]);
+
+export function isGenericCategoryLabel(value: string | null | undefined): boolean {
+  return GENERIC_CATEGORY_LABELS.has(normalizeCategory(value));
 }

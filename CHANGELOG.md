@@ -18,6 +18,16 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ---
 
+## [1.10.2] — 2026-08-30
+
+*Fewer vegetables getting lost in "Other".*
+
+### Fixed
+- 🥬 **Products land in the right category more often.** A supplier file that labels most rows "Altro"/"Varie" no longer overrides a confident guess — a zucchina, a melanzana, a patata now sort into Verdura even when the supplier's own sheet didn't bother.
+- 🌿 **More products get an automatic icon.** Basil, parsley, and other aromatic herbs — including compound names like "Basilico viola da trapiantare" — now get a matching icon instead of the generic cart. Plural forms (zucchine, carote, funghi, asparagi...) match too, and a handful of previously-unmapped items (pancetta, gamberi, calamari, mandarino, olive) now have one.
+
+---
+
 ## [1.10.1] — 2026-08-27
 
 *Making sure the supplier's inbox actually sees it.*

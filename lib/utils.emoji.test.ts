@@ -31,4 +31,33 @@ describe("getProductEmoji", () => {
   it("returns null (not the fallback) when nothing matches", () => {
     expect(getProductEmojiOrNull("Prodotto misterioso")).toBeNull();
   });
+
+  it("matches common Italian plurals, not just the singular form", () => {
+    expect(getProductEmoji("Mele")).toBe("🍎");
+    expect(getProductEmoji("Pere")).toBe("🍐");
+    expect(getProductEmoji("Carote")).toBe("🥕");
+    expect(getProductEmoji("Zucchine")).toBe("🥒");
+    expect(getProductEmoji("Cetrioli")).toBe("🥒");
+    expect(getProductEmoji("Broccoli")).toBe("🥦");
+    expect(getProductEmoji("Asparagi")).toBe("🌿");
+    expect(getProductEmoji("Funghi porcini")).toBe("🍄");
+  });
+
+  it("matches aromatic herbs, through compound descriptive names", () => {
+    expect(getProductEmoji("Basilico verde genovese")).toBe("🌿");
+    expect(getProductEmoji("Basilico viola da trapiantare")).toBe("🌿");
+    expect(getProductEmoji("Prezzemolo riccio")).toBe("🌿");
+  });
+
+  it("still keeps a dish name matching the dish, not a raw ingredient inside it", () => {
+    expect(getProductEmoji("Risotto ai funghi")).toBe("🍚");
+  });
+
+  it("covers a few previously-unmapped animal and fruit products", () => {
+    expect(getProductEmoji("Pancetta affumicata")).toBe("🥓");
+    expect(getProductEmoji("Gamberi rossi")).toBe("🦐");
+    expect(getProductEmoji("Calamari freschi")).toBe("🦑");
+    expect(getProductEmoji("Mandarino tardivo")).toBe("🍊");
+    expect(getProductEmoji("Olive taggiasche")).toBe("🫒");
+  });
 });
