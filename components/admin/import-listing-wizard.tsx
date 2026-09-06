@@ -590,11 +590,13 @@ function Step3Review({
               const selected = selectedIndexes.has(i);
               const fileCategoryRaw = cell(i, "category");
               // A generic catch-all ("Altro", "Varie"...) doesn't count as a
-              // real file category — let the guess win, mirrors resolveRow.
+              // real file category — mirrors resolveRow.
               const fileCategory =
                 fileCategoryRaw && !isGenericCategoryLabel(fileCategoryRaw) ? fileCategoryRaw : "";
-              const guessedCategory =
-                fileCategory || (name ? guessProductCategory(name) : null) || fileCategoryRaw;
+              // The name-based guess wins whenever it recognizes the product —
+              // mirrors resolveRow (see comment there for why).
+              const nameGuess = name ? guessProductCategory(name) : null;
+              const guessedCategory = nameGuess || fileCategory || fileCategoryRaw;
               return (
                 <tr key={i} className={`border-b border-brand-border ${selected ? "" : "opacity-40"}`}>
                   <td className="p-2 align-middle">
@@ -616,7 +618,7 @@ function Step3Review({
                     {guessedCategory ? (
                       <span>
                         {guessedCategory}
-                        {!fileCategory && <span className="ml-1 text-[10px] text-brand-orange">{t.admin.importWizard.autoCategory}</span>}
+                        {nameGuess && <span className="ml-1 text-[10px] text-brand-orange">{t.admin.importWizard.autoCategory}</span>}
                       </span>
                     ) : (
                       <span className="text-brand-gray-light">—</span>

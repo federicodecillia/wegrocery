@@ -18,6 +18,16 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ---
 
+## [1.10.3] — 2026-09-06
+
+*Same product, same shelf.*
+
+### Fixed
+- 🥕 **A product no longer splits across categories.** "Cicoria" (or any other product) now always lands in the same category no matter which variant or import batch it came from — the name-based guess wins over a supplier file's own inconsistent category column, everywhere products get loaded into an order.
+- 🔤 **Products are actually sorted now.** The order screen (and every other product list) sorts alphabetically by product, then variety, then format and price, instead of whatever order the last import happened to load them in.
+
+---
+
 ## [1.10.2] — 2026-08-30
 
 *Fewer vegetables getting lost in "Other".*

@@ -326,15 +326,19 @@ function resolveRow(
   const autoEmoji = getProductEmojiOrNull(name);
   const emoji = (emojiOverride && emojiOverride.trim()) || autoEmoji || "🛒";
 
-  // Category: prefer the file column; when absent, guess from the name among
-  // the preset categories (null when unsure, so we never mislabel). A file
-  // column that just says "Altro"/"Varie" (a catch-all the supplier used for
-  // anything it didn't sub-categorize) is treated as absent too, so a
-  // confident guess (e.g. "Zucchina" → Verdura) isn't overridden by it.
+  // Category: the deterministic guess from the name wins whenever it
+  // recognizes the product, so the same product always lands in the same
+  // preset category — a supplier's own free-text column is filled
+  // inconsistently row to row (the same "Cicoria" landing in Verdura on one
+  // row and Altro on another, depending on which file/batch it came from,
+  // is exactly this). Fall back to the file's column when the guess is
+  // unsure, unless it's a catch-all like "Altro"/"Varie" a supplier uses
+  // for anything it didn't bother sub-categorizing.
   const fileCategoryRaw = pickCell(raw, mapping.category) || null;
   const fileCategory =
     fileCategoryRaw && !isGenericCategoryLabel(fileCategoryRaw) ? fileCategoryRaw : null;
-  const category = fileCategory ?? guessProductCategory(name) ?? fileCategoryRaw;
+  const guessedCategory = guessProductCategory(name);
+  const category = guessedCategory ?? fileCategory;
 
   return {
     ok: true,
@@ -346,7 +350,7 @@ function resolveRow(
       unitPrice: unitPriceNum.toFixed(2),
       pricePerKg: ppkNum != null ? ppkNum.toFixed(2) : null,
       category,
-      categoryGuessed: !fileCategory && category !== null,
+      categoryGuessed: guessedCategory !== null,
       emoji,
       emojiAutoMatched: !emojiOverride && autoEmoji !== null,
       notes: pickCell(raw, mapping.notes) || null,
