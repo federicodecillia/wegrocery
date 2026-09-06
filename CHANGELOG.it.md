@@ -19,6 +19,16 @@ stanno nella PR.
 
 ---
 
+## [1.10.3] — 6 settembre 2026
+
+*Stesso prodotto, stesso scaffale.*
+
+### Correzioni
+- 🥕 **Un prodotto non si spezza più tra categorie diverse.** "Cicoria" (o qualsiasi altro prodotto) finisce sempre nella stessa categoria, qualunque sia la varietà o il lotto d'importazione da cui arriva — il riconoscimento dal nome vince sulla colonna categoria del fornitore, incoerente da un file all'altro, ovunque i prodotti vengano caricati in un ordine.
+- 🔤 **I prodotti sono finalmente ordinati per davvero.** La schermata dell'ordine (e ogni altro elenco prodotti) è in ordine alfabetico per prodotto, poi varietà, poi formato e prezzo, invece di seguire l'ordine casuale dell'ultima importazione.
+
+---
+
 ## [1.10.2] — 30 agosto 2026
 
 *Meno verdure perse dentro "Altro".*

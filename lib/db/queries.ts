@@ -56,7 +56,17 @@ export async function getCycleProducts(cycleId: string) {
     .select()
     .from(products)
     .where(and(eq(products.cycleId, cycleId), eq(products.active, true)))
-    .orderBy(asc(products.sortOrder), asc(products.name));
+    // Alphabetical by product, then variety, then format/price, so every
+    // "Cicoria" variant sits together instead of scattered in whatever
+    // order rows happened to land in the DB across separate imports.
+    // LOWER(...) keeps it case-insensitive (see the same pattern and
+    // rationale in lib/csv/distinta-builder.ts).
+    .orderBy(
+      sql`lower(${products.name})`,
+      sql`lower(coalesce(${products.variant}, ''))`,
+      sql`lower(coalesce(${products.format}, ''))`,
+      asc(products.unitPrice),
+    );
 }
 
 export async function getMemberOrderLines(memberId: string, cycleId: string) {

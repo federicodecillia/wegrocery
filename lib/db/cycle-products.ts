@@ -1,6 +1,7 @@
 import { eq, sql } from "drizzle-orm";
 import { getDb } from "@/lib/db/client";
 import { products } from "@/lib/db/schema";
+import { guessProductCategory } from "@/lib/utils";
 
 function genId(prefix: string): string {
   return `${prefix}_${crypto.randomUUID().replace(/-/g, "").slice(0, 16)}`;
@@ -58,6 +59,14 @@ export async function upsertCycleProducts(
         : typeof np.pricePerKg === "number"
           ? np.pricePerKg.toFixed(2)
           : np.pricePerKg;
+    // The deterministic name-based guess wins whenever it recognizes the
+    // product, regardless of what category the caller passed in — a raw
+    // supplier file column, or a stale value already sitting on a catalogue
+    // entry from an older import. This is the single place every "load
+    // products into a cycle" path funnels through, so fixing it here keeps
+    // the same product name landing in the same category everywhere it's
+    // loaded from (catalogue picker included), not just on fresh imports.
+    const guessedCategory = guessProductCategory(np.name);
 
     if (existing && existing !== true) {
       await db
@@ -66,7 +75,7 @@ export async function upsertCycleProducts(
           unitPrice: unitPriceStr,
           pricePerKg: pricePerKgStr ?? existing.pricePerKg,
           notes: np.notes || existing.notes,
-          category: np.category || existing.category,
+          category: guessedCategory ?? (np.category || existing.category),
           supplier: np.supplier || existing.supplier,
           supplierId: np.supplierId ?? existing.supplierId,
           emoji: np.emoji || existing.emoji,
@@ -89,7 +98,7 @@ export async function upsertCycleProducts(
         notes: np.notes?.trim() || null,
         sortOrder: currentSort,
         active: true,
-        category: np.category?.trim() || null,
+        category: guessedCategory ?? (np.category?.trim() || null),
         emoji: np.emoji?.trim() || null,
       });
       existingMap.set(key, true);
