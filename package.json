@@ -23,7 +23,7 @@
     "exceljs": "^4.4.0",
     "fast-xml-parser": "^5.11.0",
     "fflate": "^0.8.3",
-    "next": "^15.5.23",
+    "next": "^15.5.25",
     "next-auth": "5.0.0-beta.32",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
