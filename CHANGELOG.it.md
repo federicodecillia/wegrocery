@@ -19,6 +19,18 @@ stanno nella PR.
 
 ---
 
+## [Non rilasciato]
+
+*Patch di sicurezza per la pipeline immagini e l'importazione della distinta.*
+
+### Sicurezza
+- ⚡ **Next.js aggiornato alla 15.5.25**, che corregge due vulnerabilità critiche di esecuzione di codice da remoto. Una richiede un server ospitato su Windows (noi giriamo su Vercel/Linux); l'altra riguardava l'ottimizzazione delle immagini, già limitata al solo host del logo del brand. Anche `sharp` è passato alla 0.35.4.
+- 📤 **Un file fornitore malevolo non poteva più bloccare un'importazione distinta.** Ri-importare un file `.ods` (es. da un salvataggio con LibreOffice) usava un parser XML con un bug di denial-of-service su lunghe sequenze di spazi, ora corretto.
+- 📊 **Una vulnerabilità dormiente nella libreria dei fogli di calcolo, corretta comunque.** `exceljs` include una versione vecchia e vulnerabile di `uuid`; non sfruttabile qui perché l'unico punto in cui viene usata non tocca il percorso vulnerabile, ma fissata comunque alla versione corretta.
+- 🧹 **Una dipendenza di sviluppo** (`js-yaml`) con una vulnerabilità di denial-of-service aggiornata. Non ha mai raggiunto gli utenti.
+
+---
+
 ## [1.10.3] — 6 settembre 2026
 
 *Stesso prodotto, stesso scaffale.*
