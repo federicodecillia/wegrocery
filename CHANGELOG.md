@@ -18,6 +18,18 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ---
 
+## [Unreleased]
+
+*Security patches for the image pipeline and the distinta import.*
+
+### Security
+- ⚡ **Next.js updated to 15.5.25**, patching two critical remote-code-execution advisories. One requires a Windows-hosted server (we run on Vercel/Linux); the other was in image optimization, already narrowed to the brand's own logo host. `sharp` moved to 0.35.4 alongside it.
+- 📤 **A crafted supplier file could no longer stall a distinta import.** Re-importing a `.ods` re-save (e.g. from LibreOffice) used an XML parser with a denial-of-service bug on long runs of whitespace, now fixed.
+- 📊 **A dormant advisory in the spreadsheet library, fixed anyway.** `exceljs` bundles an old, vulnerable `uuid`; unreachable here since the one call site never touches the vulnerable code path, but pinned to the patched release regardless.
+- 🧹 **A development-only dependency** (`js-yaml`) with a denial-of-service advisory refreshed. It never shipped to users.
+
+---
+
 ## [1.10.3] — 2026-09-06
 
 *Same product, same shelf.*
