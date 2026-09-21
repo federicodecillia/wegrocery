@@ -27,13 +27,13 @@
     "next-auth": "5.0.0-beta.32",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
-    "resend": "^6.25.0",
+    "resend": "^6.28.1",
     "sonner": "^2.0.8",
-    "tailwind-merge": "^3.6.0"
+    "tailwind-merge": "^3.7.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.3",
-    "@types/node": "^22.20.2",
+    "@types/node": "^22.20.3",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.6",
     "drizzle-kit": "^0.31.10",
@@ -42,7 +42,7 @@
     "tailwindcss": "^4.1.14",
     "tsx": "^4.23.13",
     "typescript": "^5.9.3",
-    "vitest": "^5.0.0"
+    "vitest": "^5.0.1"
   },
   "overrides": {
     "esbuild": "^0.28.1",
