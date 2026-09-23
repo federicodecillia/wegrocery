@@ -11,7 +11,7 @@ name: Weekly Neon Backup
 #                         (must define a remote named exactly `gdrive`)
 #   - GDRIVE_BACKUP_PATH  Destination, e.g. `gdrive:PortaMoneta/GAS-Backups`
 #
-# Restore: see CLAUDE.md → "Backup & Restore" section.
+# Restore: see AGENTS.md → "Backup & Restore" section.
 
 on:
   schedule:
