@@ -875,6 +875,7 @@ export const it = {
   fields: {
     title: "Titolo",
     orderCloseDate: "Data chiusura ordine",
+    pickupDate: "Data ritiro",
     name: "Nome",
     email: "Email",
     supplier: "Fornitore",
@@ -889,6 +890,7 @@ export const it = {
     cycleNotFound: "Ciclo non trovato",
     unauthorized: "Accesso non autorizzato",
     fieldRequired: (field: string) => `${field} obbligatorio/a`,
+    invalidDate: (field: string) => `${field}: data non valida`,
     invalidPrice: "Prezzo non valido",
     csvEmpty: "Il file CSV è vuoto o contiene solo l'intestazione.",
     csvInvalid: "Nessun prodotto valido trovato nel CSV.",
