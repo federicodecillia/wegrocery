@@ -17,19 +17,26 @@ function toCents(n: number): number {
   return Math.round(n * 100);
 }
 
+// Sign of a stored amount, or 0 when it has none: a zero row, or a legacy
+// NaN row written by the old empty-amount bug (0012 blocks new ones).
+function storedSign(amount: string): number {
+  const cents = toCents(parseFloat(amount));
+  return Number.isFinite(cents) ? Math.sign(cents) : 0;
+}
+
 // The Cassa editor shows the absolute value; this puts the entry's own sign
 // back on what the admin typed. A refund (+8) whose note is edited stays +8.
-// Entries stored as 0 carry no sign, so they fall back to the type's natural
-// one (topup positive, everything else negative). Unparseable input returns
-// NaN so the server-side validation rejects it with a readable message.
-export function applyOriginalSign(originalAmount: string, type: string, input: string): number {
+// An entry with no sign (0 or legacy NaN) takes what the admin typed
+// literally ("-3" is a charge, "3" a credit), so it can still be repaired
+// from the UI. Unparseable input returns NaN so the server-side validation
+// rejects it with a readable message.
+export function applyOriginalSign(originalAmount: string, input: string): number {
   const trimmed = input.trim();
   if (trimmed === "") return NaN;
-  const magnitude = Math.abs(Number(trimmed.replace(",", ".")));
-  if (!Number.isFinite(magnitude)) return NaN;
-  const originalSign = Math.sign(parseFloat(originalAmount));
-  const sign = originalSign !== 0 ? originalSign : type === "topup" ? 1 : -1;
-  return sign * magnitude;
+  const typed = Number(trimmed.replace(",", "."));
+  if (!Number.isFinite(typed)) return NaN;
+  const sign = storedSign(originalAmount);
+  return sign !== 0 ? sign * Math.abs(typed) : typed;
 }
 
 export function validateLedgerEntryEdit(
@@ -40,10 +47,12 @@ export function validateLedgerEntryEdit(
   if (!Number.isFinite(newAmount)) return "notFinite";
   const newCents = toCents(newAmount);
   if (newCents === 0) return "zero";
-  const originalSign = Math.sign(toCents(parseFloat(entry.amount)));
+  const originalSign = storedSign(entry.amount);
   // No UI flips a sign on purpose: a sign change is always the old
   // recompute-from-type bug or a typo, and it moves twice the amount.
   if (originalSign !== 0 && originalSign !== Math.sign(newCents)) return "signChange";
+  // A sign-less (0 / legacy NaN) topup takes the typed sign: keep it positive.
+  if (entry.type === "topup" && newCents < 0) return "notPositive";
   return null;
 }
 

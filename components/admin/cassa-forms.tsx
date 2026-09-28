@@ -242,7 +242,7 @@ export function LedgerEntryRow({ entry }: { entry: LedgerEntry }) {
   function handleSave() {
     // Keep the entry's own sign: editing a refund's note must not flip it.
     // Invalid input becomes NaN and the server answers with a readable error.
-    const newAmount = applyOriginalSign(entry.amount, entry.type, amount);
+    const newAmount = applyOriginalSign(entry.amount, amount);
     startTransition(async () => {
       const result = await adminUpdateLedgerEntry(entry.entryId, { amount: newAmount, note });
       if (result.error) {

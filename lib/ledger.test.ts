@@ -21,36 +21,38 @@ describe("isAdminEditableLedgerType", () => {
 
 describe("applyOriginalSign", () => {
   it("keeps a positive correction positive (the refund-flip bug)", () => {
-    expect(applyOriginalSign("0.40", "correction", "0.40")).toBe(0.4);
-    expect(applyOriginalSign("8.00", "correction", "8")).toBe(8);
+    expect(applyOriginalSign("0.40", "0.40")).toBe(0.4);
+    expect(applyOriginalSign("8.00", "8")).toBe(8);
   });
 
   it("keeps a negative correction negative", () => {
-    expect(applyOriginalSign("-3.20", "correction", "3.50")).toBe(-3.5);
+    expect(applyOriginalSign("-3.20", "3.50")).toBe(-3.5);
   });
 
   it("keeps topups positive", () => {
-    expect(applyOriginalSign("50.00", "topup", "40")).toBe(40);
+    expect(applyOriginalSign("50.00", "40")).toBe(40);
   });
 
   it("uses the absolute value of what the admin typed", () => {
-    expect(applyOriginalSign("-3.20", "correction", "-3.50")).toBe(-3.5);
-    expect(applyOriginalSign("8.00", "correction", "-8")).toBe(8);
+    expect(applyOriginalSign("-3.20", "-3.50")).toBe(-3.5);
+    expect(applyOriginalSign("8.00", "-8")).toBe(8);
   });
 
   it("accepts a comma as decimal separator", () => {
-    expect(applyOriginalSign("1.00", "correction", "0,40")).toBe(0.4);
+    expect(applyOriginalSign("1.00", "0,40")).toBe(0.4);
   });
 
-  it("falls back to the type's natural sign when the original is zero", () => {
-    expect(applyOriginalSign("0.00", "topup", "5")).toBe(5);
-    expect(applyOriginalSign("0.00", "correction", "5")).toBe(-5);
+  it("takes the typed sign literally when the original has none (zero or legacy NaN)", () => {
+    expect(applyOriginalSign("0.00", "5")).toBe(5);
+    expect(applyOriginalSign("0.00", "-5")).toBe(-5);
+    expect(applyOriginalSign("NaN", "3,20")).toBe(3.2);
+    expect(applyOriginalSign("NaN", "-3.20")).toBe(-3.2);
   });
 
   it("returns NaN for empty or garbage input instead of a number", () => {
-    expect(applyOriginalSign("8.00", "correction", "")).toBeNaN();
-    expect(applyOriginalSign("8.00", "correction", "   ")).toBeNaN();
-    expect(applyOriginalSign("8.00", "correction", "abc")).toBeNaN();
+    expect(applyOriginalSign("8.00", "")).toBeNaN();
+    expect(applyOriginalSign("8.00", "   ")).toBeNaN();
+    expect(applyOriginalSign("8.00", "abc")).toBeNaN();
   });
 });
 
@@ -91,6 +93,17 @@ describe("validateLedgerEntryEdit", () => {
   it("lets a legacy zero entry take either sign", () => {
     expect(validateLedgerEntryEdit({ type: "adjustment", amount: "0.00" }, -1)).toBeNull();
     expect(validateLedgerEntryEdit({ type: "adjustment", amount: "0.00" }, 1)).toBeNull();
+  });
+
+  it("lets a legacy NaN entry be repaired with either sign", () => {
+    expect(validateLedgerEntryEdit({ type: "correction", amount: "NaN" }, -3.2)).toBeNull();
+    expect(validateLedgerEntryEdit({ type: "correction", amount: "NaN" }, 3.2)).toBeNull();
+  });
+
+  it("never lets a topup become negative, even from a sign-less row", () => {
+    expect(validateLedgerEntryEdit({ type: "topup", amount: "NaN" }, -20)).toBe("notPositive");
+    expect(validateLedgerEntryEdit({ type: "topup", amount: "0.00" }, -20)).toBe("notPositive");
+    expect(validateLedgerEntryEdit({ type: "topup", amount: "NaN" }, 20)).toBeNull();
   });
 });
 
