@@ -3,6 +3,7 @@
 import { and, eq, sql } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
+import { brand } from "@/lib/brand";
 import { t } from "@/lib/i18n";
 import { formatMoney } from "@/lib/i18n/format";
 import { getDb } from "@/lib/db/client";
@@ -12,16 +13,32 @@ import {
   getLastMemberOrderForPrefill,
   getMemberBalance,
   getMemberByEmail,
+  getMemberPendingOrderTotals,
   getOpenCycles,
 } from "@/lib/db/queries";
+import { recordMembershipCheck } from "@/lib/membership/members";
+import {
+  evaluateCreditLimit,
+  orderMembershipOutcome,
+  raisesOrderTotal,
+  shouldRecheckMembershipOnOrder,
+} from "@/lib/membership/policy";
+import { checkMembershipAny, isMembershipCheckEnabled } from "@/lib/membership/wallyfor";
 import { canAccessCycle } from "@/lib/utils";
 
 export type SaveOrderLine = { productId: string; quantity: number };
 
+// Expected refusals (lapsed card, credit limit) come back as a value: in
+// production Next.js replaces the message of an error thrown by a Server
+// Action with a generic digest, so a thrown message never reaches the member.
+export type SaveOrderResult =
+  | { success: true; balanceWarning: string | null }
+  | { success: false; error: string };
+
 export async function saveOrder(
   cycleId: string,
   lines: SaveOrderLine[],
-): Promise<{ success: boolean; balanceWarning: string | null }> {
+): Promise<SaveOrderResult> {
   const session = await auth();
   const email = session?.user?.email;
   if (!email) redirect("/login");
@@ -47,12 +64,64 @@ export async function saveOrder(
     throw new Error(t.errors.accessDenied);
   }
 
+  const db = getDb();
+  const now = new Date();
+
   const cycleProducts = await getCycleProducts(cycleId);
   const productMap = new Map(cycleProducts.map((p) => [p.productId, p]));
 
-  const db = getDb();
-  const now = new Date();
   const newLines = lines.filter((l) => l.quantity > 0);
+  const total = newLines.reduce((sum, l) => {
+    const p = productMap.get(l.productId);
+    if (!p) throw new Error(t.errors.productNotFound(l.productId));
+    return sum + parseFloat(p.unitPrice) * l.quantity;
+  }, 0);
+
+  // Uncharged order totals: needed by the credit limit and to tell whether
+  // this save raises the cycle's order (trimming/cancelling is never blocked).
+  const checkEnabled = isMembershipCheckEnabled() && member.role !== "admin";
+  const pending =
+    brand.minBalance !== null || checkEnabled
+      ? await getMemberPendingOrderTotals(member.memberId, cycleId)
+      : null;
+  const raisesOrder = pending ? raisesOrderTotal(pending.thisCycle, total) : true;
+
+  // Membership card: rechecked at most every 24h (a lapsed result is always
+  // rechecked). An unreachable API lets the order through: they were members
+  // at sign-in.
+  if (shouldRecheckMembershipOnOrder(member, checkEnabled, now, raisesOrder)) {
+    const result = await checkMembershipAny([member.email, member.aliasEmail]);
+    const outcome = orderMembershipOutcome(result);
+    if (result.status === "error") {
+      console.error(`[saveOrder] membership check unavailable: ${result.message}`);
+    }
+    if (outcome.record) {
+      try {
+        await recordMembershipCheck(member.memberId, outcome.record, now);
+      } catch (err) {
+        console.error("[saveOrder] could not record membership check", err);
+      }
+    }
+    if (!outcome.allow) {
+      return { success: false, error: t.errors.membershipInactive(brand.membershipUrl) };
+    }
+  }
+
+  // Credit limit (brand.minBalance). Checked before the write, so two saves
+  // racing on different cycles can overshoot it; the in-transaction SQL guard
+  // is Phase 1 work.
+  if (brand.minBalance !== null && pending) {
+    const credit = evaluateCreditLimit({
+      balance: await getMemberBalance(member.memberId),
+      openOrdersOtherCycles: pending.otherOpenCycles,
+      previousOrderTotal: pending.thisCycle,
+      newOrderTotal: total,
+      minBalance: brand.minBalance,
+    });
+    if (!credit.ok) {
+      return { success: false, error: t.errors.creditLimitExceeded(formatMoney(credit.available)) };
+    }
+  }
 
   // The Neon HTTP driver has no session to hold BEGIN...COMMIT across separate
   // round-trips, so delete + insert as two awaits could be interrupted between
@@ -103,11 +172,6 @@ export async function saveOrder(
     }
     throw err;
   }
-
-  const total = newLines.reduce((sum, l) => {
-    const p = productMap.get(l.productId)!;
-    return sum + parseFloat(p.unitPrice) * l.quantity;
-  }, 0);
 
   const balance = await getMemberBalance(member.memberId);
   const afterBalance = balance - total;
