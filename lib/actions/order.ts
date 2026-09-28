@@ -24,7 +24,7 @@ import {
   shouldRecheckMembershipOnOrder,
 } from "@/lib/membership/policy";
 import { checkMembershipAny, isMembershipCheckEnabled } from "@/lib/membership/wallyfor";
-import { canAccessCycle } from "@/lib/utils";
+import { canAccessCycle } from "@/lib/roles";
 
 export type SaveOrderLine = { productId: string; quantity: number };
 

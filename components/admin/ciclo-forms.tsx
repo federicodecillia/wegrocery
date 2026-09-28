@@ -12,6 +12,7 @@ import {
   type CreateCycleInput,
 } from "@/lib/actions/admin";
 import { formatEur } from "@/lib/utils";
+import { ACCESS_LEVELS, DEFAULT_ACCESS_LEVEL, getAccessLabel, normalizeAccessLevel } from "@/lib/roles";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import type { CatalogProductItem } from "@/lib/db/queries";
 import { ClosedCycleDetails } from "./closed-cycle-details";
@@ -39,6 +40,14 @@ type SerializedCycle = {
   status?: string;
 };
 
+function AccessLevelOptions() {
+  return ACCESS_LEVELS.map((level) => (
+    <option key={level} value={level}>
+      {t.cycleAccess[level]}
+    </option>
+  ));
+}
+
 // ── Open Cycle Card ───────────────────────────────────────────────────────────
 
 export function OpenCycleCard({
@@ -64,6 +73,9 @@ export function OpenCycleCard({
           <span className="mb-1 inline-flex items-center gap-1.5 rounded-full bg-brand-teal-light px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-brand-teal">
             <span className="h-1.5 w-1.5 rounded-full bg-brand-teal" />
             {t.admin.cycle.openBadge}
+          </span>
+          <span className="mb-1 ml-1.5 inline-flex rounded-full bg-black/[0.05] px-2 py-0.5 text-[10px] font-semibold text-brand-gray">
+            {t.admin.cycle.accessLabel}: {getAccessLabel(cycle.accessLevel)}
           </span>
           <h3 className="mt-1 text-[15px] font-bold text-brand-near-black">{cycle.title}</h3>
         </div>
@@ -573,13 +585,12 @@ export function EditCycleForm({
             <label className={labelCls}>{t.admin.cycle.accessLabel}</label>
             <select
               name="accessLevel"
-              defaultValue={cycle.accessLevel}
+              defaultValue={normalizeAccessLevel(cycle.accessLevel) ?? DEFAULT_ACCESS_LEVEL}
               className={`w-full ${inputCls}`}
             >
-              <option value="admin">{t.admin.cycle.accessAdminOnly}</option>
-              <option value="soci">{t.admin.cycle.accessActiveSoci}</option>
-              <option value="utenti">{t.admin.cycle.accessAllUsers}</option>
+              <AccessLevelOptions />
             </select>
+            <p className="mt-1 text-[10px] text-brand-gray-light">{t.admin.cycle.accessHint}</p>
           </div>
         )}
       </div>
@@ -698,11 +709,10 @@ export function CreateCycleForm({ suppliers }: { suppliers: Supplier[] }) {
           </div>
           <div>
             <label className={labelCls}>{t.admin.cycle.accessLabel}</label>
-            <select name="accessLevel" defaultValue="soci" className={`w-full ${inputCls}`}>
-              <option value="admin">{t.admin.cycle.accessAdminOnly}</option>
-              <option value="soci">{t.admin.cycle.accessActiveSoci}</option>
-              <option value="utenti">{t.admin.cycle.accessAllUsers}</option>
+            <select name="accessLevel" defaultValue={DEFAULT_ACCESS_LEVEL} className={`w-full ${inputCls}`}>
+              <AccessLevelOptions />
             </select>
+            <p className="mt-1 text-[10px] text-brand-gray-light">{t.admin.cycle.accessHint}</p>
           </div>
         </div>
         <div>

@@ -9,7 +9,7 @@ import {
   getOpenCycles,
 } from "@/lib/db/queries";
 import { saveOrder } from "@/lib/actions/order";
-import { canAccessCycle } from "@/lib/utils";
+import { canAccessCycle } from "@/lib/roles";
 import Link from "next/link";
 
 export default async function OrdinePage({

@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "@/components/ui/toast";
 import { adminDeleteLedgerEntry, adminRecordTopup, adminUpdateLedgerEntry } from "@/lib/actions/admin";
 import { formatDate, formatEur } from "@/lib/utils";
+import { getRoleLabel } from "@/lib/roles";
 import { t } from "@/lib/i18n";
 import { formatMoney } from "@/lib/i18n/format";
 import { utcToZonedLocalInput } from "@/lib/i18n/zoned-time";
@@ -407,7 +408,7 @@ export function CassaInlineList({
                 <div className="min-w-0 flex-1">
                   <div className="text-[13px] font-medium text-brand-near-black">{m.fullName}</div>
                   <div className="font-mono text-[10px] text-brand-gray-light">
-                    {m.role}
+                    {getRoleLabel(m.role)}
                     {m.active ? "" : ` ${t.admin.treasury.inactiveHint}`} · {t.admin.treasury.movementsCount(entries.length)}
                   </div>
                 </div>

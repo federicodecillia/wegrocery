@@ -201,7 +201,7 @@ direct DB access and never receives sensitive credentials.
 ### Data model
 | Table | Purpose |
 |---|---|
-| `members` | Roster + role (`admin` / `attivo` / `socio`) + email whitelist |
+| `members` | Roster + role (`admin` / `attivi` / `utenti`) + email whitelist |
 | `order_cycles` | Time-boxed purchasing windows with shipping config |
 | `products` | Per-cycle catalog snapshot (so historical prices stay frozen) |
 | `supplier_products` | Reusable supplier catalog with price-change history |

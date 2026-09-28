@@ -13,7 +13,8 @@ import {
   getNextMemberPickup,
   getOpenCycles,
 } from "@/lib/db/queries";
-import { canAccessCycle, formatDateShort, formatEur, formatEurSigned, getProductEmoji } from "@/lib/utils";
+import { formatDateShort, formatEur, formatEurSigned, getProductEmoji } from "@/lib/utils";
+import { canAccessCycle } from "@/lib/roles";
 
 export default async function HomePage() {
   const session = await requireUserSession();

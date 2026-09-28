@@ -17,8 +17,10 @@ const googleConfigured = Boolean(process.env.AUTH_GOOGLE_ID && process.env.AUTH_
 const devLoginEmail = process.env.AUTH_DEV_LOGIN_EMAIL?.trim().toLowerCase();
 const devLoginEnabled = process.env.NODE_ENV !== "production" && Boolean(devLoginEmail);
 const demoModeEnabled = process.env.DEMO_MODE === "true";
-const DEMO_LOGIN_EMAILS: Record<string, string> = {
-  socio: "demo.socio@example.com",
+// Demo profile -> seeded account (scripts/seed-demo.ts). The profile names are
+// not role values: "user" signs in as the seeded 'utenti' member.
+const DEMO_LOGIN_EMAILS: Record<"user" | "admin", string> = {
+  user: "demo.socio@example.com",
   admin: "demo.admin@example.com",
 };
 
@@ -77,7 +79,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
             name: "Demo Login",
             credentials: { profile: {} },
             async authorize(credentials) {
-              const profile = credentials?.profile === "admin" ? "admin" : "socio";
+              const profile = credentials?.profile === "admin" ? "admin" : "user";
               const email = DEMO_LOGIN_EMAILS[profile];
               const db = getDb();
               const [member] = await db
