@@ -7,6 +7,7 @@ import { adminDeleteLedgerEntry, adminRecordTopup, adminUpdateLedgerEntry } from
 import { formatDate, formatEur } from "@/lib/utils";
 import { t } from "@/lib/i18n";
 import { formatMoney } from "@/lib/i18n/format";
+import { applyOriginalSign, isAdminEditableLedgerType } from "@/lib/ledger";
 import type { LedgerEntryItem, MemberWithBalance } from "@/lib/db/queries";
 
 type Member = { memberId: string; fullName: string };
@@ -134,14 +135,15 @@ export function TopupForm({ members }: { members: Member[] }) {
       return;
     }
 
+    const form = e.currentTarget;
     startTransition(async () => {
-      try {
-        await adminRecordTopup(memberId, amount, note, entryDate);
-        toast.success(t.admin.treasury.topupRegistered(formatMoney(amount)));
-        (e.target as HTMLFormElement).reset();
-      } catch (err) {
-        toast.error(err instanceof Error ? err.message : t.admin.treasury.errorUpdating);
+      const result = await adminRecordTopup(memberId, amount, note, entryDate);
+      if (result.error) {
+        toast.error(result.error);
+        return;
       }
+      toast.success(t.admin.treasury.topupRegistered(formatMoney(amount)));
+      form.reset();
     });
   }
 
@@ -234,35 +236,39 @@ export function LedgerEntryRow({ entry }: { entry: LedgerEntry }) {
 
   const isTopup = entry.type === "topup";
   const isCharge = entry.type === "order_charge";
+  // Order/shipping charges are corrected from the cycle, never edited here.
+  const isEditable = isAdminEditableLedgerType(entry.type);
 
   function handleSave() {
-    const newAmount = isTopup ? parseFloat(amount) : -parseFloat(amount);
+    // Keep the entry's own sign: editing a refund's note must not flip it.
+    // Invalid input becomes NaN and the server answers with a readable error.
+    const newAmount = applyOriginalSign(entry.amount, entry.type, amount);
     startTransition(async () => {
-      try {
-        await adminUpdateLedgerEntry(entry.entryId, { amount: newAmount, note });
-        toast.success(t.admin.treasury.entryUpdated);
-        setEditing(false);
-      } catch (err) {
-        toast.error(err instanceof Error ? err.message : t.admin.treasury.errorUpdating);
+      const result = await adminUpdateLedgerEntry(entry.entryId, { amount: newAmount, note });
+      if (result.error) {
+        toast.error(result.error);
+        return;
       }
+      toast.success(t.admin.treasury.entryUpdated);
+      setEditing(false);
     });
   }
 
   function handleDelete() {
     if (!window.confirm(t.admin.treasury.deleteConfirm)) return;
     startTransition(async () => {
-      try {
-        await adminDeleteLedgerEntry(entry.entryId);
-        toast.success(t.admin.treasury.entryDeleted);
-      } catch (err) {
-        toast.error(err instanceof Error ? err.message : t.admin.treasury.errorUpdating);
+      const result = await adminDeleteLedgerEntry(entry.entryId);
+      if (result.error) {
+        toast.error(result.error);
+        return;
       }
+      toast.success(t.admin.treasury.entryDeleted);
     });
   }
 
   const amountNum = parseFloat(entry.amount);
 
-  if (editing) {
+  if (editing && isEditable) {
     return (
       <div className="bg-brand-orange-light px-4 py-3">
         <div className="flex items-center gap-2">
@@ -331,19 +337,23 @@ export function LedgerEntryRow({ entry }: { entry: LedgerEntry }) {
           {amountNum >= 0 ? "+" : ""}
           {formatMoney(Math.abs(amountNum))}
         </span>
-        <button
-          onClick={() => setEditing(true)}
-          className="rounded px-1.5 py-0.5 text-[10px] text-brand-gray hover:text-brand-near-black"
-        >
-          ✏
-        </button>
-        <button
-          onClick={handleDelete}
-          disabled={isPending}
-          className="rounded px-1.5 py-0.5 text-[10px] text-brand-red disabled:opacity-40"
-        >
-          ✕
-        </button>
+        {isEditable && (
+          <>
+            <button
+              onClick={() => setEditing(true)}
+              className="rounded px-1.5 py-0.5 text-[10px] text-brand-gray hover:text-brand-near-black"
+            >
+              ✏
+            </button>
+            <button
+              onClick={handleDelete}
+              disabled={isPending}
+              className="rounded px-1.5 py-0.5 text-[10px] text-brand-red disabled:opacity-40"
+            >
+              ✕
+            </button>
+          </>
+        )}
       </div>
     </div>
   );

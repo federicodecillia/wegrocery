@@ -915,6 +915,12 @@ export const it = {
     orderEditOnlyAfterClose: "L'ordine si può modificare in questo modo solo dopo la chiusura del ciclo",
     productNotValidForCycle: "Prodotto non valido per questo ciclo",
     amountMustBePositive: "L'importo deve essere positivo",
+    amountInvalid: "Importo non valido",
+    amountZero: "L'importo non può essere zero",
+    amountSignChange: "Il segno del movimento non può cambiare: per stornarlo registra un nuovo movimento.",
+    ledgerEntryNotFound: "Movimento non trovato",
+    ledgerEntryNotEditable:
+      "Gli addebiti di ordine e spedizione non si modificano da qui: correggili dal ciclo (modifica ordine, spedizione o distinta).",
     cannotDeleteSupplierWithCycles: "Non è possibile eliminare un fornitore con cicli associati. Archivialo invece.",
     catalogProductNotFound: "Prodotto non trovato a catalogo",
     noProductsSelected: "Nessun prodotto selezionato",

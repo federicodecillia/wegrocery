@@ -913,6 +913,12 @@ export const en: Strings = {
     orderEditOnlyAfterClose: "Orders can only be modified this way after the cycle is closed",
     productNotValidForCycle: "Product not valid for this cycle",
     amountMustBePositive: "Amount must be positive",
+    amountInvalid: "Invalid amount",
+    amountZero: "Amount cannot be zero",
+    amountSignChange: "An entry's sign cannot change: to reverse it, record a new entry.",
+    ledgerEntryNotFound: "Entry not found",
+    ledgerEntryNotEditable:
+      "Order and shipping charges cannot be edited here: correct them from the cycle (edit order, shipping or order sheet).",
     cannotDeleteSupplierWithCycles: "Cannot delete a supplier with associated cycles. Archive it instead.",
     catalogProductNotFound: "Catalog product not found",
     noProductsSelected: "No products selected",

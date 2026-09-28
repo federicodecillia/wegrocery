@@ -11,6 +11,12 @@ import { auditLog, ledgerEntries, members, orderCycles, orders, products, suppli
 import { upsertCycleProducts } from "@/lib/db/cycle-products";
 import { computeShippingShares, normalizeShippingMode, type ShippingMode } from "@/lib/shipping";
 import {
+  isAdminEditableLedgerType,
+  validateLedgerEntryEdit,
+  validateTopupAmount,
+  type LedgerAmountError,
+} from "@/lib/ledger";
+import {
   dispatchNotification,
   dispatchToMembers,
   dispatchWithBodies,
@@ -28,6 +34,21 @@ async function requireAdmin(): Promise<{ email: string }> {
   // expiry.
   if (!email || u?.role !== "admin" || !u?.active) throw new Error(t.errors.unauthorized);
   return { email };
+}
+
+function ledgerAmountErrorMessage(code: LedgerAmountError): string {
+  switch (code) {
+    case "notEditable":
+      return t.errors.ledgerEntryNotEditable;
+    case "notFinite":
+      return t.errors.amountInvalid;
+    case "zero":
+      return t.errors.amountZero;
+    case "signChange":
+      return t.errors.amountSignChange;
+    case "notPositive":
+      return t.errors.amountMustBePositive;
+  }
 }
 
 function genId(prefix: string): string {
@@ -777,52 +798,58 @@ export async function adminRecordTopup(
   amount: number,
   note: string,
   entryDate: string,
-) {
-  const admin = await requireAdmin();
-  if (amount <= 0) throw new Error(t.errors.amountMustBePositive);
+): Promise<{ error?: string }> {
+  try {
+    const admin = await requireAdmin();
+    const amountError = validateTopupAmount(amount);
+    if (amountError) return { error: ledgerAmountErrorMessage(amountError) };
 
-  const db = getDb();
-  const [member] = await db
-    .select({ memberId: members.memberId, email: members.email })
-    .from(members)
-    .where(eq(members.memberId, memberId))
-    .limit(1);
-  if (!member) throw new Error(t.errors.memberNotFound);
+    const db = getDb();
+    const [member] = await db
+      .select({ memberId: members.memberId, email: members.email })
+      .from(members)
+      .where(eq(members.memberId, memberId))
+      .limit(1);
+    if (!member) return { error: t.errors.memberNotFound };
 
-  const now = new Date();
-  const entryId = genId("led");
-  await db.insert(ledgerEntries).values({
-    entryId,
-    memberId,
-    entryDate: entryDate ? new Date(entryDate) : now,
-    type: "topup",
-    amount: amount.toFixed(2),
-    cycleId: null,
-    note: note?.trim() || "Ricarica",
-    createdBy: admin.email,
-    createdAt: now,
-  });
+    const now = new Date();
+    const entryId = genId("led");
+    await db.insert(ledgerEntries).values({
+      entryId,
+      memberId,
+      entryDate: entryDate ? new Date(entryDate) : now,
+      type: "topup",
+      amount: amount.toFixed(2),
+      cycleId: null,
+      note: note?.trim() || "Ricarica",
+      createdBy: admin.email,
+      createdAt: now,
+    });
 
-  const [balanceRow] = await db
-    .select({ total: sql<string>`coalesce(sum(${ledgerEntries.amount}), '0')` })
-    .from(ledgerEntries)
-    .where(eq(ledgerEntries.memberId, memberId));
-  const newBalance = parseFloat(balanceRow?.total ?? "0");
+    const [balanceRow] = await db
+      .select({ total: sql<string>`coalesce(sum(${ledgerEntries.amount}), '0')` })
+      .from(ledgerEntries)
+      .where(eq(ledgerEntries.memberId, memberId));
+    const newBalance = parseFloat(balanceRow?.total ?? "0");
 
-  await dispatchNotification(db, {
-    memberId,
-    memberEmail: member.email,
-    type: "topup_received",
-    title: t.notificationsServer.topupReceivedTitle,
-    body: t.notificationsServer.topupReceivedBody(formatMoney(amount), formatMoney(newBalance)),
-    href: "/storico",
-    createdAt: now,
-  });
+    await dispatchNotification(db, {
+      memberId,
+      memberEmail: member.email,
+      type: "topup_received",
+      title: t.notificationsServer.topupReceivedTitle,
+      body: t.notificationsServer.topupReceivedBody(formatMoney(amount), formatMoney(newBalance)),
+      href: "/storico",
+      createdAt: now,
+    });
 
-  await writeAudit(db, admin.email, "record_topup", "ledger", entryId, { memberId, amount });
-  revalidatePath("/admin");
-  revalidatePath("/");
-  revalidatePath("/storico");
+    await writeAudit(db, admin.email, "record_topup", "ledger", entryId, { memberId, amount });
+    revalidatePath("/admin");
+    revalidatePath("/");
+    revalidatePath("/storico");
+    return {};
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : t.errors.genericError };
+  }
 }
 
 // ── Supplier email ───────────────────────────────────────────────────────────
@@ -1353,26 +1380,71 @@ export async function adminEditClosedOrder(input: EditClosedOrderInput) {
   };
 }
 
+// Full snapshot of a ledger row for the audit log, so an edit or a delete can
+// be reconstructed from audit_log alone.
+const ledgerAuditColumns = {
+  entryId: ledgerEntries.entryId,
+  memberId: ledgerEntries.memberId,
+  type: ledgerEntries.type,
+  amount: ledgerEntries.amount,
+  cycleId: ledgerEntries.cycleId,
+  note: ledgerEntries.note,
+  entryDate: ledgerEntries.entryDate,
+};
+
 export async function adminUpdateLedgerEntry(
   entryId: string,
   data: { amount: number; note: string },
-) {
-  const admin = await requireAdmin();
-  const db = getDb();
-  await db
-    .update(ledgerEntries)
-    .set({ amount: data.amount.toFixed(2), note: data.note, updatedBy: admin.email, updatedAt: new Date() })
-    .where(eq(ledgerEntries.entryId, entryId));
-  await writeAudit(db, admin.email, "update_ledger", "ledger", entryId, data);
-  revalidatePath("/admin");
+): Promise<{ error?: string }> {
+  try {
+    const admin = await requireAdmin();
+    const db = getDb();
+    const [before] = await db
+      .select(ledgerAuditColumns)
+      .from(ledgerEntries)
+      .where(eq(ledgerEntries.entryId, entryId))
+      .limit(1);
+    if (!before) return { error: t.errors.ledgerEntryNotFound };
+
+    const amountError = validateLedgerEntryEdit(before, data.amount);
+    if (amountError) return { error: ledgerAmountErrorMessage(amountError) };
+
+    const after = { ...before, amount: data.amount.toFixed(2), note: data.note };
+    await db
+      .update(ledgerEntries)
+      .set({ amount: after.amount, note: after.note, updatedBy: admin.email, updatedAt: new Date() })
+      .where(eq(ledgerEntries.entryId, entryId));
+    await writeAudit(db, admin.email, "update_ledger", "ledger", entryId, { before, after });
+    revalidatePath("/admin");
+    revalidatePath("/");
+    revalidatePath("/storico");
+    return {};
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : t.errors.genericError };
+  }
 }
 
-export async function adminDeleteLedgerEntry(entryId: string) {
-  const admin = await requireAdmin();
-  const db = getDb();
-  await db.delete(ledgerEntries).where(eq(ledgerEntries.entryId, entryId));
-  await writeAudit(db, admin.email, "delete_ledger", "ledger", entryId);
-  revalidatePath("/admin");
+export async function adminDeleteLedgerEntry(entryId: string): Promise<{ error?: string }> {
+  try {
+    const admin = await requireAdmin();
+    const db = getDb();
+    const [before] = await db
+      .select(ledgerAuditColumns)
+      .from(ledgerEntries)
+      .where(eq(ledgerEntries.entryId, entryId))
+      .limit(1);
+    if (!before) return { error: t.errors.ledgerEntryNotFound };
+    if (!isAdminEditableLedgerType(before.type)) return { error: t.errors.ledgerEntryNotEditable };
+
+    await db.delete(ledgerEntries).where(eq(ledgerEntries.entryId, entryId));
+    await writeAudit(db, admin.email, "delete_ledger", "ledger", entryId, { before, after: null });
+    revalidatePath("/admin");
+    revalidatePath("/");
+    revalidatePath("/storico");
+    return {};
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : t.errors.genericError };
+  }
 }
 
 export async function adminDeleteMember(memberId: string): Promise<{ error?: string }> {
