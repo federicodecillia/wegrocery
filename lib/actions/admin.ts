@@ -5,7 +5,7 @@ import { eq, and, ne, sql, inArray } from "drizzle-orm";
 import { auth } from "@/auth";
 import { t } from "@/lib/i18n";
 import { formatMoney, formatDateTime } from "@/lib/i18n/format";
-import { zonedLocalToUtc } from "@/lib/i18n/zoned-time";
+import { parseCycleDates } from "@/lib/cycle-dates";
 import { brand } from "@/lib/brand";
 import { getDb } from "@/lib/db/client";
 import { auditLog, ledgerEntries, members, orderCycles, orders, products, suppliers, supplierProducts } from "@/lib/db/schema";
@@ -63,7 +63,7 @@ async function writeAudit(
 // type from @/lib/shipping, which is where it is declared.
 
 // Date fields are datetime-local wall-clock strings ("YYYY-MM-DDTHH:mm") in
-// APP_TIME_ZONE; the actions convert them with zonedLocalToUtc.
+// APP_TIME_ZONE; the actions convert them with parseCycleDates.
 export type CreateCycleInput = {
   title: string;
   pickupDate: string;
@@ -83,8 +83,13 @@ export async function adminCreateCycle(data: CreateCycleInput): Promise<{error?:
   try {
     const admin = await requireAdmin();
     if (!data.title?.trim()) return { error: t.errors.fieldRequired(t.fields.title) };
-    const orderCloseAt = zonedLocalToUtc(data.orderCloseAt);
-    if (!orderCloseAt) return { error: t.errors.fieldRequired(t.fields.orderCloseDate) };
+    const dates = parseCycleDates({
+      orderCloseAt: data.orderCloseAt ?? "",
+      pickupDate: data.pickupDate ?? "",
+      pickup2Date: data.pickup2Date ?? "",
+    });
+    if ("error" in dates) return { error: dates.error };
+    const orderCloseAt = dates.orderCloseAt!;
     if (!data.supplierId) return { error: t.errors.fieldRequired(t.fields.supplier) };
 
     const db = getDb();
@@ -95,9 +100,9 @@ export async function adminCreateCycle(data: CreateCycleInput): Promise<{error?:
     await db.insert(orderCycles).values({
       cycleId,
       title: data.title.trim(),
-      pickupDate: zonedLocalToUtc(data.pickupDate),
+      pickupDate: dates.pickupDate,
       pickupEndTime: data.pickupEndTime || null,
-      pickup2Date: zonedLocalToUtc(data.pickup2Date),
+      pickup2Date: dates.pickup2Date,
       pickup2EndTime: data.pickup2EndTime || null,
       shippingMode,
       shippingCostPerMember:
@@ -644,8 +649,8 @@ export async function adminUpdateCycle(
       .limit(1);
     if (!before) return { error: t.errors.cycleNotFound };
 
-    const newCloseAt = data.orderCloseAt !== undefined ? zonedLocalToUtc(data.orderCloseAt) : undefined;
-    if (newCloseAt === null) return { error: t.errors.fieldRequired(t.fields.orderCloseDate) };
+    const dates = parseCycleDates(data);
+    if ("error" in dates) return { error: dates.error };
 
     const isClosed = before.status === "closed";
     const shippingTouched =
@@ -681,14 +686,14 @@ export async function adminUpdateCycle(
       .set({
         ...(data.title !== undefined && { title: data.title }),
         ...(data.pickupDate !== undefined && {
-          pickupDate: zonedLocalToUtc(data.pickupDate),
+          pickupDate: dates.pickupDate,
         }),
         ...(data.pickupEndTime !== undefined && { pickupEndTime: data.pickupEndTime || null }),
         ...(data.pickup2Date !== undefined && {
-          pickup2Date: zonedLocalToUtc(data.pickup2Date),
+          pickup2Date: dates.pickup2Date,
         }),
         ...(data.pickup2EndTime !== undefined && { pickup2EndTime: data.pickup2EndTime || null }),
-        ...(data.orderCloseAt !== undefined && { orderCloseAt: newCloseAt }),
+        ...(data.orderCloseAt !== undefined && { orderCloseAt: dates.orderCloseAt }),
         ...(data.notes !== undefined && { notes: data.notes || null }),
         ...(data.supplierId !== undefined && { supplierId: data.supplierId || null }),
         ...(data.accessLevel !== undefined && { accessLevel: data.accessLevel }),

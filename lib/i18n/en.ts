@@ -874,6 +874,7 @@ export const en: Strings = {
   fields: {
     title: "Title",
     orderCloseDate: "Order close date",
+    pickupDate: "Pickup date",
     name: "Name",
     email: "Email",
     supplier: "Supplier",
@@ -888,6 +889,7 @@ export const en: Strings = {
     cycleNotFound: "Cycle not found",
     unauthorized: "Unauthorized access",
     fieldRequired: (field: string) => `${field} is required`,
+    invalidDate: (field: string) => `${field}: invalid date`,
     invalidPrice: "Invalid price",
     csvEmpty: "The CSV file is empty or contains only the header.",
     csvInvalid: "No valid products found in the CSV.",
