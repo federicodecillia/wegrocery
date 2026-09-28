@@ -284,6 +284,15 @@ All four emit `order_adjusted` or `order_corrected` notifications and `audit_log
   `DATABASE_URL=… node scripts/db-migrate.mjs`). `--status` lists
   applied/pending, `--baseline` records without executing. This replaces the
   one-off-script convention; `db:push` remains for local schema iteration only.
+- **No real data in the repo, and DB-writing scripts refuse prod by default.**
+  The repository is public: never commit one-off scripts, fixtures or seeds
+  that contain real members' names, emails or balances (the 2026 one-off
+  `scripts/reconcile-balances.mjs` was removed for this reason; its history
+  is not rewritten). Keep such scripts outside the repo or read the data from
+  a local, git-ignored file. Any script that writes to the database must
+  compare `new URL(process.env.DATABASE_URL).host` with the production host
+  and exit unless an explicit flag (e.g. `--allow-prod`) is passed, so a
+  mis-pointed `.env` cannot mutate production silently.
 - **Integration tests against a real DB** (recipe, not wired into CI): create
   a throwaway Neon branch, point the test run at it, delete it after —
   `npx -y neonctl branches create --name test-x --parent production --project-id small-breeze-14972344 --org-id org-gentle-violet-55538692`
