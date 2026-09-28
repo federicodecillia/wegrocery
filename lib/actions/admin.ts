@@ -9,6 +9,8 @@ import { brand } from "@/lib/brand";
 import { getDb } from "@/lib/db/client";
 import { auditLog, ledgerEntries, members, orderCycles, orders, products, suppliers, supplierProducts } from "@/lib/db/schema";
 import { upsertCycleProducts } from "@/lib/db/cycle-products";
+import type { BatchItem } from "drizzle-orm/batch";
+import { planClosedOrderEdit } from "@/lib/closed-order-edit";
 import { computeShippingShares, normalizeShippingMode, type ShippingMode } from "@/lib/shipping";
 import {
   isAdminEditableLedgerType,
@@ -1232,80 +1234,80 @@ export async function adminEditClosedOrder(input: EditClosedOrderInput) {
     .limit(1);
   if (!member) throw new Error(t.errors.memberNotFound);
 
-  // Pull the current order rows so we can compute the delta.
+  // Pull the current order rows so we can compute the delta. Actuals are
+  // needed because a weighed line's effective total is actual_line_total.
   const previousLines = await db
     .select({
       orderLineId: orders.orderLineId,
       productId: orders.productId,
       quantity: orders.quantity,
+      unitPriceSnapshot: orders.unitPriceSnapshot,
       lineTotal: orders.lineTotal,
+      actualQuantity: orders.actualQuantity,
+      actualLineTotal: orders.actualLineTotal,
     })
     .from(orders)
     .where(and(eq(orders.cycleId, input.cycleId), eq(orders.memberId, input.memberId)));
 
-  const oldTotal = previousLines.reduce((sum, l) => sum + parseFloat(l.lineTotal), 0);
-
-  // Resolve the new lines against the cycle's active products. We use the
-  // current `products.unitPrice` (which already reflects any close-time
-  // adjustments) as the snapshot.
-  const cleanLines = input.lines
-    .map((l) => ({ productId: l.productId, quantity: Math.floor(l.quantity) }))
-    .filter((l) => l.productId && l.quantity > 0);
-
-  const productIds = Array.from(new Set(cleanLines.map((l) => l.productId)));
+  // Resolve requested products against the cycle. Existing lines keep their
+  // unit_price_snapshot; only products new to this order take the current
+  // `products.unitPrice` (which already reflects any close-time adjustments).
+  const productIds = Array.from(new Set(input.lines.map((l) => l.productId).filter(Boolean)));
   const cycleProducts = productIds.length
     ? await db
-        .select({
-          productId: products.productId,
-          unitPrice: products.unitPrice,
-          name: products.name,
-        })
+        .select({ productId: products.productId, unitPrice: products.unitPrice })
         .from(products)
         .where(and(eq(products.cycleId, input.cycleId), inArray(products.productId, productIds)))
     : [];
-  const productMap = new Map(cycleProducts.map((p) => [p.productId, p]));
+  const priceByProduct = new Map(cycleProducts.map((p) => [p.productId, p.unitPrice]));
 
   // Reject any line that points at a product not in this cycle — guards
   // against client-side tampering and stale UI state.
-  for (const line of cleanLines) {
-    if (!productMap.has(line.productId)) {
+  for (const line of input.lines) {
+    if (line.productId && Math.floor(line.quantity) > 0 && !priceByProduct.has(line.productId)) {
       throw new Error(t.errors.productNotValidForCycle);
     }
   }
 
-  const newTotal = cleanLines.reduce((sum, l) => {
-    const unitPrice = parseFloat(productMap.get(l.productId)!.unitPrice);
-    return sum + unitPrice * l.quantity;
-  }, 0);
-
-  const delta = newTotal - oldTotal;
+  const plan = planClosedOrderEdit(previousLines, input.lines, priceByProduct);
+  const { oldTotal, newTotal, delta } = plan;
   const epsilon = 0.005;
 
-  // Replace the order rows: simplest correct semantics for "final desired
-  // state". neon-http has no transactions, so we delete then bulk-insert in
-  // sequence — a partial failure would leave us with an empty/partial order
-  // (visible to the member as "0 prodotti"), recoverable by re-running the
-  // edit, never producing duplicate or orphan ledger entries.
-  await db
-    .delete(orders)
-    .where(and(eq(orders.cycleId, input.cycleId), eq(orders.memberId, input.memberId)));
-
-  if (cleanLines.length > 0) {
-    await db.insert(orders).values(
-      cleanLines.map((l) => {
-        const p = productMap.get(l.productId)!;
-        const lineTotal = (parseFloat(p.unitPrice) * l.quantity).toFixed(2);
-        return {
+  // Apply the plan in one db.batch (a single Neon transaction): unchanged
+  // lines are not touched, so their actuals survive; the correction entry is
+  // part of the same batch, so the order rows and the money can't diverge.
+  const statements: BatchItem<"pg">[] = [];
+  if (plan.deletes.length > 0) {
+    statements.push(db.delete(orders).where(inArray(orders.orderLineId, plan.deletes)));
+  }
+  for (const u of plan.updates) {
+    statements.push(
+      db
+        .update(orders)
+        .set({
+          quantity: u.quantity,
+          lineTotal: u.lineTotal,
+          actualQuantity: null,
+          actualLineTotal: null,
+          updatedAt: now,
+        })
+        .where(eq(orders.orderLineId, u.orderLineId)),
+    );
+  }
+  if (plan.inserts.length > 0) {
+    statements.push(
+      db.insert(orders).values(
+        plan.inserts.map((l) => ({
           orderLineId: genId("ord"),
           cycleId: input.cycleId,
           memberId: input.memberId,
           productId: l.productId,
           quantity: l.quantity,
-          unitPriceSnapshot: p.unitPrice,
-          lineTotal,
+          unitPriceSnapshot: l.unitPrice,
+          lineTotal: l.lineTotal,
           updatedAt: now,
-        };
-      }),
+        })),
+      ),
     );
   }
 
@@ -1317,19 +1319,25 @@ export async function adminEditClosedOrder(input: EditClosedOrderInput) {
     correctionEntryId = genId("led");
     const trimmedNote = (input.note ?? "").trim();
     const reason = trimmedNote || `Correzione ordine "${cycle.title}"`;
-    await db.insert(ledgerEntries).values({
-      entryId: correctionEntryId,
-      memberId: input.memberId,
-      entryDate: now,
-      type: "correction",
-      // delta > 0 → member ordered more → additional charge (negative ledger amount).
-      // delta < 0 → member ordered less → refund (positive ledger amount).
-      amount: (-delta).toFixed(2),
-      cycleId: input.cycleId,
-      note: reason,
-      createdBy: admin.email,
-      createdAt: now,
-    });
+    statements.push(
+      db.insert(ledgerEntries).values({
+        entryId: correctionEntryId,
+        memberId: input.memberId,
+        entryDate: now,
+        type: "correction",
+        // delta > 0 → member ordered more → additional charge (negative ledger amount).
+        // delta < 0 → member ordered less → refund (positive ledger amount).
+        amount: (-delta).toFixed(2),
+        cycleId: input.cycleId,
+        note: reason,
+        createdBy: admin.email,
+        createdAt: now,
+      }),
+    );
+  }
+
+  if (statements.length > 0) {
+    await db.batch(statements as [BatchItem<"pg">, ...BatchItem<"pg">[]]);
   }
 
   // Member-facing notification with the human-readable diff.
@@ -1363,7 +1371,8 @@ export async function adminEditClosedOrder(input: EditClosedOrderInput) {
     newTotal: newTotal.toFixed(2),
     delta: delta.toFixed(2),
     correctionEntryId,
-    lineCount: cleanLines.length,
+    lineCount: previousLines.length - plan.deletes.length + plan.inserts.length,
+    updatedLines: plan.updates.length,
     note: input.note ?? null,
   });
 
