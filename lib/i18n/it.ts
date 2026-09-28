@@ -162,6 +162,17 @@ export const it = {
     demoMessage: "Demo pubblica: entra con un click, senza registrazione.",
     continueMessage: "Accedi con Google per continuare.",
     accessDenied: "Accesso negato: la tua email non risulta tra i soci attivi.",
+    attemptedEmail: (email: string) => `Hai provato ad accedere con: ${email}`,
+    notMember:
+      "Per accedere devi essere socio con la tessera attiva per l'anno in corso. Usa la stessa email con cui hai fatto la tessera.",
+    membershipInactive: "La tua tessera non risulta attiva per l'anno in corso.",
+    renewMembership: "Rinnova la tessera",
+    membershipCheckUnavailable:
+      "Non riusciamo a verificare la tessera in questo momento. Riprova tra qualche minuto.",
+    googleAccountHint:
+      "Non hai un account Google con la tua email? Puoi crearne uno gratis anche con un indirizzo non Gmail (es. la tua email personale o di lavoro): su accounts.google.com scegli di usare il tuo indirizzo email attuale invece di crearne uno nuovo.",
+    contactSupport: "Problemi? Scrivi a",
+    privacyLink: "Informativa privacy",
     configError: "Configurazione login incompleta. Controlla le variabili in .env.local.",
     googleLogin: "Login con Google",
     devLogin: "Login locale",
@@ -238,7 +249,7 @@ export const it = {
       },
       {
         q: "Cosa succede se il saldo è negativo?",
-        a: "Puoi comunque ordinare, ma riceverai un avviso. Ricordati di effettuare un bonifico al più presto per coprire il debito.",
+        a: "Puoi ordinare finché resti entro il limite di credito fissato dall'associazione (se previsto): l'app ti avvisa quando vai in negativo e blocca il salvataggio oltre il limite. Ricordati di ricaricare al più presto per coprire il debito.",
       },
       {
         q: "Come aggiungo l'app alla schermata Home?",
@@ -246,7 +257,7 @@ export const it = {
       },
       {
         q: "Cosa succede se il mio saldo è insufficiente?",
-        a: "L'app ti permette di ordinare anche se il saldo è basso o negativo (entro certi limiti), per non impedirti di fare la spesa. Tuttavia, è fondamentale ricaricare prontamente per mantenere l'associazione in salute e permettere il pagamento dei fornitori.",
+        a: "L'app ti permette di ordinare anche se il saldo è basso o negativo (fino al limite di credito fissato dall'associazione, se previsto, contando anche gli ordini già inviati e non ancora addebitati), per non impedirti di fare la spesa. Oltre il limite l'ordine non viene salvato finché non ricarichi. Tuttavia, è fondamentale ricaricare prontamente per mantenere l'associazione in salute e permettere il pagamento dei fornitori.",
       },
       {
         q: "Chi sono i fornitori?",
@@ -885,6 +896,12 @@ export const it = {
     invalidQuantity: "Quantità non valida",
     cycleNotOpen: "Il ciclo non è più aperto",
     accessDenied: "Non hai accesso a questo ciclo",
+    membershipInactive: (renewUrl: string | null) =>
+      renewUrl
+        ? `La tua tessera non risulta attiva per l'anno in corso: rinnovala su ${renewUrl} e riprova.`
+        : "La tua tessera non risulta attiva per l'anno in corso: rinnovala e riprova.",
+    creditLimitExceeded: (available: string) =>
+      `Credito insufficiente: tenendo conto degli ordini in corso puoi ordinare al massimo ${available} in questo ciclo. Ricarica il saldo per ordinare di più.`,
     productNotFound: (id: string) => `Prodotto non trovato: ${id}`,
     cycleNotFound: "Ciclo non trovato",
     unauthorized: "Accesso non autorizzato",
