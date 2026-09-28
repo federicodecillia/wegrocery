@@ -183,6 +183,11 @@ export const ledgerEntries = pgTable(
     // A NaN amount makes the member's balance NaN forever
     // (drizzle/0012_ledger_amount_checks.sql).
     check("ledger_entries_amount_not_nan", sql`${table.amount} <> 'NaN'`),
+    // At most one order/shipping charge per member per cycle: the backstop
+    // against double charging (drizzle/0013_unique_cycle_charges.sql).
+    uniqueIndex("ledger_entries_cycle_member_charge_uniq")
+      .on(table.cycleId, table.memberId, table.type)
+      .where(sql`${table.type} IN ('order_charge', 'shipping_charge')`),
   ],
 );
 
