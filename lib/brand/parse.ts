@@ -38,6 +38,18 @@ export function parseBrandConfig(raw: string | undefined): BrandConfig {
   if (o.headerShowName !== undefined && typeof o.headerShowName !== "boolean") {
     throw new Error("brand.headerShowName must be a boolean");
   }
+  for (const k of ["privacyUrl", "membershipUrl"] as const) {
+    if (o[k] !== undefined && o[k] !== null && typeof o[k] !== "string") {
+      throw new Error(`brand.${k} must be a string or null`);
+    }
+  }
+  if (
+    o.minBalance !== undefined &&
+    o.minBalance !== null &&
+    (typeof o.minBalance !== "number" || !Number.isFinite(o.minBalance))
+  ) {
+    throw new Error("brand.minBalance must be a finite number or null");
+  }
 
   let theme: BrandTheme = {};
   if (o.theme !== undefined) {
