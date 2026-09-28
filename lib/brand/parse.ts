@@ -10,6 +10,16 @@ const THEME_FIELDS = [
   "primary", "primaryLight", "accent", "accentLight", "background", "frame",
 ] as const;
 
+function isHttpUrl(v: unknown): boolean {
+  if (typeof v !== "string") return false;
+  try {
+    const { protocol } = new URL(v);
+    return protocol === "https:" || protocol === "http:";
+  } catch {
+    return false;
+  }
+}
+
 export function parseBrandConfig(raw: string | undefined): BrandConfig {
   if (!raw) return DEFAULT_BRAND;
 
@@ -37,6 +47,20 @@ export function parseBrandConfig(raw: string | undefined): BrandConfig {
   }
   if (o.headerShowName !== undefined && typeof o.headerShowName !== "boolean") {
     throw new Error("brand.headerShowName must be a boolean");
+  }
+  // Rendered as <a href> for logged-out visitors: absolute http(s) only
+  // (in-app paths need a session; this also rules out javascript: URLs).
+  for (const k of ["privacyUrl", "membershipUrl"] as const) {
+    if (o[k] !== undefined && o[k] !== null && !isHttpUrl(o[k])) {
+      throw new Error(`brand.${k} must be an absolute http(s) URL or null`);
+    }
+  }
+  if (
+    o.minBalance !== undefined &&
+    o.minBalance !== null &&
+    (typeof o.minBalance !== "number" || !Number.isFinite(o.minBalance))
+  ) {
+    throw new Error("brand.minBalance must be a finite number or null");
   }
 
   let theme: BrandTheme = {};

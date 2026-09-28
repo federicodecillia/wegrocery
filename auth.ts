@@ -4,6 +4,14 @@ import Google from "next-auth/providers/google";
 import { eq, or } from "drizzle-orm";
 import { getDb } from "@/lib/db/client";
 import { members } from "@/lib/db/schema";
+import { provisionVerifiedMember, recordMembershipCheck } from "@/lib/membership/members";
+import { existingMemberSignIn, loginErrorPath, newUserSignIn } from "@/lib/membership/policy";
+import {
+  checkMembership,
+  checkMembershipAny,
+  isMembershipCheckEnabled,
+  type MembershipResult,
+} from "@/lib/membership/wallyfor";
 
 const googleConfigured = Boolean(process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET);
 const devLoginEmail = process.env.AUTH_DEV_LOGIN_EMAIL?.trim().toLowerCase();
@@ -13,6 +21,15 @@ const DEMO_LOGIN_EMAILS: Record<string, string> = {
   socio: "demo.socio@example.com",
   admin: "demo.admin@example.com",
 };
+
+// Bookkeeping only: a failed write must not flip the sign-in decision.
+async function recordMembershipCheckSafely(memberId: string, status: "valid" | "invalid") {
+  try {
+    await recordMembershipCheck(memberId, status);
+  } catch (err) {
+    console.error("[auth] could not record membership check", err);
+  }
+}
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
   providers: [
@@ -86,7 +103,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       : []),
   ],
   callbacks: {
-    async signIn({ user }) {
+    async signIn({ user, account, profile }) {
       try {
         const email = user.email?.trim().toLowerCase();
         if (!email) return false;
@@ -94,14 +111,54 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         const db = getDb();
         const [member] = await db
           .select({
+            memberId: members.memberId,
+            email: members.email,
+            aliasEmail: members.aliasEmail,
+            role: members.role,
             active: members.active,
           })
           .from(members)
           .where(or(eq(members.email, email), eq(members.aliasEmail, email)))
           .limit(1);
 
-        return Boolean(member?.active);
-      } catch {
+        // The membership-card gate applies to Google sign-ins only; the
+        // dev/demo credential providers keep the plain whitelist.
+        const checkEnabled = account?.provider === "google" && isMembershipCheckEnabled();
+        // Self-onboarding trusts the address only if Google verified it.
+        const emailVerified = profile?.email_verified !== false;
+
+        let decision = member
+          ? existingMemberSignIn(member, checkEnabled, null)
+          : newUserSignIn(checkEnabled, null, emailVerified);
+        let result: MembershipResult | null = null;
+        if (decision.kind === "check") {
+          result = member
+            ? await checkMembershipAny([member.email, member.aliasEmail])
+            : await checkMembership(email);
+          decision = member
+            ? existingMemberSignIn(member, checkEnabled, result)
+            : newUserSignIn(checkEnabled, result, emailVerified);
+        }
+        if ("logError" in decision && decision.logError && result?.status === "error") {
+          console.error(`[auth] membership check unavailable at sign-in: ${result.message}`);
+        }
+
+        switch (decision.kind) {
+          case "allow":
+            if (member && decision.record) await recordMembershipCheckSafely(member.memberId, decision.record);
+            return true;
+          case "provision": {
+            const provisioned = await provisionVerifiedMember(email, user.name);
+            return provisioned.active ? true : loginErrorPath("AccessDenied", email);
+          }
+          case "deny":
+            if (member && decision.record) await recordMembershipCheckSafely(member.memberId, decision.record);
+            return loginErrorPath(decision.error, email);
+          default:
+            return false;
+        }
+      } catch (err) {
+        console.error("[auth] signIn callback failed", err);
         return false;
       }
     },
