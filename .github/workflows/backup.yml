@@ -1,9 +1,10 @@
-name: Weekly Neon Backup
+name: Daily Neon Backup
 
-# Runs every Sunday at 03:00 UTC (≈ 04:00–05:00 Europe/Rome).
+# Runs every day at 03:00 UTC (≈ 04:00–05:00 Europe/Rome).
 # Dumps the production Neon database with pg_dump, gzips the result,
-# and uploads it to Google Drive via rclone. Also runnable on demand
-# from the Actions tab via "Run workflow".
+# uploads it to Google Drive via rclone, then prunes backups older than
+# 90 days from the same folder. Also runnable on demand from the Actions
+# tab via "Run workflow".
 #
 # Required GitHub repository secrets:
 #   - DATABASE_URL        Neon production connection string (postgresql://...)
@@ -15,7 +16,7 @@ name: Weekly Neon Backup
 
 on:
   schedule:
-    - cron: '0 3 * * 0'
+    - cron: '0 3 * * *'
   workflow_dispatch:
 
 jobs:
@@ -82,6 +83,29 @@ jobs:
             --stats=0 \
             -v
           echo "Uploaded $BACKUP_FILE to ${{ secrets.GDRIVE_BACKUP_PATH }}"
+
+      # Retention: 90 days. Scoped to this workflow's own files only
+      # (gas-backup-*.sql.gz, top level of the destination folder), so any
+      # other file kept there by hand is never touched. Runs after a
+      # successful upload only, so a failing dump never prunes old backups.
+      # Google Drive moves deleted files to the trash (rclone default).
+      - name: Prune backups older than 90 days
+        env:
+          DEST: ${{ secrets.GDRIVE_BACKUP_PATH }}
+        run: |
+          set -euo pipefail
+          # Refuse to prune anything but a remote path (e.g. gdrive:...): an
+          # empty secret would otherwise make rclone act on the runner's cwd.
+          case "$DEST" in
+            *:*) ;;
+            *) echo "GDRIVE_BACKUP_PATH is not a remote path, skipping prune" >&2; exit 1 ;;
+          esac
+          rclone delete "$DEST" \
+            --include "gas-backup-*.sql.gz" \
+            --min-age 90d \
+            --max-depth 1 \
+            --stats=0 \
+            -v
 
       - name: Cleanup local files
         if: always()
