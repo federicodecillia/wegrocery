@@ -7,6 +7,7 @@ import { adminDeleteLedgerEntry, adminRecordTopup, adminUpdateLedgerEntry } from
 import { formatDate, formatEur } from "@/lib/utils";
 import { t } from "@/lib/i18n";
 import { formatMoney } from "@/lib/i18n/format";
+import { utcToZonedLocalInput } from "@/lib/i18n/zoned-time";
 import type { LedgerEntryItem, MemberWithBalance } from "@/lib/db/queries";
 
 type Member = { memberId: string; fullName: string };
@@ -119,7 +120,7 @@ export function CassaSummaryCards({
 
 export function TopupForm({ members }: { members: Member[] }) {
   const [isPending, startTransition] = useTransition();
-  const today = new Date().toISOString().slice(0, 10);
+  const today = utcToZonedLocalInput(new Date()).slice(0, 10);
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();

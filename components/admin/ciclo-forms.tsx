@@ -4,6 +4,7 @@ import { useState, useTransition, useEffect, useCallback } from "react";
 import { toast } from "@/components/ui/toast";
 import { t } from "@/lib/i18n";
 import { formatMoney, formatDateTime } from "@/lib/i18n/format";
+import { utcToZonedLocalInput } from "@/lib/i18n/zoned-time";
 import {
   adminCloseCycle,
   adminCreateCycle,
@@ -201,6 +202,7 @@ export function OpenCycleCard({
 
 // ── Edit Cycle Form ───────────────────────────────────────────────────────────
 
+// Wall-clock value in APP_TIME_ZONE; the server action converts it to UTC.
 function buildDateTime(date: string, time: string): string {
   if (!date) return "";
   return `${date}T${time || "00:00"}`;
@@ -424,6 +426,10 @@ export function EditCycleForm({
   isClosed?: boolean;
 }) {
   const [isPending, startTransition] = useTransition();
+  // Prefill in app-zone wall time: slicing the ISO string would show UTC.
+  const closeAtLocal = utcToZonedLocalInput(cycle.orderCloseAt);
+  const pickupLocal = utcToZonedLocalInput(cycle.pickupDate);
+  const pickup2Local = utcToZonedLocalInput(cycle.pickup2Date);
   // "manual" means the cycle is being driven by a supplier-distinta import:
   // shipping_charge ledger entries are per-member and the recompute is
   // suppressed (see adminUpdateCycle / recomputeShippingForClosedCycle).
@@ -507,7 +513,7 @@ export function EditCycleForm({
             name="orderCloseAt"
             type="datetime-local"
             required
-            defaultValue={cycle.orderCloseAt?.slice(0, 16) ?? ""}
+            defaultValue={closeAtLocal}
             className={`w-full ${inputCls}`}
           />
         </div>
@@ -536,11 +542,11 @@ export function EditCycleForm({
 
 
       <PickupSection
-        defPickup1Date={cycle.pickupDate?.slice(0, 10) ?? ""}
-        defPickup1Start={cycle.pickupDate?.slice(11, 16) ?? ""}
+        defPickup1Date={pickupLocal.slice(0, 10)}
+        defPickup1Start={pickupLocal.slice(11, 16)}
         defPickup1End={cycle.pickupEndTime ?? ""}
-        defPickup2Date={cycle.pickup2Date?.slice(0, 10) ?? ""}
-        defPickup2Start={cycle.pickup2Date?.slice(11, 16) ?? ""}
+        defPickup2Date={pickup2Local.slice(0, 10)}
+        defPickup2Start={pickup2Local.slice(11, 16)}
         defPickup2End={cycle.pickup2EndTime ?? ""}
       />
 
