@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { formatDateTime } from "@/lib/utils";
 import { t } from "@/lib/i18n";
 import { formatDate, formatTime } from "@/lib/i18n/format";
+import { utcToZonedLocalInput } from "@/lib/i18n/zoned-time";
 import Link from "next/link";
 
 type Props = {
@@ -32,7 +33,9 @@ function computeCountdown(closeAt: string, openAt: string, now: Date) {
 function formatPickupSlot(date: string, endTime: string | null): string {
   const d = new Date(date);
   const dateStr = formatDate(d, { weekday: "short", day: "numeric", month: "short" });
-  const hasStartTime = d.getHours() !== 0 || d.getMinutes() !== 0;
+  // Midnight in the app zone means "date only"; getHours() would read the
+  // server's UTC clock during SSR and the browser's clock after hydration.
+  const hasStartTime = !utcToZonedLocalInput(d).endsWith("T00:00");
   if (!hasStartTime) return dateStr;
   const startStr = formatTime(d);
   return endTime ? `${dateStr} · ${startStr}–${endTime}` : `${dateStr} · ${startStr}`;
