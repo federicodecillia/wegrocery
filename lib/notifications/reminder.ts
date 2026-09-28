@@ -1,7 +1,7 @@
 // Pure helper for the "cycle opened" broadcast audience. Kept side-effect-free
 // so it can be unit tested; the DB reads and dispatch live in the admin actions.
 
-import { canAccessCycle } from "@/lib/utils";
+import { canAccessCycle } from "@/lib/roles";
 
 export type MemberForTargeting = {
   memberId: string;

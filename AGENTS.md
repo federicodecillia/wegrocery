@@ -63,7 +63,7 @@ npm run db:push      # Push Drizzle schema to Neon (needs DATABASE_URL in .env.l
 npm run db:studio    # Drizzle Studio (visual DB browser)
 ```
 
-**Deploy**: push to `main` → Vercel auto-deploys. Feature branches create preview deployments.
+**Deploy**: push to `main` → Vercel auto-deploys production. Development PRs target `staging` and are tested on its Preview deployment before `staging` → `main`; other branches create ordinary preview deployments.
 
 **Vercel Root Directory**: repo root (empty / not set)
 
@@ -97,28 +97,51 @@ When handling an advisory:
 - If an alert is genuinely unreachable and has no safe fix, dismiss it with
   `not_used` and open a tracking issue naming the condition to revisit it.
 
-## Two environments: production + demo
+## Environments: production, staging, demo
 
-This repo deploys to **two** Vercel projects from the same `main` branch,
-differing only by environment variables:
+This repo deploys to **two** Vercel projects, differing only by environment
+variables, plus a staging deployment of the `staging` branch:
 
-- **Production** — `gas.portamoneta.org`, real members, no `DEMO_MODE`.
+- **Production** — `gas.portamoneta.org`, real members, no `DEMO_MODE`,
+  built from `main`.
+- **Staging** — Preview deployment of the `staging` branch on the
+  `porta-moneta` project, reached through its stable branch URL
+  (`porta-moneta-git-staging-<scope>.vercel.app`). Env vars scoped to
+  Preview + Git branch `staging`: `DATABASE_URL` → Neon branch `staging`
+  (child of `production`, refreshed with
+  `neonctl branches reset staging --parent`), `EMAIL_REDIRECT_TO`,
+  `APP_BASE_URL`, `WALLYFOR_*`. The Google OAuth client needs the staging
+  branch URL's `/api/auth/callback/google` as an extra redirect URI.
 - **Public demo** — `wegrocery-demo.vercel.app`, fake data, `DEMO_MODE=true`,
-  reseeded nightly.
+  reseeded nightly, built from `main`.
+
+**Git flow**: development PRs target `staging`; `staging` → `main` only after
+the change was tested on staging, following the promotion checklist (manual
+backup, production migrations, merge commit, smoke test) in the doc below.
+Migrations are applied to staging first, then production, then demo.
+
+**Email outside production**: `lib/email/resend.ts` never mails real
+addresses unless `VERCEL_ENV=production`. Elsewhere (staging, previews, local
+dev) every message is redirected to `EMAIL_REDIRECT_TO` (cc dropped, subject
+tagged `[STAGING -> <recipient>]`) or refused when that variable is unset;
+batch sends (broadcasts) are also capped to a few samples there. Never set
+`EMAIL_REDIRECT_TO` on Production.
 
 Demo behaviour lives behind the `DEMO_MODE` flag (the `demo-login` provider in
 `auth.ts`, the banner in `components/demo-banner.tsx`, the email short-circuit in
 `lib/email/resend.ts`) — it is **not** a separate branch. A merge to `main`
-rebuilds both deployments. Schema changes must be pushed to **both** databases,
-and demo-only changes go in a separate changelog section.
+rebuilds both deployments. Schema changes must be applied to **every**
+database (staging, production, demo), and demo-only changes go in a separate
+changelog section.
 
 ```bash
 npm run db:seed:demo   # reseed the demo DB (reads .env.demo.local)
 ```
 
 See [`docs/operating-two-environments.md`](./docs/operating-two-environments.md)
-for the full model: env matrix, migration steps, changelog split, and link
-privacy (gas.portamoneta.org is private; only the demo URL is for public use).
+for the full model: env matrix, staging setup, migration steps, promotion
+checklist, changelog split, and link privacy (gas.portamoneta.org and the
+staging URL are private; only the demo URL is for public use).
 
 ## Documentation conventions
 
@@ -182,7 +205,29 @@ User interaction → Server Action ("use server") → auth check → DB mutation
 
 ### Auth
 
-- Google OAuth via Auth.js. Only emails in the `members` table can log in.
+- Google OAuth via Auth.js. Only emails in the `members` table can log in,
+  unless the membership-card check is configured (below).
+- **Membership-card check (optional, per deploy).** With `WALLYFOR_API_KEY` +
+  `WALLYFOR_MERCHANT_ID` set (Porta Moneta: merchant `5082`), the `signIn`
+  callback checks Google sign-ins against WallyFor (`lib/membership/wallyfor.ts`,
+  decisions in `lib/membership/policy.ts`):
+  - active admin → in, no check; deactivated member → denied (admin
+    deactivation always wins);
+  - existing member → checked on email, then alias. Valid → in, recorded in
+    `members.membership_status/membership_verified_at` (migration 0014).
+    Invalid → `/login?error=MembershipInactive`. API error → in (fail open) +
+    `console.error`;
+  - unknown email → valid card auto-provisions an active `utenti` member (audit
+    `auto_provision_member`, actor `system`); invalid → `NotMember`; API error
+    → `MembershipCheckUnavailable` (fail closed). Never provisioned when
+    Google reports `email_verified: false`.
+  - `saveOrder` rechecks non-admins when the last valid check is older than
+    24h (a lapsed result is always rechecked); lapsed → refused with a renew
+    link (`brand.membershipUrl`), API error → allowed. Saves that do not raise
+    the cycle's total (trim/cancel) are never rechecked.
+  - dev/demo credential providers never run the check.
+- Denials redirect to `/login?error=<code>&email=<attempted>`; the login page
+  explains each code and links `brand.supportEmail` and `brand.privacyUrl`.
 - `requireUserSession()` — throws redirect to `/login` if not authenticated
 - `requireAdmin()` — throws if `role !== 'admin'`
 - `session.user.memberId` — the authenticated member's ID (set in Auth.js callbacks)
@@ -206,17 +251,29 @@ User interaction → Server Action ("use server") → auth check → DB mutation
 
 ### Role System
 
-- `admin` — full access including admin panel
-- `attivo` (alias `member`) — can order
-- `socio` — read-only
+One vocabulary for both `members.role` and `order_cycles.access_level`
+(the minimum role that can see, order in and be notified about a cycle),
+all in `lib/roles.ts`:
 
-Cycle `access_level` controls who can order: `'attivi'` (default) or broader.
+| Value | As a role (UI label) | As a cycle access level (UI label) |
+|---|---|---|
+| `admin` | "Admin": admin panel, every cycle | "Solo admin": admins only |
+| `attivi` | "Attivi" (active members) | "Attivi": attivi + admin |
+| `utenti` | "Utenti" (default, auto-provisioning) | "Utenti (tutti)": everyone, the default for new cycles |
+
+- Always go through `normalizeRole` / `normalizeAccessLevel` /
+  `canAccessCycle` / `getRoleLabel` / `getAccessLabel`; never compare raw
+  strings other than `role === "admin"`. Admin actions reject unknown values.
+- Pre-0015 values are still mapped for the rollout (roles `socio` → `utenti`,
+  `attivo`/`member` → `attivi`; levels `all` → `utenti`, `soci`/`member` →
+  `attivi`). Migration 0015 rewrites them and adds CHECK constraints, so it
+  must be applied **after** deploying the code that ships with it.
 
 ### Data Model (Neon Postgres, Drizzle ORM)
 
 | Table | Purpose |
 |---|---|
-| `members` | User registry; `role`: admin / attivo / socio |
+| `members` | User registry; `role`: admin / attivi / utenti |
 | `order_cycles` | Weekly order windows; one `open` at a time |
 | `products` | Per-cycle product list |
 | `orders` | Order lines per member per cycle |
@@ -233,7 +290,13 @@ ID prefix convention: `cyc_*`, `mem_*`, `prd_*`, `ord_*`, `led_*`, `not_*`, `aud
 
 - Closing a cycle auto-generates `order_charge` ledger entries + `order_closed` notifications for every member with orders.
 - Member balance = `SUM(ledger_entries.amount)` for that member.
-- Negative balance is allowed — UI warns but does not block ordering.
+- Negative balance is allowed — UI warns — down to the optional credit limit
+  `brand.minBalance` (null = no limit; Porta Moneta: -50). `saveOrder` refuses
+  a save when balance − uncharged orders on other open cycles − the new total
+  would fall below it (saves that do not raise the cycle's total always pass).
+  The check runs before the write batch, so concurrent saves can overshoot it.
+- Expected `saveOrder` refusals are returned as `{ success: false, error }`,
+  not thrown: Next.js masks thrown Server Action messages in production.
 - Products loaded from semicolon-delimited text: `Name;Variant;Format;Price;Supplier;Notes`.
 - Email is the unique member identifier (login key). Alias email supported for non-Google accounts.
 
@@ -274,8 +337,10 @@ All four emit `order_adjusted` or `order_corrected` notifications and `audit_log
 - **Vercel Preview deployments use the `dev` Neon branch** (since 2026-07-11:
   `DATABASE_URL` has two entries on the porta-moneta project — Preview → dev
   branch, Production → prod). PR previews share the dev branch with local dev;
-  both are throwaway (reset on demand). A per-PR Neon branch integration would
-  be a further upgrade, not required.
+  both are throwaway (reset on demand). The `staging` branch deployment is the
+  exception: its branch-scoped Preview `DATABASE_URL` points at the Neon
+  branch `staging` instead. A per-PR Neon branch integration would be a
+  further upgrade, not required.
 - **Migrations** (since 2026-07-11, issue #85): `scripts/db-migrate.mjs` tracks
   applied files in a `_migrations` table — the ledger is baselined on prod,
   demo and dev. Flow for a schema change: write the next `drizzle/NNNN_*.sql`
@@ -284,6 +349,19 @@ All four emit `order_adjusted` or `order_corrected` notifications and `audit_log
   `DATABASE_URL=… node scripts/db-migrate.mjs`). `--status` lists
   applied/pending, `--baseline` records without executing. This replaces the
   one-off-script convention; `db:push` remains for local schema iteration only.
+- **No real data in the repo, and DB-writing scripts refuse prod by default.**
+  The repository is public: never commit one-off scripts, fixtures or seeds
+  that contain real members' names, emails or balances (the 2026 one-off
+  `scripts/reconcile-balances.mjs` was removed for this reason; its history
+  is not rewritten). Keep such scripts outside the repo or read the data from
+  a local, git-ignored file. Any new script that writes to the database must
+  compare `new URL(process.env.DATABASE_URL).host` with the production host
+  and exit unless an explicit flag (e.g. `--allow-prod`) is passed, so a
+  mis-pointed `.env` cannot mutate production silently. Existing scripts:
+  `seed-demo.ts` refuses to run without `DEMO_MODE=true` (prod never sets
+  it); `db-migrate.mjs` targets production on purpose at promotion time and
+  has no such flag yet (open follow-up), so run it only with the connection
+  string typed explicitly on the command line.
 - **Integration tests against a real DB** (recipe, not wired into CI): create
   a throwaway Neon branch, point the test run at it, delete it after —
   `npx -y neonctl branches create --name test-x --parent production --project-id small-breeze-14972344 --org-id org-gentle-violet-55538692`
@@ -317,9 +395,9 @@ All four emit `order_adjusted` or `order_corrected` notifications and `audit_log
 
 ### Backup & Restore
 
-Neon free tier only retains 7 hours of point-in-time history, so we ship a weekly off-site backup to Google Drive.
+Neon free tier only retains 6 hours of point-in-time history (the Launch plan goes up to 7 days; see neon.com/pricing), so we ship a daily off-site backup to Google Drive.
 
-**Workflow**: [`.github/workflows/backup.yml`](.github/workflows/backup.yml) runs every Sunday at 03:00 UTC (also via `workflow_dispatch`). It `pg_dump`s the Neon production DB, gzips the result, and `rclone copy`s it to `gdrive:PortaMoneta/GAS-Backups/`.
+**Workflow**: [`.github/workflows/backup.yml`](.github/workflows/backup.yml) runs every day at 03:00 UTC (also via `workflow_dispatch`). It `pg_dump`s the Neon production DB, gzips the result, and `rclone copy`s it to `gdrive:PortaMoneta/GAS-Backups/`. After a successful upload it prunes that folder's own `gas-backup-*.sql.gz` files older than **90 days** (`rclone delete --min-age 90d`, top level only, other files untouched; Drive keeps them in the trash).
 
 **Required GitHub Secrets** (Settings → Secrets and variables → Actions):
 

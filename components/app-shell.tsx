@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { signOut } from "@/auth";
 import { brand } from "@/lib/brand";
+import { t } from "@/lib/i18n";
 import { BottomNav } from "@/components/bottom-nav";
 import { DemoBanner } from "@/components/demo-banner";
 import { LogoutButton } from "@/components/logout-button";
@@ -51,7 +52,16 @@ export async function AppShell({ children, email, isAdmin, memberId }: AppShellP
           <p className="text-brand-gray mt-3 truncate text-xs">{email}</p>
         </header>
 
-        <main className="flex-1 px-5 py-4 pb-[calc(var(--spacing-nav-h)+1rem)]">{children}</main>
+        <main className="flex-1 px-5 py-4 pb-[calc(var(--spacing-nav-h)+1rem)]">
+          {children}
+          {brand.privacyUrl ? (
+            <p className="mt-8 text-center text-xs">
+              <a href={brand.privacyUrl} target="_blank" rel="noopener noreferrer" className="text-brand-gray underline">
+                {t.login.privacyLink}
+              </a>
+            </p>
+          ) : null}
+        </main>
         <BottomNav isAdmin={isAdmin} />
       </div>
     </div>

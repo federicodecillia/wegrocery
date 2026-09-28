@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { computeShippingShares, normalizeShippingMode } from "./shipping";
+import { computeShippingShares, normalizeShippingMode, resolveShippingUpdate } from "./shipping";
 
 function sumCents(shares: Map<string, number>): number {
   let cents = 0;
@@ -13,6 +13,89 @@ describe("normalizeShippingMode", () => {
     expect(normalizeShippingMode("fixed_per_member")).toBe("fixed_per_member");
     expect(normalizeShippingMode("garbage")).toBe("fixed_per_member");
     expect(normalizeShippingMode(undefined)).toBe("fixed_per_member");
+  });
+
+  it("keeps manual as a valid mode instead of collapsing it to fixed", () => {
+    expect(normalizeShippingMode("manual")).toBe("manual");
+  });
+});
+
+describe("resolveShippingUpdate", () => {
+  const fixed = { shippingMode: "fixed_per_member", shippingCostPerMember: "2.50", shippingTotal: null };
+  const proportional = { shippingMode: "proportional", shippingCostPerMember: null, shippingTotal: "12.00" };
+  const manual = { shippingMode: "manual", shippingCostPerMember: null, shippingTotal: null };
+
+  it("leaves a manual (distinta-imported) cycle alone when the form resubmits it", () => {
+    // The edit form sends mode "manual" with empty cost fields.
+    const r = resolveShippingUpdate(manual, {
+      shippingMode: "manual",
+      shippingCostPerMember: "",
+      shippingTotal: "",
+    });
+    expect(r).toEqual({ patch: {}, changed: false });
+  });
+
+  it("never lets a cycle edit move a manual cycle off manual", () => {
+    const r = resolveShippingUpdate(manual, { shippingMode: "fixed_per_member", shippingCostPerMember: "0" });
+    expect(r).toEqual({ patch: {}, changed: false });
+  });
+
+  it("does not let a cycle edit introduce manual mode", () => {
+    const r = resolveShippingUpdate(fixed, { shippingMode: "manual", shippingCostPerMember: "" });
+    expect(r).toEqual({ patch: {}, changed: false });
+  });
+
+  it("reports no change when the same values are resubmitted in another format", () => {
+    const r = resolveShippingUpdate(fixed, {
+      shippingMode: "fixed_per_member",
+      shippingCostPerMember: "2.5",
+      shippingTotal: "",
+    });
+    expect(r.changed).toBe(false);
+  });
+
+  it("reports no change when no shipping field is sent", () => {
+    expect(resolveShippingUpdate(fixed, {})).toEqual({ patch: {}, changed: false });
+  });
+
+  it("detects a changed fee", () => {
+    const r = resolveShippingUpdate(fixed, {
+      shippingMode: "fixed_per_member",
+      shippingCostPerMember: "3.00",
+      shippingTotal: "",
+    });
+    expect(r.changed).toBe(true);
+    expect(r.patch).toEqual({
+      shippingMode: "fixed_per_member",
+      shippingCostPerMember: "3.00",
+      shippingTotal: null,
+    });
+  });
+
+  it("detects a mode switch and clears the other mode's field", () => {
+    const r = resolveShippingUpdate(fixed, {
+      shippingMode: "proportional",
+      shippingCostPerMember: "2.50",
+      shippingTotal: "10",
+    });
+    expect(r.changed).toBe(true);
+    expect(r.patch).toEqual({
+      shippingMode: "proportional",
+      shippingCostPerMember: null,
+      shippingTotal: "10",
+    });
+  });
+
+  it("detects clearing the fee", () => {
+    const r = resolveShippingUpdate(proportional, { shippingMode: "proportional", shippingTotal: "" });
+    expect(r.changed).toBe(true);
+    expect(r.patch.shippingTotal).toBeNull();
+  });
+
+  it("supports partial updates without a mode", () => {
+    const r = resolveShippingUpdate(proportional, { shippingTotal: "12" });
+    expect(r).toEqual({ patch: { shippingTotal: "12" }, changed: false });
+    expect(resolveShippingUpdate(proportional, { shippingTotal: "15" }).changed).toBe(true);
   });
 });
 

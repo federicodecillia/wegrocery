@@ -42,4 +42,47 @@ describe("parseBrandConfig", () => {
   it("throws on non-boolean headerShowName", () => {
     expect(() => parseBrandConfig(JSON.stringify({ headerShowName: "yes" }))).toThrow(/headerShowName/);
   });
+
+  it("defaults privacyUrl, membershipUrl and minBalance to null", () => {
+    const b = parseBrandConfig(JSON.stringify({ appName: "X" }));
+    expect(b.privacyUrl).toBeNull();
+    expect(b.membershipUrl).toBeNull();
+    expect(b.minBalance).toBeNull();
+  });
+
+  it("accepts privacyUrl, membershipUrl and minBalance", () => {
+    const b = parseBrandConfig(
+      JSON.stringify({
+        privacyUrl: "https://example.org/privacy",
+        membershipUrl: "https://example.org/tesseramento",
+        minBalance: -50,
+      }),
+    );
+    expect(b.privacyUrl).toBe("https://example.org/privacy");
+    expect(b.membershipUrl).toBe("https://example.org/tesseramento");
+    expect(b.minBalance).toBe(-50);
+  });
+
+  it("accepts explicit nulls for the optional fields", () => {
+    const b = parseBrandConfig(JSON.stringify({ privacyUrl: null, membershipUrl: null, minBalance: null }));
+    expect(b.privacyUrl).toBeNull();
+    expect(b.membershipUrl).toBeNull();
+    expect(b.minBalance).toBeNull();
+  });
+
+  it("throws on non-string privacyUrl / membershipUrl", () => {
+    expect(() => parseBrandConfig(JSON.stringify({ privacyUrl: 1 }))).toThrow(/privacyUrl/);
+    expect(() => parseBrandConfig(JSON.stringify({ membershipUrl: true }))).toThrow(/membershipUrl/);
+  });
+
+  it("throws on relative, empty or non-http(s) privacyUrl / membershipUrl", () => {
+    expect(() => parseBrandConfig(JSON.stringify({ privacyUrl: "/privacy" }))).toThrow(/privacyUrl/);
+    expect(() => parseBrandConfig(JSON.stringify({ privacyUrl: "" }))).toThrow(/privacyUrl/);
+    expect(() => parseBrandConfig(JSON.stringify({ membershipUrl: "javascript:alert(1)" }))).toThrow(/membershipUrl/);
+  });
+
+  it("throws on non-finite or non-number minBalance", () => {
+    expect(() => parseBrandConfig(JSON.stringify({ minBalance: "-50" }))).toThrow(/minBalance/);
+    expect(() => parseBrandConfig('{"minBalance": 1e999}')).toThrow(/minBalance/);
+  });
 });

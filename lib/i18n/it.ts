@@ -161,11 +161,22 @@ export const it = {
   login: {
     demoMessage: "Demo pubblica: entra con un click, senza registrazione.",
     continueMessage: "Accedi con Google per continuare.",
-    accessDenied: "Accesso negato: la tua email non risulta tra i soci attivi.",
+    accessDenied: "Accesso negato: la tua email non risulta tra i membri abilitati.",
+    attemptedEmail: (email: string) => `Hai provato ad accedere con: ${email}`,
+    notMember:
+      "Per accedere devi essere socio con la tessera attiva per l'anno in corso. Usa la stessa email con cui hai fatto la tessera.",
+    membershipInactive: "La tua tessera non risulta attiva per l'anno in corso.",
+    renewMembership: "Rinnova la tessera",
+    membershipCheckUnavailable:
+      "Non riusciamo a verificare la tessera in questo momento. Riprova tra qualche minuto.",
+    googleAccountHint:
+      "Non hai un account Google con la tua email? Puoi crearne uno gratis anche con un indirizzo non Gmail (es. la tua email personale o di lavoro): su accounts.google.com scegli di usare il tuo indirizzo email attuale invece di crearne uno nuovo.",
+    contactSupport: "Problemi? Scrivi a",
+    privacyLink: "Informativa privacy",
     configError: "Configurazione login incompleta. Controlla le variabili in .env.local.",
     googleLogin: "Login con Google",
     devLogin: "Login locale",
-    memberLogin: "Entra come Socio (demo)",
+    memberLogin: "Entra come Utente (demo)",
     adminLogin: "Entra come Admin (demo)",
     configMissing: "Aggiungi le variabili auth in .env.local per abilitare il login locale.",
   },
@@ -238,7 +249,7 @@ export const it = {
       },
       {
         q: "Cosa succede se il saldo è negativo?",
-        a: "Puoi comunque ordinare, ma riceverai un avviso. Ricordati di effettuare un bonifico al più presto per coprire il debito.",
+        a: "Puoi ordinare finché resti entro il limite di credito fissato dall'associazione (se previsto): l'app ti avvisa quando vai in negativo e blocca il salvataggio oltre il limite. Ricordati di ricaricare al più presto per coprire il debito.",
       },
       {
         q: "Come aggiungo l'app alla schermata Home?",
@@ -246,7 +257,7 @@ export const it = {
       },
       {
         q: "Cosa succede se il mio saldo è insufficiente?",
-        a: "L'app ti permette di ordinare anche se il saldo è basso o negativo (entro certi limiti), per non impedirti di fare la spesa. Tuttavia, è fondamentale ricaricare prontamente per mantenere l'associazione in salute e permettere il pagamento dei fornitori.",
+        a: "L'app ti permette di ordinare anche se il saldo è basso o negativo (fino al limite di credito fissato dall'associazione, se previsto, contando anche gli ordini già inviati e non ancora addebitati), per non impedirti di fare la spesa. Oltre il limite l'ordine non viene salvato finché non ricarichi. Tuttavia, è fondamentale ricaricare prontamente per mantenere l'associazione in salute e permettere il pagamento dei fornitori.",
       },
       {
         q: "Chi sono i fornitori?",
@@ -261,6 +272,18 @@ export const it = {
     contactHeading: "Hai altre domande?",
     contactIntro: (appName: string) =>
       `Scrivici o parla con chi gestisce la cassa al ritiro. Per problemi tecnici contatta il team IT di ${appName}.`,
+  },
+  // Member roles and cycle access levels (lib/roles.ts). The same three words
+  // name both: a cycle's access level is the minimum role that can order.
+  roles: {
+    admin: "Admin",
+    attivi: "Attivi",
+    utenti: "Utenti",
+  },
+  cycleAccess: {
+    utenti: "Utenti (tutti)",
+    attivi: "Attivi",
+    admin: "Solo admin",
   },
   admin: {
     common: {
@@ -310,9 +333,6 @@ export const it = {
       searchPlaceholder: "Cerca…",
       selectPlaceholder: "— seleziona —",
       noSupplier: "— nessuno —",
-      roleAdmin: "Admin",
-      roleMember: "Socio",
-      roleUser: "Utente",
     },
     cycle: {
       tabLabel: "Ciclo",
@@ -347,9 +367,7 @@ export const it = {
       shippingPerMemberDisplay: (amount: string) => `${amount}/socio`,
       supplierLabel: "Fornitore",
       accessLabel: "Accesso",
-      accessAdminOnly: "Solo Admin",
-      accessActiveSoci: "Soci Attivi",
-      accessAllUsers: "Tutti gli utenti",
+      accessHint: "Admin vede tutti i cicli, Attivi i cicli Utenti e Attivi, Utenti solo i cicli Utenti.",
       titleLabel: "Titolo *",
       titlePlaceholder: "es. Ordine frutta 03/05",
       createTitle: "Crea nuovo ciclo",
@@ -491,9 +509,9 @@ export const it = {
       tabLabel: "Cassa",
       balancesTitle: (n: number) => `Saldi soci (${n})`,
       totalBalance: "Saldo totale",
-      activeMembersHint: "soci attivi",
+      activeMembersHint: "membri abilitati",
       avgBalance: "Saldo medio",
-      perActiveMember: "per socio attivo",
+      perActiveMember: "per membro abilitato",
       negativeBalance: "Saldo < 0",
       filterActive: "filtro attivo · tocca per togliere",
       filterHint: "tocca per filtrare",
@@ -512,7 +530,7 @@ export const it = {
       noMemberFound: "Nessun socio trovato",
       noMovements: "Nessun movimento",
       movementsCount: (n: number) => `${n} movimenti`,
-      inactiveHint: "· inattivo",
+      inactiveHint: "· disabilitato",
       topupBadge: "ricarica",
       chargeBadge: "addebito",
       entryUpdated: "Voce aggiornata",
@@ -532,18 +550,12 @@ export const it = {
       aliasEmailHint: "(alias login)",
       aliasEmailPlaceholder: "es. nome@gmail.com",
       roleLabel: "Ruolo",
-      roleAdmin: "Admin",
-      roleSocio: "Socio",
-      roleUtente: "Utente",
       statusLabel: "Stato",
-      statusActive: "Attivo",
-      statusInactive: "Inattivo",
+      statusActive: "Abilitato",
+      statusInactive: "Disabilitato",
       submitAdd: "Aggiungi socio",
       submitEdit: "Aggiorna",
-      inactiveBadge: "inattivo",
-      groupAdmin: "Admin",
-      groupSoci: "Soci",
-      groupUtenti: "Utenti",
+      inactiveBadge: "disabilitato",
       searchPlaceholder: "Cerca per nome o email…",
       deleteConfirm: (name: string) =>
         `Eliminare "${name}"?\n\nOperazione irreversibile. Se ha ordini o movimenti verrà mostrato un errore.`,
@@ -633,7 +645,7 @@ export const it = {
       supplierStatsSubtitle: "Cicli chiusi · prodotto più richiesto",
       supplierTopProduct: (name: string) => `Top: ${name}`,
       memberParticipationTitle: "Partecipazione soci",
-      memberParticipationSubtitle: (n: number) => `Solo soci attivi · ${n} totali`,
+      memberParticipationSubtitle: (n: number) => `Solo membri abilitati · ${n} totali`,
       participationActive: "Attivi",
       participationActiveHint: "≥3 cicli",
       participationOccasional: "Occasionali",
@@ -875,20 +887,30 @@ export const it = {
   fields: {
     title: "Titolo",
     orderCloseDate: "Data chiusura ordine",
+    pickupDate: "Data ritiro",
     name: "Nome",
     email: "Email",
     supplier: "Fornitore",
   },
   errors: {
     memberNotFound: "Socio non trovato",
-    accountInactive: "Account disattivato: contatta un amministratore.",
+    accountInactive: "Account disabilitato: contatta un amministratore.",
     invalidQuantity: "Quantità non valida",
+    invalidRole: "Ruolo non valido",
+    invalidAccessLevel: "Livello di accesso non valido",
     cycleNotOpen: "Il ciclo non è più aperto",
     accessDenied: "Non hai accesso a questo ciclo",
+    membershipInactive: (renewUrl: string | null) =>
+      renewUrl
+        ? `La tua tessera non risulta attiva per l'anno in corso: rinnovala su ${renewUrl} e riprova.`
+        : "La tua tessera non risulta attiva per l'anno in corso: rinnovala e riprova.",
+    creditLimitExceeded: (available: string) =>
+      `Credito insufficiente: tenendo conto degli ordini in corso puoi ordinare al massimo ${available} in questo ciclo. Ricarica il saldo per ordinare di più.`,
     productNotFound: (id: string) => `Prodotto non trovato: ${id}`,
     cycleNotFound: "Ciclo non trovato",
     unauthorized: "Accesso non autorizzato",
     fieldRequired: (field: string) => `${field} obbligatorio/a`,
+    invalidDate: (field: string) => `${field}: data non valida`,
     invalidPrice: "Prezzo non valido",
     csvEmpty: "Il file CSV è vuoto o contiene solo l'intestazione.",
     csvInvalid: "Nessun prodotto valido trovato nel CSV.",
@@ -896,6 +918,7 @@ export const it = {
     xlsxReadError: "Errore lettura file",
     productNotInCycle: (id: string) => `Prodotto non appartenente al ciclo: ${id}`,
     cycleNotFoundOrAlreadyClosed: "Il ciclo non è aperto (potrebbe essere già stato chiuso)",
+    cycleCloseOrdersChanged: "Gli ordini sono cambiati durante la chiusura: riprova.",
     genericError: "Errore",
     cycleCreationError: "Errore nella creazione del ciclo",
     importError: "Errore durante l'importazione",
@@ -912,9 +935,16 @@ export const it = {
     actualQtyInvalid: "Quantità effettiva non valida",
     actualTotalInvalid: "Totale effettivo non valido",
     correctionError: "Errore nella rettifica",
+    closedOrderChanged: "L'ordine è cambiato nel frattempo (o il ciclo non è più chiuso): ricarica e riprova.",
     orderEditOnlyAfterClose: "L'ordine si può modificare in questo modo solo dopo la chiusura del ciclo",
     productNotValidForCycle: "Prodotto non valido per questo ciclo",
     amountMustBePositive: "L'importo deve essere positivo",
+    amountInvalid: "Importo non valido",
+    amountZero: "L'importo non può essere zero",
+    amountSignChange: "Il segno del movimento non può cambiare: per stornarlo registra un nuovo movimento.",
+    ledgerEntryNotFound: "Movimento non trovato",
+    ledgerEntryNotEditable:
+      "Gli addebiti di ordine e spedizione non si modificano da qui: correggili dal ciclo (modifica ordine, spedizione o distinta).",
     cannotDeleteSupplierWithCycles: "Non è possibile eliminare un fornitore con cicli associati. Archivialo invece.",
     catalogProductNotFound: "Prodotto non trovato a catalogo",
     noProductsSelected: "Nessun prodotto selezionato",
@@ -928,7 +958,7 @@ export const it = {
     distintaReadError: "Errore lettura distinta",
     distintaGenerationError: "Errore generazione distinta",
     importApplyError: "Errore importazione",
-    cannotDeleteMemberWithData: "Non è possibile eliminare un socio con ordini o movimenti. Disattivalo invece.",
+    cannotDeleteMemberWithData: "Non è possibile eliminare un socio con ordini o movimenti. Disabilitalo invece.",
     distintaSheetMissing: "Foglio Distinta mancante: verifica di aver caricato il file giusto.",
     distintaMetaSheetMissing:
       "Foglio _meta mancante: il file non sembra una distinta generata dall'app. Riscarica la distinta dal ciclo.",
@@ -936,6 +966,8 @@ export const it = {
     distintaMappingEmpty: "Mappatura prodotti/soci vuota nel foglio _meta.",
     cycleNoLongerInDb: "Ciclo non più presente nel database.",
     demoEmailDisabled: "Ambiente demo: invio email disabilitato",
+    emailDisabledOutsideProduction:
+      "Invio email disabilitato fuori produzione: imposta EMAIL_REDIRECT_TO per ricevere le email di test.",
     emailSendFailed: "Errore invio email",
     distintaWarningNoOrder: (memberName: string, productName: string, amount: string) =>
       `${memberName} · ${productName}: ${amount} inserito ma non c'era un ordine — ignorato.`,

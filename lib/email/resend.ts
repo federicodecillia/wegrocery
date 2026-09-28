@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 import { t } from "@/lib/i18n";
+import { outboundEnvFromProcess, resolveOutbound, resolveOutboundBatch } from "./outbound-policy";
 
 type Attachment = {
   filename: string;
@@ -34,8 +35,10 @@ export function getMailFromDefault(): string | null {
 }
 
 // Thin wrapper around Resend's SDK that returns a discriminated result
-// instead of throwing. Read env vars lazily so the module can be imported
-// in environments where Resend isn't configured (e.g. local dev without
+// instead of throwing. Outside the Vercel production deployment the recipient
+// is rewritten to EMAIL_REDIRECT_TO (or the send refused) by resolveOutbound,
+// because staging and previews run on copies of the real member list. Read
+// env vars lazily so the module can be imported in environments where Resend isn't configured (e.g. local dev without
 // the API key) without crashing at startup.
 export async function sendMail(
   opts: SendMailOpts,
@@ -43,6 +46,13 @@ export async function sendMail(
   if (process.env.DEMO_MODE === "true") {
     return { error: t.errors.demoEmailDisabled };
   }
+  const ccIn = opts.cc == null ? [] : Array.isArray(opts.cc) ? opts.cc : [opts.cc];
+  const target = resolveOutbound(
+    { to: opts.to, cc: ccIn, subject: opts.subject },
+    outboundEnvFromProcess(),
+    t.errors.emailDisabledOutsideProduction,
+  );
+  if (target.action === "block") return { error: target.error };
   const apiKey = process.env.RESEND_API_KEY;
   const from = opts.from?.trim() || process.env.MAIL_FROM;
   if (!apiKey) return { error: "RESEND_API_KEY non configurata" };
@@ -50,13 +60,12 @@ export async function sendMail(
 
   try {
     const resend = new Resend(apiKey);
-    const ccList = opts.cc == null ? [] : Array.isArray(opts.cc) ? opts.cc : [opts.cc];
     const { data, error } = await resend.emails.send({
       from,
-      to: [opts.to],
-      ...(ccList.length > 0 ? { cc: ccList } : {}),
+      to: [target.to],
+      ...(target.cc.length > 0 ? { cc: target.cc } : {}),
       ...(opts.replyTo ? { replyTo: opts.replyTo } : {}),
-      subject: opts.subject,
+      subject: target.subject,
       text: opts.text,
       ...(opts.html ? { html: opts.html } : {}),
       ...(opts.attachments ? { attachments: opts.attachments } : {}),
@@ -80,6 +89,20 @@ export async function sendMailBatch(
 ): Promise<{ ok: true; sent: number } | { error: string }> {
   if (items.length === 0) return { ok: true, sent: 0 };
   if (process.env.DEMO_MODE === "true") return { error: t.errors.demoEmailDisabled };
+  // Same outbound policy as sendMail, per message; outside production the
+  // redirected fan-out is also capped to a few samples (see
+  // resolveOutboundBatch). The decision depends only on the environment, so
+  // either every item is blocked or none is.
+  const decision = resolveOutboundBatch(
+    items,
+    outboundEnvFromProcess(),
+    t.errors.emailDisabledOutsideProduction,
+  );
+  if (decision.action === "block") return { error: decision.error };
+  const targets = decision.messages;
+  if (decision.suppressed > 0) {
+    console.info(`[email] outside production: ${decision.suppressed} redirected batch messages suppressed`);
+  }
   const apiKey = process.env.RESEND_API_KEY;
   const sender = from?.trim() || process.env.MAIL_FROM;
   if (!apiKey) return { error: "RESEND_API_KEY non configurata" };
@@ -87,14 +110,14 @@ export async function sendMailBatch(
 
   try {
     const resend = new Resend(apiKey);
-    for (let i = 0; i < items.length; i += 100) {
-      const chunk = items.slice(i, i + 100);
+    for (let i = 0; i < targets.length; i += 100) {
+      const chunk = targets.slice(i, i + 100);
       const { error } = await resend.batch.send(
         chunk.map((it) => ({ from: sender, to: [it.to], subject: it.subject, text: it.text })),
       );
       if (error) return { error: error.message || t.errors.emailSendFailed };
     }
-    return { ok: true, sent: items.length };
+    return { ok: true, sent: targets.length };
   } catch (e) {
     return { error: e instanceof Error ? e.message : t.errors.emailSendFailed };
   }

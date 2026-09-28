@@ -87,6 +87,10 @@ var = the neutral WeGrocery brand you see in the demo. Example:
 }
 ```
 
+Dates are shown and entered in `Europe/Rome` wall time. A group in another
+zone sets `NEXT_PUBLIC_TIME_ZONE` (an IANA name, e.g. `Europe/Lisbon`); it is
+inlined at build time, so redeploy after changing it.
+
 Onboarding a new group = one Vercel project + one Neon database + one brand
 JSON. Same `main` branch serves every deployment, so a bug fix or feature
 lands everywhere with a single merge — no forks, no per-client branches.
@@ -197,7 +201,7 @@ direct DB access and never receives sensitive credentials.
 ### Data model
 | Table | Purpose |
 |---|---|
-| `members` | Roster + role (`admin` / `attivo` / `socio`) + email whitelist |
+| `members` | Roster + role (`admin` / `attivi` / `utenti`) + email whitelist |
 | `order_cycles` | Time-boxed purchasing windows with shipping config |
 | `products` | Per-cycle catalog snapshot (so historical prices stay frozen) |
 | `supplier_products` | Reusable supplier catalog with price-change history |

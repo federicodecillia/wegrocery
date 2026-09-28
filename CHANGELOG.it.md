@@ -19,9 +19,24 @@ stanno nella PR.
 
 ---
 
-## [Non rilasciato]
+## [1.11.0] — 28 settembre 2026
 
-*Patch di sicurezza per la pipeline immagini e l'importazione della distinta.*
+*Aperta a tutti i soci con tessera attiva, con flussi di denaro più sicuri.*
+
+### Aggiunte
+- 🪪 **I soci con tessera attiva possono entrare da soli.** Al primo accesso con Google, con la stessa email della tessera, l'app la verifica e crea l'account, senza che un admin debba abilitarlo. La tessera viene ricontrollata prima che un ordine aumenti, e la pagina di login spiega cosa fare se l'accesso viene negato.
+- 💳 **Limite di credito.** Un ordine che porterebbe il saldo (contando gli ordini ancora aperti su altri cicli) sotto il limite del gruppo viene rifiutato, indicando l'importo ancora disponibile; ridurre o cancellare un ordine funziona sempre.
+- 🔐 **Link all'informativa privacy** nella pagina di login e nel footer.
+
+### Modificato
+- 👥 **Ruoli e accesso ai cicli usano gli stessi tre nomi: Admin, Attivi, Utenti.** Gli admin vedono tutti i cicli, gli Attivi i cicli standard e quelli privati, gli Utenti solo quelli standard. La scheda socio non propone più Admin per un ruolo non riconosciuto, e "membri abilitati" indica ora l'interruttore che abilita un account.
+
+### Risolto
+- 🕰️ **Gli orari seguono Roma ovunque.** Chiusura e ritiro non si spostano più di due ore tra card, moduli ed email, un ciclo smette di accettare ordini all'ora che mostra, e il passaggio all'ora solare del 25 ottobre è gestito.
+- 🧾 **Modificare un movimento in Cassa ne conserva il segno.** Cambiare solo la nota di un rimborso non lo trasforma più in un addebito, e un importo vuoto viene rifiutato invece di corrompere il saldo. Addebiti ordine e spedizione si correggono con un nuovo movimento, non modificandoli.
+- ⚖️ **Modificare un ordine chiuso conserva le quantità pesate**, così una nuova pesata non può più rimborsare due volte un socio.
+- 🚚 **Salvare un ciclo chiuso conserva la spedizione importata dalla distinta**, invece di azzerare la quota di tutti e inviare notifiche sbagliate.
+- 🔒 **La chiusura di un ciclo è tutto-o-niente.** Addebiti, spedizione e cambio di stato vengono scritti insieme, e il database rifiuta un secondo addebito per lo stesso ciclo.
 
 ### Sicurezza
 - ⚡ **Next.js aggiornato alla 15.5.25**, che corregge due vulnerabilità critiche di esecuzione di codice da remoto. Una richiede un server ospitato su Windows (noi giriamo su Vercel/Linux); l'altra riguardava l'ottimizzazione delle immagini, già limitata al solo host del logo del brand. Anche `sharp` è passato alla 0.35.4.
@@ -311,6 +326,7 @@ stanno nella PR.
 
 ---
 
+[1.11.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.11.0
 [1.9.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.9.0
 [1.8.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.8.1
 [1.8.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.8.0

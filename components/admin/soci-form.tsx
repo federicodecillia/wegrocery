@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { toast } from "@/components/ui/toast";
 import { adminDeleteMember, adminUpsertMember, type UpsertMemberInput } from "@/lib/actions/admin";
-import { getRoleLabel } from "@/lib/utils";
+import { DEFAULT_ROLE, ROLES, getRoleLabel, normalizeRole, type Role } from "@/lib/roles";
 import { t } from "@/lib/i18n";
 
 type Member = {
@@ -98,12 +98,14 @@ export function SociForm({ member, onClose }: { member?: Member; onClose?: () =>
             </label>
             <select
               name="role"
-              defaultValue={member?.role ?? "socio"}
+              defaultValue={normalizeRole(member?.role) ?? DEFAULT_ROLE}
               className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-brand-orange/30"
             >
-              <option value="admin">{t.admin.members.roleAdmin}</option>
-              <option value="attivo">{t.admin.members.roleSocio}</option>
-              <option value="socio">{t.admin.members.roleUtente}</option>
+              {ROLES.map((r) => (
+                <option key={r} value={r}>
+                  {t.roles[r]}
+                </option>
+              ))}
             </select>
           </div>
           <div>
@@ -147,9 +149,10 @@ export function SociList({ members }: { members: Member[] }) {
       )
     : members;
 
-  const admins = visible.filter((m) => m.role === "admin");
-  const soci = visible.filter((m) => m.role === "attivo");
-  const utenti = visible.filter((m) => m.role === "socio");
+  // Legacy values are grouped under their canonical role; an unknown value
+  // falls into the least-privileged group so the member stays visible.
+  const inGroup = (role: Role) =>
+    visible.filter((m) => (normalizeRole(m.role) ?? DEFAULT_ROLE) === role);
 
   function handleDelete(m: Member) {
     if (!window.confirm(t.admin.members.deleteConfirm(m.fullName)))
@@ -232,9 +235,9 @@ export function SociList({ members }: { members: Member[] }) {
           className="w-full rounded-xl border border-brand-border bg-white px-4 py-2.5 text-[13px] text-brand-near-black placeholder:text-brand-gray-light focus:outline-none focus:ring-2 focus:ring-brand-orange/30"
         />
       </div>
-      {renderGroup(t.admin.members.groupAdmin, admins, "bg-brand-orange-light text-brand-orange")}
-      {renderGroup(t.admin.members.groupSoci, soci, "bg-brand-teal-light text-brand-teal")}
-      {renderGroup(t.admin.members.groupUtenti, utenti, "bg-black/[0.05] text-brand-gray")}
+      {renderGroup(t.roles.admin, inGroup("admin"), "bg-brand-orange-light text-brand-orange")}
+      {renderGroup(t.roles.attivi, inGroup("attivi"), "bg-brand-teal-light text-brand-teal")}
+      {renderGroup(t.roles.utenti, inGroup("utenti"), "bg-black/[0.05] text-brand-gray")}
       {visible.length === 0 && (
         <div className="py-6 text-center text-[12px] text-brand-gray">{t.admin.common.noResults}</div>
       )}

@@ -4,6 +4,7 @@ import { useState, useTransition, useEffect, useCallback } from "react";
 import { toast } from "@/components/ui/toast";
 import { t } from "@/lib/i18n";
 import { formatMoney, formatDateTime } from "@/lib/i18n/format";
+import { utcToZonedLocalInput } from "@/lib/i18n/zoned-time";
 import {
   adminCloseCycle,
   adminCreateCycle,
@@ -11,6 +12,7 @@ import {
   type CreateCycleInput,
 } from "@/lib/actions/admin";
 import { formatEur } from "@/lib/utils";
+import { ACCESS_LEVELS, DEFAULT_ACCESS_LEVEL, getAccessLabel, normalizeAccessLevel } from "@/lib/roles";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import type { CatalogProductItem } from "@/lib/db/queries";
 import { ClosedCycleDetails } from "./closed-cycle-details";
@@ -38,6 +40,14 @@ type SerializedCycle = {
   status?: string;
 };
 
+function AccessLevelOptions() {
+  return ACCESS_LEVELS.map((level) => (
+    <option key={level} value={level}>
+      {t.cycleAccess[level]}
+    </option>
+  ));
+}
+
 // ── Open Cycle Card ───────────────────────────────────────────────────────────
 
 export function OpenCycleCard({
@@ -63,6 +73,9 @@ export function OpenCycleCard({
           <span className="mb-1 inline-flex items-center gap-1.5 rounded-full bg-brand-teal-light px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-brand-teal">
             <span className="h-1.5 w-1.5 rounded-full bg-brand-teal" />
             {t.admin.cycle.openBadge}
+          </span>
+          <span className="mb-1 ml-1.5 inline-flex rounded-full bg-black/[0.05] px-2 py-0.5 text-[10px] font-semibold text-brand-gray">
+            {t.admin.cycle.accessLabel}: {getAccessLabel(cycle.accessLevel)}
           </span>
           <h3 className="mt-1 text-[15px] font-bold text-brand-near-black">{cycle.title}</h3>
         </div>
@@ -201,6 +214,7 @@ export function OpenCycleCard({
 
 // ── Edit Cycle Form ───────────────────────────────────────────────────────────
 
+// Wall-clock value in APP_TIME_ZONE; the server action converts it to UTC.
 function buildDateTime(date: string, time: string): string {
   if (!date) return "";
   return `${date}T${time || "00:00"}`;
@@ -424,6 +438,10 @@ export function EditCycleForm({
   isClosed?: boolean;
 }) {
   const [isPending, startTransition] = useTransition();
+  // Prefill in app-zone wall time: slicing the ISO string would show UTC.
+  const closeAtLocal = utcToZonedLocalInput(cycle.orderCloseAt);
+  const pickupLocal = utcToZonedLocalInput(cycle.pickupDate);
+  const pickup2Local = utcToZonedLocalInput(cycle.pickup2Date);
   // "manual" means the cycle is being driven by a supplier-distinta import:
   // shipping_charge ledger entries are per-member and the recompute is
   // suppressed (see adminUpdateCycle / recomputeShippingForClosedCycle).
@@ -455,9 +473,13 @@ export function EditCycleForm({
       pickup2EndTime: fd.get("pickup2EndTime") as string,
       notes: fd.get("notes") as string,
       supplierId: fd.get("supplierId") as string,
-      shippingMode,
-      shippingCostPerMember: fd.get("shippingCostPerMember") as string,
-      shippingTotal: fd.get("shippingTotal") as string,
+      // Manual (distinta-imported) shipping has no inputs here: send no
+      // shipping fields at all so the per-member charges stay as imported.
+      ...(shippingMode !== "manual" && {
+        shippingMode,
+        shippingCostPerMember: fd.get("shippingCostPerMember") as string,
+        shippingTotal: fd.get("shippingTotal") as string,
+      }),
     };
     const openOnlyPatch = isClosed
       ? {}
@@ -507,7 +529,7 @@ export function EditCycleForm({
             name="orderCloseAt"
             type="datetime-local"
             required
-            defaultValue={cycle.orderCloseAt?.slice(0, 16) ?? ""}
+            defaultValue={closeAtLocal}
             className={`w-full ${inputCls}`}
           />
         </div>
@@ -522,8 +544,6 @@ export function EditCycleForm({
               {t.admin.cycle.shippingManualDescription}
             </p>
           </div>
-          <input type="hidden" name="shippingCostPerMember" value="" />
-          <input type="hidden" name="shippingTotal" value="" />
         </div>
       ) : (
         <ShippingModeFields
@@ -536,11 +556,11 @@ export function EditCycleForm({
 
 
       <PickupSection
-        defPickup1Date={cycle.pickupDate?.slice(0, 10) ?? ""}
-        defPickup1Start={cycle.pickupDate?.slice(11, 16) ?? ""}
+        defPickup1Date={pickupLocal.slice(0, 10)}
+        defPickup1Start={pickupLocal.slice(11, 16)}
         defPickup1End={cycle.pickupEndTime ?? ""}
-        defPickup2Date={cycle.pickup2Date?.slice(0, 10) ?? ""}
-        defPickup2Start={cycle.pickup2Date?.slice(11, 16) ?? ""}
+        defPickup2Date={pickup2Local.slice(0, 10)}
+        defPickup2Start={pickup2Local.slice(11, 16)}
         defPickup2End={cycle.pickup2EndTime ?? ""}
       />
 
@@ -565,13 +585,12 @@ export function EditCycleForm({
             <label className={labelCls}>{t.admin.cycle.accessLabel}</label>
             <select
               name="accessLevel"
-              defaultValue={cycle.accessLevel}
+              defaultValue={normalizeAccessLevel(cycle.accessLevel) ?? DEFAULT_ACCESS_LEVEL}
               className={`w-full ${inputCls}`}
             >
-              <option value="admin">{t.admin.cycle.accessAdminOnly}</option>
-              <option value="soci">{t.admin.cycle.accessActiveSoci}</option>
-              <option value="utenti">{t.admin.cycle.accessAllUsers}</option>
+              <AccessLevelOptions />
             </select>
+            <p className="mt-1 text-[10px] text-brand-gray-light">{t.admin.cycle.accessHint}</p>
           </div>
         )}
       </div>
@@ -690,11 +709,10 @@ export function CreateCycleForm({ suppliers }: { suppliers: Supplier[] }) {
           </div>
           <div>
             <label className={labelCls}>{t.admin.cycle.accessLabel}</label>
-            <select name="accessLevel" defaultValue="soci" className={`w-full ${inputCls}`}>
-              <option value="admin">{t.admin.cycle.accessAdminOnly}</option>
-              <option value="soci">{t.admin.cycle.accessActiveSoci}</option>
-              <option value="utenti">{t.admin.cycle.accessAllUsers}</option>
+            <select name="accessLevel" defaultValue={DEFAULT_ACCESS_LEVEL} className={`w-full ${inputCls}`}>
+              <AccessLevelOptions />
             </select>
+            <p className="mt-1 text-[10px] text-brand-gray-light">{t.admin.cycle.accessHint}</p>
           </div>
         </div>
         <div>

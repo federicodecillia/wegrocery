@@ -5,11 +5,26 @@ import { eq, and, ne, sql, inArray } from "drizzle-orm";
 import { auth } from "@/auth";
 import { t } from "@/lib/i18n";
 import { formatMoney, formatDateTime } from "@/lib/i18n/format";
+import { parseCycleDates } from "@/lib/cycle-dates";
 import { brand } from "@/lib/brand";
 import { getDb } from "@/lib/db/client";
 import { auditLog, ledgerEntries, members, orderCycles, orders, products, suppliers, supplierProducts } from "@/lib/db/schema";
 import { upsertCycleProducts } from "@/lib/db/cycle-products";
-import { computeShippingShares, normalizeShippingMode, type ShippingMode } from "@/lib/shipping";
+import type { BatchItem } from "drizzle-orm/batch";
+import { orderLinesSnapshot, planClosedOrderEdit } from "@/lib/closed-order-edit";
+import { buildCycleCloseCharges, ordersSnapshot } from "@/lib/cycle-close";
+import {
+  computeShippingShares,
+  normalizeShippingMode,
+  resolveShippingUpdate,
+  type ShippingMode,
+} from "@/lib/shipping";
+import {
+  isAdminEditableLedgerType,
+  validateLedgerEntryEdit,
+  validateTopupAmount,
+  type LedgerAmountError,
+} from "@/lib/ledger";
 import {
   dispatchNotification,
   dispatchToMembers,
@@ -18,6 +33,7 @@ import {
   getResolvedPreferences,
 } from "@/lib/notifications/dispatch";
 import { selectCycleAccessMembers } from "@/lib/notifications/reminder";
+import { DEFAULT_ACCESS_LEVEL, normalizeAccessLevel, normalizeRole, type AccessLevel } from "@/lib/roles";
 
 async function requireAdmin(): Promise<{ email: string }> {
   const session = await auth();
@@ -28,6 +44,21 @@ async function requireAdmin(): Promise<{ email: string }> {
   // expiry.
   if (!email || u?.role !== "admin" || !u?.active) throw new Error(t.errors.unauthorized);
   return { email };
+}
+
+function ledgerAmountErrorMessage(code: LedgerAmountError): string {
+  switch (code) {
+    case "notEditable":
+      return t.errors.ledgerEntryNotEditable;
+    case "notFinite":
+      return t.errors.amountInvalid;
+    case "zero":
+      return t.errors.amountZero;
+    case "signChange":
+      return t.errors.amountSignChange;
+    case "notPositive":
+      return t.errors.amountMustBePositive;
+  }
 }
 
 function genId(prefix: string): string {
@@ -61,6 +92,8 @@ async function writeAudit(
 // fails with "Export ShippingMode doesn't exist in target module". Import the
 // type from @/lib/shipping, which is where it is declared.
 
+// Date fields are datetime-local wall-clock strings ("YYYY-MM-DDTHH:mm") in
+// APP_TIME_ZONE; the actions convert them with parseCycleDates.
 export type CreateCycleInput = {
   title: string;
   pickupDate: string;
@@ -69,7 +102,8 @@ export type CreateCycleInput = {
   pickup2EndTime: string;
   orderCloseAt: string;
   supplierId?: string;
-  accessLevel: "admin" | "soci" | "utenti" | string;
+  /** An AccessLevel; legacy values are normalized, unknown ones rejected. Empty = default. */
+  accessLevel: string;
   notes: string;
   shippingMode: ShippingMode;
   shippingCostPerMember: string;
@@ -80,20 +114,30 @@ export async function adminCreateCycle(data: CreateCycleInput): Promise<{error?:
   try {
     const admin = await requireAdmin();
     if (!data.title?.trim()) return { error: t.errors.fieldRequired(t.fields.title) };
-    if (!data.orderCloseAt) return { error: t.errors.fieldRequired(t.fields.orderCloseDate) };
+    const dates = parseCycleDates({
+      orderCloseAt: data.orderCloseAt ?? "",
+      pickupDate: data.pickupDate ?? "",
+      pickup2Date: data.pickup2Date ?? "",
+    });
+    if ("error" in dates) return { error: dates.error };
+    const orderCloseAt = dates.orderCloseAt!;
     if (!data.supplierId) return { error: t.errors.fieldRequired(t.fields.supplier) };
+    const accessLevel = data.accessLevel ? normalizeAccessLevel(data.accessLevel) : DEFAULT_ACCESS_LEVEL;
+    if (!accessLevel) return { error: t.errors.invalidAccessLevel };
 
     const db = getDb();
 
     const cycleId = genId("cyc");
     const now = new Date();
-    const shippingMode = normalizeShippingMode(data.shippingMode);
+    // "manual" is reserved for the distinta import; a new cycle starts fixed.
+    const requestedMode = normalizeShippingMode(data.shippingMode);
+    const shippingMode = requestedMode === "manual" ? "fixed_per_member" : requestedMode;
     await db.insert(orderCycles).values({
       cycleId,
       title: data.title.trim(),
-      pickupDate: data.pickupDate ? new Date(data.pickupDate) : null,
+      pickupDate: dates.pickupDate,
       pickupEndTime: data.pickupEndTime || null,
-      pickup2Date: data.pickup2Date ? new Date(data.pickup2Date) : null,
+      pickup2Date: dates.pickup2Date,
       pickup2EndTime: data.pickup2EndTime || null,
       shippingMode,
       shippingCostPerMember:
@@ -103,23 +147,22 @@ export async function adminCreateCycle(data: CreateCycleInput): Promise<{error?:
       shippingTotal:
         shippingMode === "proportional" && data.shippingTotal ? data.shippingTotal : null,
       orderOpenAt: now,
-      orderCloseAt: new Date(data.orderCloseAt),
+      orderCloseAt,
       status: "open",
-      accessLevel: data.accessLevel || "attivi",
+      accessLevel,
       notes: data.notes?.trim() || null,
       createdBy: admin.email,
       createdAt: now,
       supplierId: data.supplierId || null,
     });
 
-    await writeAudit(db, admin.email, "create_cycle", "cycle", cycleId, data);
+    await writeAudit(db, admin.email, "create_cycle", "cycle", cycleId, { ...data, accessLevel });
 
     // Notify members who can see this cycle that it's open. Cycles are always
     // created already-open (no scheduled opens), so this is the single emit
     // point for cycle_opened. Kept independent of cycle creation: a delivery
     // failure must not report the (already committed) cycle as failed.
     try {
-      const accessLevel = data.accessLevel || "attivi";
       const allMembers = await db
         .select({
           memberId: members.memberId,
@@ -137,7 +180,7 @@ export async function adminCreateCycle(data: CreateCycleInput): Promise<{error?:
           title: t.notificationsServer.cycleOpenedTitle,
           body: t.notificationsServer.cycleOpenedBody(
             data.title.trim(),
-            formatDateTime(new Date(data.orderCloseAt)),
+            formatDateTime(orderCloseAt),
           ),
           href: "/ordine",
         },
@@ -156,151 +199,174 @@ export async function adminCreateCycle(data: CreateCycleInput): Promise<{error?:
   }
 }
 
-// Internal: performs the actual close-cycle work — CAS, ledger inserts,
-// notifications, and rollback on failure. Returns chargesGenerated.
+// Internal: performs the actual close-cycle work. Status flip, every
+// order_charge and every shipping_charge are committed together in a single
+// db.batch (one Neon transaction), so a failure can no longer leave a cycle
+// reopened with charges already posted. Notifications go out after the
+// commit, best-effort. Returns chargesGenerated.
 // Callers are responsible for requireAdmin(), audit log, and revalidation.
+const CLOSE_ATTEMPTS = 3;
+
 async function performCycleClose(
   db: ReturnType<typeof getDb>,
   cycleId: string,
   adminEmail: string,
 ): Promise<{ chargesGenerated: number }> {
-  const now = new Date();
-
-  // Atomic compare-and-swap: only the caller that flips status open→closed
-  // proceeds. A second concurrent call gets 0 rows back and exits cleanly.
-  const closed = await db
-    .update(orderCycles)
-    .set({ status: "closed", closedAt: now })
-    .where(and(eq(orderCycles.cycleId, cycleId), eq(orderCycles.status, "open")))
-    .returning({
-      cycleId: orderCycles.cycleId,
-      title: orderCycles.title,
-      shippingMode: orderCycles.shippingMode,
-      shippingCostPerMember: orderCycles.shippingCostPerMember,
-      shippingTotal: orderCycles.shippingTotal,
-    });
-
-  if (closed.length === 0) {
-    const [existing] = await db
-      .select({ status: orderCycles.status })
+  for (let attempt = 1; attempt <= CLOSE_ATTEMPTS; attempt++) {
+    const [cycle] = await db
+      .select({
+        status: orderCycles.status,
+        title: orderCycles.title,
+        shippingMode: orderCycles.shippingMode,
+        shippingCostPerMember: orderCycles.shippingCostPerMember,
+        shippingTotal: orderCycles.shippingTotal,
+      })
       .from(orderCycles)
       .where(eq(orderCycles.cycleId, cycleId))
       .limit(1);
-    if (!existing) throw new Error(t.errors.cycleNotFound);
-    throw new Error(t.errors.cycleNotFoundOrAlreadyClosed);
-  }
+    if (!cycle) throw new Error(t.errors.cycleNotFound);
+    if (cycle.status !== "open") throw new Error(t.errors.cycleNotFoundOrAlreadyClosed);
 
-  const cycle = closed[0];
+    const memberTotals = await db
+      .select({
+        memberId: orders.memberId,
+        total: sql<string>`sum(${orders.lineTotal})`,
+      })
+      .from(orders)
+      .where(eq(orders.cycleId, cycleId))
+      .groupBy(orders.memberId);
 
-  // The CAS guarantees only one caller reaches this branch, so duplicate
-  // ledger entries can only happen if the previous attempt failed mid-way and
-  // left the cycle closed. Belt-and-suspenders: still check.
-  const [existingCharge] = await db
-    .select({ entryId: ledgerEntries.entryId })
-    .from(ledgerEntries)
-    .where(and(eq(ledgerEntries.cycleId, cycleId), eq(ledgerEntries.type, "order_charge")))
-    .limit(1);
+    // A cycle closed by the pre-atomic code could have been reopened with
+    // some charges already posted: never charge those members twice.
+    const existingCharges = await db
+      .select({ memberId: ledgerEntries.memberId, type: ledgerEntries.type })
+      .from(ledgerEntries)
+      .where(
+        and(
+          eq(ledgerEntries.cycleId, cycleId),
+          inArray(ledgerEntries.type, ["order_charge", "shipping_charge"]),
+        ),
+      );
+    const alreadyCharged = {
+      order: new Set(existingCharges.filter((c) => c.type === "order_charge").map((c) => c.memberId)),
+      shipping: new Set(
+        existingCharges.filter((c) => c.type === "shipping_charge").map((c) => c.memberId),
+      ),
+    };
 
-  let chargesGenerated = 0;
+    const charges = buildCycleCloseCharges(memberTotals, cycle, alreadyCharged);
+    const now = new Date();
 
-  if (!existingCharge) {
-    try {
-      const memberTotals = await db
-        .select({
-          memberId: orders.memberId,
-          total: sql<string>`sum(${orders.lineTotal})`,
-        })
-        .from(orders)
-        .where(eq(orders.cycleId, cycleId))
-        .groupBy(orders.memberId);
-
-      const toInsert = memberTotals.filter((r) => parseFloat(r.total) > 0);
-
-      // Pre-compute each member's shipping share. For "proportional" mode the
-      // shares sum to shippingTotal; rounding leftovers (sum-of-cents drift)
-      // are absorbed by the largest order so the total stays exact.
-      const shippingShares = computeShippingShares(toInsert, cycle);
-
-      if (toInsert.length > 0) {
-        await db.insert(ledgerEntries).values(
-          toInsert.map((r) => ({
+    // 1. Row-lock the cycle: saveOrder takes the same lock first in its own
+    //    batch, so from here on no member write can commit on this cycle.
+    // 2. Guard, in a fresh statement snapshot taken after the lock: the cycle
+    //    must still be open and the orders must be exactly the ones the
+    //    charges were computed from. Otherwise 1/0 aborts the whole batch.
+    // 3. Flip the status and post every charge in the same transaction.
+    const lockCycle = db.execute(
+      sql`SELECT 1 FROM order_cycles WHERE cycle_id = ${cycleId} FOR UPDATE`,
+    );
+    const guard = db.execute(
+      sql`SELECT 1 / (CASE WHEN
+            (SELECT status FROM order_cycles WHERE cycle_id = ${cycleId}) = 'open'
+            AND (SELECT coalesce(jsonb_object_agg(g.member_id, g.total::text), '{}'::jsonb)
+                 FROM (SELECT member_id, sum(line_total) AS total FROM orders
+                       WHERE cycle_id = ${cycleId} GROUP BY member_id) g)
+                = ${ordersSnapshot(memberTotals)}::jsonb
+          THEN 1 ELSE 0 END) AS close_guard`,
+    );
+    const flipStatus = db
+      .update(orderCycles)
+      .set({ status: "closed", closedAt: now })
+      .where(and(eq(orderCycles.cycleId, cycleId), eq(orderCycles.status, "open")));
+    const statements: BatchItem<"pg">[] = [lockCycle, guard, flipStatus];
+    if (charges.orderCharges.length > 0) {
+      statements.push(
+        db.insert(ledgerEntries).values(
+          charges.orderCharges.map((c) => ({
             entryId: genId("led"),
-            memberId: r.memberId,
+            memberId: c.memberId,
             entryDate: now,
             type: "order_charge",
-            amount: (-parseFloat(r.total)).toFixed(2),
+            amount: c.amount,
             cycleId,
             note: t.ledger.orderCharge,
             createdBy: adminEmail,
             createdAt: now,
           })),
-        );
-
-        const shippingEntries = toInsert
-          .map((r) => ({ memberId: r.memberId, share: shippingShares.get(r.memberId) ?? 0 }))
-          .filter((s) => s.share > 0);
-        if (shippingEntries.length > 0) {
-          await db.insert(ledgerEntries).values(
-            shippingEntries.map((s) => ({
-              entryId: genId("led"),
-              memberId: s.memberId,
-              entryDate: now,
-              type: "shipping_charge",
-              amount: (-s.share).toFixed(2),
-              cycleId,
-              note:
-                cycle.shippingMode === "proportional"
-                  ? "Spedizione (quota proporzionale)"
-                  : "Spedizione",
-              createdBy: adminEmail,
-              createdAt: now,
-            })),
-          );
-        }
-
-        // One notification per charged member. Bodies differ per member (order
-        // + optional shipping), so dispatchWithBodies filters each member by
-        // their app/email channels for order_charge and batches both sends.
-        const emailByMember = await getMemberEmails(
-          db,
-          toInsert.map((r) => r.memberId),
-        );
-        const items = toInsert.map((r) => {
-          const orderTotal = parseFloat(r.total);
-          const shippingShare = shippingShares.get(r.memberId) ?? 0;
-          const totalCharged = orderTotal + shippingShare;
-          const body =
-            shippingShare > 0
-              ? t.notificationsServer.orderClosedBodyWithShipping(
-                  cycle.title,
-                  formatMoney(totalCharged),
-                  formatMoney(orderTotal),
-                  formatMoney(shippingShare),
-                )
-              : t.notificationsServer.orderClosedBody(cycle.title, formatMoney(orderTotal));
-          return {
-            memberId: r.memberId,
-            email: emailByMember.get(r.memberId) ?? null,
-            title: t.notificationsServer.orderClosedTitle,
-            body,
-            href: `/storico?cycleId=${cycleId}`,
-          };
-        });
-        await dispatchWithBodies(db, items, "order_closed", now);
-        chargesGenerated = toInsert.length;
-      }
-    } catch (e) {
-      // Rollback the status flip so the admin can retry instead of leaving
-      // the cycle in a half-closed state with no charges.
-      await db
-        .update(orderCycles)
-        .set({ status: "open", closedAt: null })
-        .where(eq(orderCycles.cycleId, cycleId));
-      throw e;
+        ),
+      );
     }
-  }
+    if (charges.shippingCharges.length > 0) {
+      statements.push(
+        db.insert(ledgerEntries).values(
+          charges.shippingCharges.map((c) => ({
+            entryId: genId("led"),
+            memberId: c.memberId,
+            entryDate: now,
+            type: "shipping_charge",
+            amount: c.amount,
+            cycleId,
+            note:
+              cycle.shippingMode === "proportional"
+                ? "Spedizione (quota proporzionale)"
+                : "Spedizione",
+            createdBy: adminEmail,
+            createdAt: now,
+          })),
+        ),
+      );
+    }
 
-  return { chargesGenerated };
+    try {
+      await db.batch(statements as [BatchItem<"pg">, ...BatchItem<"pg">[]]);
+    } catch (e) {
+      // 22012 = division_by_zero, i.e. the guard fired: either the cycle is
+      // no longer open (concurrent close) or an order changed under us.
+      if (!(e instanceof Error && /22012|division by zero/i.test(e.message))) throw e;
+      const [current] = await db
+        .select({ status: orderCycles.status })
+        .from(orderCycles)
+        .where(eq(orderCycles.cycleId, cycleId))
+        .limit(1);
+      if (current?.status !== "open") throw new Error(t.errors.cycleNotFoundOrAlreadyClosed);
+      continue; // orders changed: recompute from fresh totals
+    }
+
+    // Committed. One notification per charged member; bodies differ per
+    // member (order + optional shipping). A delivery failure is logged, never
+    // rolled back onto the (already committed) close.
+    try {
+      const emailByMember = await getMemberEmails(
+        db,
+        charges.summaries.map((s) => s.memberId),
+      );
+      const items = charges.summaries.map((s) => {
+        const body =
+          s.shippingShare > 0
+            ? t.notificationsServer.orderClosedBodyWithShipping(
+                cycle.title,
+                formatMoney(s.orderTotal + s.shippingShare),
+                formatMoney(s.orderTotal),
+                formatMoney(s.shippingShare),
+              )
+            : t.notificationsServer.orderClosedBody(cycle.title, formatMoney(s.orderTotal));
+        return {
+          memberId: s.memberId,
+          email: emailByMember.get(s.memberId) ?? null,
+          title: t.notificationsServer.orderClosedTitle,
+          body,
+          href: `/storico?cycleId=${cycleId}`,
+        };
+      });
+      if (items.length > 0) await dispatchWithBodies(db, items, "order_closed", now);
+    } catch (notifyError) {
+      console.error("[order_closed] dispatch failed:", notifyError);
+    }
+
+    return { chargesGenerated: charges.orderCharges.length };
+  }
+  throw new Error(t.errors.cycleCloseOrdersChanged);
 }
 
 export async function adminCloseCycle(cycleId: string) {
@@ -440,6 +506,16 @@ export async function adminCloseCycleWithAdjustments(
   const admin = await requireAdmin();
   const db = getDb();
 
+  // Re-pricing rewrites products and order lines, so it must never run on a
+  // cycle that is already closed (or cancelled): check before touching rows.
+  const [current] = await db
+    .select({ status: orderCycles.status })
+    .from(orderCycles)
+    .where(eq(orderCycles.cycleId, cycleId))
+    .limit(1);
+  if (!current) throw new Error(t.errors.cycleNotFound);
+  if (current.status !== "open") throw new Error(t.errors.cycleNotFoundOrAlreadyClosed);
+
   // Validate up-front: reject empty IDs, negative prices, and adjustments
   // that name a product not belonging to this cycle. Better to fail before
   // we touch any rows than mid-way through.
@@ -458,10 +534,10 @@ export async function adminCloseCycleWithAdjustments(
     if (orphan) throw new Error(`Prodotto non appartenente al ciclo: ${orphan.productId}`);
   }
 
-  // Apply the price adjustments before flipping status. We do not use a
-  // transaction (neon-http does not support interactive ones), but the
-  // CAS inside performCycleClose still guarantees that only one caller
-  // proceeds to generate charges.
+  // Apply the price adjustments before closing. We do not use a transaction
+  // (neon-http does not support interactive ones), but performCycleClose
+  // charges from the order totals it re-checks inside its own batch, so the
+  // charges always match the re-priced lines, and only one caller can close.
   for (const adj of cleaned) {
     const priceStr = adj.finalUnitPrice.toFixed(2);
     await db
@@ -640,59 +716,51 @@ export async function adminUpdateCycle(
       .limit(1);
     if (!before) return { error: t.errors.cycleNotFound };
 
-    const newCloseAt = data.orderCloseAt !== undefined ? new Date(data.orderCloseAt) : undefined;
+    const dates = parseCycleDates(data);
+    if ("error" in dates) return { error: dates.error };
+
+    let accessLevel: AccessLevel | undefined;
+    if (typeof data.accessLevel === "string") {
+      const parsed = normalizeAccessLevel(data.accessLevel);
+      if (!parsed) return { error: t.errors.invalidAccessLevel };
+      accessLevel = parsed;
+    }
 
     const isClosed = before.status === "closed";
-    const shippingTouched =
-      data.shippingMode !== undefined ||
-      data.shippingCostPerMember !== undefined ||
-      data.shippingTotal !== undefined;
 
-    // When shippingMode is provided we treat it as authoritative: also clear
-    // the field belonging to the other mode so we never end up with stale
-    // values being read at close time.
-    const shippingPatch =
-      data.shippingMode !== undefined
-        ? (() => {
-            const mode = normalizeShippingMode(data.shippingMode);
-            return {
-              shippingMode: mode,
-              shippingCostPerMember:
-                mode === "fixed_per_member" ? data.shippingCostPerMember || null : null,
-              shippingTotal: mode === "proportional" ? data.shippingTotal || null : null,
-            };
-          })()
-        : {
-            ...(data.shippingCostPerMember !== undefined && {
-              shippingCostPerMember: data.shippingCostPerMember || null,
-            }),
-            ...(data.shippingTotal !== undefined && {
-              shippingTotal: data.shippingTotal || null,
-            }),
-          };
+    // Shipping is recomputed on a closed cycle only when its effective
+    // configuration really changes. A "manual" (distinta-imported) cycle is
+    // never touched: saving it to fix a pickup date used to zero everyone's
+    // shipping and notify every member. See resolveShippingUpdate.
+    const { patch: shippingPatch, changed: shippingChanged } = resolveShippingUpdate(before, data);
 
     await db
       .update(orderCycles)
       .set({
         ...(data.title !== undefined && { title: data.title }),
         ...(data.pickupDate !== undefined && {
-          pickupDate: data.pickupDate ? new Date(data.pickupDate) : null,
+          pickupDate: dates.pickupDate,
         }),
         ...(data.pickupEndTime !== undefined && { pickupEndTime: data.pickupEndTime || null }),
         ...(data.pickup2Date !== undefined && {
-          pickup2Date: data.pickup2Date ? new Date(data.pickup2Date) : null,
+          pickup2Date: dates.pickup2Date,
         }),
         ...(data.pickup2EndTime !== undefined && { pickup2EndTime: data.pickup2EndTime || null }),
-        ...(data.orderCloseAt !== undefined && { orderCloseAt: newCloseAt }),
+        ...(data.orderCloseAt !== undefined && { orderCloseAt: dates.orderCloseAt }),
         ...(data.notes !== undefined && { notes: data.notes || null }),
         ...(data.supplierId !== undefined && { supplierId: data.supplierId || null }),
-        ...(data.accessLevel !== undefined && { accessLevel: data.accessLevel }),
+        ...(accessLevel !== undefined && { accessLevel }),
         ...shippingPatch,
       })
       .where(eq(orderCycles.cycleId, cycleId));
 
     let adjustedMembers = 0;
-    if (isClosed && shippingTouched) {
+    if (isClosed && shippingChanged) {
+      const shippingBefore = {
+        shippingMode: before.shippingMode,
+        shippingCostPerMember: before.shippingCostPerMember,
+        shippingTotal: before.shippingTotal,
+      };
       const { adjustedMembers: m } = await recomputeShippingForClosedCycle(
         db,
         cycleId,
@@ -700,23 +768,15 @@ export async function adminUpdateCycle(
       );
       adjustedMembers = m.length;
       await writeAudit(db, admin.email, "cycle_shipping_recomputed", "cycle", cycleId, {
-        before: {
-          shippingMode: before.shippingMode,
-          shippingCostPerMember: before.shippingCostPerMember,
-          shippingTotal: before.shippingTotal,
-        },
-        after: {
-          shippingMode: data.shippingMode,
-          shippingCostPerMember: data.shippingCostPerMember,
-          shippingTotal: data.shippingTotal,
-        },
+        before: shippingBefore,
+        after: { ...shippingBefore, ...shippingPatch },
         affectedMembers: m,
       });
       revalidatePath("/storico");
       revalidatePath("/notifiche");
     }
 
-    await writeAudit(db, admin.email, "update_cycle", "cycle", cycleId, data);
+    await writeAudit(db, admin.email, "update_cycle", "cycle", cycleId, { ...data, ...(accessLevel && { accessLevel }) });
     revalidatePath("/admin");
     revalidatePath("/");
     return { adjustedMembers };
@@ -777,52 +837,58 @@ export async function adminRecordTopup(
   amount: number,
   note: string,
   entryDate: string,
-) {
-  const admin = await requireAdmin();
-  if (amount <= 0) throw new Error(t.errors.amountMustBePositive);
+): Promise<{ error?: string }> {
+  try {
+    const admin = await requireAdmin();
+    const amountError = validateTopupAmount(amount);
+    if (amountError) return { error: ledgerAmountErrorMessage(amountError) };
 
-  const db = getDb();
-  const [member] = await db
-    .select({ memberId: members.memberId, email: members.email })
-    .from(members)
-    .where(eq(members.memberId, memberId))
-    .limit(1);
-  if (!member) throw new Error(t.errors.memberNotFound);
+    const db = getDb();
+    const [member] = await db
+      .select({ memberId: members.memberId, email: members.email })
+      .from(members)
+      .where(eq(members.memberId, memberId))
+      .limit(1);
+    if (!member) return { error: t.errors.memberNotFound };
 
-  const now = new Date();
-  const entryId = genId("led");
-  await db.insert(ledgerEntries).values({
-    entryId,
-    memberId,
-    entryDate: entryDate ? new Date(entryDate) : now,
-    type: "topup",
-    amount: amount.toFixed(2),
-    cycleId: null,
-    note: note?.trim() || "Ricarica",
-    createdBy: admin.email,
-    createdAt: now,
-  });
+    const now = new Date();
+    const entryId = genId("led");
+    await db.insert(ledgerEntries).values({
+      entryId,
+      memberId,
+      entryDate: entryDate ? new Date(entryDate) : now,
+      type: "topup",
+      amount: amount.toFixed(2),
+      cycleId: null,
+      note: note?.trim() || "Ricarica",
+      createdBy: admin.email,
+      createdAt: now,
+    });
 
-  const [balanceRow] = await db
-    .select({ total: sql<string>`coalesce(sum(${ledgerEntries.amount}), '0')` })
-    .from(ledgerEntries)
-    .where(eq(ledgerEntries.memberId, memberId));
-  const newBalance = parseFloat(balanceRow?.total ?? "0");
+    const [balanceRow] = await db
+      .select({ total: sql<string>`coalesce(sum(${ledgerEntries.amount}), '0')` })
+      .from(ledgerEntries)
+      .where(eq(ledgerEntries.memberId, memberId));
+    const newBalance = parseFloat(balanceRow?.total ?? "0");
 
-  await dispatchNotification(db, {
-    memberId,
-    memberEmail: member.email,
-    type: "topup_received",
-    title: t.notificationsServer.topupReceivedTitle,
-    body: t.notificationsServer.topupReceivedBody(formatMoney(amount), formatMoney(newBalance)),
-    href: "/storico",
-    createdAt: now,
-  });
+    await dispatchNotification(db, {
+      memberId,
+      memberEmail: member.email,
+      type: "topup_received",
+      title: t.notificationsServer.topupReceivedTitle,
+      body: t.notificationsServer.topupReceivedBody(formatMoney(amount), formatMoney(newBalance)),
+      href: "/storico",
+      createdAt: now,
+    });
 
-  await writeAudit(db, admin.email, "record_topup", "ledger", entryId, { memberId, amount });
-  revalidatePath("/admin");
-  revalidatePath("/");
-  revalidatePath("/storico");
+    await writeAudit(db, admin.email, "record_topup", "ledger", entryId, { memberId, amount });
+    revalidatePath("/admin");
+    revalidatePath("/");
+    revalidatePath("/storico");
+    return {};
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : t.errors.genericError };
+  }
 }
 
 // ── Supplier email ───────────────────────────────────────────────────────────
@@ -1205,80 +1271,80 @@ export async function adminEditClosedOrder(input: EditClosedOrderInput) {
     .limit(1);
   if (!member) throw new Error(t.errors.memberNotFound);
 
-  // Pull the current order rows so we can compute the delta.
+  // Pull the current order rows so we can compute the delta. Actuals are
+  // needed because a weighed line's effective total is actual_line_total.
   const previousLines = await db
     .select({
       orderLineId: orders.orderLineId,
       productId: orders.productId,
       quantity: orders.quantity,
+      unitPriceSnapshot: orders.unitPriceSnapshot,
       lineTotal: orders.lineTotal,
+      actualQuantity: orders.actualQuantity,
+      actualLineTotal: orders.actualLineTotal,
     })
     .from(orders)
     .where(and(eq(orders.cycleId, input.cycleId), eq(orders.memberId, input.memberId)));
 
-  const oldTotal = previousLines.reduce((sum, l) => sum + parseFloat(l.lineTotal), 0);
-
-  // Resolve the new lines against the cycle's active products. We use the
-  // current `products.unitPrice` (which already reflects any close-time
-  // adjustments) as the snapshot.
-  const cleanLines = input.lines
-    .map((l) => ({ productId: l.productId, quantity: Math.floor(l.quantity) }))
-    .filter((l) => l.productId && l.quantity > 0);
-
-  const productIds = Array.from(new Set(cleanLines.map((l) => l.productId)));
+  // Resolve requested products against the cycle. Existing lines keep their
+  // unit_price_snapshot; only products new to this order take the current
+  // `products.unitPrice` (which already reflects any close-time adjustments).
+  const productIds = Array.from(new Set(input.lines.map((l) => l.productId).filter(Boolean)));
   const cycleProducts = productIds.length
     ? await db
-        .select({
-          productId: products.productId,
-          unitPrice: products.unitPrice,
-          name: products.name,
-        })
+        .select({ productId: products.productId, unitPrice: products.unitPrice })
         .from(products)
         .where(and(eq(products.cycleId, input.cycleId), inArray(products.productId, productIds)))
     : [];
-  const productMap = new Map(cycleProducts.map((p) => [p.productId, p]));
+  const priceByProduct = new Map(cycleProducts.map((p) => [p.productId, p.unitPrice]));
 
   // Reject any line that points at a product not in this cycle — guards
   // against client-side tampering and stale UI state.
-  for (const line of cleanLines) {
-    if (!productMap.has(line.productId)) {
+  for (const line of input.lines) {
+    if (line.productId && Math.floor(line.quantity) > 0 && !priceByProduct.has(line.productId)) {
       throw new Error(t.errors.productNotValidForCycle);
     }
   }
 
-  const newTotal = cleanLines.reduce((sum, l) => {
-    const unitPrice = parseFloat(productMap.get(l.productId)!.unitPrice);
-    return sum + unitPrice * l.quantity;
-  }, 0);
-
-  const delta = newTotal - oldTotal;
+  const plan = planClosedOrderEdit(previousLines, input.lines, priceByProduct);
+  const { oldTotal, newTotal, delta } = plan;
   const epsilon = 0.005;
 
-  // Replace the order rows: simplest correct semantics for "final desired
-  // state". neon-http has no transactions, so we delete then bulk-insert in
-  // sequence — a partial failure would leave us with an empty/partial order
-  // (visible to the member as "0 prodotti"), recoverable by re-running the
-  // edit, never producing duplicate or orphan ledger entries.
-  await db
-    .delete(orders)
-    .where(and(eq(orders.cycleId, input.cycleId), eq(orders.memberId, input.memberId)));
-
-  if (cleanLines.length > 0) {
-    await db.insert(orders).values(
-      cleanLines.map((l) => {
-        const p = productMap.get(l.productId)!;
-        const lineTotal = (parseFloat(p.unitPrice) * l.quantity).toFixed(2);
-        return {
+  // Apply the plan in one db.batch (a single Neon transaction): unchanged
+  // lines are not touched, so their actuals survive; the correction entry is
+  // part of the same batch, so the order rows and the money can't diverge.
+  const statements: BatchItem<"pg">[] = [];
+  if (plan.deletes.length > 0) {
+    statements.push(db.delete(orders).where(inArray(orders.orderLineId, plan.deletes)));
+  }
+  for (const u of plan.updates) {
+    statements.push(
+      db
+        .update(orders)
+        .set({
+          quantity: u.quantity,
+          lineTotal: u.lineTotal,
+          actualQuantity: null,
+          actualLineTotal: null,
+          updatedAt: now,
+        })
+        .where(eq(orders.orderLineId, u.orderLineId)),
+    );
+  }
+  if (plan.inserts.length > 0) {
+    statements.push(
+      db.insert(orders).values(
+        plan.inserts.map((l) => ({
           orderLineId: genId("ord"),
           cycleId: input.cycleId,
           memberId: input.memberId,
           productId: l.productId,
           quantity: l.quantity,
-          unitPriceSnapshot: p.unitPrice,
-          lineTotal,
+          unitPriceSnapshot: l.unitPrice,
+          lineTotal: l.lineTotal,
           updatedAt: now,
-        };
-      }),
+        })),
+      ),
     );
   }
 
@@ -1290,19 +1356,55 @@ export async function adminEditClosedOrder(input: EditClosedOrderInput) {
     correctionEntryId = genId("led");
     const trimmedNote = (input.note ?? "").trim();
     const reason = trimmedNote || `Correzione ordine "${cycle.title}"`;
-    await db.insert(ledgerEntries).values({
-      entryId: correctionEntryId,
-      memberId: input.memberId,
-      entryDate: now,
-      type: "correction",
-      // delta > 0 → member ordered more → additional charge (negative ledger amount).
-      // delta < 0 → member ordered less → refund (positive ledger amount).
-      amount: (-delta).toFixed(2),
-      cycleId: input.cycleId,
-      note: reason,
-      createdBy: admin.email,
-      createdAt: now,
-    });
+    statements.push(
+      db.insert(ledgerEntries).values({
+        entryId: correctionEntryId,
+        memberId: input.memberId,
+        entryDate: now,
+        type: "correction",
+        // delta > 0 → member ordered more → additional charge (negative ledger amount).
+        // delta < 0 → member ordered less → refund (positive ledger amount).
+        amount: (-delta).toFixed(2),
+        cycleId: input.cycleId,
+        note: reason,
+        createdBy: admin.email,
+        createdAt: now,
+      }),
+    );
+  }
+
+  if (statements.length > 0) {
+    // Lock the cycle (so a concurrent cancel waits for this correction) and
+    // the member's lines, then check in a fresh snapshot that the cycle is
+    // still closed and the lines are exactly the ones the plan was computed
+    // from. Otherwise 1/0 aborts the batch: a double submit or a concurrent
+    // weighing must not post a second correction on a stale delta.
+    const lock = db.execute(
+      sql`SELECT 1 FROM order_cycles WHERE cycle_id = ${input.cycleId} FOR SHARE`,
+    );
+    const lockLines = db.execute(
+      sql`SELECT 1 FROM orders
+          WHERE cycle_id = ${input.cycleId} AND member_id = ${input.memberId} FOR UPDATE`,
+    );
+    const guard = db.execute(
+      sql`SELECT 1 / (CASE WHEN
+            (SELECT status FROM order_cycles WHERE cycle_id = ${input.cycleId}) = 'closed'
+            AND (SELECT coalesce(jsonb_object_agg(order_line_id,
+                   jsonb_build_array(quantity, line_total::text, actual_line_total::text)), '{}'::jsonb)
+                 FROM orders
+                 WHERE cycle_id = ${input.cycleId} AND member_id = ${input.memberId})
+                = ${orderLinesSnapshot(previousLines)}::jsonb
+          THEN 1 ELSE 0 END) AS edit_guard`,
+    );
+    try {
+      await db.batch([lock, lockLines, guard, ...statements]);
+    } catch (e) {
+      // 22012 = division_by_zero, i.e. the guard fired.
+      if (e instanceof Error && /22012|division by zero/i.test(e.message)) {
+        throw new Error(t.errors.closedOrderChanged);
+      }
+      throw e;
+    }
   }
 
   // Member-facing notification with the human-readable diff.
@@ -1336,7 +1438,8 @@ export async function adminEditClosedOrder(input: EditClosedOrderInput) {
     newTotal: newTotal.toFixed(2),
     delta: delta.toFixed(2),
     correctionEntryId,
-    lineCount: cleanLines.length,
+    lineCount: previousLines.length - plan.deletes.length + plan.inserts.length,
+    updatedLines: plan.updates.length,
     note: input.note ?? null,
   });
 
@@ -1353,26 +1456,71 @@ export async function adminEditClosedOrder(input: EditClosedOrderInput) {
   };
 }
 
+// Full snapshot of a ledger row for the audit log, so an edit or a delete can
+// be reconstructed from audit_log alone.
+const ledgerAuditColumns = {
+  entryId: ledgerEntries.entryId,
+  memberId: ledgerEntries.memberId,
+  type: ledgerEntries.type,
+  amount: ledgerEntries.amount,
+  cycleId: ledgerEntries.cycleId,
+  note: ledgerEntries.note,
+  entryDate: ledgerEntries.entryDate,
+};
+
 export async function adminUpdateLedgerEntry(
   entryId: string,
   data: { amount: number; note: string },
-) {
-  const admin = await requireAdmin();
-  const db = getDb();
-  await db
-    .update(ledgerEntries)
-    .set({ amount: data.amount.toFixed(2), note: data.note, updatedBy: admin.email, updatedAt: new Date() })
-    .where(eq(ledgerEntries.entryId, entryId));
-  await writeAudit(db, admin.email, "update_ledger", "ledger", entryId, data);
-  revalidatePath("/admin");
+): Promise<{ error?: string }> {
+  try {
+    const admin = await requireAdmin();
+    const db = getDb();
+    const [before] = await db
+      .select(ledgerAuditColumns)
+      .from(ledgerEntries)
+      .where(eq(ledgerEntries.entryId, entryId))
+      .limit(1);
+    if (!before) return { error: t.errors.ledgerEntryNotFound };
+
+    const amountError = validateLedgerEntryEdit(before, data.amount);
+    if (amountError) return { error: ledgerAmountErrorMessage(amountError) };
+
+    const after = { ...before, amount: data.amount.toFixed(2), note: data.note };
+    await db
+      .update(ledgerEntries)
+      .set({ amount: after.amount, note: after.note, updatedBy: admin.email, updatedAt: new Date() })
+      .where(eq(ledgerEntries.entryId, entryId));
+    await writeAudit(db, admin.email, "update_ledger", "ledger", entryId, { before, after });
+    revalidatePath("/admin");
+    revalidatePath("/");
+    revalidatePath("/storico");
+    return {};
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : t.errors.genericError };
+  }
 }
 
-export async function adminDeleteLedgerEntry(entryId: string) {
-  const admin = await requireAdmin();
-  const db = getDb();
-  await db.delete(ledgerEntries).where(eq(ledgerEntries.entryId, entryId));
-  await writeAudit(db, admin.email, "delete_ledger", "ledger", entryId);
-  revalidatePath("/admin");
+export async function adminDeleteLedgerEntry(entryId: string): Promise<{ error?: string }> {
+  try {
+    const admin = await requireAdmin();
+    const db = getDb();
+    const [before] = await db
+      .select(ledgerAuditColumns)
+      .from(ledgerEntries)
+      .where(eq(ledgerEntries.entryId, entryId))
+      .limit(1);
+    if (!before) return { error: t.errors.ledgerEntryNotFound };
+    if (!isAdminEditableLedgerType(before.type)) return { error: t.errors.ledgerEntryNotEditable };
+
+    await db.delete(ledgerEntries).where(eq(ledgerEntries.entryId, entryId));
+    await writeAudit(db, admin.email, "delete_ledger", "ledger", entryId, { before, after: null });
+    revalidatePath("/admin");
+    revalidatePath("/");
+    revalidatePath("/storico");
+    return {};
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : t.errors.genericError };
+  }
 }
 
 export async function adminDeleteMember(memberId: string): Promise<{ error?: string }> {
@@ -1418,6 +1566,8 @@ export async function adminUpsertMember(data: UpsertMemberInput) {
   const admin = await requireAdmin();
   if (!data.fullName?.trim()) throw new Error(t.errors.fieldRequired(t.fields.name));
   if (!data.email?.trim()) throw new Error(t.errors.fieldRequired(t.fields.email));
+  const role = normalizeRole(data.role);
+  if (!role) throw new Error(t.errors.invalidRole);
 
   const aliasEmail = data.aliasEmail?.toLowerCase().trim() || null;
   const db = getDb();
@@ -1430,12 +1580,12 @@ export async function adminUpsertMember(data: UpsertMemberInput) {
         fullName: data.fullName.trim(),
         email: data.email.toLowerCase().trim(),
         aliasEmail,
-        role: data.role,
+        role,
         active: data.active,
         updatedAt: now,
       })
       .where(eq(members.memberId, data.memberId));
-    await writeAudit(db, admin.email, "update_member", "member", data.memberId, data);
+    await writeAudit(db, admin.email, "update_member", "member", data.memberId, { ...data, role });
   } else {
     const memberId = genId("mem");
     await db.insert(members).values({
@@ -1443,12 +1593,12 @@ export async function adminUpsertMember(data: UpsertMemberInput) {
       fullName: data.fullName.trim(),
       email: data.email.toLowerCase().trim(),
       aliasEmail,
-      role: data.role,
+      role,
       active: data.active,
       createdAt: now,
       updatedAt: now,
     });
-    await writeAudit(db, admin.email, "create_member", "member", memberId, data);
+    await writeAudit(db, admin.email, "create_member", "member", memberId, { ...data, role });
   }
 
   revalidatePath("/admin");
