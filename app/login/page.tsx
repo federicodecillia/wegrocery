@@ -12,8 +12,21 @@ type LoginPageProps = {
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const session = await auth();
   const params = await searchParams;
-  const showAccessDenied = params.error === "AccessDenied";
-  const showConfigError = params.error === "Configuration";
+  const error = typeof params.error === "string" ? params.error : null;
+  const showConfigError = error === "Configuration";
+  // Set by the signIn callback on denial; echoed back so the member can spot
+  // a sign-in with the wrong Google account.
+  const attemptedEmail = typeof params.email === "string" ? params.email.slice(0, 254) : null;
+  const deniedMessage =
+    error === "AccessDenied"
+      ? t.login.accessDenied
+      : error === "NotMember"
+        ? t.login.notMember
+        : error === "MembershipInactive"
+          ? t.login.membershipInactive
+          : error === "MembershipCheckUnavailable"
+            ? t.login.membershipCheckUnavailable
+            : null;
   const hasGoogleAuth = Boolean(process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET);
   const hasDevLogin = process.env.NODE_ENV !== "production" && Boolean(process.env.AUTH_DEV_LOGIN_EMAIL);
   const isDemo = process.env.DEMO_MODE === "true";
@@ -30,10 +43,24 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         <p className="text-brand-gray mt-2 text-sm">
           {isDemo ? t.login.demoMessage : t.login.continueMessage}
         </p>
-        {showAccessDenied ? (
-          <p className="mt-3 rounded-md border border-red-300 bg-red-50 p-2 text-sm text-red-700">
-            {t.login.accessDenied}
-          </p>
+        {deniedMessage ? (
+          <div className="mt-3 space-y-1 rounded-md border border-red-300 bg-red-50 p-2 text-sm text-red-700">
+            <p>{deniedMessage}</p>
+            {attemptedEmail ? <p className="break-all">{t.login.attemptedEmail(attemptedEmail)}</p> : null}
+            {error === "MembershipInactive" && brand.membershipUrl ? (
+              <p>
+                <a href={brand.membershipUrl} target="_blank" rel="noopener noreferrer" className="font-medium underline">
+                  {t.login.renewMembership}
+                </a>
+              </p>
+            ) : null}
+            <p>
+              {t.login.contactSupport}{" "}
+              <a href={`mailto:${brand.supportEmail}`} className="font-medium underline">
+                {brand.supportEmail}
+              </a>
+            </p>
+          </div>
         ) : null}
         {showConfigError ? (
           <p className="mt-3 rounded-md border border-red-300 bg-red-50 p-2 text-sm text-red-700">
@@ -89,6 +116,9 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               </form>
             </>
           ) : null}
+          {hasGoogleAuth && !isDemo ? (
+            <p className="text-brand-gray text-xs">{t.login.googleAccountHint}</p>
+          ) : null}
           {!hasGoogleAuth && !hasDevLogin && !isDemo ? (
             <p className="rounded-md border border-brand-border bg-brand-warm-white p-2 text-sm text-brand-gray">
               {t.login.configMissing}
@@ -96,6 +126,16 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           ) : null}
         </div>
       </div>
+      {brand.privacyUrl ? (
+        <a
+          href={brand.privacyUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-brand-gray mt-4 text-xs underline"
+        >
+          {t.login.privacyLink}
+        </a>
+      ) : null}
     </main>
   );
 }
