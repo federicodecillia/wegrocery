@@ -1,6 +1,6 @@
 import { Resend } from "resend";
 import { t } from "@/lib/i18n";
-import { outboundEnvFromProcess, resolveOutbound } from "./outbound-policy";
+import { outboundEnvFromProcess, resolveOutbound, resolveOutboundBatch } from "./outbound-policy";
 
 type Attachment = {
   filename: string;
@@ -37,8 +37,8 @@ export function getMailFromDefault(): string | null {
 // Thin wrapper around Resend's SDK that returns a discriminated result
 // instead of throwing. Outside the Vercel production deployment the recipient
 // is rewritten to EMAIL_REDIRECT_TO (or the send refused) by resolveOutbound,
-// because staging and previews run on copies of the real member list. Read env vars lazily so the module can be imported
-// in environments where Resend isn't configured (e.g. local dev without
+// because staging and previews run on copies of the real member list. Read
+// env vars lazily so the module can be imported in environments where Resend isn't configured (e.g. local dev without
 // the API key) without crashing at startup.
 export async function sendMail(
   opts: SendMailOpts,
@@ -89,14 +89,19 @@ export async function sendMailBatch(
 ): Promise<{ ok: true; sent: number } | { error: string }> {
   if (items.length === 0) return { ok: true, sent: 0 };
   if (process.env.DEMO_MODE === "true") return { error: t.errors.demoEmailDisabled };
-  // Same outbound policy as sendMail, per message. The decision depends only
-  // on the environment, so either every item is blocked or none is.
-  const env = outboundEnvFromProcess();
-  const targets = [];
-  for (const it of items) {
-    const target = resolveOutbound(it, env, t.errors.emailDisabledOutsideProduction);
-    if (target.action === "block") return { error: target.error };
-    targets.push({ to: target.to, subject: target.subject, text: it.text });
+  // Same outbound policy as sendMail, per message; outside production the
+  // redirected fan-out is also capped to a few samples (see
+  // resolveOutboundBatch). The decision depends only on the environment, so
+  // either every item is blocked or none is.
+  const decision = resolveOutboundBatch(
+    items,
+    outboundEnvFromProcess(),
+    t.errors.emailDisabledOutsideProduction,
+  );
+  if (decision.action === "block") return { error: decision.error };
+  const targets = decision.messages;
+  if (decision.suppressed > 0) {
+    console.info(`[email] outside production: ${decision.suppressed} redirected batch messages suppressed`);
   }
   const apiKey = process.env.RESEND_API_KEY;
   const sender = from?.trim() || process.env.MAIL_FROM;
@@ -112,7 +117,7 @@ export async function sendMailBatch(
       );
       if (error) return { error: error.message || t.errors.emailSendFailed };
     }
-    return { ok: true, sent: items.length };
+    return { ok: true, sent: targets.length };
   } catch (e) {
     return { error: e instanceof Error ? e.message : t.errors.emailSendFailed };
   }
