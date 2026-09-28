@@ -13,6 +13,7 @@ type LedgerEntry = {
   amount: string;
   note: string | null;
   entryDate: Date;
+  paymentId: string | null;
 };
 
 type Props = {
@@ -190,9 +191,16 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
               {movements.map((e) => {
                 const isTopup = e.type === "topup";
                 const isPos = parseFloat(e.amount) >= 0;
-                const label =
-                  e.type === "topup" ? t.history.transfer : e.type === "order_charge" ? t.history.orderCharge : t.history.correction;
-                const fullLabel = label + (e.note ? " · " + e.note : "");
+                const isOnlineTopup = isTopup && e.paymentId !== null;
+                const label = isOnlineTopup
+                  ? t.history.onlineTopup
+                  : e.type === "topup"
+                    ? t.history.transfer
+                    : e.type === "order_charge"
+                      ? t.history.orderCharge
+                      : t.history.correction;
+                // An online top-up's note only repeats the label.
+                const fullLabel = label + (e.note && !isOnlineTopup ? " · " + e.note : "");
                 return (
                   <div
                     key={e.entryId}

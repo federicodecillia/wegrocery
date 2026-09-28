@@ -110,7 +110,8 @@ variables, plus a staging deployment of the `staging` branch:
   Preview + Git branch `staging`: `DATABASE_URL` → Neon branch `staging`
   (child of `production`, refreshed with
   `neonctl branches reset staging --parent`), `EMAIL_REDIRECT_TO`,
-  `APP_BASE_URL`, `WALLYFOR_*`. The Google OAuth client needs the staging
+  `APP_BASE_URL`, `WALLYFOR_*`, `STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET`
+  (sandbox keys only). The Google OAuth client needs the staging
   branch URL's `/api/auth/callback/google` as an extra redirect URI.
 - **Public demo** — `wegrocery-demo.vercel.app`, fake data, `DEMO_MODE=true`,
   reseeded nightly, built from `main`.
@@ -280,11 +281,12 @@ all in `lib/roles.ts`:
 | `ledger_entries` | Balance: `topup` (+), `order_charge` (−), `shipping_charge` (−), `correction` (±), `adjustment` |
 | `orders.actual_quantity` / `actual_line_total` | Recorded after delivery when the supplier weighed something different from what was ordered (e.g. 1 kg → 800 g). NULL = delivered as ordered. |
 | `notifications` | Per-member or per-role messages with `read_at` |
+| `payments` | Online top-ups (Stripe Checkout): `status` pending → succeeded / failed / expired → partially_refunded / refunded, amounts in integer cents |
 | `audit_log` | Append-only admin action log |
 | `suppliers` | Supplier registry |
 | `supplier_products` | Supplier product catalog (source for cycle products) |
 
-ID prefix convention: `cyc_*`, `mem_*`, `prd_*`, `ord_*`, `led_*`, `not_*`, `aud_*`, `sup_*`, `spr_*`.
+ID prefix convention: `cyc_*`, `mem_*`, `prd_*`, `ord_*`, `led_*`, `not_*`, `aud_*`, `sup_*`, `spr_*`, `pay_*`.
 
 ### Key Business Rules
 
@@ -310,6 +312,34 @@ The admin has four independent ways to correct a closed cycle:
 4. **Import a supplier-filled distinta (`.xlsx`)** (`adminApplyDistintaImport`) — round-trip flow: `📧 Fornitore` sends an Excel sheet built by `lib/csv/distinta-builder.ts` (products × members matrix with formulas + locked refs + hidden `_meta` sheet carrying cycleId/productId/memberId). The supplier overwrites the yellow cells after weighing, sends the file back, the admin uploads it via `📤 Carica distinta`. The parser (`lib/csv/distinta-parser.ts`) shows a diff preview; on apply, every product correction goes through `adminUpdateOrderLineActuals` (#3 above), while the shipping row writes `shipping_charge` ledger entries directly per member and flips `orderCycles.shippingMode` to **`"manual"`**. The `manual` sentinel causes `recomputeShippingForClosedCycle` to early-return, so a later admin edit to the shipping field won't overwrite the per-member values (the cycle form shows an orange banner instead of the shipping inputs).
 
 All four emit `order_adjusted` or `order_corrected` notifications and `audit_log` entries.
+
+### Online top-ups (Stripe)
+
+- Optional per deploy: `STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET`. Without
+  a key `/ricarica` shows only the bank details (`brand.bankTransfer`, or a
+  "ask the treasurer" line when null). `resolveStripeKey`
+  (`lib/payments/config.ts`) accepts live keys only on a real production deploy
+  and test keys everywhere else, demo included.
+- Flow: `startOnlineTopup` (`lib/actions/topup.ts`) validates the amount
+  (20-300 €), inserts a `pending` payment and opens a hosted Checkout Session
+  (idempotency key = paymentId, 30 min expiry) whose success/cancel URLs point
+  back at the deploy the member is on. `/ricarica` only displays the payment
+  row's status; **only the signed webhook credits**.
+- Webhook `app/api/stripe/webhook/route.ts`, excluded from the auth
+  middleware, verifies the signature on the raw body and rejects events whose
+  `livemode` differs from the key's. `lib/payments/webhook.ts` maps events
+  (`planWebhookAction`, pure) and applies each as ONE SQL statement: a guarded
+  `UPDATE payments ... WHERE status = 'pending'` feeding the ledger `INSERT`,
+  so a replayed or concurrent event writes nothing. Refunds post the delta of
+  the cumulative `charge.amount_refunded` as a negative `correction`
+  (`FOR UPDATE` serialises concurrent refunds); a refund that arrives before
+  its credit answers 500 so Stripe retries it. An amount/currency mismatch is
+  not credited: it is logged and audited as `stripe_topup_mismatch`.
+- Ledger rows with a `payment_id` cannot be edited or deleted from Cassa.
+- Staging (Vercel Authentication on): the Stripe sandbox endpoint URL needs
+  `?x-vercel-protection-bypass=<Protection Bypass for Automation secret>`.
+- Disputes are not handled automatically yet: Stripe emails the account owner,
+  the admin records a `correction` by hand.
 
 ### Email (Resend)
 

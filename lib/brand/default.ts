@@ -15,5 +15,6 @@ export const DEFAULT_BRAND: BrandConfig = {
   privacyUrl: null,
   membershipUrl: null,
   minBalance: null,
+  bankTransfer: null,
   theme: {},
 };

@@ -63,6 +63,20 @@ export function parseBrandConfig(raw: string | undefined): BrandConfig {
     throw new Error("brand.minBalance must be a finite number or null");
   }
 
+  if (o.bankTransfer !== undefined && o.bankTransfer !== null) {
+    const bt = o.bankTransfer as Record<string, unknown>;
+    if (
+      typeof bt !== "object" ||
+      Array.isArray(bt) ||
+      typeof bt.holder !== "string" ||
+      !bt.holder.trim() ||
+      typeof bt.iban !== "string" ||
+      !/^[A-Z]{2}\d{2}[A-Z0-9]{10,30}$/.test(bt.iban.replace(/\s+/g, ""))
+    ) {
+      throw new Error("brand.bankTransfer must be { holder, iban } with a valid IBAN, or null");
+    }
+  }
+
   let theme: BrandTheme = {};
   if (o.theme !== undefined) {
     if (typeof o.theme !== "object" || o.theme === null || Array.isArray(o.theme)) {
