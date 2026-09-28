@@ -935,6 +935,8 @@ export const en: Strings = {
     cycleNoLongerInDb: "Cycle no longer present in the database.",
     cycleNotClosedDistinta: "The cycle is not closed: the order sheet can only be applied to closed cycles.",
     demoEmailDisabled: "Demo mode: email sending disabled",
+    emailDisabledOutsideProduction:
+      "Email sending disabled outside production: set EMAIL_REDIRECT_TO to receive test emails.",
     emailSendFailed: "Error sending email",
     distintaWarningNoOrder: (memberName: string, productName: string, amount: string) =>
       `${memberName} · ${productName}: ${amount} entered but no order existed — ignored.`,

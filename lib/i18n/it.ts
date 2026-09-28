@@ -936,6 +936,8 @@ export const it = {
     distintaMappingEmpty: "Mappatura prodotti/soci vuota nel foglio _meta.",
     cycleNoLongerInDb: "Ciclo non più presente nel database.",
     demoEmailDisabled: "Ambiente demo: invio email disabilitato",
+    emailDisabledOutsideProduction:
+      "Invio email disabilitato fuori produzione: imposta EMAIL_REDIRECT_TO per ricevere le email di test.",
     emailSendFailed: "Errore invio email",
     distintaWarningNoOrder: (memberName: string, productName: string, amount: string) =>
       `${memberName} · ${productName}: ${amount} inserito ma non c'era un ordine — ignorato.`,
