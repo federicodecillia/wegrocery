@@ -103,3 +103,17 @@ export function planClosedOrderEdit(
   plan.delta = (newCents - oldCents) / 100;
   return plan;
 }
+
+// JSON object orderLineId → [quantity, line_total, actual_line_total], with
+// the money exactly as the DB returned it. The edit batch compares it (as
+// jsonb) with the same object rebuilt inside the transaction: if the member's
+// lines changed after the plan was computed (a concurrent edit or weighing,
+// a double submit), the delta would be stale and the batch aborts instead of
+// posting a second correction.
+export function orderLinesSnapshot(lines: ReadonlyArray<ExistingOrderLine>): string {
+  return JSON.stringify(
+    Object.fromEntries(
+      lines.map((l) => [l.orderLineId, [l.quantity, l.lineTotal, l.actualLineTotal]]),
+    ),
+  );
+}

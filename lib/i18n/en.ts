@@ -911,6 +911,7 @@ export const en: Strings = {
     actualQtyInvalid: "Invalid actual quantity",
     actualTotalInvalid: "Invalid actual total",
     correctionError: "Error saving correction",
+    closedOrderChanged: "The order changed in the meantime (or the cycle is no longer closed): reload and try again.",
     orderEditOnlyAfterClose: "Orders can only be modified this way after the cycle is closed",
     productNotValidForCycle: "Product not valid for this cycle",
     amountMustBePositive: "Amount must be positive",

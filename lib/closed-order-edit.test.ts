@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { planClosedOrderEdit, type ExistingOrderLine } from "./closed-order-edit";
+import { orderLinesSnapshot, planClosedOrderEdit, type ExistingOrderLine } from "./closed-order-edit";
 
 function line(partial: Partial<ExistingOrderLine> & { productId: string }): ExistingOrderLine {
   return {
@@ -133,5 +133,26 @@ describe("planClosedOrderEdit", () => {
     expect(() =>
       planClosedOrderEdit([], [{ productId: "ghost", quantity: 1 }], new Map()),
     ).toThrow();
+  });
+});
+
+describe("orderLinesSnapshot", () => {
+  it("maps each line to quantity and the money text the DB returned", () => {
+    expect(JSON.parse(orderLinesSnapshot([weighedBeetroot, line({ productId: "eggs" })]))).toEqual({
+      ord_beet: [2, "2.00", "1.60"],
+      ord_eggs: [1, "1.00", null],
+    });
+  });
+
+  it("changes when a line is weighed, so a stale plan is caught", () => {
+    const before = orderLinesSnapshot([line({ productId: "beet", lineTotal: "2.00" })]);
+    const after = orderLinesSnapshot([
+      line({ productId: "beet", lineTotal: "2.00", actualLineTotal: "1.60" }),
+    ]);
+    expect(after).not.toBe(before);
+  });
+
+  it("is an empty object for a member with no lines", () => {
+    expect(orderLinesSnapshot([])).toBe("{}");
   });
 });

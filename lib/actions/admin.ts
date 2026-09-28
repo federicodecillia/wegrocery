@@ -10,7 +10,7 @@ import { getDb } from "@/lib/db/client";
 import { auditLog, ledgerEntries, members, orderCycles, orders, products, suppliers, supplierProducts } from "@/lib/db/schema";
 import { upsertCycleProducts } from "@/lib/db/cycle-products";
 import type { BatchItem } from "drizzle-orm/batch";
-import { planClosedOrderEdit } from "@/lib/closed-order-edit";
+import { orderLinesSnapshot, planClosedOrderEdit } from "@/lib/closed-order-edit";
 import { buildCycleCloseCharges, ordersSnapshot } from "@/lib/cycle-close";
 import {
   computeShippingShares,
@@ -1354,7 +1354,37 @@ export async function adminEditClosedOrder(input: EditClosedOrderInput) {
   }
 
   if (statements.length > 0) {
-    await db.batch(statements as [BatchItem<"pg">, ...BatchItem<"pg">[]]);
+    // Lock the cycle (so a concurrent cancel waits for this correction) and
+    // the member's lines, then check in a fresh snapshot that the cycle is
+    // still closed and the lines are exactly the ones the plan was computed
+    // from. Otherwise 1/0 aborts the batch: a double submit or a concurrent
+    // weighing must not post a second correction on a stale delta.
+    const lock = db.execute(
+      sql`SELECT 1 FROM order_cycles WHERE cycle_id = ${input.cycleId} FOR SHARE`,
+    );
+    const lockLines = db.execute(
+      sql`SELECT 1 FROM orders
+          WHERE cycle_id = ${input.cycleId} AND member_id = ${input.memberId} FOR UPDATE`,
+    );
+    const guard = db.execute(
+      sql`SELECT 1 / (CASE WHEN
+            (SELECT status FROM order_cycles WHERE cycle_id = ${input.cycleId}) = 'closed'
+            AND (SELECT coalesce(jsonb_object_agg(order_line_id,
+                   jsonb_build_array(quantity, line_total::text, actual_line_total::text)), '{}'::jsonb)
+                 FROM orders
+                 WHERE cycle_id = ${input.cycleId} AND member_id = ${input.memberId})
+                = ${orderLinesSnapshot(previousLines)}::jsonb
+          THEN 1 ELSE 0 END) AS edit_guard`,
+    );
+    try {
+      await db.batch([lock, lockLines, guard, ...statements]);
+    } catch (e) {
+      // 22012 = division_by_zero, i.e. the guard fired.
+      if (e instanceof Error && /22012|division by zero/i.test(e.message)) {
+        throw new Error(t.errors.closedOrderChanged);
+      }
+      throw e;
+    }
   }
 
   // Member-facing notification with the human-readable diff.

@@ -913,6 +913,7 @@ export const it = {
     actualQtyInvalid: "Quantità effettiva non valida",
     actualTotalInvalid: "Totale effettivo non valido",
     correctionError: "Errore nella rettifica",
+    closedOrderChanged: "L'ordine è cambiato nel frattempo (o il ciclo non è più chiuso): ricarica e riprova.",
     orderEditOnlyAfterClose: "L'ordine si può modificare in questo modo solo dopo la chiusura del ciclo",
     productNotValidForCycle: "Prodotto non valido per questo ciclo",
     amountMustBePositive: "L'importo deve essere positivo",
