@@ -75,6 +75,12 @@ describe("parseBrandConfig", () => {
     expect(() => parseBrandConfig(JSON.stringify({ membershipUrl: true }))).toThrow(/membershipUrl/);
   });
 
+  it("throws on relative, empty or non-http(s) privacyUrl / membershipUrl", () => {
+    expect(() => parseBrandConfig(JSON.stringify({ privacyUrl: "/privacy" }))).toThrow(/privacyUrl/);
+    expect(() => parseBrandConfig(JSON.stringify({ privacyUrl: "" }))).toThrow(/privacyUrl/);
+    expect(() => parseBrandConfig(JSON.stringify({ membershipUrl: "javascript:alert(1)" }))).toThrow(/membershipUrl/);
+  });
+
   it("throws on non-finite or non-number minBalance", () => {
     expect(() => parseBrandConfig(JSON.stringify({ minBalance: "-50" }))).toThrow(/minBalance/);
     expect(() => parseBrandConfig('{"minBalance": 1e999}')).toThrow(/minBalance/);
