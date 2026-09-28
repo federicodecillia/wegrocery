@@ -176,7 +176,7 @@ export const it = {
     configError: "Configurazione login incompleta. Controlla le variabili in .env.local.",
     googleLogin: "Login con Google",
     devLogin: "Login locale",
-    memberLogin: "Entra come Socio (demo)",
+    memberLogin: "Entra come Utente (demo)",
     adminLogin: "Entra come Admin (demo)",
     configMissing: "Aggiungi le variabili auth in .env.local per abilitare il login locale.",
   },
@@ -273,6 +273,18 @@ export const it = {
     contactIntro: (appName: string) =>
       `Scrivici o parla con chi gestisce la cassa al ritiro. Per problemi tecnici contatta il team IT di ${appName}.`,
   },
+  // Member roles and cycle access levels (lib/roles.ts). The same three words
+  // name both: a cycle's access level is the minimum role that can order.
+  roles: {
+    admin: "Admin",
+    attivi: "Attivi",
+    utenti: "Utenti",
+  },
+  cycleAccess: {
+    utenti: "Utenti (tutti)",
+    attivi: "Attivi",
+    admin: "Solo admin",
+  },
   admin: {
     common: {
       save: "Salva",
@@ -321,9 +333,6 @@ export const it = {
       searchPlaceholder: "Cerca…",
       selectPlaceholder: "— seleziona —",
       noSupplier: "— nessuno —",
-      roleAdmin: "Admin",
-      roleMember: "Socio",
-      roleUser: "Utente",
     },
     cycle: {
       tabLabel: "Ciclo",
@@ -358,9 +367,7 @@ export const it = {
       shippingPerMemberDisplay: (amount: string) => `${amount}/socio`,
       supplierLabel: "Fornitore",
       accessLabel: "Accesso",
-      accessAdminOnly: "Solo Admin",
-      accessActiveSoci: "Soci Attivi",
-      accessAllUsers: "Tutti gli utenti",
+      accessHint: "Admin vede tutti i cicli, Attivi i cicli Utenti e Attivi, Utenti solo i cicli Utenti.",
       titleLabel: "Titolo *",
       titlePlaceholder: "es. Ordine frutta 03/05",
       createTitle: "Crea nuovo ciclo",
@@ -543,18 +550,12 @@ export const it = {
       aliasEmailHint: "(alias login)",
       aliasEmailPlaceholder: "es. nome@gmail.com",
       roleLabel: "Ruolo",
-      roleAdmin: "Admin",
-      roleSocio: "Socio",
-      roleUtente: "Utente",
       statusLabel: "Stato",
       statusActive: "Attivo",
       statusInactive: "Inattivo",
       submitAdd: "Aggiungi socio",
       submitEdit: "Aggiorna",
       inactiveBadge: "inattivo",
-      groupAdmin: "Admin",
-      groupSoci: "Soci",
-      groupUtenti: "Utenti",
       searchPlaceholder: "Cerca per nome o email…",
       deleteConfirm: (name: string) =>
         `Eliminare "${name}"?\n\nOperazione irreversibile. Se ha ordini o movimenti verrà mostrato un errore.`,
@@ -895,6 +896,8 @@ export const it = {
     memberNotFound: "Socio non trovato",
     accountInactive: "Account disattivato: contatta un amministratore.",
     invalidQuantity: "Quantità non valida",
+    invalidRole: "Ruolo non valido",
+    invalidAccessLevel: "Livello di accesso non valido",
     cycleNotOpen: "Il ciclo non è più aperto",
     accessDenied: "Non hai accesso a questo ciclo",
     membershipInactive: (renewUrl: string | null) =>

@@ -1,6 +1,5 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { t } from "@/lib/i18n";
 import {
   formatMoney,
   formatDate as formatDateIntl,
@@ -35,23 +34,6 @@ export function formatDateShort(date: Date | string | null | undefined): string 
 export function formatDateTime(date: Date | string | null | undefined): string {
   if (!date) return "";
   return formatDateTimeIntl(new Date(date));
-}
-
-export function getRoleLabel(role: string): string {
-  if (role === "admin") return t.admin.common.roleAdmin;
-  if (role === "attivo") return t.admin.common.roleMember;
-  if (role === "socio") return t.admin.common.roleUser;
-  return role;
-}
-
-export function canAccessCycle(accessLevel: string, role: string | null | undefined): boolean {
-  if (role === "admin") return true;
-  if (accessLevel === "all" || accessLevel === "utenti") return true;
-  if (accessLevel === "admin") return false;
-  if (accessLevel === "soci" || accessLevel === "attivi" || accessLevel === "member") {
-    return role === "attivo" || role === "member" || role === "socio";
-  }
-  return false;
 }
 
 const EMOJI_MAP: [RegExp, string][] = [

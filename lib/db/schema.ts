@@ -17,6 +17,8 @@ export const members = pgTable("members", {
   fullName: text("full_name").notNull(),
   email: text("email").notNull().unique(),
   aliasEmail: text("alias_email"),
+  // 'admin' | 'attivi' | 'utenti' (CHECK since migration 0015). Read it through
+  // normalizeRole (lib/roles.ts), which also maps the pre-0015 values.
   role: text("role").notNull(),
   active: boolean("active").notNull().default(true),
   // Last WallyFor membership-card check (migration 0014): 'valid' | 'invalid',
@@ -53,6 +55,8 @@ export const orderCycles = pgTable("order_cycles", {
   orderOpenAt: timestamp("order_open_at", { withTimezone: true }),
   orderCloseAt: timestamp("order_close_at", { withTimezone: true }),
   status: text("status").notNull(),
+  // Minimum role that can see the cycle: 'admin' | 'attivi' | 'utenti' (CHECK
+  // since migration 0015). Read it through normalizeAccessLevel / canAccessCycle.
   accessLevel: text("access_level").notNull(),
   notes: text("notes"),
   createdBy: text("created_by"),

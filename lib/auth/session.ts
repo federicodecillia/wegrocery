@@ -1,7 +1,8 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
+import { normalizeRole, type Role } from "@/lib/roles";
 
-export type UserRole = "admin" | "member" | "attivo" | "socio" | null;
+export type UserRole = Role | null;
 export type AppSession = {
   user: {
     email: string;
@@ -37,7 +38,7 @@ export async function requireUserSession(): Promise<AppSession> {
   };
 }
 
+// Legacy stored values ('socio', 'attivo', 'member') come back canonical.
 export function getUserRole(session: AppSession): UserRole {
-  const role = session.user.role;
-  return typeof role === "string" ? (role as UserRole) : null;
+  return normalizeRole(session.user.role);
 }

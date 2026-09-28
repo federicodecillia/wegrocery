@@ -217,7 +217,7 @@ User interaction → Server Action ("use server") → auth check → DB mutation
     `members.membership_status/membership_verified_at` (migration 0014).
     Invalid → `/login?error=MembershipInactive`. API error → in (fail open) +
     `console.error`;
-  - unknown email → valid card auto-provisions an active `socio` (audit
+  - unknown email → valid card auto-provisions an active `utenti` member (audit
     `auto_provision_member`, actor `system`); invalid → `NotMember`; API error
     → `MembershipCheckUnavailable` (fail closed). Never provisioned when
     Google reports `email_verified: false`.
@@ -251,17 +251,29 @@ User interaction → Server Action ("use server") → auth check → DB mutation
 
 ### Role System
 
-- `admin` — full access including admin panel
-- `attivo` (alias `member`) — can order
-- `socio` — read-only
+One vocabulary for both `members.role` and `order_cycles.access_level`
+(the minimum role that can see, order in and be notified about a cycle),
+all in `lib/roles.ts`:
 
-Cycle `access_level` controls who can order: `'attivi'` (default) or broader.
+| Value | As a role (UI label) | As a cycle access level (UI label) |
+|---|---|---|
+| `admin` | "Admin": admin panel, every cycle | "Solo admin": admins only |
+| `attivi` | "Attivi" (active members) | "Attivi": attivi + admin |
+| `utenti` | "Utenti" (default, auto-provisioning) | "Utenti (tutti)": everyone, the default for new cycles |
+
+- Always go through `normalizeRole` / `normalizeAccessLevel` /
+  `canAccessCycle` / `getRoleLabel` / `getAccessLabel`; never compare raw
+  strings other than `role === "admin"`. Admin actions reject unknown values.
+- Pre-0015 values are still mapped for the rollout (roles `socio` → `utenti`,
+  `attivo`/`member` → `attivi`; levels `all` → `utenti`, `soci`/`member` →
+  `attivi`). Migration 0015 rewrites them and adds CHECK constraints, so it
+  must be applied **after** deploying the code that ships with it.
 
 ### Data Model (Neon Postgres, Drizzle ORM)
 
 | Table | Purpose |
 |---|---|
-| `members` | User registry; `role`: admin / attivo / socio |
+| `members` | User registry; `role`: admin / attivi / utenti |
 | `order_cycles` | Weekly order windows; one `open` at a time |
 | `products` | Per-cycle product list |
 | `orders` | Order lines per member per cycle |

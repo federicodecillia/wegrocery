@@ -4,10 +4,11 @@
 import { eq, or } from "drizzle-orm";
 import { getDb } from "@/lib/db/client";
 import { auditLog, members } from "@/lib/db/schema";
+import { DEFAULT_ROLE } from "@/lib/roles";
 import { fullNameFromProfile } from "./policy";
 
-/** Base, non-admin role given to self-onboarded members. */
-export const AUTO_PROVISION_ROLE = "socio";
+/** Base, least-privileged role given to self-onboarded members. */
+export const AUTO_PROVISION_ROLE = DEFAULT_ROLE;
 
 export async function recordMembershipCheck(
   memberId: string,

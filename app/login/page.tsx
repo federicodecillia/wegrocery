@@ -97,7 +97,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               <form
                 action={async () => {
                   "use server";
-                  await signIn("demo-login", { profile: "socio", redirectTo: "/" });
+                  await signIn("demo-login", { profile: "user", redirectTo: "/" });
                 }}
               >
                 <Button type="submit" variant="teal" block>

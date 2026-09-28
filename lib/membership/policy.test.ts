@@ -17,7 +17,7 @@ const hoursAgo = (h: number) => new Date(now.getTime() - h * 3600 * 1000);
 describe("existingMemberSignIn", () => {
   it("denies inactive members, admins included, without a check", () => {
     expect(existingMemberSignIn({ active: false, role: "admin" }, true, null)).toEqual({ kind: "deny", error: "AccessDenied" });
-    expect(existingMemberSignIn({ active: false, role: "socio" }, true, null)).toEqual({ kind: "deny", error: "AccessDenied" });
+    expect(existingMemberSignIn({ active: false, role: "utenti" }, true, null)).toEqual({ kind: "deny", error: "AccessDenied" });
   });
 
   it("lets active admins in without a check", () => {
@@ -25,15 +25,15 @@ describe("existingMemberSignIn", () => {
   });
 
   it("lets active members in when the check is disabled", () => {
-    expect(existingMemberSignIn({ active: true, role: "socio" }, false, null)).toEqual({ kind: "allow" });
+    expect(existingMemberSignIn({ active: true, role: "utenti" }, false, null)).toEqual({ kind: "allow" });
   });
 
   it("asks for a check when enabled and no result yet", () => {
-    expect(existingMemberSignIn({ active: true, role: "attivo" }, true, null)).toEqual({ kind: "check" });
+    expect(existingMemberSignIn({ active: true, role: "attivi" }, true, null)).toEqual({ kind: "check" });
   });
 
   it("valid → allow and record valid", () => {
-    expect(existingMemberSignIn({ active: true, role: "socio" }, true, { status: "valid" })).toEqual({
+    expect(existingMemberSignIn({ active: true, role: "utenti" }, true, { status: "valid" })).toEqual({
       kind: "allow",
       record: "valid",
     });
@@ -41,12 +41,12 @@ describe("existingMemberSignIn", () => {
 
   it("invalid → deny with MembershipInactive and record invalid", () => {
     expect(
-      existingMemberSignIn({ active: true, role: "socio" }, true, { status: "invalid", message: "Data scaduta" }),
+      existingMemberSignIn({ active: true, role: "utenti" }, true, { status: "invalid", message: "Data scaduta" }),
     ).toEqual({ kind: "deny", error: "MembershipInactive", record: "invalid" });
   });
 
   it("error → fail open for existing members", () => {
-    expect(existingMemberSignIn({ active: true, role: "socio" }, true, { status: "error", message: "timeout" })).toEqual({
+    expect(existingMemberSignIn({ active: true, role: "utenti" }, true, { status: "error", message: "timeout" })).toEqual({
       kind: "allow",
       logError: true,
     });
@@ -99,7 +99,7 @@ describe("fullNameFromProfile", () => {
 });
 
 describe("shouldRecheckMembershipOnOrder", () => {
-  const base = { role: "socio", membershipStatus: "valid" as string | null, membershipVerifiedAt: hoursAgo(1) as Date | null };
+  const base = { role: "utenti", membershipStatus: "valid" as string | null, membershipVerifiedAt: hoursAgo(1) as Date | null };
 
   it("never rechecks when the check is disabled", () => {
     expect(shouldRecheckMembershipOnOrder({ ...base, membershipVerifiedAt: null }, false, now, true)).toBe(false);

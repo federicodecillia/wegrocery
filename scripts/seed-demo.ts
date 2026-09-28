@@ -55,14 +55,14 @@ async function main() {
     updatedAt: now,
   });
   const demoAdmin = mk("Alice Smith (Admin)", "demo.admin@example.com", "admin");
-  const demoSocio = mk("Sofia Brown (Member)", "demo.socio@example.com", "socio");
+  const demoSocio = mk("Sofia Brown (Member)", "demo.socio@example.com", "utenti");
   const others = [
-    mk("James Miller", "james.miller@example.com", "attivo"),
-    mk("Emma Johnson", "emma.johnson@example.com", "socio"),
-    mk("Oliver Taylor", "oliver.taylor@example.com", "attivo"),
-    mk("Sophia Williams", "sophia.williams@example.com", "socio"),
-    mk("Lucas Martin", "lucas.martin@example.com", "socio"),
-    mk("Isabella Garcia", "isabella.garcia@example.com", "attivo"),
+    mk("James Miller", "james.miller@example.com", "attivi"),
+    mk("Emma Johnson", "emma.johnson@example.com", "utenti"),
+    mk("Oliver Taylor", "oliver.taylor@example.com", "attivi"),
+    mk("Sophia Williams", "sophia.williams@example.com", "utenti"),
+    mk("Lucas Martin", "lucas.martin@example.com", "utenti"),
+    mk("Isabella Garcia", "isabella.garcia@example.com", "attivi"),
   ];
   const allMembers = [demoAdmin, demoSocio, ...others];
   await db.insert(members).values(allMembers);
@@ -135,7 +135,7 @@ async function main() {
     orderOpenAt: daysFromNow(openDay, 9),
     orderCloseAt: daysFromNow(closeDay, 22),
     status,
-    accessLevel: "soci",
+    accessLevel: "utenti",
     notes: null,
     createdBy: demoAdmin.email,
     createdAt: daysFromNow(openDay, 9),

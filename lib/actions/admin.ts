@@ -33,6 +33,7 @@ import {
   getResolvedPreferences,
 } from "@/lib/notifications/dispatch";
 import { selectCycleAccessMembers } from "@/lib/notifications/reminder";
+import { DEFAULT_ACCESS_LEVEL, normalizeAccessLevel, normalizeRole, type AccessLevel } from "@/lib/roles";
 
 async function requireAdmin(): Promise<{ email: string }> {
   const session = await auth();
@@ -101,7 +102,8 @@ export type CreateCycleInput = {
   pickup2EndTime: string;
   orderCloseAt: string;
   supplierId?: string;
-  accessLevel: "admin" | "soci" | "utenti" | string;
+  /** An AccessLevel; legacy values are normalized, unknown ones rejected. Empty = default. */
+  accessLevel: string;
   notes: string;
   shippingMode: ShippingMode;
   shippingCostPerMember: string;
@@ -120,6 +122,8 @@ export async function adminCreateCycle(data: CreateCycleInput): Promise<{error?:
     if ("error" in dates) return { error: dates.error };
     const orderCloseAt = dates.orderCloseAt!;
     if (!data.supplierId) return { error: t.errors.fieldRequired(t.fields.supplier) };
+    const accessLevel = data.accessLevel ? normalizeAccessLevel(data.accessLevel) : DEFAULT_ACCESS_LEVEL;
+    if (!accessLevel) return { error: t.errors.invalidAccessLevel };
 
     const db = getDb();
 
@@ -145,21 +149,20 @@ export async function adminCreateCycle(data: CreateCycleInput): Promise<{error?:
       orderOpenAt: now,
       orderCloseAt,
       status: "open",
-      accessLevel: data.accessLevel || "attivi",
+      accessLevel,
       notes: data.notes?.trim() || null,
       createdBy: admin.email,
       createdAt: now,
       supplierId: data.supplierId || null,
     });
 
-    await writeAudit(db, admin.email, "create_cycle", "cycle", cycleId, data);
+    await writeAudit(db, admin.email, "create_cycle", "cycle", cycleId, { ...data, accessLevel });
 
     // Notify members who can see this cycle that it's open. Cycles are always
     // created already-open (no scheduled opens), so this is the single emit
     // point for cycle_opened. Kept independent of cycle creation: a delivery
     // failure must not report the (already committed) cycle as failed.
     try {
-      const accessLevel = data.accessLevel || "attivi";
       const allMembers = await db
         .select({
           memberId: members.memberId,
@@ -716,6 +719,13 @@ export async function adminUpdateCycle(
     const dates = parseCycleDates(data);
     if ("error" in dates) return { error: dates.error };
 
+    let accessLevel: AccessLevel | undefined;
+    if (typeof data.accessLevel === "string") {
+      const parsed = normalizeAccessLevel(data.accessLevel);
+      if (!parsed) return { error: t.errors.invalidAccessLevel };
+      accessLevel = parsed;
+    }
+
     const isClosed = before.status === "closed";
 
     // Shipping is recomputed on a closed cycle only when its effective
@@ -739,7 +749,7 @@ export async function adminUpdateCycle(
         ...(data.orderCloseAt !== undefined && { orderCloseAt: dates.orderCloseAt }),
         ...(data.notes !== undefined && { notes: data.notes || null }),
         ...(data.supplierId !== undefined && { supplierId: data.supplierId || null }),
-        ...(data.accessLevel !== undefined && { accessLevel: data.accessLevel }),
+        ...(accessLevel !== undefined && { accessLevel }),
         ...shippingPatch,
       })
       .where(eq(orderCycles.cycleId, cycleId));
@@ -766,7 +776,7 @@ export async function adminUpdateCycle(
       revalidatePath("/notifiche");
     }
 
-    await writeAudit(db, admin.email, "update_cycle", "cycle", cycleId, data);
+    await writeAudit(db, admin.email, "update_cycle", "cycle", cycleId, { ...data, ...(accessLevel && { accessLevel }) });
     revalidatePath("/admin");
     revalidatePath("/");
     return { adjustedMembers };
@@ -1556,6 +1566,8 @@ export async function adminUpsertMember(data: UpsertMemberInput) {
   const admin = await requireAdmin();
   if (!data.fullName?.trim()) throw new Error(t.errors.fieldRequired(t.fields.name));
   if (!data.email?.trim()) throw new Error(t.errors.fieldRequired(t.fields.email));
+  const role = normalizeRole(data.role);
+  if (!role) throw new Error(t.errors.invalidRole);
 
   const aliasEmail = data.aliasEmail?.toLowerCase().trim() || null;
   const db = getDb();
@@ -1568,12 +1580,12 @@ export async function adminUpsertMember(data: UpsertMemberInput) {
         fullName: data.fullName.trim(),
         email: data.email.toLowerCase().trim(),
         aliasEmail,
-        role: data.role,
+        role,
         active: data.active,
         updatedAt: now,
       })
       .where(eq(members.memberId, data.memberId));
-    await writeAudit(db, admin.email, "update_member", "member", data.memberId, data);
+    await writeAudit(db, admin.email, "update_member", "member", data.memberId, { ...data, role });
   } else {
     const memberId = genId("mem");
     await db.insert(members).values({
@@ -1581,12 +1593,12 @@ export async function adminUpsertMember(data: UpsertMemberInput) {
       fullName: data.fullName.trim(),
       email: data.email.toLowerCase().trim(),
       aliasEmail,
-      role: data.role,
+      role,
       active: data.active,
       createdAt: now,
       updatedAt: now,
     });
-    await writeAudit(db, admin.email, "create_member", "member", memberId, data);
+    await writeAudit(db, admin.email, "create_member", "member", memberId, { ...data, role });
   }
 
   revalidatePath("/admin");
