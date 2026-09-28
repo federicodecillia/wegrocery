@@ -63,7 +63,7 @@ npm run db:push      # Push Drizzle schema to Neon (needs DATABASE_URL in .env.l
 npm run db:studio    # Drizzle Studio (visual DB browser)
 ```
 
-**Deploy**: push to `main` → Vercel auto-deploys. Feature branches create preview deployments.
+**Deploy**: push to `main` → Vercel auto-deploys production. Development PRs target `staging` and are tested on its Preview deployment before `staging` → `main`; other branches create ordinary preview deployments.
 
 **Vercel Root Directory**: repo root (empty / not set)
 
@@ -97,28 +97,50 @@ When handling an advisory:
 - If an alert is genuinely unreachable and has no safe fix, dismiss it with
   `not_used` and open a tracking issue naming the condition to revisit it.
 
-## Two environments: production + demo
+## Environments: production, staging, demo
 
-This repo deploys to **two** Vercel projects from the same `main` branch,
-differing only by environment variables:
+This repo deploys to **two** Vercel projects, differing only by environment
+variables, plus a staging deployment of the `staging` branch:
 
-- **Production** — `gas.portamoneta.org`, real members, no `DEMO_MODE`.
+- **Production** — `gas.portamoneta.org`, real members, no `DEMO_MODE`,
+  built from `main`.
+- **Staging** — Preview deployment of the `staging` branch on the
+  `porta-moneta` project, reached through its stable branch URL
+  (`porta-moneta-git-staging-<scope>.vercel.app`). Env vars scoped to
+  Preview + Git branch `staging`: `DATABASE_URL` → Neon branch `staging`
+  (child of `production`, refreshed with
+  `neonctl branches reset staging --parent`), `EMAIL_REDIRECT_TO`,
+  `APP_BASE_URL`, `WALLYFOR_*`. The Google OAuth client needs the staging
+  branch URL's `/api/auth/callback/google` as an extra redirect URI.
 - **Public demo** — `wegrocery-demo.vercel.app`, fake data, `DEMO_MODE=true`,
-  reseeded nightly.
+  reseeded nightly, built from `main`.
+
+**Git flow**: development PRs target `staging`; `staging` → `main` only after
+the change was tested on staging, following the promotion checklist (manual
+backup, production migrations, merge commit, smoke test) in the doc below.
+Migrations are applied to staging first, then production, then demo.
+
+**Email outside production**: `lib/email/resend.ts` never mails real
+addresses unless `VERCEL_ENV=production`. Elsewhere (staging, previews, local
+dev) every message is redirected to `EMAIL_REDIRECT_TO` (cc dropped, subject
+tagged `[STAGING -> <recipient>]`) or refused when that variable is unset.
+Never set `EMAIL_REDIRECT_TO` on Production.
 
 Demo behaviour lives behind the `DEMO_MODE` flag (the `demo-login` provider in
 `auth.ts`, the banner in `components/demo-banner.tsx`, the email short-circuit in
 `lib/email/resend.ts`) — it is **not** a separate branch. A merge to `main`
-rebuilds both deployments. Schema changes must be pushed to **both** databases,
-and demo-only changes go in a separate changelog section.
+rebuilds both deployments. Schema changes must be applied to **every**
+database (staging, production, demo), and demo-only changes go in a separate
+changelog section.
 
 ```bash
 npm run db:seed:demo   # reseed the demo DB (reads .env.demo.local)
 ```
 
 See [`docs/operating-two-environments.md`](./docs/operating-two-environments.md)
-for the full model: env matrix, migration steps, changelog split, and link
-privacy (gas.portamoneta.org is private; only the demo URL is for public use).
+for the full model: env matrix, staging setup, migration steps, promotion
+checklist, changelog split, and link privacy (gas.portamoneta.org and the
+staging URL are private; only the demo URL is for public use).
 
 ## Documentation conventions
 
@@ -274,8 +296,10 @@ All four emit `order_adjusted` or `order_corrected` notifications and `audit_log
 - **Vercel Preview deployments use the `dev` Neon branch** (since 2026-07-11:
   `DATABASE_URL` has two entries on the porta-moneta project — Preview → dev
   branch, Production → prod). PR previews share the dev branch with local dev;
-  both are throwaway (reset on demand). A per-PR Neon branch integration would
-  be a further upgrade, not required.
+  both are throwaway (reset on demand). The `staging` branch deployment is the
+  exception: its branch-scoped Preview `DATABASE_URL` points at the Neon
+  branch `staging` instead. A per-PR Neon branch integration would be a
+  further upgrade, not required.
 - **Migrations** (since 2026-07-11, issue #85): `scripts/db-migrate.mjs` tracks
   applied files in a `_migrations` table — the ledger is baselined on prod,
   demo and dev. Flow for a schema change: write the next `drizzle/NNNN_*.sql`
