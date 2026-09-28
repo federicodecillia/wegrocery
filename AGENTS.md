@@ -123,8 +123,9 @@ Migrations are applied to staging first, then production, then demo.
 **Email outside production**: `lib/email/resend.ts` never mails real
 addresses unless `VERCEL_ENV=production`. Elsewhere (staging, previews, local
 dev) every message is redirected to `EMAIL_REDIRECT_TO` (cc dropped, subject
-tagged `[STAGING -> <recipient>]`) or refused when that variable is unset.
-Never set `EMAIL_REDIRECT_TO` on Production.
+tagged `[STAGING -> <recipient>]`) or refused when that variable is unset;
+batch sends (broadcasts) are also capped to a few samples there. Never set
+`EMAIL_REDIRECT_TO` on Production.
 
 Demo behaviour lives behind the `DEMO_MODE` flag (the `demo-login` provider in
 `auth.ts`, the banner in `components/demo-banner.tsx`, the email short-circuit in
@@ -313,10 +314,14 @@ All four emit `order_adjusted` or `order_corrected` notifications and `audit_log
   that contain real members' names, emails or balances (the 2026 one-off
   `scripts/reconcile-balances.mjs` was removed for this reason; its history
   is not rewritten). Keep such scripts outside the repo or read the data from
-  a local, git-ignored file. Any script that writes to the database must
+  a local, git-ignored file. Any new script that writes to the database must
   compare `new URL(process.env.DATABASE_URL).host` with the production host
   and exit unless an explicit flag (e.g. `--allow-prod`) is passed, so a
-  mis-pointed `.env` cannot mutate production silently.
+  mis-pointed `.env` cannot mutate production silently. Existing scripts:
+  `seed-demo.ts` refuses to run without `DEMO_MODE=true` (prod never sets
+  it); `db-migrate.mjs` targets production on purpose at promotion time and
+  has no such flag yet (open follow-up), so run it only with the connection
+  string typed explicitly on the command line.
 - **Integration tests against a real DB** (recipe, not wired into CI): create
   a throwaway Neon branch, point the test run at it, delete it after —
   `npx -y neonctl branches create --name test-x --parent production --project-id small-breeze-14972344 --org-id org-gentle-violet-55538692`

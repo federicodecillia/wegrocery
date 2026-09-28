@@ -76,7 +76,7 @@ need to be set:
 | Variable | Staging value |
 |---|---|
 | `DATABASE_URL` | connection string of the Neon branch `staging` |
-| `EMAIL_REDIRECT_TO` | the tester's inbox (every email goes there, cc dropped, subject tagged `[STAGING -> <recipient>]`) |
+| `EMAIL_REDIRECT_TO` | the tester's inbox (every email goes there, cc dropped, subject tagged `[STAGING -> <recipient>]`; broadcasts to all members are capped to 3 samples) |
 | `APP_BASE_URL` | the staging branch URL, so email links do not point at production |
 | `WALLYFOR_*` | membership-check credentials (the same read-only check as production) |
 | payment keys | **test mode only**, never live keys |
