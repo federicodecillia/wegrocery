@@ -18,7 +18,7 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ---
 
-## [Unreleased]
+## [1.12.0] — 2026-09-28
 
 *Top up your balance online.*
 
@@ -336,6 +336,7 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ---
 
+[1.12.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.12.0
 [1.11.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.11.0
 [1.9.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.9.0
 [1.8.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.8.1

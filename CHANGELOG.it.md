@@ -19,7 +19,7 @@ stanno nella PR.
 
 ---
 
-## [Non rilasciato]
+## [1.12.0] — 28 settembre 2026
 
 *Ricarica il saldo online.*
 
@@ -337,6 +337,7 @@ stanno nella PR.
 
 ---
 
+[1.12.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.12.0
 [1.11.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.11.0
 [1.9.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.9.0
 [1.8.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.8.1
