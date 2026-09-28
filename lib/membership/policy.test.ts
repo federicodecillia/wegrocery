@@ -7,6 +7,7 @@ import {
   loginErrorPath,
   newUserSignIn,
   orderMembershipOutcome,
+  raisesOrderTotal,
   shouldRecheckMembershipOnOrder,
 } from "./policy";
 
@@ -65,6 +66,10 @@ describe("newUserSignIn", () => {
   it("invalid → NotMember", () => {
     expect(newUserSignIn(true, { status: "invalid", message: "x" })).toEqual({ kind: "deny", error: "NotMember" });
   });
+  it("never provisions (nor checks) an email Google has not verified", () => {
+    expect(newUserSignIn(true, null, false)).toEqual({ kind: "deny", error: "AccessDenied" });
+    expect(newUserSignIn(true, { status: "valid" }, false)).toEqual({ kind: "deny", error: "AccessDenied" });
+  });
   it("error → MembershipCheckUnavailable (fail closed for strangers)", () => {
     expect(newUserSignIn(true, { status: "error", message: "x" })).toEqual({
       kind: "deny",
@@ -97,24 +102,27 @@ describe("shouldRecheckMembershipOnOrder", () => {
   const base = { role: "socio", membershipStatus: "valid" as string | null, membershipVerifiedAt: hoursAgo(1) as Date | null };
 
   it("never rechecks when the check is disabled", () => {
-    expect(shouldRecheckMembershipOnOrder({ ...base, membershipVerifiedAt: null }, false, now)).toBe(false);
+    expect(shouldRecheckMembershipOnOrder({ ...base, membershipVerifiedAt: null }, false, now, true)).toBe(false);
   });
   it("never rechecks admins", () => {
-    expect(shouldRecheckMembershipOnOrder({ ...base, role: "admin", membershipVerifiedAt: null }, true, now)).toBe(false);
+    expect(shouldRecheckMembershipOnOrder({ ...base, role: "admin", membershipVerifiedAt: null }, true, now, true)).toBe(false);
   });
   it("skips a recent valid check", () => {
-    expect(shouldRecheckMembershipOnOrder(base, true, now)).toBe(false);
+    expect(shouldRecheckMembershipOnOrder(base, true, now, true)).toBe(false);
   });
   it("rechecks after 24h", () => {
     expect(
-      shouldRecheckMembershipOnOrder({ ...base, membershipVerifiedAt: new Date(now.getTime() - MEMBERSHIP_RECHECK_MS - 1) }, true, now),
+      shouldRecheckMembershipOnOrder({ ...base, membershipVerifiedAt: new Date(now.getTime() - MEMBERSHIP_RECHECK_MS - 1) }, true, now, true),
     ).toBe(true);
   });
   it("rechecks when never verified", () => {
-    expect(shouldRecheckMembershipOnOrder({ ...base, membershipStatus: null, membershipVerifiedAt: null }, true, now)).toBe(true);
+    expect(shouldRecheckMembershipOnOrder({ ...base, membershipStatus: null, membershipVerifiedAt: null }, true, now, true)).toBe(true);
+  });
+  it("never rechecks a save that only trims or cancels the order", () => {
+    expect(shouldRecheckMembershipOnOrder({ ...base, membershipStatus: "invalid", membershipVerifiedAt: null }, true, now, false)).toBe(false);
   });
   it("rechecks a recent invalid result, so a renewal takes effect at once", () => {
-    expect(shouldRecheckMembershipOnOrder({ ...base, membershipStatus: "invalid" }, true, now)).toBe(true);
+    expect(shouldRecheckMembershipOnOrder({ ...base, membershipStatus: "invalid" }, true, now, true)).toBe(true);
   });
 });
 
@@ -127,6 +135,16 @@ describe("orderMembershipOutcome", () => {
   });
   it("error → allow without recording", () => {
     expect(orderMembershipOutcome({ status: "error", message: "timeout" })).toEqual({ allow: true, record: null });
+  });
+});
+
+describe("raisesOrderTotal", () => {
+  it("compares in cents", () => {
+    expect(raisesOrderTotal(10, 10.01)).toBe(true);
+    expect(raisesOrderTotal(10, 10)).toBe(false);
+    expect(raisesOrderTotal(0.1 + 0.2, 0.3)).toBe(false);
+    expect(raisesOrderTotal(30, 0)).toBe(false);
+    expect(raisesOrderTotal(0, 0.01)).toBe(true);
   });
 });
 

@@ -20,6 +20,7 @@ import { recordMembershipCheck } from "@/lib/membership/members";
 import {
   evaluateCreditLimit,
   orderMembershipOutcome,
+  raisesOrderTotal,
   shouldRecheckMembershipOnOrder,
 } from "@/lib/membership/policy";
 import { checkMembershipAny, isMembershipCheckEnabled } from "@/lib/membership/wallyfor";
@@ -66,10 +67,29 @@ export async function saveOrder(
   const db = getDb();
   const now = new Date();
 
+  const cycleProducts = await getCycleProducts(cycleId);
+  const productMap = new Map(cycleProducts.map((p) => [p.productId, p]));
+
+  const newLines = lines.filter((l) => l.quantity > 0);
+  const total = newLines.reduce((sum, l) => {
+    const p = productMap.get(l.productId);
+    if (!p) throw new Error(t.errors.productNotFound(l.productId));
+    return sum + parseFloat(p.unitPrice) * l.quantity;
+  }, 0);
+
+  // Uncharged order totals: needed by the credit limit and to tell whether
+  // this save raises the cycle's order (trimming/cancelling is never blocked).
+  const checkEnabled = isMembershipCheckEnabled() && member.role !== "admin";
+  const pending =
+    brand.minBalance !== null || checkEnabled
+      ? await getMemberPendingOrderTotals(member.memberId, cycleId)
+      : null;
+  const raisesOrder = pending ? raisesOrderTotal(pending.thisCycle, total) : true;
+
   // Membership card: rechecked at most every 24h (a lapsed result is always
   // rechecked). An unreachable API lets the order through: they were members
   // at sign-in.
-  if (shouldRecheckMembershipOnOrder(member, isMembershipCheckEnabled(), now)) {
+  if (shouldRecheckMembershipOnOrder(member, checkEnabled, now, raisesOrder)) {
     const result = await checkMembershipAny([member.email, member.aliasEmail]);
     const outcome = orderMembershipOutcome(result);
     if (result.status === "error") {
@@ -87,26 +107,12 @@ export async function saveOrder(
     }
   }
 
-  const cycleProducts = await getCycleProducts(cycleId);
-  const productMap = new Map(cycleProducts.map((p) => [p.productId, p]));
-
-  const newLines = lines.filter((l) => l.quantity > 0);
-  const total = newLines.reduce((sum, l) => {
-    const p = productMap.get(l.productId);
-    if (!p) throw new Error(t.errors.productNotFound(l.productId));
-    return sum + parseFloat(p.unitPrice) * l.quantity;
-  }, 0);
-
   // Credit limit (brand.minBalance). Checked before the write, so two saves
   // racing on different cycles can overshoot it; the in-transaction SQL guard
   // is Phase 1 work.
-  if (brand.minBalance !== null) {
-    const [balanceNow, pending] = await Promise.all([
-      getMemberBalance(member.memberId),
-      getMemberPendingOrderTotals(member.memberId, cycleId),
-    ]);
+  if (brand.minBalance !== null && pending) {
     const credit = evaluateCreditLimit({
-      balance: balanceNow,
+      balance: await getMemberBalance(member.memberId),
       openOrdersOtherCycles: pending.otherOpenCycles,
       previousOrderTotal: pending.thisCycle,
       newOrderTotal: total,
