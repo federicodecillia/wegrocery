@@ -1,10 +1,73 @@
 // Pure shipping-share math, extracted from lib/actions/admin.ts ("use server"
 // files can only export async functions, which made this untestable in place).
 
-export type ShippingMode = "fixed_per_member" | "proportional";
+// "manual" is set only by the supplier-distinta import: shipping_charge
+// entries were written per member from the supplier's sheet, and nothing else
+// may recompute or overwrite them.
+export type ShippingMode = "fixed_per_member" | "proportional" | "manual";
 
 export function normalizeShippingMode(mode: string | undefined): ShippingMode {
-  return mode === "proportional" ? "proportional" : "fixed_per_member";
+  if (mode === "proportional" || mode === "manual") return mode;
+  return "fixed_per_member";
+}
+
+export type ShippingConfig = {
+  shippingMode: string;
+  shippingCostPerMember: string | null;
+  shippingTotal: string | null;
+};
+
+export type ShippingInput = {
+  shippingMode?: string;
+  shippingCostPerMember?: string;
+  shippingTotal?: string;
+};
+
+function toCentsOrNull(value: string | null | undefined): number | null {
+  if (value == null || value.trim() === "") return null;
+  return Math.round(parseFloat(value) * 100);
+}
+
+// Works out the order_cycles patch for the shipping fields of an admin cycle
+// edit, and whether the effective shipping configuration really changed (the
+// only case in which a closed cycle's shipping_charge entries are recomputed
+// and members notified). Rules:
+// - a manual cycle keeps its per-member values: the edit form resubmits
+//   "manual" with empty fee fields, which must not read as "fee cleared";
+// - a cycle edit can neither enter nor leave manual mode (only the distinta
+//   import sets it);
+// - an explicit mode is authoritative and clears the other mode's field;
+// - values are compared in cents, so "2.5" resubmitted over "2.50" is no change.
+export function resolveShippingUpdate(
+  before: ShippingConfig,
+  data: ShippingInput,
+): { patch: Partial<ShippingConfig>; changed: boolean } {
+  if (before.shippingMode === "manual") return { patch: {}, changed: false };
+
+  let patch: Partial<ShippingConfig>;
+  if (data.shippingMode !== undefined) {
+    const mode = normalizeShippingMode(data.shippingMode);
+    if (mode === "manual") return { patch: {}, changed: false };
+    patch = {
+      shippingMode: mode,
+      shippingCostPerMember: mode === "fixed_per_member" ? data.shippingCostPerMember || null : null,
+      shippingTotal: mode === "proportional" ? data.shippingTotal || null : null,
+    };
+  } else {
+    patch = {
+      ...(data.shippingCostPerMember !== undefined && {
+        shippingCostPerMember: data.shippingCostPerMember || null,
+      }),
+      ...(data.shippingTotal !== undefined && { shippingTotal: data.shippingTotal || null }),
+    };
+  }
+
+  const after = { ...before, ...patch };
+  const changed =
+    after.shippingMode !== before.shippingMode ||
+    toCentsOrNull(after.shippingCostPerMember) !== toCentsOrNull(before.shippingCostPerMember) ||
+    toCentsOrNull(after.shippingTotal) !== toCentsOrNull(before.shippingTotal);
+  return { patch, changed };
 }
 
 // Returns each member's shipping share in euros, keyed by memberId.

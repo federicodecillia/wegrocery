@@ -11,7 +11,12 @@ import { auditLog, ledgerEntries, members, orderCycles, orders, products, suppli
 import { upsertCycleProducts } from "@/lib/db/cycle-products";
 import type { BatchItem } from "drizzle-orm/batch";
 import { planClosedOrderEdit } from "@/lib/closed-order-edit";
-import { computeShippingShares, normalizeShippingMode, type ShippingMode } from "@/lib/shipping";
+import {
+  computeShippingShares,
+  normalizeShippingMode,
+  resolveShippingUpdate,
+  type ShippingMode,
+} from "@/lib/shipping";
 import {
   isAdminEditableLedgerType,
   validateLedgerEntryEdit,
@@ -110,7 +115,9 @@ export async function adminCreateCycle(data: CreateCycleInput): Promise<{error?:
 
     const cycleId = genId("cyc");
     const now = new Date();
-    const shippingMode = normalizeShippingMode(data.shippingMode);
+    // "manual" is reserved for the distinta import; a new cycle starts fixed.
+    const requestedMode = normalizeShippingMode(data.shippingMode);
+    const shippingMode = requestedMode === "manual" ? "fixed_per_member" : requestedMode;
     await db.insert(orderCycles).values({
       cycleId,
       title: data.title.trim(),
@@ -666,33 +673,12 @@ export async function adminUpdateCycle(
     const newCloseAt = data.orderCloseAt !== undefined ? new Date(data.orderCloseAt) : undefined;
 
     const isClosed = before.status === "closed";
-    const shippingTouched =
-      data.shippingMode !== undefined ||
-      data.shippingCostPerMember !== undefined ||
-      data.shippingTotal !== undefined;
 
-    // When shippingMode is provided we treat it as authoritative: also clear
-    // the field belonging to the other mode so we never end up with stale
-    // values being read at close time.
-    const shippingPatch =
-      data.shippingMode !== undefined
-        ? (() => {
-            const mode = normalizeShippingMode(data.shippingMode);
-            return {
-              shippingMode: mode,
-              shippingCostPerMember:
-                mode === "fixed_per_member" ? data.shippingCostPerMember || null : null,
-              shippingTotal: mode === "proportional" ? data.shippingTotal || null : null,
-            };
-          })()
-        : {
-            ...(data.shippingCostPerMember !== undefined && {
-              shippingCostPerMember: data.shippingCostPerMember || null,
-            }),
-            ...(data.shippingTotal !== undefined && {
-              shippingTotal: data.shippingTotal || null,
-            }),
-          };
+    // Shipping is recomputed on a closed cycle only when its effective
+    // configuration really changes. A "manual" (distinta-imported) cycle is
+    // never touched: saving it to fix a pickup date used to zero everyone's
+    // shipping and notify every member. See resolveShippingUpdate.
+    const { patch: shippingPatch, changed: shippingChanged } = resolveShippingUpdate(before, data);
 
     await db
       .update(orderCycles)
@@ -715,7 +701,12 @@ export async function adminUpdateCycle(
       .where(eq(orderCycles.cycleId, cycleId));
 
     let adjustedMembers = 0;
-    if (isClosed && shippingTouched) {
+    if (isClosed && shippingChanged) {
+      const shippingBefore = {
+        shippingMode: before.shippingMode,
+        shippingCostPerMember: before.shippingCostPerMember,
+        shippingTotal: before.shippingTotal,
+      };
       const { adjustedMembers: m } = await recomputeShippingForClosedCycle(
         db,
         cycleId,
@@ -723,16 +714,8 @@ export async function adminUpdateCycle(
       );
       adjustedMembers = m.length;
       await writeAudit(db, admin.email, "cycle_shipping_recomputed", "cycle", cycleId, {
-        before: {
-          shippingMode: before.shippingMode,
-          shippingCostPerMember: before.shippingCostPerMember,
-          shippingTotal: before.shippingTotal,
-        },
-        after: {
-          shippingMode: data.shippingMode,
-          shippingCostPerMember: data.shippingCostPerMember,
-          shippingTotal: data.shippingTotal,
-        },
+        before: shippingBefore,
+        after: { ...shippingBefore, ...shippingPatch },
         affectedMembers: m,
       });
       revalidatePath("/storico");

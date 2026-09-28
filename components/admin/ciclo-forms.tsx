@@ -455,9 +455,13 @@ export function EditCycleForm({
       pickup2EndTime: fd.get("pickup2EndTime") as string,
       notes: fd.get("notes") as string,
       supplierId: fd.get("supplierId") as string,
-      shippingMode,
-      shippingCostPerMember: fd.get("shippingCostPerMember") as string,
-      shippingTotal: fd.get("shippingTotal") as string,
+      // Manual (distinta-imported) shipping has no inputs here: send no
+      // shipping fields at all so the per-member charges stay as imported.
+      ...(shippingMode !== "manual" && {
+        shippingMode,
+        shippingCostPerMember: fd.get("shippingCostPerMember") as string,
+        shippingTotal: fd.get("shippingTotal") as string,
+      }),
     };
     const openOnlyPatch = isClosed
       ? {}
@@ -522,8 +526,6 @@ export function EditCycleForm({
               {t.admin.cycle.shippingManualDescription}
             </p>
           </div>
-          <input type="hidden" name="shippingCostPerMember" value="" />
-          <input type="hidden" name="shippingTotal" value="" />
         </div>
       ) : (
         <ShippingModeFields
