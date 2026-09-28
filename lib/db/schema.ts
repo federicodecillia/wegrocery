@@ -168,6 +168,30 @@ export const orders = pgTable(
   ],
 );
 
+// Online top-ups (Stripe Checkout), drizzle/0016_stripe_payments.sql.
+// status: pending -> succeeded | failed | expired; succeeded ->
+// partially_refunded | refunded. Transitions are guarded UPDATEs in
+// lib/payments/webhook.ts, so a replayed webhook changes nothing.
+export const payments = pgTable(
+  "payments",
+  {
+    paymentId: text("payment_id").primaryKey(),
+    memberId: text("member_id")
+      .notNull()
+      .references(() => members.memberId),
+    provider: text("provider").notNull(),
+    status: text("status").notNull(),
+    amountCents: integer("amount_cents").notNull(),
+    currency: text("currency").notNull(),
+    refundedCents: integer("refunded_cents").notNull().default(0),
+    checkoutSessionId: text("checkout_session_id").unique(),
+    paymentIntentId: text("payment_intent_id").unique(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
+  },
+  (table) => [index("payments_member_id_idx").on(table.memberId)],
+);
+
 export const ledgerEntries = pgTable(
   "ledger_entries",
   {
@@ -184,6 +208,8 @@ export const ledgerEntries = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }),
     updatedBy: text("updated_by"),
+    // Set on the credit and refund rows of an online top-up (migration 0016).
+    paymentId: text("payment_id").references(() => payments.paymentId),
   },
   (table) => [
     index("ledger_entries_member_id_idx").on(table.memberId),
@@ -196,6 +222,10 @@ export const ledgerEntries = pgTable(
     uniqueIndex("ledger_entries_cycle_member_charge_uniq")
       .on(table.cycleId, table.memberId, table.type)
       .where(sql`${table.type} IN ('order_charge', 'shipping_charge')`),
+    // A payment is credited at most once (drizzle/0016_stripe_payments.sql).
+    uniqueIndex("ledger_entries_payment_topup_uniq")
+      .on(table.paymentId)
+      .where(sql`${table.type} = 'topup'`),
   ],
 );
 

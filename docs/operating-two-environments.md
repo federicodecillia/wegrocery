@@ -79,7 +79,7 @@ need to be set:
 | `EMAIL_REDIRECT_TO` | the tester's inbox (every email goes there, cc dropped, subject tagged `[STAGING -> <recipient>]`; broadcasts to all members are capped to 3 samples) |
 | `APP_BASE_URL` | the staging branch URL, so email links do not point at production |
 | `WALLYFOR_*` | membership-check credentials (the same read-only check as production) |
-| payment keys | **test mode only**, never live keys |
+| `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | Stripe **sandbox** keys only (the app refuses live keys outside production). The sandbox webhook endpoint is `<staging URL>/api/stripe/webhook?x-vercel-protection-bypass=<secret>`, with the secret from Settings → Deployment Protection → Protection Bypass for Automation |
 
 `EMAIL_REDIRECT_TO` must **never** be set on Production. Outside
 `VERCEL_ENV=production` (staging, previews, local dev) the app refuses to send

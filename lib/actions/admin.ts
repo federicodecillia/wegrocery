@@ -8,7 +8,7 @@ import { formatMoney, formatDateTime } from "@/lib/i18n/format";
 import { parseCycleDates } from "@/lib/cycle-dates";
 import { brand } from "@/lib/brand";
 import { getDb } from "@/lib/db/client";
-import { auditLog, ledgerEntries, members, orderCycles, orders, products, suppliers, supplierProducts } from "@/lib/db/schema";
+import { auditLog, ledgerEntries, members, orderCycles, orders, payments, products, suppliers, supplierProducts } from "@/lib/db/schema";
 import { upsertCycleProducts } from "@/lib/db/cycle-products";
 import type { BatchItem } from "drizzle-orm/batch";
 import { orderLinesSnapshot, planClosedOrderEdit } from "@/lib/closed-order-edit";
@@ -1466,6 +1466,7 @@ const ledgerAuditColumns = {
   cycleId: ledgerEntries.cycleId,
   note: ledgerEntries.note,
   entryDate: ledgerEntries.entryDate,
+  paymentId: ledgerEntries.paymentId,
 };
 
 export async function adminUpdateLedgerEntry(
@@ -1481,6 +1482,7 @@ export async function adminUpdateLedgerEntry(
       .where(eq(ledgerEntries.entryId, entryId))
       .limit(1);
     if (!before) return { error: t.errors.ledgerEntryNotFound };
+    if (before.paymentId) return { error: t.errors.ledgerEntryFromOnlinePayment };
 
     const amountError = validateLedgerEntryEdit(before, data.amount);
     if (amountError) return { error: ledgerAmountErrorMessage(amountError) };
@@ -1511,6 +1513,7 @@ export async function adminDeleteLedgerEntry(entryId: string): Promise<{ error?:
       .limit(1);
     if (!before) return { error: t.errors.ledgerEntryNotFound };
     if (!isAdminEditableLedgerType(before.type)) return { error: t.errors.ledgerEntryNotEditable };
+    if (before.paymentId) return { error: t.errors.ledgerEntryFromOnlinePayment };
 
     await db.delete(ledgerEntries).where(eq(ledgerEntries.entryId, entryId));
     await writeAudit(db, admin.email, "delete_ledger", "ledger", entryId, { before, after: null });
@@ -1528,15 +1531,21 @@ export async function adminDeleteMember(memberId: string): Promise<{ error?: str
     const admin = await requireAdmin();
     const db = getDb();
 
-    const [[orderCount], [ledgerCount]] = await Promise.all([
+    const [[orderCount], [ledgerCount], [paymentCount]] = await Promise.all([
       db.select({ n: sql<string>`count(*)` }).from(orders).where(eq(orders.memberId, memberId)),
       db
         .select({ n: sql<string>`count(*)` })
         .from(ledgerEntries)
         .where(eq(ledgerEntries.memberId, memberId)),
+      // Even an abandoned checkout leaves a payments row pointing at the member.
+      db.select({ n: sql<string>`count(*)` }).from(payments).where(eq(payments.memberId, memberId)),
     ]);
 
-    if (parseInt(orderCount?.n ?? "0") > 0 || parseInt(ledgerCount?.n ?? "0") > 0) {
+    if (
+      parseInt(orderCount?.n ?? "0") > 0 ||
+      parseInt(ledgerCount?.n ?? "0") > 0 ||
+      parseInt(paymentCount?.n ?? "0") > 0
+    ) {
       return {
         error: t.errors.cannotDeleteMemberWithData,
       };

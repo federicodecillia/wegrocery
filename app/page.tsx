@@ -103,13 +103,19 @@ export default async function HomePage() {
             </div>
           </div>
         </div>
-        {isNegative && (
+        {isNegative ? (
           <div className="mt-[12px]">
             <Link
-              href="/storico"
+              href="/ricarica"
               className="flex w-full items-center justify-center rounded-full bg-brand-red px-4 py-[10px] text-[13px] font-bold text-white"
             >
               {t.home.rechargeButton}
+            </Link>
+          </div>
+        ) : (
+          <div className="mt-[10px] text-right">
+            <Link href="/ricarica" className="font-mono text-[11px] font-bold uppercase tracking-widest text-brand-orange">
+              {t.home.rechargeLink} →
             </Link>
           </div>
         )}
