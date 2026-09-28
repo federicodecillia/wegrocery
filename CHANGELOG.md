@@ -18,9 +18,24 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ---
 
-## [Unreleased]
+## [1.11.0] — 2026-09-28
 
-*Security patches for the image pipeline and the distinta import.*
+*Open to every card-holding member, with safer money flows.*
+
+### Added
+- 🪪 **Members with an active membership card can sign in on their own.** The first Google login with the email used for the card checks it with the membership provider and creates the account; no admin whitelisting needed. Cards are rechecked before an order grows, and the login page explains what to do when access is refused.
+- 💳 **Credit limit.** An order that would take the balance (counting orders still open on other cycles) below the group's limit is refused with the amount still available; lowering or cancelling an order always works.
+- 🔐 **Privacy policy link** on the login page and in the footer.
+
+### Changed
+- 👥 **Roles and cycle access now share the same three names: Admin, Attivi, Utenti.** Admins see every cycle, Attivi see standard and private cycles, Utenti see standard cycles only. The member form no longer defaults an unrecognised role to Admin, and "enabled members" now names the on/off switch on an account.
+
+### Fixed
+- 🕰️ **Times follow Rome everywhere.** Closing and pickup times no longer shift by two hours between cards, forms and emails, a cycle stops taking orders at the hour it shows, and the switch to winter time on 25 October is handled.
+- 🧾 **Editing a Cassa movement keeps its sign.** Changing only the note of a refund no longer turns it into a charge, and an empty amount is rejected instead of corrupting the balance. Order and shipping charges are corrected with a new entry rather than edited in place.
+- ⚖️ **Editing a closed order keeps the weighed quantities**, so re-weighing afterwards can no longer refund a member twice.
+- 🚚 **Saving a closed cycle keeps shipping imported from the distinta**, instead of resetting everyone's share and sending wrong notifications.
+- 🔒 **Closing a cycle is all-or-nothing.** Charges, shipping and the status change are written together, and a second charge for the same cycle is rejected by the database.
 
 ### Security
 - ⚡ **Next.js updated to 15.5.25**, patching two critical remote-code-execution advisories. One requires a Windows-hosted server (we run on Vercel/Linux); the other was in image optimization, already narrowed to the brand's own logo host. `sharp` moved to 0.35.4 alongside it.
@@ -310,6 +325,7 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ---
 
+[1.11.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.11.0
 [1.9.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.9.0
 [1.8.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.8.1
 [1.8.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.8.0
