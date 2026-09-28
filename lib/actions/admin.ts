@@ -11,6 +11,7 @@ import { auditLog, ledgerEntries, members, orderCycles, orders, products, suppli
 import { upsertCycleProducts } from "@/lib/db/cycle-products";
 import type { BatchItem } from "drizzle-orm/batch";
 import { planClosedOrderEdit } from "@/lib/closed-order-edit";
+import { buildCycleCloseCharges, ordersSnapshot } from "@/lib/cycle-close";
 import {
   computeShippingShares,
   normalizeShippingMode,
@@ -186,151 +187,174 @@ export async function adminCreateCycle(data: CreateCycleInput): Promise<{error?:
   }
 }
 
-// Internal: performs the actual close-cycle work — CAS, ledger inserts,
-// notifications, and rollback on failure. Returns chargesGenerated.
+// Internal: performs the actual close-cycle work. Status flip, every
+// order_charge and every shipping_charge are committed together in a single
+// db.batch (one Neon transaction), so a failure can no longer leave a cycle
+// reopened with charges already posted. Notifications go out after the
+// commit, best-effort. Returns chargesGenerated.
 // Callers are responsible for requireAdmin(), audit log, and revalidation.
+const CLOSE_ATTEMPTS = 3;
+
 async function performCycleClose(
   db: ReturnType<typeof getDb>,
   cycleId: string,
   adminEmail: string,
 ): Promise<{ chargesGenerated: number }> {
-  const now = new Date();
-
-  // Atomic compare-and-swap: only the caller that flips status open→closed
-  // proceeds. A second concurrent call gets 0 rows back and exits cleanly.
-  const closed = await db
-    .update(orderCycles)
-    .set({ status: "closed", closedAt: now })
-    .where(and(eq(orderCycles.cycleId, cycleId), eq(orderCycles.status, "open")))
-    .returning({
-      cycleId: orderCycles.cycleId,
-      title: orderCycles.title,
-      shippingMode: orderCycles.shippingMode,
-      shippingCostPerMember: orderCycles.shippingCostPerMember,
-      shippingTotal: orderCycles.shippingTotal,
-    });
-
-  if (closed.length === 0) {
-    const [existing] = await db
-      .select({ status: orderCycles.status })
+  for (let attempt = 1; attempt <= CLOSE_ATTEMPTS; attempt++) {
+    const [cycle] = await db
+      .select({
+        status: orderCycles.status,
+        title: orderCycles.title,
+        shippingMode: orderCycles.shippingMode,
+        shippingCostPerMember: orderCycles.shippingCostPerMember,
+        shippingTotal: orderCycles.shippingTotal,
+      })
       .from(orderCycles)
       .where(eq(orderCycles.cycleId, cycleId))
       .limit(1);
-    if (!existing) throw new Error(t.errors.cycleNotFound);
-    throw new Error(t.errors.cycleNotFoundOrAlreadyClosed);
-  }
+    if (!cycle) throw new Error(t.errors.cycleNotFound);
+    if (cycle.status !== "open") throw new Error(t.errors.cycleNotFoundOrAlreadyClosed);
 
-  const cycle = closed[0];
+    const memberTotals = await db
+      .select({
+        memberId: orders.memberId,
+        total: sql<string>`sum(${orders.lineTotal})`,
+      })
+      .from(orders)
+      .where(eq(orders.cycleId, cycleId))
+      .groupBy(orders.memberId);
 
-  // The CAS guarantees only one caller reaches this branch, so duplicate
-  // ledger entries can only happen if the previous attempt failed mid-way and
-  // left the cycle closed. Belt-and-suspenders: still check.
-  const [existingCharge] = await db
-    .select({ entryId: ledgerEntries.entryId })
-    .from(ledgerEntries)
-    .where(and(eq(ledgerEntries.cycleId, cycleId), eq(ledgerEntries.type, "order_charge")))
-    .limit(1);
+    // A cycle closed by the pre-atomic code could have been reopened with
+    // some charges already posted: never charge those members twice.
+    const existingCharges = await db
+      .select({ memberId: ledgerEntries.memberId, type: ledgerEntries.type })
+      .from(ledgerEntries)
+      .where(
+        and(
+          eq(ledgerEntries.cycleId, cycleId),
+          inArray(ledgerEntries.type, ["order_charge", "shipping_charge"]),
+        ),
+      );
+    const alreadyCharged = {
+      order: new Set(existingCharges.filter((c) => c.type === "order_charge").map((c) => c.memberId)),
+      shipping: new Set(
+        existingCharges.filter((c) => c.type === "shipping_charge").map((c) => c.memberId),
+      ),
+    };
 
-  let chargesGenerated = 0;
+    const charges = buildCycleCloseCharges(memberTotals, cycle, alreadyCharged);
+    const now = new Date();
 
-  if (!existingCharge) {
-    try {
-      const memberTotals = await db
-        .select({
-          memberId: orders.memberId,
-          total: sql<string>`sum(${orders.lineTotal})`,
-        })
-        .from(orders)
-        .where(eq(orders.cycleId, cycleId))
-        .groupBy(orders.memberId);
-
-      const toInsert = memberTotals.filter((r) => parseFloat(r.total) > 0);
-
-      // Pre-compute each member's shipping share. For "proportional" mode the
-      // shares sum to shippingTotal; rounding leftovers (sum-of-cents drift)
-      // are absorbed by the largest order so the total stays exact.
-      const shippingShares = computeShippingShares(toInsert, cycle);
-
-      if (toInsert.length > 0) {
-        await db.insert(ledgerEntries).values(
-          toInsert.map((r) => ({
+    // 1. Row-lock the cycle: saveOrder takes the same lock first in its own
+    //    batch, so from here on no member write can commit on this cycle.
+    // 2. Guard, in a fresh statement snapshot taken after the lock: the cycle
+    //    must still be open and the orders must be exactly the ones the
+    //    charges were computed from. Otherwise 1/0 aborts the whole batch.
+    // 3. Flip the status and post every charge in the same transaction.
+    const lockCycle = db.execute(
+      sql`SELECT 1 FROM order_cycles WHERE cycle_id = ${cycleId} FOR UPDATE`,
+    );
+    const guard = db.execute(
+      sql`SELECT 1 / (CASE WHEN
+            (SELECT status FROM order_cycles WHERE cycle_id = ${cycleId}) = 'open'
+            AND (SELECT coalesce(jsonb_object_agg(g.member_id, g.total::text), '{}'::jsonb)
+                 FROM (SELECT member_id, sum(line_total) AS total FROM orders
+                       WHERE cycle_id = ${cycleId} GROUP BY member_id) g)
+                = ${ordersSnapshot(memberTotals)}::jsonb
+          THEN 1 ELSE 0 END) AS close_guard`,
+    );
+    const flipStatus = db
+      .update(orderCycles)
+      .set({ status: "closed", closedAt: now })
+      .where(and(eq(orderCycles.cycleId, cycleId), eq(orderCycles.status, "open")));
+    const statements: BatchItem<"pg">[] = [lockCycle, guard, flipStatus];
+    if (charges.orderCharges.length > 0) {
+      statements.push(
+        db.insert(ledgerEntries).values(
+          charges.orderCharges.map((c) => ({
             entryId: genId("led"),
-            memberId: r.memberId,
+            memberId: c.memberId,
             entryDate: now,
             type: "order_charge",
-            amount: (-parseFloat(r.total)).toFixed(2),
+            amount: c.amount,
             cycleId,
             note: t.ledger.orderCharge,
             createdBy: adminEmail,
             createdAt: now,
           })),
-        );
-
-        const shippingEntries = toInsert
-          .map((r) => ({ memberId: r.memberId, share: shippingShares.get(r.memberId) ?? 0 }))
-          .filter((s) => s.share > 0);
-        if (shippingEntries.length > 0) {
-          await db.insert(ledgerEntries).values(
-            shippingEntries.map((s) => ({
-              entryId: genId("led"),
-              memberId: s.memberId,
-              entryDate: now,
-              type: "shipping_charge",
-              amount: (-s.share).toFixed(2),
-              cycleId,
-              note:
-                cycle.shippingMode === "proportional"
-                  ? "Spedizione (quota proporzionale)"
-                  : "Spedizione",
-              createdBy: adminEmail,
-              createdAt: now,
-            })),
-          );
-        }
-
-        // One notification per charged member. Bodies differ per member (order
-        // + optional shipping), so dispatchWithBodies filters each member by
-        // their app/email channels for order_charge and batches both sends.
-        const emailByMember = await getMemberEmails(
-          db,
-          toInsert.map((r) => r.memberId),
-        );
-        const items = toInsert.map((r) => {
-          const orderTotal = parseFloat(r.total);
-          const shippingShare = shippingShares.get(r.memberId) ?? 0;
-          const totalCharged = orderTotal + shippingShare;
-          const body =
-            shippingShare > 0
-              ? t.notificationsServer.orderClosedBodyWithShipping(
-                  cycle.title,
-                  formatMoney(totalCharged),
-                  formatMoney(orderTotal),
-                  formatMoney(shippingShare),
-                )
-              : t.notificationsServer.orderClosedBody(cycle.title, formatMoney(orderTotal));
-          return {
-            memberId: r.memberId,
-            email: emailByMember.get(r.memberId) ?? null,
-            title: t.notificationsServer.orderClosedTitle,
-            body,
-            href: `/storico?cycleId=${cycleId}`,
-          };
-        });
-        await dispatchWithBodies(db, items, "order_closed", now);
-        chargesGenerated = toInsert.length;
-      }
-    } catch (e) {
-      // Rollback the status flip so the admin can retry instead of leaving
-      // the cycle in a half-closed state with no charges.
-      await db
-        .update(orderCycles)
-        .set({ status: "open", closedAt: null })
-        .where(eq(orderCycles.cycleId, cycleId));
-      throw e;
+        ),
+      );
     }
-  }
+    if (charges.shippingCharges.length > 0) {
+      statements.push(
+        db.insert(ledgerEntries).values(
+          charges.shippingCharges.map((c) => ({
+            entryId: genId("led"),
+            memberId: c.memberId,
+            entryDate: now,
+            type: "shipping_charge",
+            amount: c.amount,
+            cycleId,
+            note:
+              cycle.shippingMode === "proportional"
+                ? "Spedizione (quota proporzionale)"
+                : "Spedizione",
+            createdBy: adminEmail,
+            createdAt: now,
+          })),
+        ),
+      );
+    }
 
-  return { chargesGenerated };
+    try {
+      await db.batch(statements as [BatchItem<"pg">, ...BatchItem<"pg">[]]);
+    } catch (e) {
+      // 22012 = division_by_zero, i.e. the guard fired: either the cycle is
+      // no longer open (concurrent close) or an order changed under us.
+      if (!(e instanceof Error && /22012|division by zero/i.test(e.message))) throw e;
+      const [current] = await db
+        .select({ status: orderCycles.status })
+        .from(orderCycles)
+        .where(eq(orderCycles.cycleId, cycleId))
+        .limit(1);
+      if (current?.status !== "open") throw new Error(t.errors.cycleNotFoundOrAlreadyClosed);
+      continue; // orders changed: recompute from fresh totals
+    }
+
+    // Committed. One notification per charged member; bodies differ per
+    // member (order + optional shipping). A delivery failure is logged, never
+    // rolled back onto the (already committed) close.
+    try {
+      const emailByMember = await getMemberEmails(
+        db,
+        charges.summaries.map((s) => s.memberId),
+      );
+      const items = charges.summaries.map((s) => {
+        const body =
+          s.shippingShare > 0
+            ? t.notificationsServer.orderClosedBodyWithShipping(
+                cycle.title,
+                formatMoney(s.orderTotal + s.shippingShare),
+                formatMoney(s.orderTotal),
+                formatMoney(s.shippingShare),
+              )
+            : t.notificationsServer.orderClosedBody(cycle.title, formatMoney(s.orderTotal));
+        return {
+          memberId: s.memberId,
+          email: emailByMember.get(s.memberId) ?? null,
+          title: t.notificationsServer.orderClosedTitle,
+          body,
+          href: `/storico?cycleId=${cycleId}`,
+        };
+      });
+      if (items.length > 0) await dispatchWithBodies(db, items, "order_closed", now);
+    } catch (notifyError) {
+      console.error("[order_closed] dispatch failed:", notifyError);
+    }
+
+    return { chargesGenerated: charges.orderCharges.length };
+  }
+  throw new Error(t.errors.cycleCloseOrdersChanged);
 }
 
 export async function adminCloseCycle(cycleId: string) {
@@ -470,6 +494,16 @@ export async function adminCloseCycleWithAdjustments(
   const admin = await requireAdmin();
   const db = getDb();
 
+  // Re-pricing rewrites products and order lines, so it must never run on a
+  // cycle that is already closed (or cancelled): check before touching rows.
+  const [current] = await db
+    .select({ status: orderCycles.status })
+    .from(orderCycles)
+    .where(eq(orderCycles.cycleId, cycleId))
+    .limit(1);
+  if (!current) throw new Error(t.errors.cycleNotFound);
+  if (current.status !== "open") throw new Error(t.errors.cycleNotFoundOrAlreadyClosed);
+
   // Validate up-front: reject empty IDs, negative prices, and adjustments
   // that name a product not belonging to this cycle. Better to fail before
   // we touch any rows than mid-way through.
@@ -488,10 +522,10 @@ export async function adminCloseCycleWithAdjustments(
     if (orphan) throw new Error(`Prodotto non appartenente al ciclo: ${orphan.productId}`);
   }
 
-  // Apply the price adjustments before flipping status. We do not use a
-  // transaction (neon-http does not support interactive ones), but the
-  // CAS inside performCycleClose still guarantees that only one caller
-  // proceeds to generate charges.
+  // Apply the price adjustments before closing. We do not use a transaction
+  // (neon-http does not support interactive ones), but performCycleClose
+  // charges from the order totals it re-checks inside its own batch, so the
+  // charges always match the re-priced lines, and only one caller can close.
   for (const adj of cleaned) {
     const priceStr = adj.finalUnitPrice.toFixed(2);
     await db

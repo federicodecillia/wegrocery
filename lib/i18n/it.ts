@@ -896,6 +896,7 @@ export const it = {
     xlsxReadError: "Errore lettura file",
     productNotInCycle: (id: string) => `Prodotto non appartenente al ciclo: ${id}`,
     cycleNotFoundOrAlreadyClosed: "Il ciclo non è aperto (potrebbe essere già stato chiuso)",
+    cycleCloseOrdersChanged: "Gli ordini sono cambiati durante la chiusura: riprova.",
     genericError: "Errore",
     cycleCreationError: "Errore nella creazione del ciclo",
     importError: "Errore durante l'importazione",

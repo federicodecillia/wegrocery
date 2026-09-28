@@ -895,6 +895,7 @@ export const en: Strings = {
     xlsxReadError: "File read error",
     productNotInCycle: (id: string) => `Product does not belong to this cycle: ${id}`,
     cycleNotFoundOrAlreadyClosed: "The cycle is not open (it may have already been closed)",
+    cycleCloseOrdersChanged: "Orders changed while closing the cycle: please try again.",
     genericError: "Error",
     cycleCreationError: "Error creating cycle",
     importError: "Import error",
