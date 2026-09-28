@@ -18,6 +18,10 @@ export const members = pgTable("members", {
   aliasEmail: text("alias_email"),
   role: text("role").notNull(),
   active: boolean("active").notNull().default(true),
+  // Last WallyFor membership-card check (migration 0014): 'valid' | 'invalid',
+  // NULL = never checked (always NULL on deploys without WALLYFOR_* env).
+  membershipStatus: text("membership_status"),
+  membershipVerifiedAt: timestamp("membership_verified_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
 });
