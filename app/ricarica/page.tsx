@@ -13,6 +13,15 @@ import { formatMoney } from "@/lib/i18n/format";
 import { TOPUP_MAX_CENTS, TOPUP_MIN_CENTS, TOPUP_PRESETS_CENTS } from "@/lib/payments/config";
 import { isOnlineTopupEnabled } from "@/lib/payments/stripe";
 
+function compactIban(iban: string): string {
+  return iban.replace(/\s+/g, "").toUpperCase();
+}
+
+// IT08 J030 6967 ...: easier to check by eye than one 27-character run.
+function formatIban(iban: string): string {
+  return compactIban(iban).replace(/(.{4})(?=.)/g, "$1 ");
+}
+
 type Result = { tone: "ok" | "info" | "error"; text: string; pending?: boolean } | null;
 
 // The success redirect only says "come back and look": what the member sees is
@@ -106,7 +115,7 @@ export default async function RicaricaPage({
           <>
             <p className="mb-3 text-[13px] text-brand-gray">{t.topup.bankHint}</p>
             <CopyField label={t.topup.bankHolder} value={bank.holder} />
-            <CopyField label={t.topup.bankIban} value={bank.iban} mono />
+            <CopyField label={t.topup.bankIban} value={compactIban(bank.iban)} display={formatIban(bank.iban)} mono />
             <CopyField
               label={t.topup.bankReference}
               value={t.topup.bankReferenceValue(session.user.fullName ?? session.user.email)}
