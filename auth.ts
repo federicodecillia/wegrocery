@@ -103,7 +103,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       : []),
   ],
   callbacks: {
-    async signIn({ user, account }) {
+    async signIn({ user, account, profile }) {
       try {
         const email = user.email?.trim().toLowerCase();
         if (!email) return false;
@@ -124,16 +124,20 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         // The membership-card gate applies to Google sign-ins only; the
         // dev/demo credential providers keep the plain whitelist.
         const checkEnabled = account?.provider === "google" && isMembershipCheckEnabled();
+        // Self-onboarding trusts the address only if Google verified it.
+        const emailVerified = profile?.email_verified !== false;
 
         let decision = member
           ? existingMemberSignIn(member, checkEnabled, null)
-          : newUserSignIn(checkEnabled, null);
+          : newUserSignIn(checkEnabled, null, emailVerified);
         let result: MembershipResult | null = null;
         if (decision.kind === "check") {
           result = member
             ? await checkMembershipAny([member.email, member.aliasEmail])
             : await checkMembership(email);
-          decision = member ? existingMemberSignIn(member, checkEnabled, result) : newUserSignIn(checkEnabled, result);
+          decision = member
+            ? existingMemberSignIn(member, checkEnabled, result)
+            : newUserSignIn(checkEnabled, result, emailVerified);
         }
         if ("logError" in decision && decision.logError && result?.status === "error") {
           console.error(`[auth] membership check unavailable at sign-in: ${result.message}`);
