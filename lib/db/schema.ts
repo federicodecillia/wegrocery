@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import {
   boolean,
+  check,
   index,
   integer,
   numeric,
@@ -151,6 +152,11 @@ export const orders = pgTable(
       table.cycleId,
       table.productId,
     ),
+    // numeric accepts 'NaN'; reject it so a bad price can't poison totals
+    // (drizzle/0012_ledger_amount_checks.sql).
+    check("orders_line_total_not_nan", sql`${table.lineTotal} <> 'NaN'`),
+    check("orders_unit_price_snapshot_not_nan", sql`${table.unitPriceSnapshot} <> 'NaN'`),
+    check("orders_actual_line_total_not_nan", sql`${table.actualLineTotal} <> 'NaN'`),
   ],
 );
 
@@ -174,6 +180,9 @@ export const ledgerEntries = pgTable(
   (table) => [
     index("ledger_entries_member_id_idx").on(table.memberId),
     index("ledger_entries_cycle_id_idx").on(table.cycleId),
+    // A NaN amount makes the member's balance NaN forever
+    // (drizzle/0012_ledger_amount_checks.sql).
+    check("ledger_entries_amount_not_nan", sql`${table.amount} <> 'NaN'`),
   ],
 );
 
