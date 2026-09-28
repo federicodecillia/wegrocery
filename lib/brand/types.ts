@@ -34,5 +34,18 @@ export type BrandConfig = {
    * wordmark that already contains the name.
    */
   headerShowName: boolean;
+  /**
+   * Privacy notice URL, linked from the login page and the app shell; null = no
+   * link. Use an absolute URL: every in-app path except /login requires a
+   * session (middleware.ts), so a logged-out visitor could not open it.
+   */
+  privacyUrl: string | null;
+  /** Membership / renewal page shown when the membership check fails; null = no link */
+  membershipUrl: string | null;
+  /**
+   * Credit limit: the lowest balance a member may reach after subtracting
+   * pending open orders and the order being saved (e.g. -50). null = no limit.
+   */
+  minBalance: number | null;
   theme: BrandTheme;
 };

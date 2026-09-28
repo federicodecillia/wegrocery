@@ -7,7 +7,7 @@ import { confirm } from "@/components/ui/confirm-dialog";
 import { t } from "@/lib/i18n";
 import { formatDateTime } from "@/lib/i18n/format";
 import { formatEur, getProductEmoji, normalizeCategory } from "@/lib/utils";
-import type { SaveOrderLine } from "@/lib/actions/order";
+import type { SaveOrderLine, SaveOrderResult } from "@/lib/actions/order";
 import { loadLastOrderForPrefill } from "@/lib/actions/order";
 import { OrderSentDialog } from "./order-sent-dialog";
 import { OrderSummary, type ConfirmedLine } from "./order-summary";
@@ -36,10 +36,7 @@ type Props = {
   products: Product[];
   existingLines: OrderLine[];
   balance: number;
-  saveAction: (cycleId: string, lines: SaveOrderLine[]) => Promise<{
-    success: boolean;
-    balanceWarning: string | null;
-  }>;
+  saveAction: (cycleId: string, lines: SaveOrderLine[]) => Promise<SaveOrderResult>;
 };
 
 // Normalized (see normalizeCategory): grouping keys are case-insensitive.
@@ -166,6 +163,11 @@ export function OrderForm({
           quantity,
         }));
         const result = await saveAction(cycleId, lines);
+        if (!result.success) {
+          // Expected refusal (lapsed card, credit limit): nothing was saved.
+          toast.error(result.error);
+          return;
+        }
         setSavedQty(quantities);
         setDraft(quantities);
         if (isRemoval) {

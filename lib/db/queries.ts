@@ -33,6 +33,28 @@ export async function getMemberBalance(memberId: string): Promise<number> {
   return parseFloat(row?.total ?? "0");
 }
 
+// Order totals that are saved but not yet charged to the ledger: the member's
+// lines on OTHER cycles still `open` (closing is what posts order_charge), and
+// the member's current total on `cycleId`, which a save replaces.
+export async function getMemberPendingOrderTotals(
+  memberId: string,
+  cycleId: string,
+): Promise<{ otherOpenCycles: number; thisCycle: number }> {
+  const db = getDb();
+  const [row] = await db
+    .select({
+      other: sql<string>`coalesce(sum(${orders.lineTotal}) filter (where ${orders.cycleId} <> ${cycleId}), '0')`,
+      current: sql<string>`coalesce(sum(${orders.lineTotal}) filter (where ${orders.cycleId} = ${cycleId}), '0')`,
+    })
+    .from(orders)
+    .innerJoin(orderCycles, eq(orderCycles.cycleId, orders.cycleId))
+    .where(and(eq(orders.memberId, memberId), eq(orderCycles.status, "open")));
+  return {
+    otherOpenCycles: parseFloat(row?.other ?? "0"),
+    thisCycle: parseFloat(row?.current ?? "0"),
+  };
+}
+
 export async function getOpenCycles(includeExpired = false) {
   const db = getDb();
   const cycles = await db

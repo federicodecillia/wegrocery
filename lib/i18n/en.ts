@@ -162,6 +162,17 @@ export const en: Strings = {
     demoMessage: "Public demo: enter with one click, no registration required.",
     continueMessage: "Sign in with Google to continue.",
     accessDenied: "Access denied: your email is not listed as an active member.",
+    attemptedEmail: (email: string) => `You tried to sign in with: ${email}`,
+    notMember:
+      "To sign in you need a membership card that is active for the current year. Use the same email you registered your card with.",
+    membershipInactive: "Your membership card is not active for the current year.",
+    renewMembership: "Renew your membership",
+    membershipCheckUnavailable:
+      "We can't verify your membership card right now. Please try again in a few minutes.",
+    googleAccountHint:
+      "No Google account for your email? You can create one for free with a non-Gmail address too (e.g. your personal or work email): at accounts.google.com choose to use your current email address instead of creating a new one.",
+    contactSupport: "Trouble signing in? Write to",
+    privacyLink: "Privacy notice",
     configError: "Login configuration incomplete. Check the variables in .env.local.",
     googleLogin: "Sign in with Google",
     devLogin: "Local login",
@@ -238,7 +249,7 @@ export const en: Strings = {
       },
       {
         q: "What happens if my balance is negative?",
-        a: "You can still order, but you'll receive a warning. Remember to make a bank transfer as soon as possible to cover the debt.",
+        a: "You can order as long as you stay within the credit limit set by the group (if any): the app warns you when you go negative and blocks the save beyond the limit. Remember to top up as soon as possible to cover the debt.",
       },
       {
         q: "How do I add the app to my home screen?",
@@ -246,7 +257,7 @@ export const en: Strings = {
       },
       {
         q: "What if my balance is insufficient?",
-        a: "The app lets you order even if your balance is low or negative (within certain limits) so you can still shop. However, it's essential to recharge promptly to keep the buying group healthy and allow payment to suppliers.",
+        a: "The app lets you order even if your balance is low or negative (up to the credit limit set by the group, if any, also counting orders already sent but not yet charged) so you can still shop. Beyond the limit the order is not saved until you top up. However, it's essential to recharge promptly to keep the buying group healthy and allow payment to suppliers.",
       },
       {
         q: "Who are the suppliers?",
@@ -885,6 +896,12 @@ export const en: Strings = {
     invalidQuantity: "Invalid quantity",
     cycleNotOpen: "The cycle is no longer open",
     accessDenied: "You don't have access to this cycle",
+    membershipInactive: (renewUrl: string | null) =>
+      renewUrl
+        ? `Your membership card is not active for the current year: renew it at ${renewUrl} and try again.`
+        : "Your membership card is not active for the current year: renew it and try again.",
+    creditLimitExceeded: (available: string) =>
+      `Insufficient credit: counting your pending orders you can order at most ${available} in this cycle. Top up your balance to order more.`,
     productNotFound: (id: string) => `Product not found: ${id}`,
     cycleNotFound: "Cycle not found",
     unauthorized: "Unauthorized access",
