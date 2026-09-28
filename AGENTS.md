@@ -196,10 +196,12 @@ User interaction → Server Action ("use server") → auth check → DB mutation
     `console.error`;
   - unknown email → valid card auto-provisions an active `socio` (audit
     `auto_provision_member`, actor `system`); invalid → `NotMember`; API error
-    → `MembershipCheckUnavailable` (fail closed).
+    → `MembershipCheckUnavailable` (fail closed). Never provisioned when
+    Google reports `email_verified: false`.
   - `saveOrder` rechecks non-admins when the last valid check is older than
     24h (a lapsed result is always rechecked); lapsed → refused with a renew
-    link (`brand.membershipUrl`), API error → allowed.
+    link (`brand.membershipUrl`), API error → allowed. Saves that do not raise
+    the cycle's total (trim/cancel) are never rechecked.
   - dev/demo credential providers never run the check.
 - Denials redirect to `/login?error=<code>&email=<attempted>`; the login page
   explains each code and links `brand.supportEmail` and `brand.privacyUrl`.
