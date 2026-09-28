@@ -326,9 +326,9 @@ All four emit `order_adjusted` or `order_corrected` notifications and `audit_log
 
 ### Backup & Restore
 
-Neon free tier only retains 7 hours of point-in-time history, so we ship a weekly off-site backup to Google Drive.
+Neon free tier only retains 6 hours of point-in-time history (the Launch plan goes up to 7 days; see neon.com/pricing), so we ship a daily off-site backup to Google Drive.
 
-**Workflow**: [`.github/workflows/backup.yml`](.github/workflows/backup.yml) runs every Sunday at 03:00 UTC (also via `workflow_dispatch`). It `pg_dump`s the Neon production DB, gzips the result, and `rclone copy`s it to `gdrive:PortaMoneta/GAS-Backups/`.
+**Workflow**: [`.github/workflows/backup.yml`](.github/workflows/backup.yml) runs every day at 03:00 UTC (also via `workflow_dispatch`). It `pg_dump`s the Neon production DB, gzips the result, and `rclone copy`s it to `gdrive:PortaMoneta/GAS-Backups/`. After a successful upload it prunes that folder's own `gas-backup-*.sql.gz` files older than **90 days** (`rclone delete --min-age 90d`, top level only, other files untouched; Drive keeps them in the trash).
 
 **Required GitHub Secrets** (Settings → Secrets and variables → Actions):
 
