@@ -5,6 +5,7 @@ import { eq, and, ne, sql, inArray } from "drizzle-orm";
 import { auth } from "@/auth";
 import { t } from "@/lib/i18n";
 import { formatMoney, formatDateTime } from "@/lib/i18n/format";
+import { zonedLocalToUtc } from "@/lib/i18n/zoned-time";
 import { brand } from "@/lib/brand";
 import { getDb } from "@/lib/db/client";
 import { auditLog, ledgerEntries, members, orderCycles, orders, products, suppliers, supplierProducts } from "@/lib/db/schema";
@@ -61,6 +62,8 @@ async function writeAudit(
 // fails with "Export ShippingMode doesn't exist in target module". Import the
 // type from @/lib/shipping, which is where it is declared.
 
+// Date fields are datetime-local wall-clock strings ("YYYY-MM-DDTHH:mm") in
+// APP_TIME_ZONE; the actions convert them with zonedLocalToUtc.
 export type CreateCycleInput = {
   title: string;
   pickupDate: string;
@@ -80,7 +83,8 @@ export async function adminCreateCycle(data: CreateCycleInput): Promise<{error?:
   try {
     const admin = await requireAdmin();
     if (!data.title?.trim()) return { error: t.errors.fieldRequired(t.fields.title) };
-    if (!data.orderCloseAt) return { error: t.errors.fieldRequired(t.fields.orderCloseDate) };
+    const orderCloseAt = zonedLocalToUtc(data.orderCloseAt);
+    if (!orderCloseAt) return { error: t.errors.fieldRequired(t.fields.orderCloseDate) };
     if (!data.supplierId) return { error: t.errors.fieldRequired(t.fields.supplier) };
 
     const db = getDb();
@@ -91,9 +95,9 @@ export async function adminCreateCycle(data: CreateCycleInput): Promise<{error?:
     await db.insert(orderCycles).values({
       cycleId,
       title: data.title.trim(),
-      pickupDate: data.pickupDate ? new Date(data.pickupDate) : null,
+      pickupDate: zonedLocalToUtc(data.pickupDate),
       pickupEndTime: data.pickupEndTime || null,
-      pickup2Date: data.pickup2Date ? new Date(data.pickup2Date) : null,
+      pickup2Date: zonedLocalToUtc(data.pickup2Date),
       pickup2EndTime: data.pickup2EndTime || null,
       shippingMode,
       shippingCostPerMember:
@@ -103,7 +107,7 @@ export async function adminCreateCycle(data: CreateCycleInput): Promise<{error?:
       shippingTotal:
         shippingMode === "proportional" && data.shippingTotal ? data.shippingTotal : null,
       orderOpenAt: now,
-      orderCloseAt: new Date(data.orderCloseAt),
+      orderCloseAt,
       status: "open",
       accessLevel: data.accessLevel || "attivi",
       notes: data.notes?.trim() || null,
@@ -137,7 +141,7 @@ export async function adminCreateCycle(data: CreateCycleInput): Promise<{error?:
           title: t.notificationsServer.cycleOpenedTitle,
           body: t.notificationsServer.cycleOpenedBody(
             data.title.trim(),
-            formatDateTime(new Date(data.orderCloseAt)),
+            formatDateTime(orderCloseAt),
           ),
           href: "/ordine",
         },
@@ -640,7 +644,8 @@ export async function adminUpdateCycle(
       .limit(1);
     if (!before) return { error: t.errors.cycleNotFound };
 
-    const newCloseAt = data.orderCloseAt !== undefined ? new Date(data.orderCloseAt) : undefined;
+    const newCloseAt = data.orderCloseAt !== undefined ? zonedLocalToUtc(data.orderCloseAt) : undefined;
+    if (newCloseAt === null) return { error: t.errors.fieldRequired(t.fields.orderCloseDate) };
 
     const isClosed = before.status === "closed";
     const shippingTouched =
@@ -676,11 +681,11 @@ export async function adminUpdateCycle(
       .set({
         ...(data.title !== undefined && { title: data.title }),
         ...(data.pickupDate !== undefined && {
-          pickupDate: data.pickupDate ? new Date(data.pickupDate) : null,
+          pickupDate: zonedLocalToUtc(data.pickupDate),
         }),
         ...(data.pickupEndTime !== undefined && { pickupEndTime: data.pickupEndTime || null }),
         ...(data.pickup2Date !== undefined && {
-          pickup2Date: data.pickup2Date ? new Date(data.pickup2Date) : null,
+          pickup2Date: zonedLocalToUtc(data.pickup2Date),
         }),
         ...(data.pickup2EndTime !== undefined && { pickup2EndTime: data.pickup2EndTime || null }),
         ...(data.orderCloseAt !== undefined && { orderCloseAt: newCloseAt }),
