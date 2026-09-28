@@ -182,7 +182,27 @@ User interaction → Server Action ("use server") → auth check → DB mutation
 
 ### Auth
 
-- Google OAuth via Auth.js. Only emails in the `members` table can log in.
+- Google OAuth via Auth.js. Only emails in the `members` table can log in,
+  unless the membership-card check is configured (below).
+- **Membership-card check (optional, per deploy).** With `WALLYFOR_API_KEY` +
+  `WALLYFOR_MERCHANT_ID` set (Porta Moneta: merchant `5082`), the `signIn`
+  callback checks Google sign-ins against WallyFor (`lib/membership/wallyfor.ts`,
+  decisions in `lib/membership/policy.ts`):
+  - active admin → in, no check; deactivated member → denied (admin
+    deactivation always wins);
+  - existing member → checked on email, then alias. Valid → in, recorded in
+    `members.membership_status/membership_verified_at` (migration 0014).
+    Invalid → `/login?error=MembershipInactive`. API error → in (fail open) +
+    `console.error`;
+  - unknown email → valid card auto-provisions an active `socio` (audit
+    `auto_provision_member`, actor `system`); invalid → `NotMember`; API error
+    → `MembershipCheckUnavailable` (fail closed).
+  - `saveOrder` rechecks non-admins when the last valid check is older than
+    24h (a lapsed result is always rechecked); lapsed → refused with a renew
+    link (`brand.membershipUrl`), API error → allowed.
+  - dev/demo credential providers never run the check.
+- Denials redirect to `/login?error=<code>&email=<attempted>`; the login page
+  explains each code and links `brand.supportEmail` and `brand.privacyUrl`.
 - `requireUserSession()` — throws redirect to `/login` if not authenticated
 - `requireAdmin()` — throws if `role !== 'admin'`
 - `session.user.memberId` — the authenticated member's ID (set in Auth.js callbacks)
@@ -233,7 +253,13 @@ ID prefix convention: `cyc_*`, `mem_*`, `prd_*`, `ord_*`, `led_*`, `not_*`, `aud
 
 - Closing a cycle auto-generates `order_charge` ledger entries + `order_closed` notifications for every member with orders.
 - Member balance = `SUM(ledger_entries.amount)` for that member.
-- Negative balance is allowed — UI warns but does not block ordering.
+- Negative balance is allowed — UI warns — down to the optional credit limit
+  `brand.minBalance` (null = no limit; Porta Moneta: -50). `saveOrder` refuses
+  a save when balance − uncharged orders on other open cycles − the new total
+  would fall below it (saves that do not raise the cycle's total always pass).
+  The check runs before the write batch, so concurrent saves can overshoot it.
+- Expected `saveOrder` refusals are returned as `{ success: false, error }`,
+  not thrown: Next.js masks thrown Server Action messages in production.
 - Products loaded from semicolon-delimited text: `Name;Variant;Format;Price;Supplier;Notes`.
 - Email is the unique member identifier (login key). Alias email supported for non-Google accounts.
 
