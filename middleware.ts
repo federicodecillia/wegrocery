@@ -25,8 +25,10 @@ export default auth((req) => {
   return NextResponse.next();
 });
 
+// api/stripe/webhook is called by Stripe, not by a signed-in member: it
+// authenticates the request with the webhook signature instead.
 export const config = {
   matcher: [
-    "/((?!api/auth|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!api/auth|api/stripe/webhook|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

@@ -18,6 +18,17 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ---
 
+## [Unreleased]
+
+*Top up your balance online.*
+
+### Added
+- 💳 **Online top-up.** A new "Top up" page (from the home balance card) lets members top up by card or the other methods the group enables, through a Stripe payment page. The balance updates by itself as soon as the payment is confirmed, and refunds made from Stripe show up in the history.
+- 🏦 **Bank details on the same page.** When the group sets them, the page also shows holder, IBAN and payment reference for a bank transfer, each with a copy button.
+
+### Changed
+- 🔒 **Online payments stay tied to Stripe.** In Cassa, top-ups and refunds that came from an online payment can no longer be edited or deleted: the money moved on Stripe, so the fix is a refund there or a separate correction.
+
 ## [1.11.0] — 2026-09-28
 
 *Open to every card-holding member, with safer money flows.*

@@ -47,5 +47,11 @@ export type BrandConfig = {
    * pending open orders and the order being saved (e.g. -50). null = no limit.
    */
   minBalance: number | null;
+  /**
+   * Bank details shown on /ricarica for top-ups by bank transfer; null = the
+   * page tells members to ask the treasurer. Public (NEXT_PUBLIC_*): an IBAN
+   * is meant to be shared with members.
+   */
+  bankTransfer: { holder: string; iban: string } | null;
   theme: BrandTheme;
 };

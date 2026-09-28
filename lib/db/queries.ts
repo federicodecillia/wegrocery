@@ -849,6 +849,7 @@ export type LedgerEntryItem = {
   amount: string;
   note: string | null;
   cycleTitle: string | null;
+  paymentId: string | null;
 };
 
 export async function getAllMembersLedger(): Promise<Record<string, LedgerEntryItem[]>> {
@@ -862,6 +863,7 @@ export async function getAllMembersLedger(): Promise<Record<string, LedgerEntryI
       amount: ledgerEntries.amount,
       note: ledgerEntries.note,
       cycleTitle: orderCycles.title,
+      paymentId: ledgerEntries.paymentId,
     })
     .from(ledgerEntries)
     .leftJoin(orderCycles, eq(ledgerEntries.cycleId, orderCycles.cycleId))
@@ -877,6 +879,7 @@ export async function getAllMembersLedger(): Promise<Record<string, LedgerEntryI
       amount: row.amount,
       note: row.note,
       cycleTitle: row.cycleTitle ?? null,
+      paymentId: row.paymentId ?? null,
     });
   }
   return result;

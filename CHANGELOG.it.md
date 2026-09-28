@@ -19,6 +19,17 @@ stanno nella PR.
 
 ---
 
+## [Non rilasciato]
+
+*Ricarica il saldo online.*
+
+### Aggiunte
+- 💳 **Ricarica online.** Una nuova pagina "Ricarica" (dalla card del saldo in home) permette di ricaricare con carta o con gli altri metodi attivati dal gruppo, tramite una pagina di pagamento Stripe. Il saldo si aggiorna da solo appena il pagamento è confermato, e i rimborsi fatti da Stripe compaiono nello storico.
+- 🏦 **Dati per il bonifico nella stessa pagina.** Se il gruppo li imposta, la pagina mostra anche intestatario, IBAN e causale per il bonifico, ognuno con il pulsante per copiarlo.
+
+### Modificato
+- 🔒 **I pagamenti online restano legati a Stripe.** In Cassa le ricariche e i rimborsi arrivati da un pagamento online non si possono più modificare o eliminare: i soldi si sono mossi su Stripe, quindi si corregge con un rimborso lì o con una rettifica separata.
+
 ## [1.11.0] — 28 settembre 2026
 
 *Aperta a tutti i soci con tessera attiva, con flussi di denaro più sicuri.*

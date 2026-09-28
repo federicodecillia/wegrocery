@@ -24,6 +24,7 @@ export default async function StoricoPage() {
           amount: e.amount,
           note: e.note,
           entryDate: e.entryDate,
+          paymentId: e.paymentId,
         }))}
         balance={balance}
       />

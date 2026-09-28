@@ -228,6 +228,7 @@ type LedgerEntry = {
   note: string | null;
   entryDate: string | null;
   cycleTitle?: string | null;
+  paymentId?: string | null;
 };
 
 export function LedgerEntryRow({ entry }: { entry: LedgerEntry }) {
@@ -238,8 +239,9 @@ export function LedgerEntryRow({ entry }: { entry: LedgerEntry }) {
 
   const isTopup = entry.type === "topup";
   const isCharge = entry.type === "order_charge";
-  // Order/shipping charges are corrected from the cycle, never edited here.
-  const isEditable = isAdminEditableLedgerType(entry.type);
+  // Order/shipping charges are corrected from the cycle, never edited here;
+  // online top-ups and their refunds follow the money on Stripe.
+  const isEditable = isAdminEditableLedgerType(entry.type) && !entry.paymentId;
 
   function handleSave() {
     // Keep the entry's own sign: editing a refund's note must not flip it.

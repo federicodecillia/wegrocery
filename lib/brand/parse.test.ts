@@ -85,4 +85,20 @@ describe("parseBrandConfig", () => {
     expect(() => parseBrandConfig(JSON.stringify({ minBalance: "-50" }))).toThrow(/minBalance/);
     expect(() => parseBrandConfig('{"minBalance": 1e999}')).toThrow(/minBalance/);
   });
+
+  it("accepts bankTransfer and defaults it to null", () => {
+    expect(parseBrandConfig(JSON.stringify({})).bankTransfer).toBeNull();
+    const b = parseBrandConfig(
+      JSON.stringify({ bankTransfer: { holder: "Example APS", iban: "IT60 X054 2811 1010 0000 0123 456" } }),
+    );
+    expect(b.bankTransfer?.holder).toBe("Example APS");
+  });
+
+  it("throws on an incomplete bankTransfer or a malformed IBAN", () => {
+    expect(() => parseBrandConfig(JSON.stringify({ bankTransfer: { holder: "X" } }))).toThrow(/bankTransfer/);
+    expect(() =>
+      parseBrandConfig(JSON.stringify({ bankTransfer: { holder: "X", iban: "not an iban" } })),
+    ).toThrow(/bankTransfer/);
+    expect(() => parseBrandConfig(JSON.stringify({ bankTransfer: "IT60..." }))).toThrow(/bankTransfer/);
+  });
 });
