@@ -160,3 +160,9 @@ describe("isAboveMaxBalance", () => {
     expect(isAboveMaxBalance(1_000_000, null)).toBe(false);
   });
 });
+
+describe("planPaymentSettingsUpdate, holder length", () => {
+  it("accepts a holder of exactly 100 characters", () => {
+    expect(planPaymentSettingsUpdate({ ...input, bankHolder: "x".repeat(100) }, usable)).toHaveProperty("values");
+  });
+});

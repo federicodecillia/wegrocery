@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseTopupAmount, resolveStripeKey, topupCeilingCents, topupPresets } from "./config";
+import { parseTopupAmount, resolveStripeKey, topupBlockReason, topupCeilingCents, topupPresets } from "./config";
 
 describe("parseTopupAmount", () => {
   it("accepts whole euros and both decimal separators", () => {
@@ -109,5 +109,18 @@ describe("topupPresets", () => {
       { cents: 5000, settlesDebt: false },
       { cents: 10000, settlesDebt: false },
     ]);
+  });
+});
+
+describe("topupBlockReason", () => {
+  it("is the maximum when the balance already reaches it", () => {
+    expect(topupBlockReason(0, 0)).toBe("atMaximum");
+    expect(topupBlockReason(500, 0)).toBe("atMaximum");
+  });
+
+  it("is Stripe's minimum when something still fits but less than 0,50 EUR", () => {
+    expect(topupCeilingCents(-30, 0)).toBeNull();
+    expect(topupBlockReason(-30, 0)).toBe("belowMinimum");
+    expect(topupBlockReason(29951, 30000)).toBe("belowMinimum");
   });
 });

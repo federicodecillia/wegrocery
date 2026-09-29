@@ -136,9 +136,20 @@ export function OrderForm({
     const { draft: quantities, draftKey: key, savedKey: saved } = latest.current;
     const action = draftSyncAction(key, saved, serverKey.current);
     if (action === "none") return;
+    const previous = serverKey.current;
     serverKey.current = key;
+    // A failed write leaves the server where it was, so the next edit or the
+    // flush on leave tries again (unless a newer sync already went out).
+    const retryLater = (err: unknown) => {
+      console.error(`[order draft] ${action} failed`, err);
+      if (serverKey.current === key) serverKey.current = previous;
+    };
     if (action === "discard") {
-      discardOrderDraft(cycleId).catch((err) => console.error("[order draft] discard failed", err));
+      discardOrderDraft(cycleId)
+        .then((result) => {
+          if (!result.ok) retryLater(result.error);
+        })
+        .catch(retryLater);
       return;
     }
     saveOrderDraft(cycleId, toLines(quantities))
@@ -148,10 +159,10 @@ export function OrderForm({
           toast.error(result.error);
           router.refresh();
         } else {
-          console.error("[order draft] not saved:", result.error);
+          retryLater(result.error);
         }
       })
-      .catch((err) => console.error("[order draft] save failed", err));
+      .catch(retryLater);
   }, [cycleId, router]);
 
   // Autosave after a pause in editing. Waits while a confirm, a prefill or a
@@ -389,11 +400,22 @@ export function OrderForm({
       )}
 
       {/* Way out of edit mode without saving: the confirmed order is still
-          on file, so this discards the pending tweaks and shows it again. */}
+          on file, so this discards the pending tweaks and shows it again.
+          Tweaks are kept as a draft, so dropping them asks first, like
+          "Annulla modifiche". */}
       {isEditing && hasSavedOrder && (
         <button
           type="button"
-          onClick={() => {
+          onClick={async () => {
+            if (draftKey !== savedKey) {
+              const ok = await confirm({
+                title: t.order.discardDraftTitle,
+                message: t.order.discardDraftMessage,
+                confirmLabel: t.order.discardDraftConfirm,
+                cancelLabel: t.common.cancel,
+              });
+              if (!ok) return;
+            }
             setDraft(savedQty);
             setIsEditing(false);
             setShowDraftBanner(false);

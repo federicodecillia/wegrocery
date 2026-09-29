@@ -35,6 +35,9 @@ export async function TabCassa({ balanceFilter }: Props) {
   // maximum lowered later).
   const aboveMaxCount =
     maxBalance === null ? null : activeBalances.filter((m) => isAboveMaxBalance(m.balance, maxBalance)).length;
+  // A bookmarked "above max" filter means nothing once the maximum is gone
+  // (its card is hidden, so it could not be cleared): show everyone.
+  const filter = balanceFilter === "above_max" && maxBalance === null ? null : (balanceFilter ?? null);
 
   return (
     <div className="space-y-4">
@@ -43,7 +46,7 @@ export async function TabCassa({ balanceFilter }: Props) {
         avgBalance={avgBalance}
         negativeCount={negativeCount}
         aboveMaxCount={aboveMaxCount}
-        activeFilter={balanceFilter ?? null}
+        activeFilter={filter}
       />
 
       <TopupForm members={pickerMembers} />
@@ -58,7 +61,7 @@ export async function TabCassa({ balanceFilter }: Props) {
         <CassaInlineList
           members={membersWithBalances}
           ledgerByMember={ledgerByMember}
-          balanceFilter={balanceFilter ?? null}
+          balanceFilter={filter}
           maxBalance={maxBalance}
         />
       </Card>

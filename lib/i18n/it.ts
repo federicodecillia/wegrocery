@@ -197,6 +197,8 @@ export const it = {
     ledgerNote: "Ricarica online",
     refundLedgerNote: "Rimborso ricarica online",
     atMaximum: "Il tuo saldo è già al massimo consentito dal gruppo.",
+    belowOnlineMinimum: (amount: string) =>
+      `Puoi ricaricare ancora ${amount}, ma la ricarica online parte da 0,50 €: usa il bonifico.`,
     bankRoom: (amount: string) => `Puoi ricaricare fino a ${amount}.`,
     settleDebt: (amount: string) => `Salda ${amount}`,
   },
@@ -1031,8 +1033,9 @@ export const it = {
       lastSaved: (date: string) => `Ultimo salvataggio: ${date}`,
       errors: {
         overdraftInvalid:
-          "Scoperto non valido: scrivi un numero positivo fino a 10.000, ad esempio 50, o lascia vuoto.",
-        maxBalanceInvalid: "Saldo massimo non valido: scrivi un numero fino a 10.000, ad esempio 300, o lascia vuoto.",
+          "Scoperto non valido: scrivi un numero positivo fino a 10000, senza punti, ad esempio 50, o lascia vuoto.",
+        maxBalanceInvalid:
+          "Saldo massimo non valido: scrivi un numero fino a 10000, senza punti, ad esempio 300, o lascia vuoto.",
         bankHolderRequired: "Per attivare il bonifico serve l'intestatario.",
         bankHolderTooLong: "Intestatario troppo lungo: al massimo 100 caratteri.",
         ibanInvalid: "IBAN non valido: controlla di averlo copiato per intero.",

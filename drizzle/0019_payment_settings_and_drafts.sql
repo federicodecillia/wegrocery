@@ -25,10 +25,11 @@
 --                           deleted member or cycle takes its drafts along.
 --
 -- APPLY BEFORE DEPLOYING the code that ships with it, on every environment
--- (dev/staging, demo, prod): the new code reads app_settings on /ricarica,
--- /ordine and in saveOrder, and scripts/seed-demo.ts truncates both tables, so
--- demo must be migrated before merging to main. Additive only: the old code
--- ignores both tables. No pre-flight check: both tables are new.
+-- (dev/staging, demo, prod): the new code reads app_settings on /ricarica, in
+-- saveOrder and in the Cassa and Impostazioni tabs, order_drafts on /ordine,
+-- and scripts/seed-demo.ts truncates both tables, so demo must be migrated
+-- before merging to main. Additive only: the old code ignores both tables. No
+-- pre-flight check: both tables are new.
 --
 -- Idempotent (IF NOT EXISTS everywhere). The statement-breakpoint markers keep
 -- scripts/db-migrate.mjs from splitting the statements on the semicolons of

@@ -35,6 +35,14 @@ export function topupCeilingCents(balanceCents: number, maxBalanceCents: number 
   return room < TOPUP_MIN_CENTS ? null : Math.min(TOPUP_MAX_CENTS, room);
 }
 
+// Why no online top-up fits when topupCeilingCents is null: the balance is
+// already at the maximum, or what still fits is below Stripe's minimum (a
+// member in debt by a few cents with a maximum of 0 must not read "already at
+// the maximum").
+export function topupBlockReason(balanceCents: number, maxBalanceCents: number): "atMaximum" | "belowMinimum" {
+  return maxBalanceCents - balanceCents > 0 ? "belowMinimum" : "atMaximum";
+}
+
 export type TopupPreset = { cents: number; settlesDebt: boolean };
 
 // One-tap amounts on /ricarica: for a member in debt the exact debt first

@@ -9,7 +9,7 @@ import { getMemberBalance } from "@/lib/db/queries";
 import { payments } from "@/lib/db/schema";
 import { t } from "@/lib/i18n";
 import { formatMoney } from "@/lib/i18n/format";
-import { TOPUP_MIN_CENTS, topupCeilingCents, topupPresets } from "@/lib/payments/config";
+import { TOPUP_MIN_CENTS, topupBlockReason, topupCeilingCents, topupPresets } from "@/lib/payments/config";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
 
 function compactIban(iban: string): string {
@@ -107,7 +107,14 @@ export default async function RicaricaPage({
         <section className="mb-4 rounded-[18px] border border-brand-border bg-white p-[18px] shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
           <h2 className="mb-1 text-[16px] font-extrabold text-brand-near-black">{t.topup.onlineTitle}</h2>
           {ceilingCents === null ? (
-            <p className="text-[13px] text-brand-gray">{t.topup.atMaximum}</p>
+            // Only a maximum can leave nothing for Stripe (topupCeilingCents).
+            <p className="text-[13px] text-brand-gray">
+              {maxBalanceCents !== null &&
+              roomCents !== null &&
+              topupBlockReason(balanceCents, maxBalanceCents) === "belowMinimum"
+                ? t.topup.belowOnlineMinimum(formatMoney(roomCents / 100))
+                : t.topup.atMaximum}
+            </p>
           ) : (
             <>
               <p className="mb-4 text-[13px] text-brand-gray">{t.topup.onlineHint}</p>

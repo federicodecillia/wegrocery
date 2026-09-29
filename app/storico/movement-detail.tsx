@@ -28,7 +28,9 @@ type PaymentStatus = keyof Strings["history"]["paymentStatuses"];
 
 function paymentStatusLabel(status: string | null): string {
   const labels = t.history.paymentStatuses;
-  return status !== null && status in labels ? labels[status as PaymentStatus] : "—";
+  return status !== null && Object.prototype.hasOwnProperty.call(labels, status)
+    ? labels[status as PaymentStatus]
+    : "—";
 }
 
 function recorderLabel(recorder: MovementRecorder): string {

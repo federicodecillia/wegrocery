@@ -197,7 +197,9 @@ export const en: Strings = {
     ledgerNote: "Online top-up",
     refundLedgerNote: "Online top-up refund",
     atMaximum: "Your balance is already at the maximum the group allows.",
-    bankRoom: (amount: string) => `You can top up to ${amount}.`,
+    belowOnlineMinimum: (amount: string) =>
+      `You can still top up ${amount}, but online top-ups start at €0.50: use a bank transfer.`,
+    bankRoom: (amount: string) => `You can top up at most ${amount}.`,
     settleDebt: (amount: string) => `Pay off ${amount}`,
   },
   notifications: {
@@ -1024,8 +1026,10 @@ export const en: Strings = {
       saved: "Settings saved",
       lastSaved: (date: string) => `Last saved: ${date}`,
       errors: {
-        overdraftInvalid: "Invalid overdraft: enter a positive number up to 10,000, e.g. 50, or leave it empty.",
-        maxBalanceInvalid: "Invalid max balance: enter a number up to 10,000, e.g. 300, or leave it empty.",
+        overdraftInvalid:
+          "Invalid overdraft: enter a positive number up to 10000, without separators, e.g. 50, or leave it empty.",
+        maxBalanceInvalid:
+          "Invalid max balance: enter a number up to 10000, without separators, e.g. 300, or leave it empty.",
         bankHolderRequired: "The account holder is needed to turn on bank transfers.",
         bankHolderTooLong: "Account holder too long: 100 characters at most.",
         ibanInvalid: "Invalid IBAN: check you copied all of it.",
