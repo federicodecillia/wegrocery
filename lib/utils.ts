@@ -17,10 +17,6 @@ export function formatEur(amount: number): string {
   return formatMoney(Math.abs(amount));
 }
 
-export function formatEurSigned(amount: number): string {
-  return (amount >= 0 ? "+" : "−") + formatEur(amount);
-}
-
 export function formatDate(date: Date | string | null | undefined): string {
   if (!date) return "";
   return formatDateIntl(new Date(date));

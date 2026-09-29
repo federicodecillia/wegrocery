@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "@/components/ui/toast";
 import { confirm } from "@/components/ui/confirm-dialog";
 import { t } from "@/lib/i18n";
-import { formatDateTime } from "@/lib/i18n/format";
+import { formatDateTime, formatSignedMoney } from "@/lib/i18n/format";
 import { formatEur, getProductEmoji, normalizeCategory } from "@/lib/utils";
 import type { SaveOrderLine, SaveOrderResult } from "@/lib/actions/order";
 import { loadLastOrderForPrefill } from "@/lib/actions/order";
@@ -32,6 +32,7 @@ type OrderLine = {
 type Props = {
   cycleId: string;
   cycleTitle: string;
+  supplierName: string | null;
   orderCloseAt: string | null;
   products: Product[];
   existingLines: OrderLine[];
@@ -70,6 +71,7 @@ function groupByCategory(products: Product[]) {
 export function OrderForm({
   cycleId,
   cycleTitle,
+  supplierName,
   orderCloseAt,
   products,
   existingLines,
@@ -141,6 +143,10 @@ export function OrderForm({
     startTransition(async () => {
       try {
         const result = await loadLastOrderForPrefill(cycleId);
+        if ("error" in result) {
+          toast.error(result.error);
+          return;
+        }
         if (result.matched === 0) {
           toast.warning(t.order.noProductsFromLast(result.cycleTitle ?? undefined));
           return;
@@ -164,8 +170,13 @@ export function OrderForm({
         }));
         const result = await saveAction(cycleId, lines);
         if (!result.success) {
-          // Expected refusal (lapsed card, credit limit): nothing was saved.
+          // Expected refusal (closed cycle, lapsed card, credit limit...):
+          // nothing was saved.
           toast.error(result.error);
+          // The cycle was closed while the member was editing: refresh so the
+          // page reflects the new state (the ordine page will redirect or show
+          // "Nessun ordine aperto" instead of the stale form).
+          if (result.code === "cycle_not_open") router.refresh();
           return;
         }
         setSavedQty(quantities);
@@ -185,14 +196,7 @@ export function OrderForm({
         // the home card) can't paint the pre-save order from a stale payload.
         router.refresh();
       } catch (err) {
-        const message = err instanceof Error ? err.message : t.order.saveError;
-        toast.error(message);
-        // If the cycle was closed while the user was editing, refresh so the
-        // page reflects the new state (the ordine page will redirect or show
-        // "Nessun ordine aperto" instead of the stale form).
-        if (/ciclo non.*?aperto|ciclo.*?chiuso/i.test(message)) {
-          router.refresh();
-        }
+        toast.error(err instanceof Error ? err.message : t.order.saveError);
       }
     });
   }
@@ -235,6 +239,7 @@ export function OrderForm({
         </div>
         <p className="font-mono text-[10px] text-brand-gray mt-[3px]">
           {cycleTitle}
+          {supplierName ? ` · ${supplierName}` : ""}
           {orderCloseAt ? ` · ${t.cycle.closes(formatDateTime(orderCloseAt))}` : ""}
         </p>
       </div>
@@ -391,7 +396,7 @@ export function OrderForm({
                     afterBalance < 0 ? "text-brand-red" : "text-brand-teal"
                   }`}
                 >
-                  {formatEur(afterBalance)}
+                  {formatSignedMoney(afterBalance)}
                 </div>
               </div>
             </div>

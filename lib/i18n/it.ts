@@ -30,6 +30,7 @@ export const it = {
   },
   home: {
     balanceTitle: "Il tuo saldo",
+    balanceToTopUp: "Da ricaricare",
     thisOrder: "Questo ordine",
     afterOrder: "Dopo ordine",
     rechargeButton: "Ricarica il saldo →",
@@ -106,6 +107,8 @@ export const it = {
     cancelledSuccess: "Ordine cancellato",
     removeOrder: "Rimuovi ordine",
     backToOrder: "Torna all'ordine",
+    chooseCycle: "Scegli l'ordine",
+    chooseCycleHint: "Ci sono più ordini aperti: scegli quale aprire.",
   },
   history: {
     orders: "Ordini",
@@ -119,10 +122,21 @@ export const it = {
     pickedUp: "Ritirato",
     cancelled: "Annullato",
     currentBalance: "Saldo attuale",
-    transfer: "Bonifico",
     orderCharge: "Ordine",
     correction: "Rettifica",
     onlineTopup: "Ricarica online",
+    topup: "Ricarica",
+    shipping: "Spedizione",
+    refund: "Rimborso",
+    onlineTopupRefund: "Rimborso ricarica online",
+    payout: "Restituzione saldo",
+    manualCharge: "Addebito",
+    membershipFee: "Quota associativa",
+    otherMovement: "Movimento",
+    corrections: "Correzioni",
+    cycleNet: "Totale sul saldo",
+    chargedAtClose: "Sarà addebitato sul saldo alla chiusura del ciclo.",
+    received: (quantity: string) => `ricevuti ${quantity}`,
   },
   topup: {
     title: "Ricarica il saldo",
@@ -177,7 +191,7 @@ export const it = {
         },
         order_charge: {
           label: "Addebito ordine",
-          hint: "Quando il ciclo si chiude e ti viene addebitato l'ordine.",
+          hint: "Quando il ciclo si chiude e ti viene addebitato l'ordine, o quando la cassa registra un addebito o la quota associativa.",
         },
         order_updates: {
           label: "Modifiche all'ordine",
@@ -185,7 +199,7 @@ export const it = {
         },
         wallet_topup: {
           label: "Accredito cassa",
-          hint: "Quando viene registrato un accredito sul tuo saldo.",
+          hint: "Quando viene registrata una ricarica sul tuo saldo o ti viene restituito del saldo.",
         },
       },
     },
@@ -553,11 +567,86 @@ export const it = {
       amountPlaceholder: "0,00",
       dateLabel: "Data",
       noteLabel: "Nota",
-      notePlaceholder: "Ricarica",
-      registerTopup: "Registra ricarica",
+      notePlaceholder: "Facoltativa",
+      registerTopup: "Conferma ricarica",
       registeringTopup: "Registrazione…",
-      topupRegistered: (amount: string) => `Ricarica di €${amount} registrata`,
+      topupRegistered: (amount: string, member: string) => `Ricarica di ${amount} registrata per ${member}`,
       invalidTopup: "Seleziona un socio e inserisci un importo valido",
+      memberSearchPlaceholder: "Cerca per nome o email…",
+      memberResults: (n: number) => (n === 1 ? "1 socio trovato" : `${n} soci trovati`),
+      memberChange: "Cambia",
+      memberChangeLabel: (member: string) => `Cambia socio (selezionato: ${member})`,
+      memberBalance: (amount: string) => `saldo ${amount}`,
+      methodLabel: "Metodo *",
+      methods: {
+        bonifico: "Bonifico",
+        contanti: "Contanti",
+        satispay: "Satispay",
+        altro: "Altro",
+      },
+      methodOnline: "Online",
+      externalRefLabel: "Riferimento",
+      externalRefPlaceholder: "CRO o TRN",
+      review: "Continua",
+      recapTitle: "Controlla e conferma",
+      recapMember: "Socio",
+      recapAmount: "Importo",
+      recapMethod: "Metodo",
+      recapRef: "Riferimento",
+      recapDate: "Data",
+      recapNote: "Nota",
+      recapBalance: "Saldo",
+      backToEdit: "Modifica",
+      recordAnyway: "Registra comunque",
+      possibleDuplicate: (what: string, amount: string, date: string) =>
+        `Per questo socio c'è già ${what} di ${amount} del ${date}. Controlla che non sia un doppione.`,
+      duplicateSubjects: {
+        topup: "una ricarica",
+        payout: "una restituzione",
+        manual_charge: "un addebito manuale",
+        membership_fee: "una quota associativa",
+      },
+      outgoingTitle: "Movimento in uscita",
+      outgoingHint: "Restituzione del saldo, addebito manuale o quota associativa",
+      kindLabel: "Tipo *",
+      kinds: {
+        payout: "Restituzione",
+        manual_charge: "Addebito",
+        membership_fee: "Quota",
+      },
+      kindHints: {
+        payout: "Restituisce al socio il saldo, o una parte: non può superarlo.",
+        manual_charge: "Addebito manuale sul saldo del socio.",
+        membership_fee: "Quota associativa, addebitata sul saldo.",
+      },
+      reasonLabel: "Causale *",
+      reasonPlaceholder: "Visibile al socio",
+      payoutAll: "Tutto il saldo",
+      invalidOutgoing: "Seleziona un socio e inserisci un importo valido e la causale",
+      recapKind: "Tipo",
+      recapReason: "Causale",
+      confirmOutgoing: {
+        payout: "Conferma restituzione",
+        manual_charge: "Conferma addebito",
+        membership_fee: "Conferma quota",
+      },
+      outgoingRegistered: {
+        payout: (amount: string, member: string) => `Restituzione di ${amount} registrata per ${member}`,
+        manual_charge: (amount: string, member: string) => `Addebito di ${amount} registrato per ${member}`,
+        membership_fee: (amount: string, member: string) => `Quota di ${amount} registrata per ${member}`,
+      },
+      movementErrors: {
+        invalidType: "Tipo di movimento non valido",
+        invalidMethod: "Metodo di pagamento non valido",
+        invalidDate: "Data non valida",
+        refTooLong: (max: number) => `Riferimento troppo lungo (massimo ${max} caratteri)`,
+        refTaken: (ref: string) =>
+          `Il riferimento ${ref} è già registrato: lo stesso movimento non può essere registrato due volte.`,
+        refTakenBy: (ref: string, member: string, date: string) =>
+          `Il riferimento ${ref} è già registrato (${member}, ${date}): lo stesso movimento non può essere registrato due volte.`,
+        noteRequired: "La causale è obbligatoria",
+        payoutExceedsBalance: (limit: string) => `La restituzione supera il saldo del socio, al netto degli ordini aperti non ancora addebitati: al massimo ${limit}.`,
+      },
       searchMember: "Cerca socio…",
       noMemberFound: "Nessun socio trovato",
       noMovements: "Nessun movimento",
@@ -565,6 +654,9 @@ export const it = {
       inactiveHint: "· disabilitato",
       topupBadge: "ricarica",
       chargeBadge: "addebito",
+      payoutBadge: "restituzione",
+      manualChargeBadge: "addebito manuale",
+      membershipFeeBadge: "quota",
       entryUpdated: "Voce aggiornata",
       entryDeleted: "Voce eliminata",
       deleteConfirm: "Eliminare questa voce del ledger?",
@@ -592,6 +684,8 @@ export const it = {
       deleteConfirm: (name: string) =>
         `Eliminare "${name}"?\n\nOperazione irreversibile. Se ha ordini o movimenti verrà mostrato un errore.`,
       deleted: (name: string) => `${name} eliminato`,
+      emailInUse: (email: string, name: string) =>
+        `L'indirizzo ${email} è già usato da ${name}: ogni indirizzo può appartenere a un solo socio, come email o come email secondaria.`,
     },
     suppliers: {
       tabLabel: "Fornit.",
@@ -880,7 +974,7 @@ export const it = {
       `È stato chiuso "${title}". Ti è stato addebitato ${total}.`,
     orderClosedBodyWithShipping: (title: string, total: string, order: string, shipping: string) =>
       `È stato chiuso "${title}". Ti è stato addebitato ${total} (ordine ${order} + spedizione ${shipping}).`,
-    topupReceivedTitle: "Bonifico ricevuto",
+    topupReceivedTitle: "Ricarica registrata",
     onlineTopupTitle: "Ricarica ricevuta",
     onlineTopupBody: (amount: string, balance: string) =>
       `La tua ricarica online di ${amount} è stata accreditata. Il tuo nuovo credito è ${balance}.`,
@@ -888,7 +982,7 @@ export const it = {
     onlineRefundBody: (amount: string, balance: string) =>
       `Ti sono stati rimborsati ${amount} di una ricarica online. Il tuo nuovo credito è ${balance}.`,
     topupReceivedBody: (amount: string, balance: string) =>
-      `Il tuo bonifico di ${amount} è stato ricevuto. Il tuo nuovo credito è ${balance}.`,
+      `È stata registrata una ricarica di ${amount} sul tuo saldo. Nuovo saldo: ${balance}.`,
     orderModifiedTitle: "Ordine modificato",
     orderModifiedBodyNoChange: (title: string) =>
       `Il tuo ordine in "${title}" è stato aggiornato, il saldo non cambia.`,
@@ -898,6 +992,12 @@ export const it = {
       `Il tuo ordine in "${title}" è stato modificato dall'admin: rimborso di ${amount}.`,
     orderModifiedBody: (sentence: string, balance: string) =>
       `${sentence} Nuovo saldo: ${balance}.`,
+    orderModifiedBodyUpdated: (title: string) => `Il tuo ordine in "${title}" è stato aggiornato.`,
+    orderModifiedShipping: (from: string, to: string) =>
+      `La tua quota di spedizione è passata da ${from} a ${to}.`,
+    shippingAdjustedTitle: (title: string) => `Spedizione "${title}" aggiornata`,
+    shippingAdjustedBody: (title: string, from: string, to: string) =>
+      `Le spese di spedizione del ciclo "${title}" sono state aggiornate: la tua quota è passata da ${from} a ${to}.`,
     pesataRegistrataTitle: "Pesata fornitore registrata",
     cycleOpenedTitle: "Nuovo ciclo aperto",
     cycleOpenedBody: (title: string, closeAt: string) =>
@@ -912,6 +1012,15 @@ export const it = {
       `${notes} · rimborso di ${amount} EUR sul tuo saldo.`,
     orderLineAdjustedBodyCharge: (notes: string, amount: string) =>
       `${notes} · addebito aggiuntivo di ${amount} EUR sul tuo saldo.`,
+    payoutSentTitle: "Saldo restituito",
+    payoutSentBody: (amount: string, reason: string, balance: string) =>
+      `Ti abbiamo restituito ${amount} del tuo saldo: ${reason}. Nuovo saldo: ${balance}.`,
+    manualChargeTitle: "Addebito sul saldo",
+    manualChargeBody: (amount: string, reason: string, balance: string) =>
+      `Addebito di ${amount} sul tuo saldo: ${reason}. Nuovo saldo: ${balance}.`,
+    membershipFeeTitle: "Quota associativa",
+    membershipFeeBody: (amount: string, reason: string, balance: string) =>
+      `Ti è stata addebitata la quota associativa di ${amount}: ${reason}. Nuovo saldo: ${balance}.`,
     cycleCancelledTitle: "Ordine annullato",
     cycleCancelledBody: (title: string, amount: string, reason: string) =>
       `Il ciclo "${title}" è stato annullato: ${reason}. Ti abbiamo riaccreditato ${amount}.`,

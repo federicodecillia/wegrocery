@@ -12,22 +12,34 @@ import {
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 
-export const members = pgTable("members", {
-  memberId: text("member_id").primaryKey(),
-  fullName: text("full_name").notNull(),
-  email: text("email").notNull().unique(),
-  aliasEmail: text("alias_email"),
-  // 'admin' | 'attivi' | 'utenti' (CHECK since migration 0015). Read it through
-  // normalizeRole (lib/roles.ts), which also maps the pre-0015 values.
-  role: text("role").notNull(),
-  active: boolean("active").notNull().default(true),
-  // Last WallyFor membership-card check (migration 0014): 'valid' | 'invalid',
-  // NULL = never checked (always NULL on deploys without WALLYFOR_* env).
-  membershipStatus: text("membership_status"),
-  membershipVerifiedAt: timestamp("membership_verified_at", { withTimezone: true }),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
-});
+export const members = pgTable(
+  "members",
+  {
+    memberId: text("member_id").primaryKey(),
+    fullName: text("full_name").notNull(),
+    email: text("email").notNull().unique(),
+    aliasEmail: text("alias_email"),
+    // 'admin' | 'attivi' | 'utenti' (CHECK since migration 0015). Read it through
+    // normalizeRole (lib/roles.ts), which also maps the pre-0015 values.
+    role: text("role").notNull(),
+    active: boolean("active").notNull().default(true),
+    // Last WallyFor membership-card check (migration 0014): 'valid' | 'invalid',
+    // NULL = never checked (always NULL on deploys without WALLYFOR_* env).
+    membershipStatus: text("membership_status"),
+    membershipVerifiedAt: timestamp("membership_verified_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
+  },
+  (table) => [
+    // Login keys are unique ignoring case (drizzle/0017_member_email_unique.sql).
+    // An address used as one member's email and another's alias is rejected
+    // by adminUpsertMember (lib/member-email.ts), not by an index.
+    uniqueIndex("members_email_lower_uniq").on(sql`lower(${table.email})`),
+    uniqueIndex("members_alias_email_lower_uniq")
+      .on(sql`lower(${table.aliasEmail})`)
+      .where(sql`${table.aliasEmail} IS NOT NULL`),
+  ],
+);
 
 export const suppliers = pgTable("suppliers", {
   supplierId: text("supplier_id").primaryKey(),
@@ -210,6 +222,12 @@ export const ledgerEntries = pgTable(
     updatedBy: text("updated_by"),
     // Set on the credit and refund rows of an online top-up (migration 0016).
     paymentId: text("payment_id").references(() => payments.paymentId),
+    // How a manual top-up or payout moved (migration 0018): one of
+    // MANUAL_PAYMENT_METHODS in lib/ledger.ts. NULL on online rows (they have
+    // a payment_id) and on rows that move no money.
+    method: text("method"),
+    // Bank reference (CRO/TRN) of a manual movement, NULL when none.
+    externalRef: text("external_ref"),
   },
   (table) => [
     index("ledger_entries_member_id_idx").on(table.memberId),
@@ -226,6 +244,18 @@ export const ledgerEntries = pgTable(
     uniqueIndex("ledger_entries_payment_topup_uniq")
       .on(table.paymentId)
       .where(sql`${table.type} = 'topup'`),
+    // drizzle/0018_ledger_method_external_ref.sql. A NULL method or reference
+    // passes both CHECKs.
+    check(
+      "ledger_entries_method_check",
+      sql`${table.method} IN ('bonifico', 'contanti', 'satispay', 'altro')`,
+    ),
+    check("ledger_entries_external_ref_not_blank", sql`trim(${table.externalRef}) <> ''`),
+    // The same bank transfer cannot be recorded twice, whatever the case or
+    // the surrounding spaces of its reference.
+    uniqueIndex("ledger_entries_external_ref_uniq")
+      .on(sql`upper(trim(${table.externalRef}))`)
+      .where(sql`${table.externalRef} IS NOT NULL`),
   ],
 );
 

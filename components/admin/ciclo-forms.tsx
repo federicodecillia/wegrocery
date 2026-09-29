@@ -757,6 +757,10 @@ export function CloseCycleButton({ cycleId, cycleTitle }: { cycleId: string; cyc
     startTransition(async () => {
       try {
         const result = await adminCloseCycle(cycleId);
+        if ("error" in result) {
+          toast.error(result.error);
+          return;
+        }
         toast.success(t.admin.cycle.cycleClosed(result.chargesGenerated));
       } catch (err) {
         toast.error(err instanceof Error ? err.message : t.admin.common.error);
@@ -807,9 +811,17 @@ export function CycleProductPicker({
     setLoading(true);
     try {
       const prods = await adminGetCycleProducts(cycleId);
+      if ("error" in prods) {
+        toast.error(prods.error);
+        return;
+      }
       setCurrentProducts(prods as CycleProduct[]);
       if (selectedSupplierId) {
         const cat = await adminGetCatalogBySupplier(selectedSupplierId);
+        if ("error" in cat) {
+          toast.error(cat.error);
+          return;
+        }
         setCatalog(cat as CatalogProductItem[]);
       }
     } catch {

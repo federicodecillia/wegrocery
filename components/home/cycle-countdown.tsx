@@ -8,6 +8,7 @@ import { utcToZonedLocalInput } from "@/lib/i18n/zoned-time";
 import Link from "next/link";
 
 type Props = {
+  cycleId: string;
   title: string;
   orderCloseAt: string;
   orderOpenAt: string;
@@ -41,7 +42,7 @@ function formatPickupSlot(date: string, endTime: string | null): string {
   return endTime ? `${dateStr} · ${startStr}–${endTime}` : `${dateStr} · ${startStr}`;
 }
 
-export function CycleCountdown({ title, orderCloseAt, orderOpenAt, pickupDate, pickupEndTime, pickup2Date, pickup2EndTime }: Props) {
+export function CycleCountdown({ cycleId, title, orderCloseAt, orderOpenAt, pickupDate, pickupEndTime, pickup2Date, pickup2EndTime }: Props) {
   const [now, setNow] = useState<Date | null>(null);
 
   useEffect(() => {
@@ -119,7 +120,7 @@ export function CycleCountdown({ title, orderCloseAt, orderOpenAt, pickupDate, p
 
       <div className="mt-3">
         <Link
-          href="/ordine"
+          href={`/ordine?cycleId=${cycleId}`}
           className="inline-flex w-full items-center justify-center rounded-full bg-brand-orange px-[22px] py-[14px] text-sm font-bold text-white transition-[opacity,transform] duration-150 active:scale-[0.98]"
         >
           {t.cycle.goToOrder}

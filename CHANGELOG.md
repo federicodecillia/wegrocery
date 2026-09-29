@@ -18,6 +18,25 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ---
 
+## [1.13.0] — 2026-09-29
+
+*A fuller Cassa, and a history that adds up to the balance.*
+
+### Added
+- 💸 **Outgoing movements in Cassa.** Admins can record a balance paid back to a member (never beyond the balance), a manual charge or the membership fee, each with a reason the member reads in the notification.
+- 🏦 **Manual top-ups with method and reference.** Search the member by name or email, pick the method (bank transfer, cash, Satispay, other) and add the CRO/TRN: a reference already used is refused, a similar top-up in the last days asks for confirmation, and a recap comes before saving (migration `0018`).
+- 🧺 **Pick the cycle when more than one is open.** "Order" lists the open cycles with their supplier instead of opening the first one, and the countdown button on the home page opens its own cycle.
+
+### Changed
+- 📒 **History matches the balance.** Each cycle shows products (after weighing), shipping, corrections and the total charged to the balance, and every movement has a clear name and its own icon: Top-up, Shipping, Refund, Adjustment, Balance returned, Membership fee.
+- ➕ **Amounts with their sign.** Balance and movements always show + or -, and a negative balance on the home page reads "To top up".
+- 🚚 **Shipping follows edits to closed orders.** Editing a member's order after closing re-splits everyone's shipping on the actual totals (after weighing), unless it came from the supplier's sheet; only members whose share moved are notified.
+- 🔐 **A deactivated member is signed out at once.** Deactivating a member, admins included, ends their session on the next request instead of at token expiry.
+
+### Fixed
+- 📧 **Emails and aliases are no longer shared between members.** Saving a member with an email or secondary email another member already uses, in any casing, is refused with that member's name (migration `0017`).
+- ⚠️ **Readable error messages.** In production, expected refusals (cycle closed, missing field, order changed meanwhile) now show their own text instead of a generic error, and the order page reloads by itself when the cycle has closed.
+
 ## [1.12.2] — 2026-09-29
 
 *Smaller online top-ups.*
@@ -351,6 +370,7 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ---
 
+[1.13.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.13.0
 [1.12.2]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.12.2
 [1.12.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.12.1
 [1.12.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.12.0

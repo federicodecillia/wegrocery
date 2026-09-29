@@ -1,7 +1,7 @@
 "use client";
 
 import { t } from "@/lib/i18n";
-import { formatDateTime } from "@/lib/i18n/format";
+import { formatDateTime, formatSignedMoney } from "@/lib/i18n/format";
 import { formatEur, getProductEmoji } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -94,7 +94,7 @@ export function OrderSummary({
                   balanceAfter < 0 ? "text-brand-red" : "text-brand-teal"
                 }`}
               >
-                {formatEur(balanceAfter)}
+                {formatSignedMoney(balanceAfter)}
               </div>
             </div>
           </div>

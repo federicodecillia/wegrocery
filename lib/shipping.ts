@@ -123,3 +123,64 @@ export function computeShippingShares(
   for (const r of memberTotals) shares.set(r.memberId, flat);
   return shares;
 }
+
+// A closed cycle's shipping_charge ledger row. There is at most one per member
+// (unique index, drizzle/0013_unique_cycle_charges.sql).
+export type ShippingChargeRow = { entryId: string; memberId: string; amount: string };
+
+export type ShippingRecomputePlan = {
+  // Existing rows rewritten in place with a new ledger amount. A reversal is
+  // an update to "0.00": shipping rows are never deleted.
+  updates: Array<{ entryId: string; memberId: string; amount: string }>;
+  // Members without a shipping row who now owe a share.
+  inserts: Array<{ memberId: string; amount: string }>;
+  // One entry per member whose share moved (in euros): the members to notify.
+  changes: Array<{ memberId: string; oldShare: number; newShare: number }>;
+};
+
+// Plans a closed cycle's shipping recompute: the shares computeShippingShares
+// gives on `totals` (the members' EFFECTIVE totals, after weighing) against
+// the shipping rows already posted. Every member with a row is included, so
+// one whose total dropped to 0, or who has no order left, is reversed. A
+// manual (distinta-imported) cycle is never touched. Writing the plan and
+// planning again yields an empty plan, so a rerun is harmless.
+export function planShippingRecompute(
+  cycle: ShippingConfig,
+  totals: ReadonlyArray<{ memberId: string; total: string }>,
+  existing: ReadonlyArray<ShippingChargeRow>,
+): ShippingRecomputePlan {
+  const plan: ShippingRecomputePlan = { updates: [], inserts: [], changes: [] };
+  if (cycle.shippingMode === "manual") return plan;
+
+  // Sorted because computeShippingShares' float sum depends on the order of
+  // its input, and GROUP BY returns rows in any order: a rerun must agree.
+  const byMember = (a: { memberId: string }, b: { memberId: string }) =>
+    a.memberId.localeCompare(b.memberId);
+  const eligible = totals.filter((r) => parseFloat(r.total) > 0).sort(byMember);
+  const shares = computeShippingShares(eligible, cycle);
+  const rowByMember = new Map(existing.map((r) => [r.memberId, r]));
+  const memberIds = new Set([...eligible, ...existing].sort(byMember).map((r) => r.memberId));
+
+  for (const memberId of memberIds) {
+    const newCents = Math.round((shares.get(memberId) ?? 0) * 100);
+    const row = rowByMember.get(memberId);
+    // 0 - x rather than -x: a "0.00" row must read as 0, not -0, which
+    // formatMoney prints as "-0,00 €".
+    const oldCents = row ? 0 - Math.round(parseFloat(row.amount) * 100) : 0;
+    if (newCents === oldCents) continue;
+
+    const amount = (-newCents / 100).toFixed(2);
+    if (row) plan.updates.push({ entryId: row.entryId, memberId, amount });
+    else plan.inserts.push({ memberId, amount });
+    plan.changes.push({ memberId, oldShare: oldCents / 100, newShare: newCents / 100 });
+  }
+  return plan;
+}
+
+// JSON object entryId → amount of a cycle's shipping rows, with the money
+// exactly as the DB returned it. A recompute batch compares it (as jsonb) with
+// the same object rebuilt inside the transaction and aborts when the rows
+// changed after the plan was computed.
+export function shippingRowsSnapshot(rows: ReadonlyArray<ShippingChargeRow>): string {
+  return JSON.stringify(Object.fromEntries(rows.map((r) => [r.entryId, r.amount])));
+}

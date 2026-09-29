@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
+import { checkAccess } from "@/lib/auth/access";
 
 export default auth((req) => {
   const { pathname, origin } = req.nextUrl;
+  // A member deactivated or deleted since signing in has no session any more
+  // (auth.ts ends it), so they count as logged out here.
   const isLoggedIn = Boolean(req.auth?.user?.email);
   const isLoginPage = pathname === "/login";
   const isAdminRoute = pathname === "/admin" || pathname.startsWith("/admin/");
@@ -15,11 +18,9 @@ export default auth((req) => {
     return NextResponse.redirect(new URL("/", origin));
   }
 
-  if (isAdminRoute) {
-    const role = (req.auth?.user as { role?: string | null } | undefined)?.role;
-    if (role !== "admin") {
-      return NextResponse.redirect(new URL("/", origin));
-    }
+  // Same rule as requireAdmin: role admin and an active member.
+  if (isAdminRoute && !checkAccess(req.auth?.user, "admin").ok) {
+    return NextResponse.redirect(new URL("/", origin));
   }
 
   return NextResponse.next();

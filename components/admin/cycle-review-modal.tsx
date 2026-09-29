@@ -68,8 +68,13 @@ function CycleReviewModal({
     let cancelled = false;
     (async () => {
       try {
-        const data = (await adminGetCycleProductsForReview(cycleId)) as ProductRow[];
+        const result = await adminGetCycleProductsForReview(cycleId);
         if (cancelled) return;
+        if ("error" in result) {
+          toast.error(result.error);
+          return;
+        }
+        const data = result as ProductRow[];
         setRows(data);
         setEdits(
           Object.fromEntries(data.map((r) => [r.productId, r.unitPrice.toFixed(2)])),
@@ -134,6 +139,10 @@ function CycleReviewModal({
           cycleId,
           adjustments.map((a) => ({ productId: a.productId, finalUnitPrice: a.finalUnitPrice })),
         );
+        if ("error" in result) {
+          toast.error(result.error);
+          return;
+        }
         toast.success(t.admin.cycleReview.closedSuccess(result.chargesGenerated, result.productsAdjusted));
         onClose();
       } catch (err) {

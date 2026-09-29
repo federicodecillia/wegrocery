@@ -3,7 +3,7 @@ import { AppShell } from "@/components/app-shell";
 import { CycleCountdown } from "@/components/home/cycle-countdown";
 import { NextPickupCard } from "@/components/home/next-pickup-card";
 import { t } from "@/lib/i18n";
-import { formatMoney } from "@/lib/i18n/format";
+import { formatSignedMoney } from "@/lib/i18n/format";
 import { getUserRole, requireUserSession } from "@/lib/auth/session";
 import {
   getCycleProducts,
@@ -13,8 +13,9 @@ import {
   getNextMemberPickup,
   getOpenCycles,
 } from "@/lib/db/queries";
-import { formatDateShort, formatEur, formatEurSigned, getProductEmoji } from "@/lib/utils";
+import { formatDateShort, formatEur, getProductEmoji } from "@/lib/utils";
 import { canAccessCycle } from "@/lib/roles";
+import { movementText } from "@/lib/movement-label";
 
 export default async function HomePage() {
   const session = await requireUserSession();
@@ -45,6 +46,7 @@ export default async function HomePage() {
   const afterBalance = (balance || 0) - globalOrderTotal;
 
   const isNegative = balance < 0;
+  const balanceText = formatSignedMoney(balance);
 
   return (
     <AppShell email={session.user.email} isAdmin={role === "admin"} memberId={memberId}>
@@ -61,15 +63,19 @@ export default async function HomePage() {
             isNegative ? "text-brand-red" : "text-brand-orange"
           }`}
         >
-          {t.home.balanceTitle}
+          {isNegative ? t.home.balanceToTopUp : t.home.balanceTitle}
         </div>
-        <div className="mb-[16px] flex items-baseline gap-[6px]">
+        {/* The explicit sign makes the amount longer: it shrinks to the card's
+            width (about 0.56em per character, at most 70px) so a three-digit
+            balance still fits a 375px phone. */}
+        <div className="@container mb-[16px] flex items-baseline gap-[6px]">
           <span
-            className={`text-[70px] font-black leading-none tracking-[-0.045em] ${
+            className={`font-black leading-none tracking-[-0.045em] ${
               isNegative ? "text-brand-red" : "text-brand-near-black"
             }`}
+            style={{ fontSize: `min(70px, calc(100cqi / ${(0.56 * balanceText.length).toFixed(2)}))` }}
           >
-            {formatMoney(Math.abs(balance))}
+            {balanceText}
           </span>
         </div>
         <div
@@ -98,8 +104,7 @@ export default async function HomePage() {
                 afterBalance < 0 ? "text-brand-red" : "text-brand-near-black"
               }`}
             >
-              {formatEur(afterBalance)}
-              {afterBalance < 0 && " −"}
+              {formatSignedMoney(afterBalance)}
             </div>
           </div>
         </div>
@@ -132,6 +137,7 @@ export default async function HomePage() {
             <div key={cycle.cycleId} className="mb-[24px]">
               <div className="mb-[14px]">
                 <CycleCountdown
+                  cycleId={cycle.cycleId}
                   title={cycle.title}
                   orderCloseAt={new Date(cycle.orderCloseAt ?? new Date()).toISOString()}
                   orderOpenAt={new Date(cycle.orderOpenAt ?? cycle.createdAt).toISOString()}
@@ -233,13 +239,7 @@ export default async function HomePage() {
           </div>
           {recentMovements.map((e) => {
             const isPos = parseFloat(e.amount) >= 0;
-            const typeLabel =
-              e.type === "topup"
-                ? t.history.transfer
-                : e.type === "order_charge"
-                  ? t.history.orderCharge
-                  : t.history.correction;
-            const label = typeLabel + (e.note ? " · " + e.note : "");
+            const label = movementText(e, t.history);
             return (
               <div
                 key={e.entryId}
@@ -254,7 +254,7 @@ export default async function HomePage() {
                 <div
                   className={`font-mono text-[13px] font-semibold ${isPos ? "text-brand-teal" : "text-brand-red"}`}
                 >
-                  {formatEurSigned(parseFloat(e.amount))}
+                  {formatSignedMoney(e.amount)}
                 </div>
               </div>
             );

@@ -2,28 +2,44 @@
 
 import { revalidatePath } from "next/cache";
 import { eq, and, ne, sql, inArray } from "drizzle-orm";
-import { auth } from "@/auth";
+import { requireAdmin } from "@/lib/auth/session";
 import { t } from "@/lib/i18n";
-import { formatMoney, formatDateTime } from "@/lib/i18n/format";
+import { formatMoney, formatDate, formatDateTime } from "@/lib/i18n/format";
 import { parseCycleDates } from "@/lib/cycle-dates";
 import { brand } from "@/lib/brand";
 import { getDb } from "@/lib/db/client";
 import { auditLog, ledgerEntries, members, orderCycles, orders, payments, products, suppliers, supplierProducts } from "@/lib/db/schema";
 import { upsertCycleProducts } from "@/lib/db/cycle-products";
+import { isUniqueViolation } from "@/lib/db/errors";
+import { ActionError, actionErrorMessage } from "@/lib/action-error";
+import { getMembersByEmails } from "@/lib/db/queries";
+import { findEmailConflict, normalizeEmail } from "@/lib/member-email";
 import type { BatchItem } from "drizzle-orm/batch";
 import { orderLinesSnapshot, planClosedOrderEdit } from "@/lib/closed-order-edit";
 import { buildCycleCloseCharges, ordersSnapshot } from "@/lib/cycle-close";
 import {
-  computeShippingShares,
   normalizeShippingMode,
+  planShippingRecompute,
   resolveShippingUpdate,
+  shippingRowsSnapshot,
+  type ShippingConfig,
   type ShippingMode,
+  type ShippingRecomputePlan,
 } from "@/lib/shipping";
 import {
+  EXTERNAL_REF_MAX_LENGTH,
+  EXTERNAL_REF_UNIQUE_INDEX,
+  duplicateWindow,
+  findPossibleDuplicate,
   isAdminEditableLedgerType,
+  isOutgoingLedgerType,
+  planManualMovement,
   validateLedgerEntryEdit,
-  validateTopupAmount,
+  validatePayoutAmount,
   type LedgerAmountError,
+  type ManualMovementError,
+  type ManualMovementInput,
+  type ManualMovementPlan,
 } from "@/lib/ledger";
 import {
   dispatchNotification,
@@ -34,17 +50,6 @@ import {
 } from "@/lib/notifications/dispatch";
 import { selectCycleAccessMembers } from "@/lib/notifications/reminder";
 import { DEFAULT_ACCESS_LEVEL, normalizeAccessLevel, normalizeRole, type AccessLevel } from "@/lib/roles";
-
-async function requireAdmin(): Promise<{ email: string }> {
-  const session = await auth();
-  const email = session?.user?.email;
-  const u = session?.user as { role?: string; active?: boolean } | undefined;
-  // `active` is refreshed from the members table on every request by the jwt
-  // callback, so a deactivated admin loses access immediately, not at token
-  // expiry.
-  if (!email || u?.role !== "admin" || !u?.active) throw new Error(t.errors.unauthorized);
-  return { email };
-}
 
 function ledgerAmountErrorMessage(code: LedgerAmountError): string {
   switch (code) {
@@ -224,8 +229,8 @@ async function performCycleClose(
       .from(orderCycles)
       .where(eq(orderCycles.cycleId, cycleId))
       .limit(1);
-    if (!cycle) throw new Error(t.errors.cycleNotFound);
-    if (cycle.status !== "open") throw new Error(t.errors.cycleNotFoundOrAlreadyClosed);
+    if (!cycle) throw new ActionError(t.errors.cycleNotFound);
+    if (cycle.status !== "open") throw new ActionError(t.errors.cycleNotFoundOrAlreadyClosed);
 
     const memberTotals = await db
       .select({
@@ -329,7 +334,7 @@ async function performCycleClose(
         .from(orderCycles)
         .where(eq(orderCycles.cycleId, cycleId))
         .limit(1);
-      if (current?.status !== "open") throw new Error(t.errors.cycleNotFoundOrAlreadyClosed);
+      if (current?.status !== "open") throw new ActionError(t.errors.cycleNotFoundOrAlreadyClosed);
       continue; // orders changed: recompute from fresh totals
     }
 
@@ -366,18 +371,24 @@ async function performCycleClose(
 
     return { chargesGenerated: charges.orderCharges.length };
   }
-  throw new Error(t.errors.cycleCloseOrdersChanged);
+  throw new ActionError(t.errors.cycleCloseOrdersChanged);
 }
 
-export async function adminCloseCycle(cycleId: string) {
-  const admin = await requireAdmin();
-  const db = getDb();
-  const result = await performCycleClose(db, cycleId, admin.email);
-  await writeAudit(db, admin.email, "close_cycle", "cycle", cycleId, result);
-  revalidatePath("/admin");
-  revalidatePath("/");
-  revalidatePath("/storico");
-  return result;
+export async function adminCloseCycle(
+  cycleId: string,
+): Promise<{ chargesGenerated: number } | { error: string }> {
+  try {
+    const admin = await requireAdmin();
+    const db = getDb();
+    const result = await performCycleClose(db, cycleId, admin.email);
+    await writeAudit(db, admin.email, "close_cycle", "cycle", cycleId, result);
+    revalidatePath("/admin");
+    revalidatePath("/");
+    revalidatePath("/storico");
+    return result;
+  } catch (e) {
+    return { error: actionErrorMessage(e, t.errors.genericError, "adminCloseCycle") };
+  }
 }
 
 // Cancels an already-closed cycle (e.g. the supplier failed to deliver) and
@@ -390,105 +401,109 @@ export async function adminCloseCycle(cycleId: string) {
 export async function adminCancelClosedCycle(
   cycleId: string,
   input: { refundShipping: boolean; reason: string },
-): Promise<{ refundedMembers: number; totalRefunded: number }> {
-  const admin = await requireAdmin();
-  const db = getDb();
-  const now = new Date();
-
-  const reason = input.reason.trim();
-  if (!reason) throw new Error(t.errors.cancelReasonRequired);
-
-  const [cycle] = await db
-    .select({ status: orderCycles.status, title: orderCycles.title })
-    .from(orderCycles)
-    .where(eq(orderCycles.cycleId, cycleId))
-    .limit(1);
-  if (!cycle) throw new Error(t.errors.cycleNotFound);
-  if (cycle.status !== "closed") throw new Error(t.errors.cycleNotClosed);
-
-  // Atomic compare-and-swap, same guard as performCycleClose: only the
-  // caller that flips closed→cancelled proceeds. A concurrent second call
-  // gets 0 rows back and fails cleanly instead of double-refunding.
-  const cancelledRows = await db
-    .update(orderCycles)
-    .set({ status: "cancelled" })
-    .where(and(eq(orderCycles.cycleId, cycleId), eq(orderCycles.status, "closed")))
-    .returning({ cycleId: orderCycles.cycleId });
-  if (cancelledRows.length === 0) throw new Error(t.errors.cycleNotClosed);
-
-  let refundedMembers = 0;
-  let totalRefunded = 0;
-
+): Promise<{ refundedMembers: number; totalRefunded: number } | { error: string }> {
   try {
-    const netByMember = await db
-      .select({ memberId: ledgerEntries.memberId, net: sql<string>`sum(${ledgerEntries.amount})` })
-      .from(ledgerEntries)
-      .where(
-        input.refundShipping
-          ? eq(ledgerEntries.cycleId, cycleId)
-          : and(eq(ledgerEntries.cycleId, cycleId), ne(ledgerEntries.type, "shipping_charge")),
-      )
-      .groupBy(ledgerEntries.memberId);
+    const admin = await requireAdmin();
+    const db = getDb();
+    const now = new Date();
 
-    const toRefund = netByMember
-      .map((r) => ({ memberId: r.memberId, net: parseFloat(r.net) }))
-      .filter((r) => Math.abs(r.net) > 0.005);
+    const reason = input.reason.trim();
+    if (!reason) return { error: t.errors.cancelReasonRequired };
 
-    if (toRefund.length > 0) {
-      await db.insert(ledgerEntries).values(
-        toRefund.map((r) => ({
-          entryId: genId("led"),
-          memberId: r.memberId,
-          entryDate: now,
-          type: "correction",
-          amount: (-r.net).toFixed(2),
-          cycleId,
-          note: `${t.ledger.cycleCancelled} — ${reason}`,
-          createdBy: admin.email,
-          createdAt: now,
-        })),
-      );
+    const [cycle] = await db
+      .select({ status: orderCycles.status, title: orderCycles.title })
+      .from(orderCycles)
+      .where(eq(orderCycles.cycleId, cycleId))
+      .limit(1);
+    if (!cycle) return { error: t.errors.cycleNotFound };
+    if (cycle.status !== "closed") return { error: t.errors.cycleNotClosed };
 
-      const emailByMember = await getMemberEmails(
-        db,
-        toRefund.map((r) => r.memberId),
-      );
-      await dispatchWithBodies(
-        db,
-        toRefund.map((r) => ({
-          memberId: r.memberId,
-          email: emailByMember.get(r.memberId) ?? null,
-          title: t.notificationsServer.cycleCancelledTitle,
-          body: t.notificationsServer.cycleCancelledBody(cycle.title, formatMoney(-r.net), reason),
-          href: `/storico?cycleId=${cycleId}`,
-        })),
-        "cycle_cancelled",
-        now,
-      );
+    // Atomic compare-and-swap, same guard as performCycleClose: only the
+    // caller that flips closed→cancelled proceeds. A concurrent second call
+    // gets 0 rows back and fails cleanly instead of double-refunding.
+    const cancelledRows = await db
+      .update(orderCycles)
+      .set({ status: "cancelled" })
+      .where(and(eq(orderCycles.cycleId, cycleId), eq(orderCycles.status, "closed")))
+      .returning({ cycleId: orderCycles.cycleId });
+    if (cancelledRows.length === 0) return { error: t.errors.cycleNotClosed };
 
-      refundedMembers = toRefund.length;
-      totalRefunded = toRefund.reduce((sum, r) => sum + -r.net, 0);
+    let refundedMembers = 0;
+    let totalRefunded = 0;
+
+    try {
+      const netByMember = await db
+        .select({ memberId: ledgerEntries.memberId, net: sql<string>`sum(${ledgerEntries.amount})` })
+        .from(ledgerEntries)
+        .where(
+          input.refundShipping
+            ? eq(ledgerEntries.cycleId, cycleId)
+            : and(eq(ledgerEntries.cycleId, cycleId), ne(ledgerEntries.type, "shipping_charge")),
+        )
+        .groupBy(ledgerEntries.memberId);
+
+      const toRefund = netByMember
+        .map((r) => ({ memberId: r.memberId, net: parseFloat(r.net) }))
+        .filter((r) => Math.abs(r.net) > 0.005);
+
+      if (toRefund.length > 0) {
+        await db.insert(ledgerEntries).values(
+          toRefund.map((r) => ({
+            entryId: genId("led"),
+            memberId: r.memberId,
+            entryDate: now,
+            type: "correction",
+            amount: (-r.net).toFixed(2),
+            cycleId,
+            note: `${t.ledger.cycleCancelled} — ${reason}`,
+            createdBy: admin.email,
+            createdAt: now,
+          })),
+        );
+
+        const emailByMember = await getMemberEmails(
+          db,
+          toRefund.map((r) => r.memberId),
+        );
+        await dispatchWithBodies(
+          db,
+          toRefund.map((r) => ({
+            memberId: r.memberId,
+            email: emailByMember.get(r.memberId) ?? null,
+            title: t.notificationsServer.cycleCancelledTitle,
+            body: t.notificationsServer.cycleCancelledBody(cycle.title, formatMoney(-r.net), reason),
+            href: `/storico?cycleId=${cycleId}`,
+          })),
+          "cycle_cancelled",
+          now,
+        );
+
+        refundedMembers = toRefund.length;
+        totalRefunded = toRefund.reduce((sum, r) => sum + -r.net, 0);
+      }
+    } catch (e) {
+      // Roll back the status flip so the admin can retry instead of leaving
+      // the cycle cancelled with a partial or missing refund.
+      await db.update(orderCycles).set({ status: "closed" }).where(eq(orderCycles.cycleId, cycleId));
+      throw e;
     }
+
+    await writeAudit(db, admin.email, "cancel_cycle", "cycle", cycleId, {
+      reason,
+      refundShipping: input.refundShipping,
+      refundedMembers,
+      totalRefunded: totalRefunded.toFixed(2),
+    });
+
+    revalidatePath("/admin");
+    revalidatePath("/storico");
+    revalidatePath("/notifiche");
+    revalidatePath("/");
+
+    return { refundedMembers, totalRefunded };
   } catch (e) {
-    // Roll back the status flip so the admin can retry instead of leaving
-    // the cycle cancelled with a partial or missing refund.
-    await db.update(orderCycles).set({ status: "closed" }).where(eq(orderCycles.cycleId, cycleId));
-    throw e;
+    return { error: actionErrorMessage(e, t.errors.genericError, "adminCancelClosedCycle") };
   }
-
-  await writeAudit(db, admin.email, "cancel_cycle", "cycle", cycleId, {
-    reason,
-    refundShipping: input.refundShipping,
-    refundedMembers,
-    totalRefunded: totalRefunded.toFixed(2),
-  });
-
-  revalidatePath("/admin");
-  revalidatePath("/storico");
-  revalidatePath("/notifiche");
-  revalidatePath("/");
-
-  return { refundedMembers, totalRefunded };
 }
 
 // Applies per-product price adjustments (typically because the actual weight
@@ -502,182 +517,252 @@ export async function adminCancelClosedCycle(
 export async function adminCloseCycleWithAdjustments(
   cycleId: string,
   adjustments: ReadonlyArray<{ productId: string; finalUnitPrice: number }>,
-): Promise<{ chargesGenerated: number; productsAdjusted: number }> {
-  const admin = await requireAdmin();
-  const db = getDb();
+): Promise<{ chargesGenerated: number; productsAdjusted: number } | { error: string }> {
+  try {
+    const admin = await requireAdmin();
+    const db = getDb();
 
-  // Re-pricing rewrites products and order lines, so it must never run on a
-  // cycle that is already closed (or cancelled): check before touching rows.
-  const [current] = await db
-    .select({ status: orderCycles.status })
-    .from(orderCycles)
-    .where(eq(orderCycles.cycleId, cycleId))
-    .limit(1);
-  if (!current) throw new Error(t.errors.cycleNotFound);
-  if (current.status !== "open") throw new Error(t.errors.cycleNotFoundOrAlreadyClosed);
+    // Re-pricing rewrites products and order lines, so it must never run on a
+    // cycle that is already closed (or cancelled): check before touching rows.
+    const [current] = await db
+      .select({ status: orderCycles.status })
+      .from(orderCycles)
+      .where(eq(orderCycles.cycleId, cycleId))
+      .limit(1);
+    if (!current) return { error: t.errors.cycleNotFound };
+    if (current.status !== "open") return { error: t.errors.cycleNotFoundOrAlreadyClosed };
 
-  // Validate up-front: reject empty IDs, negative prices, and adjustments
-  // that name a product not belonging to this cycle. Better to fail before
-  // we touch any rows than mid-way through.
-  const cleaned = adjustments
-    .filter((a) => a.productId && Number.isFinite(a.finalUnitPrice) && a.finalUnitPrice >= 0)
-    .map((a) => ({ productId: a.productId, finalUnitPrice: a.finalUnitPrice }));
+    // Validate up-front: reject empty IDs, negative prices, and adjustments
+    // that name a product not belonging to this cycle. Better to fail before
+    // we touch any rows than mid-way through.
+    const cleaned = adjustments
+      .filter((a) => a.productId && Number.isFinite(a.finalUnitPrice) && a.finalUnitPrice >= 0)
+      .map((a) => ({ productId: a.productId, finalUnitPrice: a.finalUnitPrice }));
 
-  if (cleaned.length > 0) {
-    const productIds = cleaned.map((a) => a.productId);
-    const cycleProducts = await db
-      .select({ productId: products.productId })
-      .from(products)
-      .where(and(eq(products.cycleId, cycleId), inArray(products.productId, productIds)));
-    const validIds = new Set(cycleProducts.map((p) => p.productId));
-    const orphan = cleaned.find((a) => !validIds.has(a.productId));
-    if (orphan) throw new Error(`Prodotto non appartenente al ciclo: ${orphan.productId}`);
+    if (cleaned.length > 0) {
+      const productIds = cleaned.map((a) => a.productId);
+      const cycleProducts = await db
+        .select({ productId: products.productId })
+        .from(products)
+        .where(and(eq(products.cycleId, cycleId), inArray(products.productId, productIds)));
+      const validIds = new Set(cycleProducts.map((p) => p.productId));
+      const orphan = cleaned.find((a) => !validIds.has(a.productId));
+      if (orphan) return { error: t.errors.productNotInCycle(orphan.productId) };
+    }
+
+    // Apply the price adjustments before closing. We do not use a transaction
+    // (neon-http does not support interactive ones), but performCycleClose
+    // charges from the order totals it re-checks inside its own batch, so the
+    // charges always match the re-priced lines, and only one caller can close.
+    for (const adj of cleaned) {
+      const priceStr = adj.finalUnitPrice.toFixed(2);
+      await db
+        .update(products)
+        .set({ unitPrice: priceStr })
+        .where(eq(products.productId, adj.productId));
+      // Recompute lineTotal from quantity * adjusted price for every order
+      // line that references this product in this cycle.
+      await db
+        .update(orders)
+        .set({
+          unitPriceSnapshot: priceStr,
+          lineTotal: sql`${orders.quantity}::numeric * ${priceStr}::numeric`,
+        })
+        .where(and(eq(orders.productId, adj.productId), eq(orders.cycleId, cycleId)));
+    }
+
+    const result = await performCycleClose(db, cycleId, admin.email);
+
+    await writeAudit(db, admin.email, "close_cycle_with_adjustments", "cycle", cycleId, {
+      ...result,
+      productsAdjusted: cleaned.length,
+      adjustments: cleaned,
+    });
+    revalidatePath("/admin");
+    revalidatePath("/");
+    revalidatePath("/storico");
+    revalidatePath("/ordine");
+    return { ...result, productsAdjusted: cleaned.length };
+  } catch (e) {
+    return { error: actionErrorMessage(e, t.errors.genericError, "adminCloseCycleWithAdjustments") };
   }
-
-  // Apply the price adjustments before closing. We do not use a transaction
-  // (neon-http does not support interactive ones), but performCycleClose
-  // charges from the order totals it re-checks inside its own batch, so the
-  // charges always match the re-priced lines, and only one caller can close.
-  for (const adj of cleaned) {
-    const priceStr = adj.finalUnitPrice.toFixed(2);
-    await db
-      .update(products)
-      .set({ unitPrice: priceStr })
-      .where(eq(products.productId, adj.productId));
-    // Recompute lineTotal from quantity * adjusted price for every order
-    // line that references this product in this cycle.
-    await db
-      .update(orders)
-      .set({
-        unitPriceSnapshot: priceStr,
-        lineTotal: sql`${orders.quantity}::numeric * ${priceStr}::numeric`,
-      })
-      .where(and(eq(orders.productId, adj.productId), eq(orders.cycleId, cycleId)));
-  }
-
-  const result = await performCycleClose(db, cycleId, admin.email);
-
-  await writeAudit(db, admin.email, "close_cycle_with_adjustments", "cycle", cycleId, {
-    ...result,
-    productsAdjusted: cleaned.length,
-    adjustments: cleaned,
-  });
-  revalidatePath("/admin");
-  revalidatePath("/");
-  revalidatePath("/storico");
-  revalidatePath("/ordine");
-  return { ...result, productsAdjusted: cleaned.length };
 }
 
-// Recomputes shipping_charge ledger entries for a closed cycle after its
-// shipping configuration changed. Updates existing entries in place (we never
-// delete to keep the audit trail), inserts new entries for members who had
-// no previous share, and emits an `order_adjusted` notification per affected
-// member. Returns the list of memberIds whose shipping share actually moved.
+// Reads and plans a closed cycle's shipping recompute (planShippingRecompute:
+// shares on the members' EFFECTIVE totals, after weighing). Returns the ledger
+// statements that apply the plan and a SQL condition that holds while nothing
+// the plan was computed from has changed: cycle still closed with the same
+// shipping settings, same effective totals, same shipping rows. The caller
+// runs both in one db.batch after locking the cycle row FOR UPDATE, so two
+// recomputes (or an edit and a recompute) cannot interleave their writes.
+// `projected` stands in for one member's total as a pending edit will leave
+// it: adminEditClosedOrder plans before its batch has changed the lines.
+async function prepareShippingRecompute(
+  db: ReturnType<typeof getDb>,
+  cycleId: string,
+  cycle: ShippingConfig,
+  adminEmail: string,
+  now: Date,
+  projected?: { memberId: string; total: string },
+) {
+  const [totals, rows] = await Promise.all([
+    db
+      .select({
+        memberId: orders.memberId,
+        total: sql<string>`sum(coalesce(${orders.actualLineTotal}, ${orders.lineTotal}))`,
+      })
+      .from(orders)
+      .where(eq(orders.cycleId, cycleId))
+      .groupBy(orders.memberId),
+    db
+      .select({
+        entryId: ledgerEntries.entryId,
+        memberId: ledgerEntries.memberId,
+        amount: ledgerEntries.amount,
+      })
+      .from(ledgerEntries)
+      .where(and(eq(ledgerEntries.cycleId, cycleId), eq(ledgerEntries.type, "shipping_charge"))),
+  ]);
+  const plan = planShippingRecompute(
+    cycle,
+    projected ? [...totals.filter((r) => r.memberId !== projected.memberId), projected] : totals,
+    rows,
+  );
+
+  // Rows are rewritten in place, never deleted, so the audit trail stays.
+  const statements: BatchItem<"pg">[] = [];
+  for (const u of plan.updates) {
+    statements.push(
+      db
+        .update(ledgerEntries)
+        .set({ amount: u.amount, note: t.ledger.shippingAdjusted, updatedAt: now, updatedBy: adminEmail })
+        .where(eq(ledgerEntries.entryId, u.entryId)),
+    );
+  }
+  if (plan.inserts.length > 0) {
+    statements.push(
+      db.insert(ledgerEntries).values(
+        plan.inserts.map((i) => ({
+          entryId: genId("led"),
+          memberId: i.memberId,
+          entryDate: now,
+          type: "shipping_charge",
+          amount: i.amount,
+          cycleId,
+          note: t.ledger.shippingAdjusted,
+          createdBy: adminEmail,
+          createdAt: now,
+        })),
+      ),
+    );
+  }
+
+  const settings = ["closed", cycle.shippingMode, cycle.shippingCostPerMember, cycle.shippingTotal];
+  const guard = sql`(SELECT jsonb_build_array(status, shipping_mode,
+                            shipping_cost_per_member::text, shipping_total::text)
+                     FROM order_cycles WHERE cycle_id = ${cycleId})
+                    = ${JSON.stringify(settings)}::jsonb
+                AND (SELECT coalesce(jsonb_object_agg(g.member_id, g.total::text), '{}'::jsonb)
+                     FROM (SELECT member_id, sum(coalesce(actual_line_total, line_total)) AS total
+                           FROM orders WHERE cycle_id = ${cycleId} GROUP BY member_id) g)
+                    = ${ordersSnapshot(totals)}::jsonb
+                AND (SELECT coalesce(jsonb_object_agg(entry_id, amount::text), '{}'::jsonb)
+                     FROM ledger_entries
+                     WHERE cycle_id = ${cycleId} AND type = 'shipping_charge')
+                    = ${shippingRowsSnapshot(rows)}::jsonb`;
+
+  return { plan, statements, guard };
+}
+
+// One `order_adjusted` notification per member whose shipping share moved.
+// Best-effort, after the commit: a failure is logged, never rolled back onto
+// the ledger writes.
+async function notifyShippingChanges(
+  db: ReturnType<typeof getDb>,
+  cycleId: string,
+  cycleTitle: string,
+  changes: ShippingRecomputePlan["changes"],
+  now: Date,
+): Promise<void> {
+  if (changes.length === 0) return;
+  try {
+    const emailByMember = await getMemberEmails(
+      db,
+      changes.map((c) => c.memberId),
+    );
+    const items = changes.map((c) => ({
+      memberId: c.memberId,
+      email: emailByMember.get(c.memberId) ?? null,
+      title: t.notificationsServer.shippingAdjustedTitle(cycleTitle),
+      body: t.notificationsServer.shippingAdjustedBody(
+        cycleTitle,
+        formatMoney(c.oldShare),
+        formatMoney(c.newShare),
+      ),
+      href: `/storico?cycleId=${cycleId}`,
+    }));
+    await dispatchWithBodies(db, items, "order_adjusted", now);
+  } catch (notifyError) {
+    console.error("[order_adjusted] shipping dispatch failed:", notifyError);
+  }
+}
+
+// Re-splits a closed cycle's shipping_charge entries after its shipping
+// settings changed (adminUpdateCycle); adminEditClosedOrder runs the same plan
+// inside its own batch. Existing rows are updated in place, members with no
+// row who now owe a share get one, a member left with no effective total is
+// reversed to 0, and only members whose share moved are notified. A manual
+// (distinta-imported) cycle is left alone. Returns those members' ids.
+//
+// The writes are one guarded batch, planned again from fresh state when a
+// concurrent change trips the guard. adminUpdateCycle saves the new settings
+// before calling this, so if it still fails the settings are saved and the
+// rows keep the previous split: saving any member's order of the cycle again
+// (Modifica in Recap ordini, even unchanged) re-runs the recompute and fixes
+// them.
+const SHIPPING_RECOMPUTE_ATTEMPTS = 3;
+
 async function recomputeShippingForClosedCycle(
   db: ReturnType<typeof getDb>,
   cycleId: string,
   adminEmail: string,
 ): Promise<{ adjustedMembers: string[] }> {
-  const [cycle] = await db
-    .select({
-      cycleId: orderCycles.cycleId,
-      title: orderCycles.title,
-      shippingMode: orderCycles.shippingMode,
-      shippingCostPerMember: orderCycles.shippingCostPerMember,
-      shippingTotal: orderCycles.shippingTotal,
-    })
-    .from(orderCycles)
-    .where(eq(orderCycles.cycleId, cycleId))
-    .limit(1);
-  if (!cycle) return { adjustedMembers: [] };
-  // Manual mode: per-member shipping was set by a supplier-distinta import.
-  // Skip recompute so an unrelated cycle edit doesn't blow away the
-  // per-member values.
-  if (cycle.shippingMode === "manual") return { adjustedMembers: [] };
-
-  const memberTotals = await db
-    .select({
-      memberId: orders.memberId,
-      total: sql<string>`sum(${orders.lineTotal})`,
-    })
-    .from(orders)
-    .where(eq(orders.cycleId, cycleId))
-    .groupBy(orders.memberId);
-  const eligible = memberTotals.filter((r) => parseFloat(r.total) > 0);
-
-  const newShares = computeShippingShares(eligible, cycle);
-
-  const existing = await db
-    .select({
-      entryId: ledgerEntries.entryId,
-      memberId: ledgerEntries.memberId,
-      amount: ledgerEntries.amount,
-    })
-    .from(ledgerEntries)
-    .where(
-      and(eq(ledgerEntries.cycleId, cycleId), eq(ledgerEntries.type, "shipping_charge")),
-    );
-  const existingByMember = new Map(existing.map((e) => [e.memberId, e]));
-
-  const now = new Date();
-  const adjusted: string[] = [];
-
-  // Pre-fetch channels + emails once for every eligible member so the loop
-  // doesn't issue a preference query per member.
-  const eligibleIds = eligible.map((r) => r.memberId);
-  const [emailByMember, prefsByMember] = await Promise.all([
-    getMemberEmails(db, eligibleIds),
-    getResolvedPreferences(db, eligibleIds),
-  ]);
-
-  for (const r of eligible) {
-    const newShare = newShares.get(r.memberId) ?? 0;
-    const prev = existingByMember.get(r.memberId);
-    const oldShare = prev ? -parseFloat(prev.amount) : 0;
-    if (Math.abs(newShare - oldShare) < 0.005) continue;
-
-    if (prev) {
-      await db
-        .update(ledgerEntries)
-        .set({
-          amount: (-newShare).toFixed(2),
-          note: t.ledger.shippingAdjusted,
-          updatedAt: now,
-          updatedBy: adminEmail,
-        })
-        .where(eq(ledgerEntries.entryId, prev.entryId));
-    } else if (newShare > 0) {
-      await db.insert(ledgerEntries).values({
-        entryId: genId("led"),
-        memberId: r.memberId,
-        entryDate: now,
-        type: "shipping_charge",
-        amount: (-newShare).toFixed(2),
-        cycleId,
-        note: t.ledger.shippingAdjusted,
-        createdBy: adminEmail,
-        createdAt: now,
-      });
+  for (let attempt = 1; attempt <= SHIPPING_RECOMPUTE_ATTEMPTS; attempt++) {
+    const [cycle] = await db
+      .select({
+        status: orderCycles.status,
+        title: orderCycles.title,
+        shippingMode: orderCycles.shippingMode,
+        shippingCostPerMember: orderCycles.shippingCostPerMember,
+        shippingTotal: orderCycles.shippingTotal,
+      })
+      .from(orderCycles)
+      .where(eq(orderCycles.cycleId, cycleId))
+      .limit(1);
+    if (!cycle || cycle.status !== "closed" || cycle.shippingMode === "manual") {
+      return { adjustedMembers: [] };
     }
 
-    await dispatchNotification(
-      db,
-      {
-        memberId: r.memberId,
-        memberEmail: emailByMember.get(r.memberId) ?? null,
-        type: "order_adjusted",
-        title: `Spedizione "${cycle.title}" aggiornata`,
-        body: `Le spese di spedizione del ciclo "${cycle.title}" sono state aggiornate: la tua quota e' passata da ${formatMoney(oldShare)} a ${formatMoney(newShare)}.`,
-        href: "/storico",
-      },
-      prefsByMember.get(r.memberId),
+    const now = new Date();
+    const shipping = await prepareShippingRecompute(db, cycleId, cycle, adminEmail, now);
+    if (shipping.statements.length === 0) return { adjustedMembers: [] };
+
+    const lock = db.execute(sql`SELECT 1 FROM order_cycles WHERE cycle_id = ${cycleId} FOR UPDATE`);
+    const guard = db.execute(
+      sql`SELECT 1 / (CASE WHEN ${shipping.guard} THEN 1 ELSE 0 END) AS shipping_guard`,
     );
+    try {
+      await db.batch([lock, guard, ...shipping.statements]);
+    } catch (e) {
+      // 22012 = division_by_zero, i.e. the guard fired: plan again.
+      if (!(e instanceof Error && /22012|division by zero/i.test(e.message))) throw e;
+      continue;
+    }
 
-    adjusted.push(r.memberId);
+    await notifyShippingChanges(db, cycleId, cycle.title, shipping.plan.changes, now);
+    return { adjustedMembers: shipping.plan.changes.map((c) => c.memberId) };
   }
-
-  return { adjustedMembers: adjusted };
+  throw new ActionError(t.errors.cycleUpdateError);
 }
 
 export async function adminUpdateCycle(
@@ -781,7 +866,7 @@ export async function adminUpdateCycle(
     revalidatePath("/");
     return { adjustedMembers };
   } catch (e) {
-    return { error: e instanceof Error ? e.message : t.errors.cycleUpdateError };
+    return { error: actionErrorMessage(e, t.errors.cycleUpdateError, "adminUpdateCycle") };
   }
 }
 
@@ -832,62 +917,263 @@ export async function adminUpdateCycleProduct(
 
 // ── Cassa ─────────────────────────────────────────────────────────────────────
 
-export async function adminRecordTopup(
+function manualMovementErrorMessage(code: ManualMovementError): string {
+  const errors = t.admin.treasury.movementErrors;
+  switch (code) {
+    case "invalidType":
+      return errors.invalidType;
+    case "invalidMethod":
+      return errors.invalidMethod;
+    case "refTooLong":
+      return errors.refTooLong(EXTERNAL_REF_MAX_LENGTH);
+    case "noteRequired":
+      return errors.noteRequired;
+    case "invalidDate":
+      return errors.invalidDate;
+    default:
+      return ledgerAmountErrorMessage(code);
+  }
+}
+
+async function memberBalance(db: ReturnType<typeof getDb>, memberId: string): Promise<number> {
+  const [row] = await db
+    .select({ total: sql<string>`coalesce(sum(${ledgerEntries.amount}), '0')` })
+    .from(ledgerEntries)
+    .where(eq(ledgerEntries.memberId, memberId));
+  return parseFloat(row?.total ?? "0");
+}
+
+// What a payout may return: the balance minus the orders not yet charged on
+// open cycles, so the next cycle close cannot take the member below zero
+// (the same base as saveOrder's credit check). Check-then-insert: two admins
+// acting at the same moment could still overdraw.
+async function memberPayoutBase(db: ReturnType<typeof getDb>, memberId: string): Promise<number> {
+  const [balance, [open]] = await Promise.all([
+    memberBalance(db, memberId),
+    db
+      .select({ total: sql<string>`coalesce(sum(${orders.lineTotal}), '0')` })
+      .from(orders)
+      .innerJoin(orderCycles, eq(orderCycles.cycleId, orders.cycleId))
+      .where(and(eq(orders.memberId, memberId), eq(orderCycles.status, "open"))),
+  ]);
+  return balance - parseFloat(open?.total ?? "0");
+}
+
+// A readable refusal when `ref` is already on a ledger row, compared like the
+// unique index (upper(trim())), or null when it is free.
+async function externalRefTakenMessage(
+  db: ReturnType<typeof getDb>,
+  ref: string,
+): Promise<string | null> {
+  const [taken] = await db
+    .select({ entryDate: ledgerEntries.entryDate, fullName: members.fullName })
+    .from(ledgerEntries)
+    .innerJoin(members, eq(ledgerEntries.memberId, members.memberId))
+    .where(sql`upper(trim(${ledgerEntries.externalRef})) = upper(trim(${ref}))`)
+    .limit(1);
+  if (!taken) return null;
+  return t.admin.treasury.movementErrors.refTakenBy(ref, taken.fullName, formatDate(taken.entryDate));
+}
+
+// The non-blocking warning for a movement that repeats one of the same type
+// and amount near the same date (online top-ups included), or null.
+async function possibleDuplicateWarning(
+  db: ReturnType<typeof getDb>,
   memberId: string,
-  amount: number,
-  note: string,
-  entryDate: string,
-): Promise<{ error?: string }> {
+  plan: ManualMovementPlan,
+): Promise<string | null> {
+  const { from, to } = duplicateWindow(plan.entryDate);
+  const rows = await db
+    .select({ amount: ledgerEntries.amount, entryDate: ledgerEntries.entryDate })
+    .from(ledgerEntries)
+    .where(
+      and(
+        eq(ledgerEntries.memberId, memberId),
+        eq(ledgerEntries.type, plan.type),
+        sql`${ledgerEntries.entryDate} BETWEEN ${from.toISOString()} AND ${to.toISOString()}`,
+      ),
+    );
+  const duplicate = findPossibleDuplicate(rows, plan.amountCents, plan.entryDate);
+  if (!duplicate) return null;
+  return t.admin.treasury.possibleDuplicate(
+    t.admin.treasury.duplicateSubjects[plan.type],
+    formatMoney(plan.amountCents / 100),
+    formatDate(duplicate.entryDate),
+  );
+}
+
+// What the member reads about a manual movement. The notification types map
+// to existing preference categories (lib/notifications/categories.ts).
+function manualMovementNotification(
+  plan: ManualMovementPlan,
+  newBalance: number,
+): { type: string; title: string; body: string } {
+  const n = t.notificationsServer;
+  const amount = formatMoney(plan.amountCents / 100);
+  const balance = formatMoney(newBalance);
+  // The causale closes a sentence in the body: drop a period the admin typed.
+  const reason = (plan.note ?? "").replace(/[.\s]+$/, "");
+  switch (plan.type) {
+    case "topup":
+      return { type: "topup_received", title: n.topupReceivedTitle, body: n.topupReceivedBody(amount, balance) };
+    case "payout":
+      return { type: "payout_sent", title: n.payoutSentTitle, body: n.payoutSentBody(amount, reason, balance) };
+    case "manual_charge":
+      return {
+        type: "manual_charge_recorded",
+        title: n.manualChargeTitle,
+        body: n.manualChargeBody(amount, reason, balance),
+      };
+    case "membership_fee":
+      return {
+        type: "membership_fee_charged",
+        title: n.membershipFeeTitle,
+        body: n.membershipFeeBody(amount, reason, balance),
+      };
+  }
+}
+
+// Outcome of a Cassa form submit. `error`: refused, nothing written.
+// `warning`: a similar movement exists, nothing written; submitting again
+// with `confirmDuplicate` records it. Otherwise it was recorded for
+// `memberName`.
+export type CassaMovementResult = { error?: string; warning?: string; memberName?: string };
+
+type ManualMovementRequest = ManualMovementInput & { memberId: string; confirmDuplicate?: boolean };
+
+// Shared by the top-up and the outgoing-movement actions, after their
+// requireAdmin(): validate, check the member (and, for a payout, the
+// balance), refuse a known reference, warn about a likely duplicate, then
+// write the row, notify the member and audit the full row.
+async function recordManualMovement(
+  admin: { email: string },
+  input: ManualMovementRequest,
+): Promise<CassaMovementResult> {
+  const now = new Date();
+  const planned = planManualMovement(input, now);
+  if ("error" in planned) return { error: manualMovementErrorMessage(planned.error) };
+  const { plan } = planned;
+
+  const db = getDb();
+  const [member] = await db
+    .select({ memberId: members.memberId, email: members.email, fullName: members.fullName })
+    .from(members)
+    .where(eq(members.memberId, input.memberId))
+    .limit(1);
+  if (!member) return { error: t.errors.memberNotFound };
+
+  if (plan.type === "payout") {
+    const excess = validatePayoutAmount(plan.amountCents / 100, await memberPayoutBase(db, member.memberId));
+    if (excess) return { error: t.admin.treasury.movementErrors.payoutExceedsBalance(formatMoney(excess.limit)) };
+  }
+  if (plan.externalRef !== null) {
+    const taken = await externalRefTakenMessage(db, plan.externalRef);
+    if (taken) return { error: taken };
+  }
+  if (!input.confirmDuplicate) {
+    const warning = await possibleDuplicateWarning(db, member.memberId, plan);
+    if (warning) return { warning };
+  }
+
+  const entryId = genId("led");
+  const row = {
+    entryId,
+    memberId: member.memberId,
+    entryDate: plan.entryDate,
+    type: plan.type,
+    amount: plan.amount,
+    cycleId: null,
+    note: plan.note,
+    method: plan.method,
+    externalRef: plan.externalRef,
+    createdBy: admin.email,
+    createdAt: now,
+  };
   try {
-    const admin = await requireAdmin();
-    const amountError = validateTopupAmount(amount);
-    if (amountError) return { error: ledgerAmountErrorMessage(amountError) };
+    await db.insert(ledgerEntries).values(row);
+  } catch (e) {
+    // Another admin recorded the same reference since the check above.
+    if (plan.externalRef !== null && isUniqueViolation(e, EXTERNAL_REF_UNIQUE_INDEX)) {
+      return {
+        error:
+          (await externalRefTakenMessage(db, plan.externalRef)) ??
+          t.admin.treasury.movementErrors.refTaken(plan.externalRef),
+      };
+    }
+    throw e;
+  }
 
-    const db = getDb();
-    const [member] = await db
-      .select({ memberId: members.memberId, email: members.email })
-      .from(members)
-      .where(eq(members.memberId, memberId))
-      .limit(1);
-    if (!member) return { error: t.errors.memberNotFound };
-
-    const now = new Date();
-    const entryId = genId("led");
-    await db.insert(ledgerEntries).values({
-      entryId,
-      memberId,
-      entryDate: entryDate ? new Date(entryDate) : now,
-      type: "topup",
-      amount: amount.toFixed(2),
-      cycleId: null,
-      note: note?.trim() || "Ricarica",
-      createdBy: admin.email,
-      createdAt: now,
-    });
-
-    const [balanceRow] = await db
-      .select({ total: sql<string>`coalesce(sum(${ledgerEntries.amount}), '0')` })
-      .from(ledgerEntries)
-      .where(eq(ledgerEntries.memberId, memberId));
-    const newBalance = parseFloat(balanceRow?.total ?? "0");
-
+  // The row is committed: a failure from here on is logged, never reported as
+  // a refusal, or the admin would record the same movement again.
+  try {
+    const newBalance = await memberBalance(db, member.memberId);
     await dispatchNotification(db, {
-      memberId,
+      memberId: member.memberId,
       memberEmail: member.email,
-      type: "topup_received",
-      title: t.notificationsServer.topupReceivedTitle,
-      body: t.notificationsServer.topupReceivedBody(formatMoney(amount), formatMoney(newBalance)),
+      ...manualMovementNotification(plan, newBalance),
       href: "/storico",
       createdAt: now,
     });
+  } catch (notifyError) {
+    console.error(`[record_${plan.type}] notification failed:`, notifyError);
+  }
+  try {
+    await writeAudit(db, admin.email, `record_${plan.type}`, "ledger", entryId, { before: null, after: row });
+  } catch (auditError) {
+    console.error(`[record_${plan.type}] audit failed:`, auditError);
+  }
+  revalidatePath("/admin");
+  revalidatePath("/");
+  revalidatePath("/storico");
+  return { memberName: member.fullName };
+}
 
-    await writeAudit(db, admin.email, "record_topup", "ledger", entryId, { memberId, amount });
-    revalidatePath("/admin");
-    revalidatePath("/");
-    revalidatePath("/storico");
-    return {};
+export type ManualTopupInput = {
+  memberId: string;
+  // As typed, positive. Everything here is re-validated by planManualMovement.
+  amount: number;
+  method: string;
+  externalRef?: string;
+  note?: string;
+  entryDate?: string;
+  confirmDuplicate?: boolean;
+};
+
+export async function adminRecordTopup(input: ManualTopupInput): Promise<CassaMovementResult> {
+  try {
+    const admin = await requireAdmin();
+    return await recordManualMovement(admin, { ...input, type: "topup" });
   } catch (e) {
-    return { error: e instanceof Error ? e.message : t.errors.genericError };
+    return { error: actionErrorMessage(e, t.errors.genericError, "adminRecordTopup") };
+  }
+}
+
+export type OutgoingMovementInput = {
+  memberId: string;
+  // "payout" | "manual_charge" | "membership_fee"; anything else is refused.
+  type: string;
+  // As typed, positive: the row is stored negative.
+  amount: number;
+  // The causale, required and shown to the member.
+  note: string;
+  // Payout only (optional); ignored for charges and fees.
+  method?: string;
+  externalRef?: string;
+  entryDate?: string;
+  confirmDuplicate?: boolean;
+};
+
+// Payout (balance returned to the member, never beyond the balance), manual
+// charge or membership fee.
+export async function adminRecordOutgoingMovement(
+  input: OutgoingMovementInput,
+): Promise<CassaMovementResult> {
+  try {
+    const admin = await requireAdmin();
+    if (!isOutgoingLedgerType(input.type)) return { error: t.admin.treasury.movementErrors.invalidType };
+    return await recordManualMovement(admin, input);
+  } catch (e) {
+    return { error: actionErrorMessage(e, t.errors.genericError, "adminRecordOutgoingMovement") };
   }
 }
 
@@ -1234,7 +1520,8 @@ export async function adminUpdateOrderLineActuals(input: {
 // unavailable). The original `order_charge` ledger entry is left intact;
 // the delta vs the new total is posted as a separate `correction` row so
 // the audit trail is preserved and the change is fully reversible by
-// posting an inverse correction.
+// posting an inverse correction. Unless the cycle is manual, its shipping is
+// re-split in the same batch (prepareShippingRecompute).
 //
 // Empty new-line lists also delete every order row for that member in the
 // cycle, which makes "rimuovi l'intero ordine" work too.
@@ -1249,211 +1536,260 @@ export type EditClosedOrderInput = {
   note?: string;
 };
 
-export async function adminEditClosedOrder(input: EditClosedOrderInput) {
-  const admin = await requireAdmin();
-  const db = getDb();
-  const now = new Date();
+export async function adminEditClosedOrder(input: EditClosedOrderInput): Promise<
+  | { oldTotal: number; newTotal: number; delta: number; newBalance: number; correctionEntryId: string | null }
+  | { error: string }
+> {
+  try {
+    const admin = await requireAdmin();
+    const db = getDb();
+    const now = new Date();
 
-  const [cycle] = await db
-    .select({ status: orderCycles.status, title: orderCycles.title })
-    .from(orderCycles)
-    .where(eq(orderCycles.cycleId, input.cycleId))
-    .limit(1);
-  if (!cycle) throw new Error(t.errors.cycleNotFound);
-  if (cycle.status !== "closed") {
-    throw new Error(t.errors.orderEditOnlyAfterClose);
-  }
-
-  const [member] = await db
-    .select({ memberId: members.memberId, fullName: members.fullName, email: members.email })
-    .from(members)
-    .where(eq(members.memberId, input.memberId))
-    .limit(1);
-  if (!member) throw new Error(t.errors.memberNotFound);
-
-  // Pull the current order rows so we can compute the delta. Actuals are
-  // needed because a weighed line's effective total is actual_line_total.
-  const previousLines = await db
-    .select({
-      orderLineId: orders.orderLineId,
-      productId: orders.productId,
-      quantity: orders.quantity,
-      unitPriceSnapshot: orders.unitPriceSnapshot,
-      lineTotal: orders.lineTotal,
-      actualQuantity: orders.actualQuantity,
-      actualLineTotal: orders.actualLineTotal,
-    })
-    .from(orders)
-    .where(and(eq(orders.cycleId, input.cycleId), eq(orders.memberId, input.memberId)));
-
-  // Resolve requested products against the cycle. Existing lines keep their
-  // unit_price_snapshot; only products new to this order take the current
-  // `products.unitPrice` (which already reflects any close-time adjustments).
-  const productIds = Array.from(new Set(input.lines.map((l) => l.productId).filter(Boolean)));
-  const cycleProducts = productIds.length
-    ? await db
-        .select({ productId: products.productId, unitPrice: products.unitPrice })
-        .from(products)
-        .where(and(eq(products.cycleId, input.cycleId), inArray(products.productId, productIds)))
-    : [];
-  const priceByProduct = new Map(cycleProducts.map((p) => [p.productId, p.unitPrice]));
-
-  // Reject any line that points at a product not in this cycle — guards
-  // against client-side tampering and stale UI state.
-  for (const line of input.lines) {
-    if (line.productId && Math.floor(line.quantity) > 0 && !priceByProduct.has(line.productId)) {
-      throw new Error(t.errors.productNotValidForCycle);
+    const [cycle] = await db
+      .select({
+        status: orderCycles.status,
+        title: orderCycles.title,
+        shippingMode: orderCycles.shippingMode,
+        shippingCostPerMember: orderCycles.shippingCostPerMember,
+        shippingTotal: orderCycles.shippingTotal,
+      })
+      .from(orderCycles)
+      .where(eq(orderCycles.cycleId, input.cycleId))
+      .limit(1);
+    if (!cycle) return { error: t.errors.cycleNotFound };
+    if (cycle.status !== "closed") {
+      return { error: t.errors.orderEditOnlyAfterClose };
     }
-  }
 
-  const plan = planClosedOrderEdit(previousLines, input.lines, priceByProduct);
-  const { oldTotal, newTotal, delta } = plan;
-  const epsilon = 0.005;
+    const [member] = await db
+      .select({ memberId: members.memberId, fullName: members.fullName, email: members.email })
+      .from(members)
+      .where(eq(members.memberId, input.memberId))
+      .limit(1);
+    if (!member) return { error: t.errors.memberNotFound };
 
-  // Apply the plan in one db.batch (a single Neon transaction): unchanged
-  // lines are not touched, so their actuals survive; the correction entry is
-  // part of the same batch, so the order rows and the money can't diverge.
-  const statements: BatchItem<"pg">[] = [];
-  if (plan.deletes.length > 0) {
-    statements.push(db.delete(orders).where(inArray(orders.orderLineId, plan.deletes)));
-  }
-  for (const u of plan.updates) {
-    statements.push(
-      db
-        .update(orders)
-        .set({
-          quantity: u.quantity,
-          lineTotal: u.lineTotal,
-          actualQuantity: null,
-          actualLineTotal: null,
-          updatedAt: now,
-        })
-        .where(eq(orders.orderLineId, u.orderLineId)),
-    );
-  }
-  if (plan.inserts.length > 0) {
-    statements.push(
-      db.insert(orders).values(
-        plan.inserts.map((l) => ({
-          orderLineId: genId("ord"),
-          cycleId: input.cycleId,
-          memberId: input.memberId,
-          productId: l.productId,
-          quantity: l.quantity,
-          unitPriceSnapshot: l.unitPrice,
-          lineTotal: l.lineTotal,
-          updatedAt: now,
-        })),
-      ),
-    );
-  }
+    // Pull the current order rows so we can compute the delta. Actuals are
+    // needed because a weighed line's effective total is actual_line_total.
+    const previousLines = await db
+      .select({
+        orderLineId: orders.orderLineId,
+        productId: orders.productId,
+        quantity: orders.quantity,
+        unitPriceSnapshot: orders.unitPriceSnapshot,
+        lineTotal: orders.lineTotal,
+        actualQuantity: orders.actualQuantity,
+        actualLineTotal: orders.actualLineTotal,
+      })
+      .from(orders)
+      .where(and(eq(orders.cycleId, input.cycleId), eq(orders.memberId, input.memberId)));
 
-  // Post a correction entry only if the total actually changed. Same-total
-  // edits (e.g. swap one product for another at identical price) are
-  // legitimate too and need no ledger movement.
-  let correctionEntryId: string | null = null;
-  if (Math.abs(delta) > epsilon) {
-    correctionEntryId = genId("led");
-    const trimmedNote = (input.note ?? "").trim();
-    const reason = trimmedNote || `Correzione ordine "${cycle.title}"`;
-    statements.push(
-      db.insert(ledgerEntries).values({
-        entryId: correctionEntryId,
-        memberId: input.memberId,
-        entryDate: now,
-        type: "correction",
-        // delta > 0 → member ordered more → additional charge (negative ledger amount).
-        // delta < 0 → member ordered less → refund (positive ledger amount).
-        amount: (-delta).toFixed(2),
-        cycleId: input.cycleId,
-        note: reason,
-        createdBy: admin.email,
-        createdAt: now,
-      }),
-    );
-  }
+    // Resolve requested products against the cycle. Existing lines keep their
+    // unit_price_snapshot; only products new to this order take the current
+    // `products.unitPrice` (which already reflects any close-time adjustments).
+    const productIds = Array.from(new Set(input.lines.map((l) => l.productId).filter(Boolean)));
+    const cycleProducts = productIds.length
+      ? await db
+          .select({ productId: products.productId, unitPrice: products.unitPrice })
+          .from(products)
+          .where(and(eq(products.cycleId, input.cycleId), inArray(products.productId, productIds)))
+      : [];
+    const priceByProduct = new Map(cycleProducts.map((p) => [p.productId, p.unitPrice]));
 
-  if (statements.length > 0) {
-    // Lock the cycle (so a concurrent cancel waits for this correction) and
-    // the member's lines, then check in a fresh snapshot that the cycle is
-    // still closed and the lines are exactly the ones the plan was computed
-    // from. Otherwise 1/0 aborts the batch: a double submit or a concurrent
-    // weighing must not post a second correction on a stale delta.
-    const lock = db.execute(
-      sql`SELECT 1 FROM order_cycles WHERE cycle_id = ${input.cycleId} FOR SHARE`,
-    );
-    const lockLines = db.execute(
-      sql`SELECT 1 FROM orders
-          WHERE cycle_id = ${input.cycleId} AND member_id = ${input.memberId} FOR UPDATE`,
-    );
-    const guard = db.execute(
-      sql`SELECT 1 / (CASE WHEN
-            (SELECT status FROM order_cycles WHERE cycle_id = ${input.cycleId}) = 'closed'
-            AND (SELECT coalesce(jsonb_object_agg(order_line_id,
-                   jsonb_build_array(quantity, line_total::text, actual_line_total::text)), '{}'::jsonb)
-                 FROM orders
-                 WHERE cycle_id = ${input.cycleId} AND member_id = ${input.memberId})
-                = ${orderLinesSnapshot(previousLines)}::jsonb
-          THEN 1 ELSE 0 END) AS edit_guard`,
-    );
-    try {
-      await db.batch([lock, lockLines, guard, ...statements]);
-    } catch (e) {
-      // 22012 = division_by_zero, i.e. the guard fired.
-      if (e instanceof Error && /22012|division by zero/i.test(e.message)) {
-        throw new Error(t.errors.closedOrderChanged);
+    // Reject any line that points at a product not in this cycle — guards
+    // against client-side tampering and stale UI state.
+    for (const line of input.lines) {
+      if (line.productId && Math.floor(line.quantity) > 0 && !priceByProduct.has(line.productId)) {
+        return { error: t.errors.productNotValidForCycle };
       }
-      throw e;
     }
+
+    const plan = planClosedOrderEdit(previousLines, input.lines, priceByProduct);
+    const { oldTotal, newTotal, delta } = plan;
+    const epsilon = 0.005;
+
+    // Shipping follows the order: re-split on the effective totals this edit
+    // leaves (the member's new total is plan.newTotal). Never on a manual cycle.
+    const shipping =
+      cycle.shippingMode === "manual"
+        ? null
+        : await prepareShippingRecompute(db, input.cycleId, cycle, admin.email, now, {
+            memberId: input.memberId,
+            total: newTotal.toFixed(2),
+          });
+
+    // Apply the plan in one db.batch (a single Neon transaction): unchanged
+    // lines are not touched, so their actuals survive; the correction entry and
+    // the shipping re-split are part of the same batch, so the order rows and
+    // the money can't diverge.
+    const statements: BatchItem<"pg">[] = [];
+    if (plan.deletes.length > 0) {
+      statements.push(db.delete(orders).where(inArray(orders.orderLineId, plan.deletes)));
+    }
+    for (const u of plan.updates) {
+      statements.push(
+        db
+          .update(orders)
+          .set({
+            quantity: u.quantity,
+            lineTotal: u.lineTotal,
+            actualQuantity: null,
+            actualLineTotal: null,
+            updatedAt: now,
+          })
+          .where(eq(orders.orderLineId, u.orderLineId)),
+      );
+    }
+    if (plan.inserts.length > 0) {
+      statements.push(
+        db.insert(orders).values(
+          plan.inserts.map((l) => ({
+            orderLineId: genId("ord"),
+            cycleId: input.cycleId,
+            memberId: input.memberId,
+            productId: l.productId,
+            quantity: l.quantity,
+            unitPriceSnapshot: l.unitPrice,
+            lineTotal: l.lineTotal,
+            updatedAt: now,
+          })),
+        ),
+      );
+    }
+
+    // Post a correction entry only if the total actually changed. Same-total
+    // edits (e.g. swap one product for another at identical price) are
+    // legitimate too and need no ledger movement.
+    let correctionEntryId: string | null = null;
+    if (Math.abs(delta) > epsilon) {
+      correctionEntryId = genId("led");
+      const trimmedNote = (input.note ?? "").trim();
+      const reason = trimmedNote || `Correzione ordine "${cycle.title}"`;
+      statements.push(
+        db.insert(ledgerEntries).values({
+          entryId: correctionEntryId,
+          memberId: input.memberId,
+          entryDate: now,
+          type: "correction",
+          // delta > 0 → member ordered more → additional charge (negative ledger amount).
+          // delta < 0 → member ordered less → refund (positive ledger amount).
+          amount: (-delta).toFixed(2),
+          cycleId: input.cycleId,
+          note: reason,
+          createdBy: admin.email,
+          createdAt: now,
+        }),
+      );
+    }
+    if (shipping) statements.push(...shipping.statements);
+
+    if (statements.length > 0) {
+      // Lock the cycle (so a concurrent cancel, or another edit's shipping
+      // re-split, waits for this one) and the member's lines, then check in a
+      // fresh snapshot that the cycle is still closed, the lines are exactly the
+      // ones the plan was computed from and so is the shipping state. Otherwise
+      // 1/0 aborts the batch: a double submit or a concurrent weighing must not
+      // post a second correction on a stale delta.
+      const lock = db.execute(
+        sql`SELECT 1 FROM order_cycles WHERE cycle_id = ${input.cycleId} FOR UPDATE`,
+      );
+      const lockLines = db.execute(
+        sql`SELECT 1 FROM orders
+            WHERE cycle_id = ${input.cycleId} AND member_id = ${input.memberId} FOR UPDATE`,
+      );
+      const guard = db.execute(
+        sql`SELECT 1 / (CASE WHEN
+              (SELECT status FROM order_cycles WHERE cycle_id = ${input.cycleId}) = 'closed'
+              AND (SELECT coalesce(jsonb_object_agg(order_line_id,
+                     jsonb_build_array(quantity, line_total::text, actual_line_total::text)), '{}'::jsonb)
+                   FROM orders
+                   WHERE cycle_id = ${input.cycleId} AND member_id = ${input.memberId})
+                  = ${orderLinesSnapshot(previousLines)}::jsonb
+              AND ${shipping ? shipping.guard : sql`TRUE`}
+            THEN 1 ELSE 0 END) AS edit_guard`,
+      );
+      try {
+        await db.batch([lock, lockLines, guard, ...statements]);
+      } catch (e) {
+        // 22012 = division_by_zero, i.e. the guard fired.
+        if (e instanceof Error && /22012|division by zero/i.test(e.message)) {
+          return { error: t.errors.closedOrderChanged };
+        }
+        throw e;
+      }
+    }
+
+    // Member-facing notification with the human-readable diff.
+    const [balanceRow] = await db
+      .select({ total: sql<string>`coalesce(sum(${ledgerEntries.amount}), '0')` })
+      .from(ledgerEntries)
+      .where(eq(ledgerEntries.memberId, input.memberId));
+    const newBalance = parseFloat(balanceRow?.total ?? "0");
+
+    // The edited member gets a single notification: a change to their own
+    // shipping share is folded into it, so the new balance it quotes adds up.
+    // Other members whose share moved get the shipping one.
+    const shippingChanges = shipping?.plan.changes ?? [];
+    const ownShipping = shippingChanges.find((c) => c.memberId === input.memberId);
+
+    const orderSentence =
+      Math.abs(delta) <= epsilon
+        ? ownShipping
+          ? t.notificationsServer.orderModifiedBodyUpdated(cycle.title)
+          : t.notificationsServer.orderModifiedBodyNoChange(cycle.title)
+        : delta > 0
+          ? t.notificationsServer.orderModifiedBodyCharge(cycle.title, formatMoney(delta))
+          : t.notificationsServer.orderModifiedBodyRefund(cycle.title, formatMoney(-delta));
+    const dirSentence = ownShipping
+      ? `${orderSentence} ${t.notificationsServer.orderModifiedShipping(
+          formatMoney(ownShipping.oldShare),
+          formatMoney(ownShipping.newShare),
+        )}`
+      : orderSentence;
+
+    await notifyShippingChanges(
+      db,
+      input.cycleId,
+      cycle.title,
+      shippingChanges.filter((c) => c.memberId !== input.memberId),
+      now,
+    );
+    await dispatchNotification(db, {
+      memberId: input.memberId,
+      memberEmail: member.email,
+      type: "order_corrected",
+      title: t.notificationsServer.orderModifiedTitle,
+      body: t.notificationsServer.orderModifiedBody(dirSentence, formatMoney(newBalance)),
+      href: `/storico?cycleId=${input.cycleId}`,
+      createdAt: now,
+    });
+
+    await writeAudit(db, admin.email, "edit_closed_order", "order", input.cycleId, {
+      cycleId: input.cycleId,
+      memberId: input.memberId,
+      oldTotal: oldTotal.toFixed(2),
+      newTotal: newTotal.toFixed(2),
+      delta: delta.toFixed(2),
+      correctionEntryId,
+      lineCount: previousLines.length - plan.deletes.length + plan.inserts.length,
+      updatedLines: plan.updates.length,
+      note: input.note ?? null,
+      shippingChanges,
+    });
+
+    revalidatePath("/admin");
+    revalidatePath("/");
+    revalidatePath("/storico");
+
+    return {
+      oldTotal: Number(oldTotal.toFixed(2)),
+      newTotal: Number(newTotal.toFixed(2)),
+      delta: Number(delta.toFixed(2)),
+      newBalance: Number(newBalance.toFixed(2)),
+      correctionEntryId,
+    };
+  } catch (e) {
+    return { error: actionErrorMessage(e, t.errors.genericError, "adminEditClosedOrder") };
   }
-
-  // Member-facing notification with the human-readable diff.
-  const [balanceRow] = await db
-    .select({ total: sql<string>`coalesce(sum(${ledgerEntries.amount}), '0')` })
-    .from(ledgerEntries)
-    .where(eq(ledgerEntries.memberId, input.memberId));
-  const newBalance = parseFloat(balanceRow?.total ?? "0");
-
-  const dirSentence =
-    Math.abs(delta) <= epsilon
-      ? t.notificationsServer.orderModifiedBodyNoChange(cycle.title)
-      : delta > 0
-        ? t.notificationsServer.orderModifiedBodyCharge(cycle.title, formatMoney(delta))
-        : t.notificationsServer.orderModifiedBodyRefund(cycle.title, formatMoney(-delta));
-
-  await dispatchNotification(db, {
-    memberId: input.memberId,
-    memberEmail: member.email,
-    type: "order_corrected",
-    title: t.notificationsServer.orderModifiedTitle,
-    body: t.notificationsServer.orderModifiedBody(dirSentence, formatMoney(newBalance)),
-    href: `/storico?cycleId=${input.cycleId}`,
-    createdAt: now,
-  });
-
-  await writeAudit(db, admin.email, "edit_closed_order", "order", input.cycleId, {
-    cycleId: input.cycleId,
-    memberId: input.memberId,
-    oldTotal: oldTotal.toFixed(2),
-    newTotal: newTotal.toFixed(2),
-    delta: delta.toFixed(2),
-    correctionEntryId,
-    lineCount: previousLines.length - plan.deletes.length + plan.inserts.length,
-    updatedLines: plan.updates.length,
-    note: input.note ?? null,
-  });
-
-  revalidatePath("/admin");
-  revalidatePath("/");
-  revalidatePath("/storico");
-
-  return {
-    oldTotal: Number(oldTotal.toFixed(2)),
-    newTotal: Number(newTotal.toFixed(2)),
-    delta: Number(delta.toFixed(2)),
-    newBalance: Number(newBalance.toFixed(2)),
-    correctionEntryId,
-  };
 }
 
 // Full snapshot of a ledger row for the audit log, so an edit or a delete can
@@ -1467,6 +1803,8 @@ const ledgerAuditColumns = {
   note: ledgerEntries.note,
   entryDate: ledgerEntries.entryDate,
   paymentId: ledgerEntries.paymentId,
+  method: ledgerEntries.method,
+  externalRef: ledgerEntries.externalRef,
 };
 
 export async function adminUpdateLedgerEntry(
@@ -1486,6 +1824,16 @@ export async function adminUpdateLedgerEntry(
 
     const amountError = validateLedgerEntryEdit(before, data.amount);
     if (amountError) return { error: ledgerAmountErrorMessage(amountError) };
+    // The member was told why the money left: the causale stays.
+    if (isOutgoingLedgerType(before.type) && !data.note?.trim()) {
+      return { error: t.admin.treasury.movementErrors.noteRequired };
+    }
+    // Growing a payout returns more money: it may not exceed the balance.
+    if (before.type === "payout") {
+      const balance = await memberPayoutBase(db, before.memberId);
+      const excess = validatePayoutAmount(Math.abs(data.amount), balance, parseFloat(before.amount));
+      if (excess) return { error: t.admin.treasury.movementErrors.payoutExceedsBalance(formatMoney(excess.limit)) };
+    }
 
     const after = { ...before, amount: data.amount.toFixed(2), note: data.note };
     await db
@@ -1571,46 +1919,76 @@ export type UpsertMemberInput = {
   active: boolean;
 };
 
-export async function adminUpsertMember(data: UpsertMemberInput) {
-  const admin = await requireAdmin();
-  if (!data.fullName?.trim()) throw new Error(t.errors.fieldRequired(t.fields.name));
-  if (!data.email?.trim()) throw new Error(t.errors.fieldRequired(t.fields.email));
-  const role = normalizeRole(data.role);
-  if (!role) throw new Error(t.errors.invalidRole);
+// Emails and aliases share one namespace (lib/member-email.ts). The message
+// names the member who already holds the address, so the admin can fix it.
+async function memberEmailConflict(
+  memberId: string | undefined,
+  wanted: { email: string; aliasEmail: string | null },
+): Promise<string | null> {
+  const holders = await getMembersByEmails([wanted.email, wanted.aliasEmail].filter((a) => a !== null));
+  const conflict = findEmailConflict(memberId, wanted, holders);
+  return conflict ? t.admin.members.emailInUse(conflict.address, conflict.fullName) : null;
+}
 
-  const aliasEmail = data.aliasEmail?.toLowerCase().trim() || null;
-  const db = getDb();
-  const now = new Date();
+export async function adminUpsertMember(data: UpsertMemberInput): Promise<{ error?: string }> {
+  try {
+    const admin = await requireAdmin();
+    if (!data.fullName?.trim()) return { error: t.errors.fieldRequired(t.fields.name) };
+    const email = normalizeEmail(data.email);
+    if (!email) return { error: t.errors.fieldRequired(t.fields.email) };
+    const role = normalizeRole(data.role);
+    if (!role) return { error: t.errors.invalidRole };
 
-  if (data.memberId) {
-    await db
-      .update(members)
-      .set({
-        fullName: data.fullName.trim(),
-        email: data.email.toLowerCase().trim(),
-        aliasEmail,
-        role,
-        active: data.active,
-        updatedAt: now,
-      })
-      .where(eq(members.memberId, data.memberId));
-    await writeAudit(db, admin.email, "update_member", "member", data.memberId, { ...data, role });
-  } else {
-    const memberId = genId("mem");
-    await db.insert(members).values({
-      memberId,
-      fullName: data.fullName.trim(),
-      email: data.email.toLowerCase().trim(),
-      aliasEmail,
-      role,
-      active: data.active,
-      createdAt: now,
-      updatedAt: now,
-    });
-    await writeAudit(db, admin.email, "create_member", "member", memberId, { ...data, role });
+    const aliasEmail = normalizeEmail(data.aliasEmail);
+    const db = getDb();
+    const now = new Date();
+
+    // A taken address is returned, not thrown: Next.js masks thrown Server
+    // Action messages in production, and the admin needs to read this one.
+    const conflict = await memberEmailConflict(data.memberId, { email, aliasEmail });
+    if (conflict) return { error: conflict };
+
+    try {
+      if (data.memberId) {
+        await db
+          .update(members)
+          .set({
+            fullName: data.fullName.trim(),
+            email,
+            aliasEmail,
+            role,
+            active: data.active,
+            updatedAt: now,
+          })
+          .where(eq(members.memberId, data.memberId));
+        await writeAudit(db, admin.email, "update_member", "member", data.memberId, { ...data, role });
+      } else {
+        const memberId = genId("mem");
+        await db.insert(members).values({
+          memberId,
+          fullName: data.fullName.trim(),
+          email,
+          aliasEmail,
+          role,
+          active: data.active,
+          createdAt: now,
+          updatedAt: now,
+        });
+        await writeAudit(db, admin.email, "create_member", "member", memberId, { ...data, role });
+      }
+    } catch (e) {
+      // A concurrent save took the address after the check above: the unique
+      // indexes (migration 0017) reject the write. Report it the same way.
+      const raced = isUniqueViolation(e) ? await memberEmailConflict(data.memberId, { email, aliasEmail }) : null;
+      if (raced) return { error: raced };
+      throw e;
+    }
+
+    revalidatePath("/admin");
+    return {};
+  } catch (e) {
+    return { error: actionErrorMessage(e, t.errors.genericError, "adminUpsertMember") };
   }
-
-  revalidatePath("/admin");
 }
 
 // ── Fornitori ─────────────────────────────────────────────────────────────────
@@ -1627,18 +2005,34 @@ export type UpsertSupplierInput = {
   active?: boolean;
 };
 
-export async function adminUpsertSupplier(data: UpsertSupplierInput) {
-  const admin = await requireAdmin();
-  if (!data.name?.trim()) throw new Error(t.errors.fieldRequired(t.fields.name));
+export async function adminUpsertSupplier(data: UpsertSupplierInput): Promise<{ error?: string }> {
+  try {
+    const admin = await requireAdmin();
+    if (!data.name?.trim()) return { error: t.errors.fieldRequired(t.fields.name) };
 
-  const db = getDb();
-  const now = new Date();
-  const trim = (v?: string) => v?.trim() || null;
+    const db = getDb();
+    const now = new Date();
+    const trim = (v?: string) => v?.trim() || null;
 
-  if (data.supplierId) {
-    await db
-      .update(suppliers)
-      .set({
+    if (data.supplierId) {
+      await db
+        .update(suppliers)
+        .set({
+          name: data.name.trim(),
+          macroCategory: trim(data.macroCategory),
+          contactName: trim(data.contactName),
+          phone: trim(data.phone),
+          email: trim(data.email),
+          address: trim(data.address),
+          notes: trim(data.notes),
+          active: data.active ?? true,
+        })
+        .where(eq(suppliers.supplierId, data.supplierId));
+      await writeAudit(db, admin.email, "update_supplier", "supplier", data.supplierId, data);
+    } else {
+      const supplierId = genId("sup");
+      await db.insert(suppliers).values({
+        supplierId,
         name: data.name.trim(),
         macroCategory: trim(data.macroCategory),
         contactName: trim(data.contactName),
@@ -1647,34 +2041,28 @@ export async function adminUpsertSupplier(data: UpsertSupplierInput) {
         address: trim(data.address),
         notes: trim(data.notes),
         active: data.active ?? true,
-      })
-      .where(eq(suppliers.supplierId, data.supplierId));
-    await writeAudit(db, admin.email, "update_supplier", "supplier", data.supplierId, data);
-  } else {
-    const supplierId = genId("sup");
-    await db.insert(suppliers).values({
-      supplierId,
-      name: data.name.trim(),
-      macroCategory: trim(data.macroCategory),
-      contactName: trim(data.contactName),
-      phone: trim(data.phone),
-      email: trim(data.email),
-      address: trim(data.address),
-      notes: trim(data.notes),
-      active: data.active ?? true,
-      createdAt: now,
-    });
-    await writeAudit(db, admin.email, "create_supplier", "supplier", supplierId, data);
+        createdAt: now,
+      });
+      await writeAudit(db, admin.email, "create_supplier", "supplier", supplierId, data);
+    }
+    revalidatePath("/admin");
+    return {};
+  } catch (e) {
+    return { error: actionErrorMessage(e, t.errors.genericError, "adminUpsertSupplier") };
   }
-  revalidatePath("/admin");
 }
 
-export async function adminArchiveSupplier(supplierId: string, active: boolean) {
-  const admin = await requireAdmin();
-  const db = getDb();
-  await db.update(suppliers).set({ active }).where(eq(suppliers.supplierId, supplierId));
-  await writeAudit(db, admin.email, active ? "unarchive_supplier" : "archive_supplier", "supplier", supplierId);
-  revalidatePath("/admin");
+export async function adminArchiveSupplier(supplierId: string, active: boolean): Promise<{ error?: string }> {
+  try {
+    const admin = await requireAdmin();
+    const db = getDb();
+    await db.update(suppliers).set({ active }).where(eq(suppliers.supplierId, supplierId));
+    await writeAudit(db, admin.email, active ? "unarchive_supplier" : "archive_supplier", "supplier", supplierId);
+    revalidatePath("/admin");
+    return {};
+  } catch (e) {
+    return { error: actionErrorMessage(e, t.errors.genericError, "adminArchiveSupplier") };
+  }
 }
 
 export async function adminDeleteSupplier(supplierId: string): Promise<{ error?: string }> {
@@ -1870,21 +2258,33 @@ export async function adminRemoveProductFromCycle(productId: string): Promise<{e
 }
 
 export async function adminGetCatalogBySupplier(supplierId: string) {
-  await requireAdmin();
-  const { getCatalogBySupplier } = await import("@/lib/db/queries");
-  return getCatalogBySupplier(supplierId);
+  try {
+    await requireAdmin();
+    const { getCatalogBySupplier } = await import("@/lib/db/queries");
+    return await getCatalogBySupplier(supplierId);
+  } catch (e) {
+    return { error: actionErrorMessage(e, t.errors.genericError, "adminGetCatalogBySupplier") };
+  }
 }
 
 export async function adminGetCycleProducts(cycleId: string) {
-  await requireAdmin();
-  const { getAdminCycleProducts } = await import("@/lib/db/queries");
-  return getAdminCycleProducts(cycleId);
+  try {
+    await requireAdmin();
+    const { getAdminCycleProducts } = await import("@/lib/db/queries");
+    return await getAdminCycleProducts(cycleId);
+  } catch (e) {
+    return { error: actionErrorMessage(e, t.errors.genericError, "adminGetCycleProducts") };
+  }
 }
 
 export async function adminGetCycleProductsForReview(cycleId: string) {
-  await requireAdmin();
-  const { getCycleProductsForReview } = await import("@/lib/db/queries");
-  return getCycleProductsForReview(cycleId);
+  try {
+    await requireAdmin();
+    const { getCycleProductsForReview } = await import("@/lib/db/queries");
+    return await getCycleProductsForReview(cycleId);
+  } catch (e) {
+    return { error: actionErrorMessage(e, t.errors.genericError, "adminGetCycleProductsForReview") };
+  }
 }
 
 // ── Supplier distinta import ─────────────────────────────────────────────────

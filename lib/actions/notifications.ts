@@ -7,6 +7,7 @@ import { getDb } from "@/lib/db/client";
 import { notificationPreferences, notifications } from "@/lib/db/schema";
 import { isNotificationCategory } from "@/lib/notifications/categories";
 import { t } from "@/lib/i18n";
+import { actionErrorMessage } from "@/lib/action-error";
 
 export async function markNotificationRead(notificationId: string) {
   const session = await requireUserSession();
@@ -43,27 +44,31 @@ export async function updateNotificationPreference(input: {
   appEnabled: boolean;
   emailEnabled: boolean;
 }): Promise<{ ok: true } | { error: string }> {
-  const session = await requireUserSession();
-  const memberId = session.user.memberId;
-  if (!memberId) return { error: t.errors.unauthorized };
-  if (!isNotificationCategory(input.category)) return { error: t.errors.genericError };
+  try {
+    const session = await requireUserSession();
+    const memberId = session.user.memberId;
+    if (!memberId) return { error: t.errors.unauthorized };
+    if (!isNotificationCategory(input.category)) return { error: t.errors.genericError };
 
-  const db = getDb();
-  const now = new Date();
-  await db
-    .insert(notificationPreferences)
-    .values({
-      memberId,
-      category: input.category,
-      appEnabled: input.appEnabled,
-      emailEnabled: input.emailEnabled,
-      updatedAt: now,
-    })
-    .onConflictDoUpdate({
-      target: [notificationPreferences.memberId, notificationPreferences.category],
-      set: { appEnabled: input.appEnabled, emailEnabled: input.emailEnabled, updatedAt: now },
-    });
+    const db = getDb();
+    const now = new Date();
+    await db
+      .insert(notificationPreferences)
+      .values({
+        memberId,
+        category: input.category,
+        appEnabled: input.appEnabled,
+        emailEnabled: input.emailEnabled,
+        updatedAt: now,
+      })
+      .onConflictDoUpdate({
+        target: [notificationPreferences.memberId, notificationPreferences.category],
+        set: { appEnabled: input.appEnabled, emailEnabled: input.emailEnabled, updatedAt: now },
+      });
 
-  revalidatePath("/notifiche/impostazioni");
-  return { ok: true };
+    revalidatePath("/notifiche/impostazioni");
+    return { ok: true };
+  } catch (e) {
+    return { error: actionErrorMessage(e, t.errors.genericError, "updateNotificationPreference") };
+  }
 }

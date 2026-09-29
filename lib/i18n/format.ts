@@ -28,6 +28,17 @@ export function formatMoney(value: number | string): string {
   return new Intl.NumberFormat(tag, { style: "currency", currency: brand.currency }).format(n);
 }
 
+// Balances and ledger movements: "+" for a credit, "-" for a debit, no sign
+// on zero. Prices and order totals stay on formatMoney.
+export function formatSignedMoney(value: number | string): string {
+  const n = typeof value === "string" ? parseFloat(value) : value;
+  return new Intl.NumberFormat(tag, {
+    style: "currency",
+    currency: brand.currency,
+    signDisplay: "exceptZero",
+  }).format(n);
+}
+
 export function formatDate(d: Date | string, opts?: Intl.DateTimeFormatOptions): string {
   const date = typeof d === "string" ? new Date(d) : d;
   return date.toLocaleDateString(tag, {

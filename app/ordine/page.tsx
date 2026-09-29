@@ -1,5 +1,6 @@
 import { AppShell } from "@/components/app-shell";
 import { OrderForm } from "./order-form";
+import { CycleChooser } from "./cycle-chooser";
 import { t } from "@/lib/i18n";
 import { getUserRole, requireUserSession } from "@/lib/auth/session";
 import {
@@ -10,6 +11,7 @@ import {
 } from "@/lib/db/queries";
 import { saveOrder } from "@/lib/actions/order";
 import { canAccessCycle } from "@/lib/roles";
+import { resolveOrderCycle } from "@/lib/order-cycle";
 import Link from "next/link";
 
 export default async function OrdinePage({
@@ -30,14 +32,15 @@ export default async function OrdinePage({
 
   const activeCycles = openCycles.filter((c) => canAccessCycle(c.accessLevel, role));
 
-  let openCycle = null;
-  if (activeCycles.length > 0) {
-    if (searchCycleId) {
-      openCycle = activeCycles.find((c) => c.cycleId === searchCycleId) ?? activeCycles[0];
-    } else {
-      openCycle = activeCycles[0];
-    }
+  const choice = resolveOrderCycle(activeCycles, searchCycleId);
+  if (choice.kind === "choose") {
+    return (
+      <AppShell email={session.user.email} isAdmin={role === "admin"} memberId={memberId}>
+        <CycleChooser cycles={activeCycles} />
+      </AppShell>
+    );
   }
+  const openCycle = choice.kind === "open" ? choice.cycle : null;
 
   if (!openCycle) {
     return (
@@ -78,8 +81,13 @@ export default async function OrdinePage({
         </div>
       )}
       <OrderForm
+        // A new cycle is a new form: switching cycles must not carry over the
+        // previous cycle's draft and saved quantities (client state survives
+        // a search-param navigation).
+        key={openCycle!.cycleId}
         cycleId={openCycle!.cycleId}
         cycleTitle={openCycle!.title}
+        supplierName={openCycle!.supplierName}
         orderCloseAt={openCycle!.orderCloseAt?.toISOString() ?? null}
         products={cycleProducts.map((p) => ({
           productId: p.productId,
