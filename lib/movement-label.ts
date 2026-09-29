@@ -81,3 +81,15 @@ export function movementText(
   if (note.toLowerCase().startsWith(label.toLowerCase())) return note;
   return `${label} · ${note}`;
 }
+
+// Who recorded a ledger row, as the Storico detail shows it: the online
+// payment for Stripe rows, else the name of the member whose email created_by
+// holds (an admin), else the system (legacy rows, accounts since deleted).
+// Never an email: getMemberLedger resolves the name server side.
+export type MovementRecorder = { kind: "online" } | { kind: "admin"; name: string } | { kind: "system" };
+
+export function movementRecorder(entry: { paymentId: string | null; recorderName: string | null }): MovementRecorder {
+  if (entry.paymentId) return { kind: "online" };
+  const name = entry.recorderName?.trim();
+  return name ? { kind: "admin", name } : { kind: "system" };
+}

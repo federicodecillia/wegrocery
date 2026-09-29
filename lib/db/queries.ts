@@ -8,6 +8,7 @@ import {
   orderCycles,
   orderDrafts,
   orders,
+  payments,
   products,
   suppliers,
   supplierProducts,
@@ -284,11 +285,36 @@ export async function getLastMemberOrderForPrefill(
   return { cycleTitle: recent.cycleTitle, quantities };
 }
 
+// The member's movements, newest first, with what the Storico detail shows:
+// the cycle title, the online payment's status and the name of whoever
+// recorded the row. created_by holds an admin's email: only the name leaves
+// this function, through a scalar subquery, so an old email/alias clash can
+// never duplicate a movement.
 export async function getMemberLedger(memberId: string, limit = 50) {
   const db = getDb();
   return db
-    .select()
+    .select({
+      entryId: ledgerEntries.entryId,
+      type: ledgerEntries.type,
+      amount: ledgerEntries.amount,
+      note: ledgerEntries.note,
+      entryDate: ledgerEntries.entryDate,
+      cycleId: ledgerEntries.cycleId,
+      paymentId: ledgerEntries.paymentId,
+      method: ledgerEntries.method,
+      externalRef: ledgerEntries.externalRef,
+      cycleTitle: orderCycles.title,
+      paymentStatus: payments.status,
+      recorderName: sql<string | null>`(
+        SELECT m.full_name FROM members m
+        WHERE lower(m.email) = lower(${ledgerEntries.createdBy})
+           OR lower(m.alias_email) = lower(${ledgerEntries.createdBy})
+        LIMIT 1
+      )`,
+    })
     .from(ledgerEntries)
+    .leftJoin(orderCycles, eq(orderCycles.cycleId, ledgerEntries.cycleId))
+    .leftJoin(payments, eq(payments.paymentId, ledgerEntries.paymentId))
     .where(eq(ledgerEntries.memberId, memberId))
     .orderBy(desc(ledgerEntries.entryDate))
     .limit(limit);
