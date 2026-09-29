@@ -2,12 +2,19 @@
 
 import { useEffect, useId, useRef, useState, useTransition } from "react";
 import { toast } from "@/components/ui/toast";
-import { adminRecordTopup, type CassaMovementResult } from "@/lib/actions/admin";
+import { adminRecordOutgoingMovement, adminRecordTopup, type CassaMovementResult } from "@/lib/actions/admin";
 import { t } from "@/lib/i18n";
-import { formatMoney } from "@/lib/i18n/format";
+import { formatDecimalInput, formatMoney } from "@/lib/i18n/format";
 import { utcToZonedLocalInput } from "@/lib/i18n/zoned-time";
-import { MANUAL_PAYMENT_METHODS, parseAmountInput, type ManualPaymentMethod } from "@/lib/ledger";
-import { formatDate } from "@/lib/utils";
+import {
+  MANUAL_PAYMENT_METHODS,
+  OUTGOING_LEDGER_TYPES,
+  parseAmountInput,
+  validatePayoutAmount,
+  type ManualPaymentMethod,
+  type OutgoingLedgerType,
+} from "@/lib/ledger";
+import { formatDate, formatEurSigned } from "@/lib/utils";
 import { MemberCombobox, type PickerMember } from "./member-combobox";
 
 const inputCls =
@@ -209,7 +216,7 @@ export function TopupForm({ members }: { members: PickerMember[] }) {
   if (review && member) {
     const lines: RecapLine[] = [
       { label: t.admin.treasury.recapMember, value: `${member.fullName} (${member.email})` },
-      { label: t.admin.treasury.recapAmount, value: `+${formatMoney(parsedAmount)}` },
+      { label: t.admin.treasury.recapAmount, value: formatEurSigned(parsedAmount) },
       { label: t.admin.treasury.recapMethod, value: t.admin.treasury.methods[method] },
       ...(externalRef.trim() ? [{ label: t.admin.treasury.recapRef, value: externalRef.trim() }] : []),
       { label: t.admin.treasury.recapDate, value: entryDate ? formatDate(entryDate) : formatDate(new Date()) },
@@ -313,5 +320,234 @@ export function TopupForm({ members }: { members: PickerMember[] }) {
         {t.admin.treasury.review}
       </button>
     </form>
+  );
+}
+
+// ── Outgoing movements ────────────────────────────────────────────────────────
+
+// Payout, manual charge or membership fee: rarer than top-ups, so the form
+// stays folded until the admin opens it.
+export function OutgoingMovementForm({ members }: { members: PickerMember[] }) {
+  const panelId = useId();
+  const [open, setOpen] = useState(false);
+  const [kind, setKind] = useState<OutgoingLedgerType>("payout");
+  const [member, setMember] = useState<PickerMember | null>(null);
+  const [amount, setAmount] = useState("");
+  const [method, setMethod] = useState<ManualPaymentMethod>("bonifico");
+  const [externalRef, setExternalRef] = useState("");
+  const [entryDate, setEntryDate] = useState(todayInput);
+  const [note, setNote] = useState("");
+  const [formError, setFormError] = useState<string | null>(null);
+
+  const isPayout = kind === "payout";
+  const parsedAmount = parseAmountInput(amount);
+  const { isPending, review, setReview, submit } = useMovementSubmit((memberName) => {
+    toast.success(t.admin.treasury.outgoingRegistered[kind](formatMoney(parsedAmount), memberName));
+    setMember(null);
+    setAmount("");
+    setMethod("bonifico");
+    setExternalRef("");
+    setEntryDate(todayInput());
+    setNote("");
+  });
+
+  function handleReview(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!member || !(Math.round(parsedAmount * 100) > 0) || !note.trim()) {
+      setFormError(t.admin.treasury.invalidOutgoing);
+      return;
+    }
+    // The server checks again against the balance at write time.
+    const excess = isPayout ? validatePayoutAmount(parsedAmount, member.balance) : null;
+    if (excess) {
+      setFormError(t.admin.treasury.movementErrors.payoutExceedsBalance(formatMoney(excess.limit)));
+      return;
+    }
+    setFormError(null);
+    setReview({ warning: null, error: null });
+  }
+
+  function confirm(confirmDuplicate: boolean) {
+    if (!member) return;
+    submit(() =>
+      adminRecordOutgoingMovement({
+        memberId: member.memberId,
+        type: kind,
+        amount: parsedAmount,
+        note,
+        method: isPayout ? method : undefined,
+        externalRef: isPayout ? externalRef : undefined,
+        entryDate,
+        confirmDuplicate,
+      }),
+    );
+  }
+
+  let body: React.ReactNode = null;
+  if (open && review && member) {
+    const lines: RecapLine[] = [
+      { label: t.admin.treasury.recapKind, value: t.admin.treasury.kinds[kind] },
+      { label: t.admin.treasury.recapMember, value: `${member.fullName} (${member.email})` },
+      { label: t.admin.treasury.recapAmount, value: formatEurSigned(-parsedAmount) },
+      ...(isPayout ? [{ label: t.admin.treasury.recapMethod, value: t.admin.treasury.methods[method] }] : []),
+      ...(isPayout && externalRef.trim() ? [{ label: t.admin.treasury.recapRef, value: externalRef.trim() }] : []),
+      { label: t.admin.treasury.recapDate, value: entryDate ? formatDate(entryDate) : formatDate(new Date()) },
+      { label: t.admin.treasury.recapReason, value: note.trim() },
+      {
+        label: t.admin.treasury.recapBalance,
+        value: `${formatMoney(member.balance)} → ${formatMoney(member.balance - parsedAmount)}`,
+      },
+    ];
+    body = (
+      <Recap
+        title={t.admin.treasury.recapTitle}
+        lines={lines}
+        review={review}
+        confirmLabel={t.admin.treasury.confirmOutgoing[kind]}
+        isPending={isPending}
+        onBack={() => setReview(null)}
+        onConfirm={confirm}
+      />
+    );
+  } else if (open) {
+    body = (
+      <form onSubmit={handleReview} noValidate className="space-y-3">
+        <fieldset>
+          <legend className={labelCls}>{t.admin.treasury.kindLabel}</legend>
+          <div className="grid grid-cols-3 gap-2">
+            {OUTGOING_LEDGER_TYPES.map((k) => (
+              <label
+                key={k}
+                className={`flex min-h-[40px] cursor-pointer items-center justify-center rounded-lg border px-1 text-center text-[12px] font-semibold has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand-teal/30 ${
+                  kind === k
+                    ? "border-brand-teal bg-brand-teal-light text-brand-teal"
+                    : "border-brand-border text-brand-near-black"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name={`${panelId}-kind`}
+                  value={k}
+                  checked={kind === k}
+                  onChange={() => setKind(k)}
+                  className="sr-only"
+                />
+                {t.admin.treasury.kinds[k]}
+              </label>
+            ))}
+          </div>
+          <p className="mt-1 text-[11px] text-brand-gray">{t.admin.treasury.kindHints[kind]}</p>
+        </fieldset>
+        <MemberCombobox
+          members={members}
+          value={member}
+          onChange={setMember}
+          label={t.admin.treasury.memberLabel}
+        />
+        <div className="grid grid-cols-2 gap-3">
+          <Field label={t.admin.treasury.amountLabel}>
+            {(id) => (
+              <>
+                <input
+                  id={id}
+                  type="text"
+                  inputMode="decimal"
+                  autoComplete="off"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  placeholder={t.admin.treasury.amountPlaceholder}
+                  className={inputCls}
+                />
+                {isPayout && member && member.balance > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setAmount(formatDecimalInput(member.balance.toFixed(2)))}
+                    className="mt-1 text-left text-[11px] font-semibold text-brand-teal underline"
+                  >
+                    {t.admin.treasury.payoutAll} ({formatMoney(member.balance)})
+                  </button>
+                )}
+              </>
+            )}
+          </Field>
+          <Field label={t.admin.treasury.dateLabel}>
+            {(id) => (
+              <input
+                id={id}
+                type="date"
+                value={entryDate}
+                onChange={(e) => setEntryDate(e.target.value)}
+                className={inputCls}
+              />
+            )}
+          </Field>
+        </div>
+        {isPayout && (
+          <div className="grid grid-cols-2 gap-3">
+            <Field label={t.admin.treasury.methodLabel}>
+              {(id) => <MethodSelect id={id} value={method} onChange={setMethod} />}
+            </Field>
+            <Field label={t.admin.treasury.externalRefLabel}>
+              {(id) => (
+                <input
+                  id={id}
+                  type="text"
+                  autoComplete="off"
+                  autoCapitalize="characters"
+                  spellCheck={false}
+                  value={externalRef}
+                  onChange={(e) => setExternalRef(e.target.value)}
+                  placeholder={t.admin.treasury.externalRefPlaceholder}
+                  className={inputCls}
+                />
+              )}
+            </Field>
+          </div>
+        )}
+        <Field label={t.admin.treasury.reasonLabel}>
+          {(id) => (
+            <input
+              id={id}
+              type="text"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder={t.admin.treasury.reasonPlaceholder}
+              className={inputCls}
+            />
+          )}
+        </Field>
+        {formError && (
+          <p role="alert" className="text-[12px] text-brand-red">
+            {formError}
+          </p>
+        )}
+        <button type="submit" className="w-full rounded-xl bg-brand-near-black py-2 text-[13px] font-bold text-white">
+          {t.admin.treasury.review}
+        </button>
+      </form>
+    );
+  }
+
+  return (
+    <div className="rounded-xl border border-brand-border bg-white p-4 shadow-sm">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        aria-controls={panelId}
+        className="flex w-full items-center justify-between gap-3 text-left"
+      >
+        <span>
+          <span className="block text-[13px] font-bold text-brand-near-black">{t.admin.treasury.outgoingTitle}</span>
+          <span className="block text-[11px] text-brand-gray">{t.admin.treasury.outgoingHint}</span>
+        </span>
+        <span aria-hidden className="text-[11px] text-brand-gray-light">
+          {open ? "▲" : "▼"}
+        </span>
+      </button>
+      <div id={panelId} hidden={!open} className="mt-4">
+        {body}
+      </div>
+    </div>
   );
 }

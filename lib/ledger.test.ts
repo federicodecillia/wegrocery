@@ -5,13 +5,16 @@ import {
   EXTERNAL_REF_MAX_LENGTH,
   EXTERNAL_REF_UNIQUE_INDEX,
   MANUAL_PAYMENT_METHODS,
+  OUTGOING_LEDGER_TYPES,
   applyOriginalSign,
   findPossibleDuplicate,
   isAdminEditableLedgerType,
+  isOutgoingLedgerType,
   isUniqueViolation,
   parseAmountInput,
   planManualMovement,
   validateLedgerEntryEdit,
+  validatePayoutAmount,
   validateTopupAmount,
 } from "./ledger";
 
@@ -25,6 +28,10 @@ describe("isAdminEditableLedgerType", () => {
     expect(isAdminEditableLedgerType("topup")).toBe(true);
     expect(isAdminEditableLedgerType("correction")).toBe(true);
     expect(isAdminEditableLedgerType("adjustment")).toBe(true);
+  });
+
+  it("allows the outgoing movements recorded from the Cassa", () => {
+    for (const type of OUTGOING_LEDGER_TYPES) expect(isAdminEditableLedgerType(type)).toBe(true);
   });
 });
 
@@ -107,6 +114,15 @@ describe("validateLedgerEntryEdit", () => {
   it("lets a legacy NaN entry be repaired with either sign", () => {
     expect(validateLedgerEntryEdit({ type: "correction", amount: "NaN" }, -3.2)).toBeNull();
     expect(validateLedgerEntryEdit({ type: "correction", amount: "NaN" }, 3.2)).toBeNull();
+  });
+
+  it("keeps outgoing movements negative", () => {
+    for (const type of OUTGOING_LEDGER_TYPES) {
+      const entry = { type, amount: "-15.00" };
+      expect(validateLedgerEntryEdit(entry, applyOriginalSign(entry.amount, "12"))).toBeNull();
+      expect(applyOriginalSign(entry.amount, "12")).toBe(-12);
+      expect(validateLedgerEntryEdit(entry, 12)).toBe("signChange");
+    }
   });
 
   it("never lets a topup become negative, even from a sign-less row", () => {
@@ -209,6 +225,91 @@ describe("planManualMovement (top-up)", () => {
   });
 });
 
+describe("isOutgoingLedgerType", () => {
+  it("recognises exactly payout, manual_charge and membership_fee", () => {
+    expect(OUTGOING_LEDGER_TYPES).toEqual(["payout", "manual_charge", "membership_fee"]);
+    for (const type of OUTGOING_LEDGER_TYPES) expect(isOutgoingLedgerType(type)).toBe(true);
+    for (const type of ["topup", "order_charge", "shipping_charge", "correction", "Payout", ""]) {
+      expect(isOutgoingLedgerType(type)).toBe(false);
+    }
+  });
+});
+
+describe("planManualMovement (outgoing)", () => {
+  const now = new Date("2026-09-29T08:00:00Z");
+
+  it("stores every outgoing movement negative, with the causale", () => {
+    for (const type of OUTGOING_LEDGER_TYPES) {
+      const result = planManualMovement({ type, amount: 12.5, note: " Quota 2027 " }, now);
+      expect(result).toEqual({
+        plan: expect.objectContaining({ type, amount: "-12.50", amountCents: 1250, note: "Quota 2027" }),
+      });
+    }
+  });
+
+  it("requires a causale", () => {
+    for (const type of OUTGOING_LEDGER_TYPES) {
+      expect(planManualMovement({ type, amount: 5, note: "  " }, now)).toEqual({ error: "noteRequired" });
+      expect(planManualMovement({ type, amount: 5 }, now)).toEqual({ error: "noteRequired" });
+    }
+  });
+
+  it("still rejects zero, negative and non-finite amounts", () => {
+    expect(planManualMovement({ type: "payout", amount: -5, note: "x" }, now)).toEqual({ error: "notPositive" });
+    expect(planManualMovement({ type: "manual_charge", amount: 0, note: "x" }, now)).toEqual({ error: "zero" });
+    expect(planManualMovement({ type: "membership_fee", amount: NaN, note: "x" }, now)).toEqual({
+      error: "notFinite",
+    });
+  });
+
+  it("lets a payout carry an optional method and reference", () => {
+    expect(
+      planManualMovement({ type: "payout", amount: 5, note: "x", method: "contanti", externalRef: " TRN1 " }, now),
+    ).toEqual({ plan: expect.objectContaining({ method: "contanti", externalRef: "TRN1" }) });
+    expect(planManualMovement({ type: "payout", amount: 5, note: "x", method: "" }, now)).toEqual({
+      plan: expect.objectContaining({ method: null, externalRef: null }),
+    });
+    expect(planManualMovement({ type: "payout", amount: 5, note: "x", method: "stripe" }, now)).toEqual({
+      error: "invalidMethod",
+    });
+  });
+
+  it("never writes a method or reference on charges and fees, which move no money", () => {
+    for (const type of ["manual_charge", "membership_fee"]) {
+      expect(
+        planManualMovement({ type, amount: 5, note: "x", method: "bonifico", externalRef: "CRO1" }, now),
+      ).toEqual({ plan: expect.objectContaining({ method: null, externalRef: null }) });
+    }
+  });
+});
+
+describe("validatePayoutAmount", () => {
+  it("allows up to the member's balance", () => {
+    expect(validatePayoutAmount(42.5, 42.5)).toBeNull();
+    expect(validatePayoutAmount(10, 42.5)).toBeNull();
+  });
+
+  it("refuses more than the balance and says how much is available", () => {
+    expect(validatePayoutAmount(42.51, 42.5)).toEqual({ limit: 42.5 });
+  });
+
+  it("has nothing to return from a zero or negative balance", () => {
+    expect(validatePayoutAmount(1, 0)).toEqual({ limit: 0 });
+    expect(validatePayoutAmount(1, -12.3)).toEqual({ limit: 0 });
+  });
+
+  it("counts an edited payout's own amount as available again", () => {
+    // Balance 10 after a 30 payout: the payout can grow to 40, not beyond.
+    expect(validatePayoutAmount(40, 10, -30)).toBeNull();
+    expect(validatePayoutAmount(40.01, 10, -30)).toEqual({ limit: 40 });
+  });
+
+  it("always lets an edited payout shrink, even once the balance went negative", () => {
+    expect(validatePayoutAmount(25, -5, -30)).toBeNull();
+    expect(validatePayoutAmount(30.01, -5, -30)).toEqual({ limit: 30 });
+  });
+});
+
 describe("findPossibleDuplicate", () => {
   const entryDate = new Date("2026-09-29T00:00:00Z");
   const row = (amount: string, isoDate: string) => ({ entryId: isoDate, amount, entryDate: new Date(isoDate) });
@@ -237,6 +338,11 @@ describe("findPossibleDuplicate", () => {
 
   it("returns null when there is nothing to compare", () => {
     expect(findPossibleDuplicate([], 2000, entryDate)).toBeNull();
+  });
+
+  it("matches outgoing rows, stored negative, on the absolute amount", () => {
+    const payout = row("-20.00", "2026-09-28T00:00:00Z");
+    expect(findPossibleDuplicate([payout], 2000, entryDate)).toBe(payout);
   });
 });
 

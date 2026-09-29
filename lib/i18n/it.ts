@@ -588,6 +588,38 @@ export const it = {
         `Per questo socio c'è già ${what} di ${amount} del ${date}. Controlla che non sia un doppione.`,
       duplicateSubjects: {
         topup: "una ricarica",
+        payout: "una restituzione",
+        manual_charge: "un addebito manuale",
+        membership_fee: "una quota associativa",
+      },
+      outgoingTitle: "Movimento in uscita",
+      outgoingHint: "Restituzione del saldo, addebito manuale o quota associativa",
+      kindLabel: "Tipo *",
+      kinds: {
+        payout: "Restituzione",
+        manual_charge: "Addebito",
+        membership_fee: "Quota",
+      },
+      kindHints: {
+        payout: "Restituisce al socio il saldo, o una parte: non può superarlo.",
+        manual_charge: "Addebito manuale sul saldo del socio.",
+        membership_fee: "Quota associativa, addebitata sul saldo.",
+      },
+      reasonLabel: "Causale *",
+      reasonPlaceholder: "Visibile al socio",
+      payoutAll: "Tutto il saldo",
+      invalidOutgoing: "Seleziona un socio e inserisci un importo valido e la causale",
+      recapKind: "Tipo",
+      recapReason: "Causale",
+      confirmOutgoing: {
+        payout: "Conferma restituzione",
+        manual_charge: "Conferma addebito",
+        membership_fee: "Conferma quota",
+      },
+      outgoingRegistered: {
+        payout: (amount: string, member: string) => `Restituzione di ${amount} registrata per ${member}`,
+        manual_charge: (amount: string, member: string) => `Addebito di ${amount} registrato per ${member}`,
+        membership_fee: (amount: string, member: string) => `Quota di ${amount} registrata per ${member}`,
       },
       movementErrors: {
         invalidType: "Tipo di movimento non valido",
@@ -598,6 +630,8 @@ export const it = {
           `Il riferimento ${ref} è già registrato: lo stesso movimento non può essere registrato due volte.`,
         refTakenBy: (ref: string, member: string, date: string) =>
           `Il riferimento ${ref} è già registrato (${member}, ${date}): lo stesso movimento non può essere registrato due volte.`,
+        noteRequired: "La causale è obbligatoria",
+        payoutExceedsBalance: (limit: string) => `La restituzione supera il saldo del socio: al massimo ${limit}.`,
       },
       searchMember: "Cerca socio…",
       noMemberFound: "Nessun socio trovato",
@@ -606,6 +640,9 @@ export const it = {
       inactiveHint: "· disabilitato",
       topupBadge: "ricarica",
       chargeBadge: "addebito",
+      payoutBadge: "restituzione",
+      manualChargeBadge: "addebito manuale",
+      membershipFeeBadge: "quota",
       entryUpdated: "Voce aggiornata",
       entryDeleted: "Voce eliminata",
       deleteConfirm: "Eliminare questa voce del ledger?",
@@ -953,6 +990,15 @@ export const it = {
       `${notes} · rimborso di ${amount} EUR sul tuo saldo.`,
     orderLineAdjustedBodyCharge: (notes: string, amount: string) =>
       `${notes} · addebito aggiuntivo di ${amount} EUR sul tuo saldo.`,
+    payoutSentTitle: "Saldo restituito",
+    payoutSentBody: (amount: string, reason: string, balance: string) =>
+      `Ti abbiamo restituito ${amount} del tuo saldo: ${reason}. Nuovo saldo: ${balance}.`,
+    manualChargeTitle: "Addebito sul saldo",
+    manualChargeBody: (amount: string, reason: string, balance: string) =>
+      `Addebito di ${amount} sul tuo saldo: ${reason}. Nuovo saldo: ${balance}.`,
+    membershipFeeTitle: "Quota associativa",
+    membershipFeeBody: (amount: string, reason: string, balance: string) =>
+      `Ti è stata addebitata la quota associativa di ${amount}: ${reason}. Nuovo saldo: ${balance}.`,
     cycleCancelledTitle: "Ordine annullato",
     cycleCancelledBody: (title: string, amount: string, reason: string) =>
       `Il ciclo "${title}" è stato annullato: ${reason}. Ti abbiamo riaccreditato ${amount}.`,

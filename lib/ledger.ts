@@ -72,7 +72,18 @@ export function validateTopupAmount(amount: number): LedgerAmountError | null {
 export const MANUAL_PAYMENT_METHODS = ["bonifico", "contanti", "satispay", "altro"] as const;
 export type ManualPaymentMethod = (typeof MANUAL_PAYMENT_METHODS)[number];
 
-export type ManualLedgerType = "topup";
+// Money leaving a member's balance by hand, all stored negative: `payout`
+// returns (part of) the balance to the member, `manual_charge` and
+// `membership_fee` debit it. Other code maps these names (Storico labels), so
+// they are part of the data model.
+export const OUTGOING_LEDGER_TYPES = ["payout", "manual_charge", "membership_fee"] as const;
+export type OutgoingLedgerType = (typeof OUTGOING_LEDGER_TYPES)[number];
+
+export type ManualLedgerType = "topup" | OutgoingLedgerType;
+
+export function isOutgoingLedgerType(type: string): type is OutgoingLedgerType {
+  return (OUTGOING_LEDGER_TYPES as readonly string[]).includes(type);
+}
 
 // Bank references (CRO/TRN) are 11-35 characters; the cap only stops pastes
 // of whole statement lines.
@@ -86,6 +97,7 @@ export type ManualMovementError =
   | "invalidType"
   | "invalidMethod"
   | "refTooLong"
+  | "noteRequired"
   | "invalidDate";
 
 export type ManualMovementInput = {
@@ -137,37 +149,62 @@ function blankToNull(value: string | null | undefined): string | null {
 
 // Validates and normalises a movement typed in the Cassa forms. The server
 // action runs it on the raw payload, so nothing from the client is written
-// unchecked.
+// unchecked. Top-ups need a method; a payout may name one; charges and fees
+// move no money, so a method or reference sent for them is dropped. Outgoing
+// movements need a causale, which the member sees.
 export function planManualMovement(
   input: ManualMovementInput,
   now: Date,
 ): { plan: ManualMovementPlan } | { error: ManualMovementError } {
-  if (input.type !== "topup") return { error: "invalidType" };
+  const type = input.type;
+  if (type !== "topup" && !isOutgoingLedgerType(type)) return { error: "invalidType" };
 
   const amountError = validateTopupAmount(input.amount);
   if (amountError) return { error: amountError };
   const amountCents = toCents(input.amount);
 
-  if (!isManualPaymentMethod(input.method)) return { error: "invalidMethod" };
+  const movesMoney = type === "topup" || type === "payout";
+  let method: ManualPaymentMethod | null = null;
+  if (type === "topup" || (type === "payout" && blankToNull(input.method) !== null)) {
+    if (!isManualPaymentMethod(input.method)) return { error: "invalidMethod" };
+    method = input.method;
+  }
 
-  const externalRef = blankToNull(input.externalRef);
+  const externalRef = movesMoney ? blankToNull(input.externalRef) : null;
   if (externalRef !== null && externalRef.length > EXTERNAL_REF_MAX_LENGTH) return { error: "refTooLong" };
+
+  const note = blankToNull(input.note);
+  if (note === null && type !== "topup") return { error: "noteRequired" };
 
   const rawDate = blankToNull(input.entryDate);
   const entryDate = rawDate === null ? now : parseDateInput(rawDate);
   if (entryDate === null) return { error: "invalidDate" };
 
+  const signedCents = type === "topup" ? amountCents : -amountCents;
   return {
     plan: {
-      type: input.type,
-      amount: (amountCents / 100).toFixed(2),
+      type,
+      amount: (signedCents / 100).toFixed(2),
       amountCents,
-      method: input.method,
+      method,
       externalRef,
-      note: blankToNull(input.note),
+      note,
       entryDate,
     },
   };
+}
+
+// A payout returns money the member holds: at most the current positive
+// balance. When a payout is edited, `balance` already includes it, so its own
+// amount (`currentPayout`, as stored) is available again: lowering a payout is
+// always allowed. Returns null when `amount` fits, else the limit in euros.
+export function validatePayoutAmount(
+  amount: number,
+  balance: number,
+  currentPayout = 0,
+): { limit: number } | null {
+  const limitCents = Math.max(toCents(balance), 0) + Math.abs(toCents(currentPayout));
+  return toCents(amount) > limitCents ? { limit: limitCents / 100 } : null;
 }
 
 // Same member, same type, same amount within this many days of the new
@@ -193,7 +230,8 @@ export function findPossibleDuplicate<T extends { amount: string; entryDate: Dat
   return (
     rows.find(
       (row) =>
-        toCents(parseFloat(row.amount)) === amountCents &&
+        // Outgoing rows are stored negative: compare what was moved.
+        Math.abs(toCents(parseFloat(row.amount))) === amountCents &&
         row.entryDate.getTime() >= from.getTime() &&
         row.entryDate.getTime() <= to.getTime(),
     ) ?? null

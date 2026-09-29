@@ -8,7 +8,12 @@ import { formatDate, formatEur } from "@/lib/utils";
 import { getRoleLabel } from "@/lib/roles";
 import { t } from "@/lib/i18n";
 import { formatMoney } from "@/lib/i18n/format";
-import { MANUAL_PAYMENT_METHODS, applyOriginalSign, isAdminEditableLedgerType } from "@/lib/ledger";
+import {
+  MANUAL_PAYMENT_METHODS,
+  applyOriginalSign,
+  isAdminEditableLedgerType,
+  isOutgoingLedgerType,
+} from "@/lib/ledger";
 import type { LedgerEntryItem, MemberWithBalance } from "@/lib/db/queries";
 
 // ── Summary Cards ─────────────────────────────────────────────────────────────
@@ -129,6 +134,30 @@ type LedgerEntry = {
   externalRef?: string | null;
 };
 
+const badgeTeal = "bg-brand-teal-light text-brand-teal";
+const badgeRed = "bg-brand-red-light text-brand-red";
+const badgeOrange = "bg-brand-orange-light text-brand-near-black";
+const badgeGray = "bg-black/[0.05] text-brand-gray";
+
+// Label and colour of a row's type badge; other types show their raw name.
+function typeBadge(type: string): { label: string; className: string } {
+  const tr = t.admin.treasury;
+  switch (type) {
+    case "topup":
+      return { label: tr.topupBadge, className: badgeTeal };
+    case "order_charge":
+      return { label: tr.chargeBadge, className: badgeRed };
+    case "payout":
+      return { label: tr.payoutBadge, className: badgeOrange };
+    case "manual_charge":
+      return { label: tr.manualChargeBadge, className: badgeRed };
+    case "membership_fee":
+      return { label: tr.membershipFeeBadge, className: badgeRed };
+    default:
+      return { label: type, className: badgeGray };
+  }
+}
+
 // "Bonifico · CRO…" for a manual movement, "Online" for a Stripe row (credit
 // or refund), "" when the row records neither.
 function movementDetails(entry: LedgerEntry): string {
@@ -145,8 +174,6 @@ export function LedgerEntryRow({ entry }: { entry: LedgerEntry }) {
   const [note, setNote] = useState(entry.note ?? "");
   const [isPending, startTransition] = useTransition();
 
-  const isTopup = entry.type === "topup";
-  const isCharge = entry.type === "order_charge";
   // Order/shipping charges are corrected from the cycle, never edited here;
   // online top-ups and their refunds follow the money on Stripe.
   const isEditable = isAdminEditableLedgerType(entry.type) && !entry.paymentId;
@@ -180,6 +207,7 @@ export function LedgerEntryRow({ entry }: { entry: LedgerEntry }) {
 
   const amountNum = parseFloat(entry.amount);
   const details = movementDetails(entry);
+  const badge = typeBadge(entry.type);
 
   if (editing && isEditable) {
     return (
@@ -197,8 +225,9 @@ export function LedgerEntryRow({ entry }: { entry: LedgerEntry }) {
             type="text"
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            placeholder={t.admin.treasury.noteLabel}
-            className="flex-1 rounded-lg border border-brand-border px-2 py-1 text-[12px]"
+            // An outgoing movement's causale is required (the member sees it).
+            placeholder={isOutgoingLedgerType(entry.type) ? t.admin.treasury.reasonLabel : t.admin.treasury.noteLabel}
+            className="w-0 min-w-0 flex-1 rounded-lg border border-brand-border px-2 py-1 text-[12px]"
           />
           <button
             onClick={handleSave}
@@ -219,18 +248,10 @@ export function LedgerEntryRow({ entry }: { entry: LedgerEntry }) {
   }
 
   return (
-    <div className="flex items-center justify-between px-4 py-2.5">
+    <div className="flex items-center justify-between gap-2 px-4 py-2.5">
       <div className="min-w-0 flex-1">
-        <span
-          className={`mr-2 rounded-full px-1.5 py-0.5 text-[10px] font-bold uppercase ${
-            isTopup
-              ? "bg-brand-teal-light text-brand-teal"
-              : isCharge
-                ? "bg-brand-red-light text-brand-red"
-                : "bg-black/[0.05] text-brand-gray"
-          }`}
-        >
-          {isTopup ? t.admin.treasury.topupBadge : isCharge ? t.admin.treasury.chargeBadge : entry.type}
+        <span className={`mr-2 rounded-full px-1.5 py-0.5 text-[10px] font-bold uppercase ${badge.className}`}>
+          {badge.label}
         </span>
         <span className="text-[12px] text-brand-gray">
           {entry.cycleTitle ? (

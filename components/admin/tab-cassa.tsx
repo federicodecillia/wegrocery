@@ -2,7 +2,7 @@ import { getAllMembersLedger, getAllMembersWithBalances } from "@/lib/db/queries
 import { Card, CardHeader } from "@/components/ui/card";
 import { t } from "@/lib/i18n";
 import { CassaInlineList, CassaSummaryCards } from "./cassa-forms";
-import { TopupForm } from "./cassa-movement-form";
+import { OutgoingMovementForm, TopupForm } from "./cassa-movement-form";
 
 type Props = {
   balanceFilter?: "negative";
@@ -39,6 +39,7 @@ export async function TabCassa({ balanceFilter }: Props) {
       />
 
       <TopupForm members={pickerMembers} />
+      <OutgoingMovementForm members={pickerMembers} />
 
       <Card>
         <CardHeader>

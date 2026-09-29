@@ -22,7 +22,11 @@ type Props = {
 
 function BalanceText({ balance }: { balance: number }) {
   return (
-    <span className={`font-mono text-[11px] font-bold ${balance >= 0 ? "text-brand-teal" : "text-brand-red"}`}>
+    <span
+      className={`shrink-0 whitespace-nowrap font-mono text-[11px] font-bold ${
+        balance >= 0 ? "text-brand-teal" : "text-brand-red"
+      }`}
+    >
       {t.admin.treasury.memberBalance(formatMoney(balance))}
     </span>
   );

@@ -585,6 +585,38 @@ export const en: Strings = {
         `This member already has ${what} of ${amount} dated ${date}. Make sure it is not a duplicate.`,
       duplicateSubjects: {
         topup: "a top-up",
+        payout: "a payout",
+        manual_charge: "a manual charge",
+        membership_fee: "a membership fee",
+      },
+      outgoingTitle: "Outgoing movement",
+      outgoingHint: "Balance payout, manual charge or membership fee",
+      kindLabel: "Type *",
+      kinds: {
+        payout: "Payout",
+        manual_charge: "Charge",
+        membership_fee: "Fee",
+      },
+      kindHints: {
+        payout: "Returns the balance, or part of it, to the member: it cannot exceed it.",
+        manual_charge: "Manual charge on the member's balance.",
+        membership_fee: "Membership fee, charged to the balance.",
+      },
+      reasonLabel: "Reason *",
+      reasonPlaceholder: "Shown to the member",
+      payoutAll: "Whole balance",
+      invalidOutgoing: "Select a member and enter a valid amount and the reason",
+      recapKind: "Type",
+      recapReason: "Reason",
+      confirmOutgoing: {
+        payout: "Confirm payout",
+        manual_charge: "Confirm charge",
+        membership_fee: "Confirm fee",
+      },
+      outgoingRegistered: {
+        payout: (amount: string, member: string) => `Payout of ${amount} recorded for ${member}`,
+        manual_charge: (amount: string, member: string) => `Charge of ${amount} recorded for ${member}`,
+        membership_fee: (amount: string, member: string) => `Fee of ${amount} recorded for ${member}`,
       },
       movementErrors: {
         invalidType: "Invalid movement type",
@@ -595,6 +627,8 @@ export const en: Strings = {
           `Reference ${ref} is already recorded: the same movement cannot be recorded twice.`,
         refTakenBy: (ref: string, member: string, date: string) =>
           `Reference ${ref} is already recorded (${member}, ${date}): the same movement cannot be recorded twice.`,
+        noteRequired: "The reason is required",
+        payoutExceedsBalance: (limit: string) => `The payout exceeds the member's balance: at most ${limit}.`,
       },
       searchMember: "Search member…",
       noMemberFound: "No member found",
@@ -603,6 +637,9 @@ export const en: Strings = {
       inactiveHint: "· disabled",
       topupBadge: "top-up",
       chargeBadge: "charge",
+      payoutBadge: "payout",
+      manualChargeBadge: "manual charge",
+      membershipFeeBadge: "fee",
       entryUpdated: "Entry updated",
       entryDeleted: "Entry deleted",
       deleteConfirm: "Delete this ledger entry?",
@@ -950,6 +987,15 @@ export const en: Strings = {
       `${notes} · refund of ${amount} EUR to your balance.`,
     orderLineAdjustedBodyCharge: (notes: string, amount: string) =>
       `${notes} · additional charge of ${amount} EUR on your balance.`,
+    payoutSentTitle: "Balance returned",
+    payoutSentBody: (amount: string, reason: string, balance: string) =>
+      `We returned ${amount} of your balance to you: ${reason}. New balance: ${balance}.`,
+    manualChargeTitle: "Balance charge",
+    manualChargeBody: (amount: string, reason: string, balance: string) =>
+      `A charge of ${amount} on your balance: ${reason}. New balance: ${balance}.`,
+    membershipFeeTitle: "Membership fee",
+    membershipFeeBody: (amount: string, reason: string, balance: string) =>
+      `Your membership fee of ${amount} has been charged: ${reason}. New balance: ${balance}.`,
     cycleCancelledTitle: "Order cancelled",
     cycleCancelledBody: (title: string, amount: string, reason: string) =>
       `The cycle "${title}" was cancelled: ${reason}. We refunded you ${amount}.`,
