@@ -9,8 +9,9 @@ describe("parseTopupAmount", () => {
   });
 
   it("enforces the range", () => {
-    expect(parseTopupAmount("19.99")).toEqual({ error: "tooLow" });
-    expect(parseTopupAmount("20")).toEqual({ cents: 2000 });
+    expect(parseTopupAmount("0.49")).toEqual({ error: "tooLow" });
+    expect(parseTopupAmount("0,5")).toEqual({ cents: 50 });
+    expect(parseTopupAmount("0")).toEqual({ error: "tooLow" });
     expect(parseTopupAmount("300")).toEqual({ cents: 30000 });
     expect(parseTopupAmount("300.01")).toEqual({ error: "tooHigh" });
   });

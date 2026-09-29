@@ -18,6 +18,13 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ---
 
+## [1.12.2] — 2026-09-29
+
+*Smaller online top-ups.*
+
+### Changed
+- 💶 **Online top-ups from 0,50 €**, the smallest amount Stripe accepts (was 20 €).
+
 ## [1.12.1] — 2026-09-28
 
 *Clearer top-up details.*
@@ -344,6 +351,7 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ---
 
+[1.12.2]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.12.2
 [1.12.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.12.1
 [1.12.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.12.0
 [1.11.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.11.0
