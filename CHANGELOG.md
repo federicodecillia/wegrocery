@@ -18,6 +18,19 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ---
 
+## [1.14.0] — 2026-09-29
+
+*Payment settings in the app, and orders that wait for you.*
+
+### Added
+- ⚙️ **Payment settings for admins.** A new Settings tab (gear icon) sets the group's overdraft limit, a maximum balance, and which top-up channels members see: bank transfer (holder and IBAN) and online payment. Until an admin saves, nothing changes (migration `0019`).
+- 🛒 **Your order waits for you.** Changes to an order are saved as you go: leave the page and come back, even from another device, and they are still there, marked "Changes not confirmed yet" until you confirm or discard them.
+- 🧾 **Movement details.** Tap a movement in History to see date and time, cycle, note, method and reference, the online payment's status and who recorded it.
+
+### Changed
+- 💶 **Top-ups respect the maximum balance.** Online top-ups offer only what fits, the bank details say how much you can still top up, and a member in debt gets the exact amount to pay it off as the first option.
+- 🏦 **Treasury flags balances above the maximum.** A top-up recorded in Treasury is never refused, but the admin is told when it takes the balance past the maximum, and a new filter lists those members.
+
 ## [1.13.0] — 2026-09-29
 
 *A fuller Cassa, and a history that adds up to the balance.*
@@ -370,6 +383,7 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ---
 
+[1.14.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.14.0
 [1.13.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.13.0
 [1.12.2]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.12.2
 [1.12.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.12.1

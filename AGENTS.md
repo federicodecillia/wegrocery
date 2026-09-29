@@ -19,7 +19,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 │   ├── storico/page.tsx        # Order history + ledger movements tabs
 │   ├── notifiche/page.tsx      # Notification list with mark-as-read
 │   ├── guida/page.tsx          # How-to steps + FAQ accordion
-│   ├── admin/page.tsx          # Admin panel: 6 tabs (ciclo/prodotti/ordini/cassa/fornitori/soci)
+│   ├── admin/page.tsx          # Admin panel: ciclo/prodotti/ordini/cassa/soci/fornitori/statistiche + impostazioni (⚙)
 │   ├── login/page.tsx          # Login with Google
 │   └── api/auth/[...nextauth]/ # Auth.js route handler
 ├── components/
@@ -31,8 +31,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 │   └── ui/                     # Button, Card, ConfirmDialog, Toast, FaqAccordion
 ├── lib/
 │   ├── db/
-│   │   ├── schema.ts           # Drizzle tables: members, order_cycles, products, orders,
-│   │   │                       #   ledger_entries, notifications, audit_log, suppliers, supplier_products
+│   │   ├── schema.ts           # Drizzle tables: members, order_cycles, products, orders, order_drafts,
+│   │   │                       #   ledger_entries, payments, app_settings, notifications, audit_log, suppliers, supplier_products
 │   │   ├── queries.ts          # All read queries + getUnreadNotificationCount
 │   │   └── client.ts           # Neon connection (DATABASE_URL)
 │   ├── actions/
@@ -41,15 +41,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 │   │   │                       #   adminEditClosedOrder
 │   │   ├── admin-cycles.ts     # Cycle-specific actions
 │   │   ├── admin-products.ts   # Product/catalog actions
+│   │   ├── admin-settings.ts   # adminUpdatePaymentSettings (Impostazioni tab)
 │   │   ├── notifications.ts    # markNotificationRead, markAllNotificationsRead
-│   │   └── order.ts            # saveOrder (member)
+│   │   └── order.ts            # saveOrder, saveOrderDraft, discardOrderDraft (member)
 │   ├── email/                  # Resend wrapper + supplier-email templates
 │   ├── csv/                    # Server-side CSV builders (e.g. supplier aggregated export)
 │   └── auth/                   # session.ts: requireUserSession(), requireAdmin(), requireActiveMember(), getUserRole()
 │                               #   access.ts: pure checkAccess/sessionClaims (edge-safe, used by middleware)
 ├── middleware.ts                # Redirect unauthenticated to /login
 ├── auth.ts                     # Auth.js config (Google provider, member whitelist callback)
-├── drizzle/                    # SQL migrations (0000–0018)
+├── drizzle/                    # SQL migrations (0000–0019)
 └── public/logo.png
 ```
 
@@ -291,6 +292,8 @@ all in `lib/roles.ts`:
 | `orders.actual_quantity` / `actual_line_total` | Recorded after delivery when the supplier weighed something different from what was ordered (e.g. 1 kg → 800 g). NULL = delivered as ordered. |
 | `notifications` | Per-member or per-role messages with `read_at` |
 | `payments` | Online top-ups (Stripe Checkout): `status` pending → succeeded / failed / expired → partially_refunded / refunded, amounts in integer cents |
+| `app_settings` | Payment settings from admin → Impostazioni, one row (`id = 1`): `payment_mode` (only `wallet` until pay-per-order), `min_balance` / `max_balance`, bank transfer on/off with holder and IBAN, online payments on/off. No row = brand defaults. Read only through `getPaymentSettings` (`lib/payments/get-settings.ts`) |
+| `order_drafts` | A member's unconfirmed edits on an open cycle (`member_id`, `cycle_id`, `lines` jsonb), autosaved by the order form; `saveOrder` and the cycle close delete them in their batch |
 | `audit_log` | Append-only admin action log |
 | `suppliers` | Supplier registry |
 | `supplier_products` | Supplier product catalog (source for cycle products) |
@@ -301,11 +304,23 @@ ID prefix convention: `cyc_*`, `mem_*`, `prd_*`, `ord_*`, `led_*`, `not_*`, `aud
 
 - Closing a cycle auto-generates `order_charge` ledger entries + `order_closed` notifications for every member with orders.
 - Member balance = `SUM(ledger_entries.amount)` for that member.
-- Negative balance is allowed — UI warns — down to the optional credit limit
-  `brand.minBalance` (null = no limit; Porta Moneta: -50). `saveOrder` refuses
-  a save when balance − uncharged orders on other open cycles − the new total
-  would fall below it (saves that do not raise the cycle's total always pass).
-  The check runs before the write batch, so concurrent saves can overshoot it.
+- Negative balance is allowed — UI warns — down to the optional credit limit:
+  the minimum balance of the payment settings (`getPaymentSettings`; before an
+  admin saves, `brand.minBalance`; null = no limit; Porta Moneta: -50).
+  `saveOrder` refuses a save when balance − uncharged orders on other open
+  cycles − the new total would fall below it (saves that do not raise the
+  cycle's total always pass). The check runs before the write batch, so
+  concurrent saves can overshoot it.
+- **Maximum balance** (payment settings, optional): online top-ups stop there
+  (`topupCeilingCents`, rechecked in `startOnlineTopup`; a soft limit, two
+  checkouts opened together can overshoot it). The bank details stay visible
+  with how much still fits; a Cassa top-up is never refused, the admin gets a
+  notice and Cassa filters "above max". A member in debt gets the exact debt
+  as the first top-up amount.
+- **Order drafts**: `/ordine` autosaves the form (`saveOrderDraft`, 800 ms
+  debounce, guarded by the cycle row `FOR SHARE` so no draft lands after the
+  close or the deadline). A draft equal to the confirmed order is deleted;
+  `saveOrder` and `performCycleClose` delete drafts in their batch.
 - **Server Actions return expected refusals as values, never throw them**:
   Next.js masks thrown Server Action messages in production. Internally a
   refusal is an `ActionError` (`lib/action-error.ts`, also thrown by the
@@ -336,9 +351,11 @@ All four emit `order_adjusted` or `order_corrected` notifications and `audit_log
 
 ### Online top-ups (Stripe)
 
-- Optional per deploy: `STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET`. Without
-  a key `/ricarica` shows only the bank details (`brand.bankTransfer`, or a
-  "ask the treasurer" line when null). `resolveStripeKey`
+- Optional per deploy (`STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET`) and
+  switchable in admin → Impostazioni: `/ricarica` offers online top-ups only
+  when both hold, and the bank details only when that channel is on (holder
+  and IBAN from the settings, `brand.bankTransfer` until an admin saves; with
+  no channel at all, an "ask the treasurer" line). `resolveStripeKey`
   (`lib/payments/config.ts`) accepts live keys only on a real production deploy
   and test keys everywhere else, demo included.
 - Flow: `startOnlineTopup` (`lib/actions/topup.ts`) validates the amount
