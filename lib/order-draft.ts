@@ -64,3 +64,13 @@ export function resumeDraft(
   if (sameOrderLines(lines, shownConfirmed)) return null;
   return { lines, dropped: positive.length - lines.length };
 }
+
+// What the order form's autosave must do so the server holds what the form
+// shows: nothing, save the draft, or drop it (the form is back to the
+// confirmed order). `serverKey` is the orderLinesKey of what the server holds.
+export type DraftSync = "none" | "save" | "discard";
+
+export function draftSyncAction(draftKey: string, savedKey: string, serverKey: string): DraftSync {
+  if (draftKey === serverKey) return "none";
+  return draftKey === savedKey ? "discard" : "save";
+}

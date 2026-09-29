@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { DRAFT_MAX_LINES, normalizeDraftLines, orderLinesKey, resumeDraft, sameOrderLines } from "./order-draft";
+import {
+  DRAFT_MAX_LINES,
+  draftSyncAction,
+  normalizeDraftLines,
+  orderLinesKey,
+  resumeDraft,
+  sameOrderLines,
+} from "./order-draft";
 
 describe("normalizeDraftLines", () => {
   it("keeps positive quantities, one line per product, sorted", () => {
@@ -86,5 +93,21 @@ describe("resumeDraft", () => {
 
   it("resumes an emptied cart when an order was confirmed", () => {
     expect(resumeDraft([], confirmed, available)).toEqual({ lines: [], dropped: 0 });
+  });
+});
+
+describe("draftSyncAction", () => {
+  it("does nothing when the server already holds what the form shows", () => {
+    expect(draftSyncAction("prd_a:1", "prd_a:1", "prd_a:1")).toBe("none");
+    expect(draftSyncAction("prd_a:2", "prd_a:1", "prd_a:2")).toBe("none");
+  });
+
+  it("saves edits the server does not hold yet", () => {
+    expect(draftSyncAction("prd_a:2", "prd_a:1", "prd_a:1")).toBe("save");
+    expect(draftSyncAction("prd_a:3", "prd_a:1", "prd_a:2")).toBe("save");
+  });
+
+  it("drops the draft once the form is back to the confirmed order", () => {
+    expect(draftSyncAction("prd_a:1", "prd_a:1", "prd_a:2")).toBe("discard");
   });
 });

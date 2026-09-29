@@ -25,14 +25,16 @@ export function AdminNav() {
   const active = searchParams.get("tab") ?? "ciclo";
 
   return (
-    // Scrolls sideways when the labels do not fit (English on a phone); in
-    // Italian all eight fit at 375 px.
-    <div className="mb-4 flex gap-1 overflow-x-auto rounded-full bg-black/[0.05] p-1 [scrollbar-width:none]">
-      {TABS.map((tab) => (
-        <Link key={tab.id} href={`/admin?tab=${tab.id}`} className={`flex-1 ${tabClass(active === tab.id)}`}>
-          {tab.label}
-        </Link>
-      ))}
+    <div className="mb-4 flex gap-1 rounded-full bg-black/[0.05] p-1">
+      {/* The labels scroll sideways when they do not fit (English on a
+          phone); the settings gear stays pinned outside, always visible. */}
+      <div className="flex min-w-0 flex-1 gap-1 overflow-x-auto [scrollbar-width:none]">
+        {TABS.map((tab) => (
+          <Link key={tab.id} href={`/admin?tab=${tab.id}`} className={`flex-1 ${tabClass(active === tab.id)}`}>
+            {tab.label}
+          </Link>
+        ))}
+      </div>
       {/* Settings as an icon: the row has no room for an eighth label. */}
       <Link
         href="/admin?tab=impostazioni"

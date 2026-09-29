@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "@/components/ui/toast";
 import { confirm } from "@/components/ui/confirm-dialog";
@@ -9,7 +9,7 @@ import { formatDateTime, formatSignedMoney } from "@/lib/i18n/format";
 import { formatEur, getProductEmoji, normalizeCategory } from "@/lib/utils";
 import type { SaveOrderLine, SaveOrderResult } from "@/lib/actions/order";
 import { discardOrderDraft, loadLastOrderForPrefill, saveOrderDraft } from "@/lib/actions/order";
-import { orderLinesKey, type ResumedDraft } from "@/lib/order-draft";
+import { draftSyncAction, orderLinesKey, type ResumedDraft } from "@/lib/order-draft";
 import { OrderSentDialog } from "./order-sent-dialog";
 import { OrderSummary, type ConfirmedLine } from "./order-summary";
 
@@ -122,33 +122,61 @@ export function OrderForm({
   // confirmed order's when there is no draft. A resumed draft that lost
   // products starts out of sync, so its cleaned version is saved at once.
   const serverKey = useRef(resumedDraft && resumedDraft.dropped === 0 ? draftKey : savedKey);
+  // The form as last rendered, for syncDraft: the debounce timer and the
+  // leave handlers run after the render that scheduled them.
+  const latest = useRef({ draft, draftKey, savedKey });
+  useEffect(() => {
+    latest.current = { draft, draftKey, savedKey };
+  });
 
-  // Autosave: after a pause in editing the server keeps what the form shows
-  // (saveOrderDraft), or drops the draft once the form is back to the
-  // confirmed order. Waits while a confirm, a prefill or a discard is in
-  // flight: they settle the server state themselves.
+  // Brings the server in line with the form (draftSyncAction): saves the
+  // draft with saveOrderDraft, drops it once the form is back to the
+  // confirmed order, or does nothing.
+  const syncDraft = useCallback(() => {
+    const { draft: quantities, draftKey: key, savedKey: saved } = latest.current;
+    const action = draftSyncAction(key, saved, serverKey.current);
+    if (action === "none") return;
+    serverKey.current = key;
+    if (action === "discard") {
+      discardOrderDraft(cycleId).catch((err) => console.error("[order draft] discard failed", err));
+      return;
+    }
+    saveOrderDraft(cycleId, toLines(quantities))
+      .then((result) => {
+        if (result.ok) return;
+        if (result.code === "cycle_not_open") {
+          toast.error(result.error);
+          router.refresh();
+        } else {
+          console.error("[order draft] not saved:", result.error);
+        }
+      })
+      .catch((err) => console.error("[order draft] save failed", err));
+  }, [cycleId, router]);
+
+  // Autosave after a pause in editing. Waits while a confirm, a prefill or a
+  // discard is in flight: they settle the server state themselves.
   useEffect(() => {
     if (isPending || draftKey === serverKey.current) return;
-    const timer = setTimeout(() => {
-      serverKey.current = draftKey;
-      if (draftKey === savedKey) {
-        discardOrderDraft(cycleId).catch((err) => console.error("[order draft] discard failed", err));
-        return;
-      }
-      saveOrderDraft(cycleId, toLines(draft))
-        .then((result) => {
-          if (result.ok) return;
-          if (result.code === "cycle_not_open") {
-            toast.error(result.error);
-            router.refresh();
-          } else {
-            console.error("[order draft] not saved:", result.error);
-          }
-        })
-        .catch((err) => console.error("[order draft] save failed", err));
-    }, DRAFT_SAVE_DELAY_MS);
+    const timer = setTimeout(syncDraft, DRAFT_SAVE_DELAY_MS);
     return () => clearTimeout(timer);
-  }, [draftKey, savedKey, isPending, cycleId, draft, router]);
+  }, [draftKey, savedKey, isPending, syncDraft]);
+
+  // Leaving before the pause ends (another page, another app, the tab
+  // closing) sends at once what the debounce had not sent yet, so the last
+  // taps are not lost.
+  useEffect(() => {
+    const onHidden = () => {
+      if (document.visibilityState === "hidden") syncDraft();
+    };
+    document.addEventListener("visibilitychange", onHidden);
+    window.addEventListener("pagehide", syncDraft);
+    return () => {
+      document.removeEventListener("visibilitychange", onHidden);
+      window.removeEventListener("pagehide", syncDraft);
+      syncDraft();
+    };
+  }, [syncDraft]);
 
   function totalOf(quantities: Record<string, number>) {
     return Object.entries(quantities).reduce((sum, [pid, qty]) => {
