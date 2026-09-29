@@ -114,6 +114,10 @@ export function EditClosedOrderModal({ cycleId, cycleTitle, mode, onClose, onSav
           lines,
           note: note.trim() || undefined,
         });
+        if ("error" in result) {
+          toast.error(result.error);
+          return;
+        }
         const deltaMsg =
           Math.abs(result.delta) < 0.005
             ? t.admin.editClosedOrder.orderUpdated

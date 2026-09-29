@@ -49,6 +49,10 @@ function CancelCycleDialog({
     startTransition(async () => {
       try {
         const result = await adminCancelClosedCycle(cycleId, { refundShipping, reason: trimmedReason });
+        if ("error" in result) {
+          toast.error(result.error);
+          return;
+        }
         toast.success(
           t.admin.cycleCancel.cancelledSuccess(result.refundedMembers, formatMoney(result.totalRefunded)),
         );
