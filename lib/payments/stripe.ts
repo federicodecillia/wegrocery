@@ -12,7 +12,3 @@ export function getStripe(): Stripe | null {
   client ??= new Stripe(status.secretKey);
   return client;
 }
-
-export function isOnlineTopupEnabled(): boolean {
-  return resolveStripeKey(process.env).enabled;
-}

@@ -168,6 +168,8 @@ export const en: Strings = {
     ledgerNote: "Online top-up",
     refundLedgerNote: "Online top-up refund",
     atMaximum: "Your balance is already at the maximum the group allows.",
+    bankRoom: (amount: string) => `You can top up to ${amount}.`,
+    settleDebt: (amount: string) => `Pay off ${amount}`,
   },
   notifications: {
     title: "Notifications",

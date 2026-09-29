@@ -168,6 +168,8 @@ export const it = {
     ledgerNote: "Ricarica online",
     refundLedgerNote: "Rimborso ricarica online",
     atMaximum: "Il tuo saldo è già al massimo consentito dal gruppo.",
+    bankRoom: (amount: string) => `Puoi ricaricare fino a ${amount}.`,
+    settleDebt: (amount: string) => `Salda ${amount}`,
   },
   notifications: {
     title: "Notifiche",
