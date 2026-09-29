@@ -25,7 +25,9 @@ export function AdminNav() {
   const active = searchParams.get("tab") ?? "ciclo";
 
   return (
-    <div className="mb-4 flex gap-1 rounded-full bg-black/[0.05] p-1">
+    // Scrolls sideways when the labels do not fit (English on a phone); in
+    // Italian all eight fit at 375 px.
+    <div className="mb-4 flex gap-1 overflow-x-auto rounded-full bg-black/[0.05] p-1 [scrollbar-width:none]">
       {TABS.map((tab) => (
         <Link key={tab.id} href={`/admin?tab=${tab.id}`} className={`flex-1 ${tabClass(active === tab.id)}`}>
           {tab.label}

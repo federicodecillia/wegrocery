@@ -93,3 +93,15 @@ export function movementRecorder(entry: { paymentId: string | null; recorderName
   const name = entry.recorderName?.trim();
   return name ? { kind: "admin", name } : { kind: "system" };
 }
+
+// Cassa movements are dated by day, stored at UTC midnight (parseDateInput in
+// lib/ledger.ts): their time of day means nothing to the member. Rows the app
+// timestamps (cycle close, weighing, Stripe) keep it.
+export function movementDateHasTime(entryDate: Date): boolean {
+  return (
+    entryDate.getUTCHours() !== 0 ||
+    entryDate.getUTCMinutes() !== 0 ||
+    entryDate.getUTCSeconds() !== 0 ||
+    entryDate.getUTCMilliseconds() !== 0
+  );
+}

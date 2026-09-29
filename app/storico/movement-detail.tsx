@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { t, type Strings } from "@/lib/i18n";
 import { formatDateTime, formatSignedMoney } from "@/lib/i18n/format";
 import { MANUAL_PAYMENT_METHODS } from "@/lib/ledger";
-import { movementKind, movementLabel, type MovementRecorder } from "@/lib/movement-label";
+import { movementDateHasTime, movementKind, movementLabel, type MovementRecorder } from "@/lib/movement-label";
 
 // A ledger row as the Storico detail shows it (built in app/storico/page.tsx).
 export type MovementDetail = {
@@ -53,8 +53,7 @@ function detailRows(entry: MovementDetail, onShowCycle: (cycleId: string) => voi
         day: "numeric",
         month: "long",
         year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
+        ...(movementDateHasTime(entry.entryDate) ? { hour: "2-digit", minute: "2-digit" } : {}),
       }),
     },
   ];
