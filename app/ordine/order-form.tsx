@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "@/components/ui/toast";
 import { confirm } from "@/components/ui/confirm-dialog";
 import { t } from "@/lib/i18n";
-import { formatDateTime } from "@/lib/i18n/format";
+import { formatDateTime, formatSignedMoney } from "@/lib/i18n/format";
 import { formatEur, getProductEmoji, normalizeCategory } from "@/lib/utils";
 import type { SaveOrderLine, SaveOrderResult } from "@/lib/actions/order";
 import { loadLastOrderForPrefill } from "@/lib/actions/order";
@@ -32,6 +32,7 @@ type OrderLine = {
 type Props = {
   cycleId: string;
   cycleTitle: string;
+  supplierName: string | null;
   orderCloseAt: string | null;
   products: Product[];
   existingLines: OrderLine[];
@@ -70,6 +71,7 @@ function groupByCategory(products: Product[]) {
 export function OrderForm({
   cycleId,
   cycleTitle,
+  supplierName,
   orderCloseAt,
   products,
   existingLines,
@@ -235,6 +237,7 @@ export function OrderForm({
         </div>
         <p className="font-mono text-[10px] text-brand-gray mt-[3px]">
           {cycleTitle}
+          {supplierName ? ` · ${supplierName}` : ""}
           {orderCloseAt ? ` · ${t.cycle.closes(formatDateTime(orderCloseAt))}` : ""}
         </p>
       </div>
@@ -391,7 +394,7 @@ export function OrderForm({
                     afterBalance < 0 ? "text-brand-red" : "text-brand-teal"
                   }`}
                 >
-                  {formatEur(afterBalance)}
+                  {formatSignedMoney(afterBalance)}
                 </div>
               </div>
             </div>

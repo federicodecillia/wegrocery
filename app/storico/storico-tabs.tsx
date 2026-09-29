@@ -3,9 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { t } from "@/lib/i18n";
-import { formatMoney } from "@/lib/i18n/format";
-import { formatDate, formatEur, formatEurSigned, getProductEmoji } from "@/lib/utils";
-import type { CycleHistoryEntry } from "@/lib/db/queries";
+import { formatNumber, formatSignedMoney } from "@/lib/i18n/format";
+import { formatDate, formatEur, getProductEmoji } from "@/lib/utils";
+import type { CycleHistoryEntry } from "@/lib/cycle-history";
+import { movementText } from "@/lib/movement-label";
 
 type LedgerEntry = {
   entryId: string;
@@ -103,7 +104,7 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="font-mono text-[15px] font-bold text-brand-near-black">
-                        {formatEur(o.orderTotal)}
+                        {o.charged ? formatSignedMoney(o.net) : formatEur(o.productsTotal)}
                       </span>
                       <span
                         className={`rounded-full px-2.5 py-0.5 font-mono text-[10px] ${
@@ -122,28 +123,48 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
                   </button>
                   {isOpen && (
                     <div className="px-4 py-[10px]">
-                      <div className="mb-[5px] font-mono text-[10px] text-brand-gray-light">{t.history.products}</div>
-                      <div className="divide-y divide-brand-border rounded-[12px] border border-brand-border bg-[#fdfdfd]">
-                        {o.lines.map((l, index) => (
-                          <div key={`${l.productName}-${index}`} className="flex items-start gap-3 px-3 py-2.5">
-                            <span className="shrink-0 text-[18px] leading-none">
-                              {l.emoji || getProductEmoji(l.productName)}
-                            </span>
-                            <div className="min-w-0 flex-1">
-                              <div className="text-[13px] font-semibold text-brand-near-black">
-                                {l.productName}
-                                {l.variant && <span className="ml-1 font-normal text-brand-gray">{l.variant}</span>}
+                      {o.lines.length > 0 && (
+                        <>
+                          <div className="mb-[5px] font-mono text-[10px] text-brand-gray-light">{t.history.products}</div>
+                          <div className="divide-y divide-brand-border rounded-[12px] border border-brand-border bg-[#fdfdfd]">
+                            {o.lines.map((l, index) => (
+                              <div key={`${l.productName}-${index}`} className="flex items-start gap-3 px-3 py-2.5">
+                                <span className="shrink-0 text-[18px] leading-none">
+                                  {l.emoji || getProductEmoji(l.productName)}
+                                </span>
+                                <div className="min-w-0 flex-1">
+                                  <div className="text-[13px] font-semibold text-brand-near-black">
+                                    {l.productName}
+                                    {l.variant && <span className="ml-1 font-normal text-brand-gray">{l.variant}</span>}
+                                  </div>
+                                  <div className="mt-[2px] text-[11px] leading-snug text-brand-gray">
+                                    {[l.supplierName, l.category].filter(Boolean).join(" · ")}
+                                  </div>
+                                  <div className="mt-[2px] font-mono text-[10px] text-brand-gray-light">
+                                    {l.quantity} × {formatEur(l.unitPrice)} ={" "}
+                                    {l.actualLineTotal !== null && l.actualLineTotal !== l.lineTotal ? (
+                                      // Weighed by the supplier: what the member actually pays.
+                                      <>
+                                        <s>{formatEur(l.lineTotal)}</s>{" "}
+                                        <span className="font-semibold text-brand-near-black">
+                                          {formatEur(l.actualLineTotal)}
+                                        </span>
+                                        {l.actualQuantity !== null &&
+                                          ` · ${t.history.received(
+                                            `${formatNumber(l.actualQuantity)}${l.unit ? ` ${l.unit}` : ""}`,
+                                          )}`}
+                                      </>
+                                    ) : (
+                                      formatEur(l.lineTotal)
+                                    )}
+                                  </div>
+                                </div>
                               </div>
-                              <div className="mt-[2px] text-[11px] leading-snug text-brand-gray">
-                                {[l.supplierName, l.category].filter(Boolean).join(" · ")}
-                              </div>
-                              <div className="mt-[2px] font-mono text-[10px] text-brand-gray-light">
-                                {l.quantity} × {formatEur(l.unitPrice)} = {formatEur(l.lineTotal)}
-                              </div>
-                            </div>
+                            ))}
                           </div>
-                        ))}
-                      </div>
+                        </>
+                      )}
+                      <CycleTotals entry={o} />
                     </div>
                   )}
                 </div>
@@ -176,7 +197,7 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
                 balance < 0 ? "text-brand-red" : "text-brand-near-black"
               }`}
             >
-              {formatMoney(Math.abs(balance))}
+              {formatSignedMoney(balance)}
             </span>
           </div>
 
@@ -191,16 +212,7 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
               {movements.map((e) => {
                 const isTopup = e.type === "topup";
                 const isPos = parseFloat(e.amount) >= 0;
-                const isOnlineTopup = isTopup && e.paymentId !== null;
-                const label = isOnlineTopup
-                  ? t.history.onlineTopup
-                  : e.type === "topup"
-                    ? t.history.transfer
-                    : e.type === "order_charge"
-                      ? t.history.orderCharge
-                      : t.history.correction;
-                // An online top-up's note only repeats the label.
-                const fullLabel = label + (e.note && !isOnlineTopup ? " · " + e.note : "");
+                const fullLabel = movementText(e, t.history);
                 return (
                   <div
                     key={e.entryId}
@@ -238,7 +250,7 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
                         isPos ? "text-brand-teal" : "text-brand-red"
                       }`}
                     >
-                      {formatEurSigned(parseFloat(e.amount))}
+                      {formatSignedMoney(e.amount)}
                     </div>
                   </div>
                 );
@@ -248,5 +260,37 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
         </>
       )}
     </>
+  );
+}
+
+// What the cycle moved on the balance, as the ledger sums it. Products and
+// shipping are costs, so they read negative like the rows they add up to.
+function CycleTotals({ entry }: { entry: CycleHistoryEntry }) {
+  if (!entry.charged) {
+    return <p className="mt-[10px] font-mono text-[10px] text-brand-gray">{t.history.chargedAtClose}</p>;
+  }
+  return (
+    <div className="mt-[10px] space-y-[3px] font-mono text-[11px] text-brand-gray">
+      <TotalRow label={t.history.products} value={formatSignedMoney(-entry.productsTotal)} />
+      {entry.shipping !== 0 && (
+        <TotalRow label={t.history.shipping} value={formatSignedMoney(-entry.shipping)} />
+      )}
+      {entry.corrections !== 0 && (
+        <TotalRow label={t.history.corrections} value={formatSignedMoney(entry.corrections)} />
+      )}
+      <div className="flex justify-between border-t border-brand-border pt-[5px] text-[12px] font-bold text-brand-near-black">
+        <span>{t.history.cycleNet}</span>
+        <span>{formatSignedMoney(entry.net)}</span>
+      </div>
+    </div>
+  );
+}
+
+function TotalRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex justify-between">
+      <span>{label}</span>
+      <span>{value}</span>
+    </div>
   );
 }
