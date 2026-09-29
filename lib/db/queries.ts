@@ -860,6 +860,8 @@ export type LedgerEntryItem = {
   note: string | null;
   cycleTitle: string | null;
   paymentId: string | null;
+  method: string | null;
+  externalRef: string | null;
 };
 
 export async function getAllMembersLedger(): Promise<Record<string, LedgerEntryItem[]>> {
@@ -874,6 +876,8 @@ export async function getAllMembersLedger(): Promise<Record<string, LedgerEntryI
       note: ledgerEntries.note,
       cycleTitle: orderCycles.title,
       paymentId: ledgerEntries.paymentId,
+      method: ledgerEntries.method,
+      externalRef: ledgerEntries.externalRef,
     })
     .from(ledgerEntries)
     .leftJoin(orderCycles, eq(ledgerEntries.cycleId, orderCycles.cycleId))
@@ -890,6 +894,8 @@ export async function getAllMembersLedger(): Promise<Record<string, LedgerEntryI
       note: row.note,
       cycleTitle: row.cycleTitle ?? null,
       paymentId: row.paymentId ?? null,
+      method: row.method ?? null,
+      externalRef: row.externalRef ?? null,
     });
   }
   return result;
