@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { it as italian } from "@/lib/i18n/it";
-import { movementLabel, movementText } from "./movement-label";
+import { movementKind, movementLabel, movementText } from "./movement-label";
 
 const labels = italian.history;
 
@@ -82,5 +82,38 @@ describe("movementText", () => {
     expect(text("correction", "-5.00", "Rimborso ricarica online", "pay_1")).toBe(
       "Rimborso ricarica online",
     );
+  });
+});
+
+describe("movementKind", () => {
+  const kind = (type: string, amount: string | number, paymentId: string | null = null) =>
+    movementKind({ type, amount, paymentId });
+
+  it("tells a bank or cash top-up from an online one", () => {
+    expect(kind("topup", "20.00")).toBe("topup");
+    expect(kind("topup", "20.00", "pay_1")).toBe("online_topup");
+  });
+
+  it("gives the order and its shipping their own kinds", () => {
+    expect(kind("order_charge", "-18.40")).toBe("order");
+    expect(kind("shipping_charge", "-2.00")).toBe("shipping");
+  });
+
+  it("splits corrections into refunds, online refunds and adjustments", () => {
+    expect(kind("correction", "1.60")).toBe("refund");
+    expect(kind("correction", "-5.00", "pay_1")).toBe("online_refund");
+    expect(kind("correction", "-0.80")).toBe("adjustment");
+    expect(kind("correction", 0)).toBe("adjustment");
+    expect(kind("adjustment", "30.00")).toBe("adjustment");
+  });
+
+  it("names the manual movements recorded from Cassa", () => {
+    expect(kind("payout", "-12.00")).toBe("payout");
+    expect(kind("manual_charge", "-4.00")).toBe("manual_charge");
+    expect(kind("membership_fee", "-15.00")).toBe("membership_fee");
+  });
+
+  it("falls back to other for a type it does not know", () => {
+    expect(kind("mystery", "1.00")).toBe("other");
   });
 });

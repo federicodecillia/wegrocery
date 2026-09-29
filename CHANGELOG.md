@@ -28,7 +28,7 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 - 🧺 **Pick the cycle when more than one is open.** "Order" lists the open cycles with their supplier instead of opening the first one, and the countdown button on the home page opens its own cycle.
 
 ### Changed
-- 📒 **History matches the balance.** Each cycle shows products (after weighing), shipping, corrections and the total charged to the balance, and movements have clear names: Top-up, Shipping, Refund, Adjustment, Balance returned, Membership fee.
+- 📒 **History matches the balance.** Each cycle shows products (after weighing), shipping, corrections and the total charged to the balance, and every movement has a clear name and its own icon: Top-up, Shipping, Refund, Adjustment, Balance returned, Membership fee.
 - ➕ **Amounts with their sign.** Balance and movements always show + or -, and a negative balance on the home page reads "To top up".
 - 🚚 **Shipping follows edits to closed orders.** Editing a member's order after closing re-splits everyone's shipping on the actual totals (after weighing), unless it came from the supplier's sheet; only members whose share moved are notified.
 - 🔐 **A deactivated member is signed out at once.** Deactivating a member, admins included, ends their session on the next request instead of at token expiry.

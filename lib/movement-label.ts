@@ -11,32 +11,61 @@ export type LedgerMovement = {
   paymentId: string | null;
 };
 
-export function movementLabel(entry: LedgerMovement, labels: MovementLabels): string {
+// What kind of movement a ledger row is, for its label and its icon. A
+// correction is split by direction; a negative one linked to a payment is a
+// Stripe refund, part of an online top-up going back to the card.
+export type MovementKind =
+  | "topup"
+  | "online_topup"
+  | "order"
+  | "shipping"
+  | "refund"
+  | "online_refund"
+  | "adjustment"
+  | "payout"
+  | "manual_charge"
+  | "membership_fee"
+  | "other";
+
+export function movementKind(entry: LedgerMovement): MovementKind {
   const amount = typeof entry.amount === "string" ? parseFloat(entry.amount) : entry.amount;
   switch (entry.type) {
     case "topup":
-      return entry.paymentId ? labels.onlineTopup : labels.topup;
+      return entry.paymentId ? "online_topup" : "topup";
     case "order_charge":
-      return labels.orderCharge;
+      return "order";
     case "shipping_charge":
-      return labels.shipping;
+      return "shipping";
     case "correction":
-      if (amount > 0) return labels.refund;
-      // A negative row linked to a payment is a Stripe refund: part of an
-      // online top-up going back to the card.
-      return entry.paymentId ? labels.onlineTopupRefund : labels.correction;
+      if (amount > 0) return "refund";
+      return entry.paymentId ? "online_refund" : "adjustment";
     case "adjustment":
       // Legacy type of unknown intent (opening balances included): neutral.
-      return labels.correction;
+      return "adjustment";
     case "payout":
-      return labels.payout;
     case "manual_charge":
-      return labels.manualCharge;
     case "membership_fee":
-      return labels.membershipFee;
+      return entry.type;
     default:
-      return labels.otherMovement;
+      return "other";
   }
+}
+
+export function movementLabel(entry: LedgerMovement, labels: MovementLabels): string {
+  const byKind: Record<MovementKind, string> = {
+    topup: labels.topup,
+    online_topup: labels.onlineTopup,
+    order: labels.orderCharge,
+    shipping: labels.shipping,
+    refund: labels.refund,
+    online_refund: labels.onlineTopupRefund,
+    adjustment: labels.correction,
+    payout: labels.payout,
+    manual_charge: labels.manualCharge,
+    membership_fee: labels.membershipFee,
+    other: labels.otherMovement,
+  };
+  return byKind[movementKind(entry)];
 }
 
 // The label, then the note when it adds something. Stripe rows carry a fixed

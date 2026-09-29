@@ -29,7 +29,7 @@ stanno nella PR.
 - 🧺 **Scelta del ciclo quando ce n'è più di uno aperto.** "Ordine" elenca i cicli aperti con il fornitore invece di aprire il primo, e il pulsante del countdown in home apre il suo ciclo.
 
 ### Modificato
-- 📒 **Lo storico torna con il saldo.** Ogni ciclo mostra prodotti (dopo le pesate), spedizione, correzioni e il totale addebitato sul saldo, e i movimenti hanno nomi chiari: Ricarica, Spedizione, Rimborso, Rettifica, Restituzione saldo, Quota associativa.
+- 📒 **Lo storico torna con il saldo.** Ogni ciclo mostra prodotti (dopo le pesate), spedizione, correzioni e il totale addebitato sul saldo, e ogni movimento ha un nome chiaro e la sua icona: Ricarica, Spedizione, Rimborso, Rettifica, Restituzione saldo, Quota associativa.
 - ➕ **Importi con il segno.** Saldo e movimenti mostrano sempre + o -, e in home un saldo negativo si legge "Da ricaricare".
 - 🚚 **La spedizione segue le modifiche agli ordini chiusi.** Modificare l'ordine di un socio dopo la chiusura ridivide la spedizione di tutti sui totali effettivi (dopo le pesate), tranne quando arriva dalla distinta del fornitore; riceve una notifica solo chi vede cambiare la propria quota.
 - 🔐 **Un socio disattivato esce subito.** Disattivare un socio, admin compresi, chiude la sua sessione alla richiesta successiva invece che alla scadenza.

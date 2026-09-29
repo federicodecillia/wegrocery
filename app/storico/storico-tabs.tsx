@@ -6,7 +6,8 @@ import { t } from "@/lib/i18n";
 import { formatNumber, formatSignedMoney } from "@/lib/i18n/format";
 import { formatDate, formatEur, getProductEmoji } from "@/lib/utils";
 import type { CycleHistoryEntry } from "@/lib/cycle-history";
-import { movementText } from "@/lib/movement-label";
+import { MovementIcon } from "@/components/movement-icon";
+import { movementKind, movementText } from "@/lib/movement-label";
 
 type LedgerEntry = {
   entryId: string;
@@ -210,7 +211,6 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
           ) : (
             <div className="overflow-hidden rounded-[18px] border border-brand-border bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
               {movements.map((e) => {
-                const isTopup = e.type === "topup";
                 const isPos = parseFloat(e.amount) >= 0;
                 const fullLabel = movementText(e, t.history);
                 return (
@@ -219,23 +219,7 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
                     className="flex items-center justify-between border-b border-brand-border px-4 py-[13px] last:border-none"
                   >
                     <div className="flex min-w-0 flex-1 items-center gap-3">
-                      <div
-                        className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[10px] ${
-                          isTopup ? "bg-brand-teal-light" : "bg-brand-orange-light"
-                        }`}
-                      >
-                        {isTopup ? (
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-brand-teal">
-                            <line x1="12" y1="19" x2="12" y2="5" />
-                            <polyline points="5 12 12 5 19 12" />
-                          </svg>
-                        ) : (
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-brand-orange">
-                            <circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" />
-                            <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6" />
-                          </svg>
-                        )}
-                      </div>
+                      <MovementIcon kind={movementKind(e)} incoming={isPos} />
                       <div className="min-w-0">
                         <div className="truncate text-[13px] font-medium text-brand-near-black">
                           {fullLabel}
