@@ -10,6 +10,9 @@ import { brand } from "@/lib/brand";
 import { getDb } from "@/lib/db/client";
 import { auditLog, ledgerEntries, members, orderCycles, orders, payments, products, suppliers, supplierProducts } from "@/lib/db/schema";
 import { upsertCycleProducts } from "@/lib/db/cycle-products";
+import { isUniqueViolation } from "@/lib/db/errors";
+import { getMembersByEmails } from "@/lib/db/queries";
+import { findEmailConflict, normalizeEmail } from "@/lib/member-email";
 import type { BatchItem } from "drizzle-orm/batch";
 import { orderLinesSnapshot, planClosedOrderEdit } from "@/lib/closed-order-edit";
 import { buildCycleCloseCharges, ordersSnapshot } from "@/lib/cycle-close";
@@ -1560,46 +1563,72 @@ export type UpsertMemberInput = {
   active: boolean;
 };
 
-export async function adminUpsertMember(data: UpsertMemberInput) {
+// Emails and aliases share one namespace (lib/member-email.ts). The message
+// names the member who already holds the address, so the admin can fix it.
+async function memberEmailConflict(
+  memberId: string | undefined,
+  wanted: { email: string; aliasEmail: string | null },
+): Promise<string | null> {
+  const holders = await getMembersByEmails([wanted.email, wanted.aliasEmail].filter((a) => a !== null));
+  const conflict = findEmailConflict(memberId, wanted, holders);
+  return conflict ? t.admin.members.emailInUse(conflict.address, conflict.fullName) : null;
+}
+
+export async function adminUpsertMember(data: UpsertMemberInput): Promise<{ error?: string }> {
   const admin = await requireAdmin();
   if (!data.fullName?.trim()) throw new Error(t.errors.fieldRequired(t.fields.name));
-  if (!data.email?.trim()) throw new Error(t.errors.fieldRequired(t.fields.email));
+  const email = normalizeEmail(data.email);
+  if (!email) throw new Error(t.errors.fieldRequired(t.fields.email));
   const role = normalizeRole(data.role);
   if (!role) throw new Error(t.errors.invalidRole);
 
-  const aliasEmail = data.aliasEmail?.toLowerCase().trim() || null;
+  const aliasEmail = normalizeEmail(data.aliasEmail);
   const db = getDb();
   const now = new Date();
 
-  if (data.memberId) {
-    await db
-      .update(members)
-      .set({
+  // A taken address is returned, not thrown: Next.js masks thrown Server
+  // Action messages in production, and the admin needs to read this one.
+  const conflict = await memberEmailConflict(data.memberId, { email, aliasEmail });
+  if (conflict) return { error: conflict };
+
+  try {
+    if (data.memberId) {
+      await db
+        .update(members)
+        .set({
+          fullName: data.fullName.trim(),
+          email,
+          aliasEmail,
+          role,
+          active: data.active,
+          updatedAt: now,
+        })
+        .where(eq(members.memberId, data.memberId));
+      await writeAudit(db, admin.email, "update_member", "member", data.memberId, { ...data, role });
+    } else {
+      const memberId = genId("mem");
+      await db.insert(members).values({
+        memberId,
         fullName: data.fullName.trim(),
-        email: data.email.toLowerCase().trim(),
+        email,
         aliasEmail,
         role,
         active: data.active,
+        createdAt: now,
         updatedAt: now,
-      })
-      .where(eq(members.memberId, data.memberId));
-    await writeAudit(db, admin.email, "update_member", "member", data.memberId, { ...data, role });
-  } else {
-    const memberId = genId("mem");
-    await db.insert(members).values({
-      memberId,
-      fullName: data.fullName.trim(),
-      email: data.email.toLowerCase().trim(),
-      aliasEmail,
-      role,
-      active: data.active,
-      createdAt: now,
-      updatedAt: now,
-    });
-    await writeAudit(db, admin.email, "create_member", "member", memberId, { ...data, role });
+      });
+      await writeAudit(db, admin.email, "create_member", "member", memberId, { ...data, role });
+    }
+  } catch (e) {
+    // A concurrent save took the address after the check above: the unique
+    // indexes (migration 0017) reject the write. Report it the same way.
+    const raced = isUniqueViolation(e) ? await memberEmailConflict(data.memberId, { email, aliasEmail }) : null;
+    if (raced) return { error: raced };
+    throw e;
   }
 
   revalidatePath("/admin");
+  return {};
 }
 
 // ── Fornitori ─────────────────────────────────────────────────────────────────

@@ -13,6 +13,7 @@ import {
   getLastMemberOrderForPrefill,
   getMemberBalance,
   getMemberByEmail,
+  getMemberById,
   getMemberPendingOrderTotals,
   getOpenCycles,
 } from "@/lib/db/queries";
@@ -43,7 +44,10 @@ export async function saveOrder(
   const email = session?.user?.email;
   if (!email) redirect("/login");
 
-  const member = await getMemberByEmail(email);
+  // The member the session resolved (auth.ts jwt callback), not a second
+  // lookup by email.
+  const memberId = (session.user as { memberId?: string | null }).memberId;
+  const member = memberId ? await getMemberById(memberId) : null;
   if (!member) throw new Error(t.errors.memberNotFound);
   if (!member.active) throw new Error(t.errors.accountInactive);
 

@@ -592,6 +592,8 @@ export const it = {
       deleteConfirm: (name: string) =>
         `Eliminare "${name}"?\n\nOperazione irreversibile. Se ha ordini o movimenti verrà mostrato un errore.`,
       deleted: (name: string) => `${name} eliminato`,
+      emailInUse: (email: string, name: string) =>
+        `L'indirizzo ${email} è già usato da ${name}: ogni indirizzo può appartenere a un solo socio, come email o come email secondaria.`,
     },
     suppliers: {
       tabLabel: "Fornit.",

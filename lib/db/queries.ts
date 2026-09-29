@@ -11,15 +11,46 @@ import {
   suppliers,
   supplierProducts,
 } from "./schema";
+import { normalizeEmail } from "@/lib/member-email";
 
+// Matches the login email or alias; stored addresses are normalized on write.
 export async function getMemberByEmail(email: string) {
+  const address = normalizeEmail(email);
+  if (!address) return null;
   const db = getDb();
   const [member] = await db
     .select()
     .from(members)
-    .where(or(eq(members.email, email), eq(members.aliasEmail, email)))
+    .where(or(eq(members.email, address), eq(members.aliasEmail, address)))
     .limit(1);
   return member ?? null;
+}
+
+export async function getMemberById(memberId: string) {
+  const db = getDb();
+  const [member] = await db.select().from(members).where(eq(members.memberId, memberId)).limit(1);
+  return member ?? null;
+}
+
+// Members holding one of `addresses` as email or alias, compared lower-cased
+// like the unique indexes of drizzle/0017_member_email_unique.sql.
+export async function getMembersByEmails(addresses: string[]) {
+  if (addresses.length === 0) return [];
+  const db = getDb();
+  return db
+    .select({
+      memberId: members.memberId,
+      fullName: members.fullName,
+      email: members.email,
+      aliasEmail: members.aliasEmail,
+    })
+    .from(members)
+    .where(
+      or(
+        inArray(sql`lower(${members.email})`, addresses),
+        inArray(sql`lower(${members.aliasEmail})`, addresses),
+      ),
+    );
 }
 
 export async function getMemberBalance(memberId: string): Promise<number> {
