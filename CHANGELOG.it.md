@@ -19,6 +19,14 @@ stanno nella PR.
 
 ---
 
+## [1.12.1] — 28 settembre 2026
+
+*Dati per la ricarica più chiari.*
+
+### Modificato
+- 🏦 **IBAN a gruppi di quattro** nella pagina Ricarica, più facile da ricontrollare a occhio; il pulsante Copia lo copia comunque senza spazi.
+- 📖 **Guida e FAQ rimandano alla pagina Ricarica** per il bonifico e il pagamento online.
+
 ## [1.12.0] — 28 settembre 2026
 
 *Ricarica il saldo online.*
@@ -337,6 +345,7 @@ stanno nella PR.
 
 ---
 
+[1.12.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.12.1
 [1.12.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.12.0
 [1.11.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.11.0
 [1.9.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.9.0

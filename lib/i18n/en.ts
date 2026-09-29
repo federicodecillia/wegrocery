@@ -246,7 +246,7 @@ export const en: Strings = {
       {
         n: 5,
         title: "Pickup and recharge",
-        body: "Come pick up on the date indicated. To recharge your balance, make a bank transfer — whoever manages the treasury will register it in the app.",
+        body: "Come pick up on the date indicated. To top up your balance, open the Top up page from the balance card on Home: it has the bank transfer details and, if the group has enabled it, online payment.",
       },
       {
         n: 6,
@@ -273,7 +273,7 @@ export const en: Strings = {
       },
       {
         q: "How does the balance work?",
-        a: "Your balance is your credit with the buying group. When an order closes, the cost is automatically deducted. To recharge, make a bank transfer to the group's account: whoever manages the treasury will register it and your balance will update.",
+        a: "Your balance is your credit with the buying group. When an order closes, the cost is automatically deducted. To top up, open the Top up page from the balance card on Home. With a bank transfer your balance updates when the treasurer records it; with online payment, if the group has enabled it, it updates as soon as the payment is confirmed.",
       },
       {
         q: "Can I edit or cancel my order after confirming it?",

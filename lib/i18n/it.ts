@@ -246,7 +246,7 @@ export const it = {
       {
         n: 5,
         title: "Ritira e ricarica",
-        body: "Vieni a ritirare nel giorno indicato. Per ricaricare il saldo fai un bonifico — chi gestisce la cassa lo registra nell'app.",
+        body: "Vieni a ritirare nel giorno indicato. Per ricaricare il saldo apri la pagina Ricarica dalla card del saldo in Home: trovi i dati per il bonifico e, se l'associazione l'ha attivato, il pagamento online.",
       },
       {
         n: 6,
@@ -273,7 +273,7 @@ export const it = {
       },
       {
         q: "Come funziona il saldo?",
-        a: "Il saldo è il tuo credito presso l'associazione. Alla chiusura dell'ordine il costo viene addebitato automaticamente. Per ricaricare fai un bonifico sul conto dell'associazione: chi gestisce la cassa lo registra e il saldo si aggiorna.",
+        a: "Il saldo è il tuo credito presso l'associazione. Alla chiusura dell'ordine il costo viene addebitato automaticamente. Per ricaricare apri la pagina Ricarica dalla card del saldo in Home. Con il bonifico il saldo si aggiorna quando chi gestisce la cassa lo registra; con il pagamento online, se l'associazione l'ha attivato, si aggiorna appena il pagamento è confermato.",
       },
       {
         q: "Posso modificare l'ordine dopo averlo confermato?",

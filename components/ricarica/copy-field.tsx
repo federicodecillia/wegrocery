@@ -3,7 +3,19 @@
 import { useState } from "react";
 import { t } from "@/lib/i18n";
 
-export function CopyField({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
+// `display` is what the member reads (e.g. an IBAN in groups of four); `value`
+// is what lands in the clipboard.
+export function CopyField({
+  label,
+  value,
+  display,
+  mono = false,
+}: {
+  label: string;
+  value: string;
+  display?: string;
+  mono?: boolean;
+}) {
   const [copied, setCopied] = useState(false);
 
   async function handleCopy() {
@@ -21,7 +33,7 @@ export function CopyField({ label, value, mono = false }: { label: string; value
       <div className="min-w-0">
         <div className="font-mono text-[10px] uppercase tracking-[0.1em] text-brand-gray">{label}</div>
         <div className={`break-all text-[14px] text-brand-near-black ${mono ? "font-mono" : "font-medium"}`}>
-          {value}
+          {display ?? value}
         </div>
       </div>
       <button
