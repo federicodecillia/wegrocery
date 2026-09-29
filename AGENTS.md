@@ -321,7 +321,7 @@ All four emit `order_adjusted` or `order_corrected` notifications and `audit_log
   (`lib/payments/config.ts`) accepts live keys only on a real production deploy
   and test keys everywhere else, demo included.
 - Flow: `startOnlineTopup` (`lib/actions/topup.ts`) validates the amount
-  (20-300 €), inserts a `pending` payment and opens a hosted Checkout Session
+  (0,50-300 €; 0,50 is Stripe's EUR minimum charge), inserts a `pending` payment and opens a hosted Checkout Session
   (idempotency key = paymentId, 30 min expiry) whose success/cancel URLs point
   back at the deploy the member is on. `/ricarica` only displays the payment
   row's status; **only the signed webhook credits**.
