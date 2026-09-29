@@ -19,6 +19,25 @@ stanno nella PR.
 
 ---
 
+## [1.13.0] — 29 settembre 2026
+
+*Una Cassa più completa, e uno storico che torna con il saldo.*
+
+### Aggiunte
+- 💸 **Movimenti in uscita in Cassa.** Gli admin possono registrare la restituzione del saldo a un socio (mai oltre il saldo), un addebito manuale o la quota associativa, ognuno con una causale che il socio legge nella notifica.
+- 🏦 **Ricarica manuale con metodo e riferimento.** Si cerca il socio per nome o email, si sceglie il metodo (bonifico, contanti, Satispay, altro) e si indica il CRO/TRN: un riferimento già usato viene rifiutato, una ricarica simile negli ultimi giorni chiede conferma, e prima di salvare c'è un riepilogo (migrazione `0018`).
+- 🧺 **Scelta del ciclo quando ce n'è più di uno aperto.** "Ordine" elenca i cicli aperti con il fornitore invece di aprire il primo, e il pulsante del countdown in home apre il suo ciclo.
+
+### Modificato
+- 📒 **Lo storico torna con il saldo.** Ogni ciclo mostra prodotti (dopo le pesate), spedizione, correzioni e il totale addebitato sul saldo, e ogni movimento ha un nome chiaro e la sua icona: Ricarica, Spedizione, Rimborso, Rettifica, Restituzione saldo, Quota associativa.
+- ➕ **Importi con il segno.** Saldo e movimenti mostrano sempre + o -, e in home un saldo negativo si legge "Da ricaricare".
+- 🚚 **La spedizione segue le modifiche agli ordini chiusi.** Modificare l'ordine di un socio dopo la chiusura ridivide la spedizione di tutti sui totali effettivi (dopo le pesate), tranne quando arriva dalla distinta del fornitore; riceve una notifica solo chi vede cambiare la propria quota.
+- 🔐 **Un socio disattivato esce subito.** Disattivare un socio, admin compresi, chiude la sua sessione alla richiesta successiva invece che alla scadenza.
+
+### Risolto
+- 📧 **Email e alias non si ripetono più tra soci.** Salvare un socio con un'email o un'email secondaria già usata da un altro, anche con maiuscole diverse, viene rifiutato indicando chi la usa (migrazione `0017`).
+- ⚠️ **Messaggi d'errore leggibili.** In produzione i rifiuti previsti (ciclo chiuso, campo mancante, ordine cambiato nel frattempo) mostrano il loro testo invece di un errore generico, e la pagina dell'ordine si ricarica da sola se il ciclo si è chiuso.
+
 ## [1.12.2] — 29 settembre 2026
 
 *Ricariche online più piccole.*
@@ -352,6 +371,7 @@ stanno nella PR.
 
 ---
 
+[1.13.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.13.0
 [1.12.2]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.12.2
 [1.12.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.12.1
 [1.12.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.12.0

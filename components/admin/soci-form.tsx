@@ -32,7 +32,11 @@ export function SociForm({ member, onClose }: { member?: Member; onClose?: () =>
     };
     startTransition(async () => {
       try {
-        await adminUpsertMember(data);
+        const result = await adminUpsertMember(data);
+        if (result?.error) {
+          toast.error(result.error);
+          return;
+        }
         toast.success(isEdit ? t.admin.members.memberUpdated : t.admin.members.memberAdded);
         onClose?.();
         if (!isEdit) (e.target as HTMLFormElement).reset();

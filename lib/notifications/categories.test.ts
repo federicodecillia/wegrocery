@@ -41,6 +41,15 @@ describe("categoryForType", () => {
     expect(categoryForType("cycle_cancelled")).toBe("order_updates");
   });
 
+  // Manual Cassa movements reuse existing categories, so no new preference
+  // toggle appears: a payout is the other side of a top-up, a manual charge
+  // or a membership fee is a debit on the balance like an order.
+  it("maps the manual Cassa movements to existing categories", () => {
+    expect(categoryForType("payout_sent")).toBe("wallet_topup");
+    expect(categoryForType("manual_charge_recorded")).toBe("order_charge");
+    expect(categoryForType("membership_fee_charged")).toBe("order_charge");
+  });
+
   it("returns null for unknown types", () => {
     expect(categoryForType("shipping_charge")).toBeNull();
     expect(categoryForType("something_new")).toBeNull();

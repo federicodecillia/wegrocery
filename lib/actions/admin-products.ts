@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { eq } from "drizzle-orm";
-import { auth } from "@/auth";
+import { requireAdmin } from "@/lib/auth/session";
 import { t } from "@/lib/i18n";
 import { getDb } from "@/lib/db/client";
 import { supplierProducts, auditLog, suppliers } from "@/lib/db/schema";
@@ -17,14 +17,6 @@ import { inspectListing, pickSupplierMatch, type ListingInspection } from "@/lib
 import { suggestMapping, type TargetField } from "@/lib/csv/header-heuristics";
 import { upsertCycleProducts } from "@/lib/db/cycle-products";
 import { decodeUploadBase64 } from "@/lib/upload-limit";
-
-async function requireAdmin() {
-  const session = await auth();
-  const email = session?.user?.email;
-  const role = (session?.user as { role?: string } | undefined)?.role;
-  if (!email || role !== "admin") throw new Error(t.errors.unauthorized);
-  return { email };
-}
 
 function genId(prefix: string): string {
   return `${prefix}_${crypto.randomUUID().replace(/-/g, "").slice(0, 16)}`;

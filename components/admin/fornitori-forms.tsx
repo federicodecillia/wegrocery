@@ -68,7 +68,11 @@ export function FornitoriForm({
     };
     startTransition(async () => {
       try {
-        await adminUpsertSupplier(data);
+        const result = await adminUpsertSupplier(data);
+        if (result.error) {
+          toast.error(result.error);
+          return;
+        }
         toast.success(isEdit ? t.admin.suppliers.supplierUpdated : t.admin.suppliers.supplierAdded);
         onClose?.();
         if (!isEdit) (e.target as HTMLFormElement).reset();
@@ -339,7 +343,11 @@ export function FornitoriList({
   function handleArchive(s: Supplier) {
     startTransition(async () => {
       try {
-        await adminArchiveSupplier(s.supplierId, !s.active);
+        const result = await adminArchiveSupplier(s.supplierId, !s.active);
+        if (result.error) {
+          toast.error(result.error);
+          return;
+        }
         toast.success(s.active ? t.admin.suppliers.supplierArchived : t.admin.suppliers.supplierReactivated);
       } catch (err) {
         toast.error(err instanceof Error ? err.message : t.admin.common.error);

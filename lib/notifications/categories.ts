@@ -45,6 +45,12 @@ const TYPE_TO_CATEGORY: Record<string, NotificationCategory> = {
   order_adjusted: "order_updates",
   cycle_opened: "cycle_opened",
   cycle_cancelled: "order_updates",
+  // Manual Cassa movements (lib/actions/admin.ts) reuse existing categories,
+  // so no new toggle: a payout is the other side of a top-up, a manual charge
+  // or a membership fee is a debit on the balance like an order.
+  payout_sent: "wallet_topup",
+  manual_charge_recorded: "order_charge",
+  membership_fee_charged: "order_charge",
 };
 
 export function categoryForType(type: string): NotificationCategory | null {

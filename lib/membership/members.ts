@@ -49,7 +49,10 @@ export async function provisionVerifiedMember(
       createdAt: now,
       updatedAt: now,
     })
-    .onConflictDoNothing({ target: members.email })
+    // No target: a concurrent first login may collide on members_email_unique
+    // or on the case-insensitive members_email_lower_uniq (migration 0017);
+    // either way the other request created the member.
+    .onConflictDoNothing()
     .returning({ memberId: members.memberId });
 
   if (inserted.length > 0) {
