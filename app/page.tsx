@@ -132,6 +132,7 @@ export default async function HomePage() {
             <div key={cycle.cycleId} className="mb-[24px]">
               <div className="mb-[14px]">
                 <CycleCountdown
+                  cycleId={cycle.cycleId}
                   title={cycle.title}
                   orderCloseAt={new Date(cycle.orderCloseAt ?? new Date()).toISOString()}
                   orderOpenAt={new Date(cycle.orderOpenAt ?? cycle.createdAt).toISOString()}

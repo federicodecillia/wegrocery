@@ -106,6 +106,8 @@ export const it = {
     cancelledSuccess: "Ordine cancellato",
     removeOrder: "Rimuovi ordine",
     backToOrder: "Torna all'ordine",
+    chooseCycle: "Scegli l'ordine",
+    chooseCycleHint: "Ci sono più ordini aperti: scegli quale aprire.",
   },
   history: {
     orders: "Ordini",

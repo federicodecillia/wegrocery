@@ -106,6 +106,8 @@ export const en: Strings = {
     cancelledSuccess: "Order cancelled",
     removeOrder: "Remove order",
     backToOrder: "Back to order",
+    chooseCycle: "Choose an order",
+    chooseCycleHint: "Several orders are open: choose which one to open.",
   },
   history: {
     orders: "Orders",

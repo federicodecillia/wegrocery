@@ -57,9 +57,10 @@ export async function getMemberPendingOrderTotals(
 
 export async function getOpenCycles(includeExpired = false) {
   const db = getDb();
-  const cycles = await db
+  const rows = await db
     .select()
     .from(orderCycles)
+    .leftJoin(suppliers, eq(orderCycles.supplierId, suppliers.supplierId))
     .where(
       includeExpired
         ? eq(orderCycles.status, "open")
@@ -69,7 +70,8 @@ export async function getOpenCycles(includeExpired = false) {
           ),
     )
     .orderBy(asc(orderCycles.orderCloseAt));
-  return cycles;
+  // The supplier's name rides along for the /ordine header and cycle picker.
+  return rows.map((r) => ({ ...r.order_cycles, supplierName: r.suppliers?.name ?? null }));
 }
 
 export async function getCycleProducts(cycleId: string) {

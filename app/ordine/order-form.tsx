@@ -32,6 +32,7 @@ type OrderLine = {
 type Props = {
   cycleId: string;
   cycleTitle: string;
+  supplierName: string | null;
   orderCloseAt: string | null;
   products: Product[];
   existingLines: OrderLine[];
@@ -70,6 +71,7 @@ function groupByCategory(products: Product[]) {
 export function OrderForm({
   cycleId,
   cycleTitle,
+  supplierName,
   orderCloseAt,
   products,
   existingLines,
@@ -235,6 +237,7 @@ export function OrderForm({
         </div>
         <p className="font-mono text-[10px] text-brand-gray mt-[3px]">
           {cycleTitle}
+          {supplierName ? ` · ${supplierName}` : ""}
           {orderCloseAt ? ` · ${t.cycle.closes(formatDateTime(orderCloseAt))}` : ""}
         </p>
       </div>
