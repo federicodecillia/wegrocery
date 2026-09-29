@@ -4,6 +4,7 @@ import {
   check,
   index,
   integer,
+  jsonb,
   numeric,
   pgTable,
   primaryKey,
@@ -180,6 +181,30 @@ export const orders = pgTable(
   ],
 );
 
+export type DraftLine = { productId: string; quantity: number };
+
+// The member's unconfirmed edits to an open cycle's order, saved while they
+// type (drizzle/0019_payment_settings_and_drafts.sql). saveOrder and the cycle
+// close delete them in their own batch; lib/order-draft.ts has the rules.
+export const orderDrafts = pgTable(
+  "order_drafts",
+  {
+    memberId: text("member_id")
+      .notNull()
+      .references(() => members.memberId, { onDelete: "cascade" }),
+    cycleId: text("cycle_id")
+      .notNull()
+      .references(() => orderCycles.cycleId, { onDelete: "cascade" }),
+    lines: jsonb("lines").$type<DraftLine[]>().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.memberId, table.cycleId] }),
+    index("order_drafts_cycle_id_idx").on(table.cycleId),
+    check("order_drafts_lines_array", sql`jsonb_typeof(${table.lines}) = 'array'`),
+  ],
+);
+
 // Online top-ups (Stripe Checkout), drizzle/0016_stripe_payments.sql.
 // status: pending -> succeeded | failed | expired; succeeded ->
 // partially_refunded | refunded. Transitions are guarded UPDATEs in
@@ -202,6 +227,50 @@ export const payments = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
   },
   (table) => [index("payments_member_id_idx").on(table.memberId)],
+);
+
+// Payment settings chosen by the admins in Impostazioni
+// (drizzle/0019_payment_settings_and_drafts.sql). At most one row, id = 1; no
+// row = the brand defaults. Read it through getPaymentSettings
+// (lib/payments/get-settings.ts), never directly.
+export const appSettings = pgTable(
+  "app_settings",
+  {
+    id: integer("id").primaryKey(),
+    // 'wallet' | 'per_order'; always 'wallet' until pay-per-order ships (B2).
+    paymentMode: text("payment_mode").notNull().default("wallet"),
+    // Credit limit (<= 0) and online top-up ceiling (>= 0); NULL = no limit.
+    minBalance: numeric("min_balance", { precision: 10, scale: 2 }),
+    maxBalance: numeric("max_balance", { precision: 10, scale: 2 }),
+    bankTransferEnabled: boolean("bank_transfer_enabled").notNull(),
+    bankHolder: text("bank_holder"),
+    bankIban: text("bank_iban"),
+    onlinePaymentsEnabled: boolean("online_payments_enabled").notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
+    updatedBy: text("updated_by").notNull(),
+  },
+  (table) => [
+    check("app_settings_single_row", sql`${table.id} = 1`),
+    check("app_settings_payment_mode_check", sql`${table.paymentMode} IN ('wallet', 'per_order')`),
+    check("app_settings_min_balance_check", sql`${table.minBalance} <= 0`),
+    check(
+      "app_settings_max_balance_check",
+      sql`${table.maxBalance} >= 0 AND ${table.maxBalance} <> 'NaN'`,
+    ),
+    check("app_settings_balance_range_check", sql`${table.minBalance} <= ${table.maxBalance}`),
+    check(
+      "app_settings_bank_complete_check",
+      sql`NOT ${table.bankTransferEnabled} OR (${table.bankHolder} IS NOT NULL AND ${table.bankIban} IS NOT NULL)`,
+    ),
+    check(
+      "app_settings_wallet_channel_check",
+      sql`${table.paymentMode} <> 'wallet' OR ${table.bankTransferEnabled} OR ${table.onlinePaymentsEnabled}`,
+    ),
+    check(
+      "app_settings_per_order_online_check",
+      sql`${table.paymentMode} <> 'per_order' OR ${table.onlinePaymentsEnabled}`,
+    ),
+  ],
 );
 
 export const ledgerEntries = pgTable(
