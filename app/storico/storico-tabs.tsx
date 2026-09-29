@@ -3,8 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { t } from "@/lib/i18n";
-import { formatMoney } from "@/lib/i18n/format";
-import { formatDate, formatEur, formatEurSigned, getProductEmoji } from "@/lib/utils";
+import { formatSignedMoney } from "@/lib/i18n/format";
+import { formatDate, formatEur, getProductEmoji } from "@/lib/utils";
 import type { CycleHistoryEntry } from "@/lib/db/queries";
 
 type LedgerEntry = {
@@ -176,7 +176,7 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
                 balance < 0 ? "text-brand-red" : "text-brand-near-black"
               }`}
             >
-              {formatMoney(Math.abs(balance))}
+              {formatSignedMoney(balance)}
             </span>
           </div>
 
@@ -238,7 +238,7 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
                         isPos ? "text-brand-teal" : "text-brand-red"
                       }`}
                     >
-                      {formatEurSigned(parseFloat(e.amount))}
+                      {formatSignedMoney(e.amount)}
                     </div>
                   </div>
                 );

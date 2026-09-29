@@ -30,6 +30,7 @@ export const en: Strings = {
   },
   home: {
     balanceTitle: "Your balance",
+    balanceToTopUp: "To top up",
     thisOrder: "This order",
     afterOrder: "After order",
     rechargeButton: "Recharge balance →",

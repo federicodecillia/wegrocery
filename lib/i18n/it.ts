@@ -30,6 +30,7 @@ export const it = {
   },
   home: {
     balanceTitle: "Il tuo saldo",
+    balanceToTopUp: "Da ricaricare",
     thisOrder: "Questo ordine",
     afterOrder: "Dopo ordine",
     rechargeButton: "Ricarica il saldo →",

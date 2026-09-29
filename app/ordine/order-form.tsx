@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "@/components/ui/toast";
 import { confirm } from "@/components/ui/confirm-dialog";
 import { t } from "@/lib/i18n";
-import { formatDateTime } from "@/lib/i18n/format";
+import { formatDateTime, formatSignedMoney } from "@/lib/i18n/format";
 import { formatEur, getProductEmoji, normalizeCategory } from "@/lib/utils";
 import type { SaveOrderLine, SaveOrderResult } from "@/lib/actions/order";
 import { loadLastOrderForPrefill } from "@/lib/actions/order";
@@ -394,7 +394,7 @@ export function OrderForm({
                     afterBalance < 0 ? "text-brand-red" : "text-brand-teal"
                   }`}
                 >
-                  {formatEur(afterBalance)}
+                  {formatSignedMoney(afterBalance)}
                 </div>
               </div>
             </div>

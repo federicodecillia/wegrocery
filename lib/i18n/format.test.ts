@@ -1,9 +1,10 @@
-import { afterEach, describe, it as test, expect } from "vitest";
+import { afterEach, describe, it as test, expect, vi } from "vitest";
 import {
   APP_TIME_ZONE,
   formatMoney,
   formatDate,
   formatDateTime,
+  formatSignedMoney,
   formatTime,
   resolveTimeZone,
 } from "./format";
@@ -21,6 +22,35 @@ describe("format helpers with default (en) brand", () => {
   });
   test("formatTime renders HH:mm", () => {
     expect(formatTime(new Date("2026-06-11T10:30:00Z"))).toMatch(/\d{2}:\d{2}/);
+  });
+});
+
+// Balances and ledger movements carry an explicit sign; prices and order
+// totals keep formatMoney.
+describe("formatSignedMoney", () => {
+  test("signs credits and debits explicitly", () => {
+    expect(formatSignedMoney(12.5)).toBe("+€12.50");
+    expect(formatSignedMoney(-1234.5)).toBe("-€1,234.50");
+  });
+  test("leaves zero unsigned, including amounts that round to zero", () => {
+    expect(formatSignedMoney(0)).toBe("€0.00");
+    expect(formatSignedMoney(-0)).toBe("€0.00");
+    expect(formatSignedMoney(-0.004)).toBe("€0.00");
+  });
+  test("accepts numeric strings (Drizzle numeric columns)", () => {
+    expect(formatSignedMoney("-3.20")).toBe("-€3.20");
+  });
+  test("follows the conventions of an Italian deploy", async () => {
+    vi.stubEnv("NEXT_PUBLIC_BRAND_JSON", JSON.stringify({ locale: "it" }));
+    vi.resetModules();
+    try {
+      const italian = await import("./format");
+      expect(italian.formatSignedMoney(-12.5)).toBe("-12,50\u00a0€");
+      expect(italian.formatSignedMoney(8)).toBe("+8,00\u00a0€");
+    } finally {
+      vi.unstubAllEnvs();
+      vi.resetModules();
+    }
   });
 });
 
