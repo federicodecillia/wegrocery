@@ -8,7 +8,7 @@ import { formatMoney, formatDate, formatDateTime } from "@/lib/i18n/format";
 import { parseCycleDates } from "@/lib/cycle-dates";
 import { brand } from "@/lib/brand";
 import { getDb } from "@/lib/db/client";
-import { auditLog, ledgerEntries, members, orderCycles, orders, payments, products, suppliers, supplierProducts } from "@/lib/db/schema";
+import { auditLog, ledgerEntries, members, orderCycles, orderDrafts, orders, payments, products, suppliers, supplierProducts } from "@/lib/db/schema";
 import { upsertCycleProducts } from "@/lib/db/cycle-products";
 import { isUniqueViolation } from "@/lib/db/errors";
 import { ActionError, actionErrorMessage } from "@/lib/action-error";
@@ -265,11 +265,13 @@ async function performCycleClose(
     const now = new Date();
 
     // 1. Row-lock the cycle: saveOrder takes the same lock first in its own
-    //    batch, so from here on no member write can commit on this cycle.
+    //    batch (saveOrderDraft a shared one), so from here on no member write
+    //    can commit on this cycle.
     // 2. Guard, in a fresh statement snapshot taken after the lock: the cycle
     //    must still be open and the orders must be exactly the ones the
     //    charges were computed from. Otherwise 1/0 aborts the whole batch.
-    // 3. Flip the status and post every charge in the same transaction.
+    // 3. Flip the status, drop the cycle's order drafts (they never become
+    //    orders) and post every charge in the same transaction.
     const lockCycle = db.execute(
       sql`SELECT 1 FROM order_cycles WHERE cycle_id = ${cycleId} FOR UPDATE`,
     );
@@ -286,7 +288,8 @@ async function performCycleClose(
       .update(orderCycles)
       .set({ status: "closed", closedAt: now })
       .where(and(eq(orderCycles.cycleId, cycleId), eq(orderCycles.status, "open")));
-    const statements: BatchItem<"pg">[] = [lockCycle, guard, flipStatus];
+    const deleteDrafts = db.delete(orderDrafts).where(eq(orderDrafts.cycleId, cycleId));
+    const statements: BatchItem<"pg">[] = [lockCycle, guard, flipStatus, deleteDrafts];
     if (charges.orderCharges.length > 0) {
       statements.push(
         db.insert(ledgerEntries).values(

@@ -6,13 +6,16 @@ import {
   notificationPreferences,
   notifications,
   orderCycles,
+  orderDrafts,
   orders,
   products,
   suppliers,
   supplierProducts,
+  type DraftLine,
 } from "./schema";
 import { buildCycleHistory, type CycleHistoryEntry } from "@/lib/cycle-history";
 import { normalizeEmail } from "@/lib/member-email";
+import { normalizeDraftLines } from "@/lib/order-draft";
 
 // Matches the login email or alias; stored addresses are normalized on write.
 export async function getMemberByEmail(email: string) {
@@ -131,6 +134,18 @@ export async function getMemberOrderLines(memberId: string, cycleId: string) {
     .select()
     .from(orders)
     .where(and(eq(orders.memberId, memberId), eq(orders.cycleId, cycleId)));
+}
+
+// The member's unconfirmed edits to the cycle's order (order_drafts), null
+// when there are none or the stored lines are unreadable.
+export async function getOrderDraft(memberId: string, cycleId: string): Promise<DraftLine[] | null> {
+  const db = getDb();
+  const [row] = await db
+    .select({ lines: orderDrafts.lines })
+    .from(orderDrafts)
+    .where(and(eq(orderDrafts.memberId, memberId), eq(orderDrafts.cycleId, cycleId)))
+    .limit(1);
+  return row ? normalizeDraftLines(row.lines) : null;
 }
 
 // Returns the next upcoming pickup the member should care about: a cycle

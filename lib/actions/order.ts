@@ -7,16 +7,19 @@ import { brand } from "@/lib/brand";
 import { t } from "@/lib/i18n";
 import { formatMoney } from "@/lib/i18n/format";
 import { getDb } from "@/lib/db/client";
-import { auditLog, orders } from "@/lib/db/schema";
+import { auditLog, orderDrafts, orders } from "@/lib/db/schema";
 import {
   getCycleProducts,
   getLastMemberOrderForPrefill,
   getMemberBalance,
   getMemberByEmail,
   getMemberById,
+  getMemberOrderLines,
   getMemberPendingOrderTotals,
   getOpenCycles,
 } from "@/lib/db/queries";
+import { requireActiveMember } from "@/lib/auth/session";
+import { normalizeDraftLines, sameOrderLines } from "@/lib/order-draft";
 import { recordMembershipCheck } from "@/lib/membership/members";
 import {
   evaluateCreditLimit,
@@ -172,6 +175,10 @@ export async function saveOrder(
     const deleteExisting = db
       .delete(orders)
       .where(and(eq(orders.memberId, member.memberId), eq(orders.cycleId, cycleId)));
+    // Confirming ends the draft the order came from.
+    const deleteDraft = db
+      .delete(orderDrafts)
+      .where(and(eq(orderDrafts.memberId, member.memberId), eq(orderDrafts.cycleId, cycleId)));
 
     try {
       if (newLines.length > 0) {
@@ -191,9 +198,9 @@ export async function saveOrder(
             };
           }),
         );
-        await db.batch([guardCycleStillOpen, deleteExisting, insertNew]);
+        await db.batch([guardCycleStillOpen, deleteExisting, insertNew, deleteDraft]);
       } else {
-        await db.batch([guardCycleStillOpen, deleteExisting]);
+        await db.batch([guardCycleStillOpen, deleteExisting, deleteDraft]);
       }
     } catch (err) {
       // 22012 = division_by_zero, i.e. the guard found the cycle closed.
@@ -250,5 +257,89 @@ export async function loadLastOrderForPrefill(
     return { ...result, matched: Object.keys(result.quantities).length };
   } catch (e) {
     return { error: actionErrorMessage(e, t.errors.genericError, "loadLastOrderForPrefill") };
+  }
+}
+
+export type DraftSaveResult =
+  | { ok: true }
+  | { ok: false; error: string; code: "cycle_not_open" | "invalid" | "unexpected" };
+
+// Autosave of the order form (debounced on the client): keeps the member's
+// unconfirmed edits to an open cycle before its deadline, limited to the
+// products still in the cycle. A draft equal to the confirmed order is
+// deleted instead, so "no draft" always means "nothing to confirm".
+export async function saveOrderDraft(cycleId: string, lines: SaveOrderLine[]): Promise<DraftSaveResult> {
+  try {
+    const { memberId } = await requireActiveMember();
+    const normalized = normalizeDraftLines(lines);
+    if (!normalized) return { ok: false, error: t.errors.invalidQuantity, code: "invalid" };
+
+    const [member, cycles] = await Promise.all([getMemberById(memberId), getOpenCycles()]);
+    const cycle = cycles.find((c) => c.cycleId === cycleId);
+    if (!member || !cycle || !canAccessCycle(cycle.accessLevel, member.role)) {
+      return { ok: false, error: t.errors.cycleNotOpen, code: "cycle_not_open" };
+    }
+
+    const [cycleProducts, confirmed] = await Promise.all([
+      getCycleProducts(cycleId),
+      getMemberOrderLines(memberId, cycleId),
+    ]);
+    const available = new Set(cycleProducts.map((p) => p.productId));
+    const draft = normalized.filter((l) => available.has(l.productId));
+
+    const db = getDb();
+    const draftOfMember = and(eq(orderDrafts.memberId, memberId), eq(orderDrafts.cycleId, cycleId));
+    if (sameOrderLines(draft, confirmed.filter((l) => available.has(l.productId)))) {
+      await db.delete(orderDrafts).where(draftOfMember);
+      return { ok: true };
+    }
+
+    // The cycle row, locked FOR SHARE: drafts never wait for each other, but
+    // the close (FOR UPDATE, then it deletes the cycle's drafts) cannot
+    // interleave, so no draft outlives the close or lands after the deadline.
+    const now = new Date();
+    try {
+      await db.batch([
+        db.execute(
+          sql`SELECT 1 / (CASE WHEN status = 'open' AND (order_close_at IS NULL OR order_close_at > now())
+                THEN 1 ELSE 0 END) AS draft_guard
+              FROM order_cycles WHERE cycle_id = ${cycleId} FOR SHARE`,
+        ),
+        db
+          .insert(orderDrafts)
+          .values({ memberId, cycleId, lines: draft, updatedAt: now })
+          .onConflictDoUpdate({
+            target: [orderDrafts.memberId, orderDrafts.cycleId],
+            set: { lines: draft, updatedAt: now },
+          }),
+      ]);
+    } catch (err) {
+      // 22012 = division_by_zero: the guard found the cycle closed or expired.
+      if (err instanceof Error && /22012|division by zero/i.test(err.message)) {
+        return { ok: false, error: t.errors.cycleNotOpen, code: "cycle_not_open" };
+      }
+      throw err;
+    }
+    return { ok: true };
+  } catch (e) {
+    return {
+      ok: false,
+      error: actionErrorMessage(e, t.errors.genericError, "saveOrderDraft"),
+      code: "unexpected",
+    };
+  }
+}
+
+// "Annulla modifiche" on /ordine, or the form went back to the confirmed
+// order: the draft goes. Deleting is always safe, whatever the cycle's state.
+export async function discardOrderDraft(cycleId: string): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    const { memberId } = await requireActiveMember();
+    await getDb()
+      .delete(orderDrafts)
+      .where(and(eq(orderDrafts.memberId, memberId), eq(orderDrafts.cycleId, cycleId)));
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: actionErrorMessage(e, t.errors.genericError, "discardOrderDraft") };
   }
 }
