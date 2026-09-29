@@ -191,7 +191,7 @@ export const it = {
         },
         order_charge: {
           label: "Addebito ordine",
-          hint: "Quando il ciclo si chiude e ti viene addebitato l'ordine.",
+          hint: "Quando il ciclo si chiude e ti viene addebitato l'ordine, o quando la cassa registra un addebito o la quota associativa.",
         },
         order_updates: {
           label: "Modifiche all'ordine",
@@ -199,7 +199,7 @@ export const it = {
         },
         wallet_topup: {
           label: "Accredito cassa",
-          hint: "Quando viene registrato un accredito sul tuo saldo.",
+          hint: "Quando viene registrata una ricarica sul tuo saldo o ti viene restituito del saldo.",
         },
       },
     },

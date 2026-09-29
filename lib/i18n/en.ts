@@ -191,7 +191,7 @@ export const en: Strings = {
         },
         order_charge: {
           label: "Order charge",
-          hint: "When the cycle closes and your order is charged.",
+          hint: "When the cycle closes and your order is charged, or the treasurer records a charge or the membership fee.",
         },
         order_updates: {
           label: "Order updates",
@@ -199,7 +199,7 @@ export const en: Strings = {
         },
         wallet_topup: {
           label: "Wallet top-up",
-          hint: "When a top-up is recorded on your balance.",
+          hint: "When a top-up is recorded on your balance or part of your balance is paid back to you.",
         },
       },
     },

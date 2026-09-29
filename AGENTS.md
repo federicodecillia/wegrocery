@@ -45,10 +45,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 │   │   └── order.ts            # saveOrder (member)
 │   ├── email/                  # Resend wrapper + supplier-email templates
 │   ├── csv/                    # Server-side CSV builders (e.g. supplier aggregated export)
-│   └── auth/session.ts         # requireUserSession(), requireAdmin(), getUserRole()
+│   └── auth/                   # session.ts: requireUserSession(), requireAdmin(), requireActiveMember(), getUserRole()
+│                               #   access.ts: pure checkAccess/sessionClaims (edge-safe, used by middleware)
 ├── middleware.ts                # Redirect unauthenticated to /login
 ├── auth.ts                     # Auth.js config (Google provider, member whitelist callback)
-├── drizzle/                    # SQL migrations (0000–0007)
+├── drizzle/                    # SQL migrations (0000–0018)
 └── public/logo.png
 ```
 
@@ -230,7 +231,13 @@ User interaction → Server Action ("use server") → auth check → DB mutation
 - Denials redirect to `/login?error=<code>&email=<attempted>`; the login page
   explains each code and links `brand.supportEmail` and `brand.privacyUrl`.
 - `requireUserSession()` — throws redirect to `/login` if not authenticated
-- `requireAdmin()` — throws if `role !== 'admin'`
+- `requireAdmin()` / `requireActiveMember()` (`lib/auth/session.ts`) — the
+  only Server Action guards: signed in, member `active`, and for admin
+  `role === 'admin'`; they return `{ email, memberId }`. Middleware and the
+  admin page apply the same rule through `checkAccess` (`lib/auth/access.ts`).
+- The `jwt` callback re-reads the member on every request and returns `null`
+  for a member deactivated or deleted since signing in: Auth.js then clears the
+  session cookie, so they are signed out at once, admins included.
 - `session.user.memberId` — the authenticated member's ID (set in Auth.js callbacks)
 
 ### Notifications
@@ -238,9 +245,10 @@ User interaction → Server Action ("use server") → auth check → DB mutation
 - Table `notifications`: `member_id | role | type | title | body | href | read_at | created_at`
 - Notification types emitted by `admin.ts` / the cron route:
   - `order_closed` — cycle closure
-  - `topup_received` — admin records a topup
+  - `topup_received` — admin records a topup (or a Stripe top-up/refund lands)
+  - `payout_sent` (category `wallet_topup`), `manual_charge_recorded` and `membership_fee_charged` (category `order_charge`) — admin records an outgoing movement in Cassa
   - `order_corrected` — admin edits a member's order via `adminEditClosedOrder`
-  - `order_adjusted` — closed-cycle shipping recompute OR per-line "actual delivered" rectification
+  - `order_adjusted` — closed-cycle shipping recompute (only members whose share moved) OR per-line "actual delivered" rectification
   - `cycle_opened` — a cycle is created (always created already-open, so this is the single emit point, in `adminCreateCycle`)
   - `cycle_closing_reminder` — **retired in v1.9.0.** No longer emitted. Rows sent while the feature existed remain in members' inboxes and fall through `categoryForType` to the unknown-type branch: rendered in-app, never emailed. Do not reintroduce the name for something else.
 - **All emission goes through `lib/notifications/dispatch.ts`** (`dispatchNotification` for single members, `dispatchWithBodies` for per-member bodies like cycle close, `dispatchToMembers` for broadcasts). Never insert into `notifications` directly — dispatch is where channel preferences are honoured.
@@ -278,7 +286,7 @@ all in `lib/roles.ts`:
 | `order_cycles` | Weekly order windows; one `open` at a time |
 | `products` | Per-cycle product list |
 | `orders` | Order lines per member per cycle |
-| `ledger_entries` | Balance: `topup` (+), `order_charge` (−), `shipping_charge` (−), `correction` (±), `adjustment` |
+| `ledger_entries` | Balance: `topup` (+), `order_charge` (−), `shipping_charge` (−), `correction` (±), `payout` / `manual_charge` / `membership_fee` (−, Cassa, reason required), legacy `adjustment`. Manual rows carry `method` (bonifico/contanti/satispay/altro) and `external_ref` (CRO/TRN, unique on `upper(trim())`, migration 0018) |
 | `orders.actual_quantity` / `actual_line_total` | Recorded after delivery when the supplier weighed something different from what was ordered (e.g. 1 kg → 800 g). NULL = delivered as ordered. |
 | `notifications` | Per-member or per-role messages with `read_at` |
 | `payments` | Online top-ups (Stripe Checkout): `status` pending → succeeded / failed / expired → partially_refunded / refunded, amounts in integer cents |
@@ -301,13 +309,17 @@ ID prefix convention: `cyc_*`, `mem_*`, `prd_*`, `ord_*`, `led_*`, `not_*`, `aud
   not thrown: Next.js masks thrown Server Action messages in production.
 - Products loaded from semicolon-delimited text: `Name;Variant;Format;Price;Supplier;Notes`.
 - Email is the unique member identifier (login key). Alias email supported for non-Google accounts.
+  Emails and aliases share one case-insensitive namespace: unique indexes on
+  `lower(email)` / `lower(alias_email)` (migration 0017) plus the email-vs-alias
+  cross-check in `adminUpsertMember`; `normalizeEmail` (`lib/member-email.ts`)
+  is the one normalizer for storing and comparing.
 
 ### Post-closure adjustments
 
 The admin has four independent ways to correct a closed cycle:
 
-1. **Edit cycle metadata** (`adminUpdateCycle` on a `status='closed'` cycle) — change title/notes/pickup dates/supplier freely; changing shipping mode or amount **recomputes `shipping_charge` ledger entries in place** for every member with orders and emits `order_adjusted` notifications. `orderCloseAt` and `accessLevel` are locked (supplier stays editable post-closure since a cycle can close before one was ever set — that's the only way to unblock the "Fornitore" send/import actions on it). UI: ✎ Modifica button in admin → Ultimi cicli.
-2. **Edit a member's whole order** (`adminEditClosedOrder`) — change integer quantities, add or remove products, or create an order from scratch for a member who didn't originally participate. Posts a single `correction` ledger entry with the delta vs the original total. Original `order_charge` row is left intact. UI: ✎ Modifica button on each member row inside Recap ordini.
+1. **Edit cycle metadata** (`adminUpdateCycle` on a `status='closed'` cycle) — change title/notes/pickup dates/supplier freely; changing shipping mode or amount **recomputes `shipping_charge` ledger entries in place** on the members' effective totals (`coalesce(actual_line_total, line_total)`, `planShippingRecompute` in `lib/shipping.ts`), reversing to 0 a member left without an order, and emits `order_adjusted` only to members whose share moved. `orderCloseAt` and `accessLevel` are locked (supplier stays editable post-closure since a cycle can close before one was ever set — that's the only way to unblock the "Fornitore" send/import actions on it). UI: ✎ Modifica button in admin → Ultimi cicli.
+2. **Edit a member's whole order** (`adminEditClosedOrder`) — change integer quantities, add or remove products, or create an order from scratch for a member who didn't originally participate. Posts a single `correction` ledger entry with the delta vs the original total. Original `order_charge` row is left intact. Unless the cycle is `manual`, the shipping is re-split in the same guarded batch (the edited member's shipping change is folded into their `order_corrected` notification; other movers get `order_adjusted`). UI: ✎ Modifica button on each member row inside Recap ordini.
 3. **Record actual delivered weight/cost per line** (`adminUpdateOrderLineActuals`) — for the case where 1 kg of beetroot weighed 800 g. Writes the actuals to `orders.actual_quantity` / `orders.actual_line_total` and posts a `correction` ledger entry with the delta. Composes with #2 because both use the same correction-ledger model. UI: click any order line inside Recap ordini.
 4. **Import a supplier-filled distinta (`.xlsx`)** (`adminApplyDistintaImport`) — round-trip flow: `📧 Fornitore` sends an Excel sheet built by `lib/csv/distinta-builder.ts` (products × members matrix with formulas + locked refs + hidden `_meta` sheet carrying cycleId/productId/memberId). The supplier overwrites the yellow cells after weighing, sends the file back, the admin uploads it via `📤 Carica distinta`. The parser (`lib/csv/distinta-parser.ts`) shows a diff preview; on apply, every product correction goes through `adminUpdateOrderLineActuals` (#3 above), while the shipping row writes `shipping_charge` ledger entries directly per member and flips `orderCycles.shippingMode` to **`"manual"`**. The `manual` sentinel causes `recomputeShippingForClosedCycle` to early-return, so a later admin edit to the shipping field won't overwrite the per-member values (the cycle form shows an orange banner instead of the shipping inputs).
 
@@ -335,7 +347,7 @@ All four emit `order_adjusted` or `order_corrected` notifications and `audit_log
   (`FOR UPDATE` serialises concurrent refunds); a refund that arrives before
   its credit answers 500 so Stripe retries it. An amount/currency mismatch is
   not credited: it is logged and audited as `stripe_topup_mismatch`.
-- Ledger rows with a `payment_id` cannot be edited or deleted from Cassa.
+- Ledger rows with a `payment_id` cannot be edited or deleted from Cassa (they show as online; `method` stays NULL).
 - Staging (Vercel Authentication on): the Stripe sandbox endpoint URL needs
   `?x-vercel-protection-bypass=<Protection Bypass for Automation secret>`.
 - Disputes are not handled automatically yet: Stripe emails the account owner,
