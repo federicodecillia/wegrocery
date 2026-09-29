@@ -56,7 +56,8 @@ export default async function AdminPage({ searchParams }: { searchParams: Search
     balance: balanceParam,
   } = await searchParams;
   const tab = tabParam ?? "ciclo";
-  const balanceFilter = balanceParam === "negative" ? "negative" : undefined;
+  const balanceFilter =
+    balanceParam === "negative" || balanceParam === "above_max" ? balanceParam : undefined;
 
   return (
     <AppShell email={session.user.email} isAdmin memberId={session.user.memberId!}>

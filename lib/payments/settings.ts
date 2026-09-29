@@ -178,3 +178,8 @@ export function planPaymentSettingsUpdate(
     },
   };
 }
+
+// Above the group's maximum balance, compared in cents; never without one.
+export function isAboveMaxBalance(balance: number, maxBalance: number | null): boolean {
+  return maxBalance !== null && Math.round(balance * 100) > Math.round(maxBalance * 100);
+}

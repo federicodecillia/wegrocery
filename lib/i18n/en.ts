@@ -561,6 +561,9 @@ export const en: Strings = {
       negativeBalance: "Balance < 0",
       filterActive: "filter active · tap to remove",
       filterHint: "tap to filter",
+      aboveMaxBalance: "Above max",
+      aboveMaxNotice: (balance: string, max: string) =>
+        `The balance is now ${balance}, above the group's maximum (${max}). If needed, return the difference with Outgoing movement → Payout.`,
       newTopup: "New top-up",
       memberLabel: "Member *",
       amountLabel: "Amount € *",

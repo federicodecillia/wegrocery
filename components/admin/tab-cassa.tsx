@@ -1,17 +1,20 @@
 import { getAllMembersLedger, getAllMembersWithBalances } from "@/lib/db/queries";
 import { Card, CardHeader } from "@/components/ui/card";
 import { t } from "@/lib/i18n";
-import { CassaInlineList, CassaSummaryCards } from "./cassa-forms";
+import { getPaymentSettings } from "@/lib/payments/get-settings";
+import { isAboveMaxBalance } from "@/lib/payments/settings";
+import { CassaInlineList, CassaSummaryCards, type BalanceFilter } from "./cassa-forms";
 import { OutgoingMovementForm, TopupForm } from "./cassa-movement-form";
 
 type Props = {
-  balanceFilter?: "negative";
+  balanceFilter?: BalanceFilter;
 };
 
 export async function TabCassa({ balanceFilter }: Props) {
-  const [membersWithBalances, ledgerByMember] = await Promise.all([
+  const [membersWithBalances, ledgerByMember, { maxBalance }] = await Promise.all([
     getAllMembersWithBalances(),
     getAllMembersLedger(),
+    getPaymentSettings(),
   ]);
 
   // Disabled members stay pickable, flagged: a member who left may still pay
@@ -28,6 +31,10 @@ export async function TabCassa({ balanceFilter }: Props) {
   const totalBalance = activeBalances.reduce((s, m) => s + m.balance, 0);
   const avgBalance = activeBalances.length > 0 ? totalBalance / activeBalances.length : 0;
   const negativeCount = activeBalances.filter((m) => m.balance < 0).length;
+  // Only with a maximum set: balances above it (a Cassa top-up, or a
+  // maximum lowered later).
+  const aboveMaxCount =
+    maxBalance === null ? null : activeBalances.filter((m) => isAboveMaxBalance(m.balance, maxBalance)).length;
 
   return (
     <div className="space-y-4">
@@ -35,6 +42,7 @@ export async function TabCassa({ balanceFilter }: Props) {
         totalBalance={totalBalance}
         avgBalance={avgBalance}
         negativeCount={negativeCount}
+        aboveMaxCount={aboveMaxCount}
         activeFilter={balanceFilter ?? null}
       />
 
@@ -51,6 +59,7 @@ export async function TabCassa({ balanceFilter }: Props) {
           members={membersWithBalances}
           ledgerByMember={ledgerByMember}
           balanceFilter={balanceFilter ?? null}
+          maxBalance={maxBalance}
         />
       </Card>
     </div>

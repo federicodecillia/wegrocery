@@ -49,6 +49,8 @@ import {
   getResolvedPreferences,
 } from "@/lib/notifications/dispatch";
 import { selectCycleAccessMembers } from "@/lib/notifications/reminder";
+import { getPaymentSettings } from "@/lib/payments/get-settings";
+import { isAboveMaxBalance } from "@/lib/payments/settings";
 import { DEFAULT_ACCESS_LEVEL, normalizeAccessLevel, normalizeRole, type AccessLevel } from "@/lib/roles";
 
 function ledgerAmountErrorMessage(code: LedgerAmountError): string {
@@ -1036,10 +1038,21 @@ function manualMovementNotification(
 // Outcome of a Cassa form submit. `error`: refused, nothing written.
 // `warning`: a similar movement exists, nothing written; submitting again
 // with `confirmDuplicate` records it. Otherwise it was recorded for
-// `memberName`.
-export type CassaMovementResult = { error?: string; warning?: string; memberName?: string };
+// `memberName`, and `notice`, when set, is something the admin should know
+// about it (a top-up that took the balance past the group's maximum).
+export type CassaMovementResult = { error?: string; warning?: string; memberName?: string; notice?: string };
 
 type ManualMovementRequest = ManualMovementInput & { memberId: string; confirmDuplicate?: boolean };
+
+// A manual top-up is never refused for the group's maximum balance: the money
+// has already arrived. The admin is told instead, with the way to return the
+// excess.
+async function aboveMaxBalanceNotice(plan: ManualMovementPlan, newBalance: number): Promise<string | undefined> {
+  if (plan.type !== "topup") return undefined;
+  const { maxBalance } = await getPaymentSettings();
+  if (maxBalance === null || !isAboveMaxBalance(newBalance, maxBalance)) return undefined;
+  return t.admin.treasury.aboveMaxNotice(formatMoney(newBalance), formatMoney(maxBalance));
+}
 
 // Shared by the top-up and the outgoing-movement actions, after their
 // requireAdmin(): validate, check the member (and, for a payout, the
@@ -1105,8 +1118,9 @@ async function recordManualMovement(
 
   // The row is committed: a failure from here on is logged, never reported as
   // a refusal, or the admin would record the same movement again.
+  let newBalance: number | null = null;
   try {
-    const newBalance = await memberBalance(db, member.memberId);
+    newBalance = await memberBalance(db, member.memberId);
     await dispatchNotification(db, {
       memberId: member.memberId,
       memberEmail: member.email,
@@ -1122,10 +1136,16 @@ async function recordManualMovement(
   } catch (auditError) {
     console.error(`[record_${plan.type}] audit failed:`, auditError);
   }
+  let notice: string | undefined;
+  try {
+    notice = newBalance === null ? undefined : await aboveMaxBalanceNotice(plan, newBalance);
+  } catch (settingsError) {
+    console.error(`[record_${plan.type}] maximum balance check failed:`, settingsError);
+  }
   revalidatePath("/admin");
   revalidatePath("/");
   revalidatePath("/storico");
-  return { memberName: member.fullName };
+  return { memberName: member.fullName, notice };
 }
 
 export type ManualTopupInput = {

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { StripeKeyStatus } from "./config";
 import {
+  isAboveMaxBalance,
   planPaymentSettingsUpdate,
   resolvePaymentSettings,
   type PaymentSettingsInput,
@@ -148,5 +149,14 @@ describe("planPaymentSettingsUpdate", () => {
       planPaymentSettingsUpdate({ ...input, bankTransferEnabled: false, onlinePaymentsEnabled: false }, usable),
     ).toEqual({ error: "noChannel" });
     expect(planPaymentSettingsUpdate({ ...input, onlinePaymentsEnabled: false }, missing)).toHaveProperty("values");
+  });
+});
+
+describe("isAboveMaxBalance", () => {
+  it("compares in cents, and is never true without a maximum", () => {
+    expect(isAboveMaxBalance(300.01, 300)).toBe(true);
+    expect(isAboveMaxBalance(300, 300)).toBe(false);
+    expect(isAboveMaxBalance(0.1 + 0.2, 0.3)).toBe(false);
+    expect(isAboveMaxBalance(1_000_000, null)).toBe(false);
   });
 });

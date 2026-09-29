@@ -564,6 +564,9 @@ export const it = {
       negativeBalance: "Saldo < 0",
       filterActive: "filtro attivo · tocca per togliere",
       filterHint: "tocca per filtrare",
+      aboveMaxBalance: "Sopra il massimo",
+      aboveMaxNotice: (balance: string, max: string) =>
+        `Il saldo ora è ${balance}, sopra il massimo del gruppo (${max}). Se serve, restituisci la differenza con Movimento in uscita → Restituzione.`,
       newTopup: "Nuova ricarica",
       memberLabel: "Socio *",
       amountLabel: "Importo € *",
