@@ -15,6 +15,7 @@ import {
 } from "@/lib/db/queries";
 import { formatDateShort, formatEur, getProductEmoji } from "@/lib/utils";
 import { canAccessCycle } from "@/lib/roles";
+import { movementText } from "@/lib/movement-label";
 
 export default async function HomePage() {
   const session = await requireUserSession();
@@ -238,13 +239,7 @@ export default async function HomePage() {
           </div>
           {recentMovements.map((e) => {
             const isPos = parseFloat(e.amount) >= 0;
-            const typeLabel =
-              e.type === "topup"
-                ? t.history.transfer
-                : e.type === "order_charge"
-                  ? t.history.orderCharge
-                  : t.history.correction;
-            const label = typeLabel + (e.note ? " · " + e.note : "");
+            const label = movementText(e, t.history);
             return (
               <div
                 key={e.entryId}
