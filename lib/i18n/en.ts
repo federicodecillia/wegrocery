@@ -589,6 +589,8 @@ export const en: Strings = {
       deleteConfirm: (name: string) =>
         `Delete "${name}"?\n\nThis is irreversible. If they have orders or movements, an error will be shown.`,
       deleted: (name: string) => `${name} deleted`,
+      emailInUse: (email: string, name: string) =>
+        `The address ${email} is already used by ${name}: an address can belong to one member only, as email or as secondary email.`,
     },
     suppliers: {
       tabLabel: "Suppliers",

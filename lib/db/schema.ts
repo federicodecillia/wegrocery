@@ -12,22 +12,34 @@ import {
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 
-export const members = pgTable("members", {
-  memberId: text("member_id").primaryKey(),
-  fullName: text("full_name").notNull(),
-  email: text("email").notNull().unique(),
-  aliasEmail: text("alias_email"),
-  // 'admin' | 'attivi' | 'utenti' (CHECK since migration 0015). Read it through
-  // normalizeRole (lib/roles.ts), which also maps the pre-0015 values.
-  role: text("role").notNull(),
-  active: boolean("active").notNull().default(true),
-  // Last WallyFor membership-card check (migration 0014): 'valid' | 'invalid',
-  // NULL = never checked (always NULL on deploys without WALLYFOR_* env).
-  membershipStatus: text("membership_status"),
-  membershipVerifiedAt: timestamp("membership_verified_at", { withTimezone: true }),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
-});
+export const members = pgTable(
+  "members",
+  {
+    memberId: text("member_id").primaryKey(),
+    fullName: text("full_name").notNull(),
+    email: text("email").notNull().unique(),
+    aliasEmail: text("alias_email"),
+    // 'admin' | 'attivi' | 'utenti' (CHECK since migration 0015). Read it through
+    // normalizeRole (lib/roles.ts), which also maps the pre-0015 values.
+    role: text("role").notNull(),
+    active: boolean("active").notNull().default(true),
+    // Last WallyFor membership-card check (migration 0014): 'valid' | 'invalid',
+    // NULL = never checked (always NULL on deploys without WALLYFOR_* env).
+    membershipStatus: text("membership_status"),
+    membershipVerifiedAt: timestamp("membership_verified_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
+  },
+  (table) => [
+    // Login keys are unique ignoring case (drizzle/0017_member_email_unique.sql).
+    // An address used as one member's email and another's alias is rejected
+    // by adminUpsertMember (lib/member-email.ts), not by an index.
+    uniqueIndex("members_email_lower_uniq").on(sql`lower(${table.email})`),
+    uniqueIndex("members_alias_email_lower_uniq")
+      .on(sql`lower(${table.aliasEmail})`)
+      .where(sql`${table.aliasEmail} IS NOT NULL`),
+  ],
+);
 
 export const suppliers = pgTable("suppliers", {
   supplierId: text("supplier_id").primaryKey(),

@@ -2,8 +2,10 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import { eq, or } from "drizzle-orm";
+import { sessionClaims } from "@/lib/auth/access";
 import { getDb } from "@/lib/db/client";
 import { members } from "@/lib/db/schema";
+import { normalizeEmail } from "@/lib/member-email";
 import { provisionVerifiedMember, recordMembershipCheck } from "@/lib/membership/members";
 import { existingMemberSignIn, loginErrorPath, newUserSignIn } from "@/lib/membership/policy";
 import {
@@ -14,7 +16,7 @@ import {
 } from "@/lib/membership/wallyfor";
 
 const googleConfigured = Boolean(process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET);
-const devLoginEmail = process.env.AUTH_DEV_LOGIN_EMAIL?.trim().toLowerCase();
+const devLoginEmail = normalizeEmail(process.env.AUTH_DEV_LOGIN_EMAIL);
 const devLoginEnabled = process.env.NODE_ENV !== "production" && Boolean(devLoginEmail);
 const demoModeEnabled = process.env.DEMO_MODE === "true";
 // Demo profile -> seeded account (scripts/seed-demo.ts). The profile names are
@@ -107,7 +109,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
   callbacks: {
     async signIn({ user, account, profile }) {
       try {
-        const email = user.email?.trim().toLowerCase();
+        const email = normalizeEmail(user.email);
         if (!email) return false;
 
         const db = getDb();
@@ -166,7 +168,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
     },
     async jwt({ token }) {
       try {
-        const email = token.email?.trim().toLowerCase();
+        const email = normalizeEmail(token.email);
         if (!email) return token;
 
         const db = getDb();
@@ -181,11 +183,12 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
           .where(or(eq(members.email, email), eq(members.aliasEmail, email)))
           .limit(1);
 
-        token.role = member?.role ?? null;
-        token.active = Boolean(member?.active);
-        token.memberId = member?.memberId ?? null;
-        token.fullName = member?.fullName ?? null;
-        return token;
+        // Deactivated or deleted since signing in: end the session on this
+        // request. Auth.js clears the cookie when the callback returns null,
+        // so middleware and every guard see the member as signed out.
+        const claims = sessionClaims(member);
+        if (!claims) return null;
+        return Object.assign(token, claims);
       } catch {
         token.role = null;
         token.active = false;
