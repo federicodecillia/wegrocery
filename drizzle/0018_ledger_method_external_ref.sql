@@ -21,9 +21,11 @@
 -- negative): no schema change is needed for them.
 --
 -- APPLY BEFORE DEPLOYING the code that ships with it, on every environment
--- (dev/staging, demo, prod): schema.ts declares both columns and
--- `select().from(ledger_entries)` lists them explicitly, so the new code fails
--- on a database that lacks them. Additive only: the old code ignores them.
+-- (dev/staging, demo, prod): schema.ts declares both columns, so both
+-- `select().from(ledger_entries)` and every drizzle `insert(ledgerEntries)`
+-- (cycle close, weighing, Cassa, the nightly demo reseed...) list them and
+-- fail on a database that lacks them. Demo is rebuilt from main: migrate it
+-- before merging to main. Additive only: the old code ignores them.
 --
 -- Apply with `npm run db:migrate` against each environment. No pre-flight
 -- check is needed: existing rows get NULL in both columns, which passes the

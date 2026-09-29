@@ -943,6 +943,22 @@ async function memberBalance(db: ReturnType<typeof getDb>, memberId: string): Pr
   return parseFloat(row?.total ?? "0");
 }
 
+// What a payout may return: the balance minus the orders not yet charged on
+// open cycles, so the next cycle close cannot take the member below zero
+// (the same base as saveOrder's credit check). Check-then-insert: two admins
+// acting at the same moment could still overdraw.
+async function memberPayoutBase(db: ReturnType<typeof getDb>, memberId: string): Promise<number> {
+  const [balance, [open]] = await Promise.all([
+    memberBalance(db, memberId),
+    db
+      .select({ total: sql<string>`coalesce(sum(${orders.lineTotal}), '0')` })
+      .from(orders)
+      .innerJoin(orderCycles, eq(orderCycles.cycleId, orders.cycleId))
+      .where(and(eq(orders.memberId, memberId), eq(orderCycles.status, "open"))),
+  ]);
+  return balance - parseFloat(open?.total ?? "0");
+}
+
 // A readable refusal when `ref` is already on a ledger row, compared like the
 // unique index (upper(trim())), or null when it is free.
 async function externalRefTakenMessage(
@@ -1047,7 +1063,7 @@ async function recordManualMovement(
   if (!member) return { error: t.errors.memberNotFound };
 
   if (plan.type === "payout") {
-    const excess = validatePayoutAmount(plan.amountCents / 100, await memberBalance(db, member.memberId));
+    const excess = validatePayoutAmount(plan.amountCents / 100, await memberPayoutBase(db, member.memberId));
     if (excess) return { error: t.admin.treasury.movementErrors.payoutExceedsBalance(formatMoney(excess.limit)) };
   }
   if (plan.externalRef !== null) {
@@ -1087,16 +1103,25 @@ async function recordManualMovement(
     throw e;
   }
 
-  const newBalance = await memberBalance(db, member.memberId);
-  await dispatchNotification(db, {
-    memberId: member.memberId,
-    memberEmail: member.email,
-    ...manualMovementNotification(plan, newBalance),
-    href: "/storico",
-    createdAt: now,
-  });
-
-  await writeAudit(db, admin.email, `record_${plan.type}`, "ledger", entryId, { before: null, after: row });
+  // The row is committed: a failure from here on is logged, never reported as
+  // a refusal, or the admin would record the same movement again.
+  try {
+    const newBalance = await memberBalance(db, member.memberId);
+    await dispatchNotification(db, {
+      memberId: member.memberId,
+      memberEmail: member.email,
+      ...manualMovementNotification(plan, newBalance),
+      href: "/storico",
+      createdAt: now,
+    });
+  } catch (notifyError) {
+    console.error(`[record_${plan.type}] notification failed:`, notifyError);
+  }
+  try {
+    await writeAudit(db, admin.email, `record_${plan.type}`, "ledger", entryId, { before: null, after: row });
+  } catch (auditError) {
+    console.error(`[record_${plan.type}] audit failed:`, auditError);
+  }
   revalidatePath("/admin");
   revalidatePath("/");
   revalidatePath("/storico");
@@ -1119,7 +1144,7 @@ export async function adminRecordTopup(input: ManualTopupInput): Promise<CassaMo
     const admin = await requireAdmin();
     return await recordManualMovement(admin, { ...input, type: "topup" });
   } catch (e) {
-    return { error: e instanceof Error ? e.message : t.errors.genericError };
+    return { error: actionErrorMessage(e, t.errors.genericError, "adminRecordTopup") };
   }
 }
 
@@ -1148,7 +1173,7 @@ export async function adminRecordOutgoingMovement(
     if (!isOutgoingLedgerType(input.type)) return { error: t.admin.treasury.movementErrors.invalidType };
     return await recordManualMovement(admin, input);
   } catch (e) {
-    return { error: e instanceof Error ? e.message : t.errors.genericError };
+    return { error: actionErrorMessage(e, t.errors.genericError, "adminRecordOutgoingMovement") };
   }
 }
 
@@ -1805,7 +1830,7 @@ export async function adminUpdateLedgerEntry(
     }
     // Growing a payout returns more money: it may not exceed the balance.
     if (before.type === "payout") {
-      const balance = await memberBalance(db, before.memberId);
+      const balance = await memberPayoutBase(db, before.memberId);
       const excess = validatePayoutAmount(Math.abs(data.amount), balance, parseFloat(before.amount));
       if (excess) return { error: t.admin.treasury.movementErrors.payoutExceedsBalance(formatMoney(excess.limit)) };
     }

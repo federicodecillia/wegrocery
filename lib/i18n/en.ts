@@ -642,7 +642,7 @@ export const en: Strings = {
         refTakenBy: (ref: string, member: string, date: string) =>
           `Reference ${ref} is already recorded (${member}, ${date}): the same movement cannot be recorded twice.`,
         noteRequired: "The reason is required",
-        payoutExceedsBalance: (limit: string) => `The payout exceeds the member's balance: at most ${limit}.`,
+        payoutExceedsBalance: (limit: string) => `The payout exceeds the member's balance, net of open orders not yet charged: at most ${limit}.`,
       },
       searchMember: "Search member…",
       noMemberFound: "No member found",

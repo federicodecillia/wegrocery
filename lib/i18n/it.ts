@@ -645,7 +645,7 @@ export const it = {
         refTakenBy: (ref: string, member: string, date: string) =>
           `Il riferimento ${ref} è già registrato (${member}, ${date}): lo stesso movimento non può essere registrato due volte.`,
         noteRequired: "La causale è obbligatoria",
-        payoutExceedsBalance: (limit: string) => `La restituzione supera il saldo del socio: al massimo ${limit}.`,
+        payoutExceedsBalance: (limit: string) => `La restituzione supera il saldo del socio, al netto degli ordini aperti non ancora addebitati: al massimo ${limit}.`,
       },
       searchMember: "Cerca socio…",
       noMemberFound: "Nessun socio trovato",

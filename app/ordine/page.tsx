@@ -81,6 +81,10 @@ export default async function OrdinePage({
         </div>
       )}
       <OrderForm
+        // A new cycle is a new form: switching cycles must not carry over the
+        // previous cycle's draft and saved quantities (client state survives
+        // a search-param navigation).
+        key={openCycle!.cycleId}
         cycleId={openCycle!.cycleId}
         cycleTitle={openCycle!.title}
         supplierName={openCycle!.supplierName}
