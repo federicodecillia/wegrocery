@@ -11,6 +11,7 @@ import { TabCassa } from "@/components/admin/tab-cassa";
 import { TabSoci } from "@/components/admin/tab-soci";
 import { TabFornitori } from "@/components/admin/tab-fornitori";
 import { TabStatistiche } from "@/components/admin/tab-statistiche";
+import { TabImpostazioni } from "@/components/admin/tab-impostazioni";
 
 type SearchParams = Promise<{
   tab?: string;
@@ -80,6 +81,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Search
             memberIds={parseCsvParam(filterMemberId)}
           />
         )}
+        {tab === "impostazioni" && <TabImpostazioni />}
       </Suspense>
     </AppShell>
   );

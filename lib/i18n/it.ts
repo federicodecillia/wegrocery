@@ -970,6 +970,43 @@ export const it = {
       importInvalid: (n: number) => `${n} scartati`,
       importAddedToCycle: (n: number) => `${n} nel ciclo`,
     },
+    settings: {
+      tabLabel: "Impostazioni",
+      defaultsNotice:
+        "Questi sono i valori predefiniti del gruppo: controllali e salva. Finché non salvi, l'app usa questi.",
+      limitsTitle: "Soglie del saldo",
+      limitsHint: "Valgono per tutti i soci. Cambiarle non tocca i saldi di oggi.",
+      overdraftLabel: "Scoperto massimo €",
+      overdraftHelp: "Quanto un socio può andare sotto zero con gli ordini. 0 = mai sotto zero.",
+      maxBalanceLabel: "Saldo massimo €",
+      maxBalanceHelp: "Oltre questo saldo non si ricarica online. La Cassa lo segnala ma non blocca.",
+      noLimit: "Nessun limite",
+      bankTitle: "Ricarica con bonifico",
+      bankHint: "I soci vedono intestatario e IBAN nella pagina Ricarica.",
+      bankHolderLabel: "Intestatario",
+      bankIbanLabel: "IBAN",
+      onlineTitle: "Ricarica online (Stripe)",
+      onlineHint: "Con carta o con gli altri metodi di Stripe. Il saldo si aggiorna da solo.",
+      testMode: "modalità test",
+      stripeUnavailable: {
+        missing: "Questo ambiente non ha le chiavi Stripe: chiedi a chi gestisce l'app.",
+        liveKeyOutsideProduction:
+          "La chiave Stripe è di produzione ma questo ambiente non lo è: il pagamento online resta spento.",
+        testKeyInProduction:
+          "La chiave Stripe è di test ma questo è l'ambiente reale: il pagamento online resta spento.",
+      },
+      saved: "Impostazioni salvate",
+      lastSaved: (date: string) => `Ultimo salvataggio: ${date}`,
+      errors: {
+        overdraftInvalid:
+          "Scoperto non valido: scrivi un numero positivo fino a 10.000, ad esempio 50, o lascia vuoto.",
+        maxBalanceInvalid: "Saldo massimo non valido: scrivi un numero fino a 10.000, ad esempio 300, o lascia vuoto.",
+        bankHolderRequired: "Per attivare il bonifico serve l'intestatario.",
+        bankHolderTooLong: "Intestatario troppo lungo: al massimo 100 caratteri.",
+        ibanInvalid: "IBAN non valido: controlla di averlo copiato per intero.",
+        noChannel: "Serve almeno un modo per ricaricare: attiva il bonifico o la ricarica online.",
+      },
+    },
   },
   notificationsServer: {
     orderClosedTitle: "Ordine chiuso",
