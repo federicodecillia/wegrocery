@@ -1,7 +1,8 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
-import { getUserRole, requireUserSession } from "@/lib/auth/session";
+import { checkAccess } from "@/lib/auth/access";
+import { requireUserSession } from "@/lib/auth/session";
 import { AdminNav } from "@/components/admin/admin-nav";
 import { TabCiclo } from "@/components/admin/tab-ciclo";
 import { TabProdotti } from "@/components/admin/tab-prodotti";
@@ -43,8 +44,8 @@ function TabSkeleton() {
 
 export default async function AdminPage({ searchParams }: { searchParams: SearchParams }) {
   const session = await requireUserSession();
-  const role = getUserRole(session);
-  if (role !== "admin") redirect("/");
+  // Same rule as middleware.ts and requireAdmin: role admin and an active member.
+  if (!checkAccess(session.user, "admin").ok) redirect("/");
 
   const {
     tab: tabParam,

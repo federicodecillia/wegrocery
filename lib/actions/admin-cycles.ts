@@ -1,7 +1,7 @@
 "use server";
 
 import { eq, and, asc, sql } from "drizzle-orm";
-import { auth } from "@/auth";
+import { requireAdmin } from "@/lib/auth/session";
 import { t } from "@/lib/i18n";
 import { getDb } from "@/lib/db/client";
 import {
@@ -11,14 +11,6 @@ import {
   products,
   suppliers,
 } from "@/lib/db/schema";
-
-async function requireAdmin() {
-  const session = await auth();
-  const email = session?.user?.email;
-  const role = (session?.user as { role?: string } | undefined)?.role;
-  if (!email || role !== "admin") throw new Error(t.errors.unauthorized);
-  return { email };
-}
 
 export async function adminGetCycleOrderDetails(cycleId: string) {
   try {

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { eq, and, ne, sql, inArray } from "drizzle-orm";
-import { auth } from "@/auth";
+import { requireAdmin } from "@/lib/auth/session";
 import { t } from "@/lib/i18n";
 import { formatMoney, formatDateTime } from "@/lib/i18n/format";
 import { parseCycleDates } from "@/lib/cycle-dates";
@@ -34,17 +34,6 @@ import {
 } from "@/lib/notifications/dispatch";
 import { selectCycleAccessMembers } from "@/lib/notifications/reminder";
 import { DEFAULT_ACCESS_LEVEL, normalizeAccessLevel, normalizeRole, type AccessLevel } from "@/lib/roles";
-
-async function requireAdmin(): Promise<{ email: string }> {
-  const session = await auth();
-  const email = session?.user?.email;
-  const u = session?.user as { role?: string; active?: boolean } | undefined;
-  // `active` is refreshed from the members table on every request by the jwt
-  // callback, so a deactivated admin loses access immediately, not at token
-  // expiry.
-  if (!email || u?.role !== "admin" || !u?.active) throw new Error(t.errors.unauthorized);
-  return { email };
-}
 
 function ledgerAmountErrorMessage(code: LedgerAmountError): string {
   switch (code) {
