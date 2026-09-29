@@ -553,11 +553,52 @@ export const it = {
       amountPlaceholder: "0,00",
       dateLabel: "Data",
       noteLabel: "Nota",
-      notePlaceholder: "Ricarica",
-      registerTopup: "Registra ricarica",
+      notePlaceholder: "Facoltativa",
+      registerTopup: "Conferma ricarica",
       registeringTopup: "Registrazione…",
-      topupRegistered: (amount: string) => `Ricarica di €${amount} registrata`,
+      topupRegistered: (amount: string, member: string) => `Ricarica di ${amount} registrata per ${member}`,
       invalidTopup: "Seleziona un socio e inserisci un importo valido",
+      memberSearchPlaceholder: "Cerca per nome o email…",
+      memberResults: (n: number) => (n === 1 ? "1 socio trovato" : `${n} soci trovati`),
+      memberChange: "Cambia",
+      memberChangeLabel: (member: string) => `Cambia socio (selezionato: ${member})`,
+      memberBalance: (amount: string) => `saldo ${amount}`,
+      methodLabel: "Metodo *",
+      methods: {
+        bonifico: "Bonifico",
+        contanti: "Contanti",
+        satispay: "Satispay",
+        altro: "Altro",
+      },
+      methodOnline: "Online",
+      externalRefLabel: "Riferimento",
+      externalRefPlaceholder: "CRO o TRN",
+      review: "Continua",
+      recapTitle: "Controlla e conferma",
+      recapMember: "Socio",
+      recapAmount: "Importo",
+      recapMethod: "Metodo",
+      recapRef: "Riferimento",
+      recapDate: "Data",
+      recapNote: "Nota",
+      recapBalance: "Saldo",
+      backToEdit: "Modifica",
+      recordAnyway: "Registra comunque",
+      possibleDuplicate: (what: string, amount: string, date: string) =>
+        `Per questo socio c'è già ${what} di ${amount} del ${date}. Controlla che non sia un doppione.`,
+      duplicateSubjects: {
+        topup: "una ricarica",
+      },
+      movementErrors: {
+        invalidType: "Tipo di movimento non valido",
+        invalidMethod: "Metodo di pagamento non valido",
+        invalidDate: "Data non valida",
+        refTooLong: (max: number) => `Riferimento troppo lungo (massimo ${max} caratteri)`,
+        refTaken: (ref: string) =>
+          `Il riferimento ${ref} è già registrato: lo stesso movimento non può essere registrato due volte.`,
+        refTakenBy: (ref: string, member: string, date: string) =>
+          `Il riferimento ${ref} è già registrato (${member}, ${date}): lo stesso movimento non può essere registrato due volte.`,
+      },
       searchMember: "Cerca socio…",
       noMemberFound: "Nessun socio trovato",
       noMovements: "Nessun movimento",
@@ -880,7 +921,7 @@ export const it = {
       `È stato chiuso "${title}". Ti è stato addebitato ${total}.`,
     orderClosedBodyWithShipping: (title: string, total: string, order: string, shipping: string) =>
       `È stato chiuso "${title}". Ti è stato addebitato ${total} (ordine ${order} + spedizione ${shipping}).`,
-    topupReceivedTitle: "Bonifico ricevuto",
+    topupReceivedTitle: "Ricarica registrata",
     onlineTopupTitle: "Ricarica ricevuta",
     onlineTopupBody: (amount: string, balance: string) =>
       `La tua ricarica online di ${amount} è stata accreditata. Il tuo nuovo credito è ${balance}.`,
@@ -888,7 +929,7 @@ export const it = {
     onlineRefundBody: (amount: string, balance: string) =>
       `Ti sono stati rimborsati ${amount} di una ricarica online. Il tuo nuovo credito è ${balance}.`,
     topupReceivedBody: (amount: string, balance: string) =>
-      `Il tuo bonifico di ${amount} è stato ricevuto. Il tuo nuovo credito è ${balance}.`,
+      `È stata registrata una ricarica di ${amount} sul tuo saldo. Nuovo saldo: ${balance}.`,
     orderModifiedTitle: "Ordine modificato",
     orderModifiedBodyNoChange: (title: string) =>
       `Il tuo ordine in "${title}" è stato aggiornato, il saldo non cambia.`,

@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { eq, and, ne, sql, inArray } from "drizzle-orm";
 import { auth } from "@/auth";
 import { t } from "@/lib/i18n";
-import { formatMoney, formatDateTime } from "@/lib/i18n/format";
+import { formatMoney, formatDate, formatDateTime } from "@/lib/i18n/format";
 import { parseCycleDates } from "@/lib/cycle-dates";
 import { brand } from "@/lib/brand";
 import { getDb } from "@/lib/db/client";
@@ -20,10 +20,17 @@ import {
   type ShippingMode,
 } from "@/lib/shipping";
 import {
+  EXTERNAL_REF_MAX_LENGTH,
+  EXTERNAL_REF_UNIQUE_INDEX,
+  duplicateWindow,
+  findPossibleDuplicate,
   isAdminEditableLedgerType,
+  isUniqueViolation,
+  planManualMovement,
   validateLedgerEntryEdit,
-  validateTopupAmount,
   type LedgerAmountError,
+  type ManualMovementError,
+  type ManualMovementPlan,
 } from "@/lib/ledger";
 import {
   dispatchNotification,
@@ -832,60 +839,159 @@ export async function adminUpdateCycleProduct(
 
 // ── Cassa ─────────────────────────────────────────────────────────────────────
 
-export async function adminRecordTopup(
+function manualMovementErrorMessage(code: ManualMovementError): string {
+  const errors = t.admin.treasury.movementErrors;
+  switch (code) {
+    case "invalidType":
+      return errors.invalidType;
+    case "invalidMethod":
+      return errors.invalidMethod;
+    case "refTooLong":
+      return errors.refTooLong(EXTERNAL_REF_MAX_LENGTH);
+    case "invalidDate":
+      return errors.invalidDate;
+    default:
+      return ledgerAmountErrorMessage(code);
+  }
+}
+
+async function memberBalance(db: ReturnType<typeof getDb>, memberId: string): Promise<number> {
+  const [row] = await db
+    .select({ total: sql<string>`coalesce(sum(${ledgerEntries.amount}), '0')` })
+    .from(ledgerEntries)
+    .where(eq(ledgerEntries.memberId, memberId));
+  return parseFloat(row?.total ?? "0");
+}
+
+// A readable refusal when `ref` is already on a ledger row, compared like the
+// unique index (upper(trim())), or null when it is free.
+async function externalRefTakenMessage(
+  db: ReturnType<typeof getDb>,
+  ref: string,
+): Promise<string | null> {
+  const [taken] = await db
+    .select({ entryDate: ledgerEntries.entryDate, fullName: members.fullName })
+    .from(ledgerEntries)
+    .innerJoin(members, eq(ledgerEntries.memberId, members.memberId))
+    .where(sql`upper(trim(${ledgerEntries.externalRef})) = upper(trim(${ref}))`)
+    .limit(1);
+  if (!taken) return null;
+  return t.admin.treasury.movementErrors.refTakenBy(ref, taken.fullName, formatDate(taken.entryDate));
+}
+
+// The non-blocking warning for a movement that repeats one of the same type
+// and amount near the same date (online top-ups included), or null.
+async function possibleDuplicateWarning(
+  db: ReturnType<typeof getDb>,
   memberId: string,
-  amount: number,
-  note: string,
-  entryDate: string,
-): Promise<{ error?: string }> {
+  plan: ManualMovementPlan,
+): Promise<string | null> {
+  const { from, to } = duplicateWindow(plan.entryDate);
+  const rows = await db
+    .select({ amount: ledgerEntries.amount, entryDate: ledgerEntries.entryDate })
+    .from(ledgerEntries)
+    .where(
+      and(
+        eq(ledgerEntries.memberId, memberId),
+        eq(ledgerEntries.type, plan.type),
+        sql`${ledgerEntries.entryDate} BETWEEN ${from.toISOString()} AND ${to.toISOString()}`,
+      ),
+    );
+  const duplicate = findPossibleDuplicate(rows, plan.amountCents, plan.entryDate);
+  if (!duplicate) return null;
+  return t.admin.treasury.possibleDuplicate(
+    t.admin.treasury.duplicateSubjects[plan.type],
+    formatMoney(plan.amountCents / 100),
+    formatDate(duplicate.entryDate),
+  );
+}
+
+// Outcome of a Cassa form submit. `error`: refused, nothing written.
+// `warning`: a similar movement exists, nothing written; submitting again
+// with `confirmDuplicate` records it. Otherwise it was recorded for
+// `memberName`.
+export type CassaMovementResult = { error?: string; warning?: string; memberName?: string };
+
+export type ManualTopupInput = {
+  memberId: string;
+  // As typed, positive. Everything here is re-validated by planManualMovement.
+  amount: number;
+  method: string;
+  externalRef?: string;
+  note?: string;
+  entryDate?: string;
+  confirmDuplicate?: boolean;
+};
+
+export async function adminRecordTopup(input: ManualTopupInput): Promise<CassaMovementResult> {
   try {
     const admin = await requireAdmin();
-    const amountError = validateTopupAmount(amount);
-    if (amountError) return { error: ledgerAmountErrorMessage(amountError) };
+    const now = new Date();
+    const planned = planManualMovement({ ...input, type: "topup" }, now);
+    if ("error" in planned) return { error: manualMovementErrorMessage(planned.error) };
+    const { plan } = planned;
 
     const db = getDb();
     const [member] = await db
-      .select({ memberId: members.memberId, email: members.email })
+      .select({ memberId: members.memberId, email: members.email, fullName: members.fullName })
       .from(members)
-      .where(eq(members.memberId, memberId))
+      .where(eq(members.memberId, input.memberId))
       .limit(1);
     if (!member) return { error: t.errors.memberNotFound };
 
-    const now = new Date();
+    if (plan.externalRef !== null) {
+      const taken = await externalRefTakenMessage(db, plan.externalRef);
+      if (taken) return { error: taken };
+    }
+    if (!input.confirmDuplicate) {
+      const warning = await possibleDuplicateWarning(db, member.memberId, plan);
+      if (warning) return { warning };
+    }
+
     const entryId = genId("led");
-    await db.insert(ledgerEntries).values({
+    const row = {
       entryId,
-      memberId,
-      entryDate: entryDate ? new Date(entryDate) : now,
-      type: "topup",
-      amount: amount.toFixed(2),
+      memberId: member.memberId,
+      entryDate: plan.entryDate,
+      type: plan.type,
+      amount: plan.amount,
       cycleId: null,
-      note: note?.trim() || "Ricarica",
+      note: plan.note,
+      method: plan.method,
+      externalRef: plan.externalRef,
       createdBy: admin.email,
       createdAt: now,
-    });
+    };
+    try {
+      await db.insert(ledgerEntries).values(row);
+    } catch (e) {
+      // Another admin recorded the same reference since the check above.
+      if (plan.externalRef !== null && isUniqueViolation(e, EXTERNAL_REF_UNIQUE_INDEX)) {
+        return {
+          error:
+            (await externalRefTakenMessage(db, plan.externalRef)) ??
+            t.admin.treasury.movementErrors.refTaken(plan.externalRef),
+        };
+      }
+      throw e;
+    }
 
-    const [balanceRow] = await db
-      .select({ total: sql<string>`coalesce(sum(${ledgerEntries.amount}), '0')` })
-      .from(ledgerEntries)
-      .where(eq(ledgerEntries.memberId, memberId));
-    const newBalance = parseFloat(balanceRow?.total ?? "0");
-
+    const newBalance = await memberBalance(db, member.memberId);
     await dispatchNotification(db, {
-      memberId,
+      memberId: member.memberId,
       memberEmail: member.email,
       type: "topup_received",
       title: t.notificationsServer.topupReceivedTitle,
-      body: t.notificationsServer.topupReceivedBody(formatMoney(amount), formatMoney(newBalance)),
+      body: t.notificationsServer.topupReceivedBody(formatMoney(plan.amount), formatMoney(newBalance)),
       href: "/storico",
       createdAt: now,
     });
 
-    await writeAudit(db, admin.email, "record_topup", "ledger", entryId, { memberId, amount });
+    await writeAudit(db, admin.email, "record_topup", "ledger", entryId, { before: null, after: row });
     revalidatePath("/admin");
     revalidatePath("/");
     revalidatePath("/storico");
-    return {};
+    return { memberName: member.fullName };
   } catch (e) {
     return { error: e instanceof Error ? e.message : t.errors.genericError };
   }

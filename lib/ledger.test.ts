@@ -1,7 +1,16 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
+  EXTERNAL_REF_MAX_LENGTH,
+  EXTERNAL_REF_UNIQUE_INDEX,
+  MANUAL_PAYMENT_METHODS,
   applyOriginalSign,
+  findPossibleDuplicate,
   isAdminEditableLedgerType,
+  isUniqueViolation,
+  parseAmountInput,
+  planManualMovement,
   validateLedgerEntryEdit,
   validateTopupAmount,
 } from "./ledger";
@@ -119,5 +128,173 @@ describe("validateTopupAmount", () => {
     expect(validateTopupAmount(0)).toBe("zero");
     expect(validateTopupAmount(0.001)).toBe("zero");
     expect(validateTopupAmount(-5)).toBe("notPositive");
+  });
+});
+
+describe("planManualMovement (top-up)", () => {
+  const now = new Date("2026-09-29T08:00:00Z");
+  const topup = { type: "topup", amount: 25, method: "bonifico" };
+
+  it("plans a positive two-decimal row with the method, reference and note", () => {
+    const result = planManualMovement(
+      { ...topup, externalRef: "  0306909606440418  ", note: "  quota settembre ", entryDate: "2026-09-20" },
+      now,
+    );
+    expect(result).toEqual({
+      plan: {
+        type: "topup",
+        amount: "25.00",
+        amountCents: 2500,
+        method: "bonifico",
+        externalRef: "0306909606440418",
+        note: "quota settembre",
+        entryDate: new Date("2026-09-20"),
+      },
+    });
+  });
+
+  it("stores blank reference and note as NULL and dates an undated entry now", () => {
+    const result = planManualMovement({ ...topup, externalRef: "   ", note: "", entryDate: "" }, now);
+    expect(result).toEqual({
+      plan: expect.objectContaining({ externalRef: null, note: null, entryDate: now }),
+    });
+  });
+
+  it("accepts every manual method", () => {
+    for (const method of MANUAL_PAYMENT_METHODS) {
+      expect(planManualMovement({ ...topup, method }, now)).toHaveProperty("plan.method", method);
+    }
+  });
+
+  it("requires a known manual method: online payments are only credited by the Stripe webhook", () => {
+    expect(planManualMovement({ ...topup, method: "stripe" }, now)).toEqual({ error: "invalidMethod" });
+    expect(planManualMovement({ ...topup, method: "Bonifico" }, now)).toEqual({ error: "invalidMethod" });
+    expect(planManualMovement({ ...topup, method: "" }, now)).toEqual({ error: "invalidMethod" });
+    expect(planManualMovement({ ...topup, method: null }, now)).toEqual({ error: "invalidMethod" });
+  });
+
+  it("rejects non-finite, zero and negative amounts", () => {
+    expect(planManualMovement({ ...topup, amount: NaN }, now)).toEqual({ error: "notFinite" });
+    expect(planManualMovement({ ...topup, amount: Infinity }, now)).toEqual({ error: "notFinite" });
+    expect(planManualMovement({ ...topup, amount: 0 }, now)).toEqual({ error: "zero" });
+    expect(planManualMovement({ ...topup, amount: 0.004 }, now)).toEqual({ error: "zero" });
+    expect(planManualMovement({ ...topup, amount: -5 }, now)).toEqual({ error: "notPositive" });
+  });
+
+  it("stores exactly the cents it validated", () => {
+    expect(planManualMovement({ ...topup, amount: 10.004 }, now)).toHaveProperty("plan.amount", "10.00");
+    expect(planManualMovement({ ...topup, amount: 0.1 + 0.2 }, now)).toHaveProperty("plan.amount", "0.30");
+  });
+
+  it("caps the reference length", () => {
+    const max = "R".repeat(EXTERNAL_REF_MAX_LENGTH);
+    expect(planManualMovement({ ...topup, externalRef: max }, now)).toHaveProperty("plan.externalRef", max);
+    expect(planManualMovement({ ...topup, externalRef: max + "R" }, now)).toEqual({ error: "refTooLong" });
+  });
+
+  it("accepts only a real YYYY-MM-DD date, as the date input sends it", () => {
+    for (const entryDate of ["not-a-date", "5", "2026-02-30", "29/09/2026", "2026-09-29T10:00"]) {
+      expect(planManualMovement({ ...topup, entryDate }, now)).toEqual({ error: "invalidDate" });
+    }
+    expect(planManualMovement({ ...topup, entryDate: "2024-02-29" }, now)).toHaveProperty(
+      "plan.entryDate",
+      new Date("2024-02-29"),
+    );
+  });
+
+  it("rejects the types the Cassa never writes by hand", () => {
+    for (const type of ["order_charge", "shipping_charge", "correction", "adjustment", ""]) {
+      expect(planManualMovement({ ...topup, type }, now)).toEqual({ error: "invalidType" });
+    }
+  });
+});
+
+describe("findPossibleDuplicate", () => {
+  const entryDate = new Date("2026-09-29T00:00:00Z");
+  const row = (amount: string, isoDate: string) => ({ entryId: isoDate, amount, entryDate: new Date(isoDate) });
+
+  it("finds a row with the same amount within seven days of the new entry", () => {
+    const earlier = row("20.00", "2026-09-25T10:00:00Z");
+    expect(findPossibleDuplicate([row("35.00", "2026-09-28T00:00:00Z"), earlier], 2000, entryDate)).toBe(
+      earlier,
+    );
+  });
+
+  it("looks both ways, since an entry can be backdated", () => {
+    const later = row("20.00", "2026-10-03T00:00:00Z");
+    expect(findPossibleDuplicate([later], 2000, entryDate)).toBe(later);
+  });
+
+  it("includes the seventh day and ignores older rows", () => {
+    expect(findPossibleDuplicate([row("20.00", "2026-09-22T00:00:00Z")], 2000, entryDate)).not.toBeNull();
+    expect(findPossibleDuplicate([row("20.00", "2026-09-21T23:59:00Z")], 2000, entryDate)).toBeNull();
+  });
+
+  it("compares cents, not strings", () => {
+    expect(findPossibleDuplicate([row("20", "2026-09-28T00:00:00Z")], 2000, entryDate)).not.toBeNull();
+    expect(findPossibleDuplicate([row("20.01", "2026-09-28T00:00:00Z")], 2000, entryDate)).toBeNull();
+  });
+
+  it("returns null when there is nothing to compare", () => {
+    expect(findPossibleDuplicate([], 2000, entryDate)).toBeNull();
+  });
+});
+
+describe("isUniqueViolation", () => {
+  const neonError = { code: "23505", constraint: EXTERNAL_REF_UNIQUE_INDEX };
+
+  it("recognises the violation wrapped by drizzle (DrizzleQueryError.cause)", () => {
+    const wrapped = Object.assign(new Error("Failed query: insert into ..."), { cause: neonError });
+    expect(isUniqueViolation(wrapped, EXTERNAL_REF_UNIQUE_INDEX)).toBe(true);
+  });
+
+  it("recognises the driver error itself", () => {
+    expect(isUniqueViolation(neonError, EXTERNAL_REF_UNIQUE_INDEX)).toBe(true);
+  });
+
+  it("ignores other constraints and other errors", () => {
+    expect(isUniqueViolation({ code: "23505", constraint: "members_email_unique" }, EXTERNAL_REF_UNIQUE_INDEX)).toBe(
+      false,
+    );
+    expect(isUniqueViolation({ code: "23514", constraint: EXTERNAL_REF_UNIQUE_INDEX }, EXTERNAL_REF_UNIQUE_INDEX)).toBe(
+      false,
+    );
+    expect(isUniqueViolation(new Error("boom"), EXTERNAL_REF_UNIQUE_INDEX)).toBe(false);
+    expect(isUniqueViolation(null, EXTERNAL_REF_UNIQUE_INDEX)).toBe(false);
+    expect(isUniqueViolation("23505", EXTERNAL_REF_UNIQUE_INDEX)).toBe(false);
+  });
+
+  it("does not loop on a cyclic cause chain", () => {
+    const a: { cause?: unknown } = {};
+    a.cause = { cause: a };
+    expect(isUniqueViolation(a, EXTERNAL_REF_UNIQUE_INDEX)).toBe(false);
+  });
+});
+
+describe("migration 0018", () => {
+  const migration = () =>
+    readFileSync(join(process.cwd(), "drizzle", "0018_ledger_method_external_ref.sql"), "utf8");
+
+  it("allows exactly the payment methods the Cassa offers", () => {
+    const list = migration().match(/CHECK \(method IN \(([^)]*)\)\)/)?.[1] ?? "";
+    expect(list.split(",").map((m) => m.trim().replace(/'/g, ""))).toEqual([...MANUAL_PAYMENT_METHODS]);
+  });
+
+  it("names the unique index the action maps to a readable error", () => {
+    expect(migration()).toContain(`CREATE UNIQUE INDEX IF NOT EXISTS ${EXTERNAL_REF_UNIQUE_INDEX}`);
+  });
+});
+
+describe("parseAmountInput", () => {
+  it("reads dot and comma decimals", () => {
+    expect(parseAmountInput("12.50")).toBe(12.5);
+    expect(parseAmountInput(" 12,5 ")).toBe(12.5);
+  });
+
+  it("returns NaN for blank or garbage input instead of 0", () => {
+    expect(parseAmountInput("")).toBeNaN();
+    expect(parseAmountInput("  ")).toBeNaN();
+    expect(parseAmountInput("12,5,0")).toBeNaN();
+    expect(parseAmountInput("abc")).toBeNaN();
   });
 });

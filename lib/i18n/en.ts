@@ -550,11 +550,52 @@ export const en: Strings = {
       amountPlaceholder: "0.00",
       dateLabel: "Date",
       noteLabel: "Note",
-      notePlaceholder: "Top-up",
-      registerTopup: "Register top-up",
+      notePlaceholder: "Optional",
+      registerTopup: "Confirm top-up",
       registeringTopup: "Registering…",
-      topupRegistered: (amount: string) => `Top-up of €${amount} registered`,
+      topupRegistered: (amount: string, member: string) => `Top-up of ${amount} recorded for ${member}`,
       invalidTopup: "Select a member and enter a valid amount",
+      memberSearchPlaceholder: "Search by name or email…",
+      memberResults: (n: number) => (n === 1 ? "1 member found" : `${n} members found`),
+      memberChange: "Change",
+      memberChangeLabel: (member: string) => `Change member (selected: ${member})`,
+      memberBalance: (amount: string) => `balance ${amount}`,
+      methodLabel: "Method *",
+      methods: {
+        bonifico: "Bank transfer",
+        contanti: "Cash",
+        satispay: "Satispay",
+        altro: "Other",
+      },
+      methodOnline: "Online",
+      externalRefLabel: "Reference",
+      externalRefPlaceholder: "Transfer ID",
+      review: "Continue",
+      recapTitle: "Check and confirm",
+      recapMember: "Member",
+      recapAmount: "Amount",
+      recapMethod: "Method",
+      recapRef: "Reference",
+      recapDate: "Date",
+      recapNote: "Note",
+      recapBalance: "Balance",
+      backToEdit: "Edit",
+      recordAnyway: "Record anyway",
+      possibleDuplicate: (what: string, amount: string, date: string) =>
+        `This member already has ${what} of ${amount} dated ${date}. Make sure it is not a duplicate.`,
+      duplicateSubjects: {
+        topup: "a top-up",
+      },
+      movementErrors: {
+        invalidType: "Invalid movement type",
+        invalidMethod: "Invalid payment method",
+        invalidDate: "Invalid date",
+        refTooLong: (max: number) => `Reference too long (at most ${max} characters)`,
+        refTaken: (ref: string) =>
+          `Reference ${ref} is already recorded: the same movement cannot be recorded twice.`,
+        refTakenBy: (ref: string, member: string, date: string) =>
+          `Reference ${ref} is already recorded (${member}, ${date}): the same movement cannot be recorded twice.`,
+      },
       searchMember: "Search member…",
       noMemberFound: "No member found",
       noMovements: "No movements",
@@ -877,7 +918,7 @@ export const en: Strings = {
       `"${title}" has been closed. You have been charged ${total}.`,
     orderClosedBodyWithShipping: (title: string, total: string, order: string, shipping: string) =>
       `"${title}" has been closed. You have been charged ${total} (order ${order} + shipping ${shipping}).`,
-    topupReceivedTitle: "Transfer received",
+    topupReceivedTitle: "Top-up recorded",
     onlineTopupTitle: "Top-up received",
     onlineTopupBody: (amount: string, balance: string) =>
       `Your online top-up of ${amount} has been credited. Your new balance is ${balance}.`,
@@ -885,7 +926,7 @@ export const en: Strings = {
     onlineRefundBody: (amount: string, balance: string) =>
       `${amount} of an online top-up has been refunded to you. Your new balance is ${balance}.`,
     topupReceivedBody: (amount: string, balance: string) =>
-      `Your transfer of ${amount} has been received. Your new balance is ${balance}.`,
+      `A top-up of ${amount} has been recorded on your balance. New balance: ${balance}.`,
     orderModifiedTitle: "Order updated",
     orderModifiedBodyNoChange: (title: string) =>
       `Your order in "${title}" has been updated, balance unchanged.`,

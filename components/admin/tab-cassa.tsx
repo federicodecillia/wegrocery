@@ -1,22 +1,26 @@
-import { getAllMembers, getAllMembersLedger, getAllMembersWithBalances } from "@/lib/db/queries";
+import { getAllMembersLedger, getAllMembersWithBalances } from "@/lib/db/queries";
 import { Card, CardHeader } from "@/components/ui/card";
 import { t } from "@/lib/i18n";
-import { CassaInlineList, CassaSummaryCards, TopupForm } from "./cassa-forms";
+import { CassaInlineList, CassaSummaryCards } from "./cassa-forms";
+import { TopupForm } from "./cassa-movement-form";
 
 type Props = {
   balanceFilter?: "negative";
 };
 
 export async function TabCassa({ balanceFilter }: Props) {
-  const [allMembers, membersWithBalances, ledgerByMember] = await Promise.all([
-    getAllMembers(),
+  const [membersWithBalances, ledgerByMember] = await Promise.all([
     getAllMembersWithBalances(),
     getAllMembersLedger(),
   ]);
 
-  const topupMembers = allMembers
-    .filter((m) => m.active)
-    .map((m) => ({ memberId: m.memberId, fullName: m.fullName }));
+  // Disabled members stay pickable, flagged: a member who left may still pay
+  // off a debt or get the balance back. Enabled ones come first; the query
+  // already sorts by name.
+  const pickerMembers = [
+    ...membersWithBalances.filter((m) => m.active),
+    ...membersWithBalances.filter((m) => !m.active),
+  ].map(({ memberId, fullName, email, active, balance }) => ({ memberId, fullName, email, active, balance }));
 
   // Aggregate only across active members so a dormant socio with €0 doesn't
   // skew the average. Negative-balance count uses the same population.
@@ -34,7 +38,7 @@ export async function TabCassa({ balanceFilter }: Props) {
         activeFilter={balanceFilter ?? null}
       />
 
-      <TopupForm members={topupMembers} />
+      <TopupForm members={pickerMembers} />
 
       <Card>
         <CardHeader>
