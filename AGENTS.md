@@ -233,7 +233,8 @@ User interaction → Server Action ("use server") → auth check → DB mutation
 - `requireUserSession()` — throws redirect to `/login` if not authenticated
 - `requireAdmin()` / `requireActiveMember()` (`lib/auth/session.ts`) — the
   only Server Action guards: signed in, member `active`, and for admin
-  `role === 'admin'`; they return `{ email, memberId }`. Middleware and the
+  `role === 'admin'`; they return `{ email, memberId }` or throw an
+  `ActionError`. Middleware and the
   admin page apply the same rule through `checkAccess` (`lib/auth/access.ts`).
 - The `jwt` callback re-reads the member on every request and returns `null`
   for a member deactivated or deleted since signing in: Auth.js then clears the
@@ -305,8 +306,16 @@ ID prefix convention: `cyc_*`, `mem_*`, `prd_*`, `ord_*`, `led_*`, `not_*`, `aud
   a save when balance − uncharged orders on other open cycles − the new total
   would fall below it (saves that do not raise the cycle's total always pass).
   The check runs before the write batch, so concurrent saves can overshoot it.
-- Expected `saveOrder` refusals are returned as `{ success: false, error }`,
-  not thrown: Next.js masks thrown Server Action messages in production.
+- **Server Actions return expected refusals as values, never throw them**:
+  Next.js masks thrown Server Action messages in production. Internally a
+  refusal is an `ActionError` (`lib/action-error.ts`, also thrown by the
+  guards); each exported action converts it at the boundary with
+  `actionErrorMessage(e, fallback, action)`, which rethrows `redirect()` /
+  `notFound()` (`unstable_rethrow`), passes an `ActionError` message through
+  and logs anything else, returning the generic fallback. `saveOrder` returns
+  `{ success: false, error, code }` (`SaveOrderErrorCode`, e.g.
+  `cycle_not_open`, which the order form uses to refresh); admin actions
+  return `{ error }` next to their data.
 - Products loaded from semicolon-delimited text: `Name;Variant;Format;Price;Supplier;Notes`.
 - Email is the unique member identifier (login key). Alias email supported for non-Google accounts.
   Emails and aliases share one case-insensitive namespace: unique indexes on
