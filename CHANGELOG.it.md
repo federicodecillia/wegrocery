@@ -19,6 +19,19 @@ stanno nella PR.
 
 ---
 
+## [1.14.0] — 29 settembre 2026
+
+*Le impostazioni dei pagamenti in app, e l'ordine che ti aspetta.*
+
+### Aggiunte
+- ⚙️ **Impostazioni dei pagamenti per gli admin.** Una nuova tab Impostazioni (icona a ingranaggio) fissa lo scoperto massimo del gruppo, un saldo massimo e i canali di ricarica che vedono i soci: bonifico (intestatario e IBAN) e pagamento online. Finché un admin non salva non cambia nulla (migrazione `0019`).
+- 🛒 **L'ordine ti aspetta.** Le modifiche all'ordine si salvano mentre le fai: esci dalla pagina e rientra, anche da un altro dispositivo, e le ritrovi, segnate come "Modifiche non ancora confermate" finché non le confermi o le annulli.
+- 🧾 **Dettaglio dei movimenti.** Tocca un movimento nello Storico per vedere data e ora, ciclo, nota, metodo e riferimento, lo stato del pagamento online e chi l'ha registrato.
+
+### Modificato
+- 💶 **Le ricariche rispettano il saldo massimo.** La ricarica online propone solo quanto ci sta, il bonifico dice quanto puoi ancora ricaricare, e chi ha un debito trova come prima scelta l'importo esatto per saldarlo.
+- 🏦 **La Cassa segnala i saldi sopra il massimo.** Una ricarica registrata in Cassa non viene mai rifiutata, ma l'admin viene avvisato se porta il saldo oltre il massimo, e un nuovo filtro elenca quei soci.
+
 ## [1.13.0] — 29 settembre 2026
 
 *Una Cassa più completa, e uno storico che torna con il saldo.*
@@ -371,6 +384,7 @@ stanno nella PR.
 
 ---
 
+[1.14.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.14.0
 [1.13.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.13.0
 [1.12.2]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.12.2
 [1.12.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.12.1

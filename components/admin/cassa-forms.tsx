@@ -15,26 +15,33 @@ import {
   isOutgoingLedgerType,
 } from "@/lib/ledger";
 import type { LedgerEntryItem, MemberWithBalance } from "@/lib/db/queries";
+import { isAboveMaxBalance } from "@/lib/payments/settings";
 
 // ── Summary Cards ─────────────────────────────────────────────────────────────
+
+// The Cassa list filters, from ?balance= (app/admin/page.tsx).
+export type BalanceFilter = "negative" | "above_max";
 
 export function CassaSummaryCards({
   totalBalance,
   avgBalance,
   negativeCount,
+  aboveMaxCount,
   activeFilter,
 }: {
   totalBalance: number;
   avgBalance: number;
   negativeCount: number;
-  activeFilter: "negative" | null;
+  // null when the group has no maximum balance: the card is hidden.
+  aboveMaxCount: number | null;
+  activeFilter: BalanceFilter | null;
 }) {
   const router = useRouter();
   const sp = useSearchParams();
 
-  function toggleNegative() {
+  function toggleFilter(filter: BalanceFilter) {
     const params = new URLSearchParams({ tab: "cassa" });
-    if (activeFilter !== "negative") params.set("balance", "negative");
+    if (activeFilter !== filter) params.set("balance", filter);
     // Preserve no other params — the cassa tab only honors `balance`.
     router.push(`/admin?${params}`);
     void sp; // referenced to make the hook participate in re-render on URL change
@@ -86,7 +93,7 @@ export function CassaSummaryCards({
   const negative = (
     <button
       type="button"
-      onClick={toggleNegative}
+      onClick={() => toggleFilter("negative")}
       aria-pressed={isActive}
       className={`text-left rounded-xl border p-3 transition-transform active:scale-[0.98] ${
         isActive
@@ -111,11 +118,39 @@ export function CassaSummaryCards({
     </button>
   );
 
+  const aboveMaxActive = activeFilter === "above_max";
+  const aboveMax = aboveMaxCount !== null && (
+    <button
+      type="button"
+      onClick={() => toggleFilter("above_max")}
+      aria-pressed={aboveMaxActive}
+      className={`text-left rounded-xl border p-3 transition-transform active:scale-[0.98] ${
+        aboveMaxActive
+          ? "border-brand-orange bg-brand-orange-light ring-2 ring-brand-orange/40"
+          : aboveMaxCount > 0
+            ? "border-brand-orange/30 bg-brand-orange-light"
+            : "border-brand-border bg-white"
+      }`}
+    >
+      <div className="mb-0.5 flex items-center justify-between">
+        <span className="font-mono text-[10px] uppercase tracking-wide text-brand-gray">
+          {t.admin.treasury.aboveMaxBalance}
+        </span>
+        <span className="text-[14px] leading-none">📈</span>
+      </div>
+      <div className="text-[18px] font-black tracking-[-0.02em] text-brand-near-black">{aboveMaxCount}</div>
+      <div className="mt-0.5 font-mono text-[10px] text-brand-gray-light">
+        {aboveMaxActive ? t.admin.treasury.filterActive : t.admin.treasury.filterHint}
+      </div>
+    </button>
+  );
+
   return (
-    <div className="grid grid-cols-3 gap-2">
+    <div className={`grid gap-2 ${aboveMaxCount === null ? "grid-cols-3" : "grid-cols-2"}`}>
       {total}
       {avg}
       {negative}
+      {aboveMax}
     </div>
   );
 }
@@ -300,16 +335,19 @@ export function CassaInlineList({
   members,
   ledgerByMember,
   balanceFilter = null,
+  maxBalance,
 }: {
   members: MemberWithBalance[];
   ledgerByMember: Record<string, LedgerEntryItem[]>;
-  balanceFilter?: "negative" | null;
+  balanceFilter?: BalanceFilter | null;
+  maxBalance: number | null;
 }) {
   const [filter, setFilter] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const filtered = members.filter((m) => {
     if (balanceFilter === "negative" && m.balance >= 0) return false;
+    if (balanceFilter === "above_max" && !isAboveMaxBalance(m.balance, maxBalance)) return false;
     const q = filter.toLowerCase();
     return (
       m.fullName.toLowerCase().includes(q) ||

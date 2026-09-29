@@ -39,8 +39,8 @@ const daysFromNow = (d: number, hour = 12) => {
 
 async function main() {
   console.log("Truncating demo tables…");
-  await sql`TRUNCATE TABLE orders, ledger_entries, products, supplier_products,
-    order_cycles, suppliers, notifications, audit_log, members CASCADE`;
+  await sql`TRUNCATE TABLE orders, order_drafts, ledger_entries, products, supplier_products,
+    order_cycles, suppliers, notifications, audit_log, app_settings, members CASCADE`;
 
   // ── Members ────────────────────────────────────────────────────────
   const now = new Date();

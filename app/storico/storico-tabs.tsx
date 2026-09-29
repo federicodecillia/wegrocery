@@ -8,15 +8,9 @@ import { formatDate, formatEur, getProductEmoji } from "@/lib/utils";
 import type { CycleHistoryEntry } from "@/lib/cycle-history";
 import { MovementIcon } from "@/components/movement-icon";
 import { movementKind, movementText } from "@/lib/movement-label";
+import { MovementDetailDialog, type MovementDetail } from "./movement-detail";
 
-type LedgerEntry = {
-  entryId: string;
-  type: string;
-  amount: string;
-  note: string | null;
-  entryDate: Date;
-  paymentId: string | null;
-};
+type LedgerEntry = MovementDetail & { entryId: string };
 
 type Props = {
   orderHistory: CycleHistoryEntry[];
@@ -32,15 +26,25 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
   const [expanded, setExpanded] = useState<Set<string>>(
     () => (deepLinkCycleId ? new Set([deepLinkCycleId]) : new Set()),
   );
+  const [selected, setSelected] = useState<LedgerEntry | null>(null);
+  // The cycle card to bring into view: the notification deep link on arrival,
+  // or the cycle picked from a movement's detail.
+  const [scrollTarget, setScrollTarget] = useState<string | null>(deepLinkCycleId);
   const cycleRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
-  // When arriving from a notification deep-link, scroll the targeted cycle
-  // card into view after the initial render.
   useEffect(() => {
-    if (!deepLinkCycleId) return;
-    const el = cycleRefs.current.get(deepLinkCycleId);
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
-  }, [deepLinkCycleId]);
+    if (!scrollTarget || tab !== "ordini") return;
+    cycleRefs.current.get(scrollTarget)?.scrollIntoView({ behavior: "smooth", block: "center" });
+    setScrollTarget(null);
+  }, [scrollTarget, tab]);
+
+  // From a movement's detail to its cycle, opened, on the Ordini tab.
+  function showCycle(cycleId: string) {
+    setSelected(null);
+    setTab("ordini");
+    setExpanded((prev) => new Set(prev).add(cycleId));
+    setScrollTarget(cycleId);
+  }
 
   function toggleExpand(cycleId: string) {
     setExpanded((prev) => {
@@ -214,9 +218,11 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
                 const isPos = parseFloat(e.amount) >= 0;
                 const fullLabel = movementText(e, t.history);
                 return (
-                  <div
+                  <button
                     key={e.entryId}
-                    className="flex items-center justify-between border-b border-brand-border px-4 py-[13px] last:border-none"
+                    type="button"
+                    onClick={() => setSelected(e)}
+                    className="flex w-full items-center justify-between border-b border-brand-border px-4 py-[13px] text-left last:border-none"
                   >
                     <div className="flex min-w-0 flex-1 items-center gap-3">
                       <MovementIcon kind={movementKind(e)} incoming={isPos} />
@@ -236,13 +242,15 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
                     >
                       {formatSignedMoney(e.amount)}
                     </div>
-                  </div>
+                  </button>
                 );
               })}
             </div>
           )}
         </>
       )}
+
+      <MovementDetailDialog entry={selected} onClose={() => setSelected(null)} onShowCycle={showCycle} />
     </>
   );
 }

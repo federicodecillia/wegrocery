@@ -143,7 +143,7 @@ function Recap({
 
 // Runs a Cassa action from the recap: an error or a duplicate warning keeps
 // the recap open with the message, a success resets the form.
-function useMovementSubmit(onRecorded: (memberName: string) => void) {
+function useMovementSubmit(onRecorded: (memberName: string, notice: string | null) => void) {
   const [isPending, startTransition] = useTransition();
   const [review, setReview] = useState<Review | null>(null);
 
@@ -156,7 +156,7 @@ function useMovementSubmit(onRecorded: (memberName: string) => void) {
         setReview({ warning: result.warning, error: null });
       } else {
         setReview(null);
-        onRecorded(result.memberName ?? "");
+        onRecorded(result.memberName ?? "", result.notice ?? null);
       }
     });
   }
@@ -176,8 +176,10 @@ export function TopupForm({ members }: { members: PickerMember[] }) {
   const [formError, setFormError] = useState<string | null>(null);
 
   const parsedAmount = parseAmountInput(amount);
-  const { isPending, review, setReview, submit } = useMovementSubmit((memberName) => {
+  const { isPending, review, setReview, submit } = useMovementSubmit((memberName, notice) => {
     toast.success(t.admin.treasury.topupRegistered(formatMoney(parsedAmount), memberName));
+    // Recorded anyway, the money arrived: the admin decides on a payout.
+    if (notice) toast.warning(notice, { duration: 12000 });
     setMember(null);
     setAmount("");
     setMethod("bonifico");

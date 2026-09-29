@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseTopupAmount, resolveStripeKey } from "./config";
+import { parseTopupAmount, resolveStripeKey, topupBlockReason, topupCeilingCents, topupPresets } from "./config";
 
 describe("parseTopupAmount", () => {
   it("accepts whole euros and both decimal separators", () => {
@@ -59,5 +59,68 @@ describe("resolveStripeKey", () => {
     expect(
       resolveStripeKey({ STRIPE_SECRET_KEY: "sk_live_x", VERCEL_ENV: "production", DEMO_MODE: "true" }),
     ).toEqual({ enabled: false, reason: "liveKeyOutsideProduction" });
+  });
+});
+
+describe("topupCeilingCents", () => {
+  it("is the usual maximum without a group maximum", () => {
+    expect(topupCeilingCents(0, null)).toBe(30000);
+    expect(topupCeilingCents(-5000, null)).toBe(30000);
+  });
+
+  it("keeps the balance within the group maximum", () => {
+    expect(topupCeilingCents(10000, 30000)).toBe(20000);
+    expect(topupCeilingCents(-2340, 0)).toBe(2340);
+    expect(topupCeilingCents(0, 100000)).toBe(30000);
+  });
+
+  it("is null when not even Stripe's minimum fits", () => {
+    expect(topupCeilingCents(29950, 30000)).toBe(50);
+    expect(topupCeilingCents(29951, 30000)).toBeNull();
+    expect(topupCeilingCents(0, 0)).toBeNull();
+    expect(topupCeilingCents(500, 0)).toBeNull();
+  });
+});
+
+describe("topupPresets", () => {
+  it("offers the usual amounts that fit", () => {
+    expect(topupPresets(0, 30000)).toEqual([
+      { cents: 2500, settlesDebt: false },
+      { cents: 5000, settlesDebt: false },
+      { cents: 10000, settlesDebt: false },
+    ]);
+    expect(topupPresets(0, 6000).map((p) => p.cents)).toEqual([2500, 5000]);
+    expect(topupPresets(0, 2000)).toEqual([]);
+  });
+
+  it("puts the exact debt first", () => {
+    expect(topupPresets(-2340, 30000)[0]).toEqual({ cents: 2340, settlesDebt: true });
+    expect(topupPresets(-2340, 2340)).toEqual([{ cents: 2340, settlesDebt: true }]);
+  });
+
+  it("raises a tiny debt to Stripe's minimum", () => {
+    expect(topupPresets(-30, 30000)[0]).toEqual({ cents: 50, settlesDebt: true });
+  });
+
+  it("skips a debt the ceiling cannot cover, and a usual amount equal to the debt", () => {
+    expect(topupPresets(-40000, 30000).some((p) => p.settlesDebt)).toBe(false);
+    expect(topupPresets(-2500, 30000)).toEqual([
+      { cents: 2500, settlesDebt: true },
+      { cents: 5000, settlesDebt: false },
+      { cents: 10000, settlesDebt: false },
+    ]);
+  });
+});
+
+describe("topupBlockReason", () => {
+  it("is the maximum when the balance already reaches it", () => {
+    expect(topupBlockReason(0, 0)).toBe("atMaximum");
+    expect(topupBlockReason(500, 0)).toBe("atMaximum");
+  });
+
+  it("is Stripe's minimum when something still fits but less than 0,50 EUR", () => {
+    expect(topupCeilingCents(-30, 0)).toBeNull();
+    expect(topupBlockReason(-30, 0)).toBe("belowMinimum");
+    expect(topupBlockReason(29951, 30000)).toBe("belowMinimum");
   });
 });

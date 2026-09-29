@@ -45,12 +45,16 @@ export type BrandConfig = {
   /**
    * Credit limit: the lowest balance a member may reach after subtracting
    * pending open orders and the order being saved (e.g. -50). null = no limit.
+   * Only a default: once an admin saves the payment settings (Impostazioni,
+   * app_settings) those win, see lib/payments/settings.ts.
    */
   minBalance: number | null;
   /**
    * Bank details shown on /ricarica for top-ups by bank transfer; null = the
    * page tells members to ask the treasurer. Public (NEXT_PUBLIC_*): an IBAN
    * is meant to be shared with members.
+   * Only a default: once an admin saves the payment settings (Impostazioni,
+   * app_settings) those win, see lib/payments/settings.ts.
    */
   bankTransfer: { holder: string; iban: string } | null;
   theme: BrandTheme;

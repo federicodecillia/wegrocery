@@ -6,13 +6,17 @@ import {
   notificationPreferences,
   notifications,
   orderCycles,
+  orderDrafts,
   orders,
+  payments,
   products,
   suppliers,
   supplierProducts,
+  type DraftLine,
 } from "./schema";
 import { buildCycleHistory, type CycleHistoryEntry } from "@/lib/cycle-history";
 import { normalizeEmail } from "@/lib/member-email";
+import { normalizeDraftLines } from "@/lib/order-draft";
 
 // Matches the login email or alias; stored addresses are normalized on write.
 export async function getMemberByEmail(email: string) {
@@ -131,6 +135,18 @@ export async function getMemberOrderLines(memberId: string, cycleId: string) {
     .select()
     .from(orders)
     .where(and(eq(orders.memberId, memberId), eq(orders.cycleId, cycleId)));
+}
+
+// The member's unconfirmed edits to the cycle's order (order_drafts), null
+// when there are none or the stored lines are unreadable.
+export async function getOrderDraft(memberId: string, cycleId: string): Promise<DraftLine[] | null> {
+  const db = getDb();
+  const [row] = await db
+    .select({ lines: orderDrafts.lines })
+    .from(orderDrafts)
+    .where(and(eq(orderDrafts.memberId, memberId), eq(orderDrafts.cycleId, cycleId)))
+    .limit(1);
+  return row ? normalizeDraftLines(row.lines) : null;
 }
 
 // Returns the next upcoming pickup the member should care about: a cycle
@@ -269,11 +285,36 @@ export async function getLastMemberOrderForPrefill(
   return { cycleTitle: recent.cycleTitle, quantities };
 }
 
+// The member's movements, newest first, with what the Storico detail shows:
+// the cycle title, the online payment's status and the name of whoever
+// recorded the row. created_by holds an admin's email: only the name leaves
+// this function, through a scalar subquery, so an old email/alias clash can
+// never duplicate a movement.
 export async function getMemberLedger(memberId: string, limit = 50) {
   const db = getDb();
   return db
-    .select()
+    .select({
+      entryId: ledgerEntries.entryId,
+      type: ledgerEntries.type,
+      amount: ledgerEntries.amount,
+      note: ledgerEntries.note,
+      entryDate: ledgerEntries.entryDate,
+      cycleId: ledgerEntries.cycleId,
+      paymentId: ledgerEntries.paymentId,
+      method: ledgerEntries.method,
+      externalRef: ledgerEntries.externalRef,
+      cycleTitle: orderCycles.title,
+      paymentStatus: payments.status,
+      recorderName: sql<string | null>`(
+        SELECT m.full_name FROM members m
+        WHERE lower(m.email) = lower(${ledgerEntries.createdBy})
+           OR lower(m.alias_email) = lower(${ledgerEntries.createdBy})
+        LIMIT 1
+      )`,
+    })
     .from(ledgerEntries)
+    .leftJoin(orderCycles, eq(orderCycles.cycleId, ledgerEntries.cycleId))
+    .leftJoin(payments, eq(payments.paymentId, ledgerEntries.paymentId))
     .where(eq(ledgerEntries.memberId, memberId))
     .orderBy(desc(ledgerEntries.entryDate))
     .limit(limit);
