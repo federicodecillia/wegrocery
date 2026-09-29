@@ -24,6 +24,35 @@ export function parseTopupAmount(
   return { cents };
 }
 
+// Highest amount the next online top-up may have: TOPUP_MAX_CENTS, lowered so
+// the balance stays within the group's maximum (payment settings). null when
+// not even TOPUP_MIN_CENTS fits. /ricarica shows it and startOnlineTopup
+// rechecks it; two checkouts opened together can still overshoot it (a soft
+// limit).
+export function topupCeilingCents(balanceCents: number, maxBalanceCents: number | null): number | null {
+  if (maxBalanceCents === null) return TOPUP_MAX_CENTS;
+  const room = maxBalanceCents - balanceCents;
+  return room < TOPUP_MIN_CENTS ? null : Math.min(TOPUP_MAX_CENTS, room);
+}
+
+export type TopupPreset = { cents: number; settlesDebt: boolean };
+
+// One-tap amounts on /ricarica: for a member in debt the exact debt first
+// (raised to Stripe's minimum), then the usual amounts that fit.
+export function topupPresets(balanceCents: number, ceilingCents: number): TopupPreset[] {
+  const presets: TopupPreset[] = [];
+  if (balanceCents < 0) {
+    const debt = Math.max(-balanceCents, TOPUP_MIN_CENTS);
+    if (debt <= ceilingCents) presets.push({ cents: debt, settlesDebt: true });
+  }
+  for (const cents of TOPUP_PRESETS_CENTS) {
+    if (cents <= ceilingCents && !presets.some((p) => p.cents === cents)) {
+      presets.push({ cents, settlesDebt: false });
+    }
+  }
+  return presets;
+}
+
 // process.env, or a literal in tests. Reads STRIPE_SECRET_KEY, VERCEL_ENV and
 // DEMO_MODE.
 type StripeEnv = Record<string, string | undefined>;
