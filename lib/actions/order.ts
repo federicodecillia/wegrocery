@@ -25,6 +25,7 @@ import {
   shouldRecheckMembershipOnOrder,
 } from "@/lib/membership/policy";
 import { checkMembershipAny, isMembershipCheckEnabled } from "@/lib/membership/wallyfor";
+import { getPaymentSettings } from "@/lib/payments/get-settings";
 import { canAccessCycle } from "@/lib/roles";
 import { actionErrorMessage } from "@/lib/action-error";
 
@@ -100,9 +101,10 @@ export async function saveOrder(
 
     // Uncharged order totals: needed by the credit limit and to tell whether
     // this save raises the cycle's order (trimming/cancelling is never blocked).
+    const { minBalance } = await getPaymentSettings();
     const checkEnabled = isMembershipCheckEnabled() && member.role !== "admin";
     const pending =
-      brand.minBalance !== null || checkEnabled
+      minBalance !== null || checkEnabled
         ? await getMemberPendingOrderTotals(member.memberId, cycleId)
         : null;
     const raisesOrder = pending ? raisesOrderTotal(pending.thisCycle, total) : true;
@@ -132,16 +134,16 @@ export async function saveOrder(
       }
     }
 
-    // Credit limit (brand.minBalance). Checked before the write, so two saves
-    // racing on different cycles can overshoot it; the in-transaction SQL guard
-    // is Phase 1 work.
-    if (brand.minBalance !== null && pending) {
+    // Credit limit (the minimum balance of the payment settings). Checked
+    // before the write, so two saves racing on different cycles can overshoot
+    // it; the in-transaction SQL guard is Phase 1 work.
+    if (minBalance !== null && pending) {
       const credit = evaluateCreditLimit({
         balance: await getMemberBalance(member.memberId),
         openOrdersOtherCycles: pending.otherOpenCycles,
         previousOrderTotal: pending.thisCycle,
         newOrderTotal: total,
-        minBalance: brand.minBalance,
+        minBalance,
       });
       if (!credit.ok) {
         return {

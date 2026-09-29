@@ -167,6 +167,7 @@ export const it = {
     lineItemName: (org: string) => `Ricarica credito ${org}`,
     ledgerNote: "Ricarica online",
     refundLedgerNote: "Rimborso ricarica online",
+    atMaximum: "Il tuo saldo è già al massimo consentito dal gruppo.",
   },
   notifications: {
     title: "Notifiche",

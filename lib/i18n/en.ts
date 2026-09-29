@@ -167,6 +167,7 @@ export const en: Strings = {
     lineItemName: (org: string) => `${org} balance top-up`,
     ledgerNote: "Online top-up",
     refundLedgerNote: "Online top-up refund",
+    atMaximum: "Your balance is already at the maximum the group allows.",
   },
   notifications: {
     title: "Notifications",
