@@ -237,22 +237,3 @@ export function findPossibleDuplicate<T extends { amount: string; entryDate: Dat
     ) ?? null
   );
 }
-
-// True when `err` (or an error in its `cause` chain: drizzle wraps the
-// driver's error in DrizzleQueryError) is a unique violation (SQLSTATE 23505)
-// of `constraint`.
-export function isUniqueViolation(err: unknown, constraint: string): boolean {
-  const seen = new Set<unknown>();
-  let current: unknown = err;
-  while (typeof current === "object" && current !== null && !seen.has(current)) {
-    seen.add(current);
-    const { code, constraint: name, cause } = current as {
-      code?: unknown;
-      constraint?: unknown;
-      cause?: unknown;
-    };
-    if (code === "23505" && name === constraint) return true;
-    current = cause;
-  }
-  return false;
-}

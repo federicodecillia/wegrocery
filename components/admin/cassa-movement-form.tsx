@@ -4,7 +4,7 @@ import { useEffect, useId, useRef, useState, useTransition } from "react";
 import { toast } from "@/components/ui/toast";
 import { adminRecordOutgoingMovement, adminRecordTopup, type CassaMovementResult } from "@/lib/actions/admin";
 import { t } from "@/lib/i18n";
-import { formatDecimalInput, formatMoney } from "@/lib/i18n/format";
+import { formatDecimalInput, formatMoney, formatSignedMoney } from "@/lib/i18n/format";
 import { utcToZonedLocalInput } from "@/lib/i18n/zoned-time";
 import {
   MANUAL_PAYMENT_METHODS,
@@ -14,7 +14,7 @@ import {
   type ManualPaymentMethod,
   type OutgoingLedgerType,
 } from "@/lib/ledger";
-import { formatDate, formatEurSigned } from "@/lib/utils";
+import { formatDate } from "@/lib/utils";
 import { MemberCombobox, type PickerMember } from "./member-combobox";
 
 const inputCls =
@@ -216,7 +216,7 @@ export function TopupForm({ members }: { members: PickerMember[] }) {
   if (review && member) {
     const lines: RecapLine[] = [
       { label: t.admin.treasury.recapMember, value: `${member.fullName} (${member.email})` },
-      { label: t.admin.treasury.recapAmount, value: formatEurSigned(parsedAmount) },
+      { label: t.admin.treasury.recapAmount, value: formatSignedMoney(parsedAmount) },
       { label: t.admin.treasury.recapMethod, value: t.admin.treasury.methods[method] },
       ...(externalRef.trim() ? [{ label: t.admin.treasury.recapRef, value: externalRef.trim() }] : []),
       { label: t.admin.treasury.recapDate, value: entryDate ? formatDate(entryDate) : formatDate(new Date()) },
@@ -388,7 +388,7 @@ export function OutgoingMovementForm({ members }: { members: PickerMember[] }) {
     const lines: RecapLine[] = [
       { label: t.admin.treasury.recapKind, value: t.admin.treasury.kinds[kind] },
       { label: t.admin.treasury.recapMember, value: `${member.fullName} (${member.email})` },
-      { label: t.admin.treasury.recapAmount, value: formatEurSigned(-parsedAmount) },
+      { label: t.admin.treasury.recapAmount, value: formatSignedMoney(-parsedAmount) },
       ...(isPayout ? [{ label: t.admin.treasury.recapMethod, value: t.admin.treasury.methods[method] }] : []),
       ...(isPayout && externalRef.trim() ? [{ label: t.admin.treasury.recapRef, value: externalRef.trim() }] : []),
       { label: t.admin.treasury.recapDate, value: entryDate ? formatDate(entryDate) : formatDate(new Date()) },

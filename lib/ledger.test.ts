@@ -10,7 +10,6 @@ import {
   findPossibleDuplicate,
   isAdminEditableLedgerType,
   isOutgoingLedgerType,
-  isUniqueViolation,
   parseAmountInput,
   planManualMovement,
   validateLedgerEntryEdit,
@@ -343,37 +342,6 @@ describe("findPossibleDuplicate", () => {
   it("matches outgoing rows, stored negative, on the absolute amount", () => {
     const payout = row("-20.00", "2026-09-28T00:00:00Z");
     expect(findPossibleDuplicate([payout], 2000, entryDate)).toBe(payout);
-  });
-});
-
-describe("isUniqueViolation", () => {
-  const neonError = { code: "23505", constraint: EXTERNAL_REF_UNIQUE_INDEX };
-
-  it("recognises the violation wrapped by drizzle (DrizzleQueryError.cause)", () => {
-    const wrapped = Object.assign(new Error("Failed query: insert into ..."), { cause: neonError });
-    expect(isUniqueViolation(wrapped, EXTERNAL_REF_UNIQUE_INDEX)).toBe(true);
-  });
-
-  it("recognises the driver error itself", () => {
-    expect(isUniqueViolation(neonError, EXTERNAL_REF_UNIQUE_INDEX)).toBe(true);
-  });
-
-  it("ignores other constraints and other errors", () => {
-    expect(isUniqueViolation({ code: "23505", constraint: "members_email_unique" }, EXTERNAL_REF_UNIQUE_INDEX)).toBe(
-      false,
-    );
-    expect(isUniqueViolation({ code: "23514", constraint: EXTERNAL_REF_UNIQUE_INDEX }, EXTERNAL_REF_UNIQUE_INDEX)).toBe(
-      false,
-    );
-    expect(isUniqueViolation(new Error("boom"), EXTERNAL_REF_UNIQUE_INDEX)).toBe(false);
-    expect(isUniqueViolation(null, EXTERNAL_REF_UNIQUE_INDEX)).toBe(false);
-    expect(isUniqueViolation("23505", EXTERNAL_REF_UNIQUE_INDEX)).toBe(false);
-  });
-
-  it("does not loop on a cyclic cause chain", () => {
-    const a: { cause?: unknown } = {};
-    a.cause = { cause: a };
-    expect(isUniqueViolation(a, EXTERNAL_REF_UNIQUE_INDEX)).toBe(false);
   });
 });
 

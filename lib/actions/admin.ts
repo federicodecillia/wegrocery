@@ -32,7 +32,6 @@ import {
   findPossibleDuplicate,
   isAdminEditableLedgerType,
   isOutgoingLedgerType,
-  isUniqueViolation,
   planManualMovement,
   validateLedgerEntryEdit,
   validatePayoutAmount,
