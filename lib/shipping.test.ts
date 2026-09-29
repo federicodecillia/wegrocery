@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { computeShippingShares, normalizeShippingMode, resolveShippingUpdate } from "./shipping";
+import {
+  computeShippingShares,
+  normalizeShippingMode,
+  planShippingRecompute,
+  resolveShippingUpdate,
+  shippingRowsSnapshot,
+  type ShippingChargeRow,
+  type ShippingRecomputePlan,
+} from "./shipping";
 
 function sumCents(shares: Map<string, number>): number {
   let cents = 0;
@@ -217,5 +225,258 @@ describe("computeShippingShares — common", () => {
         shippingTotal: null,
       }).size,
     ).toBe(0);
+  });
+});
+
+// Existing shipping_charge row for `memberId` (ledger amounts are negative).
+function row(memberId: string, amount: string): ShippingChargeRow {
+  return { entryId: `led_${memberId}`, memberId, amount };
+}
+
+// The shipping rows as they are once the plan is written: memberId → cents
+// charged (positive).
+function applyPlan(existing: ShippingChargeRow[], plan: ShippingRecomputePlan): Map<string, number> {
+  const cents = (amount: string) => 0 - Math.round(parseFloat(amount) * 100);
+  const charged = new Map(existing.map((r) => [r.memberId, cents(r.amount)]));
+  for (const u of plan.updates) charged.set(u.memberId, cents(u.amount));
+  for (const i of plan.inserts) charged.set(i.memberId, cents(i.amount));
+  return charged;
+}
+
+const emptyPlan = { updates: [], inserts: [], changes: [] };
+
+describe("planShippingRecompute — fixed_per_member", () => {
+  const fixed = { shippingMode: "fixed_per_member", shippingCostPerMember: "2.50", shippingTotal: null };
+
+  it("charges a member added to the cycle after closing, and only notifies them", () => {
+    const plan = planShippingRecompute(
+      fixed,
+      [
+        { memberId: "a", total: "10.00" },
+        { memberId: "b", total: "5.00" },
+      ],
+      [row("a", "-2.50")],
+    );
+    expect(plan.updates).toEqual([]);
+    expect(plan.inserts).toEqual([{ memberId: "b", amount: "-2.50" }]);
+    expect(plan.changes).toEqual([{ memberId: "b", oldShare: 0, newShare: 2.5 }]);
+  });
+
+  it("reverses the shipping of a member whose order was removed entirely", () => {
+    // b has no order line left, so b is absent from the totals.
+    const plan = planShippingRecompute(
+      fixed,
+      [{ memberId: "a", total: "10.00" }],
+      [row("a", "-2.50"), row("b", "-2.50")],
+    );
+    expect(plan.updates).toEqual([{ entryId: "led_b", memberId: "b", amount: "0.00" }]);
+    expect(plan.inserts).toEqual([]);
+    expect(plan.changes).toEqual([{ memberId: "b", oldShare: 2.5, newShare: 0 }]);
+  });
+
+  it("reverses the shipping of a member whose effective total dropped to 0", () => {
+    const plan = planShippingRecompute(
+      fixed,
+      [
+        { memberId: "a", total: "10.00" },
+        { memberId: "b", total: "0.00" },
+      ],
+      [row("a", "-2.50"), row("b", "-2.50")],
+    );
+    expect(plan.updates).toEqual([{ entryId: "led_b", memberId: "b", amount: "0.00" }]);
+    expect(plan.changes).toEqual([{ memberId: "b", oldShare: 2.5, newShare: 0 }]);
+  });
+
+  it("re-charges a reversed member on their existing row, from a share of exactly 0", () => {
+    const plan = planShippingRecompute(
+      fixed,
+      [
+        { memberId: "a", total: "10.00" },
+        { memberId: "b", total: "5.00" },
+      ],
+      [row("a", "-2.50"), row("b", "0.00")],
+    );
+    expect(plan.updates).toEqual([{ entryId: "led_b", memberId: "b", amount: "-2.50" }]);
+    expect(plan.inserts).toEqual([]);
+    expect(plan.changes).toEqual([{ memberId: "b", oldShare: 0, newShare: 2.5 }]);
+    // Not -0: formatMoney(-0) reads "-0,00 €" in the notification.
+    expect(Object.is(plan.changes[0].oldShare, 0)).toBe(true);
+  });
+
+  it("plans nothing when every share already matches, reversed rows included", () => {
+    const plan = planShippingRecompute(
+      fixed,
+      [
+        { memberId: "a", total: "10.00" },
+        { memberId: "b", total: "5.00" },
+        { memberId: "c", total: "0.00" },
+      ],
+      [row("a", "-2.50"), row("b", "-2.5"), row("c", "0.00")],
+    );
+    expect(plan).toEqual(emptyPlan);
+  });
+
+  it("reverses every row when the fee is cleared", () => {
+    const plan = planShippingRecompute(
+      { ...fixed, shippingCostPerMember: null },
+      [
+        { memberId: "a", total: "10.00" },
+        { memberId: "b", total: "5.00" },
+      ],
+      [row("a", "-2.50")],
+    );
+    expect(plan.updates).toEqual([{ entryId: "led_a", memberId: "a", amount: "0.00" }]);
+    expect(plan.inserts).toEqual([]);
+    expect(plan.changes).toEqual([{ memberId: "a", oldShare: 2.5, newShare: 0 }]);
+  });
+});
+
+describe("planShippingRecompute — proportional", () => {
+  const proportional = { shippingMode: "proportional", shippingCostPerMember: null, shippingTotal: "10.00" };
+
+  it("re-splits everyone's share after a quantity change", () => {
+    // Split 30/10 (7.50 + 2.50); b's order grows to 30.00: 5.00 + 5.00.
+    const plan = planShippingRecompute(
+      proportional,
+      [
+        { memberId: "a", total: "30.00" },
+        { memberId: "b", total: "30.00" },
+      ],
+      [row("a", "-7.50"), row("b", "-2.50")],
+    );
+    expect(plan.updates).toEqual([
+      { entryId: "led_a", memberId: "a", amount: "-5.00" },
+      { entryId: "led_b", memberId: "b", amount: "-5.00" },
+    ]);
+    expect(plan.inserts).toEqual([]);
+    expect(plan.changes).toEqual([
+      { memberId: "a", oldShare: 7.5, newShare: 5 },
+      { memberId: "b", oldShare: 2.5, newShare: 5 },
+    ]);
+  });
+
+  it("reverses a member going to 0 and gives the whole shipping to the others", () => {
+    const plan = planShippingRecompute(
+      proportional,
+      [
+        { memberId: "a", total: "30.00" },
+        { memberId: "b", total: "0.00" },
+      ],
+      [row("a", "-7.50"), row("b", "-2.50")],
+    );
+    expect(plan.updates).toEqual([
+      { entryId: "led_a", memberId: "a", amount: "-10.00" },
+      { entryId: "led_b", memberId: "b", amount: "0.00" },
+    ]);
+    expect(plan.changes).toEqual([
+      { memberId: "a", oldShare: 7.5, newShare: 10 },
+      { memberId: "b", oldShare: 2.5, newShare: 0 },
+    ]);
+  });
+
+  it("only notifies the members whose share actually moved", () => {
+    // c is added with an order equal to b's: a keeps its share, b and c split theirs.
+    const plan = planShippingRecompute(
+      proportional,
+      [
+        { memberId: "a", total: "20.00" },
+        { memberId: "b", total: "10.00" },
+        { memberId: "c", total: "10.00" },
+      ],
+      [row("a", "-5.00"), row("b", "-5.00")],
+    );
+    expect(plan.changes.map((c) => c.memberId)).toEqual(["b", "c"]);
+    expect(plan.updates).toEqual([{ entryId: "led_b", memberId: "b", amount: "-2.50" }]);
+    expect(plan.inserts).toEqual([{ memberId: "c", amount: "-2.50" }]);
+  });
+
+  it("still sums exactly to the shipping total after the re-split", () => {
+    // 10.00 over three equal orders: 3.34 + 3.33 + 3.33, the extra cent to
+    // the tie-break winner. c is new, a and b are rewritten.
+    const existing = [row("a", "-5.00"), row("b", "-5.00")];
+    const plan = planShippingRecompute(
+      proportional,
+      [
+        { memberId: "a", total: "10.00" },
+        { memberId: "b", total: "10.00" },
+        { memberId: "c", total: "10.00" },
+      ],
+      existing,
+    );
+    const charged = applyPlan(existing, plan);
+    expect([...charged.values()].reduce((s, c) => s + c, 0)).toBe(1000);
+    expect(Object.fromEntries(charged)).toEqual({ a: 334, b: 333, c: 333 });
+  });
+
+  it("sums exactly to the total when a reversal and a rounding drift combine", () => {
+    // 7.00 over three orders of 1.00 each; d drops to 0 and is reversed.
+    const existing = [row("a", "-1.75"), row("b", "-1.75"), row("c", "-1.75"), row("d", "-1.75")];
+    const plan = planShippingRecompute(
+      { ...proportional, shippingTotal: "7.00" },
+      [
+        { memberId: "c", total: "1.00" },
+        { memberId: "a", total: "1.00" },
+        { memberId: "d", total: "0.00" },
+        { memberId: "b", total: "1.00" },
+      ],
+      existing,
+    );
+    const charged = applyPlan(existing, plan);
+    expect([...charged.values()].reduce((s, c) => s + c, 0)).toBe(700);
+    expect(charged.get("d")).toBe(0);
+  });
+
+  it("plans nothing when the split already matches the totals", () => {
+    const plan = planShippingRecompute(
+      proportional,
+      [
+        { memberId: "a", total: "30.00" },
+        { memberId: "b", total: "10.00" },
+      ],
+      [row("a", "-7.50"), row("b", "-2.50")],
+    );
+    expect(plan).toEqual(emptyPlan);
+  });
+
+  it("does not depend on the order the rows come in, so reruns agree", () => {
+    // GROUP BY returns rows in any order, and computeShippingShares' float
+    // sum can move a cent with it: here b gets 0.39 or 0.38 depending on it.
+    const totals = [
+      { memberId: "a", total: "11.07" },
+      { memberId: "b", total: "5.43" },
+      { memberId: "c", total: "26.94" },
+    ];
+    const existing = [row("a", "-0.78"), row("b", "-0.39"), row("c", "-1.91")];
+    const cycle = { ...proportional, shippingTotal: "3.08" };
+    const plan = planShippingRecompute(cycle, totals, existing);
+    expect(plan).toEqual(emptyPlan);
+    expect(planShippingRecompute(cycle, [...totals].reverse(), [...existing].reverse())).toEqual(plan);
+  });
+});
+
+describe("planShippingRecompute — manual", () => {
+  it("never touches a manual (distinta-imported) cycle", () => {
+    const plan = planShippingRecompute(
+      { shippingMode: "manual", shippingCostPerMember: null, shippingTotal: null },
+      [
+        { memberId: "a", total: "10.00" },
+        { memberId: "b", total: "0.00" },
+        { memberId: "c", total: "8.00" },
+      ],
+      [row("a", "-4.00"), row("b", "-1.20")],
+    );
+    expect(plan).toEqual(emptyPlan);
+  });
+});
+
+describe("shippingRowsSnapshot", () => {
+  it("maps every row to the exact amount text the DB returned", () => {
+    expect(shippingRowsSnapshot([row("b", "-2.50"), row("a", "0.00")])).toBe(
+      '{"led_b":"-2.50","led_a":"0.00"}',
+    );
+  });
+
+  it("is an empty object for no rows", () => {
+    expect(shippingRowsSnapshot([])).toBe("{}");
   });
 });

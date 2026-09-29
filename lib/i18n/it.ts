@@ -900,6 +900,12 @@ export const it = {
       `Il tuo ordine in "${title}" è stato modificato dall'admin: rimborso di ${amount}.`,
     orderModifiedBody: (sentence: string, balance: string) =>
       `${sentence} Nuovo saldo: ${balance}.`,
+    orderModifiedBodyUpdated: (title: string) => `Il tuo ordine in "${title}" è stato aggiornato.`,
+    orderModifiedShipping: (from: string, to: string) =>
+      `La tua quota di spedizione è passata da ${from} a ${to}.`,
+    shippingAdjustedTitle: (title: string) => `Spedizione "${title}" aggiornata`,
+    shippingAdjustedBody: (title: string, from: string, to: string) =>
+      `Le spese di spedizione del ciclo "${title}" sono state aggiornate: la tua quota è passata da ${from} a ${to}.`,
     pesataRegistrataTitle: "Pesata fornitore registrata",
     cycleOpenedTitle: "Nuovo ciclo aperto",
     cycleOpenedBody: (title: string, closeAt: string) =>

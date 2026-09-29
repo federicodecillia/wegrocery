@@ -897,6 +897,12 @@ export const en: Strings = {
       `Your order in "${title}" was modified by an admin: refund of ${amount}.`,
     orderModifiedBody: (sentence: string, balance: string) =>
       `${sentence} New balance: ${balance}.`,
+    orderModifiedBodyUpdated: (title: string) => `Your order in "${title}" has been updated.`,
+    orderModifiedShipping: (from: string, to: string) =>
+      `Your shipping share went from ${from} to ${to}.`,
+    shippingAdjustedTitle: (title: string) => `Shipping for "${title}" updated`,
+    shippingAdjustedBody: (title: string, from: string, to: string) =>
+      `The shipping costs of "${title}" have been updated: your share went from ${from} to ${to}.`,
     pesataRegistrataTitle: "Supplier weighing recorded",
     cycleOpenedTitle: "New cycle open",
     cycleOpenedBody: (title: string, closeAt: string) =>

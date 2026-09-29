@@ -17,10 +17,13 @@ import type { BatchItem } from "drizzle-orm/batch";
 import { orderLinesSnapshot, planClosedOrderEdit } from "@/lib/closed-order-edit";
 import { buildCycleCloseCharges, ordersSnapshot } from "@/lib/cycle-close";
 import {
-  computeShippingShares,
   normalizeShippingMode,
+  planShippingRecompute,
   resolveShippingUpdate,
+  shippingRowsSnapshot,
+  type ShippingConfig,
   type ShippingMode,
+  type ShippingRecomputePlan,
 } from "@/lib/shipping";
 import {
   isAdminEditableLedgerType,
@@ -561,115 +564,181 @@ export async function adminCloseCycleWithAdjustments(
   return { ...result, productsAdjusted: cleaned.length };
 }
 
-// Recomputes shipping_charge ledger entries for a closed cycle after its
-// shipping configuration changed. Updates existing entries in place (we never
-// delete to keep the audit trail), inserts new entries for members who had
-// no previous share, and emits an `order_adjusted` notification per affected
-// member. Returns the list of memberIds whose shipping share actually moved.
+// Reads and plans a closed cycle's shipping recompute (planShippingRecompute:
+// shares on the members' EFFECTIVE totals, after weighing). Returns the ledger
+// statements that apply the plan and a SQL condition that holds while nothing
+// the plan was computed from has changed: cycle still closed with the same
+// shipping settings, same effective totals, same shipping rows. The caller
+// runs both in one db.batch after locking the cycle row FOR UPDATE, so two
+// recomputes (or an edit and a recompute) cannot interleave their writes.
+// `projected` stands in for one member's total as a pending edit will leave
+// it: adminEditClosedOrder plans before its batch has changed the lines.
+async function prepareShippingRecompute(
+  db: ReturnType<typeof getDb>,
+  cycleId: string,
+  cycle: ShippingConfig,
+  adminEmail: string,
+  now: Date,
+  projected?: { memberId: string; total: string },
+) {
+  const [totals, rows] = await Promise.all([
+    db
+      .select({
+        memberId: orders.memberId,
+        total: sql<string>`sum(coalesce(${orders.actualLineTotal}, ${orders.lineTotal}))`,
+      })
+      .from(orders)
+      .where(eq(orders.cycleId, cycleId))
+      .groupBy(orders.memberId),
+    db
+      .select({
+        entryId: ledgerEntries.entryId,
+        memberId: ledgerEntries.memberId,
+        amount: ledgerEntries.amount,
+      })
+      .from(ledgerEntries)
+      .where(and(eq(ledgerEntries.cycleId, cycleId), eq(ledgerEntries.type, "shipping_charge"))),
+  ]);
+  const plan = planShippingRecompute(
+    cycle,
+    projected ? [...totals.filter((r) => r.memberId !== projected.memberId), projected] : totals,
+    rows,
+  );
+
+  // Rows are rewritten in place, never deleted, so the audit trail stays.
+  const statements: BatchItem<"pg">[] = [];
+  for (const u of plan.updates) {
+    statements.push(
+      db
+        .update(ledgerEntries)
+        .set({ amount: u.amount, note: t.ledger.shippingAdjusted, updatedAt: now, updatedBy: adminEmail })
+        .where(eq(ledgerEntries.entryId, u.entryId)),
+    );
+  }
+  if (plan.inserts.length > 0) {
+    statements.push(
+      db.insert(ledgerEntries).values(
+        plan.inserts.map((i) => ({
+          entryId: genId("led"),
+          memberId: i.memberId,
+          entryDate: now,
+          type: "shipping_charge",
+          amount: i.amount,
+          cycleId,
+          note: t.ledger.shippingAdjusted,
+          createdBy: adminEmail,
+          createdAt: now,
+        })),
+      ),
+    );
+  }
+
+  const settings = ["closed", cycle.shippingMode, cycle.shippingCostPerMember, cycle.shippingTotal];
+  const guard = sql`(SELECT jsonb_build_array(status, shipping_mode,
+                            shipping_cost_per_member::text, shipping_total::text)
+                     FROM order_cycles WHERE cycle_id = ${cycleId})
+                    = ${JSON.stringify(settings)}::jsonb
+                AND (SELECT coalesce(jsonb_object_agg(g.member_id, g.total::text), '{}'::jsonb)
+                     FROM (SELECT member_id, sum(coalesce(actual_line_total, line_total)) AS total
+                           FROM orders WHERE cycle_id = ${cycleId} GROUP BY member_id) g)
+                    = ${ordersSnapshot(totals)}::jsonb
+                AND (SELECT coalesce(jsonb_object_agg(entry_id, amount::text), '{}'::jsonb)
+                     FROM ledger_entries
+                     WHERE cycle_id = ${cycleId} AND type = 'shipping_charge')
+                    = ${shippingRowsSnapshot(rows)}::jsonb`;
+
+  return { plan, statements, guard };
+}
+
+// One `order_adjusted` notification per member whose shipping share moved.
+// Best-effort, after the commit: a failure is logged, never rolled back onto
+// the ledger writes.
+async function notifyShippingChanges(
+  db: ReturnType<typeof getDb>,
+  cycleId: string,
+  cycleTitle: string,
+  changes: ShippingRecomputePlan["changes"],
+  now: Date,
+): Promise<void> {
+  if (changes.length === 0) return;
+  try {
+    const emailByMember = await getMemberEmails(
+      db,
+      changes.map((c) => c.memberId),
+    );
+    const items = changes.map((c) => ({
+      memberId: c.memberId,
+      email: emailByMember.get(c.memberId) ?? null,
+      title: t.notificationsServer.shippingAdjustedTitle(cycleTitle),
+      body: t.notificationsServer.shippingAdjustedBody(
+        cycleTitle,
+        formatMoney(c.oldShare),
+        formatMoney(c.newShare),
+      ),
+      href: `/storico?cycleId=${cycleId}`,
+    }));
+    await dispatchWithBodies(db, items, "order_adjusted", now);
+  } catch (notifyError) {
+    console.error("[order_adjusted] shipping dispatch failed:", notifyError);
+  }
+}
+
+// Re-splits a closed cycle's shipping_charge entries after its shipping
+// settings changed (adminUpdateCycle); adminEditClosedOrder runs the same plan
+// inside its own batch. Existing rows are updated in place, members with no
+// row who now owe a share get one, a member left with no effective total is
+// reversed to 0, and only members whose share moved are notified. A manual
+// (distinta-imported) cycle is left alone. Returns those members' ids.
+//
+// The writes are one guarded batch, planned again from fresh state when a
+// concurrent change trips the guard. adminUpdateCycle saves the new settings
+// before calling this, so if it still fails the settings are saved and the
+// rows keep the previous split: saving any member's order of the cycle again
+// (Modifica in Recap ordini, even unchanged) re-runs the recompute and fixes
+// them.
+const SHIPPING_RECOMPUTE_ATTEMPTS = 3;
+
 async function recomputeShippingForClosedCycle(
   db: ReturnType<typeof getDb>,
   cycleId: string,
   adminEmail: string,
 ): Promise<{ adjustedMembers: string[] }> {
-  const [cycle] = await db
-    .select({
-      cycleId: orderCycles.cycleId,
-      title: orderCycles.title,
-      shippingMode: orderCycles.shippingMode,
-      shippingCostPerMember: orderCycles.shippingCostPerMember,
-      shippingTotal: orderCycles.shippingTotal,
-    })
-    .from(orderCycles)
-    .where(eq(orderCycles.cycleId, cycleId))
-    .limit(1);
-  if (!cycle) return { adjustedMembers: [] };
-  // Manual mode: per-member shipping was set by a supplier-distinta import.
-  // Skip recompute so an unrelated cycle edit doesn't blow away the
-  // per-member values.
-  if (cycle.shippingMode === "manual") return { adjustedMembers: [] };
-
-  const memberTotals = await db
-    .select({
-      memberId: orders.memberId,
-      total: sql<string>`sum(${orders.lineTotal})`,
-    })
-    .from(orders)
-    .where(eq(orders.cycleId, cycleId))
-    .groupBy(orders.memberId);
-  const eligible = memberTotals.filter((r) => parseFloat(r.total) > 0);
-
-  const newShares = computeShippingShares(eligible, cycle);
-
-  const existing = await db
-    .select({
-      entryId: ledgerEntries.entryId,
-      memberId: ledgerEntries.memberId,
-      amount: ledgerEntries.amount,
-    })
-    .from(ledgerEntries)
-    .where(
-      and(eq(ledgerEntries.cycleId, cycleId), eq(ledgerEntries.type, "shipping_charge")),
-    );
-  const existingByMember = new Map(existing.map((e) => [e.memberId, e]));
-
-  const now = new Date();
-  const adjusted: string[] = [];
-
-  // Pre-fetch channels + emails once for every eligible member so the loop
-  // doesn't issue a preference query per member.
-  const eligibleIds = eligible.map((r) => r.memberId);
-  const [emailByMember, prefsByMember] = await Promise.all([
-    getMemberEmails(db, eligibleIds),
-    getResolvedPreferences(db, eligibleIds),
-  ]);
-
-  for (const r of eligible) {
-    const newShare = newShares.get(r.memberId) ?? 0;
-    const prev = existingByMember.get(r.memberId);
-    const oldShare = prev ? -parseFloat(prev.amount) : 0;
-    if (Math.abs(newShare - oldShare) < 0.005) continue;
-
-    if (prev) {
-      await db
-        .update(ledgerEntries)
-        .set({
-          amount: (-newShare).toFixed(2),
-          note: t.ledger.shippingAdjusted,
-          updatedAt: now,
-          updatedBy: adminEmail,
-        })
-        .where(eq(ledgerEntries.entryId, prev.entryId));
-    } else if (newShare > 0) {
-      await db.insert(ledgerEntries).values({
-        entryId: genId("led"),
-        memberId: r.memberId,
-        entryDate: now,
-        type: "shipping_charge",
-        amount: (-newShare).toFixed(2),
-        cycleId,
-        note: t.ledger.shippingAdjusted,
-        createdBy: adminEmail,
-        createdAt: now,
-      });
+  for (let attempt = 1; attempt <= SHIPPING_RECOMPUTE_ATTEMPTS; attempt++) {
+    const [cycle] = await db
+      .select({
+        status: orderCycles.status,
+        title: orderCycles.title,
+        shippingMode: orderCycles.shippingMode,
+        shippingCostPerMember: orderCycles.shippingCostPerMember,
+        shippingTotal: orderCycles.shippingTotal,
+      })
+      .from(orderCycles)
+      .where(eq(orderCycles.cycleId, cycleId))
+      .limit(1);
+    if (!cycle || cycle.status !== "closed" || cycle.shippingMode === "manual") {
+      return { adjustedMembers: [] };
     }
 
-    await dispatchNotification(
-      db,
-      {
-        memberId: r.memberId,
-        memberEmail: emailByMember.get(r.memberId) ?? null,
-        type: "order_adjusted",
-        title: `Spedizione "${cycle.title}" aggiornata`,
-        body: `Le spese di spedizione del ciclo "${cycle.title}" sono state aggiornate: la tua quota e' passata da ${formatMoney(oldShare)} a ${formatMoney(newShare)}.`,
-        href: "/storico",
-      },
-      prefsByMember.get(r.memberId),
+    const now = new Date();
+    const shipping = await prepareShippingRecompute(db, cycleId, cycle, adminEmail, now);
+    if (shipping.statements.length === 0) return { adjustedMembers: [] };
+
+    const lock = db.execute(sql`SELECT 1 FROM order_cycles WHERE cycle_id = ${cycleId} FOR UPDATE`);
+    const guard = db.execute(
+      sql`SELECT 1 / (CASE WHEN ${shipping.guard} THEN 1 ELSE 0 END) AS shipping_guard`,
     );
+    try {
+      await db.batch([lock, guard, ...shipping.statements]);
+    } catch (e) {
+      // 22012 = division_by_zero, i.e. the guard fired: plan again.
+      if (!(e instanceof Error && /22012|division by zero/i.test(e.message))) throw e;
+      continue;
+    }
 
-    adjusted.push(r.memberId);
+    await notifyShippingChanges(db, cycleId, cycle.title, shipping.plan.changes, now);
+    return { adjustedMembers: shipping.plan.changes.map((c) => c.memberId) };
   }
-
-  return { adjustedMembers: adjusted };
+  throw new Error(t.errors.cycleUpdateError);
 }
 
 export async function adminUpdateCycle(
@@ -1226,7 +1295,8 @@ export async function adminUpdateOrderLineActuals(input: {
 // unavailable). The original `order_charge` ledger entry is left intact;
 // the delta vs the new total is posted as a separate `correction` row so
 // the audit trail is preserved and the change is fully reversible by
-// posting an inverse correction.
+// posting an inverse correction. Unless the cycle is manual, its shipping is
+// re-split in the same batch (prepareShippingRecompute).
 //
 // Empty new-line lists also delete every order row for that member in the
 // cycle, which makes "rimuovi l'intero ordine" work too.
@@ -1247,7 +1317,13 @@ export async function adminEditClosedOrder(input: EditClosedOrderInput) {
   const now = new Date();
 
   const [cycle] = await db
-    .select({ status: orderCycles.status, title: orderCycles.title })
+    .select({
+      status: orderCycles.status,
+      title: orderCycles.title,
+      shippingMode: orderCycles.shippingMode,
+      shippingCostPerMember: orderCycles.shippingCostPerMember,
+      shippingTotal: orderCycles.shippingTotal,
+    })
     .from(orderCycles)
     .where(eq(orderCycles.cycleId, input.cycleId))
     .limit(1);
@@ -1302,9 +1378,20 @@ export async function adminEditClosedOrder(input: EditClosedOrderInput) {
   const { oldTotal, newTotal, delta } = plan;
   const epsilon = 0.005;
 
+  // Shipping follows the order: re-split on the effective totals this edit
+  // leaves (the member's new total is plan.newTotal). Never on a manual cycle.
+  const shipping =
+    cycle.shippingMode === "manual"
+      ? null
+      : await prepareShippingRecompute(db, input.cycleId, cycle, admin.email, now, {
+          memberId: input.memberId,
+          total: newTotal.toFixed(2),
+        });
+
   // Apply the plan in one db.batch (a single Neon transaction): unchanged
-  // lines are not touched, so their actuals survive; the correction entry is
-  // part of the same batch, so the order rows and the money can't diverge.
+  // lines are not touched, so their actuals survive; the correction entry and
+  // the shipping re-split are part of the same batch, so the order rows and
+  // the money can't diverge.
   const statements: BatchItem<"pg">[] = [];
   if (plan.deletes.length > 0) {
     statements.push(db.delete(orders).where(inArray(orders.orderLineId, plan.deletes)));
@@ -1364,15 +1451,17 @@ export async function adminEditClosedOrder(input: EditClosedOrderInput) {
       }),
     );
   }
+  if (shipping) statements.push(...shipping.statements);
 
   if (statements.length > 0) {
-    // Lock the cycle (so a concurrent cancel waits for this correction) and
-    // the member's lines, then check in a fresh snapshot that the cycle is
-    // still closed and the lines are exactly the ones the plan was computed
-    // from. Otherwise 1/0 aborts the batch: a double submit or a concurrent
-    // weighing must not post a second correction on a stale delta.
+    // Lock the cycle (so a concurrent cancel, or another edit's shipping
+    // re-split, waits for this one) and the member's lines, then check in a
+    // fresh snapshot that the cycle is still closed, the lines are exactly the
+    // ones the plan was computed from and so is the shipping state. Otherwise
+    // 1/0 aborts the batch: a double submit or a concurrent weighing must not
+    // post a second correction on a stale delta.
     const lock = db.execute(
-      sql`SELECT 1 FROM order_cycles WHERE cycle_id = ${input.cycleId} FOR SHARE`,
+      sql`SELECT 1 FROM order_cycles WHERE cycle_id = ${input.cycleId} FOR UPDATE`,
     );
     const lockLines = db.execute(
       sql`SELECT 1 FROM orders
@@ -1386,6 +1475,7 @@ export async function adminEditClosedOrder(input: EditClosedOrderInput) {
                  FROM orders
                  WHERE cycle_id = ${input.cycleId} AND member_id = ${input.memberId})
                 = ${orderLinesSnapshot(previousLines)}::jsonb
+            AND ${shipping ? shipping.guard : sql`TRUE`}
           THEN 1 ELSE 0 END) AS edit_guard`,
     );
     try {
@@ -1406,13 +1496,34 @@ export async function adminEditClosedOrder(input: EditClosedOrderInput) {
     .where(eq(ledgerEntries.memberId, input.memberId));
   const newBalance = parseFloat(balanceRow?.total ?? "0");
 
-  const dirSentence =
+  // The edited member gets a single notification: a change to their own
+  // shipping share is folded into it, so the new balance it quotes adds up.
+  // Other members whose share moved get the shipping one.
+  const shippingChanges = shipping?.plan.changes ?? [];
+  const ownShipping = shippingChanges.find((c) => c.memberId === input.memberId);
+
+  const orderSentence =
     Math.abs(delta) <= epsilon
-      ? t.notificationsServer.orderModifiedBodyNoChange(cycle.title)
+      ? ownShipping
+        ? t.notificationsServer.orderModifiedBodyUpdated(cycle.title)
+        : t.notificationsServer.orderModifiedBodyNoChange(cycle.title)
       : delta > 0
         ? t.notificationsServer.orderModifiedBodyCharge(cycle.title, formatMoney(delta))
         : t.notificationsServer.orderModifiedBodyRefund(cycle.title, formatMoney(-delta));
+  const dirSentence = ownShipping
+    ? `${orderSentence} ${t.notificationsServer.orderModifiedShipping(
+        formatMoney(ownShipping.oldShare),
+        formatMoney(ownShipping.newShare),
+      )}`
+    : orderSentence;
 
+  await notifyShippingChanges(
+    db,
+    input.cycleId,
+    cycle.title,
+    shippingChanges.filter((c) => c.memberId !== input.memberId),
+    now,
+  );
   await dispatchNotification(db, {
     memberId: input.memberId,
     memberEmail: member.email,
@@ -1433,6 +1544,7 @@ export async function adminEditClosedOrder(input: EditClosedOrderInput) {
     lineCount: previousLines.length - plan.deletes.length + plan.inserts.length,
     updatedLines: plan.updates.length,
     note: input.note ?? null,
+    shippingChanges,
   });
 
   revalidatePath("/admin");
