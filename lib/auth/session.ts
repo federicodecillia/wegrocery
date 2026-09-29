@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
+import { ActionError } from "@/lib/action-error";
 import { t } from "@/lib/i18n";
 import { normalizeRole, type Role } from "@/lib/roles";
 import { checkAccess } from "./access";
@@ -28,7 +29,7 @@ export async function requireUserSession(): Promise<AppSession> {
   // session means this request's member lookup failed: fail closed with an
   // error, since a redirect to /login would loop (the login page sends any
   // session with an email back to /).
-  if (!checkAccess(session.user, "member").ok) throw new Error(t.errors.unauthorized);
+  if (!checkAccess(session.user, "member").ok) throw new ActionError(t.errors.unauthorized);
 
   const u = session.user as {
     role?: string | null;
@@ -49,12 +50,12 @@ export async function requireUserSession(): Promise<AppSession> {
 
 export type GuardedMember = { email: string; memberId: string };
 
-/** Server Actions: the signed-in, active member. Throws t.errors.unauthorized otherwise. */
+/** Server Actions: the signed-in, active member. Throws ActionError(t.errors.unauthorized) otherwise. */
 export async function requireActiveMember(): Promise<GuardedMember> {
   return requireAccess("member");
 }
 
-/** Server Actions: a signed-in, active admin. Throws t.errors.unauthorized otherwise. */
+/** Server Actions: a signed-in, active admin. Throws ActionError(t.errors.unauthorized) otherwise. */
 export async function requireAdmin(): Promise<GuardedMember> {
   return requireAccess("admin");
 }
@@ -66,7 +67,7 @@ async function requireAccess(need: "member" | "admin"): Promise<GuardedMember> {
   const session = await auth();
   const email = session?.user?.email;
   const memberId = (session?.user as { memberId?: string | null } | undefined)?.memberId;
-  if (!email || !memberId || !checkAccess(session?.user, need).ok) throw new Error(t.errors.unauthorized);
+  if (!email || !memberId || !checkAccess(session?.user, need).ok) throw new ActionError(t.errors.unauthorized);
   return { email, memberId };
 }
 
