@@ -19,6 +19,13 @@ stanno nella PR.
 
 ---
 
+## [1.12.2] — 29 settembre 2026
+
+*Ricariche online più piccole.*
+
+### Modificato
+- 💶 **Ricariche online da 0,50 €**, l'importo minimo accettato da Stripe (prima 20 €).
+
 ## [1.12.1] — 28 settembre 2026
 
 *Dati per la ricarica più chiari.*
@@ -345,6 +352,7 @@ stanno nella PR.
 
 ---
 
+[1.12.2]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.12.2
 [1.12.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.12.1
 [1.12.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.12.0
 [1.11.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.11.0
