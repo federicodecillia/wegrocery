@@ -109,6 +109,17 @@ export const en: Strings = {
     backToOrder: "Back to order",
     chooseCycle: "Choose an order",
     chooseCycleHint: "Several orders are open: choose which one to open.",
+    draftBannerTitle: "Changes not confirmed yet",
+    draftBannerBody: "We kept them for you: confirm the order to send them.",
+    draftDropped: (n: number) =>
+      n === 1
+        ? "One product is no longer available and was removed."
+        : `${n} products are no longer available and were removed.`,
+    discardDraft: "Discard changes",
+    discardDraftTitle: "Discard the changes?",
+    discardDraftMessage: "You go back to the confirmed order, or to an empty cart if you had not confirmed it yet.",
+    discardDraftConfirm: "Yes, discard",
+    draftDiscarded: "Changes discarded",
   },
   history: {
     orders: "Orders",

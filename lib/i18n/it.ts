@@ -109,6 +109,17 @@ export const it = {
     backToOrder: "Torna all'ordine",
     chooseCycle: "Scegli l'ordine",
     chooseCycleHint: "Ci sono più ordini aperti: scegli quale aprire.",
+    draftBannerTitle: "Modifiche non ancora confermate",
+    draftBannerBody: "Le abbiamo tenute da parte: conferma l'ordine per inviarle.",
+    draftDropped: (n: number) =>
+      n === 1
+        ? "Un prodotto non è più disponibile ed è stato tolto."
+        : `${n} prodotti non sono più disponibili e sono stati tolti.`,
+    discardDraft: "Annulla modifiche",
+    discardDraftTitle: "Annullare le modifiche?",
+    discardDraftMessage: "Torni all'ordine confermato, o al carrello vuoto se non l'avevi ancora confermato.",
+    discardDraftConfirm: "Sì, annulla",
+    draftDiscarded: "Modifiche annullate",
   },
   history: {
     orders: "Ordini",

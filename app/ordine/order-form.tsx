@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "@/components/ui/toast";
 import { confirm } from "@/components/ui/confirm-dialog";
@@ -8,7 +8,8 @@ import { t } from "@/lib/i18n";
 import { formatDateTime, formatSignedMoney } from "@/lib/i18n/format";
 import { formatEur, getProductEmoji, normalizeCategory } from "@/lib/utils";
 import type { SaveOrderLine, SaveOrderResult } from "@/lib/actions/order";
-import { loadLastOrderForPrefill } from "@/lib/actions/order";
+import { discardOrderDraft, loadLastOrderForPrefill, saveOrderDraft } from "@/lib/actions/order";
+import { orderLinesKey, type ResumedDraft } from "@/lib/order-draft";
 import { OrderSentDialog } from "./order-sent-dialog";
 import { OrderSummary, type ConfirmedLine } from "./order-summary";
 
@@ -36,12 +37,21 @@ type Props = {
   orderCloseAt: string | null;
   products: Product[];
   existingLines: OrderLine[];
+  // Unconfirmed edits found on the server (order_drafts), or null.
+  resumedDraft: ResumedDraft | null;
   balance: number;
   saveAction: (cycleId: string, lines: SaveOrderLine[]) => Promise<SaveOrderResult>;
 };
 
 // Normalized (see normalizeCategory): grouping keys are case-insensitive.
 const CAT_ORDER = ["frutta", "verdura", "insalate"];
+
+// Autosave delay of the draft: long enough to batch a run of taps on "+".
+const DRAFT_SAVE_DELAY_MS = 800;
+
+function toLines(quantities: Record<string, number>): SaveOrderLine[] {
+  return Object.entries(quantities).map(([productId, quantity]) => ({ productId, quantity }));
+}
 
 function groupByCategory(products: Product[]) {
   // Group case-insensitively so "Verdura" and "verdura" render as one
@@ -75,6 +85,7 @@ export function OrderForm({
   orderCloseAt,
   products,
   existingLines,
+  resumedDraft,
   balance,
   saveAction,
 }: Props) {
@@ -89,10 +100,14 @@ export function OrderForm({
   );
 
   const [savedQty, setSavedQty] = useState<Record<string, number>>(savedOnMount);
-  const [draft, setDraft] = useState<Record<string, number>>(savedOnMount);
-  // Members with an order already in land on the recap; everyone else on the
-  // product list, which is the only thing they can act on.
-  const [isEditing, setIsEditing] = useState(Object.keys(savedOnMount).length === 0);
+  // A member coming back to unconfirmed edits finds them.
+  const [draft, setDraft] = useState<Record<string, number>>(() =>
+    resumedDraft ? Object.fromEntries(resumedDraft.lines.map((l) => [l.productId, l.quantity])) : savedOnMount,
+  );
+  // Members with an order already in land on the recap; everyone else, and
+  // anyone with unconfirmed edits, on the product list.
+  const [isEditing, setIsEditing] = useState(resumedDraft !== null || Object.keys(savedOnMount).length === 0);
+  const [showDraftBanner, setShowDraftBanner] = useState(resumedDraft !== null);
   const [sent, setSent] = useState<{
     itemCount: number;
     total: number;
@@ -100,6 +115,40 @@ export function OrderForm({
   } | null>(null);
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
+
+  const draftKey = orderLinesKey(toLines(draft));
+  const savedKey = orderLinesKey(toLines(savedQty));
+  // What the server holds for this form, as a key: the draft's, or the
+  // confirmed order's when there is no draft. A resumed draft that lost
+  // products starts out of sync, so its cleaned version is saved at once.
+  const serverKey = useRef(resumedDraft && resumedDraft.dropped === 0 ? draftKey : savedKey);
+
+  // Autosave: after a pause in editing the server keeps what the form shows
+  // (saveOrderDraft), or drops the draft once the form is back to the
+  // confirmed order. Waits while a confirm, a prefill or a discard is in
+  // flight: they settle the server state themselves.
+  useEffect(() => {
+    if (isPending || draftKey === serverKey.current) return;
+    const timer = setTimeout(() => {
+      serverKey.current = draftKey;
+      if (draftKey === savedKey) {
+        discardOrderDraft(cycleId).catch((err) => console.error("[order draft] discard failed", err));
+        return;
+      }
+      saveOrderDraft(cycleId, toLines(draft))
+        .then((result) => {
+          if (result.ok) return;
+          if (result.code === "cycle_not_open") {
+            toast.error(result.error);
+            router.refresh();
+          } else {
+            console.error("[order draft] not saved:", result.error);
+          }
+        })
+        .catch((err) => console.error("[order draft] save failed", err));
+    }, DRAFT_SAVE_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [draftKey, savedKey, isPending, cycleId, draft, router]);
 
   function totalOf(quantities: Record<string, number>) {
     return Object.entries(quantities).reduce((sum, [pid, qty]) => {
@@ -164,11 +213,7 @@ export function OrderForm({
   function persist(quantities: Record<string, number>, isRemoval: boolean) {
     startTransition(async () => {
       try {
-        const lines: SaveOrderLine[] = Object.entries(quantities).map(([productId, quantity]) => ({
-          productId,
-          quantity,
-        }));
-        const result = await saveAction(cycleId, lines);
+        const result = await saveAction(cycleId, toLines(quantities));
         if (!result.success) {
           // Expected refusal (closed cycle, lapsed card, credit limit...):
           // nothing was saved.
@@ -179,6 +224,10 @@ export function OrderForm({
           if (result.code === "cycle_not_open") router.refresh();
           return;
         }
+        // saveOrder deleted the draft in its batch: the server holds exactly
+        // the confirmed order.
+        serverKey.current = orderLinesKey(toLines(quantities));
+        setShowDraftBanner(false);
         setSavedQty(quantities);
         setDraft(quantities);
         if (isRemoval) {
@@ -210,6 +259,28 @@ export function OrderForm({
       danger: true,
     });
     if (ok) persist({}, true);
+  }
+
+  async function handleDiscardDraft() {
+    const ok = await confirm({
+      title: t.order.discardDraftTitle,
+      message: t.order.discardDraftMessage,
+      confirmLabel: t.order.discardDraftConfirm,
+      cancelLabel: t.common.cancel,
+    });
+    if (!ok) return;
+    startTransition(async () => {
+      const result = await discardOrderDraft(cycleId);
+      if (!result.ok) {
+        toast.error(result.error);
+        return;
+      }
+      serverKey.current = savedKey;
+      setShowDraftBanner(false);
+      setDraft(savedQty);
+      setIsEditing(Object.keys(savedQty).length === 0);
+      toast.success(t.order.draftDiscarded);
+    });
   }
 
   function handleSave() {
@@ -244,6 +315,27 @@ export function OrderForm({
         </p>
       </div>
 
+      {/* Unconfirmed edits found on arrival (order_drafts). */}
+      {isEditing && showDraftBanner && (
+        <div className="mt-3 rounded-[14px] border border-brand-orange-mid bg-brand-orange-light p-[12px_14px]">
+          <p className="text-[13px] font-bold text-brand-near-black">{t.order.draftBannerTitle}</p>
+          <p className="mt-1 text-[12px] leading-[1.45] text-brand-near-black">{t.order.draftBannerBody}</p>
+          {resumedDraft !== null && resumedDraft.dropped > 0 && (
+            <p className="mt-1 text-[12px] leading-[1.45] text-brand-orange">
+              {t.order.draftDropped(resumedDraft.dropped)}
+            </p>
+          )}
+          <button
+            type="button"
+            onClick={handleDiscardDraft}
+            disabled={isPending}
+            className="mt-2 text-[12px] font-semibold text-brand-orange underline disabled:opacity-50"
+          >
+            {t.order.discardDraft}
+          </button>
+        </div>
+      )}
+
       {/* Empty catalog: the cycle is open but the admin hasn't loaded any
           products yet. Same visual as page.tsx's no-open-cycle empty state. */}
       {products.length === 0 && (
@@ -276,6 +368,7 @@ export function OrderForm({
           onClick={() => {
             setDraft(savedQty);
             setIsEditing(false);
+            setShowDraftBanner(false);
           }}
           className="mt-3 inline-flex items-center gap-1 text-[12px] font-semibold text-brand-teal"
         >
