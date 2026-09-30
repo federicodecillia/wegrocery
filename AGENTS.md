@@ -359,7 +359,10 @@ All four emit `order_adjusted` or `order_corrected` notifications and `audit_log
   and IBAN from the settings, `brand.bankTransfer` until an admin saves; with
   no channel at all, an "ask the treasurer" line). `resolveStripeKey`
   (`lib/payments/config.ts`) accepts live keys only on a real production deploy
-  and test keys everywhere else, demo included.
+  and test keys everywhere else, demo included. A restricted key (`rk_*`)
+  needs Checkout Sessions: Write, PaymentIntents: Read and, since 1.15.0,
+  Refunds: Read (`charge.refunded` re-lists the charge's refunds); without it
+  every `charge.refunded` answers 500.
 - Flow: `startOnlineTopup` (`lib/actions/topup.ts`) validates the amount
   (0,50-300 €; 0,50 is Stripe's EUR minimum charge), inserts a `pending` payment and opens a hosted Checkout Session
   (idempotency key = paymentId, 30 min expiry) whose success/cancel URLs point
