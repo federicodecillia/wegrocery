@@ -3,6 +3,7 @@ import { getDb } from "@/lib/db/client";
 import { members } from "@/lib/db/schema";
 import { t } from "@/lib/i18n";
 import { formatMoney } from "@/lib/i18n/format";
+import { reportError } from "@/lib/observability";
 import { dispatchToMembers } from "@/lib/notifications/dispatch";
 import { selectCycleAccessMembers } from "@/lib/notifications/reminder";
 import { audit, genId, notifyMember, type Db } from "./effects";
@@ -28,6 +29,8 @@ type RefundRow = {
 // The refund row an event is about: by Stripe id, then by the id the app put
 // in the metadata, then an imported pre-1.15.0 row of the same payment and
 // amount that Stripe had not named yet (adopted here: its Stripe id is set).
+// Only a refund Stripe made before the import can be an imported one, and
+// SKIP LOCKED gives two concurrent events two different rows.
 async function findRefund(db: Db, input: StripeRefundInput): Promise<RefundRow | null> {
   const byAppId = input.appRefundId ? sql` OR refund_id = ${input.appRefundId}` : sql``;
   const { rows } = await db.execute<RefundRow>(sql`
@@ -49,8 +52,10 @@ async function findRefund(db: Db, input: StripeRefundInput): Promise<RefundRow |
         AND r.created_by = 'import'
         AND r.stripe_refund_id IS NULL
         AND r.amount_cents = ${input.amountCents}
+        AND r.created_at >= to_timestamp(${input.createdAt})
       ORDER BY r.created_at, r.refund_id
       LIMIT 1
+      FOR UPDATE OF r SKIP LOCKED
     )
       AND stripe_refund_id IS NULL
     RETURNING refund_id, payment_id, member_id, cycle_id, status
@@ -235,7 +240,14 @@ export async function upsertStripeRefund(input: StripeRefundInput): Promise<void
     if (!plan) return;
     const written = await writeTransition(db, row, found === null, input, plan);
     if (written) {
-      await afterTransition(db, row, input, plan, written.posted);
+      // The movement is committed. A failure here must not answer 500: Stripe
+      // would retry an event that has nothing left to write, and the notices
+      // would be lost anyway.
+      try {
+        await afterTransition(db, row, input, plan, written.posted);
+      } catch (e) {
+        reportError("stripe refund notices", e, { refundId: row.refund_id, paymentId: row.payment_id });
+      }
       return;
     }
     // Another event for the same refund got there first: read it again.

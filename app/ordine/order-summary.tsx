@@ -61,7 +61,7 @@ export function OrderSummary({
               <div className="flex min-w-0 items-start gap-2">
                 <span className="text-[18px] leading-none">{getProductEmoji(l.name)}</span>
                 <div className="min-w-0">
-                  <div className="text-[13px] font-medium text-brand-near-black">{l.name}</div>
+                  <div className="text-[14px] font-medium text-brand-near-black">{l.name}</div>
                   <div className="mt-[1px] font-mono text-label text-brand-gray">
                     {l.quantity} × {formatEur(l.unitPrice)}
                     {l.meta ? ` · ${l.meta}` : ""}

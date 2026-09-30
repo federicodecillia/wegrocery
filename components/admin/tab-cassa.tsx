@@ -49,22 +49,27 @@ export async function TabCassa({ balanceFilter }: Props) {
         activeFilter={filter}
       />
 
-      <TopupForm members={pickerMembers} />
-      <OutgoingMovementForm members={pickerMembers} />
+      {/* Desktop: movement forms on the left, balances and history on the right. */}
+      <div className="space-y-4 lg:grid lg:grid-cols-2 lg:items-start lg:gap-6 lg:space-y-0">
+        <div className="space-y-4">
+          <TopupForm members={pickerMembers} />
+          <OutgoingMovementForm members={pickerMembers} />
+        </div>
 
-      <Card>
-        <CardHeader>
-          <h3 className="text-[13px] font-bold text-brand-near-black">
-            {t.admin.treasury.balancesTitle(membersWithBalances.length)}
-          </h3>
-        </CardHeader>
-        <CassaInlineList
-          members={membersWithBalances}
-          ledgerByMember={ledgerByMember}
-          balanceFilter={filter}
-          maxBalance={maxBalance}
-        />
-      </Card>
+        <Card>
+          <CardHeader>
+            <h3 className="text-[13px] font-bold text-brand-near-black">
+              {t.admin.treasury.balancesTitle(membersWithBalances.length)}
+            </h3>
+          </CardHeader>
+          <CassaInlineList
+            members={membersWithBalances}
+            ledgerByMember={ledgerByMember}
+            balanceFilter={filter}
+            maxBalance={maxBalance}
+          />
+        </Card>
+      </div>
     </div>
   );
 }

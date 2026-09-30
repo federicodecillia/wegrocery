@@ -45,7 +45,7 @@ export function OrderSentDialog({
             {t.order.confirmedSummary(itemCount, formatEur(total))}
           </p>
 
-          <Dialog.Description className="mt-3 text-[13px] leading-[1.5] text-brand-gray">
+          <Dialog.Description className="mt-3 text-[14px] leading-[1.5] text-brand-gray">
             {t.order.sentBody}
           </Dialog.Description>
 

@@ -21,6 +21,8 @@ export type StripeRefundInput = {
   status: string;
   // metadata.refundId, set on the refunds the app asks for; null on Dashboard ones.
   appRefundId: string | null;
+  // When Stripe created it, in Unix seconds.
+  createdAt: number;
 };
 
 export function refundInputOf(refund: Stripe.Refund): StripeRefundInput | null {
@@ -34,6 +36,7 @@ export function refundInputOf(refund: Stripe.Refund): StripeRefundInput | null {
     currency: refund.currency,
     status: refund.status,
     appRefundId: refund.metadata?.refundId ?? null,
+    createdAt: refund.created,
   };
 }
 

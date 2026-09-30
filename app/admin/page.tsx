@@ -60,7 +60,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Search
     balanceParam === "negative" || balanceParam === "above_max" ? balanceParam : undefined;
 
   return (
-    <AppShell email={session.user.email} isAdmin memberId={session.user.memberId!}>
+    <AppShell email={session.user.email} isAdmin memberId={session.user.memberId!} width="admin">
       <Suspense fallback={null}>
         <AdminNav />
       </Suspense>

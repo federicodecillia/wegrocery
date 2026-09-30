@@ -23,8 +23,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 │   ├── login/page.tsx          # Login with Google
 │   └── api/auth/[...nextauth]/ # Auth.js route handler
 ├── components/
-│   ├── app-shell.tsx           # Async layout wrapper: header (logo + bell + logout) + bottom nav
-│   ├── bottom-nav.tsx          # 5-item bottom nav (home/ordine/storico/guida/admin)
+│   ├── app-shell.tsx           # Async layout wrapper: header (logo + email + bell + logout, top nav from lg) + bottom nav
+│   ├── bottom-nav.tsx          # 5-item bottom nav, hidden from lg
+│   ├── top-nav.tsx             # Same items in the header, from lg
+│   ├── nav-items.ts            # Nav items + isItemActive (icons in nav-icon.tsx)
+│   ├── shell-width.ts          # SHELL_WIDTH: member vs admin card widths
+│   ├── shell-skeleton.tsx      # Skeleton mirroring AppShell, used by loading.tsx files
 │   ├── notification-bell.tsx   # Bell icon with red unread badge
 │   ├── home/cycle-countdown.tsx
 │   ├── admin/                  # Admin tab components (one per tab)
@@ -63,7 +67,17 @@ npm run dev          # Start dev server at http://localhost:3000
 npm run build        # Production build
 npm run db:push      # Push Drizzle schema to Neon (needs DATABASE_URL in .env.local)
 npm run db:studio    # Drizzle Studio (visual DB browser)
+npm test             # Unit tests (pure, no database)
+npm run test:int     # Integration tests on a test database (see below)
 ```
+
+**Integration tests** (`*.int.test.ts`, `vitest.int.config.ts`): the real queries against Postgres, for what unit tests cannot show (guarded writes, concurrent events, migrations). They run only with `INT_TEST_DATABASE_URL` set, or with `INT_TEST_USE_DATABASE_URL=1` when the `DATABASE_URL` in the environment is already a test database (e.g. `INT_TEST_USE_DATABASE_URL=1 node --env-file=.env.demo.local node_modules/vitest/vitest.mjs run -c vitest.int.config.ts`); otherwise they are skipped. Never point them at production. Each test builds its rows with `makeScope()` (`test/int/fixtures.ts`): one fake member per run, ids prefixed `int_`, removed in `afterAll`. The setup drops `RESEND_API_KEY` and `STRIPE_SECRET_KEY` from the environment, so a test can neither send an email nor call Stripe. In CI the `integration` job creates a throwaway Neon branch, applies the pending migrations and runs the suite; it needs the `NEON_API_KEY` secret and the `NEON_PROJECT_ID` variable and is skipped without them (forks). `NEON_PROJECT_ID` must be a project with fake data only (the demo), never production: the repository is public, so the job masks the branch's connection string before any step can print it.
+
+**Releases**: open the `staging` → `main` PR with `?template=release.md` (`.github/PULL_REQUEST_TEMPLATE/release.md`): upgrade notes, migration before the merge, smoke test on `/api/health`, rollback.
+
+**Health and errors**: `/api/health` (public) returns `{ ok, version, db }`, 503 when the database does not answer. Unexpected errors go through `reportError` (`lib/observability.ts`): always the server log, Sentry too when `SENTRY_DSN` is set (server only, errors only; data collection is off and `beforeSend` cuts the query parameters a driver error quotes; initialized in `instrumentation.ts`). Use it instead of a bare `console.error` for errors someone should look at.
+
+**Stripe on staging**: `scripts/stripe-staging-check.mjs` runs real sandbox refunds against the staging deploy; it refuses live keys and any database other than `STAGING_DB_HOST`. The events the webhook endpoint must subscribe to are `REQUIRED_STRIPE_EVENTS` (`lib/payments/config.ts`).
 
 **Deploy**: push to `main` → Vercel auto-deploys production. Development PRs target `staging` and are tested on its Preview deployment before `staging` → `main`; other branches create ordinary preview deployments.
 
@@ -568,9 +582,11 @@ Rules (enforced by `lib/brand/design-guard.test.ts`):
 Key patterns:
 - **Saldo hero card**: primary-soft (positive) or red-light (negative), 70px balance amount
 - **Pill steppers** in order form: zero-state (single + btn) vs has-qty state (−/qty/+)
-- **Bottom nav**: 5 tabs, primary-text active state, SVG icons
+- **Navigation**: 5 items from `nav-items.ts`. `BottomNav` up to `lg`, `TopNav` (in the header) from `lg`; never both
 - **Notification bell**: in header, red badge with count, links to `/notifiche`
-- Shell `max-w-[480px]`, `md:max-w-[640px]`, `lg:max-w-[960px]`, centered; `bg-brand-frame` frames the app
+- Shell `max-w-[480px]`, `md:max-w-[640px]`, centered; `bg-brand-frame` frames the app. Only Admin (`<AppShell width="admin">`) adds `lg:max-w-[960px]`. Widths live in `shell-width.ts`; a route with a non-default width needs its own `loading.tsx` (see `app/admin/loading.tsx`)
+- Member pages: reading text is 14px; mono amounts and labels keep their own sizes
+- The email is in the header from `sm`; on phones it is on the Notifications page
 
 ### Known Gotchas
 

@@ -82,3 +82,17 @@ export function resolveStripeKey(env: StripeEnv): StripeKeyStatus {
   if (!livemode && isRealProduction) return { enabled: false, reason: "testKeyInProduction" };
   return { enabled: true, secretKey: key, livemode };
 }
+
+// The events the Stripe webhook endpoint of a deploy must subscribe to
+// (app/api/stripe/webhook). Without the refund.* ones refunds are still
+// recorded, through charge.refunded, but a refund that fails later is missed.
+export const REQUIRED_STRIPE_EVENTS = [
+  "checkout.session.completed",
+  "checkout.session.async_payment_succeeded",
+  "checkout.session.async_payment_failed",
+  "checkout.session.expired",
+  "charge.refunded",
+  "refund.created",
+  "refund.updated",
+  "refund.failed",
+] as const;

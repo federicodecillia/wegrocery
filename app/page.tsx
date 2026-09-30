@@ -114,7 +114,7 @@ export default async function HomePage() {
           <div className="mt-[12px]">
             <Link
               href="/ricarica"
-              className="flex w-full items-center justify-center rounded-full bg-brand-red px-4 py-[10px] text-[13px] font-bold text-white"
+              className="flex w-full items-center justify-center rounded-full bg-brand-red px-4 py-[10px] text-[14px] font-bold text-white"
             >
               {t.home.rechargeButton}
             </Link>
@@ -191,7 +191,7 @@ export default async function HomePage() {
                     );
                   })}
                   <div className="flex items-center justify-between rounded-b-[18px] border-t border-brand-border bg-[#f5f1ec] px-4 py-[12px]">
-                    <span className="text-[13px] font-extrabold text-brand-near-black">{t.home.totalLabel}</span>
+                    <span className="text-[14px] font-extrabold text-brand-near-black">{t.home.totalLabel}</span>
                     <span className="font-mono text-[13px] font-bold text-brand-near-black">
                       {formatEur(orderTotal)}
                     </span>
@@ -202,7 +202,7 @@ export default async function HomePage() {
                   <span className="text-[14px] text-brand-gray">{t.home.noOrdersYet}</span>
                   <Link
                     href={`/ordine?cycleId=${cycle.cycleId}`}
-                    className="rounded-full bg-primary px-4 py-[10px] text-[13px] font-bold text-on-primary"
+                    className="rounded-full bg-primary px-4 py-[10px] text-[14px] font-bold text-on-primary"
                   >
                     {t.home.orderButton}
                   </Link>
@@ -248,7 +248,7 @@ export default async function HomePage() {
                 className="flex items-center justify-between border-b border-brand-border py-[11px] last:border-none"
               >
                 <div>
-                  <div className="text-[13px] font-medium text-brand-near-black">{label}</div>
+                  <div className="text-[14px] font-medium text-brand-near-black">{label}</div>
                   <div className="mt-[2px] font-mono text-label text-muted">
                     {formatDateShort(e.entryDate)}
                   </div>

@@ -1,7 +1,9 @@
 name: CI
 
-# Typecheck, lint and unit tests on every PR to main or staging. Pure checks:
-# no secrets, no database (the vitest suite is DB-free by design).
+# Typecheck, lint and unit tests on every PR to main or staging: pure checks,
+# no secrets, no database. The integration job runs the *.int.test.ts suite on
+# a throwaway Neon branch and needs NEON_API_KEY (secret) and NEON_PROJECT_ID
+# (variable); without them, e.g. on a fork, it is skipped.
 # Node matches demo-reset.yml.
 
 on:
@@ -40,3 +42,72 @@ jobs:
 
       - name: Unit tests
         run: npx vitest run
+
+  integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # The repository is public, so are these logs: the connection string of
+    # the test branch is masked before anything can print it, and the Neon
+    # API key is given only to the steps that call Neon.
+    steps:
+      - name: Check for a test database
+        id: neon
+        env:
+          HAS_KEY: ${{ secrets.NEON_API_KEY != '' }}
+          NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
+        run: |
+          if [ "$HAS_KEY" = "true" ] && [ -n "$NEON_PROJECT_ID" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No NEON_API_KEY / NEON_PROJECT_ID: integration tests skipped."
+          fi
+
+      - uses: actions/checkout@v7
+        if: steps.neon.outputs.available == 'true'
+
+      - uses: actions/setup-node@v7
+        if: steps.neon.outputs.available == 'true'
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        if: steps.neon.outputs.available == 'true'
+        run: npm ci
+
+      # A copy-on-write branch of the project's default branch, deleted below
+      # (and by Neon itself after two hours if the runner dies). NEON_PROJECT_ID
+      # must be a project with fake data only, e.g. the demo: never production.
+      - name: Create a throwaway database branch
+        if: steps.neon.outputs.available == 'true'
+        id: branch
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
+          BRANCH: ci-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          EXPIRES=$(date -u -d '+2 hours' +%Y-%m-%dT%H:%M:%SZ)
+          npx -y neonctl@7.0.1 branches create --project-id "$NEON_PROJECT_ID" --name "$BRANCH" \
+            --expires-at "$EXPIRES" --output json > /dev/null
+          echo "name=$BRANCH" >> "$GITHUB_OUTPUT"
+          URL=$(npx -y neonctl@7.0.1 connection-string "$BRANCH" --project-id "$NEON_PROJECT_ID")
+          echo "::add-mask::$URL"
+          PASSWORD=$(node -e 'process.stdout.write(decodeURIComponent(new URL(process.argv[1]).password))' "$URL")
+          echo "::add-mask::$PASSWORD"
+          echo "INT_TEST_DATABASE_URL=$URL" >> "$GITHUB_ENV"
+
+      - name: Apply pending migrations
+        if: steps.neon.outputs.available == 'true'
+        run: DATABASE_URL="$INT_TEST_DATABASE_URL" node scripts/db-migrate.mjs
+
+      - name: Integration tests
+        if: steps.neon.outputs.available == 'true'
+        run: npm run test:int
+
+      - name: Delete the database branch
+        if: always() && steps.branch.outputs.name != ''
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
+        run: npx -y neonctl@7.0.1 branches delete "${{ steps.branch.outputs.name }}" --project-id "$NEON_PROJECT_ID"

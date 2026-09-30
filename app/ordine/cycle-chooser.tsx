@@ -20,7 +20,7 @@ export function CycleChooser({ cycles }: Props) {
       <h1 className="text-[20px] font-black tracking-[-0.03em] text-brand-near-black">
         {t.order.chooseCycle}
       </h1>
-      <p className="mt-[3px] text-[13px] text-brand-gray">{t.order.chooseCycleHint}</p>
+      <p className="mt-[3px] text-[14px] text-brand-gray">{t.order.chooseCycleHint}</p>
       <div className="mt-4 space-y-3">
         {cycles.map((c) => (
           <Link

@@ -9,6 +9,7 @@ vi.mock("@/lib/notifications/dispatch", () => ({ dispatchNotification: vi.fn() }
 vi.mock("./refund-store", () => ({ upsertStripeRefund: vi.fn(), syncChargeRefunds: vi.fn() }));
 
 const { planWebhookAction } = await import("./webhook");
+const { REQUIRED_STRIPE_EVENTS } = await import("./config");
 
 function event(type: string, object: Record<string, unknown>): Stripe.Event {
   return { id: "evt_1", type, livemode: false, data: { object } } as unknown as Stripe.Event;
@@ -75,6 +76,7 @@ describe("planWebhookAction", () => {
     amount: 400,
     currency: "eur",
     status: "succeeded",
+    created: 1790000000,
     metadata: {},
   };
 
@@ -89,6 +91,7 @@ describe("planWebhookAction", () => {
           currency: "eur",
           status: "succeeded",
           appRefundId: null,
+          createdAt: 1790000000,
         },
       });
     }
@@ -105,5 +108,30 @@ describe("planWebhookAction", () => {
 
   it("ignores everything else", () => {
     expect(planWebhookAction(event("customer.created", {}))).toEqual({ kind: "ignore" });
+  });
+});
+
+describe("REQUIRED_STRIPE_EVENTS", () => {
+  it("lists only events the webhook acts on", () => {
+    // A session this app created and a refund of one of its charges: none of
+    // the required events may fall through to "ignore".
+    const objects: Record<string, unknown> = {
+      checkout: {
+        id: "cs_1",
+        metadata: { paymentId: "pay_1" },
+        payment_status: "paid",
+        amount_total: 1000,
+        currency: "eur",
+        payment_intent: "pi_1",
+      },
+      refund: { id: "re_1", payment_intent: "pi_1", amount: 400, currency: "eur", status: "succeeded", created: 1, metadata: {} },
+      charge: { id: "ch_1", payment_intent: "pi_1" },
+    };
+    for (const type of REQUIRED_STRIPE_EVENTS) {
+      const object = objects[type.split(".")[0]];
+      const action = planWebhookAction({ type, data: { object } } as unknown as Stripe.Event);
+      expect(action.kind, type).not.toBe("ignore");
+    }
+    expect(new Set(REQUIRED_STRIPE_EVENTS).size).toBe(REQUIRED_STRIPE_EVENTS.length);
   });
 });

@@ -17,6 +17,7 @@ function stripeRefund(fields: Record<string, unknown>): Stripe.Refund {
     amount: 400,
     currency: "eur",
     status: "succeeded",
+    created: 1790000000,
     metadata: {},
     ...fields,
   } as unknown as Stripe.Refund;
@@ -31,6 +32,7 @@ describe("refundInputOf", () => {
       currency: "eur",
       status: "succeeded",
       appRefundId: null,
+      createdAt: 1790000000,
     });
   });
 
