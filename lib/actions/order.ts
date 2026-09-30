@@ -20,14 +20,9 @@ import {
 } from "@/lib/db/queries";
 import { requireActiveMember } from "@/lib/auth/session";
 import { normalizeDraftLines, sameOrderLines } from "@/lib/order-draft";
-import { recordMembershipCheck } from "@/lib/membership/members";
-import {
-  evaluateCreditLimit,
-  orderMembershipOutcome,
-  raisesOrderTotal,
-  shouldRecheckMembershipOnOrder,
-} from "@/lib/membership/policy";
-import { checkMembershipAny, isMembershipCheckEnabled } from "@/lib/membership/wallyfor";
+import { membershipAllowsOrder } from "@/lib/membership/order-check";
+import { evaluateCreditLimit, raisesOrderTotal } from "@/lib/membership/policy";
+import { isMembershipCheckEnabled } from "@/lib/membership/wallyfor";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
 import { canAccessCycle } from "@/lib/roles";
 import { actionErrorMessage } from "@/lib/action-error";
@@ -102,6 +97,12 @@ export async function saveOrder(
       0,
     );
 
+    // A pay-per-order cycle is confirmed by paying it (startOrderPayment),
+    // never by this wallet path.
+    if (cycle.paymentMode === "per_order") {
+      return { success: false, error: t.errors.cycleNotOpen, code: "cycle_not_open" };
+    }
+
     // Uncharged order totals: needed by the credit limit and to tell whether
     // this save raises the cycle's order (trimming/cancelling is never blocked).
     const { minBalance } = await getPaymentSettings();
@@ -112,29 +113,13 @@ export async function saveOrder(
         : null;
     const raisesOrder = pending ? raisesOrderTotal(pending.thisCycle, total) : true;
 
-    // Membership card: rechecked at most every 24h (a lapsed result is always
-    // rechecked). An unreachable API lets the order through: they were members
-    // at sign-in.
-    if (shouldRecheckMembershipOnOrder(member, checkEnabled, now, raisesOrder)) {
-      const result = await checkMembershipAny([member.email, member.aliasEmail]);
-      const outcome = orderMembershipOutcome(result);
-      if (result.status === "error") {
-        console.error(`[saveOrder] membership check unavailable: ${result.message}`);
-      }
-      if (outcome.record) {
-        try {
-          await recordMembershipCheck(member.memberId, outcome.record, now);
-        } catch (err) {
-          console.error("[saveOrder] could not record membership check", err);
-        }
-      }
-      if (!outcome.allow) {
-        return {
-          success: false,
-          error: t.errors.membershipInactive(brand.membershipUrl),
-          code: "membership_inactive",
-        };
-      }
+    // Membership card (lib/membership/order-check.ts).
+    if (!(await membershipAllowsOrder(member, checkEnabled, now, raisesOrder, "saveOrder"))) {
+      return {
+        success: false,
+        error: t.errors.membershipInactive(brand.membershipUrl),
+        code: "membership_inactive",
+      };
     }
 
     // Credit limit (the minimum balance of the payment settings). Checked

@@ -1,7 +1,6 @@
 "use server";
 
 import { eq } from "drizzle-orm";
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { brand } from "@/lib/brand";
@@ -19,6 +18,7 @@ import {
 } from "@/lib/payments/config";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
 import { getStripe } from "@/lib/payments/stripe";
+import { requestOrigin } from "@/lib/request-origin";
 
 // Returned as a value, not thrown: in production Next.js hides thrown Server
 // Action messages behind a digest.
@@ -27,15 +27,6 @@ export type StartTopupResult = { url: string } | { error: string };
 function amountErrorMessage(code: TopupAmountError): string {
   const range = t.topup.amountRange(formatMoney(TOPUP_MIN_CENTS / 100), formatMoney(TOPUP_MAX_CENTS / 100));
   return code === "invalid" ? t.topup.amountInvalid : range;
-}
-
-// The URL the member is on, so success/cancel bring them back to the same
-// deploy (production, staging alias or local dev).
-async function requestOrigin(): Promise<string> {
-  const h = await headers();
-  const host = h.get("x-forwarded-host") ?? h.get("host");
-  const proto = h.get("x-forwarded-proto") ?? (host?.startsWith("localhost") ? "http" : "https");
-  return `${proto}://${host}`;
 }
 
 function genId(prefix: string): string {
@@ -49,7 +40,8 @@ export async function startOnlineTopup(amountInput: string): Promise<StartTopupR
 
   // Switched off in Impostazioni, or no usable key on this deploy.
   const settings = await getPaymentSettings();
-  const stripe = settings.onlineTopupAvailable ? getStripe() : null;
+  // A pay-per-order group has no wallet to top up.
+  const stripe = settings.onlineTopupAvailable && settings.mode === "wallet" ? getStripe() : null;
   if (!stripe) return { error: t.topup.unavailable };
 
   const member = await getMemberByEmail(email);

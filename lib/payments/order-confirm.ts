@@ -24,6 +24,13 @@ export async function getCycleCoverageCents(db: Db, memberId: string, cycleId: s
   return rows[0]?.covered ?? 0;
 }
 
+// These writes belong to pay-per-order cycles only: a wallet cycle's order is
+// saveOrder's, and an unknown cycle is refused like a closed one.
+function openPerOrderCycle(cycleId: string): SQL {
+  return sql`coalesce((SELECT status = 'open' AND payment_mode = 'per_order' FROM order_cycles
+    WHERE cycle_id = ${cycleId}), false)`;
+}
+
 function isGuardError(e: unknown): boolean {
   return e instanceof Error && /22012|division by zero/i.test(e.message);
 }
@@ -43,7 +50,7 @@ export async function confirmOrderWithoutPayment(
   const lock = db.execute(sql`SELECT 1 FROM order_cycles WHERE cycle_id = ${cycleId} FOR UPDATE`);
   const guard = db.execute(sql`
     SELECT 1 / (CASE WHEN
-      (SELECT status FROM order_cycles WHERE cycle_id = ${cycleId}) = 'open'
+      ${openPerOrderCycle(cycleId)}
       AND ${coverageSql(memberId, cycleId)} = ${input.expectedCoveredCents}
     THEN 1 ELSE 0 END) AS confirm_guard
   `);
@@ -79,8 +86,7 @@ export async function cancelOrderWrite(
 ): Promise<{ status: "cancelled"; refundIds: string[] } | { status: "cycle_not_open" }> {
   const lock = db.execute(sql`SELECT 1 FROM order_cycles WHERE cycle_id = ${cycleId} FOR UPDATE`);
   const guard = db.execute(sql`
-    SELECT 1 / (CASE WHEN (SELECT status FROM order_cycles WHERE cycle_id = ${cycleId}) = 'open'
-      THEN 1 ELSE 0 END) AS cancel_guard
+    SELECT 1 / (CASE WHEN ${openPerOrderCycle(cycleId)} THEN 1 ELSE 0 END) AS cancel_guard
   `);
   const deleteOrder = db.execute(sql`DELETE FROM orders WHERE member_id = ${memberId} AND cycle_id = ${cycleId}`);
   const deleteDraft = db.execute(sql`DELETE FROM order_drafts WHERE member_id = ${memberId} AND cycle_id = ${cycleId}`);

@@ -130,4 +130,22 @@ describeDb("order confirmation and cancellation", () => {
     expect(await orders(cycleId)).toEqual([`${productIds[0]} x2 = 8.00`]);
     expect(await refunds(cycleId)).toEqual([]);
   });
+
+  it("never touches the order of a wallet cycle", async () => {
+    const { cycleId, productIds } = await scope.createCycle("wallet", { products });
+    await sql`INSERT INTO orders (order_line_id, cycle_id, member_id, product_id, quantity, unit_price_snapshot,
+        line_total, updated_at)
+      VALUES (${scope.id("w_line")}, ${cycleId}, ${scope.memberId}, ${productIds[0]}, 2, 4, 8, now())`;
+
+    expect(await cancelOrderWrite(getDb(), scope.memberId, cycleId)).toEqual({ status: "cycle_not_open" });
+    expect(
+      await confirmOrderWithoutPayment(getDb(), {
+        memberId: scope.memberId,
+        cycleId,
+        lines: [],
+        expectedCoveredCents: 0,
+      }),
+    ).toBe("changed");
+    expect(await orders(cycleId)).toEqual([`${productIds[0]} x2 = 8.00`]);
+  });
 });
