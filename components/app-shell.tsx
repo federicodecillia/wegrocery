@@ -37,15 +37,16 @@ export async function AppShell({ children, email, isAdmin, memberId, width = "me
         <DemoBanner />
         <header className="border-b border-brand-border px-5 py-4">
           <div className="flex items-center justify-between gap-3">
-            <div className="shrink-0">
+            {/* A long app name wraps instead of pushing Logout off the card. */}
+            <div className="min-w-0 sm:shrink-0">
               <Link href="/" aria-label="Home" className="inline-flex items-center gap-2">
-                <Image src={brand.logoUrl} alt={brand.appName} width={26} height={26} priority className="h-[26px] w-auto" />
+                <Image src={brand.logoUrl} alt={brand.appName} width={26} height={26} priority className="h-[26px] w-auto shrink-0" />
                 {brand.headerShowName && (
                   <span className="text-[15px] font-semibold text-brand-near-black">{brand.appName}</span>
                 )}
               </Link>
             </div>
-            <div className="flex min-w-0 items-center gap-2">
+            <div className="flex shrink-0 items-center gap-2 sm:min-w-0 sm:shrink">
               {/* On phones the email is on the Notifications page instead. */}
               <span className="hidden min-w-0 truncate text-xs text-brand-gray sm:block">{email}</span>
               <NotificationBell unreadCount={unreadCount} />

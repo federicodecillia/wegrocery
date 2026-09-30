@@ -16,36 +16,27 @@ export function TopNav({ isAdmin }: TopNavProps) {
   return (
     <nav className="mt-3 hidden lg:block">
       <ul className="flex gap-1">
-        {navItems.map((item) => {
-          const active = isItemActive(pathname, item);
-          const locked = item.adminOnly && !isAdmin;
-          const baseClasses = "flex items-center gap-2 rounded-full px-3 py-2 text-[14px] font-medium";
-          const stateClasses = active
-            ? "bg-primary-soft text-primary-text"
-            : locked
-              ? "text-muted"
-              : "text-brand-gray hover:text-brand-near-black";
-
-          return (
-            <li key={item.href}>
-              {locked ? (
-                <span aria-disabled className={`${baseClasses} ${stateClasses}`}>
-                  <NavIcon name={item.icon} />
-                  <span>{item.label}</span>
-                </span>
-              ) : (
+        {/* No locked placeholder here: BottomNav needs it to fill its grid, a
+            flex row does not. */}
+        {navItems
+          .filter((item) => isAdmin || !item.adminOnly)
+          .map((item) => {
+            const active = isItemActive(pathname, item);
+            return (
+              <li key={item.href}>
                 <Link
                   href={item.href}
                   aria-current={active ? "page" : undefined}
-                  className={`${baseClasses} ${stateClasses}`}
+                  className={`flex items-center gap-2 rounded-full px-3 py-2 text-[14px] font-medium ${
+                    active ? "bg-primary-soft text-primary-text" : "text-brand-gray hover:text-brand-near-black"
+                  }`}
                 >
                   <NavIcon name={item.icon} />
                   <span>{item.label}</span>
                 </Link>
-              )}
-            </li>
-          );
-        })}
+              </li>
+            );
+          })}
       </ul>
     </nav>
   );

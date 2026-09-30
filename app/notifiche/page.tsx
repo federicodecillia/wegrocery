@@ -18,14 +18,12 @@ export default async function NotifichePage() {
 
   return (
     <AppShell email={session.user.email} isAdmin={role === "admin"} memberId={memberId}>
+      {/* From sm the email is in the header; on phones it gets its own line here. */}
+      <p className="mb-1 break-all text-xs text-brand-gray sm:hidden">{session.user.email}</p>
       <div className="mb-5 flex items-center justify-between gap-3">
-        <div className="min-w-0">
-          <h1 className="text-[20px] font-black tracking-[-0.03em] text-brand-near-black">
-            {t.notifications.title}
-          </h1>
-          {/* From sm the email is in the header. */}
-          <p className="truncate text-xs text-brand-gray sm:hidden">{session.user.email}</p>
-        </div>
+        <h1 className="text-[20px] font-black tracking-[-0.03em] text-brand-near-black">
+          {t.notifications.title}
+        </h1>
         <div className="flex shrink-0 items-center gap-2">
           {unreadCount > 0 && (
             <form

@@ -34,7 +34,11 @@ export function BottomNav({ isAdmin }: BottomNavProps) {
                   <span>{item.label}</span>
                 </span>
               ) : (
-                <Link href={item.href} className={`${baseClasses} ${stateClasses}`}>
+                <Link
+                  href={item.href}
+                  aria-current={active ? "page" : undefined}
+                  className={`${baseClasses} ${stateClasses}`}
+                >
                   <NavIcon name={item.icon} />
                   <span>{item.label}</span>
                 </Link>

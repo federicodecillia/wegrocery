@@ -1,7 +1,7 @@
 import { SHELL_WIDTH, type ShellWidth } from "@/components/shell-width";
 
-// Mirror AppShell's wrapper exactly (same max-widths, frame padding and card
-// chrome) so the streamed page doesn't shift when it replaces this.
+// Mirror AppShell's wrapper (same max-widths, frame padding, card chrome and
+// header height) so the streamed page doesn't shift when it replaces this.
 export function ShellSkeleton({ width = "member" }: { width?: ShellWidth }) {
   return (
     <div className="min-h-screen bg-brand-frame sm:p-6">
@@ -11,7 +11,7 @@ export function ShellSkeleton({ width = "member" }: { width?: ShellWidth }) {
         <div className="border-b border-brand-border px-5 py-4">
           <div className="flex items-center justify-between gap-3">
             <div className="h-[26px] w-28 animate-pulse rounded-md bg-black/[0.05]" />
-            <div className="h-[26px] w-20 animate-pulse rounded-full bg-black/[0.04]" />
+            <div className="h-8 w-20 animate-pulse rounded-full bg-black/[0.04]" />
           </div>
           <div className="mt-3 hidden h-9 w-80 animate-pulse rounded-full bg-black/[0.04] lg:block" />
         </div>

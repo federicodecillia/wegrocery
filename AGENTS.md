@@ -575,7 +575,7 @@ Key patterns:
 - **Navigation**: 5 items from `nav-items.ts`. `BottomNav` up to `lg`, `TopNav` (in the header) from `lg`; never both
 - **Notification bell**: in header, red badge with count, links to `/notifiche`
 - Shell `max-w-[480px]`, `md:max-w-[640px]`, centered; `bg-brand-frame` frames the app. Only Admin (`<AppShell width="admin">`) adds `lg:max-w-[960px]`. Widths live in `shell-width.ts`; a route with a non-default width needs its own `loading.tsx` (see `app/admin/loading.tsx`)
-- Member pages: reading text 14px, mono amounts 13px
+- Member pages: reading text is 14px; mono amounts and labels keep their own sizes
 - The email is in the header from `sm`; on phones it is on the Notifications page
 
 ### Known Gotchas
