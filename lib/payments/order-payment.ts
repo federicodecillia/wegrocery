@@ -160,3 +160,17 @@ export function homeOrderStatus(input: {
   if (!draft) return { kind: "paid", amountCents: coveredCents };
   return draft.chargeCents > 0 ? { kind: "changes", amountCents: draft.chargeCents } : { kind: "changes_no_pay", amountCents: 0 };
 }
+
+// The gap between what the confirmed order costs now (products, shipping,
+// handling) and what its payments cover. "refund": the member paid more (they
+// took something out); it comes back when the cycle is settled. "due": less
+// (Stripe's minimum rounding aside, a fee raised after paying); settled too.
+export function paidDifference(
+  requiredCents: number,
+  coveredCents: number,
+): { kind: "refund" | "due"; cents: number } | null {
+  if (coveredCents === requiredCents) return null;
+  return coveredCents > requiredCents
+    ? { kind: "refund", cents: coveredCents - requiredCents }
+    : { kind: "due", cents: requiredCents - coveredCents };
+}

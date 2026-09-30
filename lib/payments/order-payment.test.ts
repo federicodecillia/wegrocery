@@ -3,6 +3,7 @@ import {
   cancelRefunds,
   checkoutLineItems,
   homeOrderStatus,
+  paidDifference,
   coveredCents,
   ORDER_PAYMENT_MAX_CENTS,
   orderPaymentAmount,
@@ -215,5 +216,16 @@ describe("homeOrderStatus", () => {
       kind: "changes_no_pay",
       amountCents: 0,
     });
+  });
+});
+
+describe("paidDifference", () => {
+  it("says how much comes back when the member paid more than the order now costs", () => {
+    expect(paidDifference(980, 1420)).toEqual({ kind: "refund", cents: 440 });
+  });
+
+  it("says nothing when the payments match the order, and flags a shortfall", () => {
+    expect(paidDifference(980, 980)).toBeNull();
+    expect(paidDifference(1000, 980)).toEqual({ kind: "due", cents: 20 });
   });
 });

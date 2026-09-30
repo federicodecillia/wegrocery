@@ -21,9 +21,9 @@ describe("CATEGORY_DEFAULTS", () => {
     }
   });
 
-  it("enables email by default ONLY for cycle_opened", () => {
+  it("sends no email by default: members turn email on themselves", () => {
     for (const category of NOTIFICATION_CATEGORIES) {
-      expect(CATEGORY_DEFAULTS[category].email).toBe(category === "cycle_opened");
+      expect(CATEGORY_DEFAULTS[category].email).toBe(false);
     }
   });
 });
@@ -94,7 +94,7 @@ describe("resolvePreferences", () => {
     expect(resolved.order_charge).toEqual({ app: false, email: true });
     // untouched categories keep their defaults
     expect(resolved.wallet_topup).toEqual({ app: true, email: false });
-    expect(resolved.cycle_opened).toEqual({ app: true, email: true });
+    expect(resolved.cycle_opened).toEqual({ app: true, email: false });
   });
 
   it("ignores rows for unknown categories", () => {

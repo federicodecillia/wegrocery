@@ -471,7 +471,19 @@ export function OrderForm({
           lines={confirmedLines}
           total={savedTotal}
           balanceAfter={balance - savedTotal}
-          paidCents={payPerOrder ? payPerOrder.coveredCents : undefined}
+          payment={
+            payPerOrder
+              ? {
+                  paidCents: payPerOrder.coveredCents,
+                  amount: orderPaymentAmount({
+                    productsCents: Math.round(savedTotal * 100),
+                    shipping: payPerOrder.shipping,
+                    fee: payPerOrder.fee,
+                    coveredCents: payPerOrder.coveredCents,
+                  }),
+                }
+              : undefined
+          }
           orderCloseAt={orderCloseAt}
           isPending={isPending}
           onEdit={() => setIsEditing(true)}

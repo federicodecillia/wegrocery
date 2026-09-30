@@ -18,11 +18,13 @@ export type NotificationCategory = (typeof NOTIFICATION_CATEGORIES)[number];
 
 export type ChannelPrefs = { app: boolean; email: boolean };
 
-// Per-category defaults. App is on for everything; email is on ONLY for
-// cycle_opened (the one broadcast members opted into by default). Every other
-// category is email-off until the member turns it on in the panel.
+// Per-category defaults. App is on for everything; email is off for every
+// category until the member turns it on in the panel (since 1.17.0, also for
+// cycle_opened: one email per member per cycle weighs on the email quota, and
+// the sign-in links must get through). Members who saved their preferences
+// keep them: only the absent rows follow these defaults.
 export const CATEGORY_DEFAULTS: Record<NotificationCategory, ChannelPrefs> = {
-  cycle_opened: { app: true, email: true },
+  cycle_opened: { app: true, email: false },
   order_charge: { app: true, email: false },
   order_updates: { app: true, email: false },
   wallet_topup: { app: true, email: false },

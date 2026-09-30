@@ -72,6 +72,9 @@ export const en: Strings = {
       shipping: "Shipping",
       fee: "Handling and order preparation (estimate)",
       feeHint: "When the cycle is settled we refund what was not needed.",
+      refundDifference: (amount: string) =>
+        `You paid ${amount} more than the order costs now: we refund it to your card when the cycle is settled.`,
+      dueDifference: (amount: string) => `${amount} still to pay: settled when the cycle closes its accounts.`,
       alreadyPaid: "Already paid",
       toPay: "To pay",
       nothingToPay: "Nothing to pay",
