@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { redirect } from "next/navigation";
 import { signOut } from "@/auth";
 import { brand } from "@/lib/brand";
 import { t } from "@/lib/i18n";
@@ -53,7 +54,8 @@ export async function AppShell({ children, email, isAdmin, memberId, width = "me
               <LogoutButton
                 action={async () => {
                   "use server";
-                  await signOut({ redirectTo: "/login" });
+                  await signOut();
+                  redirect("/login");
                 }}
               />
             </div>

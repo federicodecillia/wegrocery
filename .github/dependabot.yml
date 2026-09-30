@@ -35,10 +35,11 @@ updates:
         dependency-type: development
         update-types: ["major"]
     ignore:
-      # next-auth is intentionally pinned to an exact beta: on a prerelease line
-      # a caret would accept breaking betas. Upgrades here are a manual decision,
-      # and security advisories reach us through Dependabot alerts regardless.
-      - dependency-name: next-auth
+      # better-auth is pinned to an exact version (package.json): sign-in is
+      # the most sensitive dependency, so upgrades are a deliberate decision
+      # (run lib/auth/config.int.test.ts first). Security advisories still
+      # reach us through Dependabot alerts.
+      - dependency-name: better-auth
       # The majors below are already triaged and tracked: Next 16 in #110, the
       # dev toolchain in #111. Closing their PRs is not enough — Dependabot
       # recreates a closed PR on the next weekly run, and each one costs two red

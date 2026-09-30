@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **WeGrocery** is an open-source, white-label web app for food co-ops and buying groups (born as the Porta Moneta GAS app, now its first client deployment). Members log in with Google, place weekly orders, and track their balance. Admins manage cycles, products, suppliers, and member topups. Branding/locale per deployment via `NEXT_PUBLIC_BRAND_JSON` (see `lib/brand` and `lib/i18n`).
 
-**Stack**: Next.js 15 App Router · Postgres (Neon serverless) · Auth.js (Google OAuth) · Drizzle ORM · Tailwind CSS v4 · Vercel
+**Stack**: Next.js 15 App Router · Postgres (Neon serverless) · Better Auth (email link, optional Google) · Drizzle ORM · Tailwind CSS v4 · Vercel
 
 **Live**: gas.portamoneta.org
 
@@ -21,7 +21,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 │   ├── guida/page.tsx          # How-to steps + FAQ accordion
 │   ├── admin/page.tsx          # Admin panel: ciclo/prodotti/ordini/cassa/soci/fornitori/statistiche + impostazioni (⚙)
 │   ├── login/page.tsx          # Login with Google
-│   └── api/auth/[...nextauth]/ # Auth.js route handler
+│   └── api/auth/[...all]/      # Better Auth handler, limited to lib/auth/public-endpoints.ts
 ├── components/
 │   ├── app-shell.tsx           # Async layout wrapper: header (logo + email + bell + logout, top nav from lg) + bottom nav
 │   ├── bottom-nav.tsx          # 5-item bottom nav, hidden from lg
@@ -53,7 +53,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 │   └── auth/                   # session.ts: requireUserSession(), requireAdmin(), requireActiveMember(), getUserRole()
 │                               #   access.ts: pure checkAccess/sessionClaims (edge-safe, used by middleware)
 ├── middleware.ts                # Redirect unauthenticated to /login
-├── auth.ts                     # Auth.js config (Google provider, member whitelist callback)
+├── auth.ts                     # Better Auth instance, auth() (session + member), signOut()
 ├── drizzle/                    # SQL migrations (0000–0020)
 └── public/logo.png
 ```
@@ -112,9 +112,7 @@ When handling an advisory:
   `^0.34.5` even on 16.2.12, so there is no upstream fix coming.
 - **Confirm the fix landed** by comparing each alert's `first_patched_version`
   against the resolved tree, not by trusting the bump.
-- **`next-auth` is pinned to an exact beta on purpose.** A caret on a
-  prerelease accepts breaking betas, so it sits in Dependabot's `ignore` list
-  and upgrades there are a deliberate decision.
+- **`better-auth` is pinned to an exact version on purpose** and sits in Dependabot's `ignore` list: sign-in upgrades are a deliberate decision, tested with `lib/auth/config.int.test.ts`.
 - If an alert is genuinely unreachable and has no safe fix, dismiss it with
   `not_used` and open a tracking issue naming the condition to revisit it.
 
@@ -227,39 +225,23 @@ User interaction → Server Action ("use server") → auth check → DB mutation
 
 ### Auth
 
-- Google OAuth via Auth.js. Only emails in the `members` table can log in,
-  unless the membership-card check is configured (below).
-- **Membership-card check (optional, per deploy).** With `WALLYFOR_API_KEY` +
-  `WALLYFOR_MERCHANT_ID` set (Porta Moneta: merchant `5082`), the `signIn`
-  callback checks Google sign-ins against WallyFor (`lib/membership/wallyfor.ts`,
-  decisions in `lib/membership/policy.ts`):
-  - active admin → in, no check; deactivated member → denied (admin
-    deactivation always wins);
-  - existing member → checked on email, then alias. Valid → in, recorded in
-    `members.membership_status/membership_verified_at` (migration 0014).
-    Invalid → `/login?error=MembershipInactive`. API error → in (fail open) +
-    `console.error`;
-  - unknown email → valid card auto-provisions an active `utenti` member (audit
-    `auto_provision_member`, actor `system`); invalid → `NotMember`; API error
-    → `MembershipCheckUnavailable` (fail closed). Never provisioned when
-    Google reports `email_verified: false`.
-  - `saveOrder` rechecks non-admins when the last valid check is older than
-    24h (a lapsed result is always rechecked); lapsed → refused with a renew
-    link (`brand.membershipUrl`), API error → allowed. Saves that do not raise
-    the cycle's total (trim/cancel) are never rechecked.
-  - dev/demo credential providers never run the check.
-- Denials redirect to `/login?error=<code>&email=<attempted>`; the login page
-  explains each code and links `brand.supportEmail` and `brand.privacyUrl`.
-- `requireUserSession()` — throws redirect to `/login` if not authenticated
-- `requireAdmin()` / `requireActiveMember()` (`lib/auth/session.ts`) — the
-  only Server Action guards: signed in, member `active`, and for admin
-  `role === 'admin'`; they return `{ email, memberId }` or throw an
-  `ActionError`. Middleware and the
-  admin page apply the same rule through `checkAccess` (`lib/auth/access.ts`).
-- The `jwt` callback re-reads the member on every request and returns `null`
-  for a member deactivated or deleted since signing in: Auth.js then clears the
-  session cookie, so they are signed out at once, admins included.
-- `session.user.memberId` — the authenticated member's ID (set in Auth.js callbacks)
+- **Better Auth** (since Lotto C, `lib/auth/config.ts`; instance and `auth()` in `auth.ts`). The default way in is an **email link**: the member types their address, Better Auth answers every request the same ("check your inbox", no enumeration), and `sendMagicLink` decides which email goes out (`lib/auth/email-kind.ts`): a link to a member or to a card holder, an explanation to anyone else (not a member, account deactivated, card lapsed, card check unavailable). Links last 15 minutes, work once, are stored hashed; 3 requests a minute per IP (`x-vercel-forwarded-for`). The emailed link opens `/login/conferma` (a button, a form GET to the verify endpoint), because mail scanners open links.
+- **Google** is optional: on only with `AUTH_GOOGLE_ID` + `AUTH_GOOGLE_SECRET` (redirect URI `<app>/api/auth/callback/google`, as before). Its tokens and profile picture are never kept.
+- **Who gets in** (`lib/auth/admission.ts`, decisions in `lib/membership/policy.ts`), checked before a link goes out, on every Google sign-in (`user.validateUserInfo`), and when any session is created (`databaseHooks.session.create.before`: only for an active member, provisioned there for a card holder):
+  - active member (email or alias) → in; deactivated → denied;
+  - **membership-card check (optional):** with `WALLYFOR_API_KEY` + `WALLYFOR_MERCHANT_ID` (Porta Moneta: merchant `5082`), non-admins are checked against WallyFor: valid → in (recorded in `members.membership_status`), lapsed → `MembershipInactive`, API error → in (fail open);
+  - unknown address → with the card check, a valid card provisions an active `utenti` member (audit `auto_provision_member`), invalid → `NotMember`, API error → `MembershipCheckUnavailable` (fail closed); without it → `NotMember`. Google identities whose email Google has not verified are never provisioned.
+  - `saveOrder` rechecks non-admins when the last valid check is older than 24h, as before.
+- Sessions live in `auth_sessions` (30 days, no IP or browser kept; migration 0022). Tables are prefixed `auth_`; an auth user is a sign-in identity (an address), not a member: `auth()` finds the member by email or alias **on every request** and returns no session for a member deactivated or deleted since, so they are signed out at once. `members.last_login_at` is set at each new session and shown in Soci.
+- **Admin → Soci → Invita** emails a member the same link with a welcome text (`adminInviteMember`, `metadata.invite`): the onboarding of groups without the card check.
+- Demo (`DEMO_MODE=true`) and local development (`AUTH_DEV_LOGIN_EMAIL`, never in production) sign in through their own endpoints (`lib/auth/plugins.ts`); the session hook still requires an active member.
+- HTTP: only the endpoints in `lib/auth/public-endpoints.ts` answer (email link request and verify; Google's two where configured; demo and dev where enabled); everything else is a 404. Hosts accepted and used in links (`lib/auth/hosts.ts`): `APP_BASE_URL`, Vercel's production URL, a preview's own URLs, localhost under `next dev`.
+- Middleware only checks that the session cookie exists (no database); pages and actions check the session: `requireUserSession()` (redirect to `/login`), `requireAdmin()` / `requireActiveMember()` (`lib/auth/session.ts`, the only Server Action guards; `ActionError` otherwise). The admin page applies `checkAccess` (`lib/auth/access.ts`) and redirects non-admins home.
+- Denials land on `/login?error=<code>`; the login page explains each code and links `brand.supportEmail` and `brand.privacyUrl`.
+- `better-auth` is pinned to an exact version; upgrades run `lib/auth/config.int.test.ts` first.
+- Abuse limits: 3 link requests a minute per IP (Better Auth, keyed on `x-vercel-forwarded-for`: outside Vercel every request shares one bucket), plus caps on the emails one address receives (`lib/auth/email-caps.ts`: 5 links an hour, 1 explanation a day, 50 explanations a day overall). The decision and the send run after the response (`defer: after`), so a member's request takes as long as a stranger's.
+- A Google identity whose address Google has not verified is refused, member or not (`lib/auth/identity.ts`). Changing a member's email or alias, or deleting the member, deletes the sign-in identities (and sessions) of the addresses they no longer have.
+- Known limits, not handled yet: a link forwarded by its requester signs the receiver into the requester's account (the confirmation page does not show the address); `auth_rate_limits` and unclicked `auth_verifications` rows are not purged; the token sits in the confirmation page's URL until used.
 
 ### Notifications
 

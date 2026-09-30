@@ -1,6 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
+import { getAuthInstance } from "@/auth";
+import { admitEmail } from "@/lib/auth/admission";
 import { eq, and, notInArray, sql, inArray } from "drizzle-orm";
 import { requireAdmin } from "@/lib/auth/session";
 import { t } from "@/lib/i18n";
@@ -8,7 +11,7 @@ import { formatMoney, formatDate, formatDateTime } from "@/lib/i18n/format";
 import { parseCycleDates } from "@/lib/cycle-dates";
 import { brand } from "@/lib/brand";
 import { getDb } from "@/lib/db/client";
-import { auditLog, ledgerEntries, members, orderCycles, orderDrafts, orders, payments, products, suppliers, supplierProducts } from "@/lib/db/schema";
+import { auditLog, authUsers, ledgerEntries, members, orderCycles, orderDrafts, orders, payments, products, suppliers, supplierProducts } from "@/lib/db/schema";
 import { upsertCycleProducts } from "@/lib/db/cycle-products";
 import { isUniqueViolation } from "@/lib/db/errors";
 import { ActionError, actionErrorMessage } from "@/lib/action-error";
@@ -1962,6 +1965,35 @@ export async function adminDeleteLedgerEntry(entryId: string): Promise<{ error?:
   }
 }
 
+// Soci: emails a member a sign-in link with a welcome text (lib/auth). The
+// same link any member can ask for from the login page; useful for groups
+// without a membership-card check, where members join by invitation.
+export async function adminInviteMember(memberId: string): Promise<{ error?: string }> {
+  try {
+    const admin = await requireAdmin();
+    const db = getDb();
+    const [member] = await db
+      .select({ email: members.email, active: members.active })
+      .from(members)
+      .where(eq(members.memberId, memberId))
+      .limit(1);
+    if (!member) return { error: t.errors.memberNotFound };
+    if (!member.active) return { error: t.admin.members.inviteInactive };
+    // The link goes out only if the member may sign in (e.g. a lapsed card
+    // gets an explanation instead): say so rather than "sent".
+    const admission = await admitEmail(member.email, { emailVerified: true });
+    if (admission.kind === "deny") return { error: t.admin.members.inviteRefused };
+    await getAuthInstance().api.signInMagicLink({
+      body: { email: member.email, callbackURL: "/", metadata: { invite: true } },
+      headers: await headers(),
+    });
+    await writeAudit(db, admin.email, "invite_member", "member", memberId, {});
+    return {};
+  } catch (e) {
+    return { error: actionErrorMessage(e, t.errors.genericError, "adminInviteMember") };
+  }
+}
+
 export async function adminDeleteMember(memberId: string): Promise<{ error?: string }> {
   try {
     const admin = await requireAdmin();
@@ -1987,7 +2019,15 @@ export async function adminDeleteMember(memberId: string): Promise<{ error?: str
       };
     }
 
+    const [gone] = await db
+      .select({ email: members.email, aliasEmail: members.aliasEmail })
+      .from(members)
+      .where(eq(members.memberId, memberId))
+      .limit(1);
     await db.delete(members).where(eq(members.memberId, memberId));
+    // Its sign-in identities and sessions go with it.
+    const addresses = [gone?.email, gone?.aliasEmail].map((a) => normalizeEmail(a)).filter((a): a is string => Boolean(a));
+    if (addresses.length > 0) await db.delete(authUsers).where(inArray(sql`lower(${authUsers.email})`, addresses));
     await writeAudit(db, admin.email, "delete_member", "member", memberId);
     revalidatePath("/admin");
     return {};
@@ -2038,6 +2078,21 @@ export async function adminUpsertMember(data: UpsertMemberInput): Promise<{ erro
 
     try {
       if (data.memberId) {
+        // Addresses the member no longer has: their sign-in identities (and
+        // sessions) go, so the address given to someone else later does not
+        // open this member's account.
+        const [previous] = await db
+          .select({ email: members.email, aliasEmail: members.aliasEmail })
+          .from(members)
+          .where(eq(members.memberId, data.memberId))
+          .limit(1);
+        const kept = new Set([email, aliasEmail].filter(Boolean));
+        const dropped = [previous?.email, previous?.aliasEmail]
+          .map((a) => normalizeEmail(a))
+          .filter((a): a is string => Boolean(a) && !kept.has(a));
+        if (dropped.length > 0) {
+          await db.delete(authUsers).where(inArray(sql`lower(${authUsers.email})`, dropped));
+        }
         await db
           .update(members)
           .set({

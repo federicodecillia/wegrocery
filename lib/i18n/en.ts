@@ -282,7 +282,20 @@ export const en: Strings = {
   },
   login: {
     demoMessage: "Public demo: enter with one click, no registration required.",
-    continueMessage: "Sign in with Google to continue.",
+    continueMessage: "Enter your email: we'll send you a link to sign in.",
+    emailLabel: "Your email",
+    emailPlaceholder: "name@example.com",
+    sendLink: "Send me the link",
+    sending: "Sending...",
+    sent: "Check your inbox: if the address belongs to a member you'll find the sign-in link (valid for 15 minutes). Check spam too.",
+    rateLimited: "Too many requests: wait a minute and try again.",
+    failed: "We couldn't send the request. Try again.",
+    or: "or",
+    googleRedirecting: "Taking you to Google...",
+    confirmTitle: "Sign in",
+    confirmMessage: "Tap the button to sign in. The link works once.",
+    confirmButton: "Sign in",
+    linkInvalid: "The link is no longer valid: it may have been used already or expired. Ask for a new one.",
     accessDenied: "Access denied: your email is not listed as an enabled member.",
     attemptedEmail: (email: string) => `You tried to sign in with: ${email}`,
     notMember:
@@ -301,6 +314,22 @@ export const en: Strings = {
     memberLogin: "Enter as User (demo)",
     adminLogin: "Enter as Admin (demo)",
     configMissing: "Add auth variables to .env.local to enable local login.",
+  },
+  authEmail: {
+    subject: (kind: string, app: string) =>
+      kind === "invite" ? `You're invited to ${app}` : kind === "login" ? `Your link to sign in to ${app}` : `Signing in to ${app}`,
+    login: (app: string, url: string, minutes: number) =>
+      `Hi,\n\nto sign in to ${app} open this link and tap "Sign in":\n\n${url}\n\nThe link is valid for ${minutes} minutes and works once. If you didn't ask for it, ignore this email.`,
+    invite: (app: string, url: string, minutes: number) =>
+      `Hi,\n\nyou've been invited to ${app}, the buying group's app to order and see your balance.\n\nTo sign in open this link and tap "Sign in":\n\n${url}\n\nThe link is valid for ${minutes} minutes. When it expires, ask for a new one from the sign-in page with this same email.`,
+    notMember: (app: string, email: string, support: string) =>
+      `Hi,\n\nsomeone asked to sign in to ${app} with ${email}, which is not a member's address. If you're a member with another address, use that one; if you think this is a mistake write to ${support}.\n\nIf you didn't ask, ignore this email.`,
+    accountInactive: (app: string, support: string) =>
+      `Hi,\n\nyour account on ${app} is not active. To reactivate it write to ${support}.`,
+    membershipInactive: (app: string, renew: string | null, support: string) =>
+      `Hi,\n\nyour membership card is not active for this year, so you can't sign in to ${app}.${renew ? ` You can renew it here: ${renew}` : ""}\n\nQuestions: ${support}.`,
+    checkUnavailable: (app: string) =>
+      `Hi,\n\nwe can't check your membership card right now, so we can't send you the link to sign in to ${app}. Try again in a few minutes.`,
   },
   logout: {
     confirmTitle: "Sign out?",
@@ -415,7 +444,7 @@ export const en: Strings = {
       items: {
         database: "Database",
         authSecret: "Session key",
-        signIn: "Sign-in with Google",
+        signIn: "Sign-in (email link, optional Google)",
         brand: "Group name, logo and colours",
         baseUrl: "App address in emails",
         email: "Sending email",
@@ -428,6 +457,10 @@ export const en: Strings = {
         databaseUnreachable: "Cannot read the list of migrations: check the database or run npm run doctor.",
         defaultBrand: "No brand set: the app uses WeGrocery's name and colours.",
         noBaseUrl: "Without an address, emails arrive without links to the app.",
+        demoSignIn: "Demo: sign in with the profile buttons.",
+        emailAndGoogle: "Email link and Google.",
+        emailOnly: "Email link.",
+        googleOnly: "Google only: without email, members with no Google account cannot sign in.",
         contrast: "Some theme colours are hard to read:",
         noRedirect: "Outside production emails are redirected to EMAIL_REDIRECT_TO: without it they are not sent.",
         noWebhookSecret: "The webhook secret is missing: payments would not be recorded.",
@@ -805,6 +838,13 @@ export const en: Strings = {
       submitAdd: "Add member",
       submitEdit: "Update",
       inactiveBadge: "disabled",
+      invite: "Invite",
+      inviteSending: "Sending...",
+      inviteSent: (name: string) => `Invitation sent to ${name}: they receive a link to sign in.`,
+      inviteInactive: "The member is deactivated: reactivate them before inviting.",
+      inviteRefused: "The member cannot sign in right now (for example the card is not active): no link sent.",
+      lastLogin: (when: string) => `last sign-in ${when}`,
+      neverLoggedIn: "never signed in",
       searchPlaceholder: "Search by name or email…",
       deleteConfirm: (name: string) =>
         `Delete "${name}"?\n\nThis is irreversible. If they have orders or movements, an error will be shown.`,

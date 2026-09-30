@@ -33,7 +33,7 @@ real concurrency control, real members. Porta Moneta is the first white-label
 deployment of this codebase.
 
 It is also a complete **reference implementation** of a modern Next.js app:
-App Router, React Server Components, Server Actions, Auth.js v5, Drizzle ORM
+App Router, React Server Components, Server Actions, Better Auth, Drizzle ORM
 on serverless Postgres, deployed on Vercel.
 
 **Who it's for:**
@@ -109,7 +109,7 @@ The full operating model is documented in
 - **Next.js 15** App Router + React 19 + TypeScript strict mode
 - **Postgres** on [Neon](https://neon.tech) (HTTP driver, serverless)
 - **Drizzle ORM** with hand-written migrations
-- **Auth.js v5** (Google OAuth) with an email whitelist enforced against the `members` table
+- **Better Auth**: sign-in with an email link (optional Google), only for addresses in the `members` table (or with a valid membership card, where that check is set up)
 - **Tailwind CSS v4** with a custom theme (orange/teal/warm white)
 - **Vercel** for hosting and CI/CD (auto-deploy on push to `main`)
 
@@ -141,7 +141,7 @@ analytics dashboard is rendered with pure CSS and inline SVG.
 │   ├── actions/               # Server Actions (admin, order, notifications)
 │   └── auth/session.ts        # requireUserSession(), requireAdmin()
 ├── drizzle/                   # Hand-written SQL migrations
-├── auth.ts                    # Auth.js v5 config
+├── auth.ts                    # Better Auth instance and auth()
 ├── middleware.ts              # Auth gate (redirect to /login)
 └── SETUP.md                   # Step-by-step local setup guide
 ```
