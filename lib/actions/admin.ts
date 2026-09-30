@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
-import { betterAuthInstance } from "@/auth";
+import { getAuthInstance } from "@/auth";
 import { admitEmail } from "@/lib/auth/admission";
 import { eq, and, notInArray, sql, inArray } from "drizzle-orm";
 import { requireAdmin } from "@/lib/auth/session";
@@ -1983,7 +1983,7 @@ export async function adminInviteMember(memberId: string): Promise<{ error?: str
     // gets an explanation instead): say so rather than "sent".
     const admission = await admitEmail(member.email, { emailVerified: true });
     if (admission.kind === "deny") return { error: t.admin.members.inviteRefused };
-    await betterAuthInstance.api.signInMagicLink({
+    await getAuthInstance().api.signInMagicLink({
       body: { email: member.email, callbackURL: "/", metadata: { invite: true } },
       headers: await headers(),
     });

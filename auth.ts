@@ -28,8 +28,17 @@ function authEmailText({ kind, email, url }: AuthEmail): string {
   }
 }
 
-// The app's one Better Auth instance (lib/auth/config.ts has the rules).
-export const betterAuthInstance = createAuth(getDb(), {
+// The app's one Better Auth instance (lib/auth/config.ts has the rules),
+// built on first use: the build imports this module without a database
+// (a preview without DATABASE_URL must still build).
+let instance: ReturnType<typeof createAuth> | null = null;
+
+export function getAuthInstance(): ReturnType<typeof createAuth> {
+  instance ??= buildInstance();
+  return instance;
+}
+
+const buildInstance = () => createAuth(getDb(), {
   // Who the address belongs to, which email and the send all run after the
   // response: a member's request must not take longer than a stranger's.
   defer: (task) => after(task),
@@ -47,7 +56,7 @@ export const betterAuthInstance = createAuth(getDb(), {
 // role, active, memberId and fullName are read from the members table on every
 // request, so a deactivated or deleted member is signed out at once.
 export async function auth(): Promise<AppSession | null> {
-  const session = await betterAuthInstance.api.getSession({ headers: await headers() });
+  const session = await getAuthInstance().api.getSession({ headers: await headers() });
   if (!session) return null;
   const member = await findMemberByLoginEmail(session.user.email);
   const claims = sessionClaims(member);
@@ -57,5 +66,5 @@ export async function auth(): Promise<AppSession | null> {
 
 // Server Action: ends this browser's session.
 export async function signOut(): Promise<void> {
-  await betterAuthInstance.api.signOut({ headers: await headers() });
+  await getAuthInstance().api.signOut({ headers: await headers() });
 }
