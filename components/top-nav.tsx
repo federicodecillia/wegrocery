@@ -5,26 +5,26 @@ import { usePathname } from "next/navigation";
 import { NavIcon } from "@/components/nav-icon";
 import { isItemActive, navItems } from "@/components/nav-items";
 
-type BottomNavProps = {
+type TopNavProps = {
   isAdmin: boolean;
 };
 
-export function BottomNav({ isAdmin }: BottomNavProps) {
+// Desktop navigation (from lg): replaces BottomNav, which is hidden there.
+export function TopNav({ isAdmin }: TopNavProps) {
   const pathname = usePathname();
 
   return (
-    <nav className="sticky bottom-0 z-20 border-t border-brand-border bg-brand-warm-white pb-[env(safe-area-inset-bottom)] lg:hidden">
-      <ul className="grid h-nav-h grid-cols-5">
+    <nav className="mt-3 hidden lg:block">
+      <ul className="flex gap-1">
         {navItems.map((item) => {
           const active = isItemActive(pathname, item);
           const locked = item.adminOnly && !isAdmin;
-          const baseClasses =
-            "flex h-full flex-col items-center justify-center gap-1 text-label font-medium tracking-[0.02em]";
+          const baseClasses = "flex items-center gap-2 rounded-full px-3 py-2 text-[14px] font-medium";
           const stateClasses = active
-            ? "text-primary-text"
+            ? "bg-primary-soft text-primary-text"
             : locked
               ? "text-muted"
-              : "text-brand-gray";
+              : "text-brand-gray hover:text-brand-near-black";
 
           return (
             <li key={item.href}>
@@ -34,7 +34,11 @@ export function BottomNav({ isAdmin }: BottomNavProps) {
                   <span>{item.label}</span>
                 </span>
               ) : (
-                <Link href={item.href} className={`${baseClasses} ${stateClasses}`}>
+                <Link
+                  href={item.href}
+                  aria-current={active ? "page" : undefined}
+                  className={`${baseClasses} ${stateClasses}`}
+                >
                   <NavIcon name={item.icon} />
                   <span>{item.label}</span>
                 </Link>

@@ -54,7 +54,7 @@ export function NotificationPreferencesForm({ initial }: Props) {
             }`}
           >
             <div className="min-w-0 flex-1">
-              <div className="text-[13px] font-bold text-brand-near-black">{cfg.label}</div>
+              <div className="text-[14px] font-bold text-brand-near-black">{cfg.label}</div>
               <div className="mt-[3px] text-[12px] leading-snug text-brand-gray">{cfg.hint}</div>
             </div>
             <div className="flex shrink-0 gap-1">

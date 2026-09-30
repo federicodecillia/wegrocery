@@ -124,7 +124,7 @@ export function MovementDetailDialog({
                     <dt className="shrink-0 text-label font-semibold uppercase tracking-wide text-brand-gray">
                       {row.label}
                     </dt>
-                    <dd className="min-w-0 break-words text-right text-[13px] text-brand-near-black">{row.value}</dd>
+                    <dd className="min-w-0 break-words text-right text-[14px] text-brand-near-black">{row.value}</dd>
                   </div>
                 ))}
               </dl>

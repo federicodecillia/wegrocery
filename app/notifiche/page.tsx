@@ -18,11 +18,15 @@ export default async function NotifichePage() {
 
   return (
     <AppShell email={session.user.email} isAdmin={role === "admin"} memberId={memberId}>
-      <div className="flex items-center justify-between mb-5">
-        <h1 className="text-[20px] font-black tracking-[-0.03em] text-brand-near-black">
-          {t.notifications.title}
-        </h1>
-        <div className="flex items-center gap-2">
+      <div className="mb-5 flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-[20px] font-black tracking-[-0.03em] text-brand-near-black">
+            {t.notifications.title}
+          </h1>
+          {/* From sm the email is in the header. */}
+          <p className="truncate text-xs text-brand-gray sm:hidden">{session.user.email}</p>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
           {unreadCount > 0 && (
             <form
               action={async () => {
@@ -66,7 +70,7 @@ export default async function NotifichePage() {
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <span className="mb-4 text-4xl">🔔</span>
           <p className="text-[15px] font-bold text-brand-near-black">{t.notifications.noNotifications}</p>
-          <p className="mt-1 text-[13px] text-brand-gray">
+          <p className="mt-1 text-[14px] text-brand-gray">
             {t.notifications.noNotificationsHint}
           </p>
         </div>
@@ -94,7 +98,7 @@ export default async function NotifichePage() {
                 />
                 <div className="min-w-0 flex-1">
                   <div
-                    className={`text-[13px] leading-snug ${
+                    className={`text-[14px] leading-snug ${
                       n.readAt ? "font-medium text-brand-gray" : "font-bold text-brand-near-black"
                     }`}
                   >

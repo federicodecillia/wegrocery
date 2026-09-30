@@ -70,7 +70,7 @@ export default async function GuidaPage() {
                 </div>
                 <ul className="space-y-1.5">
                   {s.items.slice(0, 4).map((item, idx) => (
-                    <li key={idx} className="text-[13px] leading-[1.45] text-brand-near-black">
+                    <li key={idx} className="text-[14px] leading-[1.45] text-brand-near-black">
                       {splitInlineBold(item.text).map((p, i) =>
                         p.bold ? (
                           <strong key={i} className="font-bold">
@@ -107,7 +107,7 @@ export default async function GuidaPage() {
       <div className="mt-6 rounded-[18px] border border-brand-border bg-white p-6 text-center shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
         <div className="mb-[10px] text-[32px]">{t.guide.contactEmoji}</div>
         <div className="mb-[6px] text-[15px] font-bold text-brand-near-black">{t.guide.contactHeading}</div>
-        <p className="mb-4 text-[13px] text-brand-gray">
+        <p className="mb-4 text-[14px] text-brand-gray">
           {t.guide.contactIntro(brand.appName)}
         </p>
         <div className="flex flex-col gap-3">

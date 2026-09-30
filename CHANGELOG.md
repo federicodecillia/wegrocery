@@ -18,6 +18,13 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ---
 
+## [Unreleased]
+
+### Changed
+- 🖥️ **A proper desktop layout.** On a computer the menu moves to the top and the pages keep a comfortable reading width; only Admin uses the wider window, and Treasury shows the forms next to the member balances.
+- 🔤 **Slightly larger reading text.** Descriptions and lists in the member pages go from 13 to 14 px.
+- ✉️ **Your email, out of the way.** On a phone it no longer takes a line under the logo: you find it on the Notifications page.
+
 ## [1.16.0] — 2026-09-30
 
 *Text you can read, in any group's colours.*

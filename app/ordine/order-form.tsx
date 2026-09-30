@@ -357,7 +357,7 @@ export function OrderForm({
       {/* Unconfirmed edits found on arrival (order_drafts). */}
       {isEditing && showDraftBanner && (
         <div className="mt-3 rounded-[14px] border border-primary-mid bg-primary-soft p-[12px_14px]">
-          <p className="text-[13px] font-bold text-brand-near-black">{t.order.draftBannerTitle}</p>
+          <p className="text-[14px] font-bold text-brand-near-black">{t.order.draftBannerTitle}</p>
           <p className="mt-1 text-[12px] leading-[1.45] text-brand-near-black">{t.order.draftBannerBody}</p>
           {resumedDraft !== null && resumedDraft.dropped > 0 && (
             <p className="mt-1 text-[12px] leading-[1.45] text-primary-text">
@@ -515,11 +515,12 @@ export function OrderForm({
         </div>
       ))}
 
-      {/* Sticky footer — rides above the (sticky) bottom nav. In-flow sticky
+      {/* Sticky footer — rides above the (sticky) bottom nav; from lg the nav
+          is in the header, so it sits at the bottom edge. In-flow sticky
           inherits the card width at every breakpoint; -mx-5 bleeds it across
           main's padding to the card edges. */}
       {isEditing && (hasOrder || hasSavedOrder) && (
-        <div className="sticky z-10 -mx-5 mt-4 -mb-[calc(var(--spacing-nav-h)+1rem)] bottom-[calc(var(--spacing-nav-h)+env(safe-area-inset-bottom))]">
+        <div className="sticky z-10 -mx-5 mt-4 -mb-[calc(var(--spacing-nav-h)+1rem)] bottom-[calc(var(--spacing-nav-h)+env(safe-area-inset-bottom))] lg:-mb-4 lg:bottom-0">
           <div className="border-t border-brand-border bg-brand-warm-white/97 px-5 py-3.5 backdrop-blur-sm">
             <div className="mb-3 flex items-end justify-between">
               <div>
