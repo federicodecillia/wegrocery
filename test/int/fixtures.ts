@@ -79,6 +79,23 @@ export function makeScope(label: string) {
       return { paymentId, paymentIntentId };
     },
 
+    // An order payment whose Checkout is still open: what startOrderPayment
+    // writes before sending the member to Stripe.
+    async createPendingOrderPayment(
+      name: string,
+      cycleId: string,
+      amountCents: number,
+      lines: { productId: string; quantity: number; unitPriceCents: number }[],
+    ): Promise<{ paymentId: string; sessionId: string; paymentIntentId: string }> {
+      const paymentId = `${prefix}_pay_${name}`;
+      const sessionId = `cs_${prefix}_${name}`;
+      await sql`INSERT INTO payments (payment_id, member_id, provider, status, amount_cents, currency,
+          refunded_cents, checkout_session_id, created_at, updated_at, kind, cycle_id, order_snapshot)
+        VALUES (${paymentId}, ${memberId}, 'stripe', 'pending', ${amountCents}, 'eur', 0, ${sessionId}, now(),
+          now(), 'order', ${cycleId}, ${JSON.stringify({ lines })}::jsonb)`;
+      return { paymentId, sessionId, paymentIntentId: `pi_${prefix}_${name}` };
+    },
+
     // A refund the app has asked for and Stripe has not answered yet.
     async createRequestedRefund(
       refundId: string,

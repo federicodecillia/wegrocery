@@ -4,6 +4,7 @@ import { getDb } from "@/lib/db/client";
 import { t } from "@/lib/i18n";
 import { formatMoney } from "@/lib/i18n/format";
 import { audit, genId, notifyMember } from "./effects";
+import { applyOrderCredit, type OrderCreditAction } from "./order-credit";
 import { syncChargeRefunds, upsertStripeRefund } from "./refund-store";
 import { refundInputOf, type StripeRefundInput } from "./refunds";
 
@@ -18,6 +19,7 @@ export type WebhookAction =
       currency: string;
       paymentIntentId: string | null;
     }
+  | OrderCreditAction
   | { kind: "close"; paymentId: string; sessionId: string; status: "failed" | "expired" }
   | { kind: "refund"; refund: StripeRefundInput }
   | { kind: "refund_sync"; paymentIntentId: string }
@@ -39,6 +41,20 @@ export function planWebhookAction(event: Stripe.Event): WebhookAction {
       // delayed method (SEPA, bank transfer): the async event follows.
       if (!paymentId || session.payment_status !== "paid") return { kind: "ignore" };
       if (session.amount_total == null || !session.currency) return { kind: "ignore" };
+      // An order payment (pay-per-order) becomes the member's order on its
+      // cycle; anything else is a top-up.
+      const cycleId = session.metadata?.cycleId;
+      if (session.metadata?.kind === "order" && cycleId) {
+        return {
+          kind: "order_credit",
+          paymentId,
+          cycleId,
+          sessionId: session.id,
+          amountCents: session.amount_total,
+          currency: session.currency,
+          paymentIntentId: idOf(session.payment_intent),
+        };
+      }
       return {
         kind: "credit",
         paymentId,
@@ -91,6 +107,7 @@ export async function applyWebhookAction(action: WebhookAction): Promise<void> {
   if (action.kind === "ignore") return;
   if (action.kind === "refund") return upsertStripeRefund(action.refund);
   if (action.kind === "refund_sync") return syncChargeRefunds(action.paymentIntentId);
+  if (action.kind === "order_credit") return applyOrderCredit(action);
   const db = getDb();
 
   if (action.kind === "credit") {
@@ -104,6 +121,7 @@ export async function applyWebhookAction(action: WebhookAction): Promise<void> {
             updated_at = now()
         WHERE payment_id = ${action.paymentId}
           AND status = 'pending'
+          AND kind = 'topup'
           AND (checkout_session_id IS NULL OR checkout_session_id = ${action.sessionId})
           AND amount_cents = ${action.amountCents}
           AND currency = ${action.currency}

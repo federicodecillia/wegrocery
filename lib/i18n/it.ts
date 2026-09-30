@@ -1076,6 +1076,11 @@ export const it = {
       `Il rimborso di ${amount} sulla carta non è andato a buon fine e l'importo è tornato sul tuo saldo (ora ${balance}). Chi gestisce la cassa te lo restituirà con un bonifico.`,
     refundFailedAdminBody: (amount: string, name: string) =>
       `Il rimborso di ${amount} sulla carta di ${name} non è andato a buon fine e l'importo è tornato sul suo saldo. Restituiscilo con un bonifico: Cassa → Movimento in uscita → Restituzione.`,
+    orderPaidTitle: "Ordine confermato e pagato",
+    orderPaidBody: (cycle: string, amount: string, products: string, shipping: string, fee: string) =>
+      `Il tuo ordine per "${cycle}" è confermato. Hai pagato ${amount}: prodotti ${products}, spedizione ${shipping}, spese di gestione e preparazione ordine (stima) ${fee}. A conti chiusi ti rimborsiamo quello che non è servito.`,
+    orderPaidShortBody: (cycle: string, amount: string) =>
+      `Il tuo ordine per "${cycle}" è confermato. Hai pagato ${amount}.`,
     orderRefundTitle: "Rimborso in arrivo",
     orderRefundCancelledBody: (amount: string) =>
       `Hai annullato l'ordine: ti rimborsiamo ${amount} sulla carta con cui hai pagato. Di solito arriva in 5-10 giorni.`,

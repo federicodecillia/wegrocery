@@ -1070,6 +1070,11 @@ export const en: Strings = {
       `The ${amount} refund to your card did not go through, so the amount is back on your balance (now ${balance}). The treasurer will return it by bank transfer.`,
     refundFailedAdminBody: (amount: string, name: string) =>
       `The ${amount} card refund to ${name} did not go through and the amount is back on their balance. Return it by bank transfer: Treasury → Outgoing movement → Payout.`,
+    orderPaidTitle: "Order confirmed and paid",
+    orderPaidBody: (cycle: string, amount: string, products: string, shipping: string, fee: string) =>
+      `Your order for "${cycle}" is confirmed. You paid ${amount}: products ${products}, shipping ${shipping}, handling and order preparation (estimate) ${fee}. When the cycle is settled we refund what was not needed.`,
+    orderPaidShortBody: (cycle: string, amount: string) =>
+      `Your order for "${cycle}" is confirmed. You paid ${amount}.`,
     orderRefundTitle: "Refund on its way",
     orderRefundCancelledBody: (amount: string) =>
       `You cancelled your order: we are refunding ${amount} to the card you paid with. It usually takes 5-10 days.`,
