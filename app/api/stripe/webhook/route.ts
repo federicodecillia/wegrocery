@@ -2,10 +2,12 @@ import { resolveStripeKey } from "@/lib/payments/config";
 import { getStripe } from "@/lib/payments/stripe";
 import { applyWebhookAction, planWebhookAction } from "@/lib/payments/webhook";
 
-// Stripe -> app notifications for online top-ups. Public (excluded from the
-// auth middleware): authenticity comes from the signature, verified on the raw
-// body with STRIPE_WEBHOOK_SECRET. The amount credited always comes from the
-// signed event, never from the success redirect.
+// Stripe -> app notifications for online payments and their refunds. Public
+// (excluded from the auth middleware): authenticity comes from the signature,
+// verified on the raw body with STRIPE_WEBHOOK_SECRET. Amounts always come
+// from the signed event or from Stripe's API, never from the success redirect.
+// The endpoint subscribes to checkout.session.*, charge.refunded and
+// refund.created / refund.updated / refund.failed.
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
