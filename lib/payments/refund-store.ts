@@ -3,6 +3,7 @@ import { getDb } from "@/lib/db/client";
 import { members } from "@/lib/db/schema";
 import { t } from "@/lib/i18n";
 import { formatMoney } from "@/lib/i18n/format";
+import { reportError } from "@/lib/observability";
 import { dispatchToMembers } from "@/lib/notifications/dispatch";
 import { selectCycleAccessMembers } from "@/lib/notifications/reminder";
 import { audit, genId, notifyMember, type Db } from "./effects";
@@ -239,7 +240,14 @@ export async function upsertStripeRefund(input: StripeRefundInput): Promise<void
     if (!plan) return;
     const written = await writeTransition(db, row, found === null, input, plan);
     if (written) {
-      await afterTransition(db, row, input, plan, written.posted);
+      // The movement is committed. A failure here must not answer 500: Stripe
+      // would retry an event that has nothing left to write, and the notices
+      // would be lost anyway.
+      try {
+        await afterTransition(db, row, input, plan, written.posted);
+      } catch (e) {
+        reportError("stripe refund notices", e, { refundId: row.refund_id, paymentId: row.payment_id });
+      }
       return;
     }
     // Another event for the same refund got there first: read it again.

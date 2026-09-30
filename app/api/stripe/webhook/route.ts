@@ -1,3 +1,4 @@
+import { reportError } from "@/lib/observability";
 import { resolveStripeKey } from "@/lib/payments/config";
 import { getStripe } from "@/lib/payments/stripe";
 import { applyWebhookAction, planWebhookAction } from "@/lib/payments/webhook";
@@ -6,8 +7,7 @@ import { applyWebhookAction, planWebhookAction } from "@/lib/payments/webhook";
 // (excluded from the auth middleware): authenticity comes from the signature,
 // verified on the raw body with STRIPE_WEBHOOK_SECRET. Amounts always come
 // from the signed event or from Stripe's API, never from the success redirect.
-// The endpoint subscribes to checkout.session.*, charge.refunded and
-// refund.created / refund.updated / refund.failed.
+// The endpoint subscribes to REQUIRED_STRIPE_EVENTS (lib/payments/config.ts).
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
@@ -37,7 +37,7 @@ export async function POST(req: Request): Promise<Response> {
     await applyWebhookAction(planWebhookAction(event));
   } catch (e) {
     // 500 makes Stripe retry with backoff; the handlers are idempotent.
-    console.error("[stripe] webhook handling failed", event.type, event.id, e);
+    reportError("stripe webhook", e, { eventType: event.type, eventId: event.id });
     return new Response("Handler error", { status: 500 });
   }
   return Response.json({ received: true });

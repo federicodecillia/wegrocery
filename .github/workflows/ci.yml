@@ -1,7 +1,9 @@
 name: CI
 
-# Typecheck, lint and unit tests on every PR to main or staging. Pure checks:
-# no secrets, no database (the vitest suite is DB-free by design).
+# Typecheck, lint and unit tests on every PR to main or staging: pure checks,
+# no secrets, no database. The integration job runs the *.int.test.ts suite on
+# a throwaway Neon branch and needs NEON_API_KEY (secret) and NEON_PROJECT_ID
+# (variable); without them, e.g. on a fork, it is skipped.
 # Node matches demo-reset.yml.
 
 on:
@@ -40,3 +42,64 @@ jobs:
 
       - name: Unit tests
         run: npx vitest run
+
+  integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+      NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
+
+    steps:
+      - name: Check for a test database
+        id: neon
+        run: |
+          if [ -n "$NEON_API_KEY" ] && [ -n "$NEON_PROJECT_ID" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No NEON_API_KEY / NEON_PROJECT_ID: integration tests skipped."
+          fi
+
+      - uses: actions/checkout@v7
+        if: steps.neon.outputs.available == 'true'
+
+      - uses: actions/setup-node@v7
+        if: steps.neon.outputs.available == 'true'
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        if: steps.neon.outputs.available == 'true'
+        run: npm ci
+
+      # A copy-on-write branch of the project's default branch, deleted below.
+      - name: Create a throwaway database branch
+        if: steps.neon.outputs.available == 'true'
+        id: branch
+        uses: neondatabase/create-branch-action@v6
+        with:
+          project_id: ${{ vars.NEON_PROJECT_ID }}
+          branch_name: ci-${{ github.run_id }}-${{ github.run_attempt }}
+          api_key: ${{ secrets.NEON_API_KEY }}
+
+      - name: Apply pending migrations
+        if: steps.neon.outputs.available == 'true'
+        env:
+          DATABASE_URL: ${{ steps.branch.outputs.db_url }}
+        run: node scripts/db-migrate.mjs
+
+      - name: Integration tests
+        if: steps.neon.outputs.available == 'true'
+        env:
+          INT_TEST_DATABASE_URL: ${{ steps.branch.outputs.db_url }}
+        run: npm run test:int
+
+      - name: Delete the database branch
+        if: always() && steps.branch.outputs.branch_id != ''
+        uses: neondatabase/delete-branch-action@v3
+        with:
+          project_id: ${{ vars.NEON_PROJECT_ID }}
+          branch: ${{ steps.branch.outputs.branch_id }}
+          api_key: ${{ secrets.NEON_API_KEY }}

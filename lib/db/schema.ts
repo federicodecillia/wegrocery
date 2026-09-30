@@ -206,10 +206,11 @@ export const orderDrafts = pgTable(
 );
 
 // Online top-ups (Stripe Checkout), drizzle/0016_stripe_payments.sql.
-// status: pending -> succeeded | failed | expired; succeeded ->
-// partially_refunded | refunded, following refunded_cents = the sum of its
-// pending or succeeded refunds (refunds table). Transitions are guarded UPDATEs in
-// lib/payments/webhook.ts, so a replayed webhook changes nothing.
+// status: pending -> succeeded | failed | expired, guarded UPDATEs in
+// lib/payments/webhook.ts; succeeded <-> partially_refunded | refunded,
+// following refunded_cents = the sum of its pending or succeeded refunds,
+// moved by lib/payments/refund-store.ts together with the refund's ledger
+// row. A replayed webhook changes nothing.
 export const payments = pgTable(
   "payments",
   {
