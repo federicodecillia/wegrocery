@@ -66,14 +66,16 @@ export default async function HomePage() {
           {isNegative ? t.home.balanceToTopUp : t.home.balanceTitle}
         </div>
         {/* The explicit sign makes the amount longer: it shrinks to the card's
-            width (about 0.56em per character, at most 70px) so a three-digit
-            balance still fits a 375px phone. */}
+            width (at most 70px) so a three-digit balance still fits a 375px
+            phone. 0.61em per character covers the widest format measured
+            ("+€888.88" is 0.60; Italian "+888,88 €" is 0.55), and nowrap keeps
+            the sign from ever dropping onto its own line. */}
         <div className="@container mb-[16px] flex items-baseline gap-[6px]">
           <span
-            className={`font-black leading-none tracking-[-0.045em] ${
+            className={`whitespace-nowrap font-black leading-none tracking-[-0.045em] ${
               isNegative ? "text-brand-red" : "text-brand-near-black"
             }`}
-            style={{ fontSize: `min(70px, calc(100cqi / ${(0.56 * balanceText.length).toFixed(2)}))` }}
+            style={{ fontSize: `min(70px, calc(100cqi / ${(0.61 * balanceText.length).toFixed(2)}))` }}
           >
             {balanceText}
           </span>
