@@ -75,6 +75,7 @@ describe("planWebhookAction", () => {
     amount: 400,
     currency: "eur",
     status: "succeeded",
+    created: 1790000000,
     metadata: {},
   };
 
@@ -89,6 +90,7 @@ describe("planWebhookAction", () => {
           currency: "eur",
           status: "succeeded",
           appRefundId: null,
+          createdAt: 1790000000,
         },
       });
     }
