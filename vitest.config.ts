@@ -9,5 +9,7 @@ export default defineConfig({
   },
   test: {
     environment: "node",
+    // *.int.test.ts need a database: npm run test:int (vitest.int.config.ts).
+    exclude: ["**/*.int.test.ts", "node_modules/**", ".next/**"],
   },
 });

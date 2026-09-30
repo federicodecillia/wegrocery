@@ -21,6 +21,9 @@ stanno nella PR.
 
 ## [Non rilasciato]
 
+### Aggiunte
+- 🩺 **Controllo di stato e segnalazione degli errori facoltativa.** `/api/health` dice se l'app e il suo database rispondono, e gli errori del server possono arrivare a Sentry. Nota di aggiornamento: nessuna migrazione; `SENTRY_DSN` è facoltativa, senza non cambia nulla.
+
 ### Modificato
 - 🖥️ **Un vero layout da computer.** Da computer il menu passa in alto e le pagine tengono una larghezza comoda da leggere; solo Admin usa la finestra larga, e in Cassa i form stanno accanto ai saldi dei soci.
 - 🔤 **Testi di lettura un po' più grandi.** Descrizioni ed elenchi nelle pagine dei soci passano da 13 a 14 px.

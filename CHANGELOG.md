@@ -20,6 +20,9 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ## [Unreleased]
 
+### Added
+- 🩺 **Health check and optional error reporting.** `/api/health` says whether the app and its database answer, and server errors can go to Sentry. Upgrade note: no migration; `SENTRY_DSN` is optional, without it nothing changes.
+
 ### Changed
 - 🖥️ **A proper desktop layout.** On a computer the menu moves to the top and the pages keep a comfortable reading width; only Admin uses the wider window, and Treasury shows the forms next to the member balances.
 - 🔤 **Slightly larger reading text.** Descriptions and lists in the member pages go from 13 to 14 px.

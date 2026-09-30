@@ -1,4 +1,5 @@
 import { unstable_rethrow } from "next/navigation";
+import { reportError } from "@/lib/observability";
 
 // In production Next.js replaces the message of an error thrown by a Server
 // Action with a generic digest, so a refusal thrown to the client never
@@ -20,11 +21,11 @@ export class ActionError extends Error {
  * The message an exported Server Action returns for an error it caught.
  * Rethrows Next.js control flow first, so redirect() and notFound() still
  * work. An ActionError is shown as it is; anything else (a driver error can
- * quote SQL, or a bug) is logged under `action` and replaced by `fallback`.
+ * quote SQL, or a bug) is reported under `action` and replaced by `fallback`.
  */
 export function actionErrorMessage(e: unknown, fallback: string, action: string): string {
   unstable_rethrow(e);
   if (e instanceof ActionError) return e.message;
-  console.error(`[${action}]`, e);
+  reportError(action, e);
   return fallback;
 }

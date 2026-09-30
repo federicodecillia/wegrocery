@@ -11,11 +11,13 @@
     "db:migrate": "node --env-file=.env.local scripts/db-migrate.mjs",
     "db:studio": "node --env-file=.env.local node_modules/drizzle-kit/bin.cjs studio",
     "db:seed:demo": "node --env-file=.env.demo.local node_modules/tsx/dist/cli.mjs scripts/seed-demo.ts",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:int": "vitest run -c vitest.int.config.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.1",
     "@radix-ui/react-dialog": "^1.1.23",
+    "@sentry/nextjs": "^11.1.0",
     "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.0.0",
     "clsx": "^2.1.1",
