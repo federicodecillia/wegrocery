@@ -20,6 +20,10 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ## [Unreleased]
 
+## [1.16.1] — 2026-09-30
+
+*A desktop layout, and the groundwork to watch the app's health.*
+
 ### Added
 - 🩺 **Health check and optional error reporting.** `/api/health` says whether the app and its database answer, and server errors can go to Sentry. Upgrade note: no migration; `SENTRY_DSN` is optional, without it nothing changes.
 
@@ -422,6 +426,7 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ---
 
+[1.16.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.16.1
 [1.16.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.16.0
 [1.15.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.15.0
 [1.14.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.14.1

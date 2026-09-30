@@ -21,6 +21,10 @@ stanno nella PR.
 
 ## [Non rilasciato]
 
+## [1.16.1] — 30 settembre 2026
+
+*Un layout da computer, e le basi per tenere d'occhio la salute dell'app.*
+
 ### Aggiunte
 - 🩺 **Controllo di stato e segnalazione degli errori facoltativa.** `/api/health` dice se l'app e il suo database rispondono, e gli errori del server possono arrivare a Sentry. Nota di aggiornamento: nessuna migrazione; `SENTRY_DSN` è facoltativa, senza non cambia nulla.
 
@@ -423,6 +427,7 @@ stanno nella PR.
 
 ---
 
+[1.16.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.16.1
 [1.16.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.16.0
 [1.15.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.15.0
 [1.14.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.14.1
