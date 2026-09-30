@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   cancelRefunds,
+  checkoutLineItems,
   coveredCents,
   ORDER_PAYMENT_MAX_CENTS,
   orderPaymentAmount,
@@ -141,5 +142,44 @@ describe("resolveCycleFee", () => {
   it("falls back to the last per_order cycle's fee, then to 10%", () => {
     expect(resolveCycleFee("per_order", undefined, { type: "fixed", value: 3 })).toEqual({ fee: { type: "fixed", value: 3 } });
     expect(resolveCycleFee("per_order", undefined, null)).toEqual({ fee: { type: "percent", value: 10 } });
+  });
+});
+
+describe("checkoutLineItems", () => {
+  const labels = { products: "Products", shipping: "Shipping", fee: "Handling (estimate)", supplement: "Order supplement" };
+  const amount = (over: Partial<Parameters<typeof checkoutLineItems>[0]>) => ({
+    productsCents: 2000,
+    shippingCents: 300,
+    feeCents: 200,
+    requiredCents: 2500,
+    coveredCents: 0,
+    chargeCents: 2500,
+    outcome: "pay" as const,
+    ...over,
+  });
+
+  it("itemises a first payment, leaving out what is zero", () => {
+    expect(checkoutLineItems(amount({}), labels)).toEqual([
+      { name: "Products", amountCents: 2000 },
+      { name: "Shipping", amountCents: 300 },
+      { name: "Handling (estimate)", amountCents: 200 },
+    ]);
+    expect(checkoutLineItems(amount({ shippingCents: 0, requiredCents: 2200, chargeCents: 2200 }), labels)).toEqual([
+      { name: "Products", amountCents: 2000 },
+      { name: "Handling (estimate)", amountCents: 200 },
+    ]);
+  });
+
+  it("charges a supplement as one line when part of the order is already paid", () => {
+    expect(checkoutLineItems(amount({ coveredCents: 1400, chargeCents: 1100 }), labels)).toEqual([
+      { name: "Order supplement", amountCents: 1100 },
+    ]);
+  });
+
+  it("always adds up to what Stripe charges, also when the minimum raised it", () => {
+    const tiny = amount({ productsCents: 30, shippingCents: 0, feeCents: 3, requiredCents: 33, chargeCents: 50 });
+    const items = checkoutLineItems(tiny, labels);
+    expect(items.reduce((s, i) => s + i.amountCents, 0)).toBe(50);
+    expect(items).toEqual([{ name: "Products", amountCents: 50 }]);
   });
 });

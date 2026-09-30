@@ -124,3 +124,19 @@ export function resolveCycleFee(
   const parsed = parseHandlingFee(input.type, input.value);
   return "error" in parsed ? parsed : { fee: parsed };
 }
+
+// The lines of the Stripe Checkout page. A first payment shows its breakdown;
+// a supplement (something is already paid) is one line. They always add up to
+// chargeCents: when Stripe's minimum raised the charge, a single line carries it.
+export function checkoutLineItems(
+  amount: OrderAmount,
+  labels: { products: string; shipping: string; fee: string; supplement: string },
+): { name: string; amountCents: number }[] {
+  if (amount.coveredCents > 0) return [{ name: labels.supplement, amountCents: amount.chargeCents }];
+  if (amount.chargeCents !== amount.requiredCents) return [{ name: labels.products, amountCents: amount.chargeCents }];
+  return [
+    { name: labels.products, amountCents: amount.productsCents },
+    { name: labels.shipping, amountCents: amount.shippingCents },
+    { name: labels.fee, amountCents: amount.feeCents },
+  ].filter((i) => i.amountCents > 0);
+}
