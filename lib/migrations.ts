@@ -24,4 +24,5 @@ export const MIGRATIONS = [
   "0019_payment_settings_and_drafts.sql",
   "0020_stripe_refunds.sql",
   "0021_pay_per_order.sql",
+  "0022_auth_sessions.sql",
 ] as const;

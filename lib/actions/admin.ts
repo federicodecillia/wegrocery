@@ -1,6 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
+import { betterAuthInstance } from "@/auth";
 import { eq, and, notInArray, sql, inArray } from "drizzle-orm";
 import { requireAdmin } from "@/lib/auth/session";
 import { t } from "@/lib/i18n";
@@ -1959,6 +1961,31 @@ export async function adminDeleteLedgerEntry(entryId: string): Promise<{ error?:
     return {};
   } catch (e) {
     return { error: e instanceof Error ? e.message : t.errors.genericError };
+  }
+}
+
+// Soci: emails a member a sign-in link with a welcome text (lib/auth). The
+// same link any member can ask for from the login page; useful for groups
+// without a membership-card check, where members join by invitation.
+export async function adminInviteMember(memberId: string): Promise<{ error?: string }> {
+  try {
+    const admin = await requireAdmin();
+    const db = getDb();
+    const [member] = await db
+      .select({ email: members.email, active: members.active })
+      .from(members)
+      .where(eq(members.memberId, memberId))
+      .limit(1);
+    if (!member) return { error: t.errors.memberNotFound };
+    if (!member.active) return { error: t.admin.members.inviteInactive };
+    await betterAuthInstance.api.signInMagicLink({
+      body: { email: member.email, callbackURL: "/", metadata: { invite: true } },
+      headers: await headers(),
+    });
+    await writeAudit(db, admin.email, "invite_member", "member", memberId, {});
+    return {};
+  } catch (e) {
+    return { error: actionErrorMessage(e, t.errors.genericError, "adminInviteMember") };
   }
 }
 

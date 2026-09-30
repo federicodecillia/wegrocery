@@ -81,17 +81,16 @@ function stripe(env: Env): ConfigItem {
   return { ...base, status: "ok", note: key.livemode ? "live" : "test" };
 }
 
-// Google is the only way in today (the email link comes with Lotto C). The
-// demo signs in with its own one-click buttons instead.
+// The email link is the way in (it needs email set up); Google is optional.
+// The demo signs in with its own one-click buttons instead.
 function signIn(env: Env): ConfigItem {
   const google = set(env.AUTH_GOOGLE_ID) && set(env.AUTH_GOOGLE_SECRET);
+  const emailLink = set(env.RESEND_API_KEY) && set(env.MAIL_FROM);
   const demo = env.DEMO_MODE === "true";
-  return {
-    id: "signIn",
-    required: !demo,
-    vars: ["AUTH_GOOGLE_ID", "AUTH_GOOGLE_SECRET"],
-    status: google ? "ok" : demo ? "off" : "missing",
-  };
+  const base = { id: "signIn", required: !demo, vars: ["RESEND_API_KEY", "MAIL_FROM", "AUTH_GOOGLE_ID", "AUTH_GOOGLE_SECRET"] } as const;
+  if (demo) return { ...base, status: "ok", note: "demoSignIn" };
+  if (emailLink) return { ...base, status: "ok", note: google ? "emailAndGoogle" : "emailOnly" };
+  return google ? { ...base, status: "warning", note: "googleOnly" } : { ...base, status: "missing" };
 }
 
 export function configStatus(env: Env, facts: ConfigFacts): ConfigItem[] {

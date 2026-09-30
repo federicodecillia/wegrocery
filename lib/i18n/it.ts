@@ -282,7 +282,20 @@ export const it = {
   },
   login: {
     demoMessage: "Demo pubblica: entra con un click, senza registrazione.",
-    continueMessage: "Accedi con Google per continuare.",
+    continueMessage: "Scrivi la tua email: ti mandiamo un link per entrare.",
+    emailLabel: "La tua email",
+    emailPlaceholder: "nome@esempio.it",
+    sendLink: "Mandami il link",
+    sending: "Invio...",
+    sent: "Controlla la posta: se l'indirizzo è di un socio trovi il link per entrare (vale 15 minuti). Guarda anche nello spam.",
+    rateLimited: "Troppe richieste: aspetta un minuto e riprova.",
+    failed: "Non siamo riusciti a mandare la richiesta. Riprova.",
+    or: "oppure",
+    googleRedirecting: "Ti porto su Google...",
+    confirmTitle: "Entra",
+    confirmMessage: "Tocca il pulsante per entrare. Il link vale una sola volta.",
+    confirmButton: "Entra",
+    linkInvalid: "Il link non è più valido: può essere già stato usato o scaduto. Chiedine uno nuovo.",
     accessDenied: "Accesso negato: la tua email non risulta tra i membri abilitati.",
     attemptedEmail: (email: string) => `Hai provato ad accedere con: ${email}`,
     notMember:
@@ -301,6 +314,22 @@ export const it = {
     memberLogin: "Entra come Utente (demo)",
     adminLogin: "Entra come Admin (demo)",
     configMissing: "Aggiungi le variabili auth in .env.local per abilitare il login locale.",
+  },
+  authEmail: {
+    subject: (kind: string, app: string) =>
+      kind === "invite" ? `Sei invitato su ${app}` : kind === "login" ? `Il tuo link per entrare in ${app}` : `Accesso a ${app}`,
+    login: (app: string, url: string, minutes: number) =>
+      `Ciao,\n\nper entrare in ${app} apri questo link e tocca "Entra":\n\n${url}\n\nIl link vale ${minutes} minuti e una sola volta. Se non l'hai chiesto tu, ignora questa email.`,
+    invite: (app: string, url: string, minutes: number) =>
+      `Ciao,\n\nsei stato invitato su ${app}, l'app del gruppo d'acquisto per ordinare e vedere il tuo saldo.\n\nPer entrare apri questo link e tocca "Entra":\n\n${url}\n\nIl link vale ${minutes} minuti. Quando scade, chiedine uno nuovo dalla pagina di accesso con questa stessa email.`,
+    notMember: (app: string, email: string, support: string) =>
+      `Ciao,\n\nqualcuno ha chiesto di entrare in ${app} con l'indirizzo ${email}, che non risulta tra i soci. Se sei socio con un altro indirizzo usa quello; se pensi sia un errore scrivi a ${support}.\n\nSe non l'hai chiesto tu, ignora questa email.`,
+    accountInactive: (app: string, support: string) =>
+      `Ciao,\n\nil tuo account su ${app} non è attivo. Per riattivarlo scrivi a ${support}.`,
+    membershipInactive: (app: string, renew: string | null, support: string) =>
+      `Ciao,\n\nla tua tessera non risulta attiva per l'anno in corso, quindi non puoi entrare in ${app}.${renew ? ` Puoi rinnovarla qui: ${renew}` : ""}\n\nPer dubbi scrivi a ${support}.`,
+    checkUnavailable: (app: string) =>
+      `Ciao,\n\nin questo momento non riusciamo a verificare la tua tessera, quindi non possiamo mandarti il link per entrare in ${app}. Riprova tra qualche minuto.`,
   },
   logout: {
     confirmTitle: "Uscire?",
@@ -417,7 +446,7 @@ export const it = {
       items: {
         database: "Database",
         authSecret: "Chiave delle sessioni",
-        signIn: "Accesso con Google",
+        signIn: "Accesso (link via email, Google facoltativo)",
         brand: "Nome, logo e colori del gruppo",
         baseUrl: "Indirizzo dell'app nelle email",
         email: "Invio delle email",
@@ -430,6 +459,10 @@ export const it = {
         databaseUnreachable: "Non riesco a leggere l'elenco delle migrazioni: controlla il database o lancia npm run doctor.",
         defaultBrand: "Nessun brand impostato: l'app usa il nome e i colori di WeGrocery.",
         noBaseUrl: "Senza indirizzo le email arrivano senza link all'app.",
+        demoSignIn: "Demo: si entra con i pulsanti del profilo.",
+        emailAndGoogle: "Link via email e Google.",
+        emailOnly: "Link via email.",
+        googleOnly: "Solo Google: senza email i soci senza account Google non possono entrare.",
         contrast: "Alcuni colori del tema non si leggono bene:",
         noRedirect: "Fuori dalla produzione le email vanno deviate a EMAIL_REDIRECT_TO: senza, non partono.",
         noWebhookSecret: "Manca il segreto del webhook: i pagamenti non verrebbero registrati.",
@@ -808,6 +841,12 @@ export const it = {
       submitAdd: "Aggiungi socio",
       submitEdit: "Aggiorna",
       inactiveBadge: "disabilitato",
+      invite: "Invita",
+      inviteSending: "Invio...",
+      inviteSent: (name: string) => `Invito mandato a ${name}: riceve un link per entrare.`,
+      inviteInactive: "Il socio è disattivato: riattivalo prima di invitarlo.",
+      lastLogin: (when: string) => `ultimo accesso ${when}`,
+      neverLoggedIn: "mai entrato",
       searchPlaceholder: "Cerca per nome o email…",
       deleteConfirm: (name: string) =>
         `Eliminare "${name}"?\n\nOperazione irreversibile. Se ha ordini o movimenti verrà mostrato un errore.`,

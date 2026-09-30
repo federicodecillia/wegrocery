@@ -2,7 +2,7 @@
 // Server Action guards in ./session.ts, and the session refresh in auth.ts.
 // No imports on purpose: the middleware bundles this file for the edge runtime.
 
-/** The session fields the guards read. auth.ts refreshes them from the members table on every request. */
+/** The session fields the guards read. auth() reads them from the members table on every request. */
 export type SessionUser =
   | {
       email?: string | null;
@@ -28,9 +28,9 @@ export function checkAccess(user: SessionUser, need: "member" | "admin"): Access
 export type SessionClaims = { memberId: string; role: string; active: true; fullName: string };
 
 /**
- * What the jwt callback stores for the member row found for the session
- * email. null ends the session: the member was deactivated or deleted since
- * signing in (Auth.js clears the session cookie when the callback returns null).
+ * What auth() (auth.ts) adds to the session for the member row found for the
+ * session email, on every request. null = no session: the member was
+ * deactivated or deleted since signing in.
  */
 export function sessionClaims(
   member: { memberId: string; role: string; active: boolean; fullName: string } | null | undefined,

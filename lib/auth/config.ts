@@ -1,0 +1,185 @@
+import { betterAuth } from "better-auth";
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { nextCookies } from "better-auth/next-js";
+import { magicLink } from "better-auth/plugins";
+import { eq, sql } from "drizzle-orm";
+import type { getDb } from "@/lib/db/client";
+import { authAccounts, authRateLimits, authSessions, authUsers, authVerifications, members } from "@/lib/db/schema";
+import { normalizeEmail } from "@/lib/member-email";
+import { admitEmail, memberForNewSession } from "./admission";
+import { AUTH_COOKIE_PREFIX } from "./cookie";
+import { authEmailKind, carriesLink, type AuthEmailKind } from "./email-kind";
+import { allowedHosts, fallbackBaseURL, safeCallbackPath } from "./hosts";
+import { demoLogin, devLogin } from "./plugins";
+
+// The one Better Auth configuration (auth.ts builds the instance). Sign-in
+// with an email link by default, Google where its variables are set, the
+// demo's and the developer's shortcuts where they apply. Who gets in is
+// lib/auth/admission.ts, checked before a link goes out, when Google hands
+// an identity over, and again when any session is created.
+
+type Env = Record<string, string | undefined>;
+type Db = ReturnType<typeof getDb>;
+
+// The "15 minuti" of the email: change them together.
+export const MAGIC_LINK_MINUTES = 15;
+const DAY_SECONDS = 24 * 60 * 60;
+
+export type AuthEmail = {
+  kind: AuthEmailKind;
+  email: string;
+  // The confirmation page on this deploy, for the kinds that carry a link.
+  url: string | null;
+};
+
+export type CreateAuthOptions = {
+  sendAuthEmail: (message: AuthEmail) => Promise<void>;
+  // Tests pin a local URL; the app resolves it per request among the allowed hosts.
+  baseURL?: string;
+  // Better Auth turns its limiter on only in production; tests switch it on here.
+  rateLimit?: boolean;
+  env?: Env;
+};
+
+export function googleCredentials(env: Env): { clientId: string; clientSecret: string } | null {
+  const clientId = env.AUTH_GOOGLE_ID?.trim() ?? "";
+  const clientSecret = env.AUTH_GOOGLE_SECRET?.trim() ?? "";
+  return clientId && clientSecret ? { clientId, clientSecret } : null;
+}
+
+// The link in the email opens a page with a button (app/login/conferma), not
+// Better Auth's verify endpoint: mail scanners open links, and a link that
+// works once would be spent before the member clicks it.
+export function confirmationURL(verifyUrl: string, token: string): string {
+  const verify = new URL(verifyUrl);
+  const confirm = new URL("/login/conferma", verify.origin);
+  confirm.searchParams.set("token", token);
+  confirm.searchParams.set("next", safeCallbackPath(verify.searchParams.get("callbackURL")));
+  return confirm.toString();
+}
+
+export function createAuth(db: Db, options: CreateAuthOptions) {
+  const env = options.env ?? process.env;
+  const google = googleCredentials(env);
+  const devEmail = normalizeEmail(env.AUTH_DEV_LOGIN_EMAIL);
+
+  return betterAuth({
+    secret: env.AUTH_SECRET,
+    baseURL: options.baseURL ?? {
+      // Never empty (Better Auth refuses that): the fallback's host at least.
+      allowedHosts: allowedHosts(env).length > 0 ? allowedHosts(env) : [new URL(fallbackBaseURL(env)).host],
+      fallback: fallbackBaseURL(env),
+      protocol: env.NODE_ENV === "development" ? "http" : "https",
+    },
+    database: drizzleAdapter(db, {
+      provider: "pg",
+      schema: { authUsers, authSessions, authAccounts, authVerifications, authRateLimits },
+    }),
+    user: {
+      modelName: "authUsers",
+      // Google (every time) and a first email-link sign-in: the same gate as
+      // the email link itself. A refusal lands on /login?error=<code>.
+      validateUserInfo: async ({ user, source }) => {
+        if (source.method !== "oauth" && source.method !== "magic-link") return;
+        const email = typeof user.email === "string" ? user.email : "";
+        const verified = source.method === "magic-link" || user.emailVerified === true;
+        const admission = await admitEmail(email, { emailVerified: verified });
+        if (admission.kind === "deny") return { error: admission.error };
+      },
+    },
+    session: { modelName: "authSessions", expiresIn: 30 * DAY_SECONDS, updateAge: DAY_SECONDS },
+    account: {
+      modelName: "authAccounts",
+      // Google's tokens are never kept nor refreshed: the app never calls
+      // Google after the sign-in.
+      updateAccountOnSignIn: false,
+      accountLinking: { enabled: true, trustedProviders: ["google"] },
+    },
+    verification: { modelName: "authVerifications" },
+    socialProviders: google
+      ? {
+          google: {
+            clientId: google.clientId,
+            clientSecret: google.clientSecret,
+            disableIdTokenSignIn: true,
+            prompt: "select_account",
+            // Name and email only: no profile picture.
+            mapProfileToUser: () => ({ image: undefined }),
+          },
+        }
+      : undefined,
+    onAPIError: { errorURL: "/login?error=AccessDenied" },
+    rateLimit: {
+      enabled: options.rateLimit ?? env.NODE_ENV === "production",
+      storage: "database",
+      modelName: "authRateLimits",
+      customRules: {
+        "/sign-in/magic-link": { window: 60, max: 3 },
+        "/demo/sign-in": { window: 60, max: 30 },
+      },
+    },
+    advanced: {
+      cookiePrefix: AUTH_COOKIE_PREFIX,
+      disableOriginCheck: false,
+      database: { generateId: () => crypto.randomUUID() },
+      // Vercel overwrites this header: a client cannot fake its address.
+      ipAddress: { ipAddressHeaders: ["x-vercel-forwarded-for"] },
+    },
+    databaseHooks: {
+      session: {
+        create: {
+          // Every way in ends here: a session exists only for an active
+          // member (created now for a card holder the check admitted), and it
+          // keeps no IP address or browser.
+          before: async (session) => {
+            const [identity] = await db
+              .select({ email: authUsers.email, name: authUsers.name })
+              .from(authUsers)
+              .where(eq(authUsers.id, session.userId))
+              .limit(1);
+            if (!identity) return false;
+            const memberId = await memberForNewSession(identity.email, identity.name || null);
+            if (!memberId) return false;
+            return { data: { ...session, ipAddress: null, userAgent: null } };
+          },
+          after: async (session) => {
+            await db.execute(sql`
+              UPDATE ${members} SET last_login_at = now()
+              WHERE member_id = (
+                SELECT m.member_id FROM ${members} m, ${authUsers} u
+                WHERE u.id = ${session.userId}
+                  AND (lower(m.email) = lower(u.email) OR lower(m.alias_email) = lower(u.email))
+                LIMIT 1
+              )`);
+          },
+        },
+      },
+      account: {
+        create: {
+          before: async (account) => ({
+            data: { ...account, accessToken: null, refreshToken: null, idToken: null },
+          }),
+        },
+      },
+    },
+    plugins: [
+      magicLink({
+        expiresIn: MAGIC_LINK_MINUTES * 60,
+        storeToken: "hashed",
+        // Better Auth answers every request the same way; which email goes
+        // out (a link, an invitation, or why not) is decided here.
+        sendMagicLink: async ({ email, url, token, metadata }) => {
+          const admission = await admitEmail(email, { emailVerified: true });
+          const kind = authEmailKind(admission, metadata?.invite === true);
+          await options.sendAuthEmail({ kind, email, url: carriesLink(kind) ? confirmationURL(url, token) : null });
+        },
+      }),
+      ...(env.DEMO_MODE === "true" ? [demoLogin()] : []),
+      ...(env.NODE_ENV !== "production" && devEmail ? [devLogin(devEmail)] : []),
+      // Last, as Better Auth wants: lets Server Actions set its cookies.
+      nextCookies(),
+    ],
+  });
+}
+
+export type Auth = ReturnType<typeof createAuth>;

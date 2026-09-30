@@ -15,6 +15,7 @@ export async function TabSoci() {
           aliasEmail: m.aliasEmail ?? null,
           role: m.role,
           active: m.active,
+          lastLoginAt: m.lastLoginAt?.toISOString() ?? null,
         }))}
       />
     </div>

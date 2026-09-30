@@ -57,7 +57,7 @@ export async function saveOrder(
     const email = session?.user?.email;
     if (!email) redirect("/login");
 
-    // The member the session resolved (auth.ts jwt callback), not a second
+    // The member the session resolved (auth() in auth.ts), not a second
     // lookup by email.
     const memberId = (session.user as { memberId?: string | null }).memberId;
     const member = memberId ? await getMemberById(memberId) : null;

@@ -46,6 +46,14 @@ describe("configStatus", () => {
     expect(item(items, "signIn")).toMatchObject({ status: "missing", required: true });
   });
 
+  it("signs in by email link, with Google as an extra", () => {
+    expect(item(configStatus(complete, facts), "signIn")).toMatchObject({ status: "ok", note: "emailAndGoogle" });
+    const noGoogle = { ...complete, AUTH_GOOGLE_ID: "", AUTH_GOOGLE_SECRET: "" };
+    expect(item(configStatus(noGoogle, facts), "signIn")).toMatchObject({ status: "ok", note: "emailOnly" });
+    const noEmail = { ...complete, RESEND_API_KEY: "" };
+    expect(item(configStatus(noEmail, facts), "signIn")).toMatchObject({ status: "warning", note: "googleOnly" });
+  });
+
   it("names the migrations not applied yet, and a database it cannot read", () => {
     const pending = configStatus(complete, { appliedMigrations: MIGRATIONS.slice(0, -1), brandWarnings: [] });
     expect(item(pending, "database")).toMatchObject({ status: "warning", note: "pendingMigrations", detail: [MIGRATIONS.at(-1)] });
@@ -98,7 +106,7 @@ describe("configStatus", () => {
 
   it("does not ask the demo for Google: it signs in with its own buttons", () => {
     expect(item(configStatus({ ...complete, AUTH_GOOGLE_ID: "", DEMO_MODE: "true" }, facts), "signIn")).toMatchObject({
-      status: "off",
+      status: "ok",
       required: false,
     });
   });
