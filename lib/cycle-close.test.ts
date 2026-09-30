@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildCycleCloseCharges, ordersSnapshot } from "./cycle-close";
+import { cancelledCycleReversalTypes } from "./cycle-close";
 
 const fixed = { shippingMode: "fixed_per_member", shippingCostPerMember: "2.00", shippingTotal: null };
 const proportional = { shippingMode: "proportional", shippingCostPerMember: null, shippingTotal: "10.00" };
@@ -102,5 +103,19 @@ describe("ordersSnapshot", () => {
 
   it("is an empty object for no orders", () => {
     expect(ordersSnapshot([])).toBe("{}");
+  });
+});
+
+describe("cancelledCycleReversalTypes", () => {
+  it("reverses the whole cycle net of a wallet cycle, shipping aside when it is kept", () => {
+    expect(cancelledCycleReversalTypes("wallet", true)).toBeNull();
+    expect(cancelledCycleReversalTypes("wallet", false)).toEqual({ exclude: ["shipping_charge"] });
+  });
+
+  it("reverses only the charges and corrections of a pay-per-order cycle, never payments or refunds", () => {
+    expect(cancelledCycleReversalTypes("per_order", true)).toEqual({
+      include: ["order_charge", "shipping_charge", "correction"],
+    });
+    expect(cancelledCycleReversalTypes("per_order", false)).toEqual({ include: ["order_charge", "correction"] });
   });
 });

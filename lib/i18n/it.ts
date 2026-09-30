@@ -178,6 +178,8 @@ export const it = {
     refund: "Rimborso",
     onlineTopupRefund: "Rimborso ricarica online",
     refundFailed: "Rimborso non riuscito",
+    orderPayment: "Pagamento ordine",
+    orderRefund: "Rimborso sulla carta",
     payout: "Restituzione saldo",
     manualCharge: "Addebito",
     membershipFee: "Quota associativa",
@@ -510,6 +512,8 @@ export const it = {
       closingCycle: "Chiusura…",
       closeCycleConfirm: (title: string) =>
         `Chiudere "${title}"?\n\nVerranno generati gli addebiti per tutti i soci con ordini.`,
+      perOrderCloseWarning: (drafts: number, pending: number) =>
+        `Bozze non pagate: ${drafts} (restano fuori dall'ordine). Pagamenti in corso: ${pending} (se arrivano dopo la chiusura vengono rimborsati).`,
       cycleClosed: (n: number) => `Ciclo chiuso. ${n} addebiti generati.`,
       editClosedBanner:
         "Stai modificando un ciclo gia' chiuso. Le modifiche alle spese di spedizione ricalcoleranno gli addebiti dei soci e invieranno una notifica di rettifica. Chiusura ordini e livello di accesso non sono modificabili a ciclo chiuso.",
@@ -1101,6 +1105,10 @@ export const it = {
       `È stato chiuso "${title}". Ti è stato addebitato ${total}.`,
     orderClosedBodyWithShipping: (title: string, total: string, order: string, shipping: string) =>
       `È stato chiuso "${title}". Ti è stato addebitato ${total} (ordine ${order} + spedizione ${shipping}).`,
+    orderClosedPerOrderBody: (title: string, total: string) =>
+      `È stato chiuso "${title}". Il costo del tuo ordine per ora è ${total}: è provvisorio fino alle pesate e alla distinta del fornitore. A conti chiusi ti rimborsiamo la differenza con quanto hai pagato.`,
+    cycleCancelledPerOrderBody: (title: string, reason: string) =>
+      `L'ordine "${title}" è stato annullato: ${reason}. Quanto hai pagato ti torna sulla carta a conti chiusi.`,
     topupReceivedTitle: "Ricarica registrata",
     onlineTopupTitle: "Ricarica ricevuta",
     onlineTopupBody: (amount: string, balance: string) =>

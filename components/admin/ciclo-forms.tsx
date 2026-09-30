@@ -60,12 +60,16 @@ export function OpenCycleCard({
   suppliers,
 }: {
   cycle: SerializedCycle;
-  stats: { orderCount: number; grandTotal: number };
+  stats: { orderCount: number; grandTotal: number; unpaidDrafts?: number; pendingPayments?: number };
   suppliers: Supplier[];
 }) {
   const [editing, setEditing] = useState(false);
   const [managingProducts, setManagingProducts] = useState(false);
   const [importingListing, setImportingListing] = useState(false);
+  const perOrderWarning =
+    cycle.paymentMode === "per_order" && ((stats.unpaidDrafts ?? 0) > 0 || (stats.pendingPayments ?? 0) > 0)
+      ? t.admin.cycle.perOrderCloseWarning(stats.unpaidDrafts ?? 0, stats.pendingPayments ?? 0)
+      : null;
 
   return (
     <Card className="mb-4 border-l-4 border-l-accent">
@@ -103,7 +107,11 @@ export function OpenCycleCard({
             {editing ? t.admin.common.cancel : t.admin.common.edit}
           </button>
           <CycleReviewCloseButton cycleId={cycle.cycleId} cycleTitle={cycle.title} />
-          <CloseCycleButton cycleId={cycle.cycleId} cycleTitle={cycle.title} />
+          <CloseCycleButton
+            cycleId={cycle.cycleId}
+            cycleTitle={cycle.title}
+            warning={perOrderWarning}
+          />
         </div>
       </CardHeader>
       {editing ? (
@@ -125,6 +133,11 @@ export function OpenCycleCard({
             </div>
           </div>
           <div className="mt-3 space-y-1 text-[12px] text-brand-gray">
+            {perOrderWarning && (
+              <div className="rounded-lg border border-primary-mid bg-primary-soft p-3 text-brand-near-black">
+                {perOrderWarning}
+              </div>
+            )}
             {cycle.isOverdue && (
               <div className="rounded-lg border border-brand-red/30 bg-brand-red-light p-3 text-brand-red">
                 {t.admin.cycle.overdueWarning}
@@ -830,11 +843,21 @@ export function CreateCycleForm({
 
 // ── Close Cycle Button ────────────────────────────────────────────────────────
 
-export function CloseCycleButton({ cycleId, cycleTitle }: { cycleId: string; cycleTitle: string }) {
+export function CloseCycleButton({
+  cycleId,
+  cycleTitle,
+  warning,
+}: {
+  cycleId: string;
+  cycleTitle: string;
+  /** Pay-per-order: unpaid drafts and open payments, said before closing. */
+  warning?: string | null;
+}) {
   const [isPending, startTransition] = useTransition();
 
   function handleClose() {
-    if (!window.confirm(t.admin.cycle.closeCycleConfirm(cycleTitle))) return;
+    const message = t.admin.cycle.closeCycleConfirm(cycleTitle);
+    if (!window.confirm(warning ? `${message}\n\n${warning}` : message)) return;
     startTransition(async () => {
       try {
         const result = await adminCloseCycle(cycleId);

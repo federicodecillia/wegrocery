@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { eq, and, ne, sql, inArray } from "drizzle-orm";
+import { eq, and, notInArray, sql, inArray } from "drizzle-orm";
 import { requireAdmin } from "@/lib/auth/session";
 import { t } from "@/lib/i18n";
 import { formatMoney, formatDate, formatDateTime } from "@/lib/i18n/format";
@@ -16,7 +16,7 @@ import { getLastHandlingFee, getMembersByEmails } from "@/lib/db/queries";
 import { findEmailConflict, normalizeEmail } from "@/lib/member-email";
 import type { BatchItem } from "drizzle-orm/batch";
 import { orderLinesSnapshot, planClosedOrderEdit } from "@/lib/closed-order-edit";
-import { buildCycleCloseCharges, ordersSnapshot } from "@/lib/cycle-close";
+import { buildCycleCloseCharges, cancelledCycleReversalTypes, ordersSnapshot } from "@/lib/cycle-close";
 import {
   normalizeShippingMode,
   planShippingRecompute,
@@ -247,6 +247,7 @@ async function performCycleClose(
         shippingMode: orderCycles.shippingMode,
         shippingCostPerMember: orderCycles.shippingCostPerMember,
         shippingTotal: orderCycles.shippingTotal,
+        paymentMode: orderCycles.paymentMode,
       })
       .from(orderCycles)
       .where(eq(orderCycles.cycleId, cycleId))
@@ -372,8 +373,11 @@ async function performCycleClose(
         charges.summaries.map((s) => s.memberId),
       );
       const items = charges.summaries.map((s) => {
-        const body =
-          s.shippingShare > 0
+        // Pay-per-order: the member paid an estimate; the charge is provisional
+        // until the weighing and the supplier's sheet, then settled.
+        const body = cycle.paymentMode === "per_order"
+          ? t.notificationsServer.orderClosedPerOrderBody(cycle.title, formatMoney(s.orderTotal + s.shippingShare))
+          : s.shippingShare > 0
             ? t.notificationsServer.orderClosedBodyWithShipping(
                 cycle.title,
                 formatMoney(s.orderTotal + s.shippingShare),
@@ -436,12 +440,13 @@ export async function adminCancelClosedCycle(
     if (!reason) return { error: t.errors.cancelReasonRequired };
 
     const [cycle] = await db
-      .select({ status: orderCycles.status, title: orderCycles.title })
+      .select({ status: orderCycles.status, title: orderCycles.title, paymentMode: orderCycles.paymentMode })
       .from(orderCycles)
       .where(eq(orderCycles.cycleId, cycleId))
       .limit(1);
     if (!cycle) return { error: t.errors.cycleNotFound };
     if (cycle.status !== "closed") return { error: t.errors.cycleNotClosed };
+    const reversal = cancelledCycleReversalTypes(cycle.paymentMode, input.refundShipping);
 
     // Atomic compare-and-swap, same guard as performCycleClose: only the
     // caller that flips closed→cancelled proceeds. A concurrent second call
@@ -461,9 +466,11 @@ export async function adminCancelClosedCycle(
         .select({ memberId: ledgerEntries.memberId, net: sql<string>`sum(${ledgerEntries.amount})` })
         .from(ledgerEntries)
         .where(
-          input.refundShipping
+          reversal === null
             ? eq(ledgerEntries.cycleId, cycleId)
-            : and(eq(ledgerEntries.cycleId, cycleId), ne(ledgerEntries.type, "shipping_charge")),
+            : "include" in reversal
+              ? and(eq(ledgerEntries.cycleId, cycleId), inArray(ledgerEntries.type, reversal.include))
+              : and(eq(ledgerEntries.cycleId, cycleId), notInArray(ledgerEntries.type, reversal.exclude)),
         )
         .groupBy(ledgerEntries.memberId);
 
@@ -496,7 +503,10 @@ export async function adminCancelClosedCycle(
             memberId: r.memberId,
             email: emailByMember.get(r.memberId) ?? null,
             title: t.notificationsServer.cycleCancelledTitle,
-            body: t.notificationsServer.cycleCancelledBody(cycle.title, formatMoney(-r.net), reason),
+            body:
+              cycle.paymentMode === "per_order"
+                ? t.notificationsServer.cycleCancelledPerOrderBody(cycle.title, reason)
+                : t.notificationsServer.cycleCancelledBody(cycle.title, formatMoney(-r.net), reason),
             href: `/storico?cycleId=${cycleId}`,
           })),
           "cycle_cancelled",

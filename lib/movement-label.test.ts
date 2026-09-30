@@ -160,3 +160,12 @@ describe("failed card refunds", () => {
     ).toBe("Rimborso non riuscito");
   });
 });
+
+describe("pay-per-order movements", () => {
+  it("names an order payment and a refund to the card", () => {
+    expect(movementLabel({ type: "order_payment", amount: 25, paymentId: "pay_1" }, labels)).toBe("Pagamento ordine");
+    expect(movementLabel({ type: "order_refund", amount: -7, paymentId: "pay_1" }, labels)).toBe("Rimborso sulla carta");
+    expect(movementKind({ type: "order_payment", amount: 25, paymentId: "pay_1" })).toBe("order_payment");
+    expect(movementKind({ type: "order_refund", amount: -7, paymentId: "pay_1" })).toBe("order_refund");
+  });
+});

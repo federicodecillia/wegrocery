@@ -111,6 +111,32 @@ export async function getOpenCycles(includeExpired = false) {
   return rows.map((r) => ({ ...r.order_cycles, supplierName: r.suppliers?.name ?? null }));
 }
 
+// Where the member's order payment for a cycle stands, for the notice on the
+// way back from Stripe: the payment of `sessionId` when given, else nothing.
+// "failed" covers an expired session too.
+export async function getOrderPaymentStatus(
+  memberId: string,
+  cycleId: string,
+  sessionId: string | undefined,
+): Promise<"pending" | "succeeded" | "failed" | null> {
+  if (!sessionId) return null;
+  const db = getDb();
+  const [row] = await db
+    .select({ status: payments.status })
+    .from(payments)
+    .where(
+      and(
+        eq(payments.checkoutSessionId, sessionId),
+        eq(payments.memberId, memberId),
+        eq(payments.cycleId, cycleId),
+      ),
+    )
+    .limit(1);
+  if (!row) return null;
+  if (row.status === "pending") return "pending";
+  return row.status === "failed" || row.status === "expired" ? "failed" : "succeeded";
+}
+
 // Refunds the app asked for that Stripe has not answered (refunds.status =
 // 'requested'): the Cassa tab offers to send them again.
 export async function getRequestedRefundCount(): Promise<number> {
@@ -506,9 +532,18 @@ export async function getOpenCycleStats(cycleId: string) {
     })
     .from(orders)
     .where(eq(orders.cycleId, cycleId));
+  // Pay-per-order: drafts nobody paid stay out of the order at the close, and
+  // a Checkout still open may complete after it (then it is refunded).
+  const { rows } = await db.execute<{ drafts: number; pending: number }>(sql`
+    SELECT
+      (SELECT count(*)::int FROM order_drafts WHERE cycle_id = ${cycleId}) AS drafts,
+      (SELECT count(*)::int FROM payments WHERE cycle_id = ${cycleId} AND kind = 'order' AND status = 'pending') AS pending
+  `);
   return {
     orderCount: parseInt(result?.orderCount ?? "0"),
     grandTotal: parseFloat(result?.grandTotal ?? "0"),
+    unpaidDrafts: rows[0]?.drafts ?? 0,
+    pendingPayments: rows[0]?.pending ?? 0,
   };
 }
 

@@ -9,7 +9,9 @@ import { formatDateTime, formatSignedMoney } from "@/lib/i18n/format";
 import { formatEur, getProductEmoji, normalizeCategory } from "@/lib/utils";
 import type { SaveOrderLine, SaveOrderResult } from "@/lib/actions/order";
 import { discardOrderDraft, loadLastOrderForPrefill, saveOrderDraft } from "@/lib/actions/order";
+import type { OrderPaymentResult } from "@/lib/actions/order-payment";
 import { draftSyncAction, orderLinesKey, type ResumedDraft } from "@/lib/order-draft";
+import { ORDER_PAYMENT_MIN_CENTS, orderPaymentAmount, type HandlingFee } from "@/lib/payments/order-payment";
 import { OrderSentDialog } from "./order-sent-dialog";
 import { OrderSummary, type ConfirmedLine } from "./order-summary";
 
@@ -41,6 +43,19 @@ type Props = {
   resumedDraft: ResumedDraft | null;
   balance: number;
   saveAction: (cycleId: string, lines: SaveOrderLine[]) => Promise<SaveOrderResult>;
+  // Set on a pay-per-order cycle: the order is confirmed by paying it, and
+  // there is no wallet balance to show. Amounts here are for display; the
+  // server computes them again.
+  payPerOrder?: PayPerOrder;
+};
+
+export type PayPerOrder = {
+  fee: HandlingFee;
+  shipping: { mode: string; fixedCents: number | null };
+  // What the member's payments for this cycle already cover.
+  coveredCents: number;
+  payAction: (cycleId: string, lines: SaveOrderLine[]) => Promise<OrderPaymentResult>;
+  cancelAction: (cycleId: string) => Promise<OrderPaymentResult>;
 };
 
 // Normalized (see normalizeCategory): grouping keys are case-insensitive.
@@ -88,6 +103,7 @@ export function OrderForm({
   resumedDraft,
   balance,
   saveAction,
+  payPerOrder,
 }: Props) {
   const productMap = new Map(products.map((p) => [p.productId, p]));
 
@@ -198,6 +214,15 @@ export function OrderForm({
 
   const orderTotal = totalOf(draft);
   const afterBalance = balance - orderTotal;
+  // Pay-per-order: what confirming the draft costs now.
+  const payAmount = payPerOrder
+    ? orderPaymentAmount({
+        productsCents: Math.round(orderTotal * 100),
+        shipping: payPerOrder.shipping,
+        fee: payPerOrder.fee,
+        coveredCents: payPerOrder.coveredCents,
+      })
+    : null;
   const hasOrder = orderTotal > 0;
   const hasSavedOrder = Object.keys(savedQty).length > 0;
 
@@ -289,7 +314,57 @@ export function OrderForm({
     });
   }
 
+  // Pay-per-order: confirm (paying on Stripe when something is due) or cancel
+  // (the payments of the cycle are refunded).
+  function runPayment(action: () => Promise<OrderPaymentResult>, quantities: Record<string, number>) {
+    startTransition(async () => {
+      try {
+        const result = await action();
+        if (result.status === "error") {
+          toast.error(result.error);
+          if (["cycle_not_open", "changed", "in_progress"].includes(result.code)) router.refresh();
+          return;
+        }
+        if (result.status === "redirect") {
+          // The draft is on the server: the member finds it on the way back.
+          serverKey.current = orderLinesKey(toLines(quantities));
+          toast.message(t.order.pay.redirecting);
+          window.location.assign(result.url);
+          return;
+        }
+        serverKey.current = orderLinesKey(toLines(quantities));
+        setShowDraftBanner(false);
+        setSavedQty(quantities);
+        setDraft(quantities);
+        if (result.status === "cancelled") {
+          setIsEditing(true);
+          toast.success(result.refunded ? t.order.pay.cancelled : t.order.pay.cancelledNoRefund);
+        } else {
+          setIsEditing(false);
+          toast.success(t.order.pay.confirmed);
+        }
+        router.refresh();
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : t.order.saveError);
+      }
+    });
+  }
+
   async function handleCancelOrder() {
+    if (payPerOrder) {
+      const ok = await confirm({
+        title: t.order.pay.cancelTitle,
+        message:
+          payPerOrder.coveredCents > 0
+            ? t.order.pay.cancelMessage(formatEur(payPerOrder.coveredCents / 100))
+            : t.order.pay.cancelMessageNoRefund,
+        confirmLabel: t.order.pay.cancelConfirm,
+        cancelLabel: t.common.cancel,
+        danger: true,
+      });
+      if (ok) runPayment(() => payPerOrder.cancelAction(cycleId), {});
+      return;
+    }
     const ok = await confirm({
       title: t.order.cancelOrderTitle,
       message: t.order.cancelOrderMessage,
@@ -327,6 +402,10 @@ export function OrderForm({
     // not a save — it goes through the same confirmation as the recap button.
     if (!hasOrder && hasSavedOrder) {
       void handleCancelOrder();
+      return;
+    }
+    if (payPerOrder) {
+      runPayment(() => payPerOrder.payAction(cycleId, toLines(draft)), draft);
       return;
     }
     persist(draft, false);
@@ -392,6 +471,7 @@ export function OrderForm({
           lines={confirmedLines}
           total={savedTotal}
           balanceAfter={balance - savedTotal}
+          paidCents={payPerOrder ? payPerOrder.coveredCents : undefined}
           orderCloseAt={orderCloseAt}
           isPending={isPending}
           onEdit={() => setIsEditing(true)}
@@ -528,22 +608,55 @@ export function OrderForm({
                   {t.order.totalOrder}
                 </div>
                 <div className="mt-[2px] text-[24px] font-black tracking-[-0.03em] text-brand-near-black">
-                  {formatEur(orderTotal)}
+                  {formatEur(payAmount ? payAmount.requiredCents / 100 : orderTotal)}
                 </div>
               </div>
-              <div className="text-right">
-                <div className="font-mono text-label uppercase tracking-[0.09em] text-muted">
-                  {t.order.balanceAfter}
+              {payAmount ? (
+                <div className="text-right">
+                  <div className="font-mono text-label uppercase tracking-[0.09em] text-muted">
+                    {t.order.pay.toPay}
+                  </div>
+                  <div className="mt-[2px] font-mono text-[14px] font-bold text-brand-near-black">
+                    {payAmount.chargeCents > 0 ? formatEur(payAmount.chargeCents / 100) : t.order.pay.nothingToPay}
+                  </div>
                 </div>
-                <div
-                  className={`mt-[2px] font-mono text-[14px] font-bold ${
-                    afterBalance < 0 ? "text-brand-red" : "text-accent-text"
-                  }`}
-                >
-                  {formatSignedMoney(afterBalance)}
+              ) : (
+                <div className="text-right">
+                  <div className="font-mono text-label uppercase tracking-[0.09em] text-muted">
+                    {t.order.balanceAfter}
+                  </div>
+                  <div
+                    className={`mt-[2px] font-mono text-[14px] font-bold ${
+                      afterBalance < 0 ? "text-brand-red" : "text-accent-text"
+                    }`}
+                  >
+                    {formatSignedMoney(afterBalance)}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
+            {payAmount && hasOrder && (
+              <dl className="mb-3 space-y-[2px] text-[12px] text-brand-gray">
+                {[
+                  [t.order.pay.products, payAmount.productsCents],
+                  [t.order.pay.shipping, payAmount.shippingCents],
+                  [t.order.pay.fee, payAmount.feeCents],
+                  [t.order.pay.alreadyPaid, -payAmount.coveredCents],
+                ]
+                  .filter(([, c]) => c !== 0)
+                  .map(([label, c]) => (
+                    <div key={label as string} className="flex justify-between gap-3">
+                      <dt>{label}</dt>
+                      <dd className="font-mono text-brand-near-black">{formatEur((c as number) / 100)}</dd>
+                    </div>
+                  ))}
+                <p className="pt-[2px] text-muted">
+                  {payAmount.outcome === "pay" && payAmount.chargeCents > payAmount.requiredCents - payAmount.coveredCents
+                    ? t.order.pay.minimumNote(formatEur(ORDER_PAYMENT_MIN_CENTS / 100))
+                    : t.order.pay.feeHint}
+                </p>
+              </dl>
+            )}
             <button
               onClick={handleSave}
               disabled={isPending}
@@ -555,9 +668,15 @@ export function OrderForm({
             >
               {isPending
                 ? t.order.saving
-                : hasOrder
-                  ? t.order.confirmOrder
-                  : t.order.removeOrder}
+                : !hasOrder
+                  ? payPerOrder
+                    ? t.order.pay.cancelOrder
+                    : t.order.removeOrder
+                  : !payAmount
+                    ? t.order.confirmOrder
+                    : payAmount.chargeCents > 0
+                      ? t.order.pay.confirmAndPay(formatEur(payAmount.chargeCents / 100))
+                      : t.order.pay.confirm}
             </button>
           </div>
         </div>

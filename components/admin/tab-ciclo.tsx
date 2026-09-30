@@ -64,7 +64,12 @@ export async function TabCiclo() {
                   handlingFeeType: openCycle.handlingFeeType,
                   handlingFeeValue: openCycle.handlingFeeValue,
                 }}
-                stats={{ orderCount: stats?.orderCount ?? 0, grandTotal: stats?.grandTotal ?? 0 }}
+                stats={{
+                  orderCount: stats?.orderCount ?? 0,
+                  grandTotal: stats?.grandTotal ?? 0,
+                  unpaidDrafts: stats?.unpaidDrafts ?? 0,
+                  pendingPayments: stats?.pendingPayments ?? 0,
+                }}
                 suppliers={suppliers}
               />
             );

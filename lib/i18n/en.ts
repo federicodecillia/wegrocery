@@ -178,6 +178,8 @@ export const en: Strings = {
     refund: "Refund",
     onlineTopupRefund: "Online top-up refund",
     refundFailed: "Refund failed",
+    orderPayment: "Order payment",
+    orderRefund: "Refund to card",
     payout: "Balance returned",
     manualCharge: "Charge",
     membershipFee: "Membership fee",
@@ -508,6 +510,8 @@ export const en: Strings = {
       closingCycle: "Closing…",
       closeCycleConfirm: (title: string) =>
         `Close "${title}"?\n\nCharges will be generated for all members with orders.`,
+      perOrderCloseWarning: (drafts: number, pending: number) =>
+        `Unpaid drafts: ${drafts} (they stay out of the order). Payments in progress: ${pending} (refunded if they arrive after the close).`,
       cycleClosed: (n: number) => `Cycle closed. ${n} charges generated.`,
       editClosedBanner:
         "You are editing a closed cycle. Shipping cost changes will recalculate member charges and send adjustment notifications. Order closing date and access level cannot be changed after closure.",
@@ -1095,6 +1099,10 @@ export const en: Strings = {
       `"${title}" has been closed. You have been charged ${total}.`,
     orderClosedBodyWithShipping: (title: string, total: string, order: string, shipping: string) =>
       `"${title}" has been closed. You have been charged ${total} (order ${order} + shipping ${shipping}).`,
+    orderClosedPerOrderBody: (title: string, total: string) =>
+      `"${title}" is closed. Your order costs ${total} for now: it is provisional until the weighing and the supplier's sheet. When the cycle is settled we refund the difference with what you paid.`,
+    cycleCancelledPerOrderBody: (title: string, reason: string) =>
+      `The cycle "${title}" was cancelled: ${reason}. What you paid comes back to your card when the cycle is settled.`,
     topupReceivedTitle: "Top-up recorded",
     onlineTopupTitle: "Top-up received",
     onlineTopupBody: (amount: string, balance: string) =>

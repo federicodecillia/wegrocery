@@ -17,6 +17,8 @@ type Props = {
   lines: ConfirmedLine[];
   total: number;
   balanceAfter: number;
+  /** Pay-per-order: what the member paid for this cycle, shown instead of the balance. */
+  paidCents?: number;
   orderCloseAt: string | null;
   isPending: boolean;
   onEdit: () => void;
@@ -30,6 +32,7 @@ export function OrderSummary({
   lines,
   total,
   balanceAfter,
+  paidCents,
   orderCloseAt,
   isPending,
   onEdit,
@@ -85,18 +88,29 @@ export function OrderSummary({
                 {formatEur(total)}
               </div>
             </div>
-            <div className="text-right">
-              <div className="font-mono text-label uppercase tracking-[0.09em] text-muted">
-                {t.order.balanceAfter}
+            {paidCents !== undefined ? (
+              <div className="text-right">
+                <div className="font-mono text-label uppercase tracking-[0.09em] text-muted">
+                  {t.order.pay.alreadyPaid}
+                </div>
+                <div className="mt-[2px] font-mono text-[13px] font-bold text-accent-text">
+                  {formatEur(paidCents / 100)}
+                </div>
               </div>
-              <div
-                className={`mt-[2px] font-mono text-[13px] font-bold ${
-                  balanceAfter < 0 ? "text-brand-red" : "text-accent-text"
-                }`}
-              >
-                {formatSignedMoney(balanceAfter)}
+            ) : (
+              <div className="text-right">
+                <div className="font-mono text-label uppercase tracking-[0.09em] text-muted">
+                  {t.order.balanceAfter}
+                </div>
+                <div
+                  className={`mt-[2px] font-mono text-[13px] font-bold ${
+                    balanceAfter < 0 ? "text-brand-red" : "text-accent-text"
+                  }`}
+                >
+                  {formatSignedMoney(balanceAfter)}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </footer>
       </div>

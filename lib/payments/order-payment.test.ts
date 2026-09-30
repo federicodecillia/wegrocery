@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   cancelRefunds,
   checkoutLineItems,
+  homeOrderStatus,
   coveredCents,
   ORDER_PAYMENT_MAX_CENTS,
   orderPaymentAmount,
@@ -181,5 +182,38 @@ describe("checkoutLineItems", () => {
     const items = checkoutLineItems(tiny, labels);
     expect(items.reduce((s, i) => s + i.amountCents, 0)).toBe(50);
     expect(items).toEqual([{ name: "Products", amountCents: 50 }]);
+  });
+});
+
+describe("homeOrderStatus", () => {
+  const draft = (chargeCents: number) => ({ chargeCents });
+
+  it("shows nothing without an order or a draft", () => {
+    expect(homeOrderStatus({ hasConfirmedOrder: false, draft: null, coveredCents: 0 })).toBeNull();
+  });
+
+  it("asks to pay a draft that is not an order yet", () => {
+    expect(homeOrderStatus({ hasConfirmedOrder: false, draft: draft(2500), coveredCents: 0 })).toEqual({
+      kind: "draft",
+      amountCents: 2500,
+    });
+  });
+
+  it("shows a confirmed order as paid, with what was paid", () => {
+    expect(homeOrderStatus({ hasConfirmedOrder: true, draft: null, coveredCents: 2500 })).toEqual({
+      kind: "paid",
+      amountCents: 2500,
+    });
+  });
+
+  it("tells changes to pay from changes that only need confirming", () => {
+    expect(homeOrderStatus({ hasConfirmedOrder: true, draft: draft(1100), coveredCents: 2500 })).toEqual({
+      kind: "changes",
+      amountCents: 1100,
+    });
+    expect(homeOrderStatus({ hasConfirmedOrder: true, draft: draft(0), coveredCents: 2500 })).toEqual({
+      kind: "changes_no_pay",
+      amountCents: 0,
+    });
   });
 });

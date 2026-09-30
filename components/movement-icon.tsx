@@ -60,6 +60,21 @@ const PATHS: Record<MovementKind, ReactNode> = {
       <line x1="12" y1="16" x2="12.01" y2="16" />
     </>
   ),
+  // Order paid by card: a card.
+  order_payment: (
+    <>
+      <rect x="2" y="5" width="20" height="14" rx="2" />
+      <line x1="2" y1="10" x2="22" y2="10" />
+    </>
+  ),
+  // Money going back to the card: a card with an arrow back.
+  order_refund: (
+    <>
+      <rect x="2" y="5" width="20" height="14" rx="2" />
+      <polyline points="9 12 6 15 9 18" />
+      <line x1="6" y1="15" x2="16" y2="15" />
+    </>
+  ),
   // Adjustment: pencil.
   adjustment: <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />,
   // Balance returned to the member: arrow leaving a box.

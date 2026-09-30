@@ -140,3 +140,22 @@ export function checkoutLineItems(
     { name: labels.fee, amountCents: amount.feeCents },
   ].filter((i) => i.amountCents > 0);
 }
+
+// The order's state on Home, for one pay-per-order cycle. `draft` is the
+// amount of the unconfirmed edits (orderPaymentAmount on the draft), null
+// without a draft.
+export type HomeOrderStatus = {
+  kind: "draft" | "paid" | "changes" | "changes_no_pay";
+  amountCents: number;
+} | null;
+
+export function homeOrderStatus(input: {
+  hasConfirmedOrder: boolean;
+  draft: { chargeCents: number } | null;
+  coveredCents: number;
+}): HomeOrderStatus {
+  const { hasConfirmedOrder, draft, coveredCents } = input;
+  if (!hasConfirmedOrder) return draft ? { kind: "draft", amountCents: draft.chargeCents } : null;
+  if (!draft) return { kind: "paid", amountCents: coveredCents };
+  return draft.chargeCents > 0 ? { kind: "changes", amountCents: draft.chargeCents } : { kind: "changes_no_pay", amountCents: 0 };
+}
