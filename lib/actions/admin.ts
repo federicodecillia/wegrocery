@@ -51,6 +51,7 @@ import {
 import { selectCycleAccessMembers } from "@/lib/notifications/reminder";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
 import { parseHandlingFee, resolveCycleFee } from "@/lib/payments/order-payment";
+import { retryRequestedRefunds } from "@/lib/payments/refund-request";
 import { isAboveMaxBalance } from "@/lib/payments/settings";
 import { DEFAULT_ACCESS_LEVEL, normalizeAccessLevel, normalizeRole, type AccessLevel } from "@/lib/roles";
 
@@ -1242,6 +1243,23 @@ export async function adminRecordOutgoingMovement(
 // Returns the defaults the supplier-email dialog needs to pre-fill its
 // fields (To / From / CC / Subject). Used by the client before the admin
 // hits "Invia ora" so they can review and tweak any field.
+// Cassa: sends again the refunds Stripe has not answered (a network error
+// after an order was cancelled or a payment arrived late). Safe to repeat:
+// each refund's id is its Stripe idempotency key.
+export async function adminRetryRequestedRefunds(): Promise<
+  { sent: number; failed: number; waiting: number } | { error: string }
+> {
+  try {
+    const admin = await requireAdmin();
+    const result = await retryRequestedRefunds();
+    await writeAudit(getDb(), admin.email, "retry_refunds", "payment", "", result);
+    revalidatePath("/admin");
+    return result;
+  } catch (e) {
+    return { error: actionErrorMessage(e, t.errors.genericError, "adminRetryRequestedRefunds") };
+  }
+}
+
 export async function adminGetSupplierEmailDefaults(cycleId: string): Promise<
   | {
       ok: true;

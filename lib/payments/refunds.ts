@@ -94,3 +94,25 @@ export function refundLedgerRow(
 export function refundedCentsDelta(movement: RefundMovement, amountCents: number): number {
   return movement === "debit" ? amountCents : -amountCents;
 }
+
+// Which ledger note a refund movement gets (the strings are in t.ledger and
+// t.topup).
+export type RefundNoteKind = "topup" | "order" | "orderCancelled" | "latePayment" | "failed";
+
+export function refundNoteKind(cycleId: string | null, reason: string, movement: RefundMovement): RefundNoteKind {
+  if (movement === "reversal") return "failed";
+  if (cycleId === null) return "topup";
+  if (reason === "order_cancelled") return "orderCancelled";
+  if (reason === "late_payment") return "latePayment";
+  return "order";
+}
+
+// What to do when stripe.refunds.create throws. "definitive": Stripe read the
+// request and refused it (already refunded, charge too old...), so asking
+// again gives the same answer. "retry": anything else, where the refund may
+// or may not have reached Stripe; the same idempotency key makes a second
+// call safe.
+export function classifyRefundError(error: unknown): "definitive" | "retry" {
+  const type = (error as { type?: unknown } | null)?.type;
+  return type === "StripeInvalidRequestError" || type === "StripeCardError" ? "definitive" : "retry";
+}

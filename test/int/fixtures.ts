@@ -57,6 +57,42 @@ export function makeScope(label: string) {
       return { paymentId, paymentIntentId };
     },
 
+    // An order payment already credited on a cycle: the payment row and its
+    // order_payment ledger row.
+    async createPaidOrderPayment(
+      name: string,
+      cycleId: string,
+      amountCents: number,
+    ): Promise<{ paymentId: string; paymentIntentId: string }> {
+      const paymentId = `${prefix}_pay_${name}`;
+      const paymentIntentId = `pi_${prefix}_${name}`;
+      await sql`INSERT INTO payments (payment_id, member_id, provider, status, amount_cents, currency,
+          refunded_cents, checkout_session_id, payment_intent_id, created_at, updated_at, kind, cycle_id,
+          order_snapshot)
+        VALUES (${paymentId}, ${memberId}, 'stripe', 'succeeded', ${amountCents}, 'eur', 0,
+          ${`cs_${prefix}_${name}`}, ${paymentIntentId}, now(), now(), 'order', ${cycleId},
+          ${JSON.stringify({ lines: [] })}::jsonb)`;
+      await sql`INSERT INTO ledger_entries (entry_id, member_id, entry_date, type, amount, cycle_id, note,
+          created_by, created_at, payment_id)
+        VALUES (${`${prefix}_led_${name}`}, ${memberId}, now(), 'order_payment', ${amountCents}::numeric / 100,
+          ${cycleId}, 'Order payment', 'stripe', now(), ${paymentId})`;
+      return { paymentId, paymentIntentId };
+    },
+
+    // A refund the app has asked for and Stripe has not answered yet.
+    async createRequestedRefund(
+      refundId: string,
+      paymentId: string,
+      cycleId: string,
+      amountCents: number,
+      reason: "order_cancelled" | "late_payment" | "settlement",
+    ): Promise<void> {
+      await sql`INSERT INTO refunds (refund_id, payment_id, member_id, cycle_id, amount_cents, status, reason,
+          stripe_refund_id, created_by, created_at, updated_at)
+        VALUES (${refundId}, ${paymentId}, ${memberId}, ${cycleId}, ${amountCents}, 'requested', ${reason}, NULL,
+          'system', now(), now())`;
+    },
+
     // An open cycle with its products, all under this run's prefix.
     async createCycle(
       name: string,

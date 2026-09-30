@@ -1,10 +1,12 @@
 import type Stripe from "stripe";
 import { describe, expect, it } from "vitest";
 import {
+  classifyRefundError,
   planRefundTransition,
   refundedCentsDelta,
   refundInputOf,
   refundLedgerRow,
+  refundNoteKind,
   refundStatusOf,
   type RefundStatus,
 } from "./refunds";
@@ -124,5 +126,40 @@ describe("refundedCentsDelta", () => {
   it("adds a debited refund to the payment and takes a reversed one back", () => {
     expect(refundedCentsDelta("debit", 400)).toBe(400);
     expect(refundedCentsDelta("reversal", 400)).toBe(-400);
+  });
+});
+
+describe("classifyRefundError", () => {
+  it("treats a request Stripe rejects as definitive", () => {
+    expect(classifyRefundError({ type: "StripeInvalidRequestError" })).toBe("definitive");
+    expect(classifyRefundError({ type: "StripeCardError" })).toBe("definitive");
+  });
+
+  it("retries anything else: network, Stripe's own errors, rate limits, the unknown", () => {
+    for (const e of [
+      { type: "StripeConnectionError" },
+      { type: "StripeAPIError" },
+      { type: "StripeRateLimitError" },
+      { type: "StripeAuthenticationError" },
+      new Error("fetch failed"),
+      null,
+    ]) {
+      expect(classifyRefundError(e)).toBe("retry");
+    }
+  });
+});
+
+describe("refundNoteKind", () => {
+  it("names why a refund of a cycle's payment left", () => {
+    expect(refundNoteKind("cyc_1", "order_cancelled", "debit")).toBe("orderCancelled");
+    expect(refundNoteKind("cyc_1", "late_payment", "debit")).toBe("latePayment");
+    expect(refundNoteKind("cyc_1", "settlement", "debit")).toBe("order");
+    expect(refundNoteKind("cyc_1", "dashboard", "debit")).toBe("order");
+  });
+
+  it("keeps the top-up note for a refund without a cycle, and one note for every reversal", () => {
+    expect(refundNoteKind(null, "dashboard", "debit")).toBe("topup");
+    expect(refundNoteKind("cyc_1", "order_cancelled", "reversal")).toBe("failed");
+    expect(refundNoteKind(null, "dashboard", "reversal")).toBe("failed");
   });
 });

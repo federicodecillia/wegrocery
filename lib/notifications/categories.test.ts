@@ -119,3 +119,10 @@ describe("channelsForType", () => {
     expect(channelsForType("shipping_charge", resolved)).toEqual({ app: true, email: false });
   });
 });
+
+describe("pay-per-order notification types", () => {
+  it("files a paid order under order updates and a refund on its way under the wallet", () => {
+    expect(categoryForType("order_paid")).toBe("order_updates");
+    expect(categoryForType("order_refund_sent")).toBe("wallet_topup");
+  });
+});

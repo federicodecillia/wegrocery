@@ -596,6 +596,12 @@ export const it = {
     treasury: {
       tabLabel: "Cassa",
       balancesTitle: (n: number) => `Saldi soci (${n})`,
+      pendingRefundsTitle: (n: number) => (n === 1 ? "1 rimborso in attesa di Stripe" : `${n} rimborsi in attesa di Stripe`),
+      pendingRefundsHint: "Stripe non ha ancora ricevuto questi rimborsi, di solito per un errore di rete. Riprovare è sicuro: nessuno viene rimborsato due volte.",
+      pendingRefundsRetry: "Riprova i rimborsi",
+      pendingRefundsRetrying: "Invio...",
+      pendingRefundsResult: (sent: number, failed: number, waiting: number) =>
+        `Inviati ${sent}, rifiutati ${failed}, ancora in attesa ${waiting}`,
       totalBalance: "Saldo totale",
       activeMembersHint: "membri abilitati",
       avgBalance: "Saldo medio",
@@ -1070,6 +1076,16 @@ export const it = {
       `Il rimborso di ${amount} sulla carta non è andato a buon fine e l'importo è tornato sul tuo saldo (ora ${balance}). Chi gestisce la cassa te lo restituirà con un bonifico.`,
     refundFailedAdminBody: (amount: string, name: string) =>
       `Il rimborso di ${amount} sulla carta di ${name} non è andato a buon fine e l'importo è tornato sul suo saldo. Restituiscilo con un bonifico: Cassa → Movimento in uscita → Restituzione.`,
+    orderRefundTitle: "Rimborso in arrivo",
+    orderRefundCancelledBody: (amount: string) =>
+      `Hai annullato l'ordine: ti rimborsiamo ${amount} sulla carta con cui hai pagato. Di solito arriva in 5-10 giorni.`,
+    orderRefundLateBody: (amount: string) =>
+      `Il tuo pagamento è arrivato quando gli ordini erano già chiusi, quindi l'ordine non è stato registrato. Ti rimborsiamo ${amount} sulla carta con cui hai pagato: di solito arriva in 5-10 giorni.`,
+    orderRefundBody: (amount: string) =>
+      `Ti rimborsiamo ${amount} sulla carta con cui hai pagato l'ordine. Di solito arriva in 5-10 giorni.`,
+    refundRejectedTitle: "Rimborso rifiutato da Stripe",
+    refundRejectedAdminBody: (amount: string, name: string) =>
+      `Stripe ha rifiutato il rimborso di ${amount} a ${name}. L'importo resta tra i pagamenti del suo ordine: controlla il pagamento su Stripe e, se serve, restituiscilo con un bonifico.`,
     topupReceivedBody: (amount: string, balance: string) =>
       `È stata registrata una ricarica di ${amount} sul tuo saldo. Nuovo saldo: ${balance}.`,
     orderModifiedTitle: "Ordine modificato",
@@ -1119,6 +1135,10 @@ export const it = {
     shippingAdjusted: "Spedizione rettificata",
     shippingFromSupplier: "Spedizione da distinta fornitore",
     cycleCancelled: "Annullamento ciclo",
+    orderPayment: "Pagamento ordine",
+    orderRefund: "Rimborso sulla carta",
+    orderRefundCancelled: "Rimborso sulla carta: ordine annullato",
+    orderRefundLate: "Rimborso sulla carta: pagamento arrivato a ordini chiusi",
   },
   fields: {
     title: "Titolo",

@@ -54,6 +54,10 @@ const TYPE_TO_CATEGORY: Record<string, NotificationCategory> = {
   // A Stripe refund that failed after being accepted: the money is back on
   // the balance (lib/payments/refund-store.ts), the other side of a top-up.
   refund_failed: "wallet_topup",
+  // Pay-per-order (lib/payments): the order was paid and confirmed; money is
+  // on its way back to the card (cancelled order, late payment).
+  order_paid: "order_updates",
+  order_refund_sent: "wallet_topup",
 };
 
 export function categoryForType(type: string): NotificationCategory | null {

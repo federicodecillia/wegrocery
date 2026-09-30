@@ -111,6 +111,15 @@ export async function getOpenCycles(includeExpired = false) {
   return rows.map((r) => ({ ...r.order_cycles, supplierName: r.suppliers?.name ?? null }));
 }
 
+// Refunds the app asked for that Stripe has not answered (refunds.status =
+// 'requested'): the Cassa tab offers to send them again.
+export async function getRequestedRefundCount(): Promise<number> {
+  const { rows } = await getDb().execute<{ n: number }>(
+    sql`SELECT count(*)::int AS n FROM refunds WHERE status = 'requested'`,
+  );
+  return rows[0]?.n ?? 0;
+}
+
 // The handling fee of the most recent pay-per-order cycle: the default of the
 // next one. null before the first.
 export async function getLastHandlingFee(): Promise<HandlingFee | null> {

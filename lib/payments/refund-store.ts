@@ -12,6 +12,8 @@ import {
   refundedCentsDelta,
   refundInputOf,
   refundLedgerRow,
+  refundNoteKind,
+  type RefundNoteKind,
   type RefundStatus,
   type RefundTransition,
   type StripeRefundInput,
@@ -24,6 +26,7 @@ type RefundRow = {
   member_id: string;
   cycle_id: string | null;
   status: RefundStatus;
+  reason: string;
 };
 
 // The refund row an event is about: by Stripe id, then by the id the app put
@@ -34,7 +37,7 @@ type RefundRow = {
 async function findRefund(db: Db, input: StripeRefundInput): Promise<RefundRow | null> {
   const byAppId = input.appRefundId ? sql` OR refund_id = ${input.appRefundId}` : sql``;
   const { rows } = await db.execute<RefundRow>(sql`
-    SELECT refund_id, payment_id, member_id, cycle_id, status
+    SELECT refund_id, payment_id, member_id, cycle_id, status, reason
     FROM refunds
     WHERE stripe_refund_id = ${input.stripeRefundId}${byAppId}
     ORDER BY stripe_refund_id IS NULL
@@ -58,7 +61,7 @@ async function findRefund(db: Db, input: StripeRefundInput): Promise<RefundRow |
       FOR UPDATE OF r SKIP LOCKED
     )
       AND stripe_refund_id IS NULL
-    RETURNING refund_id, payment_id, member_id, cycle_id, status
+    RETURNING refund_id, payment_id, member_id, cycle_id, status, reason
   `);
   return adopted[0] ?? null;
 }
@@ -124,7 +127,7 @@ async function writeTransition(
 
   const ledger = refundLedgerRow(row.cycle_id, input.amountCents, plan.movement);
   const delta = refundedCentsDelta(plan.movement, input.amountCents);
-  const note = plan.movement === "debit" ? t.topup.refundLedgerNote : t.topup.refundFailedLedgerNote;
+  const note = REFUND_NOTES[refundNoteKind(row.cycle_id, row.reason, plan.movement)]();
   const { rows } = await db.execute<{ posted: number }>(sql`
     WITH r AS (${head}),
     led AS (
@@ -156,9 +159,22 @@ async function writeTransition(
   return written ? { posted: written.posted > 0 } : null;
 }
 
-// Every active admin (the audience of an admin-only cycle): the money is back
-// on the member's balance and someone has to return it by bank transfer.
-async function notifyAdmins(db: Db, memberId: string, amount: string): Promise<void> {
+const REFUND_NOTES: Record<RefundNoteKind, () => string> = {
+  topup: () => t.topup.refundLedgerNote,
+  failed: () => t.topup.refundFailedLedgerNote,
+  order: () => t.ledger.orderRefund,
+  orderCancelled: () => t.ledger.orderRefundCancelled,
+  latePayment: () => t.ledger.orderRefundLate,
+};
+
+// Every active admin (the audience of an admin-only cycle) is told about a
+// refund that needs a person: `body` gets the member's name.
+export async function notifyAdminsOfRefund(
+  db: Db,
+  memberId: string,
+  title: string,
+  body: (memberName: string) => string,
+): Promise<void> {
   const rows = await db
     .select({
       memberId: members.memberId,
@@ -173,12 +189,7 @@ async function notifyAdmins(db: Db, memberId: string, amount: string): Promise<v
   await dispatchToMembers(
     db,
     admins.map((a) => ({ memberId: a.memberId, email: a.email })),
-    {
-      type: "refund_failed",
-      title: t.notificationsServer.refundFailedTitle,
-      body: t.notificationsServer.refundFailedAdminBody(amount, name),
-      href: "/admin?tab=cassa",
-    },
+    { type: "refund_failed", title, body: body(name), href: "/admin?tab=cassa" },
   );
 }
 
@@ -204,11 +215,22 @@ async function afterTransition(
       t.notificationsServer.onlineRefundBody(amount, balance),
     );
   }
+  if (plan.movement === "debit" && row.cycle_id !== null) {
+    const body =
+      row.reason === "order_cancelled"
+        ? t.notificationsServer.orderRefundCancelledBody(amount)
+        : row.reason === "late_payment"
+          ? t.notificationsServer.orderRefundLateBody(amount)
+          : t.notificationsServer.orderRefundBody(amount);
+    await notifyMember(db, row.member_id, "order_refund_sent", t.notificationsServer.orderRefundTitle, () => body);
+  }
   if (reversed) {
     await notifyMember(db, row.member_id, "refund_failed", t.notificationsServer.refundFailedTitle, (balance) =>
       t.notificationsServer.refundFailedBody(amount, balance),
     );
-    await notifyAdmins(db, row.member_id, amount);
+    await notifyAdminsOfRefund(db, row.member_id, t.notificationsServer.refundFailedTitle, (name) =>
+      t.notificationsServer.refundFailedAdminBody(amount, name),
+    );
   }
 }
 
@@ -234,6 +256,7 @@ export async function upsertStripeRefund(input: StripeRefundInput): Promise<void
         member_id: payment.member_id,
         cycle_id: null,
         status: "requested",
+        reason: "dashboard",
       };
     }
     const plan = planRefundTransition(row.status, input.status);

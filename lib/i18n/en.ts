@@ -593,6 +593,12 @@ export const en: Strings = {
     treasury: {
       tabLabel: "Treasury",
       balancesTitle: (n: number) => `Member balances (${n})`,
+      pendingRefundsTitle: (n: number) => (n === 1 ? "1 refund waiting for Stripe" : `${n} refunds waiting for Stripe`),
+      pendingRefundsHint: "Stripe has not received these refunds yet, usually because of a network error. Retrying is safe: nobody is refunded twice.",
+      pendingRefundsRetry: "Retry the refunds",
+      pendingRefundsRetrying: "Sending...",
+      pendingRefundsResult: (sent: number, failed: number, waiting: number) =>
+        `Sent ${sent}, rejected ${failed}, still waiting ${waiting}`,
       totalBalance: "Total balance",
       activeMembersHint: "enabled members",
       avgBalance: "Average balance",
@@ -1064,6 +1070,16 @@ export const en: Strings = {
       `The ${amount} refund to your card did not go through, so the amount is back on your balance (now ${balance}). The treasurer will return it by bank transfer.`,
     refundFailedAdminBody: (amount: string, name: string) =>
       `The ${amount} card refund to ${name} did not go through and the amount is back on their balance. Return it by bank transfer: Treasury → Outgoing movement → Payout.`,
+    orderRefundTitle: "Refund on its way",
+    orderRefundCancelledBody: (amount: string) =>
+      `You cancelled your order: we are refunding ${amount} to the card you paid with. It usually takes 5-10 days.`,
+    orderRefundLateBody: (amount: string) =>
+      `Your payment arrived after orders had closed, so the order was not recorded. We are refunding ${amount} to the card you paid with: it usually takes 5-10 days.`,
+    orderRefundBody: (amount: string) =>
+      `We are refunding ${amount} to the card you paid your order with. It usually takes 5-10 days.`,
+    refundRejectedTitle: "Refund rejected by Stripe",
+    refundRejectedAdminBody: (amount: string, name: string) =>
+      `Stripe rejected the refund of ${amount} to ${name}. The amount stays among the payments of their order: check the payment on Stripe and, if needed, return it by bank transfer.`,
     topupReceivedBody: (amount: string, balance: string) =>
       `A top-up of ${amount} has been recorded on your balance. New balance: ${balance}.`,
     orderModifiedTitle: "Order updated",
@@ -1113,6 +1129,10 @@ export const en: Strings = {
     shippingAdjusted: "Shipping adjusted",
     shippingFromSupplier: "Shipping from supplier sheet",
     cycleCancelled: "Cycle cancellation",
+    orderPayment: "Order payment",
+    orderRefund: "Refund to card",
+    orderRefundCancelled: "Refund to card: order cancelled",
+    orderRefundLate: "Refund to card: payment arrived after orders closed",
   },
   fields: {
     title: "Title",
