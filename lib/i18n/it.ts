@@ -109,6 +109,17 @@ export const it = {
     backToOrder: "Torna all'ordine",
     chooseCycle: "Scegli l'ordine",
     chooseCycleHint: "Ci sono più ordini aperti: scegli quale aprire.",
+    draftBannerTitle: "Modifiche non ancora confermate",
+    draftBannerBody: "Le abbiamo tenute da parte: conferma l'ordine per inviarle.",
+    draftDropped: (n: number) =>
+      n === 1
+        ? "Un prodotto non è più disponibile ed è stato tolto."
+        : `${n} prodotti non sono più disponibili e sono stati tolti.`,
+    discardDraft: "Annulla modifiche",
+    discardDraftTitle: "Annullare le modifiche?",
+    discardDraftMessage: "Torni all'ordine confermato, o al carrello vuoto se non l'avevi ancora confermato.",
+    discardDraftConfirm: "Sì, annulla",
+    draftDiscarded: "Modifiche annullate",
   },
   history: {
     orders: "Ordini",
@@ -137,6 +148,24 @@ export const it = {
     cycleNet: "Totale sul saldo",
     chargedAtClose: "Sarà addebitato sul saldo alla chiusura del ciclo.",
     received: (quantity: string) => `ricevuti ${quantity}`,
+    detailDescription: "Dettagli del movimento selezionato",
+    detailDate: "Data",
+    detailCycle: "Ciclo",
+    detailNote: "Nota",
+    detailMethod: "Metodo",
+    detailReference: "Riferimento",
+    detailPaymentStatus: "Stato del pagamento",
+    detailRecordedBy: "Registrato da",
+    recordedOnline: "Pagamento online",
+    recordedSystem: "Sistema",
+    paymentStatuses: {
+      pending: "In attesa",
+      succeeded: "Riuscito",
+      failed: "Non riuscito",
+      expired: "Scaduto",
+      partially_refunded: "Rimborsato in parte",
+      refunded: "Rimborsato",
+    },
   },
   topup: {
     title: "Ricarica il saldo",
@@ -167,6 +196,11 @@ export const it = {
     lineItemName: (org: string) => `Ricarica credito ${org}`,
     ledgerNote: "Ricarica online",
     refundLedgerNote: "Rimborso ricarica online",
+    atMaximum: "Il tuo saldo è già al massimo consentito dal gruppo.",
+    belowOnlineMinimum: (amount: string) =>
+      `Puoi ricaricare ancora ${amount}, ma la ricarica online parte da 0,50 €: usa il bonifico.`,
+    bankRoom: (amount: string) => `Puoi ricaricare fino a ${amount}.`,
+    settleDebt: (amount: string) => `Salda ${amount}`,
   },
   notifications: {
     title: "Notifiche",
@@ -561,6 +595,9 @@ export const it = {
       negativeBalance: "Saldo < 0",
       filterActive: "filtro attivo · tocca per togliere",
       filterHint: "tocca per filtrare",
+      aboveMaxBalance: "Sopra il massimo",
+      aboveMaxNotice: (balance: string, max: string) =>
+        `Il saldo ora è ${balance}, sopra il massimo del gruppo (${max}). Se serve, restituisci la differenza con Movimento in uscita → Restituzione.`,
       newTopup: "Nuova ricarica",
       memberLabel: "Socio *",
       amountLabel: "Importo € *",
@@ -966,6 +1003,44 @@ export const it = {
       importSkipped: (n: number) => `${n} invariati`,
       importInvalid: (n: number) => `${n} scartati`,
       importAddedToCycle: (n: number) => `${n} nel ciclo`,
+    },
+    settings: {
+      tabLabel: "Impostazioni",
+      defaultsNotice:
+        "Questi sono i valori predefiniti del gruppo: controllali e salva. Finché non salvi, l'app usa questi.",
+      limitsTitle: "Soglie del saldo",
+      limitsHint: "Valgono per tutti i soci. Cambiarle non tocca i saldi di oggi.",
+      overdraftLabel: "Scoperto massimo €",
+      overdraftHelp: "Quanto un socio può andare sotto zero con gli ordini. 0 = mai sotto zero.",
+      maxBalanceLabel: "Saldo massimo €",
+      maxBalanceHelp: "Oltre questo saldo non si ricarica online. La Cassa lo segnala ma non blocca.",
+      noLimit: "Nessun limite",
+      bankTitle: "Ricarica con bonifico",
+      bankHint: "I soci vedono intestatario e IBAN nella pagina Ricarica.",
+      bankHolderLabel: "Intestatario",
+      bankIbanLabel: "IBAN",
+      onlineTitle: "Ricarica online (Stripe)",
+      onlineHint: "Con carta o con gli altri metodi di Stripe. Il saldo si aggiorna da solo.",
+      testMode: "modalità test",
+      stripeUnavailable: {
+        missing: "Questo ambiente non ha le chiavi Stripe: chiedi a chi gestisce l'app.",
+        liveKeyOutsideProduction:
+          "La chiave Stripe è di produzione ma questo ambiente non lo è: il pagamento online resta spento.",
+        testKeyInProduction:
+          "La chiave Stripe è di test ma questo è l'ambiente reale: il pagamento online resta spento.",
+      },
+      saved: "Impostazioni salvate",
+      lastSaved: (date: string) => `Ultimo salvataggio: ${date}`,
+      errors: {
+        overdraftInvalid:
+          "Scoperto non valido: scrivi un numero positivo fino a 10000, senza punti, ad esempio 50, o lascia vuoto.",
+        maxBalanceInvalid:
+          "Saldo massimo non valido: scrivi un numero fino a 10000, senza punti, ad esempio 300, o lascia vuoto.",
+        bankHolderRequired: "Per attivare il bonifico serve l'intestatario.",
+        bankHolderTooLong: "Intestatario troppo lungo: al massimo 100 caratteri.",
+        ibanInvalid: "IBAN non valido: controlla di averlo copiato per intero.",
+        noChannel: "Serve almeno un modo per ricaricare: attiva il bonifico o la ricarica online.",
+      },
     },
   },
   notificationsServer: {

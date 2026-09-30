@@ -6,11 +6,18 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { brand } from "@/lib/brand";
 import { getDb } from "@/lib/db/client";
-import { getMemberByEmail } from "@/lib/db/queries";
+import { getMemberBalance, getMemberByEmail } from "@/lib/db/queries";
 import { payments } from "@/lib/db/schema";
 import { t } from "@/lib/i18n";
 import { formatMoney } from "@/lib/i18n/format";
-import { parseTopupAmount, TOPUP_MAX_CENTS, TOPUP_MIN_CENTS, type TopupAmountError } from "@/lib/payments/config";
+import {
+  parseTopupAmount,
+  topupCeilingCents,
+  TOPUP_MAX_CENTS,
+  TOPUP_MIN_CENTS,
+  type TopupAmountError,
+} from "@/lib/payments/config";
+import { getPaymentSettings } from "@/lib/payments/get-settings";
 import { getStripe } from "@/lib/payments/stripe";
 
 // Returned as a value, not thrown: in production Next.js hides thrown Server
@@ -40,7 +47,9 @@ export async function startOnlineTopup(amountInput: string): Promise<StartTopupR
   const email = session?.user?.email;
   if (!email) redirect("/login");
 
-  const stripe = getStripe();
+  // Switched off in Impostazioni, or no usable key on this deploy.
+  const settings = await getPaymentSettings();
+  const stripe = settings.onlineTopupAvailable ? getStripe() : null;
   if (!stripe) return { error: t.topup.unavailable };
 
   const member = await getMemberByEmail(email);
@@ -49,6 +58,17 @@ export async function startOnlineTopup(amountInput: string): Promise<StartTopupR
 
   const parsed = parseTopupAmount(amountInput);
   if ("error" in parsed) return { error: amountErrorMessage(parsed.error) };
+
+  // The group's maximum balance: /ricarica only offers what fits, this is the
+  // check. Read before the insert, so two checkouts opened together can
+  // overshoot it (a soft limit, see topupCeilingCents).
+  const balanceCents = Math.round((await getMemberBalance(member.memberId)) * 100);
+  const maxBalanceCents = settings.maxBalance === null ? null : Math.round(settings.maxBalance * 100);
+  const ceiling = topupCeilingCents(balanceCents, maxBalanceCents);
+  if (ceiling === null) return { error: t.topup.atMaximum };
+  if (parsed.cents > ceiling) {
+    return { error: t.topup.amountRange(formatMoney(TOPUP_MIN_CENTS / 100), formatMoney(ceiling / 100)) };
+  }
 
   const db = getDb();
   const now = new Date();

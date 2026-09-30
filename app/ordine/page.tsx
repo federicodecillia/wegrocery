@@ -8,10 +8,12 @@ import {
   getMemberBalance,
   getMemberOrderLines,
   getOpenCycles,
+  getOrderDraft,
 } from "@/lib/db/queries";
 import { saveOrder } from "@/lib/actions/order";
 import { canAccessCycle } from "@/lib/roles";
 import { resolveOrderCycle } from "@/lib/order-cycle";
+import { resumeDraft } from "@/lib/order-draft";
 import Link from "next/link";
 
 export default async function OrdinePage({
@@ -56,10 +58,17 @@ export default async function OrdinePage({
     );
   }
 
-  const [cycleProducts, existingLines] = await Promise.all([
+  const [cycleProducts, existingLines, storedDraft] = await Promise.all([
     getCycleProducts(openCycle!.cycleId),
     getMemberOrderLines(memberId, openCycle!.cycleId),
+    getOrderDraft(memberId, openCycle!.cycleId),
   ]);
+  // Unconfirmed edits to pick up, limited to the products still in the cycle.
+  const resumedDraft = resumeDraft(
+    storedDraft,
+    existingLines,
+    new Set(cycleProducts.map((p) => p.productId)),
+  );
 
   return (
     <AppShell email={session.user.email} isAdmin={role === "admin"} memberId={memberId}>
@@ -104,6 +113,7 @@ export default async function OrdinePage({
           productId: l.productId,
           quantity: l.quantity,
         }))}
+        resumedDraft={resumedDraft}
         balance={balance}
         saveAction={saveOrder}
       />

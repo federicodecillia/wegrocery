@@ -70,3 +70,9 @@ export function formatDecimalInput(value: number | string): string {
   const s = typeof value === "number" ? String(value) : value;
   return brand.locale === "it" ? s.replace(".", ",") : s;
 }
+
+// A euro amount pre-filled in an editable input: whole euros stay bare ("50"),
+// cents always show both digits ("35,20", not "35,2").
+export function formatAmountInput(euros: number): string {
+  return formatDecimalInput(Number.isInteger(euros) ? String(euros) : euros.toFixed(2));
+}

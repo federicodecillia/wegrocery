@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { it as italian } from "@/lib/i18n/it";
-import { movementKind, movementLabel, movementText } from "./movement-label";
+import { movementDateHasTime, movementKind, movementLabel, movementRecorder, movementText } from "./movement-label";
 
 const labels = italian.history;
 
@@ -115,5 +115,35 @@ describe("movementKind", () => {
 
   it("falls back to other for a type it does not know", () => {
     expect(kind("mystery", "1.00")).toBe("other");
+  });
+});
+
+describe("movementRecorder", () => {
+  it("credits online rows to the online payment, whatever the row names", () => {
+    expect(movementRecorder({ paymentId: "pay_1", recorderName: null })).toEqual({ kind: "online" });
+    expect(movementRecorder({ paymentId: "pay_1", recorderName: "Alice" })).toEqual({ kind: "online" });
+  });
+
+  it("names the admin who recorded the row", () => {
+    expect(movementRecorder({ paymentId: null, recorderName: " Alice Smith " })).toEqual({
+      kind: "admin",
+      name: "Alice Smith",
+    });
+  });
+
+  it("falls back to the system when nobody matches", () => {
+    expect(movementRecorder({ paymentId: null, recorderName: null })).toEqual({ kind: "system" });
+    expect(movementRecorder({ paymentId: null, recorderName: "  " })).toEqual({ kind: "system" });
+  });
+});
+
+describe("movementDateHasTime", () => {
+  it("drops the time of a movement dated by day in Cassa (UTC midnight)", () => {
+    expect(movementDateHasTime(new Date("2026-09-29T00:00:00.000Z"))).toBe(false);
+  });
+
+  it("keeps the time of movements the app timestamps", () => {
+    expect(movementDateHasTime(new Date("2026-09-23T22:00:00.000Z"))).toBe(true);
+    expect(movementDateHasTime(new Date("2026-09-29T14:31:05.123Z"))).toBe(true);
   });
 });

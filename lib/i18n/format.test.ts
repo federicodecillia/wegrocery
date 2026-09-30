@@ -1,6 +1,7 @@
 import { afterEach, describe, it as test, expect, vi } from "vitest";
 import {
   APP_TIME_ZONE,
+  formatAmountInput,
   formatMoney,
   formatDate,
   formatDateTime,
@@ -22,6 +23,17 @@ describe("format helpers with default (en) brand", () => {
   });
   test("formatTime renders HH:mm", () => {
     expect(formatTime(new Date("2026-06-11T10:30:00Z"))).toMatch(/\d{2}:\d{2}/);
+  });
+});
+
+// Settings amounts pre-filled in an editable input (default brand: dots).
+describe("formatAmountInput", () => {
+  test("keeps whole euros bare", () => {
+    expect(formatAmountInput(50)).toBe("50");
+  });
+  test("shows both cent digits when there are cents", () => {
+    expect(formatAmountInput(35.2)).toBe("35.20");
+    expect(formatAmountInput(0.5)).toBe("0.50");
   });
 });
 
