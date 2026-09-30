@@ -22,6 +22,7 @@ stanno nella PR.
 ## [Non rilasciato]
 
 ### Aggiunte
+- 🧮 **Controllo notturno dei conti.** Dopo il backup, un controllo in sola lettura verifica che pagamenti, rimborsi e addebiti tornino, e segnala subito se non tornano.
 - 🧭 **Stato della configurazione.** In Impostazioni si vede cosa è collegato in questa installazione (database, accesso, email, pagamenti...) e cosa manca, solo per nome; `npm run doctor` stampa lo stesso. Le note di aggiornamento per versione stanno in `docs/upgrading.md`, e `MIGRATE_ON_BUILD=true` applica le migrazioni a ogni build di produzione (facoltativo).
 - 💳 **Pagamento per ordine, le basi.** L'app ora sa incassare il pagamento di un ordine con Stripe, rimborsarlo se l'ordine viene annullato o se il pagamento arriva a ordini chiusi, e riprovare un rimborso dalla Cassa. Non ancora selezionabile: diventa un'opzione in Impostazioni insieme al conguaglio. Nota di aggiornamento: applicare `drizzle/0021_pay_per_order.sql` prima del deploy; nessuna variabile nuova, nessun evento Stripe nuovo.
 

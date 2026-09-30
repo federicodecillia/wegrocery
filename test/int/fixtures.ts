@@ -143,7 +143,7 @@ export function makeScope(label: string) {
       const like = `${prefix}%`;
       await sql`DELETE FROM notifications WHERE member_id = ${memberId} OR body LIKE ${`%${memberName}%`}`;
       await sql`DELETE FROM audit_log WHERE entity_id LIKE ${like}`;
-      await sql`DELETE FROM ledger_entries WHERE member_id = ${memberId}`;
+      await sql`DELETE FROM ledger_entries WHERE member_id = ${memberId} OR entry_id LIKE ${like}`;
       await sql`DELETE FROM refunds WHERE member_id = ${memberId}`;
       await sql`DELETE FROM payments WHERE member_id = ${memberId}`;
       await sql`DELETE FROM order_drafts WHERE member_id = ${memberId}`;
