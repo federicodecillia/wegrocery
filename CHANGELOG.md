@@ -20,6 +20,10 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ## [Unreleased]
 
+## [1.17.0] — 2026-09-30
+
+*Sign in with an email link, and the groundwork for paying each order.*
+
 ### Added
 - ✉️ **Sign in with an email link.** Type your address and you get a link that signs you in, no Google account needed; Google stays for whoever prefers it. Admins can send the link as an invitation from Members, and see each member's last sign-in. Upgrade note: apply `drizzle/0022_auth_sessions.sql` before deploying; email (Resend) must be set up; everyone signs in once more after the update; the Google redirect URI does not change.
 - 🧮 **Nightly check of the books.** After the backup, a read-only check makes sure every payment, refund and charge adds up, and fails loudly if not.
@@ -435,6 +439,7 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ---
 
+[1.17.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.17.0
 [1.16.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.16.1
 [1.16.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.16.0
 [1.15.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.15.0
