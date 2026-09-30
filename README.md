@@ -33,7 +33,7 @@ real concurrency control, real members. Porta Moneta is the first white-label
 deployment of this codebase.
 
 It is also a complete **reference implementation** of a modern Next.js app:
-App Router, React Server Components, Server Actions, Auth.js v5, Drizzle ORM
+App Router, React Server Components, Server Actions, Better Auth, Drizzle ORM
 on serverless Postgres, deployed on Vercel.
 
 **Who it's for:**
@@ -109,7 +109,7 @@ The full operating model is documented in
 - **Next.js 15** App Router + React 19 + TypeScript strict mode
 - **Postgres** on [Neon](https://neon.tech) (HTTP driver, serverless)
 - **Drizzle ORM** with hand-written migrations
-- **Auth.js v5** (Google OAuth) with an email whitelist enforced against the `members` table
+- **Better Auth**: sign-in with an email link (optional Google), only for addresses in the `members` table (or with a valid membership card, where that check is set up)
 - **Tailwind CSS v4** with a custom theme (orange/teal/warm white)
 - **Vercel** for hosting and CI/CD (auto-deploy on push to `main`)
 
@@ -141,7 +141,7 @@ analytics dashboard is rendered with pure CSS and inline SVG.
 │   ├── actions/               # Server Actions (admin, order, notifications)
 │   └── auth/session.ts        # requireUserSession(), requireAdmin()
 ├── drizzle/                   # Hand-written SQL migrations
-├── auth.ts                    # Auth.js v5 config
+├── auth.ts                    # Better Auth instance and auth()
 ├── middleware.ts              # Auth gate (redirect to /login)
 └── SETUP.md                   # Step-by-step local setup guide
 ```
@@ -250,7 +250,7 @@ Quick start once `.env.local` is in place:
 
 ```bash
 npm install
-npm run db:push     # apply schema.ts to Neon
+npm run db:migrate  # apply the migrations in drizzle/ to the database
 npm run dev         # http://localhost:3000
 ```
 
@@ -260,7 +260,9 @@ Other scripts:
 |---|---|
 | `npm run dev` | Dev server with hot reload (Next.js) |
 | `npm run build` | Production build + type check |
-| `npm run db:push` | Apply Drizzle schema changes to the linked Postgres |
+| `npm run db:migrate` | Apply pending migrations (`drizzle/*.sql`) to the database in `.env.local` |
+| `npm run doctor` | What this environment has set up, and what is missing |
+| `npm test` / `npm run test:int` | Unit tests / integration tests on a test database |
 | `npm run db:studio` | Drizzle Studio (visual DB browser) |
 
 ---
@@ -268,9 +270,11 @@ Other scripts:
 ## Deployment
 
 Pushing to `main` triggers a Vercel production deploy. Feature branches
-get automatic preview deployments. Schema migrations to Neon are run
-manually with `npm run db:push` from the local laptop before merging
-breaking changes, so the database is always one step ahead of the live code.
+get automatic preview deployments. Migrations (`drizzle/*.sql`) are applied
+before the code that needs them, with `node scripts/db-migrate.mjs`, or at
+every production build with `MIGRATE_ON_BUILD=true`: see
+[docs/upgrading.md](docs/upgrading.md). What a deploy has set up shows in
+admin → Impostazioni → *Configuration status* and in `npm run doctor`.
 
 ---
 

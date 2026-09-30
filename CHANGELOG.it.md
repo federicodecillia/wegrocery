@@ -21,6 +21,19 @@ stanno nella PR.
 
 ## [Non rilasciato]
 
+## [1.17.0] — 30 settembre 2026
+
+*Accesso con un link via email, e le basi per pagare ogni ordine.*
+
+### Aggiunte
+- ✉️ **Accesso con un link via email.** Scrivi il tuo indirizzo e ricevi un link che ti fa entrare, senza bisogno di un account Google; Google resta per chi lo preferisce. Gli admin possono mandare il link come invito da Soci e vedono l'ultimo accesso di ogni socio. Nota di aggiornamento: applicare `drizzle/0022_auth_sessions.sql` prima del deploy; l'invio email (Resend) deve essere configurato; dopo l'aggiornamento tutti rientrano una volta; l'indirizzo di ritorno di Google non cambia.
+- 🧮 **Controllo notturno dei conti.** Dopo il backup, un controllo in sola lettura verifica che pagamenti, rimborsi e addebiti tornino, e segnala subito se non tornano.
+- 🧭 **Stato della configurazione.** In Impostazioni si vede cosa è collegato in questa installazione (database, accesso, email, pagamenti...) e cosa manca, solo per nome; `npm run doctor` stampa lo stesso. Le note di aggiornamento per versione stanno in `docs/upgrading.md`, e `MIGRATE_ON_BUILD=true` applica le migrazioni a ogni build di produzione (facoltativo).
+- 💳 **Pagamento per ordine, le basi.** L'app ora sa incassare il pagamento di un ordine con Stripe, rimborsarlo se l'ordine viene annullato o se il pagamento arriva a ordini chiusi, e riprovare un rimborso dalla Cassa. Non ancora selezionabile: diventa un'opzione in Impostazioni insieme al conguaglio. Nota di aggiornamento: applicare `drizzle/0021_pay_per_order.sql` prima del deploy; nessuna variabile nuova, nessun evento Stripe nuovo.
+
+### Modificato
+- 🔕 **Niente email predefinita all'apertura del ciclo.** Chi non ha scelto riceve l'avviso "ciclo aperto" solo nell'app e può accendere l'email nelle preferenze; chi aveva già scelto mantiene la sua scelta.
+
 ## [1.16.1] — 30 settembre 2026
 
 *Un layout da computer, e le basi per tenere d'occhio la salute dell'app.*
@@ -427,6 +440,7 @@ stanno nella PR.
 
 ---
 
+[1.17.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.17.0
 [1.16.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.16.1
 [1.16.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.16.0
 [1.15.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.15.0

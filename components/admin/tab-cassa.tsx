@@ -1,20 +1,22 @@
-import { getAllMembersLedger, getAllMembersWithBalances } from "@/lib/db/queries";
+import { getAllMembersLedger, getAllMembersWithBalances, getRequestedRefundCount } from "@/lib/db/queries";
 import { Card, CardHeader } from "@/components/ui/card";
 import { t } from "@/lib/i18n";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
 import { isAboveMaxBalance } from "@/lib/payments/settings";
 import { CassaInlineList, CassaSummaryCards, type BalanceFilter } from "./cassa-forms";
 import { OutgoingMovementForm, TopupForm } from "./cassa-movement-form";
+import { PendingRefundsNotice } from "./pending-refunds-notice";
 
 type Props = {
   balanceFilter?: BalanceFilter;
 };
 
 export async function TabCassa({ balanceFilter }: Props) {
-  const [membersWithBalances, ledgerByMember, { maxBalance }] = await Promise.all([
+  const [membersWithBalances, ledgerByMember, { maxBalance }, requestedRefunds] = await Promise.all([
     getAllMembersWithBalances(),
     getAllMembersLedger(),
     getPaymentSettings(),
+    getRequestedRefundCount(),
   ]);
 
   // Disabled members stay pickable, flagged: a member who left may still pay
@@ -48,6 +50,8 @@ export async function TabCassa({ balanceFilter }: Props) {
         aboveMaxCount={aboveMaxCount}
         activeFilter={filter}
       />
+
+      {requestedRefunds > 0 && <PendingRefundsNotice count={requestedRefunds} />}
 
       {/* Desktop: movement forms on the left, balances and history on the right. */}
       <div className="space-y-4 lg:grid lg:grid-cols-2 lg:items-start lg:gap-6 lg:space-y-0">

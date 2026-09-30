@@ -66,6 +66,47 @@ export const it = {
     pickup: "Ritiro",
   },
   order: {
+    // Pagamento per ordine (modalità 2)
+    pay: {
+      products: "Prodotti",
+      shipping: "Spedizione",
+      fee: "Spese di gestione e preparazione ordine (stima)",
+      feeHint: "A conti chiusi ti rimborsiamo quello che non è servito.",
+      refundDifference: (amount: string) =>
+        `Hai pagato ${amount} in più di quanto costa ora l'ordine: te li rimborsiamo sulla carta a conti chiusi.`,
+      dueDifference: (amount: string) => `Mancano ${amount}: si regolano a conti chiusi.`,
+      alreadyPaid: "Già pagato",
+      toPay: "Da pagare",
+      nothingToPay: "Niente da pagare",
+      confirmAndPay: (amount: string) => `Conferma e paga ${amount}`,
+      confirm: "Conferma",
+      redirecting: "Ti porto al pagamento...",
+      cancelOrder: "Annulla ordine",
+      cancelTitle: "Annullare l'ordine?",
+      cancelMessage: (amount: string) =>
+        `L'ordine viene cancellato e ti rimborsiamo ${amount} sulla carta con cui hai pagato. Di solito arriva in 5-10 giorni.`,
+      cancelMessageNoRefund: "L'ordine viene cancellato.",
+      cancelConfirm: "Sì, annulla",
+      cancelled: "Ordine annullato. Il rimborso è partito.",
+      cancelledNoRefund: "Ordine annullato.",
+      confirmed: "Ordine confermato.",
+      verifying: "Pagamento in verifica: tra qualche istante il tuo ordine risulta confermato.",
+      paid: "Pagamento ricevuto: il tuo ordine è confermato.",
+      lateRefunded: "Il pagamento è arrivato quando l'ordine non poteva più accettarlo: te lo rimborsiamo per intero sulla carta.",
+      payCancelled: "Pagamento annullato: non ti è stato addebitato nulla e l'ordine non è cambiato.",
+      supplement: (cycle: string) => `Integrazione ordine: ${cycle}`,
+      lineProducts: (cycle: string) => `Prodotti: ${cycle}`,
+      unavailable: "I pagamenti online non sono disponibili in questo momento. Contatta chi gestisce il gruppo.",
+      inProgress: "Un tuo pagamento per questo ordine è in verifica: aspetta qualche istante e ricarica la pagina.",
+      tooHigh: (max: string) => `L'importo supera ${max}: contatta chi gestisce la cassa.`,
+      changed: "Qualcosa è cambiato mentre confermavi: ricontrolla l'ordine e riprova.",
+      minimumNote: (amount: string) =>
+        `L'importo minimo di un pagamento è ${amount}: la differenza ti torna a conti chiusi.`,
+      statusDraft: (amount: string) => `Bozza da pagare: ${amount}`,
+      statusPaid: (amount: string) => `Confermato e pagato: ${amount}`,
+      statusChanges: (amount: string) => `Modifiche da pagare: +${amount}`,
+      statusChangesNoPay: "Modifiche da confermare",
+    },
     yourOrder: "Il tuo ordine",
     noOpenOrders: "Nessun ordine aperto",
     noOpenOrdersHint: "Torna quando l'ordine sarà aperto.",
@@ -141,6 +182,8 @@ export const it = {
     refund: "Rimborso",
     onlineTopupRefund: "Rimborso ricarica online",
     refundFailed: "Rimborso non riuscito",
+    orderPayment: "Pagamento ordine",
+    orderRefund: "Rimborso sulla carta",
     payout: "Restituzione saldo",
     manualCharge: "Addebito",
     membershipFee: "Quota associativa",
@@ -242,7 +285,20 @@ export const it = {
   },
   login: {
     demoMessage: "Demo pubblica: entra con un click, senza registrazione.",
-    continueMessage: "Accedi con Google per continuare.",
+    continueMessage: "Scrivi la tua email: ti mandiamo un link per entrare.",
+    emailLabel: "La tua email",
+    emailPlaceholder: "nome@esempio.it",
+    sendLink: "Mandami il link",
+    sending: "Invio...",
+    sent: "Controlla la posta: se l'indirizzo è di un socio trovi il link per entrare (vale 15 minuti). Guarda anche nello spam.",
+    rateLimited: "Troppe richieste: aspetta un minuto e riprova.",
+    failed: "Non siamo riusciti a mandare la richiesta. Riprova.",
+    or: "oppure",
+    googleRedirecting: "Ti porto su Google...",
+    confirmTitle: "Entra",
+    confirmMessage: "Tocca il pulsante per entrare. Il link vale una sola volta.",
+    confirmButton: "Entra",
+    linkInvalid: "Il link non è più valido: può essere già stato usato o scaduto. Chiedine uno nuovo.",
     accessDenied: "Accesso negato: la tua email non risulta tra i membri abilitati.",
     attemptedEmail: (email: string) => `Hai provato ad accedere con: ${email}`,
     notMember:
@@ -261,6 +317,22 @@ export const it = {
     memberLogin: "Entra come Utente (demo)",
     adminLogin: "Entra come Admin (demo)",
     configMissing: "Aggiungi le variabili auth in .env.local per abilitare il login locale.",
+  },
+  authEmail: {
+    subject: (kind: string, app: string) =>
+      kind === "invite" ? `Sei invitato su ${app}` : kind === "login" ? `Il tuo link per entrare in ${app}` : `Accesso a ${app}`,
+    login: (app: string, url: string, minutes: number) =>
+      `Ciao,\n\nper entrare in ${app} apri questo link e tocca "Entra":\n\n${url}\n\nIl link vale ${minutes} minuti e una sola volta. Se non l'hai chiesto tu, ignora questa email.`,
+    invite: (app: string, url: string, minutes: number) =>
+      `Ciao,\n\nsei stato invitato su ${app}, l'app del gruppo d'acquisto per ordinare e vedere il tuo saldo.\n\nPer entrare apri questo link e tocca "Entra":\n\n${url}\n\nIl link vale ${minutes} minuti. Quando scade, chiedine uno nuovo dalla pagina di accesso con questa stessa email.`,
+    notMember: (app: string, email: string, support: string) =>
+      `Ciao,\n\nqualcuno ha chiesto di entrare in ${app} con l'indirizzo ${email}, che non risulta tra i soci. Se sei socio con un altro indirizzo usa quello; se pensi sia un errore scrivi a ${support}.\n\nSe non l'hai chiesto tu, ignora questa email.`,
+    accountInactive: (app: string, support: string) =>
+      `Ciao,\n\nil tuo account su ${app} non è attivo. Per riattivarlo scrivi a ${support}.`,
+    membershipInactive: (app: string, renew: string | null, support: string) =>
+      `Ciao,\n\nla tua tessera non risulta attiva per l'anno in corso, quindi non puoi entrare in ${app}.${renew ? ` Puoi rinnovarla qui: ${renew}` : ""}\n\nPer dubbi scrivi a ${support}.`,
+    checkUnavailable: (app: string) =>
+      `Ciao,\n\nin questo momento non riusciamo a verificare la tua tessera, quindi non possiamo mandarti il link per entrare in ${app}. Riprova tra qualche minuto.`,
   },
   logout: {
     confirmTitle: "Uscire?",
@@ -368,6 +440,44 @@ export const it = {
     admin: "Solo admin",
   },
   admin: {
+    configStatus: {
+      title: "Stato della configurazione",
+      intro:
+        "Cosa è collegato in questa installazione. I valori stanno nelle variabili d'ambiente del progetto su Vercel: qui compaiono solo i nomi.",
+      status: { ok: "OK", missing: "Manca", warning: "Da controllare", off: "Spento" },
+      required: "obbligatorio",
+      items: {
+        database: "Database",
+        authSecret: "Chiave delle sessioni",
+        signIn: "Accesso (link via email, Google facoltativo)",
+        brand: "Nome, logo e colori del gruppo",
+        baseUrl: "Indirizzo dell'app nelle email",
+        email: "Invio delle email",
+        stripe: "Pagamenti online (Stripe)",
+        membership: "Verifica della tessera (WallyFor)",
+        sentry: "Segnalazione degli errori (Sentry)",
+      } as Record<string, string>,
+      notes: {
+        pendingMigrations: "Migrazioni da applicare prima di usare le funzioni nuove:",
+        databaseUnreachable: "Non riesco a leggere l'elenco delle migrazioni: controlla il database o lancia npm run doctor.",
+        defaultBrand: "Nessun brand impostato: l'app usa il nome e i colori di WeGrocery.",
+        noBaseUrl: "Senza indirizzo le email arrivano senza link all'app.",
+        demoSignIn: "Demo: si entra con i pulsanti del profilo.",
+        emailAndGoogle: "Link via email e Google.",
+        emailOnly: "Link via email.",
+        googleOnly: "Solo Google: senza email i soci senza account Google non possono entrare.",
+        contrast: "Alcuni colori del tema non si leggono bene:",
+        noRedirect: "Fuori dalla produzione le email vanno deviate a EMAIL_REDIRECT_TO: senza, non partono.",
+        noWebhookSecret: "Manca il segreto del webhook: i pagamenti non verrebbero registrati.",
+        live: "Chiave live.",
+        test: "Chiave di test: nessun addebito reale.",
+        missing: "Chiave assente.",
+        liveKeyOutsideProduction: "Chiave live fuori dalla produzione: pagamenti disattivati.",
+        testKeyInProduction: "Chiave di test in produzione: pagamenti disattivati.",
+        stripeEvents: "Eventi da attivare sull'endpoint del webhook:",
+      } as Record<string, string>,
+      variables: "Variabili:",
+    },
     common: {
       save: "Salva",
       saveChanges: "Salva modifiche",
@@ -443,6 +553,12 @@ export const it = {
       shippingProportional: "Proporzionale",
       shippingFixedHint: "Importo addebitato a ogni socio con un ordine.",
       shippingProportionalHint: "Costo totale spedizione: viene diviso tra i soci in proporzione al valore del loro ordine.",
+      handlingFeeLabel: "Spese di gestione e preparazione ordine",
+      handlingFeePercent: "% sui prodotti",
+      handlingFeeFixed: "Importo fisso",
+      handlingFeeHint: "È una stima che ogni socio paga con l'ordine: a conti chiusi gli torna quello che non è servito.",
+      handlingFeeEditWarning: "Chi ha già pagato non viene ricalcolato: la differenza si pareggia a conti chiusi.",
+      handlingFeeDisplay: (fee: string) => `Spese di gestione: ${fee}`,
       shippingManualTitle: "Gestita manualmente per socio",
       shippingManualDescription: "Le quote di spedizione sono state importate dalla distinta fornitore e variano per socio. Le voci nel saldo dei soci restano invariate finché non carichi una nuova distinta.",
       shippingProportionalDisplay: (amount: string) => `${amount} totali (proporzionale al valore ordine)`,
@@ -467,6 +583,8 @@ export const it = {
       closingCycle: "Chiusura…",
       closeCycleConfirm: (title: string) =>
         `Chiudere "${title}"?\n\nVerranno generati gli addebiti per tutti i soci con ordini.`,
+      perOrderCloseWarning: (drafts: number, pending: number) =>
+        `Bozze non pagate: ${drafts} (restano fuori dall'ordine). Pagamenti in corso: ${pending} (se arrivano dopo la chiusura vengono rimborsati).`,
       cycleClosed: (n: number) => `Ciclo chiuso. ${n} addebiti generati.`,
       editClosedBanner:
         "Stai modificando un ciclo gia' chiuso. Le modifiche alle spese di spedizione ricalcoleranno gli addebiti dei soci e invieranno una notifica di rettifica. Chiusura ordini e livello di accesso non sono modificabili a ciclo chiuso.",
@@ -590,6 +708,12 @@ export const it = {
     treasury: {
       tabLabel: "Cassa",
       balancesTitle: (n: number) => `Saldi soci (${n})`,
+      pendingRefundsTitle: (n: number) => (n === 1 ? "1 rimborso in attesa di Stripe" : `${n} rimborsi in attesa di Stripe`),
+      pendingRefundsHint: "Stripe non ha ancora ricevuto questi rimborsi, di solito per un errore di rete. Riprovare è sicuro: nessuno viene rimborsato due volte.",
+      pendingRefundsRetry: "Riprova i rimborsi",
+      pendingRefundsRetrying: "Invio...",
+      pendingRefundsResult: (sent: number, failed: number, waiting: number) =>
+        `Inviati ${sent}, rifiutati ${failed}, ancora in attesa ${waiting}`,
       totalBalance: "Saldo totale",
       activeMembersHint: "membri abilitati",
       avgBalance: "Saldo medio",
@@ -720,6 +844,13 @@ export const it = {
       submitAdd: "Aggiungi socio",
       submitEdit: "Aggiorna",
       inactiveBadge: "disabilitato",
+      invite: "Invita",
+      inviteSending: "Invio...",
+      inviteSent: (name: string) => `Invito mandato a ${name}: riceve un link per entrare.`,
+      inviteInactive: "Il socio è disattivato: riattivalo prima di invitarlo.",
+      inviteRefused: "Il socio ora non può entrare (per esempio la tessera non è attiva): nessun link inviato.",
+      lastLogin: (when: string) => `ultimo accesso ${when}`,
+      neverLoggedIn: "mai entrato",
       searchPlaceholder: "Cerca per nome o email…",
       deleteConfirm: (name: string) =>
         `Eliminare "${name}"?\n\nOperazione irreversibile. Se ha ordini o movimenti verrà mostrato un errore.`,
@@ -1052,6 +1183,10 @@ export const it = {
       `È stato chiuso "${title}". Ti è stato addebitato ${total}.`,
     orderClosedBodyWithShipping: (title: string, total: string, order: string, shipping: string) =>
       `È stato chiuso "${title}". Ti è stato addebitato ${total} (ordine ${order} + spedizione ${shipping}).`,
+    orderClosedPerOrderBody: (title: string, total: string) =>
+      `È stato chiuso "${title}". Il costo del tuo ordine per ora è ${total}: è provvisorio fino alle pesate e alla distinta del fornitore. A conti chiusi ti rimborsiamo la differenza con quanto hai pagato.`,
+    cycleCancelledPerOrderBody: (title: string, reason: string) =>
+      `L'ordine "${title}" è stato annullato: ${reason}. Quanto hai pagato ti torna sulla carta a conti chiusi.`,
     topupReceivedTitle: "Ricarica registrata",
     onlineTopupTitle: "Ricarica ricevuta",
     onlineTopupBody: (amount: string, balance: string) =>
@@ -1064,6 +1199,21 @@ export const it = {
       `Il rimborso di ${amount} sulla carta non è andato a buon fine e l'importo è tornato sul tuo saldo (ora ${balance}). Chi gestisce la cassa te lo restituirà con un bonifico.`,
     refundFailedAdminBody: (amount: string, name: string) =>
       `Il rimborso di ${amount} sulla carta di ${name} non è andato a buon fine e l'importo è tornato sul suo saldo. Restituiscilo con un bonifico: Cassa → Movimento in uscita → Restituzione.`,
+    orderPaidTitle: "Ordine confermato e pagato",
+    orderPaidBody: (cycle: string, amount: string, products: string, shipping: string, fee: string) =>
+      `Il tuo ordine per "${cycle}" è confermato. Hai pagato ${amount}: prodotti ${products}, spedizione ${shipping}, spese di gestione e preparazione ordine (stima) ${fee}. A conti chiusi ti rimborsiamo quello che non è servito.`,
+    orderPaidShortBody: (cycle: string, amount: string) =>
+      `Il tuo ordine per "${cycle}" è confermato. Hai pagato ${amount}.`,
+    orderRefundTitle: "Rimborso in arrivo",
+    orderRefundCancelledBody: (amount: string) =>
+      `Hai annullato l'ordine: ti rimborsiamo ${amount} sulla carta con cui hai pagato. Di solito arriva in 5-10 giorni.`,
+    orderRefundLateBody: (amount: string) =>
+      `Il tuo pagamento è arrivato quando gli ordini erano già chiusi, quindi l'ordine non è stato registrato. Ti rimborsiamo ${amount} sulla carta con cui hai pagato: di solito arriva in 5-10 giorni.`,
+    orderRefundBody: (amount: string) =>
+      `Ti rimborsiamo ${amount} sulla carta con cui hai pagato l'ordine. Di solito arriva in 5-10 giorni.`,
+    refundRejectedTitle: "Rimborso rifiutato da Stripe",
+    refundRejectedAdminBody: (amount: string, name: string) =>
+      `Stripe ha rifiutato il rimborso di ${amount} a ${name}. L'importo resta tra i pagamenti del suo ordine: controlla il pagamento su Stripe e, se serve, restituiscilo con un bonifico.`,
     topupReceivedBody: (amount: string, balance: string) =>
       `È stata registrata una ricarica di ${amount} sul tuo saldo. Nuovo saldo: ${balance}.`,
     orderModifiedTitle: "Ordine modificato",
@@ -1113,6 +1263,10 @@ export const it = {
     shippingAdjusted: "Spedizione rettificata",
     shippingFromSupplier: "Spedizione da distinta fornitore",
     cycleCancelled: "Annullamento ciclo",
+    orderPayment: "Pagamento ordine",
+    orderRefund: "Rimborso sulla carta",
+    orderRefundCancelled: "Rimborso sulla carta: ordine annullato",
+    orderRefundLate: "Rimborso sulla carta: pagamento arrivato a ordini chiusi",
   },
   fields: {
     title: "Titolo",
@@ -1128,6 +1282,7 @@ export const it = {
     invalidQuantity: "Quantità non valida",
     invalidRole: "Ruolo non valido",
     invalidAccessLevel: "Livello di accesso non valido",
+    handlingFeeInvalid: "Spese di gestione non valide: un numero con al massimo due decimali, la percentuale fino a 100",
     cycleNotOpen: "Il ciclo non è più aperto",
     accessDenied: "Non hai accesso a questo ciclo",
     membershipInactive: (renewUrl: string | null) =>

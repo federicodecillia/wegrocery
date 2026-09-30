@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import {
+  bigint,
   boolean,
   check,
   index,
@@ -12,6 +13,7 @@ import {
   timestamp,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
+import type { OrderSnapshot } from "@/lib/payments/order-payment";
 
 export const members = pgTable(
   "members",
@@ -28,6 +30,9 @@ export const members = pgTable(
     // NULL = never checked (always NULL on deploys without WALLYFOR_* env).
     membershipStatus: text("membership_status"),
     membershipVerifiedAt: timestamp("membership_verified_at", { withTimezone: true }),
+    // Set at every new session (drizzle/0022_auth_sessions.sql); NULL = never
+    // signed in since the email link arrived.
+    lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
   },
@@ -76,6 +81,13 @@ export const orderCycles = pgTable("order_cycles", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
   closedAt: timestamp("closed_at", { withTimezone: true }),
   supplierId: text("supplier_id").references(() => suppliers.supplierId),
+  // The group's payment mode when the cycle was created, fixed for its life
+  // (drizzle/0021_pay_per_order.sql): 'wallet' | 'per_order'.
+  paymentMode: text("payment_mode").notNull().default("wallet"),
+  // The "handling and order preparation" share of a 'per_order' cycle:
+  // 'percent' of the products or a 'fixed' amount. NULL on wallet cycles.
+  handlingFeeType: text("handling_fee_type"),
+  handlingFeeValue: numeric("handling_fee_value", { precision: 10, scale: 2 }),
 });
 
 export const supplierProducts = pgTable("supplier_products", {
@@ -227,8 +239,22 @@ export const payments = pgTable(
     paymentIntentId: text("payment_intent_id").unique(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
+    // drizzle/0021_pay_per_order.sql. 'topup' | 'order' | 'balance'; an
+    // 'order' payment confirms the order of cycle_id and carries what it
+    // charged for (OrderSnapshot, lib/payments/order-payment.ts).
+    kind: text("kind").notNull().default("topup"),
+    cycleId: text("cycle_id").references(() => orderCycles.cycleId),
+    orderSnapshot: jsonb("order_snapshot").$type<OrderSnapshot>(),
   },
-  (table) => [index("payments_member_id_idx").on(table.memberId)],
+  (table) => [
+    index("payments_member_id_idx").on(table.memberId),
+    index("payments_member_cycle_idx").on(table.memberId, table.cycleId),
+    check("payments_kind_check", sql`${table.kind} IN ('topup', 'order', 'balance')`),
+    check(
+      "payments_order_complete_check",
+      sql`${table.kind} <> 'order' OR (${table.cycleId} IS NOT NULL AND ${table.orderSnapshot} IS NOT NULL)`,
+    ),
+  ],
 );
 
 // Stripe refunds (drizzle/0020_stripe_refunds.sql), one row per refund of a
@@ -366,6 +392,11 @@ export const ledgerEntries = pgTable(
     uniqueIndex("ledger_entries_external_ref_uniq")
       .on(sql`upper(trim(${table.externalRef}))`)
       .where(sql`${table.externalRef} IS NOT NULL`),
+    // An order or balance payment is credited at most once per cycle
+    // (drizzle/0021_pay_per_order.sql).
+    uniqueIndex("ledger_entries_payment_cycle_credit_uniq")
+      .on(table.paymentId, sql`coalesce(${table.cycleId}, '')`)
+      .where(sql`${table.type} IN ('order_payment', 'balance_payment')`),
     // One debit and at most one reversal per refund (drizzle/0020_stripe_refunds.sql).
     uniqueIndex("ledger_entries_refund_type_uniq")
       .on(table.refundId, table.type)
@@ -419,3 +450,81 @@ export const notificationPreferences = pgTable(
   },
   (table) => [primaryKey({ columns: [table.memberId, table.category] })],
 );
+
+// ── Sign-in (Better Auth, drizzle/0022_auth_sessions.sql) ────────────────────
+// Written only by Better Auth (lib/auth/config.ts). An auth user is a sign-in
+// identity (an email); the member is found by email or alias on every request.
+
+export const authUsers = pgTable(
+  "auth_users",
+  {
+    id: text("id").primaryKey(),
+    email: text("email").notNull(),
+    name: text("name").notNull().default(""),
+    emailVerified: boolean("email_verified").notNull().default(false),
+    image: text("image"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [uniqueIndex("auth_users_email_lower_uniq").on(sql`lower(${table.email})`)],
+);
+
+export const authSessions = pgTable(
+  "auth_sessions",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => authUsers.id, { onDelete: "cascade" }),
+    token: text("token").notNull().unique(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    ipAddress: text("ip_address"),
+    userAgent: text("user_agent"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
+  },
+  (table) => [index("auth_sessions_user_id_idx").on(table.userId)],
+);
+
+export const authAccounts = pgTable(
+  "auth_accounts",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => authUsers.id, { onDelete: "cascade" }),
+    accountId: text("account_id").notNull(),
+    providerId: text("provider_id").notNull(),
+    accessToken: text("access_token"),
+    refreshToken: text("refresh_token"),
+    idToken: text("id_token"),
+    accessTokenExpiresAt: timestamp("access_token_expires_at", { withTimezone: true }),
+    refreshTokenExpiresAt: timestamp("refresh_token_expires_at", { withTimezone: true }),
+    scope: text("scope"),
+    password: text("password"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
+  },
+  (table) => [index("auth_accounts_user_id_idx").on(table.userId)],
+);
+
+export const authVerifications = pgTable(
+  "auth_verifications",
+  {
+    id: text("id").primaryKey(),
+    identifier: text("identifier").notNull(),
+    value: text("value").notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
+  },
+  (table) => [index("auth_verifications_identifier_idx").on(table.identifier)],
+);
+
+export const authRateLimits = pgTable("auth_rate_limits", {
+  id: text("id").primaryKey(),
+  key: text("key").notNull().unique(),
+  count: integer("count").notNull(),
+  lastRequest: bigint("last_request", { mode: "number" }).notNull(),
+});
+

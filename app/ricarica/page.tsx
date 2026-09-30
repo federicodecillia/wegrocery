@@ -1,4 +1,5 @@
 import { and, eq } from "drizzle-orm";
+import { redirect } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { CopyField } from "@/components/ricarica/copy-field";
 import { PendingRefresh } from "@/components/ricarica/pending-refresh";
@@ -62,6 +63,8 @@ export default async function RicaricaPage({
     resultFor(memberId, esito, session_id),
     getPaymentSettings(),
   ]);
+  // A pay-per-order group has no wallet to top up.
+  if (settings.mode === "per_order") redirect("/");
   const online = settings.onlineTopupAvailable;
   const bank = settings.bankTransfer;
   // The group's maximum balance, in cents: online top-ups stop there, the

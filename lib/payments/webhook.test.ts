@@ -135,3 +135,32 @@ describe("REQUIRED_STRIPE_EVENTS", () => {
     expect(new Set(REQUIRED_STRIPE_EVENTS).size).toBe(REQUIRED_STRIPE_EVENTS.length);
   });
 });
+
+describe("order payments", () => {
+  const session = {
+    id: "cs_1",
+    payment_status: "paid",
+    amount_total: 2500,
+    currency: "eur",
+    payment_intent: "pi_1",
+  };
+  const plan = (metadata: Record<string, string>) =>
+    planWebhookAction({ type: "checkout.session.completed", data: { object: { ...session, metadata } } } as unknown as Stripe.Event);
+
+  it("routes a paid order session to the order credit with its cycle", () => {
+    expect(plan({ paymentId: "pay_1", kind: "order", cycleId: "cyc_1" })).toEqual({
+      kind: "order_credit",
+      paymentId: "pay_1",
+      cycleId: "cyc_1",
+      sessionId: "cs_1",
+      amountCents: 2500,
+      currency: "eur",
+      paymentIntentId: "pi_1",
+    });
+  });
+
+  it("keeps a session without kind, or an order without its cycle, a top-up credit", () => {
+    expect(plan({ paymentId: "pay_1" }).kind).toBe("credit");
+    expect(plan({ paymentId: "pay_1", kind: "order" }).kind).toBe("credit");
+  });
+});

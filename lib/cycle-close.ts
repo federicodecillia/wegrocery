@@ -53,3 +53,18 @@ export function buildCycleCloseCharges(
 export function ordersSnapshot(memberTotals: ReadonlyArray<MemberOrderTotal>): string {
   return JSON.stringify(Object.fromEntries(memberTotals.map((r) => [r.memberId, r.total])));
 }
+
+// Which of a cancelled cycle's ledger rows the cancellation reverses. A wallet
+// cycle: its whole net (charges and later corrections), shipping aside when the
+// group keeps it. A pay-per-order cycle: only what was charged, never the
+// payments and refunds, or the member would get nothing back (the settlement
+// then returns what they paid).
+export function cancelledCycleReversalTypes(
+  paymentMode: string,
+  refundShipping: boolean,
+): { include: string[] } | { exclude: string[] } | null {
+  if (paymentMode === "per_order") {
+    return { include: refundShipping ? ["order_charge", "shipping_charge", "correction"] : ["order_charge", "correction"] };
+  }
+  return refundShipping ? null : { exclude: ["shipping_charge"] };
+}

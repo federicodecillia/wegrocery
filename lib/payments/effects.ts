@@ -32,6 +32,7 @@ export async function notifyMember(
   type: string,
   title: string,
   body: (balance: string) => string,
+  href = "/storico",
 ): Promise<void> {
   const [member] = await db
     .select({ email: members.email })
@@ -45,7 +46,7 @@ export async function notifyMember(
     type,
     title,
     body: body(formatMoney(balance)),
-    href: "/storico",
+    href,
     createdAt: new Date(),
   });
 }

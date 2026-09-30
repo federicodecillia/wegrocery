@@ -12,7 +12,12 @@ import {
   getMemberOrderLines,
   getNextMemberPickup,
   getOpenCycles,
+  getOrderDraft,
 } from "@/lib/db/queries";
+import { getDb } from "@/lib/db/client";
+import { getPaymentSettings } from "@/lib/payments/get-settings";
+import { getCycleCoverageCents } from "@/lib/payments/order-confirm";
+import { homeOrderStatus, orderPaymentAmount, type HomeOrderStatus } from "@/lib/payments/order-payment";
 import { formatDateShort, formatEur, getProductEmoji } from "@/lib/utils";
 import { canAccessCycle } from "@/lib/roles";
 import { movementText } from "@/lib/movement-label";
@@ -22,12 +27,16 @@ export default async function HomePage() {
   const role = getUserRole(session);
   const memberId = session.user.memberId!;
 
-  const [balance, openCycles, recentMovements, nextPickup] = await Promise.all([
+  const [balance, openCycles, recentMovements, nextPickup, settings] = await Promise.all([
     getMemberBalance(memberId),
     getOpenCycles(),
     getMemberLedger(memberId, 4),
     getNextMemberPickup(memberId),
+    getPaymentSettings(),
   ]);
+  // A pay-per-order group has no wallet: no balance card, and each cycle
+  // says where its order stands instead.
+  const payPerOrder = settings.mode === "per_order";
 
   const activeCycles = openCycles.filter((c) => canAccessCycle(c.accessLevel, role));
 
@@ -38,9 +47,37 @@ export default async function HomePage() {
         getMemberOrderLines(memberId, cycle.cycleId),
       ]);
       const orderTotal = myLines.reduce((s, l) => s + parseFloat(l.lineTotal), 0);
-      return { cycle, cycleProducts, myLines, orderTotal };
+      return { cycle, cycleProducts, myLines, orderTotal, payStatus: await payStatusOf(cycle, cycleProducts, myLines.length > 0) };
     })
   );
+
+  async function payStatusOf(
+    cycle: (typeof activeCycles)[number],
+    cycleProducts: { productId: string; unitPrice: string }[],
+    hasConfirmedOrder: boolean,
+  ): Promise<HomeOrderStatus> {
+    const feeType = cycle.handlingFeeType;
+    if (cycle.paymentMode !== "per_order" || (feeType !== "percent" && feeType !== "fixed") || cycle.handlingFeeValue === null) {
+      return null;
+    }
+    const [coveredCents, draftLines] = await Promise.all([
+      getCycleCoverageCents(getDb(), memberId, cycle.cycleId),
+      getOrderDraft(memberId, cycle.cycleId),
+    ]);
+    const prices = new Map(cycleProducts.map((p) => [p.productId, Math.round(Number(p.unitPrice) * 100)]));
+    const draft = draftLines
+      ? orderPaymentAmount({
+          productsCents: draftLines.reduce((sum, l) => sum + (prices.get(l.productId) ?? 0) * l.quantity, 0),
+          shipping: {
+            mode: cycle.shippingMode,
+            fixedCents: cycle.shippingCostPerMember === null ? null : Math.round(Number(cycle.shippingCostPerMember) * 100),
+          },
+          fee: { type: feeType, value: Number(cycle.handlingFeeValue) },
+          coveredCents,
+        })
+      : null;
+    return homeOrderStatus({ hasConfirmedOrder, draft, coveredCents });
+  }
 
   const globalOrderTotal = cycleDataList.reduce((sum, d) => sum + (isNaN(d.orderTotal) ? 0 : d.orderTotal), 0);
   const afterBalance = (balance || 0) - globalOrderTotal;
@@ -50,7 +87,9 @@ export default async function HomePage() {
 
   return (
     <AppShell email={session.user.email} isAdmin={role === "admin"} memberId={memberId}>
-      {/* ── Saldo hero card ── */}
+      {/* ── Saldo hero card (wallet groups only) ── */}
+      {!payPerOrder && (
+        <>
       <div
         className={`mb-[14px] rounded-[20px] p-[20px_22px_22px] ${
           isNegative
@@ -128,12 +167,15 @@ export default async function HomePage() {
         )}
       </div>
 
+        </>
+      )}
+
       {/* ── Prossimo ritiro card ── */}
       {nextPickup && <NextPickupCard pickup={nextPickup} />}
 
       {/* ── Cycles loop ── */}
       {cycleDataList.length > 0 ? (
-        cycleDataList.map(({ cycle, cycleProducts, myLines, orderTotal }) => {
+        cycleDataList.map(({ cycle, cycleProducts, myLines, orderTotal, payStatus }) => {
           const productMap = new Map(cycleProducts.map((p) => [p.productId, p]));
           return (
             <div key={cycle.cycleId} className="mb-[24px]">
@@ -149,6 +191,28 @@ export default async function HomePage() {
                   pickup2EndTime={cycle.pickup2EndTime ?? null}
                 />
               </div>
+
+              {payStatus && (
+                <Link
+                  href={`/ordine?cycleId=${cycle.cycleId}`}
+                  className={`mb-[10px] flex items-center justify-between rounded-[14px] border px-4 py-[10px] text-[14px] font-semibold ${
+                    payStatus.kind === "paid"
+                      ? "border-accent/25 bg-accent-soft text-accent-text"
+                      : "border-primary-mid bg-primary-soft text-primary-text"
+                  }`}
+                >
+                  <span>
+                    {payStatus.kind === "draft"
+                      ? t.order.pay.statusDraft(formatEur(payStatus.amountCents / 100))
+                      : payStatus.kind === "paid"
+                        ? t.order.pay.statusPaid(formatEur(payStatus.amountCents / 100))
+                        : payStatus.kind === "changes"
+                          ? t.order.pay.statusChanges(formatEur(payStatus.amountCents / 100))
+                          : t.order.pay.statusChangesNoPay}
+                  </span>
+                  <span aria-hidden="true">→</span>
+                </Link>
+              )}
 
               {myLines.length > 0 ? (
                 <div className="overflow-hidden rounded-[18px] border border-brand-border bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)]">

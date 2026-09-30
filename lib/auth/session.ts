@@ -24,8 +24,8 @@ export async function requireUserSession(): Promise<AppSession> {
     redirect("/login");
   }
 
-  // auth.ts ends the session of a member deactivated or deleted since signing
-  // in, so they are sent to /login just above. An inactive flag on a live
+  // auth() returns no session for a member deactivated or deleted since
+  // signing in, so they are sent to /login just above. An inactive flag on a live
   // session means this request's member lookup failed: fail closed with an
   // error, since a redirect to /login would loop (the login page sends any
   // session with an email back to /).
@@ -61,7 +61,7 @@ export async function requireAdmin(): Promise<GuardedMember> {
 }
 
 // Same rule as middleware.ts and requireUserSession. `active` and `memberId`
-// are re-read from the members table on every request by the jwt callback, so
+// are re-read from the members table on every request by auth(), so
 // a deactivated admin loses access immediately, not at token expiry.
 async function requireAccess(need: "member" | "admin"): Promise<GuardedMember> {
   const session = await auth();

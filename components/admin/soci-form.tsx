@@ -2,7 +2,8 @@
 
 import { useState, useTransition } from "react";
 import { toast } from "@/components/ui/toast";
-import { adminDeleteMember, adminUpsertMember, type UpsertMemberInput } from "@/lib/actions/admin";
+import { adminDeleteMember, adminInviteMember, adminUpsertMember, type UpsertMemberInput } from "@/lib/actions/admin";
+import { formatDate } from "@/lib/utils";
 import { DEFAULT_ROLE, ROLES, getRoleLabel, normalizeRole, type Role } from "@/lib/roles";
 import { t } from "@/lib/i18n";
 
@@ -13,6 +14,7 @@ type Member = {
   aliasEmail: string | null;
   role: string;
   active: boolean;
+  lastLoginAt?: string | null;
 };
 
 export function SociForm({ member, onClose }: { member?: Member; onClose?: () => void }) {
@@ -144,6 +146,15 @@ export function SociList({ members }: { members: Member[] }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [filter, setFilter] = useState("");
   const [deletingId, startDeleteTransition] = useTransition();
+  const [inviting, startInviteTransition] = useTransition();
+
+  function handleInvite(m: Member) {
+    startInviteTransition(async () => {
+      const result = await adminInviteMember(m.memberId);
+      if (result.error) toast.error(result.error);
+      else toast.success(t.admin.members.inviteSent(m.fullName));
+    });
+  }
 
   const query = filter.toLowerCase().trim();
   const visible = query
@@ -201,11 +212,23 @@ export function SociList({ members }: { members: Member[] }) {
                       <span className="ml-1 text-accent-text">· {m.aliasEmail}</span>
                     )}
                   </div>
+                  <div className="text-label text-muted">
+                    {m.lastLoginAt ? t.admin.members.lastLogin(formatDate(m.lastLoginAt)) : t.admin.members.neverLoggedIn}
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className={`rounded-full px-2 py-0.5 text-label font-semibold ${roleColor}`}>
                     {getRoleLabel(m.role)}
                   </span>
+                  {m.active && (
+                    <button
+                      onClick={() => handleInvite(m)}
+                      disabled={inviting}
+                      className="rounded-full border border-brand-border px-2.5 py-1 text-label font-semibold text-accent-text disabled:opacity-40"
+                    >
+                      {t.admin.members.invite}
+                    </button>
+                  )}
                   <button
                     onClick={() => setEditingId(m.memberId)}
                     className="rounded-full border border-brand-border px-2.5 py-1 text-label font-semibold text-brand-gray"

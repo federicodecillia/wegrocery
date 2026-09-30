@@ -66,6 +66,47 @@ export const en: Strings = {
     pickup: "Pickup",
   },
   order: {
+    // Pay per order (mode 2)
+    pay: {
+      products: "Products",
+      shipping: "Shipping",
+      fee: "Handling and order preparation (estimate)",
+      feeHint: "When the cycle is settled we refund what was not needed.",
+      refundDifference: (amount: string) =>
+        `You paid ${amount} more than the order costs now: we refund it to your card when the cycle is settled.`,
+      dueDifference: (amount: string) => `${amount} still to pay: settled when the cycle closes its accounts.`,
+      alreadyPaid: "Already paid",
+      toPay: "To pay",
+      nothingToPay: "Nothing to pay",
+      confirmAndPay: (amount: string) => `Confirm and pay ${amount}`,
+      confirm: "Confirm",
+      redirecting: "Taking you to the payment...",
+      cancelOrder: "Cancel order",
+      cancelTitle: "Cancel the order?",
+      cancelMessage: (amount: string) =>
+        `The order is deleted and we refund ${amount} to the card you paid with. It usually takes 5-10 days.`,
+      cancelMessageNoRefund: "The order is deleted.",
+      cancelConfirm: "Yes, cancel it",
+      cancelled: "Order cancelled. The refund is on its way.",
+      cancelledNoRefund: "Order cancelled.",
+      confirmed: "Order confirmed.",
+      verifying: "Payment being verified: your order will show as confirmed in a moment.",
+      paid: "Payment received: your order is confirmed.",
+      lateRefunded: "The payment arrived when the order could no longer take it: we are refunding it in full to your card.",
+      payCancelled: "Payment cancelled: you were not charged and your order did not change.",
+      supplement: (cycle: string) => `Order supplement: ${cycle}`,
+      lineProducts: (cycle: string) => `Products: ${cycle}`,
+      unavailable: "Online payments are not available right now. Contact whoever runs the group.",
+      inProgress: "A payment of yours for this order is being verified: wait a moment and reload the page.",
+      tooHigh: (max: string) => `The amount is above ${max}: contact the treasurer.`,
+      changed: "Something changed while you were confirming: check the order and try again.",
+      minimumNote: (amount: string) =>
+        `The minimum payment is ${amount}: the difference comes back to you when the cycle is settled.`,
+      statusDraft: (amount: string) => `Draft to pay: ${amount}`,
+      statusPaid: (amount: string) => `Confirmed and paid: ${amount}`,
+      statusChanges: (amount: string) => `Changes to pay: +${amount}`,
+      statusChangesNoPay: "Changes to confirm",
+    },
     yourOrder: "Your order",
     noOpenOrders: "No open orders",
     noOpenOrdersHint: "Come back when the order is open.",
@@ -141,6 +182,8 @@ export const en: Strings = {
     refund: "Refund",
     onlineTopupRefund: "Online top-up refund",
     refundFailed: "Refund failed",
+    orderPayment: "Order payment",
+    orderRefund: "Refund to card",
     payout: "Balance returned",
     manualCharge: "Charge",
     membershipFee: "Membership fee",
@@ -242,7 +285,20 @@ export const en: Strings = {
   },
   login: {
     demoMessage: "Public demo: enter with one click, no registration required.",
-    continueMessage: "Sign in with Google to continue.",
+    continueMessage: "Enter your email: we'll send you a link to sign in.",
+    emailLabel: "Your email",
+    emailPlaceholder: "name@example.com",
+    sendLink: "Send me the link",
+    sending: "Sending...",
+    sent: "Check your inbox: if the address belongs to a member you'll find the sign-in link (valid for 15 minutes). Check spam too.",
+    rateLimited: "Too many requests: wait a minute and try again.",
+    failed: "We couldn't send the request. Try again.",
+    or: "or",
+    googleRedirecting: "Taking you to Google...",
+    confirmTitle: "Sign in",
+    confirmMessage: "Tap the button to sign in. The link works once.",
+    confirmButton: "Sign in",
+    linkInvalid: "The link is no longer valid: it may have been used already or expired. Ask for a new one.",
     accessDenied: "Access denied: your email is not listed as an enabled member.",
     attemptedEmail: (email: string) => `You tried to sign in with: ${email}`,
     notMember:
@@ -261,6 +317,22 @@ export const en: Strings = {
     memberLogin: "Enter as User (demo)",
     adminLogin: "Enter as Admin (demo)",
     configMissing: "Add auth variables to .env.local to enable local login.",
+  },
+  authEmail: {
+    subject: (kind: string, app: string) =>
+      kind === "invite" ? `You're invited to ${app}` : kind === "login" ? `Your link to sign in to ${app}` : `Signing in to ${app}`,
+    login: (app: string, url: string, minutes: number) =>
+      `Hi,\n\nto sign in to ${app} open this link and tap "Sign in":\n\n${url}\n\nThe link is valid for ${minutes} minutes and works once. If you didn't ask for it, ignore this email.`,
+    invite: (app: string, url: string, minutes: number) =>
+      `Hi,\n\nyou've been invited to ${app}, the buying group's app to order and see your balance.\n\nTo sign in open this link and tap "Sign in":\n\n${url}\n\nThe link is valid for ${minutes} minutes. When it expires, ask for a new one from the sign-in page with this same email.`,
+    notMember: (app: string, email: string, support: string) =>
+      `Hi,\n\nsomeone asked to sign in to ${app} with ${email}, which is not a member's address. If you're a member with another address, use that one; if you think this is a mistake write to ${support}.\n\nIf you didn't ask, ignore this email.`,
+    accountInactive: (app: string, support: string) =>
+      `Hi,\n\nyour account on ${app} is not active. To reactivate it write to ${support}.`,
+    membershipInactive: (app: string, renew: string | null, support: string) =>
+      `Hi,\n\nyour membership card is not active for this year, so you can't sign in to ${app}.${renew ? ` You can renew it here: ${renew}` : ""}\n\nQuestions: ${support}.`,
+    checkUnavailable: (app: string) =>
+      `Hi,\n\nwe can't check your membership card right now, so we can't send you the link to sign in to ${app}. Try again in a few minutes.`,
   },
   logout: {
     confirmTitle: "Sign out?",
@@ -366,6 +438,44 @@ export const en: Strings = {
     admin: "Admin only",
   },
   admin: {
+    configStatus: {
+      title: "Configuration status",
+      intro:
+        "What is connected in this installation. The values live in the project's environment variables on Vercel: only their names show here.",
+      status: { ok: "OK", missing: "Missing", warning: "Check", off: "Off" },
+      required: "required",
+      items: {
+        database: "Database",
+        authSecret: "Session key",
+        signIn: "Sign-in (email link, optional Google)",
+        brand: "Group name, logo and colours",
+        baseUrl: "App address in emails",
+        email: "Sending email",
+        stripe: "Online payments (Stripe)",
+        membership: "Membership card check (WallyFor)",
+        sentry: "Error reporting (Sentry)",
+      } as Record<string, string>,
+      notes: {
+        pendingMigrations: "Migrations to apply before using the new features:",
+        databaseUnreachable: "Cannot read the list of migrations: check the database or run npm run doctor.",
+        defaultBrand: "No brand set: the app uses WeGrocery's name and colours.",
+        noBaseUrl: "Without an address, emails arrive without links to the app.",
+        demoSignIn: "Demo: sign in with the profile buttons.",
+        emailAndGoogle: "Email link and Google.",
+        emailOnly: "Email link.",
+        googleOnly: "Google only: without email, members with no Google account cannot sign in.",
+        contrast: "Some theme colours are hard to read:",
+        noRedirect: "Outside production emails are redirected to EMAIL_REDIRECT_TO: without it they are not sent.",
+        noWebhookSecret: "The webhook secret is missing: payments would not be recorded.",
+        live: "Live key.",
+        test: "Test key: no real charges.",
+        missing: "No key.",
+        liveKeyOutsideProduction: "Live key outside production: payments switched off.",
+        testKeyInProduction: "Test key in production: payments switched off.",
+        stripeEvents: "Events to enable on the webhook endpoint:",
+      } as Record<string, string>,
+      variables: "Variables:",
+    },
     common: {
       save: "Save",
       saveChanges: "Save changes",
@@ -441,6 +551,12 @@ export const en: Strings = {
       shippingProportional: "Proportional",
       shippingFixedHint: "Amount charged to each member with an order.",
       shippingProportionalHint: "Total shipping cost: split among members in proportion to their order value.",
+      handlingFeeLabel: "Handling and order preparation",
+      handlingFeePercent: "% of the products",
+      handlingFeeFixed: "Fixed amount",
+      handlingFeeHint: "An estimate each member pays with the order: what is not needed goes back when the cycle is settled.",
+      handlingFeeEditWarning: "Members who have already paid are not recalculated: the difference is evened out at settlement.",
+      handlingFeeDisplay: (fee: string) => `Handling: ${fee}`,
       shippingManualTitle: "Managed manually per member",
       shippingManualDescription: "Shipping shares were imported from the supplier order sheet and vary by member. Member balance entries remain unchanged until you upload a new order sheet.",
       shippingProportionalDisplay: (amount: string) => `${amount} total (proportional to order value)`,
@@ -465,6 +581,8 @@ export const en: Strings = {
       closingCycle: "Closing…",
       closeCycleConfirm: (title: string) =>
         `Close "${title}"?\n\nCharges will be generated for all members with orders.`,
+      perOrderCloseWarning: (drafts: number, pending: number) =>
+        `Unpaid drafts: ${drafts} (they stay out of the order). Payments in progress: ${pending} (refunded if they arrive after the close).`,
       cycleClosed: (n: number) => `Cycle closed. ${n} charges generated.`,
       editClosedBanner:
         "You are editing a closed cycle. Shipping cost changes will recalculate member charges and send adjustment notifications. Order closing date and access level cannot be changed after closure.",
@@ -587,6 +705,12 @@ export const en: Strings = {
     treasury: {
       tabLabel: "Treasury",
       balancesTitle: (n: number) => `Member balances (${n})`,
+      pendingRefundsTitle: (n: number) => (n === 1 ? "1 refund waiting for Stripe" : `${n} refunds waiting for Stripe`),
+      pendingRefundsHint: "Stripe has not received these refunds yet, usually because of a network error. Retrying is safe: nobody is refunded twice.",
+      pendingRefundsRetry: "Retry the refunds",
+      pendingRefundsRetrying: "Sending...",
+      pendingRefundsResult: (sent: number, failed: number, waiting: number) =>
+        `Sent ${sent}, rejected ${failed}, still waiting ${waiting}`,
       totalBalance: "Total balance",
       activeMembersHint: "enabled members",
       avgBalance: "Average balance",
@@ -717,6 +841,13 @@ export const en: Strings = {
       submitAdd: "Add member",
       submitEdit: "Update",
       inactiveBadge: "disabled",
+      invite: "Invite",
+      inviteSending: "Sending...",
+      inviteSent: (name: string) => `Invitation sent to ${name}: they receive a link to sign in.`,
+      inviteInactive: "The member is deactivated: reactivate them before inviting.",
+      inviteRefused: "The member cannot sign in right now (for example the card is not active): no link sent.",
+      lastLogin: (when: string) => `last sign-in ${when}`,
+      neverLoggedIn: "never signed in",
       searchPlaceholder: "Search by name or email…",
       deleteConfirm: (name: string) =>
         `Delete "${name}"?\n\nThis is irreversible. If they have orders or movements, an error will be shown.`,
@@ -1046,6 +1177,10 @@ export const en: Strings = {
       `"${title}" has been closed. You have been charged ${total}.`,
     orderClosedBodyWithShipping: (title: string, total: string, order: string, shipping: string) =>
       `"${title}" has been closed. You have been charged ${total} (order ${order} + shipping ${shipping}).`,
+    orderClosedPerOrderBody: (title: string, total: string) =>
+      `"${title}" is closed. Your order costs ${total} for now: it is provisional until the weighing and the supplier's sheet. When the cycle is settled we refund the difference with what you paid.`,
+    cycleCancelledPerOrderBody: (title: string, reason: string) =>
+      `The cycle "${title}" was cancelled: ${reason}. What you paid comes back to your card when the cycle is settled.`,
     topupReceivedTitle: "Top-up recorded",
     onlineTopupTitle: "Top-up received",
     onlineTopupBody: (amount: string, balance: string) =>
@@ -1058,6 +1193,21 @@ export const en: Strings = {
       `The ${amount} refund to your card did not go through, so the amount is back on your balance (now ${balance}). The treasurer will return it by bank transfer.`,
     refundFailedAdminBody: (amount: string, name: string) =>
       `The ${amount} card refund to ${name} did not go through and the amount is back on their balance. Return it by bank transfer: Treasury → Outgoing movement → Payout.`,
+    orderPaidTitle: "Order confirmed and paid",
+    orderPaidBody: (cycle: string, amount: string, products: string, shipping: string, fee: string) =>
+      `Your order for "${cycle}" is confirmed. You paid ${amount}: products ${products}, shipping ${shipping}, handling and order preparation (estimate) ${fee}. When the cycle is settled we refund what was not needed.`,
+    orderPaidShortBody: (cycle: string, amount: string) =>
+      `Your order for "${cycle}" is confirmed. You paid ${amount}.`,
+    orderRefundTitle: "Refund on its way",
+    orderRefundCancelledBody: (amount: string) =>
+      `You cancelled your order: we are refunding ${amount} to the card you paid with. It usually takes 5-10 days.`,
+    orderRefundLateBody: (amount: string) =>
+      `Your payment arrived after orders had closed, so the order was not recorded. We are refunding ${amount} to the card you paid with: it usually takes 5-10 days.`,
+    orderRefundBody: (amount: string) =>
+      `We are refunding ${amount} to the card you paid your order with. It usually takes 5-10 days.`,
+    refundRejectedTitle: "Refund rejected by Stripe",
+    refundRejectedAdminBody: (amount: string, name: string) =>
+      `Stripe rejected the refund of ${amount} to ${name}. The amount stays among the payments of their order: check the payment on Stripe and, if needed, return it by bank transfer.`,
     topupReceivedBody: (amount: string, balance: string) =>
       `A top-up of ${amount} has been recorded on your balance. New balance: ${balance}.`,
     orderModifiedTitle: "Order updated",
@@ -1107,6 +1257,10 @@ export const en: Strings = {
     shippingAdjusted: "Shipping adjusted",
     shippingFromSupplier: "Shipping from supplier sheet",
     cycleCancelled: "Cycle cancellation",
+    orderPayment: "Order payment",
+    orderRefund: "Refund to card",
+    orderRefundCancelled: "Refund to card: order cancelled",
+    orderRefundLate: "Refund to card: payment arrived after orders closed",
   },
   fields: {
     title: "Title",
@@ -1122,6 +1276,7 @@ export const en: Strings = {
     invalidQuantity: "Invalid quantity",
     invalidRole: "Invalid role",
     invalidAccessLevel: "Invalid access level",
+    handlingFeeInvalid: "Invalid handling fee: a number with at most two decimals, a percentage up to 100",
     cycleNotOpen: "The cycle is no longer open",
     accessDenied: "You don't have access to this cycle",
     membershipInactive: (renewUrl: string | null) =>

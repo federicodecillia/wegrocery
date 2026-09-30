@@ -1,8 +1,10 @@
 import { redirect } from "next/navigation";
-import { auth, signIn } from "@/auth";
+import { auth } from "@/auth";
 import { brand } from "@/lib/brand";
 import { t } from "@/lib/i18n";
-import { Button } from "@/components/ui/button";
+import { googleCredentials } from "@/lib/auth/config";
+import { LoginForm } from "./login-form";
+import { ShortcutButtons } from "./shortcut-buttons";
 import { DemoBanner } from "@/components/demo-banner";
 
 type LoginPageProps = {
@@ -13,10 +15,6 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const session = await auth();
   const params = await searchParams;
   const error = typeof params.error === "string" ? params.error : null;
-  const showConfigError = error === "Configuration";
-  // Set by the signIn callback on denial; echoed back so the member can spot
-  // a sign-in with the wrong Google account.
-  const attemptedEmail = typeof params.email === "string" ? params.email.slice(0, 254) : null;
   const deniedMessage =
     error === "AccessDenied"
       ? t.login.accessDenied
@@ -26,8 +24,12 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           ? t.login.membershipInactive
           : error === "MembershipCheckUnavailable"
             ? t.login.membershipCheckUnavailable
-            : null;
-  const hasGoogleAuth = Boolean(process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET);
+            : error === "LinkInvalid" || error === "INVALID_TOKEN" || error === "EXPIRED_TOKEN"
+              ? t.login.linkInvalid
+              : error === "failed_to_create_session" || error === "unable_to_create_session"
+                ? t.login.accessDenied
+                : null;
+  const hasGoogleAuth = googleCredentials(process.env) !== null;
   const hasDevLogin = process.env.NODE_ENV !== "production" && Boolean(process.env.AUTH_DEV_LOGIN_EMAIL);
   const isDemo = process.env.DEMO_MODE === "true";
 
@@ -46,7 +48,6 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         {deniedMessage ? (
           <div className="mt-3 space-y-1 rounded-md border border-red-300 bg-red-50 p-2 text-sm text-red-700">
             <p>{deniedMessage}</p>
-            {attemptedEmail ? <p className="break-all">{t.login.attemptedEmail(attemptedEmail)}</p> : null}
             {error === "MembershipInactive" && brand.membershipUrl ? (
               <p>
                 <a href={brand.membershipUrl} target="_blank" rel="noopener noreferrer" className="font-medium underline">
@@ -62,68 +63,9 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             </p>
           </div>
         ) : null}
-        {showConfigError ? (
-          <p className="mt-3 rounded-md border border-red-300 bg-red-50 p-2 text-sm text-red-700">
-            {t.login.configError}
-          </p>
-        ) : null}
         <div className="mt-6 space-y-3">
-          {hasGoogleAuth ? (
-            <form
-              action={async () => {
-                "use server";
-                await signIn("google", { redirectTo: "/" });
-              }}
-            >
-              <Button type="submit" variant="teal" block>
-                {t.login.googleLogin}
-              </Button>
-            </form>
-          ) : null}
-          {hasDevLogin ? (
-            <form
-              action={async () => {
-                "use server";
-                await signIn("dev-login", { redirectTo: "/" });
-              }}
-            >
-              <Button type="submit" variant="orange" block>
-                {t.login.devLogin}
-              </Button>
-            </form>
-          ) : null}
-          {isDemo ? (
-            <>
-              <form
-                action={async () => {
-                  "use server";
-                  await signIn("demo-login", { profile: "user", redirectTo: "/" });
-                }}
-              >
-                <Button type="submit" variant="teal" block>
-                  {t.login.memberLogin}
-                </Button>
-              </form>
-              <form
-                action={async () => {
-                  "use server";
-                  await signIn("demo-login", { profile: "admin", redirectTo: "/" });
-                }}
-              >
-                <Button type="submit" variant="orange" block>
-                  {t.login.adminLogin}
-                </Button>
-              </form>
-            </>
-          ) : null}
-          {hasGoogleAuth && !isDemo ? (
-            <p className="text-brand-gray text-xs">{t.login.googleAccountHint}</p>
-          ) : null}
-          {!hasGoogleAuth && !hasDevLogin && !isDemo ? (
-            <p className="rounded-md border border-brand-border bg-brand-warm-white p-2 text-sm text-brand-gray">
-              {t.login.configMissing}
-            </p>
-          ) : null}
+          {isDemo ? null : <LoginForm googleEnabled={hasGoogleAuth} next="/" />}
+          {isDemo || hasDevLogin ? <ShortcutButtons demo={isDemo} dev={hasDevLogin} /> : null}
         </div>
       </div>
       {brand.privacyUrl ? (

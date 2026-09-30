@@ -1,10 +1,10 @@
 {
   "name": "wegrocery",
-  "version": "1.16.1",
+  "version": "1.17.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "node scripts/migrate-on-build.mjs && next build",
     "start": "next start",
     "lint": "next lint",
     "db:push": "node --env-file=.env.local node_modules/drizzle-kit/bin.cjs push",
@@ -12,7 +12,8 @@
     "db:studio": "node --env-file=.env.local node_modules/drizzle-kit/bin.cjs studio",
     "db:seed:demo": "node --env-file=.env.demo.local node_modules/tsx/dist/cli.mjs scripts/seed-demo.ts",
     "test": "vitest run",
-    "test:int": "vitest run -c vitest.int.config.ts"
+    "test:int": "vitest run -c vitest.int.config.ts",
+    "doctor": "node --env-file-if-exists=.env.local node_modules/tsx/dist/cli.mjs scripts/doctor.mts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.1",
@@ -20,13 +21,13 @@
     "@sentry/nextjs": "^11.1.0",
     "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.0.0",
+    "better-auth": "1.7.5",
     "clsx": "^2.1.1",
     "drizzle-orm": "^0.45.3",
     "exceljs": "^4.4.0",
     "fast-xml-parser": "^5.11.1",
     "fflate": "^0.8.3",
     "next": "^15.5.26",
-    "next-auth": "5.0.0-beta.32",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "resend": "^6.29.0",

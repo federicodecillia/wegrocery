@@ -62,9 +62,8 @@ Genera un valore nuovo:
 echo "AUTH_SECRET=\"$(openssl rand -base64 32)\"" >> .env.local
 ```
 
-> Avere `AUTH_SECRET` diverso tra locale e prod è la prassi consigliata da
-> Auth.js: le sessioni dei due ambienti restano separate, niente leak fra
-> contesti.
+> Avere `AUTH_SECRET` diverso tra locale e prod è la prassi consigliata:
+> le sessioni dei due ambienti restano separate.
 
 ### 2c-bis. Variabili per l'invio mail al fornitore (opzionale)
 
@@ -164,7 +163,7 @@ punto 2d. Se manca, rifai 2b.
 
 ### `signin/google` → "There is a problem with the server configuration"
 Manca `AUTH_SECRET`. Vedi 2c. **Riavvia il dev server** dopo averla
-aggiunta — Auth.js legge le env solo all'avvio.
+aggiunta: le variabili si leggono solo all'avvio.
 
 ### Login Google → "Accesso negato: la tua email non risulta tra i soci attivi"
 La tua email non è in `members` o `active=false`. Vedi punto 5.

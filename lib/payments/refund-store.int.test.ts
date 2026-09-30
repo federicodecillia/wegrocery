@@ -224,3 +224,44 @@ describeDb("adoption of imported refunds", () => {
     expect(refunded_cents).toBe(900);
   });
 });
+
+// A refund made from the Stripe Dashboard on an order payment belongs to the
+// payment's cycle, so what the cycle's payments cover goes down with it.
+describeDb("dashboard refund of an order payment", () => {
+  const scope = makeScope("dashord");
+  const { sql } = scope;
+
+  beforeAll(async () => {
+    await scope.createMember();
+  });
+
+  afterAll(async () => {
+    await scope.cleanup();
+  });
+
+  it("records it as an order_refund on the payment's cycle", async () => {
+    const { cycleId } = await scope.createCycle("c", { paymentMode: "per_order" });
+    const pay = await scope.createPaidOrderPayment("p", cycleId, 4000);
+    const object = {
+      id: `re_${scope.prefix}`,
+      object: "refund",
+      payment_intent: pay.paymentIntentId,
+      amount: 4000,
+      currency: "eur",
+      status: "succeeded",
+      created: Math.floor(Date.now() / 1000),
+      metadata: {},
+    };
+    await applyWebhookAction(
+      planWebhookAction({ id: "evt_x", type: "refund.created", livemode: false, data: { object } } as unknown as Stripe.Event),
+    );
+    const rows = await sql`SELECT type, amount::text AS amount, cycle_id FROM ledger_entries
+      WHERE payment_id = ${pay.paymentId} ORDER BY created_at, entry_id`;
+    expect(rows.map((r) => `${r.type} ${r.amount} ${r.cycle_id}`)).toEqual([
+      `order_payment 40.00 ${cycleId}`,
+      `order_refund -40.00 ${cycleId}`,
+    ]);
+    const [r] = await sql`SELECT cycle_id FROM refunds WHERE payment_id = ${pay.paymentId}`;
+    expect(r.cycle_id).toBe(cycleId);
+  });
+});
