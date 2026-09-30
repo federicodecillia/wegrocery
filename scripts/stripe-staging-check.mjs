@@ -36,7 +36,12 @@ const appHost = process.env.STAGING_APP_HOST?.trim();
 if (!expectedDbHost || !appHost) throw new Error("refusing: set STAGING_DB_HOST and STAGING_APP_HOST");
 const url = process.env.DATABASE_URL;
 if (!url) throw new Error("DATABASE_URL is required");
-const host = new URL(url).host;
+let host;
+try {
+  host = new URL(url).host;
+} catch {
+  throw new Error("refusing: DATABASE_URL is not a valid URL"); // never echo it
+}
 if (host !== expectedDbHost) throw new Error("refusing: DATABASE_URL is not the staging database");
 
 const stripe = new Stripe(key);

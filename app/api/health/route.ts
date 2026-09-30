@@ -14,7 +14,11 @@ export async function GET(): Promise<Response> {
     await getDb().execute(sql`SELECT 1`);
     db = true;
   } catch {
-    // Reported as db: false; the cause is in the server log of the query.
+    // Reported as db: false. Not logged: the endpoint is public, and a probe
+    // must not be able to fill the log.
   }
-  return Response.json({ ok: db, version: packageJson.version, db }, { status: db ? 200 : 503 });
+  return Response.json(
+    { ok: db, version: packageJson.version, db },
+    { status: db ? 200 : 503, headers: { "Cache-Control": "no-store" } },
+  );
 }

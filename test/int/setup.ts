@@ -18,5 +18,8 @@ if (url) {
   delete process.env.STRIPE_SECRET_KEY;
 } else {
   delete process.env.INT_TEST_DB_READY;
+  // A test that forgot describeDb must fail, not reach whatever database the
+  // shell happens to point at.
+  delete process.env.DATABASE_URL;
   console.warn("[int] no test database configured: integration tests skipped");
 }

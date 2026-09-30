@@ -48,8 +48,9 @@ describeDb("stripe refunds on the database", () => {
     a = await scope.createPaidTopup("a", 1000);
     b = await scope.createPaidTopup("b", 1000);
     c = await scope.createPaidTopup("c", 1000);
-    // Payment c carries a refund recorded before 1.15.0 and imported by 0020,
-    // an hour ago: Stripe has not named it yet.
+    // Payment c carries a refund recorded before 1.15.0 and imported by 0020:
+    // Stripe has not named it yet. The imported row is dated after the Stripe
+    // refund the events below carry (created "now"), as a real one would be.
     const legacyEntry = scope.id("led_c_refund");
     const legacyRefund = `ref_legacy_${legacyEntry}`;
     await sql`UPDATE payments SET refunded_cents = 500, status = 'partially_refunded' WHERE payment_id = ${c.paymentId}`;

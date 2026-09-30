@@ -31,6 +31,6 @@ export default auth((req) => {
 // is a public liveness check that returns no data.
 export const config = {
   matcher: [
-    "/((?!api/auth|api/stripe/webhook|api/health|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!api/auth|api/stripe/webhook|api/health$|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
