@@ -69,9 +69,9 @@ async function findRefund(db: Db, input: StripeRefundInput): Promise<RefundRow |
 async function findPayment(
   db: Db,
   paymentIntentId: string,
-): Promise<{ payment_id: string; member_id: string } | null> {
-  const { rows } = await db.execute<{ payment_id: string; member_id: string }>(
-    sql`SELECT payment_id, member_id FROM payments WHERE payment_intent_id = ${paymentIntentId}`,
+): Promise<{ payment_id: string; member_id: string; cycle_id: string | null } | null> {
+  const { rows } = await db.execute<{ payment_id: string; member_id: string; cycle_id: string | null }>(
+    sql`SELECT payment_id, member_id, cycle_id FROM payments WHERE payment_intent_id = ${paymentIntentId}`,
   );
   return rows[0] ?? null;
 }
@@ -107,7 +107,7 @@ async function writeTransition(
         INSERT INTO refunds
           (refund_id, payment_id, member_id, cycle_id, amount_cents, status, reason,
            stripe_refund_id, created_by, created_at, updated_at)
-        VALUES (${row.refund_id}, ${row.payment_id}, ${row.member_id}, NULL, ${input.amountCents},
+        VALUES (${row.refund_id}, ${row.payment_id}, ${row.member_id}, ${row.cycle_id}, ${input.amountCents},
                 ${plan.status}, 'dashboard', ${input.stripeRefundId}, 'stripe', now(), now())
         ON CONFLICT DO NOTHING
         RETURNING refund_id, payment_id, member_id, cycle_id`
@@ -254,7 +254,8 @@ export async function upsertStripeRefund(input: StripeRefundInput): Promise<void
         refund_id: `ref_${input.stripeRefundId}`,
         payment_id: payment.payment_id,
         member_id: payment.member_id,
-        cycle_id: null,
+        // An order payment's refund belongs to its cycle (order_refund).
+        cycle_id: payment.cycle_id,
         status: "requested",
         reason: "dashboard",
       };

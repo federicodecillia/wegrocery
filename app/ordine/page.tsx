@@ -101,6 +101,8 @@ export default async function OrdinePage({
           ? { tone: "info" as const, text: t.order.pay.verifying, pending: true }
           : payment === "succeeded"
             ? { tone: "ok" as const, text: t.order.pay.paid, pending: false }
+            : payment === "refunded"
+              ? { tone: "info" as const, text: t.order.pay.lateRefunded, pending: false }
             : payment === "failed"
               ? { tone: "error" as const, text: t.topup.resultFailed, pending: false }
               : null;

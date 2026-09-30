@@ -14,7 +14,7 @@ import { getStripe } from "./stripe";
 // 'requested' inside its own guarded write; this sends it to Stripe.
 
 // The one Stripe call this module makes, so tests can pass a fake.
-export type RefundApi = { refunds: Pick<Stripe["refunds"], "create"> };
+export type RefundApi = { refunds: Pick<Stripe["refunds"], "create" | "list"> };
 
 // sent: Stripe accepted it and the refund is in the ledger.
 // failed: Stripe rejected the request; the row is 'failed', nothing moved.
@@ -30,6 +30,9 @@ type RequestedRefund = {
   member_id: string;
   amount_cents: number;
   payment_intent_id: string | null;
+  // Older than Stripe's 24 hours of idempotency: the same key no longer
+  // protects a second call.
+  stale: boolean;
 };
 
 export async function sendRequestedRefund(
@@ -38,7 +41,8 @@ export async function sendRequestedRefund(
 ): Promise<RefundSendResult> {
   const db = getDb();
   const { rows } = await db.execute<RequestedRefund>(sql`
-    SELECT r.refund_id, r.payment_id, r.member_id, r.amount_cents, p.payment_intent_id
+    SELECT r.refund_id, r.payment_id, r.member_id, r.amount_cents, p.payment_intent_id,
+           r.created_at < now() - interval '23 hours' AS stale
     FROM refunds r
     JOIN payments p ON p.payment_id = r.payment_id
     WHERE r.refund_id = ${refundId} AND r.status = 'requested'
@@ -49,6 +53,19 @@ export async function sendRequestedRefund(
 
   let refund: Stripe.Refund;
   try {
+    if (row.stale && row.payment_intent_id) {
+      // The first call may have reached Stripe with its answer lost: find it
+      // by its id before asking again, or the member could be refunded twice.
+      const { data } = await stripe.refunds.list({ payment_intent: row.payment_intent_id, limit: 100 });
+      const earlier = data.find((r) => r.metadata?.refundId === refundId);
+      if (earlier) {
+        const input = refundInputOf(earlier);
+        if (input) {
+          await upsertStripeRefund(input);
+          return "sent";
+        }
+      }
+    }
     if (!row.payment_intent_id) throw Object.assign(new Error("payment without a payment intent"), { type: "StripeInvalidRequestError" });
     refund = await stripe.refunds.create(
       { payment_intent: row.payment_intent_id, amount: row.amount_cents, metadata: { refundId } },

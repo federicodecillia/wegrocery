@@ -202,4 +202,19 @@ describeDb("order payment credit", () => {
       expect(hasOrder !== refunded, JSON.stringify(s)).toBe(true);
     }
   });
+
+  it("refunds a payment whose row was closed while its Checkout was still being created", async () => {
+    const { cycleId, productIds } = await scope.createCycle("closedrow", { paymentMode: "per_order", products });
+    const pay = await scope.createPendingOrderPayment("closedrow", cycleId, 440, [
+      { productId: productIds[0], quantity: 1, unitPriceCents: 400 },
+    ]);
+    // Another tab expired the member's checkouts and closed this row as failed.
+    await sql`UPDATE payments SET status = 'failed', checkout_session_id = NULL WHERE payment_id = ${pay.paymentId}`;
+
+    await applyOrderCredit(completed(pay, cycleId, 440), acceptingStripe());
+    const s = await state(pay.paymentId, cycleId);
+    expect(s.ledger).toEqual(["order_payment 4.40", "order_refund -4.40"]);
+    expect(s.refunds).toEqual([`late_${pay.paymentId} succeeded late_payment 440`]);
+    expect(s.orders).toEqual([]);
+  });
 });

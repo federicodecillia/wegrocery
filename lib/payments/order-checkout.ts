@@ -8,15 +8,16 @@ export type CheckoutApi = { checkout: { sessions: Pick<Stripe["checkout"]["sessi
 // Expires the member's open Checkouts on the cycle before a new one is
 // created: without it, a double tap or a second tab ends in two payments for
 // the same order. "paid" = one of them was completed and its webhook has not
-// been handled yet: the caller must not start another payment now.
+// been handled yet, or one is still being created: the caller must not start
+// another payment now.
 export async function expireOpenCheckouts(
   db: Db,
   stripe: CheckoutApi,
   memberId: string,
   cycleId: string,
 ): Promise<"clear" | "paid"> {
-  const { rows } = await db.execute<{ payment_id: string; checkout_session_id: string | null }>(sql`
-    SELECT payment_id, checkout_session_id FROM payments
+  const { rows } = await db.execute<{ payment_id: string; checkout_session_id: string | null; fresh: boolean }>(sql`
+    SELECT payment_id, checkout_session_id, created_at > now() - interval '5 minutes' AS fresh FROM payments
     WHERE member_id = ${memberId} AND cycle_id = ${cycleId} AND kind = 'order' AND status = 'pending'
   `);
   for (const row of rows) {
@@ -26,7 +27,11 @@ export async function expireOpenCheckouts(
         WHERE payment_id = ${row.payment_id} AND status = 'pending'
       `);
     if (!row.checkout_session_id) {
-      await close("failed"); // its Checkout was never created
+      // Another request may be creating its Checkout right now: closing the
+      // row would leave that payment with nowhere to land. Treat it as in
+      // progress; after a few minutes it was never created.
+      if (row.fresh) return "paid";
+      await close("failed");
       continue;
     }
     try {

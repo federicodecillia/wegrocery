@@ -89,6 +89,7 @@ export const en: Strings = {
       confirmed: "Order confirmed.",
       verifying: "Payment being verified: your order will show as confirmed in a moment.",
       paid: "Payment received: your order is confirmed.",
+      lateRefunded: "The payment arrived when the order could no longer take it: we are refunding it in full to your card.",
       payCancelled: "Payment cancelled: you were not charged and your order did not change.",
       supplement: (cycle: string) => `Order supplement: ${cycle}`,
       lineProducts: (cycle: string) => `Products: ${cycle}`,

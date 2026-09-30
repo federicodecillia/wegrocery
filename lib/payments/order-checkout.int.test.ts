@@ -51,9 +51,12 @@ describeDb("expiring open order checkouts", () => {
     await sql`UPDATE payments SET status = 'expired' WHERE payment_id = ${c.paymentId}`;
   });
 
-  it("closes a row whose checkout was never created", async () => {
+  it("leaves alone a row whose checkout may still be being created, and closes an old one", async () => {
     const d = await scope.createPendingOrderPayment("d", cycleId, 900, []);
     await sql`UPDATE payments SET checkout_session_id = NULL WHERE payment_id = ${d.paymentId}`;
+    expect(await expireOpenCheckouts(getDb(), stripe({}).api, scope.memberId, cycleId)).toBe("paid");
+    expect(await status(d.paymentId)).toBe("pending");
+    await sql`UPDATE payments SET created_at = now() - interval '10 minutes' WHERE payment_id = ${d.paymentId}`;
     expect(await expireOpenCheckouts(getDb(), stripe({}).api, scope.memberId, cycleId)).toBe("clear");
     expect(await status(d.paymentId)).toBe("failed");
   });

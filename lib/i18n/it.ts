@@ -89,6 +89,7 @@ export const it = {
       confirmed: "Ordine confermato.",
       verifying: "Pagamento in verifica: tra qualche istante il tuo ordine risulta confermato.",
       paid: "Pagamento ricevuto: il tuo ordine è confermato.",
+      lateRefunded: "Il pagamento è arrivato quando l'ordine non poteva più accettarlo: te lo rimborsiamo per intero sulla carta.",
       payCancelled: "Pagamento annullato: non ti è stato addebitato nulla e l'ordine non è cambiato.",
       supplement: (cycle: string) => `Integrazione ordine: ${cycle}`,
       lineProducts: (cycle: string) => `Prodotti: ${cycle}`,

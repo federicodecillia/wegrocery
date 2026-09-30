@@ -100,8 +100,8 @@ describe("cancelRefunds", () => {
         { paymentId: "pay_2", amountCents: 1100, refundedCents: 400, requestedCents: 0 },
       ]),
     ).toEqual([
-      { refundId: "cancel_pay_1", paymentId: "pay_1", amountCents: 2500 },
-      { refundId: "cancel_pay_2", paymentId: "pay_2", amountCents: 700 },
+      { refundId: "cancel_pay_1_1", paymentId: "pay_1", amountCents: 2500 },
+      { refundId: "cancel_pay_2_1", paymentId: "pay_2", amountCents: 700 },
     ]);
   });
 

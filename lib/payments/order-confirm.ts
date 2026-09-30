@@ -76,9 +76,10 @@ export async function confirmOrderWithoutPayment(
 
 // Cancels the member's order on an open cycle: the lines and the draft go,
 // and every paid payment of the cycle gets a refund request for what is left
-// of it (paid, minus refunded, minus already requested). The ids are
-// deterministic (cancel_<paymentId>), so cancelling twice asks for nothing
-// twice. The caller then sends each request to Stripe (sendRequestedRefund).
+// of it (paid, minus refunded, minus already requested), so cancelling twice
+// asks for nothing twice. The id counts the payment's cancel refunds
+// (cancel_<paymentId>_<n>): one Stripe rejected, or one reversed after being
+// paid, can be asked for again. The cycle lock keeps the count stable. The caller then sends each request to Stripe (sendRequestedRefund).
 export async function cancelOrderWrite(
   db: Db,
   memberId: string,
@@ -94,7 +95,10 @@ export async function cancelOrderWrite(
     INSERT INTO refunds
       (refund_id, payment_id, member_id, cycle_id, amount_cents, status, reason, stripe_refund_id,
        created_by, created_at, updated_at)
-    SELECT 'cancel_' || p.payment_id, p.payment_id, p.member_id, p.cycle_id, left_cents.amount, 'requested',
+    SELECT 'cancel_' || p.payment_id || '_' || (
+             SELECT count(*) + 1 FROM refunds r0
+             WHERE r0.payment_id = p.payment_id AND r0.reason = 'order_cancelled'
+           ), p.payment_id, p.member_id, p.cycle_id, left_cents.amount, 'requested',
            'order_cancelled', NULL, 'system', now(), now()
     FROM payments p
     CROSS JOIN LATERAL (

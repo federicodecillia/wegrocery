@@ -105,11 +105,11 @@ describeDb("order confirmation and cancellation", () => {
       VALUES (${scope.id("canc_line")}, ${cycleId}, ${scope.memberId}, ${productIds[0]}, 2, 4, 8, now())`;
 
     const first = await cancelOrderWrite(getDb(), scope.memberId, cycleId);
-    expect(first).toEqual({ status: "cancelled", refundIds: [`cancel_${a.paymentId}`, `cancel_${b.paymentId}`] });
+    expect(first).toEqual({ status: "cancelled", refundIds: [`cancel_${a.paymentId}_1`, `cancel_${b.paymentId}_1`] });
     expect(await orders(cycleId)).toEqual([]);
     expect(await refunds(cycleId)).toEqual([
-      `cancel_${a.paymentId} requested order_cancelled 2500`,
-      `cancel_${b.paymentId} requested order_cancelled 700`,
+      `cancel_${a.paymentId}_1 requested order_cancelled 2500`,
+      `cancel_${b.paymentId}_1 requested order_cancelled 700`,
     ]);
     expect(await getCycleCoverageCents(getDb(), scope.memberId, cycleId)).toBe(400); // only the Dashboard refund is unaccounted
 
@@ -147,5 +147,16 @@ describeDb("order confirmation and cancellation", () => {
       }),
     ).toBe("changed");
     expect(await orders(cycleId)).toEqual([`${productIds[0]} x2 = 8.00`]);
+  });
+
+  it("asks again for a refund Stripe rejected, under a new id", async () => {
+    const { cycleId } = await scope.createCycle("rerej", { paymentMode: "per_order", products });
+    const p = await scope.createPaidOrderPayment("rerej", cycleId, 900);
+    const first = await cancelOrderWrite(getDb(), scope.memberId, cycleId);
+    expect(first).toEqual({ status: "cancelled", refundIds: [`cancel_${p.paymentId}_1`] });
+    await sql`UPDATE refunds SET status = 'failed' WHERE refund_id = ${`cancel_${p.paymentId}_1`}`;
+
+    const second = await cancelOrderWrite(getDb(), scope.memberId, cycleId);
+    expect(second).toEqual({ status: "cancelled", refundIds: [`cancel_${p.paymentId}_2`] });
   });
 });

@@ -113,12 +113,13 @@ export async function getOpenCycles(includeExpired = false) {
 
 // Where the member's order payment for a cycle stands, for the notice on the
 // way back from Stripe: the payment of `sessionId` when given, else nothing.
-// "failed" covers an expired session too.
+// "failed" covers an expired session too; "refunded" a payment the app gave
+// back because the order could no longer take it.
 export async function getOrderPaymentStatus(
   memberId: string,
   cycleId: string,
   sessionId: string | undefined,
-): Promise<"pending" | "succeeded" | "failed" | null> {
+): Promise<"pending" | "succeeded" | "refunded" | "failed" | null> {
   if (!sessionId) return null;
   const db = getDb();
   const [row] = await db
@@ -134,7 +135,9 @@ export async function getOrderPaymentStatus(
     .limit(1);
   if (!row) return null;
   if (row.status === "pending") return "pending";
-  return row.status === "failed" || row.status === "expired" ? "failed" : "succeeded";
+  if (row.status === "failed" || row.status === "expired") return "failed";
+  // Refunded right away: it arrived after the close or a product left the cycle.
+  return row.status === "succeeded" ? "succeeded" : "refunded";
 }
 
 // Refunds the app asked for that Stripe has not answered (refunds.status =

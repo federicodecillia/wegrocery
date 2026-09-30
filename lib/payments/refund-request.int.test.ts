@@ -100,4 +100,33 @@ describeDb("refunds requested by the app", () => {
       ledger: [`order_refund -12.00 ${cycleId}`],
     });
   });
+
+  it("looks a refund up on Stripe before asking again after its idempotency key expired", async () => {
+    const pay = await scope.createPaidOrderPayment("old", cycleId, 800);
+    const refundId = `cancel_${pay.paymentId}_1`;
+    await scope.createRequestedRefund(refundId, pay.paymentId, cycleId, 800, "order_cancelled");
+    await sql`UPDATE refunds SET created_at = now() - interval '25 hours' WHERE refund_id = ${refundId}`;
+    // The first call reached Stripe; its answer and its events were lost.
+    const existing = {
+      id: `re_${refundId}`,
+      object: "refund",
+      payment_intent: pay.paymentIntentId,
+      amount: 800,
+      currency: "eur",
+      status: "succeeded",
+      created: Math.floor(Date.now() / 1000) - 90000,
+      metadata: { refundId },
+    };
+    const create = vi.fn();
+    const list = vi.fn(async () => ({ data: [existing] }));
+    const api = { refunds: { create, list } } as unknown as RefundApi;
+
+    expect(await sendRequestedRefund(refundId, api)).toBe("sent");
+    expect(create).not.toHaveBeenCalled();
+    expect(await state(pay.paymentId)).toEqual({
+      payment: "refunded 800",
+      refunds: [`${refundId} succeeded re_${refundId}`],
+      ledger: [`order_refund -8.00 ${cycleId}`],
+    });
+  });
 });

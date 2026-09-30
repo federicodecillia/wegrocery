@@ -1,6 +1,6 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { actionErrorMessage } from "@/lib/action-error";
 import { requireActiveMember } from "@/lib/auth/session";
@@ -102,6 +102,13 @@ export async function startOrderPayment(
       return refuse("membership_inactive", t.errors.membershipInactive(brand.membershipUrl));
     }
 
+    // Open Checkouts first, then the coverage: a payment landing meanwhile is
+    // counted, and a Checkout left open cannot later overwrite this order.
+    const stripe = settings.onlineTopupAvailable ? getStripe() : null;
+    if (stripe && (await expireOpenCheckouts(db, stripe, memberId, cycleId)) === "paid") {
+      return refuse("in_progress", t.order.pay.inProgress);
+    }
+    const covered = await getCycleCoverageCents(db, memberId, cycleId);
     const amount = orderPaymentAmount({
       productsCents,
       shipping: {
@@ -109,7 +116,7 @@ export async function startOrderPayment(
         fixedCents: cycle.shippingCostPerMember === null ? null : cents(cycle.shippingCostPerMember),
       },
       fee,
-      coveredCents: await getCycleCoverageCents(db, memberId, cycleId),
+      coveredCents: covered,
     });
 
     if (amount.outcome === "too_high") {
@@ -121,7 +128,7 @@ export async function startOrderPayment(
         memberId,
         cycleId,
         lines: priced,
-        expectedCoveredCents: amount.coveredCents,
+        expectedCoveredCents: covered,
       });
       if (written === "changed") return refuse("changed", t.order.pay.changed);
       await writeAudit(email, "confirmMyOrder", cycleId, { lineCount: priced.length, amount });
@@ -130,11 +137,7 @@ export async function startOrderPayment(
     }
 
     // Something to pay: Stripe Checkout.
-    const stripe = settings.onlineTopupAvailable ? getStripe() : null;
     if (!stripe) return refuse("unavailable", t.order.pay.unavailable);
-    if ((await expireOpenCheckouts(db, stripe, memberId, cycleId)) === "paid") {
-      return refuse("in_progress", t.order.pay.inProgress);
-    }
 
     // The draft is what the member will find if they come back without paying.
     await db
@@ -191,10 +194,17 @@ export async function startOrderPayment(
         },
         { idempotencyKey: paymentId },
       );
-      await db
+      // Only while the row is still pending: another tab may have closed it
+      // meanwhile, and then this Checkout must not be paid.
+      const linked = await db
         .update(payments)
         .set({ checkoutSessionId: checkout.id, updatedAt: new Date() })
-        .where(eq(payments.paymentId, paymentId));
+        .where(and(eq(payments.paymentId, paymentId), eq(payments.status, "pending")))
+        .returning({ paymentId: payments.paymentId });
+      if (linked.length === 0) {
+        await stripe.checkout.sessions.expire(checkout.id).catch((e) => reportError("order checkout", e, { paymentId }));
+        return refuse("changed", t.order.pay.changed);
+      }
       if (!checkout.url) throw new Error("Checkout Session without url");
       return { status: "redirect", url: checkout.url };
     } catch (e) {

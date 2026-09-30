@@ -24,6 +24,17 @@ export type OrderCreditAction = {
 const snapshotLines = sql`jsonb_to_recordset(p.order_snapshot->'lines')
   AS l("productId" text, quantity integer, "unitPriceCents" integer)`;
 
+// A payment row closed by the app (its Checkout was expired, or never came
+// back from Stripe) that Stripe may still report as paid.
+const CLOSED_UNPAID = new Set(["failed", "expired"]);
+
+async function isCredited(db: Db, paymentId: string): Promise<boolean> {
+  const { rows } = await db.execute(
+    sql`SELECT 1 FROM ledger_entries WHERE payment_id = ${paymentId} AND type = 'order_payment'`,
+  );
+  return rows.length > 0;
+}
+
 function isGuardError(e: unknown): boolean {
   return e instanceof Error && /22012|division by zero/i.test(e.message);
 }
@@ -122,7 +133,7 @@ async function creditLate(db: Db, a: OrderCreditAction): Promise<string | null> 
           checkout_session_id = ${a.sessionId},
           payment_intent_id = coalesce(${a.paymentIntentId}, payment_intent_id),
           updated_at = now()
-      WHERE payment_id = ${a.paymentId} AND status = 'pending'
+      WHERE payment_id = ${a.paymentId} AND status IN ('pending', 'failed', 'expired')
       RETURNING payment_id, member_id, amount_cents
     ),
     led AS (
@@ -206,7 +217,12 @@ export async function applyOrderCredit(a: OrderCreditAction, stripe: RefundApi |
 
   // The guard fired. Why?
   const row = await readPayment(db, a.paymentId);
-  if (!row || row.status !== "pending") return; // already handled: a replayed event
+  if (!row) return;
+  // Already handled (a replayed event), unless the row was closed as failed or
+  // expired while its Checkout was being created and the member paid anyway:
+  // that money has no order, so it goes back like a late payment.
+  const closedButPaid = CLOSED_UNPAID.has(row.status) && !(await isCredited(db, a.paymentId));
+  if (row.status !== "pending" && !closedButPaid) return;
   const matches =
     row.amount_cents === a.amountCents &&
     row.currency === a.currency &&
@@ -221,6 +237,7 @@ export async function applyOrderCredit(a: OrderCreditAction, stripe: RefundApi |
     });
     return;
   }
+  const closedWithoutPayment = row.status !== "pending";
   const { rows: blockers } = await db.execute<{ cycle_open: boolean; missing: number }>(sql`
     SELECT
       (SELECT status FROM order_cycles WHERE cycle_id = ${a.cycleId}) = 'open' AS cycle_open,
@@ -232,7 +249,7 @@ export async function applyOrderCredit(a: OrderCreditAction, stripe: RefundApi |
          )) AS missing
   `);
   const blocker = blockers[0];
-  if (blocker?.cycle_open && blocker.missing === 0) {
+  if (!closedWithoutPayment && blocker?.cycle_open && blocker.missing === 0) {
     // Nothing explains the refusal: let Stripe deliver the event again.
     throw new Error(`order payment ${a.paymentId} could not be credited`);
   }

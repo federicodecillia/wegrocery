@@ -85,14 +85,15 @@ export type RefundablePayment = {
   requestedCents: number;
 };
 
-// Cancelling the order gives back what is left of every payment of the cycle.
-// The id is deterministic, so a repeated cancel asks for nothing twice.
+// Cancelling the order gives back what is left of every payment of the cycle
+// (the first cancel of each payment; lib/payments/order-confirm.ts numbers the
+// later ones in SQL).
 export function cancelRefunds(
   payments: ReadonlyArray<RefundablePayment>,
 ): { refundId: string; paymentId: string; amountCents: number }[] {
   return payments
     .map((p) => ({
-      refundId: `cancel_${p.paymentId}`,
+      refundId: `cancel_${p.paymentId}_1`,
       paymentId: p.paymentId,
       amountCents: p.amountCents - p.refundedCents - p.requestedCents,
     }))
