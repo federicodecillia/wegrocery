@@ -143,7 +143,7 @@ export function EmojiPicker({ name, value, onChange }: Props) {
                 placeholder={t.common.emojiSearchPlaceholder}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                className="w-full rounded-md border border-brand-border px-2.5 py-1.5 text-[12px] text-brand-near-black placeholder:text-brand-gray-light focus:outline-none focus:ring-2 focus:ring-brand-teal/30"
+                className="w-full rounded-md border border-brand-border px-2.5 py-1.5 text-[12px] text-brand-near-black placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/30"
               />
             </div>
 
@@ -163,8 +163,8 @@ export function EmojiPicker({ name, value, onChange }: Props) {
                         onClick={() => pick(e.char)}
                         title={e.name}
                         aria-label={e.name}
-                        className={`flex h-8 w-8 items-center justify-center rounded-md text-xl leading-none transition hover:bg-brand-teal-light ${
-                          isSelected ? "bg-brand-teal-light ring-2 ring-brand-teal" : ""
+                        className={`flex h-8 w-8 items-center justify-center rounded-md text-xl leading-none transition hover:bg-accent-soft ${
+                          isSelected ? "bg-accent-soft ring-2 ring-accent" : ""
                         }`}
                       >
                         {e.char}
@@ -202,7 +202,7 @@ export function EmojiPicker({ name, value, onChange }: Props) {
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="dialog"
         aria-expanded={open}
-        className="flex h-[38px] w-full items-center justify-center rounded-lg border border-brand-border bg-white text-2xl leading-none transition hover:border-brand-teal/60 focus:outline-none focus:ring-2 focus:ring-brand-teal/30"
+        className="flex h-[38px] w-full items-center justify-center rounded-lg border border-brand-border bg-white text-2xl leading-none transition hover:border-accent/60 focus:outline-none focus:ring-2 focus:ring-accent/30"
       >
         {current}
       </button>

@@ -88,7 +88,7 @@ export default async function NotifichePage() {
               >
                 <span
                   className={`mt-[5px] h-2 w-2 shrink-0 rounded-full ${
-                    n.readAt ? "bg-transparent" : "bg-brand-orange"
+                    n.readAt ? "bg-transparent" : "bg-primary"
                   }`}
                   aria-label={n.readAt ? undefined : t.notifications.unreadLabel}
                 />
@@ -101,7 +101,7 @@ export default async function NotifichePage() {
                     {n.title}
                   </div>
                   <div className="mt-[3px] text-[12px] leading-snug text-brand-gray">{n.body}</div>
-                  <div className="mt-[5px] font-mono text-[10px] text-brand-gray-light">
+                  <div className="mt-[5px] font-mono text-[10px] text-muted">
                     {formatDateShort(n.createdAt)}
                   </div>
                 </div>

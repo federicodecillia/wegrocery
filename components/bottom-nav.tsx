@@ -91,9 +91,9 @@ export function BottomNav({ isAdmin }: BottomNavProps) {
           const baseClasses =
             "flex h-full flex-col items-center justify-center gap-1 text-[11px] font-medium tracking-[0.02em]";
           const stateClasses = active
-            ? "text-brand-orange"
+            ? "text-primary-text"
             : locked
-              ? "text-brand-gray-light"
+              ? "text-muted"
               : "text-brand-gray";
 
           return (

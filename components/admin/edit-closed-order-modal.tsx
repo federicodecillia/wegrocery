@@ -143,7 +143,7 @@ export function EditClosedOrderModal({ cycleId, cycleTitle, mode, onClose, onSav
       <div className="flex max-h-[92vh] w-full max-w-[600px] flex-col rounded-2xl bg-brand-warm-white shadow-2xl">
         <div className="flex items-start justify-between gap-3 border-b border-brand-border p-5">
           <div>
-            <div className="font-mono text-[10px] uppercase tracking-[0.13em] text-brand-orange">
+            <div className="font-mono text-[10px] uppercase tracking-[0.13em] text-primary-text">
               {cycleTitle} · {mode.kind === "create" ? t.admin.editClosedOrder.newOrder : t.admin.editClosedOrder.editOrder}
             </div>
             <h3 className="mt-1 text-[16px] font-black text-brand-near-black">
@@ -152,7 +152,7 @@ export function EditClosedOrderModal({ cycleId, cycleTitle, mode, onClose, onSav
             <p className="mt-1 text-[11px] leading-snug text-brand-gray">
               {t.admin.editClosedOrder.correctionNote}
             </p>
-            <p className="mt-2 rounded-lg bg-brand-teal/10 px-2.5 py-1.5 text-[11px] leading-snug text-brand-teal">
+            <p className="mt-2 rounded-lg bg-accent/10 px-2.5 py-1.5 text-[11px] leading-snug text-accent-text">
               {t.admin.editClosedOrder.priceWeightBridge}
             </p>
           </div>
@@ -178,7 +178,7 @@ export function EditClosedOrderModal({ cycleId, cycleTitle, mode, onClose, onSav
                   <select
                     value={memberId}
                     onChange={(e) => setMemberId(e.target.value)}
-                    className="w-full rounded-lg border border-brand-border bg-white px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-brand-teal/30"
+                    className="w-full rounded-lg border border-brand-border bg-white px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-accent/30"
                   >
                     <option value="">{t.admin.editClosedOrder.selectMember}</option>
                     {bootstrap.members.map((m) => (
@@ -197,7 +197,7 @@ export function EditClosedOrderModal({ cycleId, cycleTitle, mode, onClose, onSav
               ) : (
                 grouped.map(([category, prods]) => (
                   <div key={category} className="mb-5">
-                    <div className="mb-2 font-mono text-[10px] font-bold uppercase tracking-[0.13em] text-brand-orange">
+                    <div className="mb-2 font-mono text-[10px] font-bold uppercase tracking-[0.13em] text-primary-text">
                       {category}
                     </div>
                     <div className="overflow-hidden rounded-xl border border-brand-border bg-white">
@@ -221,11 +221,11 @@ export function EditClosedOrderModal({ cycleId, cycleTitle, mode, onClose, onSav
                                 </div>
                                 <div className="flex flex-wrap items-center gap-x-2 text-[11px] text-brand-gray">
                                   {meta && <span className="font-mono">{meta}</span>}
-                                  <span className="font-mono font-semibold text-brand-orange">
+                                  <span className="font-mono font-semibold text-primary-text">
                                     {formatEur(parseFloat(p.unitPrice))}
                                   </span>
                                   {p.pricePerKg && (
-                                    <span className="font-mono text-[10px] text-brand-gray-light">
+                                    <span className="font-mono text-[10px] text-muted">
                                       ({formatEur(parseFloat(p.pricePerKg))}/kg)
                                     </span>
                                   )}
@@ -242,11 +242,11 @@ export function EditClosedOrderModal({ cycleId, cycleTitle, mode, onClose, onSav
                                 +
                               </button>
                             ) : (
-                              <div className="flex shrink-0 items-center gap-2 rounded-full bg-brand-orange/15 p-0.5">
+                              <div className="flex shrink-0 items-center gap-2 rounded-full bg-primary/15 p-0.5">
                                 <button
                                   type="button"
                                   onClick={() => bump(p.productId, -1)}
-                                  className="flex h-7 w-7 items-center justify-center rounded-full text-[16px] font-light text-brand-orange"
+                                  className="flex h-7 w-7 items-center justify-center rounded-full text-[16px] font-light text-primary-text"
                                   aria-label={t.admin.editClosedOrder.reduceAria}
                                 >
                                   −
@@ -257,7 +257,7 @@ export function EditClosedOrderModal({ cycleId, cycleTitle, mode, onClose, onSav
                                 <button
                                   type="button"
                                   onClick={() => bump(p.productId, 1)}
-                                  className="flex h-7 w-7 items-center justify-center rounded-full text-[16px] font-light text-brand-orange"
+                                  className="flex h-7 w-7 items-center justify-center rounded-full text-[16px] font-light text-primary-text"
                                   aria-label={t.admin.editClosedOrder.increaseAria}
                                 >
                                   +
@@ -281,7 +281,7 @@ export function EditClosedOrderModal({ cycleId, cycleTitle, mode, onClose, onSav
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
                   placeholder={t.admin.editClosedOrder.notePlaceholder}
-                  className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-brand-teal/30"
+                  className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-accent/30"
                 />
               </div>
             </>
@@ -291,7 +291,7 @@ export function EditClosedOrderModal({ cycleId, cycleTitle, mode, onClose, onSav
         <div className="border-t border-brand-border bg-white p-4">
           <div className="mb-3 grid grid-cols-3 gap-2 text-center">
             <div>
-              <div className="font-mono text-[10px] uppercase tracking-wide text-brand-gray-light">
+              <div className="font-mono text-[10px] uppercase tracking-wide text-muted">
                 {t.admin.editClosedOrder.beforeLabel}
               </div>
               <div className="font-mono text-[13px] font-bold text-brand-gray">
@@ -299,7 +299,7 @@ export function EditClosedOrderModal({ cycleId, cycleTitle, mode, onClose, onSav
               </div>
             </div>
             <div>
-              <div className="font-mono text-[10px] uppercase tracking-wide text-brand-gray-light">
+              <div className="font-mono text-[10px] uppercase tracking-wide text-muted">
                 {t.admin.editClosedOrder.afterLabel}
               </div>
               <div className="font-mono text-[13px] font-bold text-brand-near-black">
@@ -307,7 +307,7 @@ export function EditClosedOrderModal({ cycleId, cycleTitle, mode, onClose, onSav
               </div>
             </div>
             <div>
-              <div className="font-mono text-[10px] uppercase tracking-wide text-brand-gray-light">
+              <div className="font-mono text-[10px] uppercase tracking-wide text-muted">
                 {t.admin.editClosedOrder.deltaLabel}
               </div>
               <div
@@ -316,7 +316,7 @@ export function EditClosedOrderModal({ cycleId, cycleTitle, mode, onClose, onSav
                     ? "text-brand-gray"
                     : delta > 0
                       ? "text-brand-red"
-                      : "text-brand-teal"
+                      : "text-accent-text"
                 }`}
               >
                 {Math.abs(delta) < 0.005
@@ -335,7 +335,7 @@ export function EditClosedOrderModal({ cycleId, cycleTitle, mode, onClose, onSav
             <button
               onClick={handleSave}
               disabled={isPending || (mode.kind === "create" && !memberId)}
-              className="flex-1 rounded-xl bg-brand-orange py-3 text-[13px] font-bold text-white shadow-lg active:scale-95 disabled:opacity-50"
+              className="flex-1 rounded-xl bg-primary py-3 text-[13px] font-bold text-on-primary shadow-lg active:scale-95 disabled:opacity-50"
             >
               {isPending ? t.admin.common.saving : t.admin.common.saveChanges}
             </button>

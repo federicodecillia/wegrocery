@@ -164,7 +164,7 @@ export function ImportListingWizard({ open, onClose, cycleId, cycleTitle }: Prop
       <div className="flex max-h-[92vh] w-full max-w-[820px] flex-col rounded-2xl bg-brand-warm-white shadow-2xl">
         <header className="flex items-start justify-between gap-3 border-b border-brand-border p-5">
           <div>
-            <div className="font-mono text-[10px] uppercase tracking-[0.13em] text-brand-orange">
+            <div className="font-mono text-[10px] uppercase tracking-[0.13em] text-primary-text">
               {cycleTitle ? `${cycleTitle} · ` : ""}{t.admin.cycle.importListing} · {t.admin.importWizard.stepIndicator(step, 3)}
             </div>
             <h3 className="mt-1 text-[16px] font-black text-brand-near-black">
@@ -332,7 +332,7 @@ function Step1Upload({
                 onClick={() => setSheetIdx(i)}
                 className={`rounded-full border px-3 py-1 text-[12px] ${
                   i === sheetIdx
-                    ? "border-brand-orange bg-brand-orange-light text-brand-near-black"
+                    ? "border-primary bg-primary-soft text-brand-near-black"
                     : "border-brand-border bg-white text-brand-gray"
                 }`}
               >
@@ -353,7 +353,7 @@ function Step1Upload({
               onClick={() => setSupplierMode("existing")}
               className={`flex-1 rounded-lg border px-3 py-2 text-[12px] ${
                 supplierMode === "existing"
-                  ? "border-brand-orange bg-brand-orange-light"
+                  ? "border-primary bg-primary-soft"
                   : "border-brand-border bg-white"
               }`}
             >
@@ -363,7 +363,7 @@ function Step1Upload({
               onClick={() => setSupplierMode("new")}
               className={`flex-1 rounded-lg border px-3 py-2 text-[12px] ${
                 supplierMode === "new"
-                  ? "border-brand-orange bg-brand-orange-light"
+                  ? "border-primary bg-primary-soft"
                   : "border-brand-border bg-white"
               }`}
             >
@@ -535,7 +535,7 @@ function Step3Review({
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap items-center gap-3 rounded-lg bg-brand-orange-light px-3 py-2 text-[12px]">
+      <div className="flex flex-wrap items-center gap-3 rounded-lg bg-primary-soft px-3 py-2 text-[12px]">
         <label className="flex items-center gap-2">
           <input
             type="checkbox"
@@ -618,10 +618,10 @@ function Step3Review({
                     {guessedCategory ? (
                       <span>
                         {guessedCategory}
-                        {nameGuess && <span className="ml-1 text-[10px] text-brand-orange">{t.admin.importWizard.autoCategory}</span>}
+                        {nameGuess && <span className="ml-1 text-[10px] text-primary-text">{t.admin.importWizard.autoCategory}</span>}
                       </span>
                     ) : (
-                      <span className="text-brand-gray-light">—</span>
+                      <span className="text-muted">—</span>
                     )}
                   </td>
                   <td className="p-2 align-middle text-brand-gray">{cell(i, "format")}</td>
@@ -672,7 +672,7 @@ function PreviewTable({
                 <th key={i} className="p-2 text-left">
                   <div className="font-semibold text-brand-near-black">{c || t.admin.importWizard.columnPlaceholder(i + 1)}</div>
                   {hi && (
-                    <div className="font-mono text-[10px] uppercase text-brand-orange">
+                    <div className="font-mono text-[10px] uppercase text-primary-text">
                       → {TARGET_LABEL[hi as TargetField]}
                     </div>
                   )}

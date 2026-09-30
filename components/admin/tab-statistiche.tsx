@@ -127,8 +127,8 @@ function OverviewCards({
           key={c.label}
           className={`rounded-xl p-3 ${
             c.tone === "orange"
-              ? "border border-brand-orange-mid bg-brand-orange-light"
-              : "border border-brand-teal/20 bg-brand-teal-light"
+              ? "border border-primary-mid bg-primary-soft"
+              : "border border-accent/20 bg-accent-soft"
           }`}
         >
           <div className="mb-1 flex items-center justify-between">
@@ -141,7 +141,7 @@ function OverviewCards({
             {c.value}
           </div>
           {c.hint && (
-            <div className="mt-0.5 truncate font-mono text-[10px] text-brand-gray-light">
+            <div className="mt-0.5 truncate font-mono text-[10px] text-muted">
               {c.hint}
             </div>
           )}
@@ -184,7 +184,7 @@ function ProductRankingsCard({
                 .join(" · ");
               return (
                 <li key={`${r.name}-${idx}`} className="flex items-center gap-3">
-                  <span className="w-5 shrink-0 text-right font-mono text-[10px] text-brand-gray-light">
+                  <span className="w-5 shrink-0 text-right font-mono text-[10px] text-muted">
                     {idx + 1}
                   </span>
                   <span className="shrink-0 text-[16px] leading-none">
@@ -195,7 +195,7 @@ function ProductRankingsCard({
                       <span className="truncate text-[12px] font-semibold text-brand-near-black">
                         {r.name}
                         {meta && (
-                          <span className="ml-1 font-normal text-brand-gray-light">{meta}</span>
+                          <span className="ml-1 font-normal text-muted">{meta}</span>
                         )}
                       </span>
                       <span className="shrink-0 font-mono text-[11px] font-bold text-brand-near-black">
@@ -204,11 +204,11 @@ function ProductRankingsCard({
                     </div>
                     <div className="mt-1 h-2 overflow-hidden rounded-full bg-black/[0.05]">
                       <div
-                        className="h-full rounded-full bg-brand-orange"
+                        className="h-full rounded-full bg-primary"
                         style={{ width: `${widthPct}%` }}
                       />
                     </div>
-                    <div className="mt-0.5 flex justify-between font-mono text-[10px] text-brand-gray-light">
+                    <div className="mt-0.5 flex justify-between font-mono text-[10px] text-muted">
                       <span>{t.admin.stats.cyclesCountLabel(r.cyclesCount)}</span>
                       <span>{formatEur(r.totalAmount)}</span>
                     </div>
@@ -275,7 +275,7 @@ function RevenueTrendCard({
             <span
               className={`shrink-0 rounded-full px-2 py-0.5 font-mono text-[10px] font-bold ${
                 trendDelta >= 0
-                  ? "bg-brand-teal-light text-brand-teal"
+                  ? "bg-accent-soft text-accent-text"
                   : "bg-brand-red-light text-brand-red"
               }`}
             >
@@ -296,15 +296,15 @@ function RevenueTrendCard({
         >
           <defs>
             <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="var(--color-brand-orange)" stopOpacity="0.30" />
-              <stop offset="100%" stopColor="var(--color-brand-orange)" stopOpacity="0" />
+              <stop offset="0%" stopColor="var(--color-primary)" stopOpacity="0.30" />
+              <stop offset="100%" stopColor="var(--color-primary)" stopOpacity="0" />
             </linearGradient>
           </defs>
           <path d={areaPath} fill="url(#revenueGradient)" />
           <path
             d={linePath}
             fill="none"
-            stroke="var(--color-brand-orange)"
+            stroke="var(--color-primary)"
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -315,7 +315,7 @@ function RevenueTrendCard({
               cx={p.x}
               cy={p.y}
               r="2.5"
-              fill="var(--color-brand-orange)"
+              fill="var(--color-primary)"
             >
               <title>
                 {p.title}: {formatEur(p.total)} ({p.orderCount} {t.admin.stats.filterMembers})
@@ -323,25 +323,25 @@ function RevenueTrendCard({
             </circle>
           ))}
         </svg>
-        <div className="mt-2 flex justify-between font-mono text-[10px] text-brand-gray-light">
+        <div className="mt-2 flex justify-between font-mono text-[10px] text-muted">
           <span>{trend[0].title}</span>
           <span>{trend[trend.length - 1].title}</span>
         </div>
         <div className="mt-2 grid grid-cols-3 gap-2 text-center">
           <div>
-            <div className="font-mono text-[10px] uppercase text-brand-gray-light">{t.admin.stats.trendLast}</div>
+            <div className="font-mono text-[10px] uppercase text-muted">{t.admin.stats.trendLast}</div>
             <div className="font-mono text-[12px] font-bold text-brand-near-black">
               {formatEur(lastPoint.total)}
             </div>
           </div>
           <div>
-            <div className="font-mono text-[10px] uppercase text-brand-gray-light">{t.admin.stats.trendMax}</div>
+            <div className="font-mono text-[10px] uppercase text-muted">{t.admin.stats.trendMax}</div>
             <div className="font-mono text-[12px] font-bold text-brand-near-black">
               {formatEur(maxVal)}
             </div>
           </div>
           <div>
-            <div className="font-mono text-[10px] uppercase text-brand-gray-light">{t.admin.stats.trendAvg}</div>
+            <div className="font-mono text-[10px] uppercase text-muted">{t.admin.stats.trendAvg}</div>
             <div className="font-mono text-[12px] font-bold text-brand-near-black">
               {formatEur(trend.reduce((s, p) => s + p.total, 0) / trend.length)}
             </div>
@@ -385,11 +385,11 @@ function SupplierStatsCard({
                 </div>
                 <div className="mt-1 h-2 overflow-hidden rounded-full bg-black/[0.05]">
                   <div
-                    className="h-full rounded-full bg-brand-teal"
+                    className="h-full rounded-full bg-accent"
                     style={{ width: `${widthPct}%` }}
                   />
                 </div>
-                <div className="mt-0.5 flex justify-between font-mono text-[10px] text-brand-gray-light">
+                <div className="mt-0.5 flex justify-between font-mono text-[10px] text-muted">
                   <span>{t.admin.stats.cyclesCountLabel(s.cyclesCount)}</span>
                   {s.topProductName && <span>{t.admin.stats.supplierTopProduct(s.topProductName)}</span>}
                 </div>
@@ -426,20 +426,20 @@ function MemberParticipationCard({
       </CardHeader>
       <CardBody>
         <div className="mb-3 grid grid-cols-3 gap-2 text-center">
-          <div className="rounded-lg bg-brand-teal-light p-2">
-            <div className="font-mono text-[10px] uppercase text-brand-teal">{t.admin.stats.participationActive}</div>
+          <div className="rounded-lg bg-accent-soft p-2">
+            <div className="font-mono text-[10px] uppercase text-accent-text">{t.admin.stats.participationActive}</div>
             <div className="text-[18px] font-black text-brand-near-black">{heavy.length}</div>
-            <div className="font-mono text-[10px] text-brand-gray-light">{t.admin.stats.participationActiveHint}</div>
+            <div className="font-mono text-[10px] text-muted">{t.admin.stats.participationActiveHint}</div>
           </div>
-          <div className="rounded-lg bg-brand-orange-light p-2">
-            <div className="font-mono text-[10px] uppercase text-brand-orange">{t.admin.stats.participationOccasional}</div>
+          <div className="rounded-lg bg-primary-soft p-2">
+            <div className="font-mono text-[10px] uppercase text-primary-text">{t.admin.stats.participationOccasional}</div>
             <div className="text-[18px] font-black text-brand-near-black">{occasional.length}</div>
-            <div className="font-mono text-[10px] text-brand-gray-light">{t.admin.stats.participationOccasionalHint}</div>
+            <div className="font-mono text-[10px] text-muted">{t.admin.stats.participationOccasionalHint}</div>
           </div>
           <div className="rounded-lg bg-black/[0.05] p-2">
             <div className="font-mono text-[10px] uppercase text-brand-gray">{t.admin.stats.participationDormant}</div>
             <div className="text-[18px] font-black text-brand-near-black">{dormant.length}</div>
-            <div className="font-mono text-[10px] text-brand-gray-light">{t.admin.stats.participationDormantHint}</div>
+            <div className="font-mono text-[10px] text-muted">{t.admin.stats.participationDormantHint}</div>
           </div>
         </div>
 

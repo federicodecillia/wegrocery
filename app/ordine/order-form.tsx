@@ -342,8 +342,8 @@ export function OrderForm({
           <h1 className="text-[20px] font-black tracking-[-0.03em] text-brand-near-black">
             {t.order.yourOrder}
           </h1>
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-brand-teal/20 bg-brand-teal-light px-2.5 py-0.5 font-mono text-[10px] font-semibold text-brand-teal">
-            <span className="h-1.5 w-1.5 rounded-full bg-brand-teal opacity-75" />
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-accent/20 bg-accent-soft px-2.5 py-0.5 font-mono text-[10px] font-semibold text-accent-text">
+            <span className="h-1.5 w-1.5 rounded-full bg-accent opacity-75" />
             {t.cycle.open}
           </span>
         </div>
@@ -356,11 +356,11 @@ export function OrderForm({
 
       {/* Unconfirmed edits found on arrival (order_drafts). */}
       {isEditing && showDraftBanner && (
-        <div className="mt-3 rounded-[14px] border border-brand-orange-mid bg-brand-orange-light p-[12px_14px]">
+        <div className="mt-3 rounded-[14px] border border-primary-mid bg-primary-soft p-[12px_14px]">
           <p className="text-[13px] font-bold text-brand-near-black">{t.order.draftBannerTitle}</p>
           <p className="mt-1 text-[12px] leading-[1.45] text-brand-near-black">{t.order.draftBannerBody}</p>
           {resumedDraft !== null && resumedDraft.dropped > 0 && (
-            <p className="mt-1 text-[12px] leading-[1.45] text-brand-orange">
+            <p className="mt-1 text-[12px] leading-[1.45] text-primary-text">
               {t.order.draftDropped(resumedDraft.dropped)}
             </p>
           )}
@@ -368,7 +368,7 @@ export function OrderForm({
             type="button"
             onClick={handleDiscardDraft}
             disabled={isPending}
-            className="mt-2 text-[12px] font-semibold text-brand-orange underline disabled:opacity-50"
+            className="mt-2 text-[12px] font-semibold text-primary-text underline disabled:opacity-50"
           >
             {t.order.discardDraft}
           </button>
@@ -420,7 +420,7 @@ export function OrderForm({
             setIsEditing(false);
             setShowDraftBanner(false);
           }}
-          className="mt-3 inline-flex items-center gap-1 text-[12px] font-semibold text-brand-teal"
+          className="mt-3 inline-flex items-center gap-1 text-[12px] font-semibold text-accent-text"
         >
           ← {t.order.backToOrder}
         </button>
@@ -433,7 +433,7 @@ export function OrderForm({
           type="button"
           onClick={handlePrefillFromLast}
           disabled={isPending}
-          className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-full border border-brand-teal/30 bg-brand-teal-light px-4 py-2 text-[12px] font-semibold text-brand-teal disabled:opacity-50"
+          className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-full border border-accent/30 bg-accent-soft px-4 py-2 text-[12px] font-semibold text-accent-text disabled:opacity-50"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M3 12a9 9 0 1 0 3-6.7" />
@@ -447,7 +447,7 @@ export function OrderForm({
       {isEditing && groups.map(({ category, products: prods }) => (
         <div key={category}>
           {category && (
-            <div className="pt-4 pb-2 font-mono text-[10px] uppercase tracking-[0.10em] text-brand-gray-light">
+            <div className="pt-4 pb-2 font-mono text-[10px] uppercase tracking-[0.10em] text-muted">
               {category === "Altro" ? t.order.otherCategory : category}
             </div>
           )}
@@ -467,11 +467,11 @@ export function OrderForm({
                     <div className="text-[14px] font-medium text-brand-near-black">{p.name}</div>
                     <div className="mt-[2px] flex flex-wrap items-center gap-x-2 gap-y-0.5">
                       {meta && <span className="font-mono text-[11px] text-brand-gray">{meta}</span>}
-                      <span className="font-mono text-[11px] font-semibold text-brand-orange">
+                      <span className="font-mono text-[11px] font-semibold text-primary-text">
                         {formatEur(parseFloat(p.unitPrice))}
                       </span>
                       {p.pricePerKg && (
-                        <span className="font-mono text-[10px] text-brand-gray-light">
+                        <span className="font-mono text-[10px] text-muted">
                           ({formatEur(parseFloat(p.pricePerKg))}/kg)
                         </span>
                       )}
@@ -489,7 +489,7 @@ export function OrderForm({
                     </button>
                   </div>
                 ) : (
-                  <div className="flex flex-shrink-0 items-center rounded-full bg-brand-orange-light p-0.5">
+                  <div className="flex flex-shrink-0 items-center rounded-full bg-primary-soft p-0.5">
                     <button
                       onClick={() => changeQty(p.productId, -1)}
                       aria-label={t.order.less}
@@ -503,7 +503,7 @@ export function OrderForm({
                     <button
                       onClick={() => changeQty(p.productId, 1)}
                       aria-label={t.order.more}
-                      className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-orange text-[18px] font-light text-white"
+                      className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-[18px] font-light text-on-primary"
                     >
                       +
                     </button>
@@ -523,7 +523,7 @@ export function OrderForm({
           <div className="border-t border-brand-border bg-brand-warm-white/97 px-5 py-3.5 backdrop-blur-sm">
             <div className="mb-3 flex items-end justify-between">
               <div>
-                <div className="font-mono text-[10px] uppercase tracking-[0.09em] text-brand-gray-light">
+                <div className="font-mono text-[10px] uppercase tracking-[0.09em] text-muted">
                   {t.order.totalOrder}
                 </div>
                 <div className="mt-[2px] text-[24px] font-black tracking-[-0.03em] text-brand-near-black">
@@ -531,12 +531,12 @@ export function OrderForm({
                 </div>
               </div>
               <div className="text-right">
-                <div className="font-mono text-[10px] uppercase tracking-[0.09em] text-brand-gray-light">
+                <div className="font-mono text-[10px] uppercase tracking-[0.09em] text-muted">
                   {t.order.balanceAfter}
                 </div>
                 <div
                   className={`mt-[2px] font-mono text-[14px] font-bold ${
-                    afterBalance < 0 ? "text-brand-red" : "text-brand-teal"
+                    afterBalance < 0 ? "text-brand-red" : "text-accent-text"
                   }`}
                 >
                   {formatSignedMoney(afterBalance)}
@@ -546,8 +546,10 @@ export function OrderForm({
             <button
               onClick={handleSave}
               disabled={isPending}
-              className={`w-full rounded-full px-[22px] py-[14px] text-sm font-bold text-white transition-[opacity,transform] duration-150 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed ${
-                hasOrder ? "bg-brand-orange" : "bg-brand-red"
+              className={`w-full rounded-full px-[22px] py-[14px] text-sm font-bold transition-[opacity,transform] duration-150 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed ${
+                hasOrder
+                  ? "bg-primary text-on-primary"
+                  : "bg-brand-red text-white"
               }`}
             >
               {isPending

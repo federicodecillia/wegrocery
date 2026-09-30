@@ -84,7 +84,7 @@ export function ClosedCycleDetails({
     return (
       <button
         onClick={handleOpen}
-        className="rounded-lg bg-brand-teal/10 px-3 py-1 text-[11px] font-bold text-brand-teal hover:bg-brand-teal/20"
+        className="rounded-lg bg-accent/10 px-3 py-1 text-[11px] font-bold text-accent-text hover:bg-accent/20"
       >
         {label}
       </button>
@@ -129,7 +129,7 @@ export function ClosedCycleDetails({
             <div className="py-20 text-center text-brand-gray">{t.admin.closedCycleDetails.noOrders}</div>
           ) : (
             <div className="space-y-8">
-              <div className="flex items-center gap-2 rounded-lg bg-brand-orange/5 px-3 py-2 text-[11px] text-brand-gray">
+              <div className="flex items-center gap-2 rounded-lg bg-primary/5 px-3 py-2 text-[11px] text-brand-gray">
                 <span className="text-[13px]">👆</span>
                 <span>{t.admin.closedCycleDetails.rectifyHint}</span>
               </div>
@@ -140,16 +140,16 @@ export function ClosedCycleDetails({
                 const total = productsTotal + memberShipping;
                 return (
                   <div key={memberName} className="space-y-2">
-                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-brand-teal/20 pb-1">
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-accent/20 pb-1">
                       <span className="text-[14px] font-bold text-brand-near-black">{memberName}</span>
                       <div className="flex items-center gap-3">
-                        <span className="text-[13px] font-black text-brand-teal">{formatEur(total)}</span>
+                        <span className="text-[13px] font-black text-accent-text">{formatEur(total)}</span>
                         {memberId && (
                           <button
                             onClick={() =>
                               setEditTarget({ kind: "edit", memberId, memberName })
                             }
-                            className="rounded-full bg-brand-orange/10 px-2.5 py-0.5 text-[10px] font-bold text-brand-orange hover:bg-brand-orange/20"
+                            className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-bold text-primary-text hover:bg-primary/20"
                           >
                             {t.admin.closedCycleDetails.editQtyButton}
                           </button>
@@ -187,7 +187,7 @@ export function ClosedCycleDetails({
         <div className="space-y-2 border-t border-brand-border p-4">
           <button
             onClick={() => setEditTarget({ kind: "create" })}
-            className="w-full rounded-xl border border-dashed border-brand-orange/40 bg-brand-orange-light py-2 text-[12px] font-bold text-brand-orange hover:bg-brand-orange/15"
+            className="w-full rounded-xl border border-dashed border-primary/40 bg-primary-soft py-2 text-[12px] font-bold text-primary-text hover:bg-primary/15"
           >
             {t.admin.closedCycleDetails.addOrder}
           </button>
@@ -234,7 +234,7 @@ function OrderLineRow({ line, onSaved }: { line: OrderDetail; onSaved: () => voi
       <button
         type="button"
         onClick={() => setEditing(true)}
-        className="group flex w-full items-start justify-between gap-2 rounded-lg px-1.5 py-1 text-left text-[12px] text-brand-near-black hover:bg-brand-orange/5"
+        className="group flex w-full items-start justify-between gap-2 rounded-lg px-1.5 py-1 text-left text-[12px] text-brand-near-black hover:bg-primary/5"
         title={t.admin.closedCycleDetails.rectifyTitle}
       >
         <div className="flex min-w-0 flex-1 gap-2">
@@ -243,7 +243,7 @@ function OrderLineRow({ line, onSaved }: { line: OrderDetail; onSaved: () => voi
             <div className="truncate font-medium">
               {line.productName} {line.variant && <span className="text-brand-gray">({line.variant})</span>}
               {adjusted && (
-                <span className="ml-1 rounded-full bg-brand-orange/15 px-1.5 py-px text-[10px] font-bold uppercase tracking-wide text-brand-orange">
+                <span className="ml-1 rounded-full bg-primary/15 px-1.5 py-px text-[10px] font-bold uppercase tracking-wide text-primary-text">
                   {t.admin.closedCycleDetails.adjustedBadge}
                 </span>
               )}
@@ -258,7 +258,7 @@ function OrderLineRow({ line, onSaved }: { line: OrderDetail; onSaved: () => voi
             <>
               {/* Original (struck): same `qty × unit_price = total` format
                   as non-rectified rows so the two are visually consistent. */}
-              <span className="block text-brand-gray-light line-through">
+              <span className="block text-muted line-through">
                 {line.quantity}
                 {unitSuffix} × {formatEur(parseFloat(line.unitPrice))} = {formatEur(orderedTotal)}
               </span>
@@ -298,7 +298,7 @@ function OrderLineRow({ line, onSaved }: { line: OrderDetail; onSaved: () => voi
                 {unitSuffix} × {formatEur(parseFloat(line.unitPrice))} = {formatEur(orderedTotal)}
               </span>
               {pricePerKg != null && (
-                <span className="block text-brand-gray-light">
+                <span className="block text-muted">
                   {formatEur(pricePerKg)}/kg
                 </span>
               )}
@@ -307,7 +307,7 @@ function OrderLineRow({ line, onSaved }: { line: OrderDetail; onSaved: () => voi
         </span>
         <span
           aria-hidden
-          className="shrink-0 self-center text-[12px] text-brand-orange/40 group-hover:text-brand-orange"
+          className="shrink-0 self-center text-[12px] text-muted group-hover:text-primary-text"
         >
           ✎
         </span>
@@ -396,7 +396,7 @@ function OrderLineEditForm({
   const unitSuffix = unit ? ` ${unit}` : "";
 
   return (
-    <div className="space-y-2 rounded-lg border border-brand-orange/30 bg-brand-orange-light px-2.5 py-2">
+    <div className="space-y-2 rounded-lg border border-primary/30 bg-primary-soft px-2.5 py-2">
       <div className="flex items-center gap-2 text-[11px] text-brand-near-black">
         <span className="text-[14px]">{line.emoji || getProductEmoji(line.productName)}</span>
         <span className="font-bold">{line.productName}</span>
@@ -413,7 +413,7 @@ function OrderLineEditForm({
             value={qty}
             onChange={(e) => onQtyChange(e.target.value)}
             disabled={isPending}
-            className="rounded-md border border-brand-border bg-white px-2 py-1.5 text-[13px] font-mono text-brand-near-black focus:outline-none focus:ring-2 focus:ring-brand-orange/40"
+            className="rounded-md border border-brand-border bg-white px-2 py-1.5 text-[13px] font-mono text-brand-near-black focus:outline-none focus:ring-2 focus:ring-primary/40"
           />
         </label>
         <label className="flex flex-col gap-0.5 text-[10px] font-semibold uppercase tracking-wide text-brand-gray">
@@ -427,7 +427,7 @@ function OrderLineEditForm({
               setTotalTouched(true);
             }}
             disabled={isPending}
-            className="rounded-md border border-brand-border bg-white px-2 py-1.5 text-[13px] font-mono text-brand-near-black focus:outline-none focus:ring-2 focus:ring-brand-orange/40"
+            className="rounded-md border border-brand-border bg-white px-2 py-1.5 text-[13px] font-mono text-brand-near-black focus:outline-none focus:ring-2 focus:ring-primary/40"
           />
         </label>
       </div>
@@ -436,7 +436,7 @@ function OrderLineEditForm({
           type="button"
           onClick={handleSave}
           disabled={isPending}
-          className="flex-1 rounded-md bg-brand-orange px-2 py-1.5 text-[11px] font-bold text-white disabled:opacity-60"
+          className="flex-1 rounded-md bg-primary px-2 py-1.5 text-[11px] font-bold text-on-primary disabled:opacity-60"
         >
           {isPending ? t.admin.common.saving : t.admin.common.save}
         </button>

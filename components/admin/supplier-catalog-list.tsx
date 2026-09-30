@@ -106,7 +106,7 @@ export function SupplierCatalogList({
             <select
               value={uploadSupplierId}
               onChange={(e) => setUploadSupplierId(e.target.value)}
-              className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-brand-teal/30"
+              className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-accent/30"
             >
               {suppliers.length === 0 ? (
                 <option value="">{t.admin.products.noSupplierAvailable}</option>
@@ -134,7 +134,7 @@ export function SupplierCatalogList({
           <button
             onClick={() => setAddingSupplierId(defaultAddSupplierId || suppliers[0]?.supplierId || null)}
             disabled={suppliers.length === 0}
-            className="rounded-lg bg-brand-teal px-3 py-1.5 text-[11px] font-bold text-white disabled:opacity-50"
+            className="rounded-lg bg-accent px-3 py-1.5 text-[11px] font-bold text-on-accent disabled:opacity-50"
           >
             {t.admin.products.addButton}
           </button>
@@ -148,7 +148,7 @@ export function SupplierCatalogList({
             <select
               value={supplierFilter}
               onChange={(e) => setSupplierFilter(e.target.value)}
-              className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-brand-teal/30"
+              className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-accent/30"
             >
               <option value={ALL}>{t.admin.products.allSuppliers}</option>
               {suppliers.map((supplier) => (
@@ -167,7 +167,7 @@ export function SupplierCatalogList({
               <select
                 value={categoryFilter}
                 onChange={(e) => setCategoryFilter(e.target.value)}
-                className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-brand-teal/30"
+                className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-accent/30"
               >
                 <option value={ALL}>{t.admin.products.allCategories}</option>
                 {categories.map((category) => (
@@ -185,7 +185,7 @@ export function SupplierCatalogList({
               <select
                 value={groupBy}
                 onChange={(e) => setGroupBy(e.target.value as GroupBy)}
-                className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-brand-teal/30"
+                className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-accent/30"
               >
                 <option value="category">{t.admin.products.groupByCategory}</option>
                 <option value="supplier">{t.admin.products.groupBySupplier}</option>
@@ -241,7 +241,7 @@ export function SupplierCatalogList({
                         {product.format && <span>{product.format}</span>}
                       </div>
                       {product.notes && (
-                        <div className="mt-1 text-[11px] text-brand-gray-light">{product.notes}</div>
+                        <div className="mt-1 text-[11px] text-muted">{product.notes}</div>
                       )}
                     </div>
                     <div className="shrink-0 text-right">
@@ -249,14 +249,14 @@ export function SupplierCatalogList({
                         {formatEur(parseFloat(product.unitPrice))}
                       </div>
                       {product.pricePerKg && (
-                        <div className="font-mono text-[10px] text-brand-gray-light">
+                        <div className="font-mono text-[10px] text-muted">
                           ({formatEur(parseFloat(product.pricePerKg))}/kg)
                         </div>
                       )}
                       <div className="mt-2 flex justify-end gap-2">
                         <button
                           onClick={() => setEditingId(product.catalogProductId)}
-                          className="text-[10px] font-bold text-brand-teal hover:underline"
+                          className="text-[10px] font-bold text-accent-text hover:underline"
                         >
                           {t.admin.common.edit}
                         </button>

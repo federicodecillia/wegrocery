@@ -26,7 +26,7 @@ export function FaqAccordion({ faqs }: { faqs: Faq[] }) {
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
-              className={`flex-shrink-0 text-brand-gray-light transition-transform duration-150 ${
+              className={`flex-shrink-0 text-muted transition-transform duration-150 ${
                 open === i ? "rotate-180" : ""
               }`}
             >

@@ -32,7 +32,7 @@ export function OrderSentDialog({
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-[150] bg-black/30 backdrop-blur-[4px] data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0" />
         <Dialog.Content className="fixed left-1/2 top-1/2 z-[151] w-[90%] max-w-[340px] -translate-x-1/2 -translate-y-1/2 rounded-3xl border border-brand-border bg-white p-7 text-center shadow-[0_8px_32px_rgba(45,43,41,0.15)] data-[state=open]:animate-in data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:zoom-out-95">
-          <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-brand-teal-light text-brand-teal">
+          <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-accent-soft text-accent-text">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M20 6 9 17l-5-5" />
             </svg>
@@ -41,7 +41,7 @@ export function OrderSentDialog({
           <Dialog.Title className="text-[19px] font-black tracking-[-0.02em] text-brand-near-black">
             {t.order.sentTitle}
           </Dialog.Title>
-          <p className="mt-1 font-mono text-[12px] font-semibold text-brand-teal">
+          <p className="mt-1 font-mono text-[12px] font-semibold text-accent-text">
             {t.order.confirmedSummary(itemCount, formatEur(total))}
           </p>
 
@@ -50,12 +50,12 @@ export function OrderSentDialog({
           </Dialog.Description>
 
           {balanceWarning && (
-            <p className="mt-3 rounded-xl bg-brand-orange-light px-3 py-2 text-[12px] leading-[1.45] text-brand-orange">
+            <p className="mt-3 rounded-xl bg-primary-soft px-3 py-2 text-[12px] leading-[1.45] text-primary-text">
               {balanceWarning}
             </p>
           )}
 
-          <p className="mt-3 text-[11px] leading-[1.45] text-brand-gray-light">
+          <p className="mt-3 text-[11px] leading-[1.45] text-muted">
             {orderCloseAt
               ? t.order.editableUntil(formatDateTime(orderCloseAt))
               : t.order.editableUntilClose}

@@ -10,7 +10,7 @@ import type { PaymentSettingsInput, StripeKeyState } from "@/lib/payments/settin
 
 const card = "rounded-xl border border-brand-border bg-white p-4 shadow-sm";
 const inputCls =
-  "w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-brand-teal/30";
+  "w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-accent/30";
 const labelCls = "mb-1 block text-[11px] font-semibold uppercase tracking-wide text-brand-gray";
 const helpCls = "mt-1 text-[11px] leading-snug text-brand-gray";
 
@@ -49,7 +49,7 @@ export function PaymentSettingsForm({
   return (
     <form onSubmit={handleSubmit} noValidate className="space-y-4">
       {savedAt === null && (
-        <p className="rounded-lg border border-brand-orange/40 bg-brand-orange-light px-3 py-2 text-[12px] text-brand-near-black">
+        <p className="rounded-lg border border-primary/40 bg-primary-soft px-3 py-2 text-[12px] text-brand-near-black">
           {s.defaultsNotice}
         </p>
       )}
@@ -103,7 +103,7 @@ export function PaymentSettingsForm({
             type="checkbox"
             checked={values.bankTransferEnabled}
             onChange={(e) => update("bankTransferEnabled", e.target.checked)}
-            className="mt-0.5 h-5 w-5 shrink-0 accent-brand-teal"
+            className="mt-0.5 h-5 w-5 shrink-0 accent-accent"
           />
         </label>
         <div className="mt-3 space-y-3">
@@ -144,7 +144,7 @@ export function PaymentSettingsForm({
             <span className="flex items-center gap-2 text-[13px] font-bold text-brand-near-black">
               {s.onlineTitle}
               {stripeKey.usable && !stripeKey.livemode && (
-                <span className="rounded-full bg-brand-orange-light px-2 py-0.5 font-mono text-[10px] font-semibold text-brand-orange">
+                <span className="rounded-full bg-primary-soft px-2 py-0.5 font-mono text-[10px] font-semibold text-primary-text">
                   {s.testMode}
                 </span>
               )}
@@ -156,7 +156,7 @@ export function PaymentSettingsForm({
             checked={values.onlinePaymentsEnabled}
             disabled={!stripeKey.usable}
             onChange={(e) => update("onlinePaymentsEnabled", e.target.checked)}
-            className="mt-0.5 h-5 w-5 shrink-0 accent-brand-teal disabled:opacity-50"
+            className="mt-0.5 h-5 w-5 shrink-0 accent-accent disabled:opacity-50"
           />
         </label>
         {!stripeKey.usable && (
@@ -169,12 +169,12 @@ export function PaymentSettingsForm({
       <button
         type="submit"
         disabled={isPending}
-        className="w-full rounded-xl bg-brand-teal py-2.5 text-[13px] font-bold text-white disabled:opacity-60"
+        className="w-full rounded-xl bg-accent py-2.5 text-[13px] font-bold text-on-accent disabled:opacity-60"
       >
         {isPending ? t.admin.common.saving : t.admin.common.save}
       </button>
       {savedAt && (
-        <p className="text-center font-mono text-[10px] text-brand-gray-light">
+        <p className="text-center font-mono text-[10px] text-muted">
           {s.lastSaved(
             formatDateTime(savedAt, { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" }),
           )}

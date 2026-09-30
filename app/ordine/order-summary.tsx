@@ -37,16 +37,16 @@ export function OrderSummary({
 }: Props) {
   return (
     <>
-      <div className="mt-4 overflow-hidden rounded-[18px] border border-brand-teal/25 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-        <header className="flex items-center gap-3 border-b border-brand-border bg-brand-teal-light px-4 py-3.5">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-teal text-white">
+      <div className="mt-4 overflow-hidden rounded-[18px] border border-accent/25 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+        <header className="flex items-center gap-3 border-b border-brand-border bg-accent-soft px-4 py-3.5">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent text-on-accent">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M20 6 9 17l-5-5" />
             </svg>
           </span>
           <div className="min-w-0">
-            <div className="text-[15px] font-bold text-brand-teal">{t.order.confirmed}</div>
-            <div className="mt-[1px] font-mono text-[11px] text-brand-teal/80">
+            <div className="text-[15px] font-bold text-accent-text">{t.order.confirmed}</div>
+            <div className="mt-[1px] font-mono text-[11px] text-accent-text">
               {t.order.confirmedSummary(lines.length, formatEur(total))}
             </div>
           </div>
@@ -78,7 +78,7 @@ export function OrderSummary({
         <footer className="border-t border-brand-border bg-brand-warm-white px-4 py-3">
           <div className="flex items-end justify-between">
             <div>
-              <div className="font-mono text-[10px] uppercase tracking-[0.09em] text-brand-gray-light">
+              <div className="font-mono text-[10px] uppercase tracking-[0.09em] text-muted">
                 {t.order.totalOrder}
               </div>
               <div className="mt-[2px] text-[20px] font-black tracking-[-0.03em] text-brand-near-black">
@@ -86,12 +86,12 @@ export function OrderSummary({
               </div>
             </div>
             <div className="text-right">
-              <div className="font-mono text-[10px] uppercase tracking-[0.09em] text-brand-gray-light">
+              <div className="font-mono text-[10px] uppercase tracking-[0.09em] text-muted">
                 {t.order.balanceAfter}
               </div>
               <div
                 className={`mt-[2px] font-mono text-[13px] font-bold ${
-                  balanceAfter < 0 ? "text-brand-red" : "text-brand-teal"
+                  balanceAfter < 0 ? "text-brand-red" : "text-accent-text"
                 }`}
               >
                 {formatSignedMoney(balanceAfter)}

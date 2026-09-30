@@ -1,15 +1,16 @@
+/** Hex colours (#rgb or #rrggbb); anything else falls back to the default with a warning. */
 export type BrandTheme = {
-  /** maps to --orange (primary CTA color) */
+  /** primary fill (CTA buttons, active states); text on it and its darker text variant are derived, see roles.ts */
   primary?: string;
-  /** maps to --orange-l */
+  /** soft primary background */
   primaryLight?: string;
-  /** maps to --teal (accent) */
+  /** accent fill; text colours derived like primary */
   accent?: string;
-  /** maps to --teal-l */
+  /** soft accent background */
   accentLight?: string;
-  /** maps to --background and --warm-wh */
+  /** app background */
   background?: string;
-  /** maps to --frame (page frame behind the card) */
+  /** page frame behind the card */
   frame?: string;
 };
 

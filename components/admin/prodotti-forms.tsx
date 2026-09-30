@@ -86,7 +86,7 @@ export function CatalogProductForm({
   }
 
   const inputCls =
-    "w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-brand-teal/30";
+    "w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-accent/30";
   const labelCls = "mb-1 block text-[11px] font-semibold uppercase tracking-wide text-brand-gray";
 
   return (
@@ -169,7 +169,7 @@ export function CatalogProductForm({
         </div>
         <div className="col-span-2">
           <label className={labelCls}>
-            {t.admin.products.priceKgLabel} <span className="ml-1 text-brand-gray-light normal-case">{t.admin.products.priceKgOptional}</span>
+            {t.admin.products.priceKgLabel} <span className="ml-1 text-muted normal-case">{t.admin.products.priceKgOptional}</span>
             <FieldHelp text={HELP.prezzoKg} />
           </label>
           <input
@@ -207,7 +207,7 @@ export function CatalogProductForm({
       <button
         type="submit"
         disabled={isPending}
-        className="mt-4 w-full rounded-xl bg-brand-teal py-2 text-[13px] font-bold text-white disabled:opacity-60"
+        className="mt-4 w-full rounded-xl bg-accent py-2 text-[13px] font-bold text-on-accent disabled:opacity-60"
       >
         {isPending ? t.admin.products.savingProduct : product ? t.admin.common.saveChanges : t.admin.products.createProduct}
       </button>
@@ -314,13 +314,13 @@ export function CatalogCsvActions({ supplierId }: { supplierId: string }) {
         onClick={downloadTemplate}
         disabled={downloading}
         title={t.admin.products.templateTitle}
-        className={`${btnBase} border-brand-border bg-white text-brand-teal hover:bg-brand-warm-white/50`}
+        className={`${btnBase} border-brand-border bg-white text-accent-text hover:bg-brand-warm-white/50`}
       >
         {downloading ? t.admin.common.generating : t.admin.products.templateDownload}
       </button>
       <label
         title={t.admin.products.uploadFileTitle}
-        className={`${btnBase} cursor-pointer border-brand-border bg-white text-brand-teal hover:bg-brand-warm-white/50 ${
+        className={`${btnBase} cursor-pointer border-brand-border bg-white text-accent-text hover:bg-brand-warm-white/50 ${
           isPending || !supplierId ? "opacity-60" : ""
         }`}
       >
@@ -336,7 +336,7 @@ export function CatalogCsvActions({ supplierId }: { supplierId: string }) {
       <button
         onClick={() => setWizardOpen(true)}
         title={t.admin.products.importGuidedTitle}
-        className={`${btnBase} border-brand-orange/30 bg-brand-orange-light text-brand-orange hover:opacity-90`}
+        className={`${btnBase} border-primary/30 bg-primary-soft text-primary-text hover:opacity-90`}
       >
         {t.admin.products.importGuided}
       </button>
@@ -391,7 +391,7 @@ export function CatalogLoadForm({
         <p className="text-[13px] font-bold text-brand-near-black">{t.admin.products.loadFromCatalogTitle}</p>
         <button
           onClick={() => setSelected(new Set(catalogProducts.map((p) => p.catalogProductId)))}
-          className="text-[11px] font-semibold text-brand-teal"
+          className="text-[11px] font-semibold text-accent-text"
         >
           {t.admin.products.selectAll}
         </button>
@@ -407,13 +407,13 @@ export function CatalogLoadForm({
               type="checkbox"
               checked={selected.has(p.catalogProductId)}
               onChange={() => toggle(p.catalogProductId)}
-              className="rounded border-brand-border text-brand-teal focus:ring-brand-teal"
+              className="rounded border-brand-border text-accent-text focus:ring-accent"
             />
             <div className="flex-1 text-[13px] text-brand-near-black">
               {p.name}
               {p.variant && <span className="ml-1 text-[12px] text-brand-gray">{p.variant}</span>}
               {p.format && (
-                <span className="ml-1 font-mono text-[10px] text-brand-gray-light">({p.format})</span>
+                <span className="ml-1 font-mono text-[10px] text-muted">({p.format})</span>
               )}
             </div>
             <div className="font-mono text-[12px] font-semibold text-brand-near-black">
@@ -426,7 +426,7 @@ export function CatalogLoadForm({
       <button
         onClick={handleLoad}
         disabled={isPending || selected.size === 0}
-        className="w-full rounded-xl bg-brand-teal py-2 text-[13px] font-bold text-white disabled:opacity-60"
+        className="w-full rounded-xl bg-accent py-2 text-[13px] font-bold text-on-accent disabled:opacity-60"
       >
         {isPending ? t.admin.products.loadingFromCatalog : t.admin.products.loadSelected(selected.size)}
       </button>
@@ -490,7 +490,7 @@ export function EditCycleProductForm({
   }
 
   const inputCls =
-    "w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-brand-teal/30";
+    "w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-accent/30";
   const labelCls = "mb-1 block text-[11px] font-semibold uppercase tracking-wide text-brand-gray";
 
   return (
@@ -573,7 +573,7 @@ export function EditCycleProductForm({
       <button
         type="submit"
         disabled={isPending}
-        className="mt-3 w-full rounded-lg bg-brand-teal py-1.5 text-[12px] font-bold text-white disabled:opacity-60"
+        className="mt-3 w-full rounded-lg bg-accent py-1.5 text-[12px] font-bold text-on-accent disabled:opacity-60"
       >
         {isPending ? t.admin.products.savingProduct : t.admin.common.saveChanges}
       </button>
@@ -610,7 +610,7 @@ export function ProductListItem({
 
   return (
     <div className="flex items-center gap-3 px-4 py-2.5 hover:bg-brand-warm-white/50 group">
-      <span className="w-6 shrink-0 font-mono text-[11px] text-brand-gray-light">
+      <span className="w-6 shrink-0 font-mono text-[11px] text-muted">
         {index + 1}
       </span>
       <span className="shrink-0 text-[16px] leading-none">{emoji}</span>
@@ -620,7 +620,7 @@ export function ProductListItem({
           <span className="ml-1.5 text-[12px] text-brand-gray">{product.variant}</span>
         )}
         {product.format && (
-          <span className="ml-1.5 font-mono text-[10px] text-brand-gray-light">
+          <span className="ml-1.5 font-mono text-[10px] text-muted">
             {product.format}
           </span>
         )}
@@ -631,14 +631,14 @@ export function ProductListItem({
             {formatEur(parseFloat(product.unitPrice))}
           </div>
           {product.pricePerKg && (
-            <div className="font-mono text-[10px] text-brand-gray-light">
+            <div className="font-mono text-[10px] text-muted">
               ({formatEur(parseFloat(product.pricePerKg))}/kg)
             </div>
           )}
         </div>
         <button
           onClick={() => setIsEditing(true)}
-          className="rounded-full bg-white px-2 py-1 text-[11px] font-bold text-brand-teal shadow-sm ring-1 ring-inset ring-brand-teal/20 hover:bg-brand-teal hover:text-white transition-colors opacity-0 group-hover:opacity-100"
+          className="rounded-full bg-white px-2 py-1 text-[11px] font-bold text-accent-text shadow-sm ring-1 ring-inset ring-accent/20 hover:bg-accent hover:text-on-accent transition-colors opacity-0 group-hover:opacity-100"
         >
           {t.admin.common.edit}
         </button>
@@ -698,7 +698,7 @@ export function CatalogManager({
           <CatalogCsvActions supplierId={supplierId} />
           <button
             onClick={() => setShowAdd(true)}
-            className="rounded-lg bg-brand-teal px-3 py-1.5 text-[11px] font-bold text-white transition-transform active:scale-95"
+            className="rounded-lg bg-accent px-3 py-1.5 text-[11px] font-bold text-on-accent transition-transform active:scale-95"
           >
             {t.admin.products.addProductButton}
           </button>
@@ -734,8 +734,8 @@ export function CatalogManager({
                 </div>
                 <div className="flex items-center gap-2 text-[11px] text-brand-gray">
                   {p.variant && <span>{p.variant}</span>}
-                  {p.format && <span className="font-mono text-[10px] text-brand-gray-light">({p.format})</span>}
-                  {p.category && <span className="rounded-full bg-brand-teal-light px-2 text-brand-teal">{p.category}</span>}
+                  {p.format && <span className="font-mono text-[10px] text-muted">({p.format})</span>}
+                  {p.category && <span className="rounded-full bg-accent-soft px-2 text-accent-text">{p.category}</span>}
                 </div>
               </div>
               <div className="text-right">
@@ -743,14 +743,14 @@ export function CatalogManager({
                   {formatEur(parseFloat(p.unitPrice))}
                 </div>
                 {p.pricePerKg && (
-                  <div className="font-mono text-[10px] text-brand-gray-light">
+                  <div className="font-mono text-[10px] text-muted">
                     ({formatEur(parseFloat(p.pricePerKg))}/kg)
                   </div>
                 )}
                 <div className="mt-1 flex justify-end gap-2">
                   <button
                     onClick={() => setEditingId(p.catalogProductId)}
-                    className="text-[10px] font-bold text-brand-teal hover:underline"
+                    className="text-[10px] font-bold text-accent-text hover:underline"
                   >
                     {t.admin.common.edit}
                   </button>

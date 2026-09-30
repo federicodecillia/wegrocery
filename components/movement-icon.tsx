@@ -103,7 +103,7 @@ export function MovementIcon({ kind, incoming }: { kind: MovementKind; incoming:
   return (
     <div
       className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[10px] ${
-        incoming ? "bg-brand-teal-light text-brand-teal" : "bg-brand-orange-light text-brand-orange"
+        incoming ? "bg-accent-soft text-accent-text" : "bg-primary-soft text-primary-text"
       }`}
     >
       <svg

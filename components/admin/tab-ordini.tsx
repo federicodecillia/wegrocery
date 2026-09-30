@@ -34,7 +34,7 @@ export async function TabOrdini({ cycleId, memberId }: Props) {
         {selectedMember && (
           <div className="rounded-xl border border-brand-border bg-white px-4 py-3 shadow-sm">
             <div className="text-[13px] font-bold text-brand-near-black">{selectedMember.fullName}</div>
-            <div className="mt-0.5 font-mono text-[10px] text-brand-gray-light">
+            <div className="mt-0.5 font-mono text-[10px] text-muted">
               {selectedMember.email} · {orders.length} cicl{orders.length === 1 ? "o" : "i"} ·{" "}
               {formatEur(orders.reduce((s, o) => s + o.total, 0))} totale
             </div>
@@ -53,7 +53,7 @@ export async function TabOrdini({ cycleId, memberId }: Props) {
                   <div>
                     <div className="text-[13px] font-bold text-brand-near-black">{cycle.cycleTitle}</div>
                     {cycle.pickupDate && (
-                      <div className="mt-0.5 font-mono text-[10px] text-brand-gray-light">
+                      <div className="mt-0.5 font-mono text-[10px] text-muted">
                         {t.admin.orders.pickupLabel} {formatDate(cycle.pickupDate)}
                       </div>
                     )}
@@ -62,7 +62,7 @@ export async function TabOrdini({ cycleId, memberId }: Props) {
                     <span
                       className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
                         cycle.cycleStatus === "open"
-                          ? "bg-brand-teal-light text-brand-teal"
+                          ? "bg-accent-soft text-accent-text"
                           : "bg-black/[0.05] text-brand-gray"
                       }`}
                     >
@@ -82,7 +82,7 @@ export async function TabOrdini({ cycleId, memberId }: Props) {
                         {line.variant && (
                           <span className="text-brand-gray">· {line.variant}</span>
                         )}
-                        <span className="font-mono text-[11px] text-brand-gray-light">
+                        <span className="font-mono text-[11px] text-muted">
                           ×{line.quantity}
                         </span>
                       </span>
@@ -125,17 +125,17 @@ export async function TabOrdini({ cycleId, memberId }: Props) {
 
       {/* Stats */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="rounded-xl bg-brand-orange-light px-4 py-3">
+        <div className="rounded-xl bg-primary-soft px-4 py-3">
           <div className="font-mono text-[10px] uppercase text-brand-gray">{t.admin.orders.membersLabel}</div>
           <div className="text-[24px] font-bold text-brand-near-black">{summary.orderCount}</div>
         </div>
-        <div className="rounded-xl bg-brand-teal-light px-4 py-3">
+        <div className="rounded-xl bg-accent-soft px-4 py-3">
           <div className="font-mono text-[10px] uppercase text-brand-gray">{t.admin.orders.totalLabel}</div>
           <div className="text-[24px] font-bold text-brand-near-black">
             {formatEur(summary.grandTotal)}
           </div>
           {summary.shippingTotal > 0 && (
-            <div className="mt-0.5 font-mono text-[10px] text-brand-gray-light">
+            <div className="mt-0.5 font-mono text-[10px] text-muted">
               {t.admin.orders.productsBreakdown(formatEur(summary.productsTotal), formatEur(summary.shippingTotal))}
             </div>
           )}
@@ -178,7 +178,7 @@ export async function TabOrdini({ cycleId, memberId }: Props) {
                     <span className="text-[16px] leading-none">{getProductEmoji(p.name)}</span>
                     <span className="text-[13px] font-medium text-brand-near-black">
                       {p.name}
-                      {p.unit && <span className="ml-1 font-mono text-[10px] text-brand-gray-light">/{p.unit}</span>}
+                      {p.unit && <span className="ml-1 font-mono text-[10px] text-muted">/{p.unit}</span>}
                     </span>
                     {p.variant && (
                       <span className="text-[12px] text-brand-gray">{p.variant}</span>
