@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { brand } from "@/lib/brand";
+import { brand, resolvePalette } from "@/lib/brand";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
@@ -9,7 +9,7 @@ export default function manifest(): MetadataRoute.Manifest {
     start_url: "/",
     display: "standalone",
     background_color: brand.theme.background ?? "#faf8f5",
-    theme_color: brand.theme.primary ?? "#f5a623",
+    theme_color: resolvePalette(brand.theme).primary,
     orientation: "portrait",
     icons: [
       { src: brand.logoUrl, sizes: "any", type: "image/png", purpose: "any" },

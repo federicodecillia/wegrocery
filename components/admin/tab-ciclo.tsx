@@ -80,9 +80,9 @@ export async function TabCiclo() {
                   {/* Status pill on the LEFT so it reads as a label, not a button —
                       visually separated from the action buttons on the right. */}
                   <span
-                    className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
+                    className={`shrink-0 rounded-full px-2 py-0.5 text-label font-bold uppercase tracking-wide ${
                       c.status === "open"
-                        ? "bg-brand-teal-light text-brand-teal"
+                        ? "bg-accent-soft text-accent-text"
                         : c.status === "cancelled"
                           ? "bg-brand-red-light text-brand-red"
                           : "bg-black/[0.05] text-brand-gray"
@@ -96,7 +96,7 @@ export async function TabCiclo() {
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-[13px] font-medium text-brand-near-black">{c.title}</div>
-                    <div className="mt-0.5 truncate font-mono text-[10px] text-brand-gray-light">
+                    <div className="mt-0.5 font-mono text-label leading-tight text-muted">
                       {c.supplierName ?? "—"}
                       {c.pickupDate ? ` · ${formatDate(c.pickupDate)}` : ""}
                     </div>

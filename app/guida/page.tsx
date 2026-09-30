@@ -23,13 +23,13 @@ export default async function GuidaPage() {
       </h1>
 
       {/* How-to steps */}
-      <div className="mb-6 rounded-[18px] border border-brand-teal/20 bg-brand-teal-light p-[18px]">
+      <div className="mb-6 rounded-[18px] border border-accent/20 bg-accent-soft p-[18px]">
         {t.guide.howToSteps.map((step, i) => (
           <div
             key={step.n}
             className={`flex gap-3 ${i < t.guide.howToSteps.length - 1 ? "mb-3" : ""}`}
           >
-            <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-brand-teal font-mono text-[11px] font-bold text-white">
+            <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-accent font-mono text-label font-bold text-on-accent">
               {step.n}
             </div>
             <p className="mt-[3px] text-[14px] leading-[1.5] text-brand-near-black">
@@ -43,10 +43,10 @@ export default async function GuidaPage() {
 
       {/* Novità — teaser della release più recente con link al changelog */}
       {latest && (
-        <section className="mb-6 overflow-hidden rounded-[18px] border border-brand-orange-mid bg-brand-orange-light">
-          <div className="flex items-baseline justify-between gap-2 border-b border-brand-orange-mid/40 px-[18px] py-3">
+        <section className="mb-6 overflow-hidden rounded-[18px] border border-primary-mid bg-primary-soft">
+          <div className="flex items-baseline justify-between gap-2 border-b border-primary-mid/40 px-[18px] py-3">
             <div>
-              <div className="font-mono text-[10px] uppercase tracking-[0.13em] text-brand-orange">
+              <div className="font-mono text-label uppercase tracking-[0.13em] text-primary-text">
                 {t.guide.newsTitle} · v{latest.version}
               </div>
               <h2 className="mt-0.5 text-[15px] font-black tracking-[-0.01em] text-brand-near-black">
@@ -54,7 +54,7 @@ export default async function GuidaPage() {
               </h2>
             </div>
             {latest.date && (
-              <span className="font-mono text-[10px] text-brand-gray">{latest.date}</span>
+              <span className="font-mono text-label text-brand-gray">{latest.date}</span>
             )}
           </div>
           <div className="space-y-3 px-[18px] py-4">
@@ -65,7 +65,7 @@ export default async function GuidaPage() {
             )}
             {latest.sections.slice(0, 2).map((s) => (
               <div key={s.heading}>
-                <div className="mb-1 font-mono text-[10px] font-bold uppercase tracking-wide text-brand-orange">
+                <div className="mb-1 font-mono text-label font-bold uppercase tracking-wide text-primary-text">
                   {s.heading}
                 </div>
                 <ul className="space-y-1.5">
@@ -86,10 +86,10 @@ export default async function GuidaPage() {
               </div>
             ))}
           </div>
-          <div className="border-t border-brand-orange-mid/40 px-[18px] py-3 text-center">
+          <div className="border-t border-primary-mid/40 px-[18px] py-3 text-center">
             <Link
               href="/changelog"
-              className="inline-flex items-center gap-1 text-[12px] font-bold text-brand-orange hover:underline"
+              className="inline-flex items-center gap-1 text-[12px] font-bold text-primary-text hover:underline"
             >
               {t.guide.seeAllNews}
             </Link>
@@ -113,7 +113,7 @@ export default async function GuidaPage() {
         <div className="flex flex-col gap-3">
           <a
             href={`mailto:${brand.supportEmail}`}
-            className="inline-flex items-center justify-center rounded-full bg-brand-orange px-[22px] py-[12px] text-sm font-bold text-white no-underline transition-transform active:scale-95"
+            className="inline-flex items-center justify-center rounded-full bg-primary px-[22px] py-[12px] text-sm font-bold text-on-primary no-underline transition-transform active:scale-95"
           >
             {brand.supportEmail}
           </a>

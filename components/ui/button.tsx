@@ -18,15 +18,15 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const base =
-  "inline-flex items-center justify-center rounded-full font-sans font-bold tracking-tight cursor-pointer select-none transition-[opacity,transform] duration-150 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange/40";
+  "inline-flex items-center justify-center rounded-full font-sans font-bold tracking-tight cursor-pointer select-none transition-[opacity,transform] duration-150 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40";
 
 const variants: Record<ButtonVariant, string> = {
   primary: "bg-brand-near-black text-white",
-  orange: "bg-brand-orange text-white",
-  teal: "bg-brand-teal text-white",
+  orange: "bg-primary text-on-primary",
+  teal: "bg-accent text-on-accent",
   red: "bg-brand-red text-white",
   ghost:
-    "bg-transparent border border-brand-border text-brand-near-black font-mono text-[11px] tracking-widest uppercase",
+    "bg-transparent border border-brand-border text-brand-near-black font-mono text-label tracking-widest uppercase",
   outline: "bg-transparent border border-brand-border text-brand-near-black",
 };
 

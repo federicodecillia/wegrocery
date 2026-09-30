@@ -23,8 +23,8 @@ type Props = {
 function BalanceText({ balance }: { balance: number }) {
   return (
     <span
-      className={`shrink-0 whitespace-nowrap font-mono text-[11px] font-bold ${
-        balance >= 0 ? "text-brand-teal" : "text-brand-red"
+      className={`shrink-0 whitespace-nowrap font-mono text-label font-bold ${
+        balance >= 0 ? "text-accent-text" : "text-brand-red"
       }`}
     >
       {t.admin.treasury.memberBalance(formatMoney(balance))}
@@ -105,12 +105,12 @@ export function MemberCombobox({ members, value, onChange, label }: Props) {
   if (value) {
     return (
       <div>
-        <span id={`${baseId}-label`} className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-brand-gray">
+        <span id={`${baseId}-label`} className="mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray">
           {label}
         </span>
         <div
           aria-labelledby={`${baseId}-label`}
-          className="flex items-center justify-between gap-2 rounded-lg border border-brand-teal/40 bg-brand-teal-light px-3 py-2"
+          className="flex items-center justify-between gap-2 rounded-lg border border-accent/40 bg-accent-soft px-3 py-2"
         >
           <div className="min-w-0">
             <div className="truncate text-[13px] font-semibold text-brand-near-black">
@@ -119,7 +119,7 @@ export function MemberCombobox({ members, value, onChange, label }: Props) {
                 <span className="ml-1 font-normal text-brand-gray">{t.admin.treasury.inactiveHint}</span>
               )}
             </div>
-            <div className="truncate font-mono text-[10px] text-brand-gray">{value.email}</div>
+            <div className="truncate font-mono text-label text-brand-gray">{value.email}</div>
             <BalanceText balance={value.balance} />
           </div>
           <button
@@ -142,7 +142,7 @@ export function MemberCombobox({ members, value, onChange, label }: Props) {
 
   return (
     <div className="relative">
-      <label htmlFor={inputId} className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-brand-gray">
+      <label htmlFor={inputId} className="mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray">
         {label}
       </label>
       <input
@@ -170,7 +170,7 @@ export function MemberCombobox({ members, value, onChange, label }: Props) {
         onClick={() => setOpen(true)}
         onBlur={() => setOpen(false)}
         onKeyDown={handleKeyDown}
-        className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black placeholder:text-brand-gray-light focus:outline-none focus:ring-2 focus:ring-brand-teal/30"
+        className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/30"
       />
       <p className="sr-only" aria-live="polite">
         {open ? t.admin.treasury.memberResults(matches.length) : ""}
@@ -191,7 +191,7 @@ export function MemberCombobox({ members, value, onChange, label }: Props) {
                   if (i !== activeIndex) setActive(i);
                 }}
                 className={`flex min-h-[44px] cursor-pointer items-center justify-between gap-2 px-3 py-2 ${
-                  i === activeIndex ? "bg-brand-teal-light" : ""
+                  i === activeIndex ? "bg-accent-soft" : ""
                 }`}
               >
                 <div className="min-w-0">
@@ -199,7 +199,7 @@ export function MemberCombobox({ members, value, onChange, label }: Props) {
                     {m.fullName}
                     {!m.active && <span className="ml-1 text-brand-gray">{t.admin.treasury.inactiveHint}</span>}
                   </div>
-                  <div className="truncate font-mono text-[10px] text-brand-gray">{m.email}</div>
+                  <div className="truncate font-mono text-label text-brand-gray">{m.email}</div>
                 </div>
                 <BalanceText balance={m.balance} />
               </li>

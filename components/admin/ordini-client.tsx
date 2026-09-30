@@ -33,7 +33,7 @@ export function OrdiniFilters({
   const currentMember = sp.get("member") ?? "";
 
   const selectCls =
-    "rounded-xl border border-brand-border bg-white px-3 py-2 text-[12px] font-semibold text-brand-near-black focus:outline-none focus:ring-2 focus:ring-brand-orange/30 min-w-0 max-w-full flex-1";
+    "rounded-xl border border-brand-border bg-white px-3 py-2 text-[12px] font-semibold text-brand-near-black focus:outline-none focus:ring-2 focus:ring-primary/30 min-w-0 max-w-full flex-1";
 
   function onMemberChange(e: React.ChangeEvent<HTMLSelectElement>) {
     const val = e.target.value;
@@ -99,7 +99,7 @@ export function OrdiniByMember({ byMember }: { byMember: CycleSummary["byMember"
               <span className="font-mono text-[13px] font-bold text-brand-near-black">
                 {formatEur(m.total)}
               </span>
-              <span className="text-brand-gray-light">{expanded.has(m.memberId) ? "▲" : "▼"}</span>
+              <span className="text-muted">{expanded.has(m.memberId) ? "▲" : "▼"}</span>
             </div>
           </button>
           {expanded.has(m.memberId) && (
@@ -110,11 +110,11 @@ export function OrdiniByMember({ byMember }: { byMember: CycleSummary["byMember"
                     <span className="text-[14px] leading-none">{getProductEmoji(line.productName)}</span>
                     {line.productName}
                     {line.variant ? ` · ${line.variant}` : ""}
-                    <span className="ml-1 font-mono text-[11px] text-brand-gray-light">
+                    <span className="ml-1 font-mono text-label text-muted">
                       ×{line.quantity}
                     </span>
                     {line.adjusted && (
-                      <span className="ml-1 rounded-full bg-brand-orange/15 px-1.5 py-px text-[10px] font-bold uppercase tracking-wide text-brand-orange">
+                      <span className="ml-1 rounded-full bg-primary/15 px-1.5 py-px text-label font-bold uppercase tracking-wide text-primary-text">
                         {t.admin.orders.adjustedBadge}
                       </span>
                     )}

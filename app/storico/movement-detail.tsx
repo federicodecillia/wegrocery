@@ -67,7 +67,7 @@ function detailRows(entry: MovementDetail, onShowCycle: (cycleId: string) => voi
         <button
           type="button"
           onClick={() => onShowCycle(cycleId)}
-          className="text-right font-semibold text-brand-teal underline"
+          className="text-right font-semibold text-accent-text underline"
         >
           {cycleTitle}
         </button>
@@ -112,7 +112,7 @@ export function MovementDetailDialog({
               </div>
               <p
                 className={`mt-3 font-mono text-[26px] font-black tracking-[-0.03em] ${
-                  incoming ? "text-brand-teal" : "text-brand-red"
+                  incoming ? "text-accent-text" : "text-brand-red"
                 }`}
               >
                 {formatSignedMoney(entry.amount)}
@@ -121,7 +121,7 @@ export function MovementDetailDialog({
               <dl className="mt-4 divide-y divide-brand-border rounded-xl border border-brand-border">
                 {detailRows(entry, onShowCycle).map((row) => (
                   <div key={row.label} className="flex items-baseline justify-between gap-3 px-3 py-2">
-                    <dt className="shrink-0 text-[11px] font-semibold uppercase tracking-wide text-brand-gray">
+                    <dt className="shrink-0 text-label font-semibold uppercase tracking-wide text-brand-gray">
                       {row.label}
                     </dt>
                     <dd className="min-w-0 break-words text-right text-[13px] text-brand-near-black">{row.value}</dd>

@@ -18,6 +18,18 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ---
 
+## [1.16.0] — 2026-09-30
+
+*Text you can read, in any group's colours.*
+
+### Changed
+- 👓 **Text you can read.** Buttons, links, labels and amounts now have enough contrast on every screen: dark text on the coloured buttons, darker shades for coloured and grey text, a deeper red for negative amounts.
+- 🎨 **Colours that follow the group's palette.** Text colours are worked out from the brand colours, so a group with a different palette stays readable. Upgrade note: nothing to do; theme colours must be hex (`#rgb` or `#rrggbb`), anything else falls back to the default palette with a `[brand]` warning in the logs.
+- 🔎 **Nothing smaller than 12 px.** Labels, badges and captions that were 10 or 11 px are now 12 px, and on a phone the form fields no longer zoom the page when you tap them.
+
+### Fixed
+- 💶 **Balance on one line.** On Home the balance no longer wraps after the sign in English formats.
+
 ## [1.15.0] — 2026-09-30
 
 *Card refunds you can follow.*
@@ -400,6 +412,7 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ---
 
+[1.16.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.16.0
 [1.15.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.15.0
 [1.14.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.14.1
 [1.14.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.14.0

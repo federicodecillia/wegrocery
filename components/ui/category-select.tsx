@@ -105,7 +105,7 @@ export function CategorySelect({ name, value, extra = [], placeholder = t.common
   }
 
   const triggerCls =
-    "flex w-full items-center justify-between rounded-lg border border-brand-border bg-white px-3 py-2 text-left text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-brand-teal/30";
+    "flex w-full items-center justify-between rounded-lg border border-brand-border bg-white px-3 py-2 text-left text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-accent/30";
 
   return (
     <div ref={rootRef} className="relative">
@@ -118,10 +118,10 @@ export function CategorySelect({ name, value, extra = [], placeholder = t.common
         aria-expanded={open}
         className={triggerCls}
       >
-        <span className={selected ? "" : "text-brand-gray-light"}>
+        <span className={selected ? "" : "text-muted"}>
           {selected || placeholder}
         </span>
-        <span className="ml-2 text-brand-gray-light">▾</span>
+        <span className="ml-2 text-muted">▾</span>
       </button>
 
       {open && (
@@ -136,12 +136,12 @@ export function CategorySelect({ name, value, extra = [], placeholder = t.common
               role="option"
               aria-selected={normalizeCategory(opt) === normalizeCategory(selected)}
               onClick={() => pick(opt)}
-              className={`flex w-full items-center justify-between px-3 py-1.5 text-left text-[13px] transition hover:bg-brand-teal-light ${
-                normalizeCategory(opt) === normalizeCategory(selected) ? "bg-brand-teal-light font-semibold text-brand-teal" : "text-brand-near-black"
+              className={`flex w-full items-center justify-between px-3 py-1.5 text-left text-[13px] transition hover:bg-accent-soft ${
+                normalizeCategory(opt) === normalizeCategory(selected) ? "bg-accent-soft font-semibold text-accent-text" : "text-brand-near-black"
               }`}
             >
               <span>{opt}</span>
-              {normalizeCategory(opt) === normalizeCategory(selected) && <span className="text-[11px] text-brand-teal">✓</span>}
+              {normalizeCategory(opt) === normalizeCategory(selected) && <span className="text-label text-accent-text">✓</span>}
             </button>
           ))}
 
@@ -161,12 +161,12 @@ export function CategorySelect({ name, value, extra = [], placeholder = t.common
                     }
                   }}
                   placeholder={t.common.newCategoryPlaceholder}
-                  className="flex-1 rounded-md border border-brand-border bg-white px-2 py-1 text-[12px] focus:outline-none focus:ring-2 focus:ring-brand-teal/30"
+                  className="flex-1 rounded-md border border-brand-border bg-white px-2 py-1 text-[12px] focus:outline-none focus:ring-2 focus:ring-accent/30"
                 />
                 <button
                   type="button"
                   onClick={confirmAdd}
-                  className="rounded-md bg-brand-teal px-2 py-1 text-[11px] font-bold text-white"
+                  className="rounded-md bg-accent px-2 py-1 text-label font-bold text-on-accent"
                 >
                   OK
                 </button>
@@ -176,7 +176,7 @@ export function CategorySelect({ name, value, extra = [], placeholder = t.common
                     setAdding(false);
                     setNewCat("");
                   }}
-                  className="rounded-md px-2 py-1 text-[11px] text-brand-gray"
+                  className="rounded-md px-2 py-1 text-label text-brand-gray"
                 >
                   ✕
                 </button>
@@ -185,7 +185,7 @@ export function CategorySelect({ name, value, extra = [], placeholder = t.common
               <button
                 type="button"
                 onClick={() => setAdding(true)}
-                className="flex w-full items-center gap-1.5 px-3 py-2 text-left text-[12px] font-semibold text-brand-teal hover:bg-brand-teal-light"
+                className="flex w-full items-center gap-1.5 px-3 py-2 text-left text-[12px] font-semibold text-accent-text hover:bg-accent-soft"
               >
                 <span aria-hidden>+</span> Aggiungi nuova categoria
               </button>

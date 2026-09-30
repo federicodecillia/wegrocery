@@ -16,7 +16,7 @@ export function CancelCycleButton({ cycleId, cycleTitle }: { cycleId: string; cy
     <>
       <button
         onClick={() => setOpen(true)}
-        className="rounded-lg bg-brand-red/10 px-3 py-1 text-[11px] font-bold text-brand-red hover:bg-brand-red/20"
+        className="rounded-lg bg-brand-red/10 px-3 py-1 text-label font-bold text-brand-red hover:bg-brand-red/20"
       >
         {t.admin.cycleCancel.openButton}
       </button>
@@ -78,7 +78,7 @@ function CancelCycleDialog({
               <Dialog.Title className="text-[15px] font-bold text-brand-near-black">
                 {t.admin.cycleCancel.modalTitle}
               </Dialog.Title>
-              <p className="mt-0.5 text-[11px] text-brand-gray">{cycleTitle}</p>
+              <p className="mt-0.5 text-label text-brand-gray">{cycleTitle}</p>
             </div>
             <button
               onClick={() => onOpenChange(false)}
@@ -94,7 +94,7 @@ function CancelCycleDialog({
             </p>
 
             <div>
-              <label className="mb-1 block text-[11px] font-semibold text-brand-gray">
+              <label className="mb-1 block text-label font-semibold text-brand-gray">
                 {t.admin.cycleCancel.reasonLabel}
               </label>
               <textarea

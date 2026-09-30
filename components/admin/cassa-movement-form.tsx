@@ -18,8 +18,8 @@ import { formatDate } from "@/lib/utils";
 import { MemberCombobox, type PickerMember } from "./member-combobox";
 
 const inputCls =
-  "w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-brand-teal/30";
-const labelCls = "mb-1 block text-[11px] font-semibold uppercase tracking-wide text-brand-gray";
+  "w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-accent/30";
+const labelCls = "mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray";
 
 function todayInput(): string {
   return utcToZonedLocalInput(new Date()).slice(0, 10);
@@ -100,13 +100,13 @@ function Recap({
       <dl className="divide-y divide-brand-border rounded-lg border border-brand-border">
         {lines.map((line) => (
           <div key={line.label} className="flex items-baseline justify-between gap-3 px-3 py-2">
-            <dt className="shrink-0 text-[11px] font-semibold uppercase tracking-wide text-brand-gray">{line.label}</dt>
+            <dt className="shrink-0 text-label font-semibold uppercase tracking-wide text-brand-gray">{line.label}</dt>
             <dd className="min-w-0 break-words text-right text-[13px] text-brand-near-black">{line.value}</dd>
           </div>
         ))}
       </dl>
       {review.warning && (
-        <p role="alert" className="mt-3 rounded-lg border border-brand-orange/40 bg-brand-orange-light px-3 py-2 text-[12px] text-brand-near-black">
+        <p role="alert" className="mt-3 rounded-lg border border-primary/40 bg-primary-soft px-3 py-2 text-[12px] text-brand-near-black">
           {review.warning}
         </p>
       )}
@@ -128,7 +128,7 @@ function Recap({
           type="button"
           onClick={() => onConfirm(review.warning !== null)}
           disabled={isPending}
-          className="rounded-xl bg-brand-teal py-2 text-[13px] font-bold text-white disabled:opacity-60"
+          className="rounded-xl bg-accent py-2 text-[13px] font-bold text-on-accent disabled:opacity-60"
         >
           {isPending
             ? t.admin.treasury.registeringTopup
@@ -318,7 +318,7 @@ export function TopupForm({ members }: { members: PickerMember[] }) {
           {formError}
         </p>
       )}
-      <button type="submit" className="mt-4 w-full rounded-xl bg-brand-teal py-2 text-[13px] font-bold text-white">
+      <button type="submit" className="mt-4 w-full rounded-xl bg-accent py-2 text-[13px] font-bold text-on-accent">
         {t.admin.treasury.review}
       </button>
     </form>
@@ -420,9 +420,9 @@ export function OutgoingMovementForm({ members }: { members: PickerMember[] }) {
             {OUTGOING_LEDGER_TYPES.map((k) => (
               <label
                 key={k}
-                className={`flex min-h-[40px] cursor-pointer items-center justify-center rounded-lg border px-1 text-center text-[12px] font-semibold has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand-teal/30 ${
+                className={`flex min-h-[40px] cursor-pointer items-center justify-center rounded-lg border px-1 text-center text-[12px] font-semibold has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent/30 ${
                   kind === k
-                    ? "border-brand-teal bg-brand-teal-light text-brand-teal"
+                    ? "border-accent bg-accent-soft text-accent-text"
                     : "border-brand-border text-brand-near-black"
                 }`}
               >
@@ -438,7 +438,7 @@ export function OutgoingMovementForm({ members }: { members: PickerMember[] }) {
               </label>
             ))}
           </div>
-          <p className="mt-1 text-[11px] text-brand-gray">{t.admin.treasury.kindHints[kind]}</p>
+          <p className="mt-1 text-label text-brand-gray">{t.admin.treasury.kindHints[kind]}</p>
         </fieldset>
         <MemberCombobox
           members={members}
@@ -464,7 +464,7 @@ export function OutgoingMovementForm({ members }: { members: PickerMember[] }) {
                   <button
                     type="button"
                     onClick={() => setAmount(formatDecimalInput(member.balance.toFixed(2)))}
-                    className="mt-1 text-left text-[11px] font-semibold text-brand-teal underline"
+                    className="mt-1 text-left text-label font-semibold text-accent-text underline"
                   >
                     {t.admin.treasury.payoutAll} ({formatMoney(member.balance)})
                   </button>
@@ -541,9 +541,9 @@ export function OutgoingMovementForm({ members }: { members: PickerMember[] }) {
       >
         <span>
           <span className="block text-[13px] font-bold text-brand-near-black">{t.admin.treasury.outgoingTitle}</span>
-          <span className="block text-[11px] text-brand-gray">{t.admin.treasury.outgoingHint}</span>
+          <span className="block text-label text-brand-gray">{t.admin.treasury.outgoingHint}</span>
         </span>
-        <span aria-hidden className="text-[11px] text-brand-gray-light">
+        <span aria-hidden className="text-label text-muted">
           {open ? "▲" : "▼"}
         </span>
       </button>

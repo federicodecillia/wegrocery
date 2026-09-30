@@ -42,9 +42,9 @@ async function resultFor(memberId: string, esito?: string, sessionId?: string): 
 }
 
 const TONE_CLASSES = {
-  ok: "border-brand-teal bg-brand-teal-light text-brand-near-black",
-  info: "border-brand-orange-mid bg-brand-orange-light text-brand-near-black",
-  error: "border-[#f9c8c8] bg-brand-red-light text-brand-red",
+  ok: "border-accent bg-accent-soft text-brand-near-black",
+  info: "border-primary-mid bg-primary-soft text-brand-near-black",
+  error: "border-brand-red/30 bg-brand-red-light text-brand-red",
 } as const;
 
 export default async function RicaricaPage({
@@ -84,12 +84,12 @@ export default async function RicaricaPage({
 
       <div
         className={`mb-4 rounded-[16px] border p-4 ${
-          balance < 0 ? "border-[#f9c8c8] bg-brand-red-light" : "border-brand-orange-mid bg-brand-orange-light"
+          balance < 0 ? "border-brand-red/30 bg-brand-red-light" : "border-primary-mid bg-primary-soft"
         }`}
       >
         <div
-          className={`mb-[6px] font-mono text-[10px] uppercase tracking-[0.10em] ${
-            balance < 0 ? "text-brand-red" : "text-brand-orange"
+          className={`mb-[6px] font-mono text-label uppercase tracking-[0.10em] ${
+            balance < 0 ? "text-brand-red" : "text-primary-text"
           }`}
         >
           {t.topup.currentBalance}

@@ -5,26 +5,7 @@ import { Toaster } from "@/components/providers/toaster";
 import { ConfirmDialogProvider } from "@/components/ui/confirm-dialog";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import { brand } from "@/lib/brand";
-import type { BrandTheme } from "@/lib/brand";
-
-const THEME_VAR_MAP: Record<keyof BrandTheme, string[]> = {
-  primary: ["--orange"],
-  primaryLight: ["--orange-l"],
-  accent: ["--teal"],
-  accentLight: ["--teal-l"],
-  background: ["--background", "--warm-wh"],
-  frame: ["--frame"],
-};
-
-function themeStyle(): React.CSSProperties {
-  const style: Record<string, string> = {};
-  for (const [key, vars] of Object.entries(THEME_VAR_MAP)) {
-    const value = brand.theme[key as keyof BrandTheme];
-    if (value) for (const v of vars) style[v] = value;
-  }
-  return style as React.CSSProperties;
-}
+import { brand, deriveRoleVars, resolvePalette } from "@/lib/brand";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -53,7 +34,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: brand.theme.primary ?? "#f5a623",
+  themeColor: resolvePalette(brand.theme).primary,
 };
 
 export default function RootLayout({
@@ -65,7 +46,7 @@ export default function RootLayout({
     <html
       lang={brand.locale}
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-      style={themeStyle()}
+      style={deriveRoleVars(brand.theme) as React.CSSProperties}
     >
       <head>
         <link rel="apple-touch-icon" href={brand.logoUrl} />

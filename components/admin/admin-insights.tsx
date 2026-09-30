@@ -60,9 +60,9 @@ function InsightCard({
 }) {
   const toneClasses = {
     neutral: "border-brand-border bg-white",
-    warning: "border-brand-orange-mid bg-brand-orange-light",
+    warning: "border-primary-mid bg-primary-soft",
     danger: "border-brand-red/30 bg-brand-red-light",
-    info: "border-brand-teal/20 bg-brand-teal-light",
+    info: "border-accent/20 bg-accent-soft",
   }[tone];
 
   return (
@@ -71,7 +71,7 @@ function InsightCard({
       className={`block rounded-xl border p-2.5 transition-transform active:scale-[0.98] ${toneClasses}`}
     >
       <div className="mb-0.5 flex items-center justify-between gap-1">
-        <span className="font-mono text-[10px] uppercase tracking-wide text-brand-gray">
+        <span className="font-mono text-label uppercase tracking-wide text-brand-gray">
           {label}
         </span>
         <span className="text-[13px] leading-none">{icon}</span>
@@ -82,7 +82,7 @@ function InsightCard({
         {value}
       </div>
       {hint && (
-        <div className="mt-0.5 truncate font-mono text-[10px] text-brand-gray-light">
+        <div className="mt-0.5 font-mono text-label leading-tight text-muted">
           {hint}
         </div>
       )}

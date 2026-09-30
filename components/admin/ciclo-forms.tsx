@@ -64,17 +64,17 @@ export function OpenCycleCard({
   const [importingListing, setImportingListing] = useState(false);
 
   return (
-    <Card className="mb-4 border-l-4 border-l-brand-teal">
+    <Card className="mb-4 border-l-4 border-l-accent">
       {/* The title stacks above a wrapping button row so the five actions
           always wrap within the card instead of overflowing — the app caps at
           640px, too narrow to ever fit them on one line beside the title. */}
       <CardHeader className="flex flex-col items-start gap-3">
         <div>
-          <span className="mb-1 inline-flex items-center gap-1.5 rounded-full bg-brand-teal-light px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-brand-teal">
-            <span className="h-1.5 w-1.5 rounded-full bg-brand-teal" />
+          <span className="mb-1 inline-flex items-center gap-1.5 rounded-full bg-accent-soft px-2 py-0.5 text-label font-bold uppercase tracking-wider text-accent-text">
+            <span className="h-1.5 w-1.5 rounded-full bg-accent" />
             {t.admin.cycle.openBadge}
           </span>
-          <span className="mb-1 ml-1.5 inline-flex rounded-full bg-black/[0.05] px-2 py-0.5 text-[10px] font-semibold text-brand-gray">
+          <span className="mb-1 ml-1.5 inline-flex rounded-full bg-black/[0.05] px-2 py-0.5 text-label font-semibold text-brand-gray">
             {t.admin.cycle.accessLabel}: {getAccessLabel(cycle.accessLevel)}
           </span>
           <h3 className="mt-1 text-[15px] font-bold text-brand-near-black">{cycle.title}</h3>
@@ -82,19 +82,19 @@ export function OpenCycleCard({
         <div className="flex w-full flex-wrap gap-2">
           <button
             onClick={() => setManagingProducts((v) => !v)}
-            className="rounded-xl border border-brand-teal/30 bg-brand-teal-light px-3 py-1.5 text-[11px] font-bold text-brand-teal"
+            className="rounded-xl border border-accent/30 bg-accent-soft px-3 py-1.5 text-label font-bold text-accent-text"
           >
             {managingProducts ? t.admin.cycle.closeProducts : t.admin.cycle.manageProducts}
           </button>
           <button
             onClick={() => setImportingListing(true)}
-            className="rounded-xl border border-brand-orange/30 bg-brand-orange-light px-3 py-1.5 text-[11px] font-bold text-brand-orange"
+            className="rounded-xl border border-primary/30 bg-primary-soft px-3 py-1.5 text-label font-bold text-primary-text"
           >
             {t.admin.cycle.importListing}
           </button>
           <button
             onClick={() => setEditing((v) => !v)}
-            className="rounded-xl border border-brand-border px-3 py-1.5 text-[11px] font-semibold text-brand-gray"
+            className="rounded-xl border border-brand-border px-3 py-1.5 text-label font-semibold text-brand-gray"
           >
             {editing ? t.admin.common.cancel : t.admin.common.edit}
           </button>
@@ -109,12 +109,12 @@ export function OpenCycleCard({
       ) : (
         <CardBody>
           <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-lg bg-brand-orange-light px-3 py-2">
-              <div className="font-mono text-[11px] text-brand-gray">{t.admin.cycle.ordersCount}</div>
+            <div className="rounded-lg bg-primary-soft px-3 py-2">
+              <div className="font-mono text-label text-brand-gray">{t.admin.cycle.ordersCount}</div>
               <div className="text-[20px] font-bold text-brand-near-black">{stats.orderCount}</div>
             </div>
-            <div className="rounded-lg bg-brand-teal-light px-3 py-2">
-              <div className="font-mono text-[11px] text-brand-gray">{t.admin.cycle.totalAmount}</div>
+            <div className="rounded-lg bg-accent-soft px-3 py-2">
+              <div className="font-mono text-label text-brand-gray">{t.admin.cycle.totalAmount}</div>
               <div className="text-[20px] font-bold text-brand-near-black">
                 {formatEur(stats.grandTotal)}
               </div>
@@ -220,9 +220,9 @@ function buildDateTime(date: string, time: string): string {
   return `${date}T${time || "00:00"}`;
 }
 
-const inputCls = "rounded-lg border border-brand-border px-2 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-brand-orange/30";
-const labelCls = "mb-1 block text-[11px] font-semibold uppercase tracking-wide text-brand-gray";
-const miniLabelCls = "shrink-0 text-[11px] font-medium text-brand-gray";
+const inputCls = "rounded-lg border border-brand-border px-2 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-primary/30";
+const labelCls = "mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray";
+const miniLabelCls = "shrink-0 text-label font-medium text-brand-gray";
 
 // 15-minute time slots from 06:00 to 22:00. A <select> of these replaces the
 // native <input type="time">: it is unambiguous on mobile and cannot produce an
@@ -332,7 +332,7 @@ function PickupSection({
             <button
               type="button"
               onClick={() => setShowPickup2(false)}
-              className="text-[11px] font-semibold text-brand-gray hover:text-brand-red"
+              className="text-label font-semibold text-brand-gray hover:text-brand-red"
             >
               {t.admin.cycle.removePickup2}
             </button>
@@ -341,7 +341,7 @@ function PickupSection({
           <button
             type="button"
             onClick={() => setShowPickup2(true)}
-            className="text-[12px] font-semibold text-brand-orange hover:underline"
+            className="text-[12px] font-semibold text-primary-text hover:underline"
           >
             {t.admin.cycle.addPickup2}
           </button>
@@ -378,7 +378,7 @@ function ShippingModeFields({
             key={opt.v}
             type="button"
             onClick={() => onModeChange(opt.v)}
-            className={`flex-1 rounded-md py-1.5 text-[11px] font-semibold transition-colors ${
+            className={`flex-1 rounded-md py-1.5 text-label font-semibold transition-colors ${
               mode === opt.v
                 ? "bg-white text-brand-near-black shadow-sm"
                 : "bg-transparent text-brand-gray"
@@ -399,7 +399,7 @@ function ShippingModeFields({
             placeholder="0.00"
             className={`w-full ${inputCls}`}
           />
-          <p className="mt-1 text-[10px] text-brand-gray-light">
+          <p className="mt-1 text-label text-muted">
             {t.admin.cycle.shippingFixedHint}
           </p>
           {/* Hidden so the form data shape stays uniform across modes. */}
@@ -416,7 +416,7 @@ function ShippingModeFields({
             placeholder="0.00"
             className={`w-full ${inputCls}`}
           />
-          <p className="mt-1 text-[10px] text-brand-gray-light">
+          <p className="mt-1 text-label text-muted">
             {t.admin.cycle.shippingProportionalHint}
           </p>
           <input type="hidden" name="shippingCostPerMember" value="" />
@@ -508,7 +508,7 @@ export function EditCycleForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
       {isClosed && (
-        <div className="rounded-lg border border-brand-orange/30 bg-brand-orange-light px-3 py-2 text-[12px] leading-snug text-brand-near-black">
+        <div className="rounded-lg border border-primary/30 bg-primary-soft px-3 py-2 text-[12px] leading-snug text-brand-near-black">
           {t.admin.cycle.editClosedBanner}
         </div>
       )}
@@ -538,8 +538,8 @@ export function EditCycleForm({
       {shippingMode === "manual" ? (
         <div>
           <label className={labelCls}>{t.admin.cycle.shippingLabel}</label>
-          <div className="rounded-xl border border-brand-orange/30 bg-brand-orange-light p-3 text-[12px] text-brand-near-black">
-            <div className="font-bold text-brand-orange">{t.admin.cycle.shippingManualTitle}</div>
+          <div className="rounded-xl border border-primary/30 bg-primary-soft p-3 text-[12px] text-brand-near-black">
+            <div className="font-bold text-primary-text">{t.admin.cycle.shippingManualTitle}</div>
             <p className="mt-1 text-brand-gray">
               {t.admin.cycle.shippingManualDescription}
             </p>
@@ -590,7 +590,7 @@ export function EditCycleForm({
             >
               <AccessLevelOptions />
             </select>
-            <p className="mt-1 text-[10px] text-brand-gray-light">{t.admin.cycle.accessHint}</p>
+            <p className="mt-1 text-label text-muted">{t.admin.cycle.accessHint}</p>
           </div>
         )}
       </div>
@@ -606,7 +606,7 @@ export function EditCycleForm({
       <button
         type="submit"
         disabled={isPending}
-        className="w-full rounded-xl bg-brand-orange py-2 text-[13px] font-bold text-white disabled:opacity-60"
+        className="w-full rounded-xl bg-primary py-2 text-[13px] font-bold text-on-primary disabled:opacity-60"
       >
         {isPending ? t.admin.common.saving : t.admin.common.saveChanges}
       </button>
@@ -655,7 +655,7 @@ export function CreateCycleForm({ suppliers }: { suppliers: Supplier[] }) {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="w-full rounded-xl border-2 border-dashed border-brand-orange/40 py-3 text-[13px] font-semibold text-brand-orange"
+        className="w-full rounded-xl border-2 border-dashed border-primary/40 py-3 text-[13px] font-semibold text-primary-text"
       >
         {t.admin.cycle.createButton}
       </button>
@@ -712,7 +712,7 @@ export function CreateCycleForm({ suppliers }: { suppliers: Supplier[] }) {
             <select name="accessLevel" defaultValue={DEFAULT_ACCESS_LEVEL} className={`w-full ${inputCls}`}>
               <AccessLevelOptions />
             </select>
-            <p className="mt-1 text-[10px] text-brand-gray-light">{t.admin.cycle.accessHint}</p>
+            <p className="mt-1 text-label text-muted">{t.admin.cycle.accessHint}</p>
           </div>
         </div>
         <div>
@@ -725,13 +725,13 @@ export function CreateCycleForm({ suppliers }: { suppliers: Supplier[] }) {
         </div>
       </div>
       {suppliers.length === 0 && (
-        <p className="mt-2 text-[11px] text-brand-red">{t.admin.products.noSupplierAvailable}</p>
+        <p className="mt-2 text-label text-brand-red">{t.admin.products.noSupplierAvailable}</p>
       )}
       <div className="mt-4 flex gap-2">
         <button
           type="submit"
           disabled={isPending}
-          className="flex-1 rounded-xl bg-brand-orange py-2 text-[13px] font-bold text-white disabled:opacity-60"
+          className="flex-1 rounded-xl bg-primary py-2 text-[13px] font-bold text-on-primary disabled:opacity-60"
         >
           {isPending ? t.admin.cycle.creating : t.admin.cycle.createSubmit}
         </button>
@@ -862,14 +862,14 @@ export function CycleProductPicker({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h4 className="text-[13px] font-bold text-brand-near-black">{t.admin.products.cycleProductsTitle}</h4>
-        <div className="text-[11px] text-brand-gray">{t.admin.products.cycleProductsCount(currentProducts.length)}</div>
+        <div className="text-label text-brand-gray">{t.admin.products.cycleProductsCount(currentProducts.length)}</div>
       </div>
 
       {currentProducts.length > 0 ? (
         <div className="space-y-4">
           {Array.from(new Set(currentProducts.map(p => p.supplierName || "Altro"))).map(sName => (
             <div key={sName} className="space-y-1">
-              <div className="px-1 text-[10px] font-bold uppercase tracking-wider text-brand-gray-light">
+              <div className="px-1 text-label font-bold uppercase tracking-wider text-muted">
                 {sName}
               </div>
               <div className="divide-y divide-brand-border rounded-lg border border-brand-border bg-white overflow-hidden shadow-sm">
@@ -877,16 +877,16 @@ export function CycleProductPicker({
                   <div key={p.productId} className="flex items-center justify-between p-2.5 hover:bg-brand-warm-white/30">
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-[12px] font-medium text-brand-near-black">{p.name}</div>
-                      <div className="flex items-center gap-2 text-[10px] text-brand-gray">
+                      <div className="flex items-center gap-2 text-label text-brand-gray">
                         <span>{p.variant} {p.format && `(${p.format})`}</span>
-                        <span className="font-mono font-bold text-brand-orange">
+                        <span className="font-mono font-bold text-primary-text">
                           {formatEur(parseFloat(p.unitPrice))}
                         </span>
                       </div>
                     </div>
                     <button
                       onClick={() => handleRemove(p.productId)}
-                      className="ml-2 rounded-lg bg-red-50 px-2 py-1 text-[10px] font-bold text-red-600 hover:bg-red-100"
+                      className="ml-2 rounded-lg bg-red-50 px-2 py-1 text-label font-bold text-red-600 hover:bg-red-100"
                     >
                       {t.admin.products.removeFromCycle}
                     </button>
@@ -907,7 +907,7 @@ export function CycleProductPicker({
         <select
           value={selectedSupplierId}
           onChange={(e) => setSelectedSupplierId(e.target.value)}
-          className="mb-4 w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-brand-teal/30"
+          className="mb-4 w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-accent/30"
         >
           <option value="">{t.admin.products.selectSupplierOption}</option>
           {suppliers.map((s) => (
@@ -927,16 +927,16 @@ export function CycleProductPicker({
                   <div key={cp.catalogProductId} className="flex items-center justify-between p-2.5 hover:bg-brand-warm-white/50">
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-[12px] font-medium text-brand-near-black">{cp.name}</div>
-                      <div className="flex items-center gap-2 text-[10px] text-brand-gray">
+                      <div className="flex items-center gap-2 text-label text-brand-gray">
                         <span>{cp.variant} {cp.format && `(${cp.format})`}</span>
-                        <span className="font-mono font-bold text-brand-orange">
+                        <span className="font-mono font-bold text-primary-text">
                           {formatEur(parseFloat(cp.unitPrice))}
                         </span>
                       </div>
                     </div>
                     <button
                       onClick={() => handleAdd(cp.catalogProductId)}
-                      className="ml-2 rounded-lg bg-brand-teal px-3 py-1 text-[10px] font-bold text-white hover:bg-brand-teal-dark"
+                      className="ml-2 rounded-lg bg-accent px-3 py-1 text-label font-bold text-on-accent"
                     >
                       {t.admin.products.addButton}
                     </button>
@@ -984,7 +984,7 @@ export function SupplierActionsButton({
         onClick={() => setOpen(true)}
         disabled={!!disabledReason}
         title={disabledReason ?? undefined}
-        className="rounded-lg bg-brand-teal/10 px-3 py-1 text-[11px] font-bold text-brand-teal hover:bg-brand-teal/20 disabled:cursor-not-allowed disabled:opacity-50"
+        className="rounded-lg bg-accent/10 px-3 py-1 text-label font-bold text-accent-text hover:bg-accent/20 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {t.admin.cycle.supplierButton}
       </button>
@@ -1017,7 +1017,7 @@ export function ClosedCycleEditButton({
     return (
       <button
         onClick={() => setOpen(true)}
-        className="rounded-lg bg-brand-orange/10 px-3 py-1 text-[11px] font-bold text-brand-orange hover:bg-brand-orange/20"
+        className="rounded-lg bg-primary/10 px-3 py-1 text-label font-bold text-primary-text hover:bg-primary/20"
       >
         {t.admin.cycle.editClosedButton}
       </button>
@@ -1028,7 +1028,7 @@ export function ClosedCycleEditButton({
       <div className="flex max-h-[92vh] w-full max-w-[600px] flex-col rounded-2xl bg-brand-warm-white shadow-2xl">
         <div className="flex items-center justify-between border-b border-brand-border p-5">
           <div>
-            <div className="font-mono text-[10px] uppercase tracking-[0.13em] text-brand-orange">
+            <div className="font-mono text-label uppercase tracking-[0.13em] text-primary-text">
               {t.admin.cycle.editClosedLabel}
             </div>
             <h3 className="mt-1 text-[16px] font-black text-brand-near-black">{cycle.title}</h3>

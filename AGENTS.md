@@ -526,28 +526,51 @@ Then choose your path:
 
 `pg_dump` runs with `--no-owner --no-privileges --format=plain` so the dump is portable across Neon branches without role-name conflicts. The `\restrict` / `\unrestrict` directives at the top and bottom are PG 17 metadata — `psql` handles them transparently.
 
-### Design System — Orange/Teal
+### Design System: role tokens
 
-CSS variables in `app/globals.css` as Tailwind v4 `@theme`:
+Brand colours come from the brand JSON (`theme`), never from the code.
+`lib/brand/roles.ts` derives the CSS variables, `app/layout.tsx` sets them on
+`<html>`, and `app/globals.css` maps them to Tailwind 4 `@theme` colours.
+Defaults below are the WeGrocery palette (`DEFAULT_PALETTE`).
 
-| Token | Value | Use |
+| Class suffix | Default | Use |
 |---|---|---|
-| `--pm-orange` | #F5A623 | Primary brand, buttons, active nav |
-| `--pm-orange-light` | #FEF3DC | Saldo positive background |
-| `--pm-teal` | #00A896 | Cycle open badge, topup accent |
-| `--pm-teal-light` | #E0F5F3 | Teal backgrounds |
-| `--pm-red` | #E05252 | Negative balance, errors |
-| `--pm-near-black` | #2d2b29 | Primary text |
-| `--pm-gray` | #58595B | Secondary text |
-| `--pm-warm-white` | #faf8f5 | App background |
-| `--pm-border` | rgba(88,89,91,0.10) | Borders |
+| `primary` | #F5A623 | Fills: CTA buttons, active dots, progress. Also borders and rings |
+| `on-primary` | computed | Text on a `bg-primary` fill (near-black or white, whichever reads better) |
+| `primary-text` | computed (#8E6014) | Primary-coloured **text** and links on light surfaces |
+| `primary-soft` | #FEF3DC | Soft background (balance card) |
+| `primary-mid` | primary at 30% | Borders on soft backgrounds |
+| `accent`, `on-accent`, `accent-text`, `accent-soft` | #00A896 … | Same roles for the accent (open-cycle badge, top-ups) |
+| `muted` | computed (#6B6B6B) | Secondary text |
+| `brand-red` / `brand-red-light` | #C53030 / #FEECEC | Negative balance, errors, destructive buttons (white text) |
+| `brand-near-black` | #2d2b29 | Primary text, dark buttons (white text) |
+| `brand-gray` | #58595B | Secondary text |
+| `brand-gray-light` | #ADADAD | Fills and disabled states only |
+| `brand-warm-white` | #faf8f5 | App background |
+| `brand-border` | rgba(88,89,91,0.10) | Borders |
+
+Rules (enforced by `lib/brand/design-guard.test.ts`):
+- Every text/background pair reaches WCAG AA (4.5:1). Computed tokens
+  guarantee it for any palette; `brandContrastWarnings()` logs at startup
+  when a palette cannot.
+- Never `text-white` on `bg-primary` / `bg-accent`: use `text-on-primary` /
+  `text-on-accent`. Keep the fill and its text colour on the same line.
+- Coloured text is `text-primary-text` / `text-accent-text`, not `text-primary`
+  (that is the fill colour; fine only on a dark background).
+- No opacity modifier on a text token (`text-accent-text/80`): it undoes the
+  computed contrast. Tints of a fill behind its own text go up to `/20`.
+- Never `text-brand-gray-light`: use `text-muted`.
+- No palette names (`orange`, `teal`) and no hard-coded brand hex.
+- No text under 12px: `text-label` (12px) is the smallest size. On phones
+  `input`, `select` and `textarea` are forced to 16px in `globals.css` (iOS
+  zooms the page on smaller fields), so do not size fields below that.
 
 Key patterns:
-- **Saldo hero card**: orange-light (positive) or red-light (negative), 70px balance amount
+- **Saldo hero card**: primary-soft (positive) or red-light (negative), 70px balance amount
 - **Pill steppers** in order form: zero-state (single + btn) vs has-qty state (−/qty/+)
-- **Bottom nav**: 5 tabs, orange active state, SVG icons
+- **Bottom nav**: 5 tabs, primary-text active state, SVG icons
 - **Notification bell**: in header, red badge with count, links to `/notifiche`
-- Max-width **480px centered** on desktop; `bg-pm-frame` (#ddd8d0) frames the app
+- Shell `max-w-[480px]`, `md:max-w-[640px]`, `lg:max-w-[960px]`, centered; `bg-brand-frame` frames the app
 
 ### Known Gotchas
 

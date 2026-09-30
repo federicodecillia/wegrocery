@@ -80,7 +80,7 @@ export default async function OrdinePage({
               href={`/ordine?cycleId=${c.cycleId}`}
               className={`shrink-0 rounded-full px-4 py-1.5 text-[12px] font-bold transition-colors ${
                 c.cycleId === openCycle!.cycleId
-                  ? "bg-brand-teal text-white shadow-sm"
+                  ? "bg-accent text-on-accent shadow-sm"
                   : "bg-white text-brand-gray border border-brand-border hover:bg-brand-warm-white"
               }`}
             >

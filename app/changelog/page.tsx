@@ -50,8 +50,8 @@ export default async function ChangelogPage({
         ))}
       </div>
 
-      <div className="mt-8 text-center text-[11px] text-brand-gray-light">
-        <Link href="/guida" className="text-brand-teal underline-offset-2 hover:underline">
+      <div className="mt-8 text-center text-label text-muted">
+        <Link href="/guida" className="text-accent-text underline-offset-2 hover:underline">
           ← {t.backToGuide}
         </Link>
       </div>
@@ -80,7 +80,7 @@ function VersionBlock({
             {isUnreleased ? t.unreleased : `v${version.version}`}
           </h2>
           {version.date && (
-            <span className="font-mono text-[10px] uppercase tracking-wide text-brand-gray-light">
+            <span className="font-mono text-label uppercase tracking-wide text-muted">
               {version.date}
             </span>
           )}
@@ -95,7 +95,7 @@ function VersionBlock({
         {version.sections.map((s) => (
           <section key={s.heading}>
             <h3
-              className={`mb-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wide ${toneFor(s.heading)}`}
+              className={`mb-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-mono text-label font-bold uppercase tracking-wide ${toneFor(s.heading)}`}
             >
               <span aria-hidden="true">{emojiFor(s.heading)}</span>
               {s.heading}
@@ -142,16 +142,16 @@ function emojiFor(heading: string): string {
 // language.
 function toneFor(heading: string): string {
   const h = heading.toLowerCase();
-  if (h === "added" || h === "aggiunte") return "bg-brand-teal-light text-brand-teal";
+  if (h === "added" || h === "aggiunte") return "bg-accent-soft text-accent-text";
   if (h === "fixed" || h === "risolto") return "bg-brand-red-light text-brand-red";
   if (h === "changed" || h === "modificato")
-    return "bg-brand-orange-light text-brand-orange";
+    return "bg-primary-soft text-primary-text";
   if (h === "performance") return "bg-[#e7ddff] text-[#5e2dc8]";
   if (h === "removed" || h === "rimosso") return "bg-black/[0.08] text-brand-gray";
   if (h === "security" || h === "sicurezza")
     return "bg-brand-red-light text-brand-red";
   if (h === "documentation" || h === "documentazione")
-    return "bg-brand-teal-light text-brand-teal";
+    return "bg-accent-soft text-accent-text";
   return "bg-brand-warm-white text-brand-gray";
 }
 
@@ -177,7 +177,7 @@ function InlineMarkdown({ text }: { text: string }) {
 
 function LanguageToggle({ current }: { current: ChangelogLanguage }) {
   return (
-    <div className="flex shrink-0 overflow-hidden rounded-full border border-brand-border bg-white text-[10px] font-bold">
+    <div className="flex shrink-0 overflow-hidden rounded-full border border-brand-border bg-white text-label font-bold">
       <Link
         href="/changelog?lang=it"
         className={`px-2.5 py-1 ${current === "it" ? "bg-brand-near-black text-white" : "text-brand-gray"}`}

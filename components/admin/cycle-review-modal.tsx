@@ -39,7 +39,7 @@ export function CycleReviewCloseButton({ cycleId, cycleTitle }: Props) {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="rounded-xl border border-brand-orange/30 bg-brand-orange-light px-4 py-2 text-[12px] font-bold text-brand-orange disabled:opacity-60"
+        className="rounded-xl border border-primary/30 bg-primary-soft px-4 py-2 text-[12px] font-bold text-primary-text disabled:opacity-60"
       >
         {t.admin.cycleReview.openButton}
       </button>
@@ -163,7 +163,7 @@ function CycleReviewModal({
         <header className="flex items-center justify-between border-b border-brand-border px-5 py-4">
           <div>
             <h2 className="text-[15px] font-bold text-brand-near-black">{t.admin.cycleReview.modalTitle}</h2>
-            <p className="mt-0.5 text-[11px] text-brand-gray">{cycleTitle}</p>
+            <p className="mt-0.5 text-label text-brand-gray">{cycleTitle}</p>
           </div>
           <button
             onClick={onClose}
@@ -174,7 +174,7 @@ function CycleReviewModal({
           </button>
         </header>
 
-        <p className="border-b border-brand-border bg-brand-orange-light/40 px-5 py-2 text-[11px] text-brand-gray">
+        <p className="border-b border-brand-border bg-primary-soft/40 px-5 py-2 text-label text-brand-gray">
           {t.admin.cycleReview.modalDescription}
         </p>
 
@@ -195,7 +195,7 @@ function CycleReviewModal({
                     key={r.productId}
                     className={`rounded-lg border bg-white px-3 py-2.5 ${
                       Math.abs(next - r.unitPrice) > 0.001
-                        ? "border-brand-orange/40"
+                        ? "border-primary/40"
                         : "border-brand-border"
                     } ${noOrders ? "opacity-60" : ""}`}
                   >
@@ -207,8 +207,8 @@ function CycleReviewModal({
                         <div className="text-[13px] font-semibold text-brand-near-black">
                           {r.name}
                         </div>
-                        {meta && <div className="text-[11px] text-brand-gray">{meta}</div>}
-                        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-brand-gray">
+                        {meta && <div className="text-label text-brand-gray">{meta}</div>}
+                        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-label text-brand-gray">
                           <span>
                             {t.admin.cycleReview.orderedLabel}{" "}
                             <span className="font-mono font-bold text-brand-near-black">
@@ -224,7 +224,7 @@ function CycleReviewModal({
                         </div>
                       </div>
                       <div className="shrink-0 text-right">
-                        <label className="block text-[10px] uppercase tracking-wide text-brand-gray-light">
+                        <label className="block text-label uppercase tracking-wide text-muted">
                           {t.admin.cycleReview.finalPriceLabel}
                         </label>
                         <input
@@ -236,12 +236,12 @@ function CycleReviewModal({
                           onChange={(e) =>
                             setEdits((prev) => ({ ...prev, [r.productId]: e.target.value }))
                           }
-                          className="w-[88px] rounded-lg border border-brand-border px-2 py-1.5 text-right text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-brand-orange/30"
+                          className="w-[88px] rounded-lg border border-brand-border px-2 py-1.5 text-right text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-primary/30"
                         />
                         {Math.abs(next - r.unitPrice) > 0.001 && (
                           <div
-                            className={`mt-1 text-[10px] font-semibold ${
-                              delta >= 0 ? "text-brand-orange" : "text-brand-teal"
+                            className={`mt-1 text-label font-semibold ${
+                              delta >= 0 ? "text-primary-text" : "text-accent-text"
                             }`}
                           >
                             {delta >= 0 ? "+" : "-"}{formatMoney(Math.abs(delta))}
@@ -263,7 +263,7 @@ function CycleReviewModal({
         <footer className="border-t border-brand-border bg-white px-5 py-3.5">
           <div className="mb-3 flex items-end justify-between text-[12px]">
             <div>
-              <div className="font-mono text-[10px] uppercase tracking-wide text-brand-gray-light">
+              <div className="font-mono text-label uppercase tracking-wide text-muted">
                 {t.admin.cycleReview.ordersTotalLabel}
               </div>
               <div className="font-mono text-[15px] font-bold text-brand-near-black">
@@ -272,12 +272,12 @@ function CycleReviewModal({
             </div>
             {Math.abs(totalDelta) > 0.005 && (
               <div className="text-right">
-                <div className="font-mono text-[10px] uppercase tracking-wide text-brand-gray-light">
+                <div className="font-mono text-label uppercase tracking-wide text-muted">
                   {t.admin.cycleReview.variationLabel}
                 </div>
                 <div
                   className={`font-mono text-[13px] font-bold ${
-                    totalDelta >= 0 ? "text-brand-orange" : "text-brand-teal"
+                    totalDelta >= 0 ? "text-primary-text" : "text-accent-text"
                   }`}
                 >
                   {totalDelta >= 0 ? "+" : "-"}{formatMoney(Math.abs(totalDelta))}
@@ -295,7 +295,7 @@ function CycleReviewModal({
             <button
               onClick={handleConfirm}
               disabled={isPending || loading}
-              className="flex-[2] rounded-xl bg-brand-orange px-4 py-2.5 text-[13px] font-bold text-white disabled:opacity-60"
+              className="flex-[2] rounded-xl bg-primary px-4 py-2.5 text-[13px] font-bold text-on-primary disabled:opacity-60"
             >
               {isPending
                 ? t.admin.cycleReview.closing
