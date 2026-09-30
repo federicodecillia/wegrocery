@@ -21,6 +21,10 @@ stanno nella PR.
 
 ## [Non rilasciato]
 
+## [1.17.0] — 30 settembre 2026
+
+*Accesso con un link via email, e le basi per pagare ogni ordine.*
+
 ### Aggiunte
 - ✉️ **Accesso con un link via email.** Scrivi il tuo indirizzo e ricevi un link che ti fa entrare, senza bisogno di un account Google; Google resta per chi lo preferisce. Gli admin possono mandare il link come invito da Soci e vedono l'ultimo accesso di ogni socio. Nota di aggiornamento: applicare `drizzle/0022_auth_sessions.sql` prima del deploy; l'invio email (Resend) deve essere configurato; dopo l'aggiornamento tutti rientrano una volta; l'indirizzo di ritorno di Google non cambia.
 - 🧮 **Controllo notturno dei conti.** Dopo il backup, un controllo in sola lettura verifica che pagamenti, rimborsi e addebiti tornino, e segnala subito se non tornano.
@@ -436,6 +440,7 @@ stanno nella PR.
 
 ---
 
+[1.17.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.17.0
 [1.16.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.16.1
 [1.16.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.16.0
 [1.15.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.15.0
