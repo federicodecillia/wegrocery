@@ -207,7 +207,8 @@ export const orderDrafts = pgTable(
 
 // Online top-ups (Stripe Checkout), drizzle/0016_stripe_payments.sql.
 // status: pending -> succeeded | failed | expired; succeeded ->
-// partially_refunded | refunded. Transitions are guarded UPDATEs in
+// partially_refunded | refunded, following refunded_cents = the sum of its
+// pending or succeeded refunds (refunds table). Transitions are guarded UPDATEs in
 // lib/payments/webhook.ts, so a replayed webhook changes nothing.
 export const payments = pgTable(
   "payments",
@@ -227,6 +228,43 @@ export const payments = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
   },
   (table) => [index("payments_member_id_idx").on(table.memberId)],
+);
+
+// Stripe refunds (drizzle/0020_stripe_refunds.sql), one row per refund of a
+// payment. Written only by upsertStripeRefund (lib/payments/refund-store.ts):
+// status requested -> pending | succeeded -> failed | canceled through guarded
+// writes, so a replayed or out-of-order webhook changes nothing.
+export const refunds = pgTable(
+  "refunds",
+  {
+    refundId: text("refund_id").primaryKey(),
+    paymentId: text("payment_id")
+      .notNull()
+      .references(() => payments.paymentId),
+    memberId: text("member_id")
+      .notNull()
+      .references(() => members.memberId),
+    cycleId: text("cycle_id").references(() => orderCycles.cycleId),
+    amountCents: integer("amount_cents").notNull(),
+    status: text("status").notNull(),
+    reason: text("reason").notNull(),
+    stripeRefundId: text("stripe_refund_id").unique(),
+    createdBy: text("created_by").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
+  },
+  (table) => [
+    index("refunds_payment_id_idx").on(table.paymentId),
+    check("refunds_amount_positive", sql`${table.amountCents} > 0`),
+    check(
+      "refunds_status_check",
+      sql`${table.status} IN ('requested', 'pending', 'succeeded', 'failed', 'canceled')`,
+    ),
+    check(
+      "refunds_reason_check",
+      sql`${table.reason} IN ('settlement', 'order_cancelled', 'late_payment', 'dashboard')`,
+    ),
+  ],
 );
 
 // Payment settings chosen by the admins in Impostazioni
@@ -297,6 +335,8 @@ export const ledgerEntries = pgTable(
     method: text("method"),
     // Bank reference (CRO/TRN) of a manual movement, NULL when none.
     externalRef: text("external_ref"),
+    // The refund this row debits or reverses (migration 0020), NULL otherwise.
+    refundId: text("refund_id").references(() => refunds.refundId),
   },
   (table) => [
     index("ledger_entries_member_id_idx").on(table.memberId),
@@ -325,6 +365,10 @@ export const ledgerEntries = pgTable(
     uniqueIndex("ledger_entries_external_ref_uniq")
       .on(sql`upper(trim(${table.externalRef}))`)
       .where(sql`${table.externalRef} IS NOT NULL`),
+    // One debit and at most one reversal per refund (drizzle/0020_stripe_refunds.sql).
+    uniqueIndex("ledger_entries_refund_type_uniq")
+      .on(table.refundId, table.type)
+      .where(sql`${table.refundId} IS NOT NULL`),
   ],
 );
 

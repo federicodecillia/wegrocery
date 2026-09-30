@@ -1,12 +1,11 @@
 import type Stripe from "stripe";
-import { eq, sql } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 import { getDb } from "@/lib/db/client";
-import { auditLog, members } from "@/lib/db/schema";
-import { getMemberBalance } from "@/lib/db/queries";
 import { t } from "@/lib/i18n";
 import { formatMoney } from "@/lib/i18n/format";
-import { dispatchNotification } from "@/lib/notifications/dispatch";
-import { getStripe } from "./stripe";
+import { audit, genId, notifyMember } from "./effects";
+import { syncChargeRefunds, upsertStripeRefund } from "./refund-store";
+import { refundInputOf, type StripeRefundInput } from "./refunds";
 
 // What a Stripe event means for us. Pure, so the event mapping is unit tested
 // without a database.
@@ -20,7 +19,8 @@ export type WebhookAction =
       paymentIntentId: string | null;
     }
   | { kind: "close"; paymentId: string; sessionId: string; status: "failed" | "expired" }
-  | { kind: "refund"; paymentIntentId: string; refundedCents: number }
+  | { kind: "refund"; refund: StripeRefundInput }
+  | { kind: "refund_sync"; paymentIntentId: string }
   | { kind: "ignore" };
 
 function idOf(ref: string | { id: string } | null): string | null {
@@ -60,79 +60,37 @@ export function planWebhookAction(event: Stripe.Event): WebhookAction {
         status: event.type === "checkout.session.expired" ? "expired" : "failed",
       };
     }
+    case "refund.created":
+    case "refund.updated":
+    case "refund.failed": {
+      const refund = refundInputOf(event.data.object);
+      return refund ? { kind: "refund", refund } : { kind: "ignore" };
+    }
     case "charge.refunded": {
-      const charge = event.data.object;
-      const paymentIntentId = idOf(charge.payment_intent);
+      // The event says how much was refunded in total, not which refund
+      // changed: read the charge's refunds again (the safety net for refund.*
+      // events that never arrived).
+      const paymentIntentId = idOf(event.data.object.payment_intent);
       if (!paymentIntentId) return { kind: "ignore" };
-      return { kind: "refund", paymentIntentId, refundedCents: charge.amount_refunded };
+      return { kind: "refund_sync", paymentIntentId };
     }
     default:
       return { kind: "ignore" };
   }
 }
 
-type Db = ReturnType<typeof getDb>;
 type LedgerRow = { member_id: string; amount: string; payment_id: string };
 
-function genId(prefix: string): string {
-  return `${prefix}_${crypto.randomUUID().replace(/-/g, "").slice(0, 12)}`;
-}
-
-async function audit(db: Db, action: string, entityId: string, payload: unknown) {
-  await db.insert(auditLog).values({
-    auditId: crypto.randomUUID(),
-    userEmail: "stripe",
-    action,
-    entityType: "payment",
-    entityId,
-    payloadJson: JSON.stringify(payload),
-    createdAt: new Date(),
-  });
-}
-
-async function notifyMember(db: Db, memberId: string, title: string, body: (balance: string) => string) {
-  const [member] = await db
-    .select({ email: members.email })
-    .from(members)
-    .where(eq(members.memberId, memberId))
-    .limit(1);
-  const balance = await getMemberBalance(memberId);
-  await dispatchNotification(db, {
-    memberId,
-    memberEmail: member?.email ?? null,
-    type: "topup_received",
-    title,
-    body: body(formatMoney(balance)),
-    href: "/storico",
-    createdAt: new Date(),
-  });
-}
-
-// Stripe does not order events: a refund can arrive while the credit is still
-// being retried, when the payment row has no payment_intent_id yet. Answering
-// 200 would drop the refund forever, so throw (-> 500, Stripe retries later)
-// when the intent belongs to one of our payments that is still pending.
-async function ensureRefundNotEarly(db: Db, paymentIntentId: string): Promise<void> {
-  const { rows } = await db.execute<{ one: number }>(
-    sql`SELECT 1 AS one FROM payments WHERE payment_intent_id = ${paymentIntentId}`,
-  );
-  if (rows.length > 0) return; // known payment: this refund was already posted
-  const intent = await getStripe()?.paymentIntents.retrieve(paymentIntentId);
-  const paymentId = intent?.metadata?.paymentId;
-  if (!paymentId) return; // not a top-up of this app
-  const { rows: pending } = await db.execute<{ one: number }>(
-    sql`SELECT 1 AS one FROM payments WHERE payment_id = ${paymentId} AND status = 'pending'`,
-  );
-  if (pending.length > 0) throw new Error(`refund for ${paymentId} arrived before its credit`);
-}
-
-// Each branch is ONE SQL statement, hence one transaction: the guarded UPDATE
-// on payments and the ledger INSERT happen together or not at all. A replayed
-// or late event finds the payment already past the guarded status and writes
-// nothing (and the partial unique index on ledger_entries.payment_id would
-// reject a second credit anyway).
+// Credit and close are ONE SQL statement each, hence one transaction: the
+// guarded UPDATE on payments and the ledger INSERT happen together or not at
+// all. A replayed or late event finds the payment already past the guarded
+// status and writes nothing (and the partial unique index on
+// ledger_entries.payment_id would reject a second credit anyway). Refunds go
+// through upsertStripeRefund (lib/payments/refund-store.ts), same rules.
 export async function applyWebhookAction(action: WebhookAction): Promise<void> {
   if (action.kind === "ignore") return;
+  if (action.kind === "refund") return upsertStripeRefund(action.refund);
+  if (action.kind === "refund_sync") return syncChargeRefunds(action.paymentIntentId);
   const db = getDb();
 
   if (action.kind === "credit") {
@@ -173,57 +131,15 @@ export async function applyWebhookAction(action: WebhookAction): Promise<void> {
     }
     await audit(db, "stripe_topup", action.paymentId, credited);
     const amount = formatMoney(parseFloat(credited.amount));
-    await notifyMember(db, credited.member_id, t.notificationsServer.onlineTopupTitle, (balance) =>
+    await notifyMember(db, credited.member_id, "topup_received", t.notificationsServer.onlineTopupTitle, (balance) =>
       t.notificationsServer.onlineTopupBody(amount, balance),
     );
     return;
   }
 
-  if (action.kind === "close") {
-    await db.execute(sql`
-      UPDATE payments
-      SET status = ${action.status}, checkout_session_id = ${action.sessionId}, updated_at = now()
-      WHERE payment_id = ${action.paymentId} AND status = 'pending'
-    `);
-    return;
-  }
-
-  // Refund: charge.amount_refunded is cumulative, so post only the delta since
-  // the last refund we saw. FOR UPDATE serialises two refund events for the
-  // same payment; the second then sees the first one's refunded_cents.
-  const entryId = genId("led");
-  const { rows } = await db.execute<LedgerRow>(sql`
-    WITH prev AS (
-      SELECT payment_id, refunded_cents
-      FROM payments
-      WHERE payment_intent_id = ${action.paymentIntentId}
-        AND status IN ('succeeded', 'partially_refunded')
-      FOR UPDATE
-    ),
-    upd AS (
-      UPDATE payments p
-      SET refunded_cents = ${action.refundedCents},
-          status = CASE WHEN ${action.refundedCents} >= p.amount_cents THEN 'refunded' ELSE 'partially_refunded' END,
-          updated_at = now()
-      FROM prev
-      WHERE p.payment_id = prev.payment_id AND prev.refunded_cents < ${action.refundedCents}
-      RETURNING p.payment_id, p.member_id, ${action.refundedCents} - prev.refunded_cents AS delta_cents
-    )
-    INSERT INTO ledger_entries
-      (entry_id, member_id, entry_date, type, amount, cycle_id, note, created_by, created_at, payment_id)
-    SELECT ${entryId}, member_id, now(), 'correction', -(delta_cents::numeric / 100), NULL,
-           ${t.topup.refundLedgerNote}, 'stripe', now(), payment_id
-    FROM upd
-    RETURNING member_id, amount::text AS amount, payment_id
+  await db.execute(sql`
+    UPDATE payments
+    SET status = ${action.status}, checkout_session_id = ${action.sessionId}, updated_at = now()
+    WHERE payment_id = ${action.paymentId} AND status = 'pending'
   `);
-  const refunded = rows[0];
-  if (!refunded) {
-    await ensureRefundNotEarly(db, action.paymentIntentId);
-    return;
-  }
-  await audit(db, "stripe_refund", refunded.payment_id, refunded);
-  const amount = formatMoney(Math.abs(parseFloat(refunded.amount)));
-  await notifyMember(db, refunded.member_id, t.notificationsServer.onlineRefundTitle, (balance) =>
-    t.notificationsServer.onlineRefundBody(amount, balance),
-  );
 }

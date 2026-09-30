@@ -19,6 +19,16 @@ stanno nella PR.
 
 ---
 
+## [1.15.0] — 30 settembre 2026
+
+*Rimborsi sulla carta che puoi seguire.*
+
+### Aggiunte
+- ⚠️ **Rimborsi non andati a buon fine.** Se un rimborso sulla carta fallisce dopo l'invio, l'importo torna sul saldo, lo Storico mostra "Rimborso non riuscito", e il socio e gli admin vengono avvisati di come verrà restituito.
+
+### Modificato
+- 💳 **Rimborsi sulla carta registrati uno per uno.** Ogni rimborso di una ricarica online viene registrato una volta sola, appena Stripe lo accetta, anche quando arriva in più passaggi (migrazione `0020`).
+
 ## [1.14.1] — 30 settembre 2026
 
 *Importi più ordinati nelle Impostazioni.*
@@ -391,6 +401,7 @@ stanno nella PR.
 
 ---
 
+[1.15.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.15.0
 [1.14.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.14.1
 [1.14.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.14.0
 [1.13.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.13.0
