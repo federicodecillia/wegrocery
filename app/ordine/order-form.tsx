@@ -647,7 +647,9 @@ export function OrderForm({
                   .map(([label, c]) => (
                     <div key={label as string} className="flex justify-between gap-3">
                       <dt>{label}</dt>
-                      <dd className="font-mono text-brand-near-black">{formatEur((c as number) / 100)}</dd>
+                      <dd className="font-mono text-brand-near-black">
+                        {(c as number) < 0 ? `−${formatEur(-(c as number) / 100)}` : formatEur((c as number) / 100)}
+                      </dd>
                     </div>
                   ))}
                 <p className="pt-[2px] text-muted">
