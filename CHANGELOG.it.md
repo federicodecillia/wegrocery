@@ -19,7 +19,9 @@ stanno nella PR.
 
 ---
 
-## [Non rilasciato]
+## [1.16.0] — 30 settembre 2026
+
+*Testi che si leggono, con i colori di qualsiasi gruppo.*
 
 ### Modificato
 - 👓 **Testi che si leggono.** Pulsanti, link, etichette e importi hanno ora abbastanza contrasto in ogni schermata: testo scuro sui pulsanti colorati, tonalità più scure per i testi colorati e grigi, un rosso più profondo per gli importi negativi.
@@ -411,6 +413,7 @@ stanno nella PR.
 
 ---
 
+[1.16.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.16.0
 [1.15.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.15.0
 [1.14.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.14.1
 [1.14.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.14.0

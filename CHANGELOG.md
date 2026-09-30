@@ -18,7 +18,9 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ---
 
-## [Unreleased]
+## [1.16.0] — 2026-09-30
+
+*Text you can read, in any group's colours.*
 
 ### Changed
 - 👓 **Text you can read.** Buttons, links, labels and amounts now have enough contrast on every screen: dark text on the coloured buttons, darker shades for coloured and grey text, a deeper red for negative amounts.
@@ -410,6 +412,7 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ---
 
+[1.16.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.16.0
 [1.15.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.15.0
 [1.14.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.14.1
 [1.14.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.14.0
