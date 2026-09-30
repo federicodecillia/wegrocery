@@ -307,7 +307,7 @@ function OrderLineRow({ line, onSaved }: { line: OrderDetail; onSaved: () => voi
         </span>
         <span
           aria-hidden
-          className="shrink-0 self-center text-[12px] text-primary-text/40 group-hover:text-primary-text"
+          className="shrink-0 self-center text-[12px] text-muted group-hover:text-primary-text"
         >
           ✎
         </span>

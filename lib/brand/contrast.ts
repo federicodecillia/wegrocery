@@ -29,6 +29,14 @@ export function contrastRatio(a: string, b: string): number {
   return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
 }
 
+/** `top` at `alpha` over `base`: what `bg-primary/20` looks like on a surface. */
+export function mixHex(top: string, base: string, alpha: number): string {
+  const t = parseHex(top);
+  const b = parseHex(base);
+  if (!t || !b) return base;
+  return toHex(t.map((v, i) => v * alpha + b[i] * (1 - alpha)) as Rgb);
+}
+
 /** Text colour for a filled surface: `dark` or white, whichever reads better. */
 export function pickOn(fill: string, dark: string): string {
   return contrastRatio(dark, fill) >= contrastRatio("#ffffff", fill) ? dark : "#ffffff";

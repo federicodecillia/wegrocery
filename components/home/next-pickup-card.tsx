@@ -44,7 +44,7 @@ export function NextPickupCard({ pickup }: { pickup: NextPickup }) {
             <div className="text-[28px] font-black leading-none tracking-[-0.04em] text-accent-text">
               {daysUntil}
             </div>
-            <div className="font-mono text-[10px] uppercase tracking-[0.07em] text-accent-text/80">
+            <div className="font-mono text-[10px] uppercase tracking-[0.07em] text-accent-text">
               {daysUntil === 1 ? t.cycle.days_singular : t.cycle.days_plural}
             </div>
           </div>

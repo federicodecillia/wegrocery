@@ -46,7 +46,7 @@ export function OrderSummary({
           </span>
           <div className="min-w-0">
             <div className="text-[15px] font-bold text-accent-text">{t.order.confirmed}</div>
-            <div className="mt-[1px] font-mono text-[11px] text-accent-text/80">
+            <div className="mt-[1px] font-mono text-[11px] text-accent-text">
               {t.order.confirmedSummary(lines.length, formatEur(total))}
             </div>
           </div>

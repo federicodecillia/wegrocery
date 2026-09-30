@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { contrastRatio } from "./contrast";
+import { contrastRatio, mixHex } from "./contrast";
 import { brandContrastWarnings, deriveRoleVars, resolvePalette } from "./roles";
 
 describe("brand roles", () => {
@@ -42,6 +42,25 @@ describe("brand roles", () => {
         expect(contrastRatio(v["--muted"], bg)).toBeGreaterThanOrEqual(4.5);
       }
     }
+  });
+
+  it("coloured text stays readable on a tint of its own fill", () => {
+    for (const theme of [{}, { primary: "#1d8fe0", accent: "#2f9e44" }]) {
+      const v = deriveRoleVars(theme);
+      for (const role of ["primary", "accent"] as const) {
+        for (const base of [v["--background"], "#ffffff"]) {
+          const tint = mixHex(v[`--${role}`], base, 0.2); // bg-primary/20 is the strongest tint in use
+          expect(contrastRatio(v[`--${role}-text`], tint)).toBeGreaterThanOrEqual(4.5);
+        }
+      }
+    }
+  });
+
+  it("warns when a derived text colour cannot reach 4.5 on a brand surface", () => {
+    expect(brandContrastWarnings({ primaryLight: "#b45309" })).toEqual(
+      expect.arrayContaining([expect.stringContaining("primaryLight")]),
+    );
+    expect(brandContrastWarnings({ background: "#111111" }).length).toBeGreaterThan(1);
   });
 
   it("maps background to both surface variables", () => {

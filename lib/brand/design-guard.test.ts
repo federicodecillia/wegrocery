@@ -32,9 +32,18 @@ describe("design guard", () => {
   });
 
   it("never puts white text on a brand fill", () => {
-    const fill = String.raw`(?<![:\w-])bg-(primary|accent)(?![-/\w])`;
-    const white = String.raw`(?<![:\w-])text-white(?![-/\w])`;
+    // Variant prefixes (hover:, file:, peer-checked:) count too.
+    const fill = String.raw`(?<![\w-])bg-(primary|accent)(?![-/\w])`;
+    const white = String.raw`(?<![\w-])text-white(?![-\w])`;
     expect(hits(new RegExp(`${fill}.*${white}|${white}.*${fill}`))).toEqual([]);
+  });
+
+  it("never fades a text token: the opacity undoes the computed contrast", () => {
+    expect(hits(/text-((primary|accent)-text|muted)\/\d/)).toEqual([]);
+  });
+
+  it("never uses a fill colour as text", () => {
+    expect(hits(/(?<![\w-])text-(primary|accent)(?![-\w])/)).toEqual([]);
   });
 
   it("has no hard-coded brand hex", () => {

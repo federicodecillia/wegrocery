@@ -537,7 +537,7 @@ Defaults below are the WeGrocery palette (`DEFAULT_PALETTE`).
 |---|---|---|
 | `primary` | #F5A623 | Fills: CTA buttons, active dots, progress. Also borders and rings |
 | `on-primary` | computed | Text on a `bg-primary` fill (near-black or white, whichever reads better) |
-| `primary-text` | computed (#936415) | Primary-coloured **text** and links on light surfaces |
+| `primary-text` | computed (#8E6014) | Primary-coloured **text** and links on light surfaces |
 | `primary-soft` | #FEF3DC | Soft background (balance card) |
 | `primary-mid` | primary at 30% | Borders on soft backgrounds |
 | `accent`, `on-accent`, `accent-text`, `accent-soft` | #00A896 … | Same roles for the accent (open-cycle badge, top-ups) |
@@ -557,6 +557,8 @@ Rules (enforced by `lib/brand/design-guard.test.ts`):
   `text-on-accent`. Keep the fill and its text colour on the same line.
 - Coloured text is `text-primary-text` / `text-accent-text`, not `text-primary`
   (that is the fill colour; fine only on a dark background).
+- No opacity modifier on a text token (`text-accent-text/80`): it undoes the
+  computed contrast. Tints of a fill behind its own text go up to `/20`.
 - Never `text-brand-gray-light`: use `text-muted`.
 - No palette names (`orange`, `teal`) and no hard-coded brand hex.
 
