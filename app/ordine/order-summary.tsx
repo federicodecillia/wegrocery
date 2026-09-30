@@ -46,7 +46,7 @@ export function OrderSummary({
           </span>
           <div className="min-w-0">
             <div className="text-[15px] font-bold text-accent-text">{t.order.confirmed}</div>
-            <div className="mt-[1px] font-mono text-[11px] text-accent-text">
+            <div className="mt-[1px] font-mono text-label text-accent-text">
               {t.order.confirmedSummary(lines.length, formatEur(total))}
             </div>
           </div>
@@ -62,7 +62,7 @@ export function OrderSummary({
                 <span className="text-[18px] leading-none">{getProductEmoji(l.name)}</span>
                 <div className="min-w-0">
                   <div className="text-[13px] font-medium text-brand-near-black">{l.name}</div>
-                  <div className="mt-[1px] font-mono text-[10px] text-brand-gray">
+                  <div className="mt-[1px] font-mono text-label text-brand-gray">
                     {l.quantity} × {formatEur(l.unitPrice)}
                     {l.meta ? ` · ${l.meta}` : ""}
                   </div>
@@ -78,7 +78,7 @@ export function OrderSummary({
         <footer className="border-t border-brand-border bg-brand-warm-white px-4 py-3">
           <div className="flex items-end justify-between">
             <div>
-              <div className="font-mono text-[10px] uppercase tracking-[0.09em] text-muted">
+              <div className="font-mono text-label uppercase tracking-[0.09em] text-muted">
                 {t.order.totalOrder}
               </div>
               <div className="mt-[2px] text-[20px] font-black tracking-[-0.03em] text-brand-near-black">
@@ -86,7 +86,7 @@ export function OrderSummary({
               </div>
             </div>
             <div className="text-right">
-              <div className="font-mono text-[10px] uppercase tracking-[0.09em] text-muted">
+              <div className="font-mono text-label uppercase tracking-[0.09em] text-muted">
                 {t.order.balanceAfter}
               </div>
               <div

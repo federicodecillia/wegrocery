@@ -80,7 +80,7 @@ export function StatsFilters({
       {hasAny && (
         <button
           onClick={() => pushWith({ cycles: [], suppliers: [], members: [] })}
-          className="text-[11px] font-semibold text-primary-text hover:underline"
+          className="text-label font-semibold text-primary-text hover:underline"
         >
           {t.admin.stats.removeFilters}
         </button>
@@ -173,7 +173,7 @@ function MultiSelect({
               <button
                 type="button"
                 onClick={() => onChange([])}
-                className="mt-1 text-[11px] font-semibold text-primary-text hover:underline"
+                className="mt-1 text-label font-semibold text-primary-text hover:underline"
               >
                 {t.admin.stats.deselectAll}
               </button>
@@ -181,7 +181,7 @@ function MultiSelect({
           </div>
           <div className="max-h-[220px] overflow-y-auto py-1">
             {visibleOptions.length === 0 ? (
-              <p className="px-3 py-2 text-[11px] text-brand-gray">{t.admin.stats.noFilterResults}</p>
+              <p className="px-3 py-2 text-label text-brand-gray">{t.admin.stats.noFilterResults}</p>
             ) : (
               visibleOptions.map((o) => {
                 const checked = selectedSet.has(o.id);

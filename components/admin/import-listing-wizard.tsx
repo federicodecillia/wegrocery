@@ -164,7 +164,7 @@ export function ImportListingWizard({ open, onClose, cycleId, cycleTitle }: Prop
       <div className="flex max-h-[92vh] w-full max-w-[820px] flex-col rounded-2xl bg-brand-warm-white shadow-2xl">
         <header className="flex items-start justify-between gap-3 border-b border-brand-border p-5">
           <div>
-            <div className="font-mono text-[10px] uppercase tracking-[0.13em] text-primary-text">
+            <div className="font-mono text-label uppercase tracking-[0.13em] text-primary-text">
               {cycleTitle ? `${cycleTitle} · ` : ""}{t.admin.cycle.importListing} · {t.admin.importWizard.stepIndicator(step, 3)}
             </div>
             <h3 className="mt-1 text-[16px] font-black text-brand-near-black">
@@ -172,7 +172,7 @@ export function ImportListingWizard({ open, onClose, cycleId, cycleTitle }: Prop
               {step === 2 && t.admin.importWizard.step2Title}
               {step === 3 && t.admin.importWizard.step3Title}
             </h3>
-            <p className="mt-1 text-[11px] leading-snug text-brand-gray">
+            <p className="mt-1 text-label leading-snug text-brand-gray">
               {step === 1 && t.admin.importWizard.step1Description}
               {step === 2 && t.admin.importWizard.step2Description}
               {step === 3 && t.admin.importWizard.step3Description}
@@ -225,7 +225,7 @@ export function ImportListingWizard({ open, onClose, cycleId, cycleTitle }: Prop
         </div>
 
         <footer className="flex items-center justify-between gap-3 border-t border-brand-border p-4">
-          <div className="text-[11px] text-brand-gray">
+          <div className="text-label text-brand-gray">
             {step === 1 && filename && t.admin.importWizard.fileInfo(filename)}
             {step === 2 && !requiredMapped && (
               <span className="text-brand-red">{t.admin.importWizard.requiredMissingWarning}</span>
@@ -315,14 +315,14 @@ function Step1Upload({
         <div className="text-[13px] font-semibold text-brand-near-black">
           {pending ? t.admin.importWizard.readingFile : filename ? t.admin.importWizard.fileSelected(filename) : t.admin.importWizard.fileDropLabel}
         </div>
-        <div className="mt-1 text-[11px] text-brand-gray">
+        <div className="mt-1 text-label text-brand-gray">
           {t.admin.importWizard.fileDropHint}
         </div>
       </label>
 
       {inspection && inspection.inspection.sheets.length > 1 && (
         <div>
-          <div className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-brand-gray">
+          <div className="mb-1 text-label font-semibold uppercase tracking-wider text-brand-gray">
             {t.admin.importWizard.sheetLabel}
           </div>
           <div className="flex flex-wrap gap-2">
@@ -345,7 +345,7 @@ function Step1Upload({
 
       {inspection && (
         <div>
-          <div className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-brand-gray">
+          <div className="mb-1 text-label font-semibold uppercase tracking-wider text-brand-gray">
             {t.admin.importWizard.supplierLabel}
           </div>
           <div className="flex gap-2">
@@ -393,7 +393,7 @@ function Step1Upload({
             />
           )}
           {inspection.inspection.supplierHints.length > 0 && supplierMode === "existing" && (
-            <div className="mt-2 text-[11px] text-brand-gray">
+            <div className="mt-2 text-label text-brand-gray">
               {t.admin.importWizard.supplierSuggestedHint(inspection.inspection.supplierHints[0].text)}
               {inspection.suggestedSupplierId === "" || !inspection.suggestedSupplierId
                 ? t.admin.importWizard.supplierNoMatch
@@ -405,7 +405,7 @@ function Step1Upload({
 
       {inspection && (
         <div>
-          <div className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-brand-gray">
+          <div className="mb-1 text-label font-semibold uppercase tracking-wider text-brand-gray">
             {t.admin.importWizard.previewLabel(inspection.inspection.sheets[sheetIdx]?.rows.length ?? 0)}
           </div>
           <PreviewTable
@@ -466,7 +466,7 @@ function Step2Mapping({
         })}
       </div>
       <div>
-        <div className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-brand-gray">
+        <div className="mb-1 text-label font-semibold uppercase tracking-wider text-brand-gray">
           {t.admin.importWizard.step2PreviewLabel}
         </div>
         <PreviewTable columns={sheet.columns} rows={sheet.rows.slice(0, 5)} highlightMap={mapping} />
@@ -609,7 +609,7 @@ function Step3Review({
                       onChange={(v) => setEmojiOverrides({ ...emojiOverrides, [i]: v })}
                     />
                     {!override && !auto && (
-                      <div className="text-[10px] text-brand-red">{t.admin.importWizard.emojiNotAuto}</div>
+                      <div className="text-label text-brand-red">{t.admin.importWizard.emojiNotAuto}</div>
                     )}
                   </td>
                   <td className="p-2 align-middle font-semibold">{name || <em className="text-brand-red">{t.admin.importWizard.emptyName}</em>}</td>
@@ -618,7 +618,7 @@ function Step3Review({
                     {guessedCategory ? (
                       <span>
                         {guessedCategory}
-                        {nameGuess && <span className="ml-1 text-[10px] text-primary-text">{t.admin.importWizard.autoCategory}</span>}
+                        {nameGuess && <span className="ml-1 text-label text-primary-text">{t.admin.importWizard.autoCategory}</span>}
                       </span>
                     ) : (
                       <span className="text-muted">—</span>
@@ -659,11 +659,11 @@ function PreviewTable({
     return m;
   }, [highlightMap]);
 
-  if (!columns.length) return <div className="text-[11px] text-brand-gray">{t.admin.importWizard.noColumnsDetected}</div>;
+  if (!columns.length) return <div className="text-label text-brand-gray">{t.admin.importWizard.noColumnsDetected}</div>;
 
   return (
     <div className="overflow-x-auto rounded-lg border border-brand-border bg-white">
-      <table className="w-full text-[11px]">
+      <table className="w-full text-label">
         <thead className="border-b border-brand-border bg-brand-warm-white">
           <tr>
             {columns.map((c, i) => {
@@ -672,7 +672,7 @@ function PreviewTable({
                 <th key={i} className="p-2 text-left">
                   <div className="font-semibold text-brand-near-black">{c || t.admin.importWizard.columnPlaceholder(i + 1)}</div>
                   {hi && (
-                    <div className="font-mono text-[10px] uppercase text-primary-text">
+                    <div className="font-mono text-label uppercase text-primary-text">
                       → {TARGET_LABEL[hi as TargetField]}
                     </div>
                   )}

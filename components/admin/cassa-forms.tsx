@@ -50,7 +50,7 @@ export function CassaSummaryCards({
   const total = (
     <div className="rounded-xl border border-accent/20 bg-accent-soft p-3">
       <div className="mb-0.5 flex items-center justify-between">
-        <span className="font-mono text-[10px] uppercase tracking-wide text-brand-gray">
+        <span className="font-mono text-label uppercase tracking-wide text-brand-gray">
           {t.admin.treasury.totalBalance}
         </span>
         <span className="text-[14px] leading-none">💰</span>
@@ -62,7 +62,7 @@ export function CassaSummaryCards({
       >
         {formatEur(totalBalance)}
       </div>
-      <div className="mt-0.5 font-mono text-[10px] text-muted">
+      <div className="mt-0.5 font-mono text-label text-muted">
         {t.admin.treasury.activeMembersHint}
       </div>
     </div>
@@ -71,7 +71,7 @@ export function CassaSummaryCards({
   const avg = (
     <div className="rounded-xl border border-brand-border bg-white p-3">
       <div className="mb-0.5 flex items-center justify-between">
-        <span className="font-mono text-[10px] uppercase tracking-wide text-brand-gray">
+        <span className="font-mono text-label uppercase tracking-wide text-brand-gray">
           {t.admin.treasury.avgBalance}
         </span>
         <span className="text-[14px] leading-none">📊</span>
@@ -83,7 +83,7 @@ export function CassaSummaryCards({
       >
         {formatEur(avgBalance)}
       </div>
-      <div className="mt-0.5 font-mono text-[10px] text-muted">
+      <div className="mt-0.5 font-mono text-label text-muted">
         {t.admin.treasury.perActiveMember}
       </div>
     </div>
@@ -104,7 +104,7 @@ export function CassaSummaryCards({
       }`}
     >
       <div className="mb-0.5 flex items-center justify-between">
-        <span className="font-mono text-[10px] uppercase tracking-wide text-brand-gray">
+        <span className="font-mono text-label uppercase tracking-wide text-brand-gray">
           {t.admin.treasury.negativeBalance}
         </span>
         <span className="text-[14px] leading-none">💸</span>
@@ -112,7 +112,7 @@ export function CassaSummaryCards({
       <div className="text-[18px] font-black tracking-[-0.02em] text-brand-near-black">
         {negativeCount}
       </div>
-      <div className="mt-0.5 font-mono text-[10px] text-muted">
+      <div className="mt-0.5 font-mono text-label text-muted">
         {isActive ? t.admin.treasury.filterActive : t.admin.treasury.filterHint}
       </div>
     </button>
@@ -133,13 +133,13 @@ export function CassaSummaryCards({
       }`}
     >
       <div className="mb-0.5 flex items-center justify-between">
-        <span className="font-mono text-[10px] uppercase tracking-wide text-brand-gray">
+        <span className="font-mono text-label uppercase tracking-wide text-brand-gray">
           {t.admin.treasury.aboveMaxBalance}
         </span>
         <span className="text-[14px] leading-none">📈</span>
       </div>
       <div className="text-[18px] font-black tracking-[-0.02em] text-brand-near-black">{aboveMaxCount}</div>
-      <div className="mt-0.5 font-mono text-[10px] text-muted">
+      <div className="mt-0.5 font-mono text-label text-muted">
         {aboveMaxActive ? t.admin.treasury.filterActive : t.admin.treasury.filterHint}
       </div>
     </button>
@@ -269,13 +269,13 @@ export function LedgerEntryRow({ entry }: { entry: LedgerEntry }) {
           <button
             onClick={handleSave}
             disabled={isPending}
-            className="rounded-lg bg-accent px-3 py-1 text-[11px] font-bold text-on-accent disabled:opacity-60"
+            className="rounded-lg bg-accent px-3 py-1 text-label font-bold text-on-accent disabled:opacity-60"
           >
             {t.admin.common.save}
           </button>
           <button
             onClick={() => setEditing(false)}
-            className="rounded-lg border border-brand-border px-3 py-1 text-[11px] text-brand-gray"
+            className="rounded-lg border border-brand-border px-3 py-1 text-label text-brand-gray"
           >
             ✕
           </button>
@@ -287,7 +287,7 @@ export function LedgerEntryRow({ entry }: { entry: LedgerEntry }) {
   return (
     <div className="flex items-center justify-between gap-2 px-4 py-2.5">
       <div className="min-w-0 flex-1">
-        <span className={`mr-2 rounded-full px-1.5 py-0.5 text-[10px] font-bold uppercase ${badge.className}`}>
+        <span className={`mr-2 rounded-full px-1.5 py-0.5 text-label font-bold uppercase ${badge.className}`}>
           {badge.label}
         </span>
         <span className="text-[12px] text-brand-gray">
@@ -300,7 +300,7 @@ export function LedgerEntryRow({ entry }: { entry: LedgerEntry }) {
             <span className="ml-1 text-muted">· {entry.note}</span>
           )}
         </span>
-        {details && <div className="mt-0.5 break-all font-mono text-[10px] text-muted">{details}</div>}
+        {details && <div className="mt-0.5 break-all font-mono text-label text-muted">{details}</div>}
       </div>
       <div className="flex items-center gap-2">
         <span
@@ -313,14 +313,14 @@ export function LedgerEntryRow({ entry }: { entry: LedgerEntry }) {
           <>
             <button
               onClick={() => setEditing(true)}
-              className="rounded px-1.5 py-0.5 text-[10px] text-brand-gray hover:text-brand-near-black"
+              className="rounded px-1.5 py-0.5 text-label text-brand-gray hover:text-brand-near-black"
             >
               ✏
             </button>
             <button
               onClick={handleDelete}
               disabled={isPending}
-              className="rounded px-1.5 py-0.5 text-[10px] text-brand-red disabled:opacity-40"
+              className="rounded px-1.5 py-0.5 text-label text-brand-red disabled:opacity-40"
             >
               ✕
             </button>
@@ -380,7 +380,7 @@ export function CassaInlineList({
               >
                 <div className="min-w-0 flex-1">
                   <div className="text-[13px] font-medium text-brand-near-black">{m.fullName}</div>
-                  <div className="font-mono text-[10px] text-muted">
+                  <div className="font-mono text-label text-muted">
                     {getRoleLabel(m.role)}
                     {m.active ? "" : ` ${t.admin.treasury.inactiveHint}`} · {t.admin.treasury.movementsCount(entries.length)}
                   </div>
@@ -394,7 +394,7 @@ export function CassaInlineList({
                     {m.balance >= 0 ? "+" : ""}
                     {formatMoney(Math.abs(m.balance))}
                   </span>
-                  <span className="text-[11px] text-muted">{isExpanded ? "▲" : "▼"}</span>
+                  <span className="text-label text-muted">{isExpanded ? "▲" : "▼"}</span>
                 </div>
               </button>
 
@@ -407,7 +407,7 @@ export function CassaInlineList({
                   ) : (
                     entries.map((entry) => (
                       <div key={entry.entryId}>
-                        <div className="px-4 pt-2 font-mono text-[10px] text-muted">
+                        <div className="px-4 pt-2 font-mono text-label text-muted">
                           {entry.entryDate ? formatDate(entry.entryDate) : "—"}
                         </div>
                         <LedgerEntryRow entry={entry} />

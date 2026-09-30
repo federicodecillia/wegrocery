@@ -67,22 +67,22 @@ export function CycleCountdown({ cycleId, title, orderCloseAt, orderOpenAt, pick
             {title}
           </div>
           <div className="mt-[3px] space-y-[2px]">
-            <div className="font-mono text-[10px] text-brand-gray">
+            <div className="font-mono text-label text-brand-gray">
               {t.cycle.closes(formatDateTime(orderCloseAt))}
             </div>
             {pickupDate && (
-              <div className="font-mono text-[10px] text-brand-gray">
+              <div className="font-mono text-label text-brand-gray">
                 {pickup2Date ? t.cycle.pickup1(formatPickupSlot(pickupDate, pickupEndTime)) : `${t.cycle.pickup}: ${formatPickupSlot(pickupDate, pickupEndTime)}`}
               </div>
             )}
             {pickup2Date && (
-              <div className="font-mono text-[10px] text-brand-gray">
+              <div className="font-mono text-label text-brand-gray">
                 {t.cycle.pickup2(formatPickupSlot(pickup2Date, pickup2EndTime))}
               </div>
             )}
           </div>
         </div>
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-accent/20 bg-accent-soft px-2.5 py-0.5 font-mono text-[10px] font-semibold text-accent-text">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-accent/20 bg-accent-soft px-2.5 py-0.5 font-mono text-label font-semibold text-accent-text">
           <span className="h-1.5 w-1.5 rounded-full bg-accent opacity-75" />
           {t.cycle.open}
         </span>
@@ -101,7 +101,7 @@ export function CycleCountdown({ cycleId, title, orderCloseAt, orderOpenAt, pick
             <div className="font-mono text-[22px] font-semibold leading-none text-brand-near-black">
               {num}
             </div>
-            <div className="mt-[3px] font-mono text-[10px] uppercase tracking-[0.08em] text-muted">
+            <div className="mt-[3px] font-mono text-label uppercase tracking-[0.08em] text-muted">
               {unit}
             </div>
           </div>
@@ -114,7 +114,7 @@ export function CycleCountdown({ cycleId, title, orderCloseAt, orderOpenAt, pick
           style={{ width: `${pct}%` }}
         />
       </div>
-      <div className="mt-[5px] font-mono text-[10px] text-muted">
+      <div className="mt-[5px] font-mono text-label text-muted">
         {t.cycle.daysRemaining(hoursLeft)}
       </div>
 

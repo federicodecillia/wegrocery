@@ -89,7 +89,7 @@ export function BottomNav({ isAdmin }: BottomNavProps) {
           const active = isItemActive(pathname, item);
           const locked = item.adminOnly && !isAdmin;
           const baseClasses =
-            "flex h-full flex-col items-center justify-center gap-1 text-[11px] font-medium tracking-[0.02em]";
+            "flex h-full flex-col items-center justify-center gap-1 text-label font-medium tracking-[0.02em]";
           const stateClasses = active
             ? "text-primary-text"
             : locked

@@ -163,7 +163,7 @@ function CycleReviewModal({
         <header className="flex items-center justify-between border-b border-brand-border px-5 py-4">
           <div>
             <h2 className="text-[15px] font-bold text-brand-near-black">{t.admin.cycleReview.modalTitle}</h2>
-            <p className="mt-0.5 text-[11px] text-brand-gray">{cycleTitle}</p>
+            <p className="mt-0.5 text-label text-brand-gray">{cycleTitle}</p>
           </div>
           <button
             onClick={onClose}
@@ -174,7 +174,7 @@ function CycleReviewModal({
           </button>
         </header>
 
-        <p className="border-b border-brand-border bg-primary-soft/40 px-5 py-2 text-[11px] text-brand-gray">
+        <p className="border-b border-brand-border bg-primary-soft/40 px-5 py-2 text-label text-brand-gray">
           {t.admin.cycleReview.modalDescription}
         </p>
 
@@ -207,8 +207,8 @@ function CycleReviewModal({
                         <div className="text-[13px] font-semibold text-brand-near-black">
                           {r.name}
                         </div>
-                        {meta && <div className="text-[11px] text-brand-gray">{meta}</div>}
-                        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-brand-gray">
+                        {meta && <div className="text-label text-brand-gray">{meta}</div>}
+                        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-label text-brand-gray">
                           <span>
                             {t.admin.cycleReview.orderedLabel}{" "}
                             <span className="font-mono font-bold text-brand-near-black">
@@ -224,7 +224,7 @@ function CycleReviewModal({
                         </div>
                       </div>
                       <div className="shrink-0 text-right">
-                        <label className="block text-[10px] uppercase tracking-wide text-muted">
+                        <label className="block text-label uppercase tracking-wide text-muted">
                           {t.admin.cycleReview.finalPriceLabel}
                         </label>
                         <input
@@ -240,7 +240,7 @@ function CycleReviewModal({
                         />
                         {Math.abs(next - r.unitPrice) > 0.001 && (
                           <div
-                            className={`mt-1 text-[10px] font-semibold ${
+                            className={`mt-1 text-label font-semibold ${
                               delta >= 0 ? "text-primary-text" : "text-accent-text"
                             }`}
                           >
@@ -263,7 +263,7 @@ function CycleReviewModal({
         <footer className="border-t border-brand-border bg-white px-5 py-3.5">
           <div className="mb-3 flex items-end justify-between text-[12px]">
             <div>
-              <div className="font-mono text-[10px] uppercase tracking-wide text-muted">
+              <div className="font-mono text-label uppercase tracking-wide text-muted">
                 {t.admin.cycleReview.ordersTotalLabel}
               </div>
               <div className="font-mono text-[15px] font-bold text-brand-near-black">
@@ -272,7 +272,7 @@ function CycleReviewModal({
             </div>
             {Math.abs(totalDelta) > 0.005 && (
               <div className="text-right">
-                <div className="font-mono text-[10px] uppercase tracking-wide text-muted">
+                <div className="font-mono text-label uppercase tracking-wide text-muted">
                   {t.admin.cycleReview.variationLabel}
                 </div>
                 <div

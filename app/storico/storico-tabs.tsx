@@ -103,7 +103,7 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
                       <div className="text-[14px] font-bold tracking-[-0.01em] text-brand-near-black">
                         {o.title}
                       </div>
-                      <div className="mt-[2px] font-mono text-[10px] text-muted">
+                      <div className="mt-[2px] font-mono text-label text-muted">
                         {formatDate(o.pickupDate)}
                       </div>
                     </div>
@@ -112,7 +112,7 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
                         {o.charged ? formatSignedMoney(o.net) : formatEur(o.productsTotal)}
                       </span>
                       <span
-                        className={`rounded-full px-2.5 py-0.5 font-mono text-[10px] ${
+                        className={`rounded-full px-2.5 py-0.5 font-mono text-label ${
                           o.status === "cancelled"
                             ? "bg-brand-red-light text-brand-red"
                             : "bg-accent-soft text-accent-text"
@@ -130,7 +130,7 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
                     <div className="px-4 py-[10px]">
                       {o.lines.length > 0 && (
                         <>
-                          <div className="mb-[5px] font-mono text-[10px] text-muted">{t.history.products}</div>
+                          <div className="mb-[5px] font-mono text-label text-muted">{t.history.products}</div>
                           <div className="divide-y divide-brand-border rounded-[12px] border border-brand-border bg-[#fdfdfd]">
                             {o.lines.map((l, index) => (
                               <div key={`${l.productName}-${index}`} className="flex items-start gap-3 px-3 py-2.5">
@@ -142,10 +142,10 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
                                     {l.productName}
                                     {l.variant && <span className="ml-1 font-normal text-brand-gray">{l.variant}</span>}
                                   </div>
-                                  <div className="mt-[2px] text-[11px] leading-snug text-brand-gray">
+                                  <div className="mt-[2px] text-label leading-snug text-brand-gray">
                                     {[l.supplierName, l.category].filter(Boolean).join(" · ")}
                                   </div>
-                                  <div className="mt-[2px] font-mono text-[10px] text-muted">
+                                  <div className="mt-[2px] font-mono text-label text-muted">
                                     {l.quantity} × {formatEur(l.unitPrice)} ={" "}
                                     {l.actualLineTotal !== null && l.actualLineTotal !== l.lineTotal ? (
                                       // Weighed by the supplier: what the member actually pays.
@@ -191,7 +191,7 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
             }`}
           >
             <div
-              className={`mb-[6px] font-mono text-[10px] uppercase tracking-[0.10em] ${
+              className={`mb-[6px] font-mono text-label uppercase tracking-[0.10em] ${
                 balance < 0 ? "text-brand-red" : "text-primary-text"
               }`}
             >
@@ -230,7 +230,7 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
                         <div className="truncate text-[13px] font-medium text-brand-near-black">
                           {fullLabel}
                         </div>
-                        <div className="mt-[2px] font-mono text-[10px] text-muted">
+                        <div className="mt-[2px] font-mono text-label text-muted">
                           {formatDate(e.entryDate)}
                         </div>
                       </div>
@@ -259,10 +259,10 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
 // shipping are costs, so they read negative like the rows they add up to.
 function CycleTotals({ entry }: { entry: CycleHistoryEntry }) {
   if (!entry.charged) {
-    return <p className="mt-[10px] font-mono text-[10px] text-brand-gray">{t.history.chargedAtClose}</p>;
+    return <p className="mt-[10px] font-mono text-label text-brand-gray">{t.history.chargedAtClose}</p>;
   }
   return (
-    <div className="mt-[10px] space-y-[3px] font-mono text-[11px] text-brand-gray">
+    <div className="mt-[10px] space-y-[3px] font-mono text-label text-brand-gray">
       <TotalRow label={t.history.products} value={formatSignedMoney(-entry.productsTotal)} />
       {entry.shipping !== 0 && (
         <TotalRow label={t.history.shipping} value={formatSignedMoney(-entry.shipping)} />

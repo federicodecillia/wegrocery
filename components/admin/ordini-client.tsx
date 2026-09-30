@@ -110,11 +110,11 @@ export function OrdiniByMember({ byMember }: { byMember: CycleSummary["byMember"
                     <span className="text-[14px] leading-none">{getProductEmoji(line.productName)}</span>
                     {line.productName}
                     {line.variant ? ` · ${line.variant}` : ""}
-                    <span className="ml-1 font-mono text-[11px] text-muted">
+                    <span className="ml-1 font-mono text-label text-muted">
                       ×{line.quantity}
                     </span>
                     {line.adjusted && (
-                      <span className="ml-1 rounded-full bg-primary/15 px-1.5 py-px text-[10px] font-bold uppercase tracking-wide text-primary-text">
+                      <span className="ml-1 rounded-full bg-primary/15 px-1.5 py-px text-label font-bold uppercase tracking-wide text-primary-text">
                         {t.admin.orders.adjustedBadge}
                       </span>
                     )}

@@ -32,7 +32,7 @@ export default async function NotifichePage() {
             >
               <button
                 type="submit"
-                className="rounded-full border border-brand-border px-[13px] py-[5px] font-mono text-[11px] font-bold uppercase tracking-widest text-brand-near-black"
+                className="rounded-full border border-brand-border px-[13px] py-[5px] font-mono text-label font-bold uppercase tracking-widest text-brand-near-black"
               >
                 {t.notifications.markAllRead}
               </button>
@@ -101,7 +101,7 @@ export default async function NotifichePage() {
                     {n.title}
                   </div>
                   <div className="mt-[3px] text-[12px] leading-snug text-brand-gray">{n.body}</div>
-                  <div className="mt-[5px] font-mono text-[10px] text-muted">
+                  <div className="mt-[5px] font-mono text-label text-muted">
                     {formatDateShort(n.createdAt)}
                   </div>
                 </div>

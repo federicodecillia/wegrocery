@@ -20,7 +20,7 @@ export function NextPickupCard({ pickup }: { pickup: NextPickup }) {
     <div className="mb-[14px] rounded-[16px] border border-accent/20 bg-accent-soft p-[14px_16px]">
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <div className="mb-[3px] flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.13em] text-accent-text">
+          <div className="mb-[3px] flex items-center gap-1.5 font-mono text-label uppercase tracking-[0.13em] text-accent-text">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <rect x="3" y="4" width="18" height="18" rx="2" />
               <path d="M16 2v4M8 2v4M3 10h18" />
@@ -34,7 +34,7 @@ export function NextPickupCard({ pickup }: { pickup: NextPickup }) {
             {timeRange}
           </div>
           {(pickup.cycleTitle || pickup.supplierName) && (
-            <div className="mt-[2px] truncate text-[11px] text-brand-gray">
+            <div className="mt-[2px] truncate text-label text-brand-gray">
               {[pickup.cycleTitle, pickup.supplierName].filter(Boolean).join(" · ")}
             </div>
           )}
@@ -44,7 +44,7 @@ export function NextPickupCard({ pickup }: { pickup: NextPickup }) {
             <div className="text-[28px] font-black leading-none tracking-[-0.04em] text-accent-text">
               {daysUntil}
             </div>
-            <div className="font-mono text-[10px] uppercase tracking-[0.07em] text-accent-text">
+            <div className="font-mono text-label uppercase tracking-[0.07em] text-accent-text">
               {daysUntil === 1 ? t.cycle.days_singular : t.cycle.days_plural}
             </div>
           </div>

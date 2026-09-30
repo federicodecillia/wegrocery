@@ -36,6 +36,8 @@
   --color-brand-red-light: var(--red-l);
   --color-brand-border: var(--border);
   --spacing-nav-h: var(--nav-h);
+  /* Smallest text in the app: labels, badges, captions. Nothing goes under it. */
+  --text-label: 0.75rem;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -45,6 +47,16 @@ body {
   color: var(--foreground);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
   -webkit-tap-highlight-color: transparent;
+}
+
+/* iOS zooms the page when a focused field is under 16px. Unlayered on
+   purpose: it has to win over the text-* utilities on the fields. */
+@media (max-width: 639px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

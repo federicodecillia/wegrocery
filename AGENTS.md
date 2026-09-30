@@ -561,6 +561,9 @@ Rules (enforced by `lib/brand/design-guard.test.ts`):
   computed contrast. Tints of a fill behind its own text go up to `/20`.
 - Never `text-brand-gray-light`: use `text-muted`.
 - No palette names (`orange`, `teal`) and no hard-coded brand hex.
+- No text under 12px: `text-label` (12px) is the smallest size. On phones
+  `input`, `select` and `textarea` are forced to 16px in `globals.css` (iOS
+  zooms the page on smaller fields), so do not size fields below that.
 
 Key patterns:
 - **Saldo hero card**: primary-soft (positive) or red-light (negative), 70px balance amount

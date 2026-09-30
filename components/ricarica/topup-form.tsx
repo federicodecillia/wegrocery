@@ -79,7 +79,7 @@ export function TopupForm({ presets, minCents, maxCents }: Props) {
           ))}
         </div>
       )}
-      <label className="mb-1 block font-mono text-[10px] uppercase tracking-[0.1em] text-brand-gray" htmlFor="topup-amount">
+      <label className="mb-1 block font-mono text-label uppercase tracking-[0.1em] text-brand-gray" htmlFor="topup-amount">
         {t.topup.otherAmount}
       </label>
       <input

@@ -84,7 +84,7 @@ export function FornitoriForm({
 
   const inputCls =
     "w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-primary/30";
-  const labelCls = "mb-1 block text-[11px] font-semibold uppercase tracking-wide text-brand-gray";
+  const labelCls = "mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray";
 
   return (
     <form
@@ -96,7 +96,7 @@ export function FornitoriForm({
           {isEdit ? t.admin.suppliers.editSupplier(supplier.name) : t.admin.suppliers.addSupplier}
         </p>
         {isEdit && onClose && (
-          <button type="button" onClick={onClose} className="text-[11px] text-brand-gray">
+          <button type="button" onClick={onClose} className="text-label text-brand-gray">
             ✕ {t.admin.common.cancel}
           </button>
         )}
@@ -228,7 +228,7 @@ export function CatalogProductForm({
 
   const inputCls =
     "w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-accent/30";
-  const labelCls = "mb-1 block text-[11px] font-semibold uppercase tracking-wide text-brand-gray";
+  const labelCls = "mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray";
 
   return (
     <form onSubmit={handleSubmit} className="mb-3 rounded-lg border border-brand-border bg-white p-3 shadow-sm">
@@ -236,7 +236,7 @@ export function CatalogProductForm({
         <p className="text-[12px] font-bold text-brand-near-black">
           {product ? t.admin.products.editCatalogProduct : t.admin.products.newCatalogProduct}
         </p>
-        <button type="button" onClick={onClose} className="text-[11px] text-brand-gray">
+        <button type="button" onClick={onClose} className="text-label text-brand-gray">
           ✕ {t.admin.common.cancel}
         </button>
       </div>
@@ -390,7 +390,7 @@ export function FornitoriList({
     if (list.length === 0) return null;
     return (
       <div className="mb-4">
-        <p className="mb-1 px-1 font-mono text-[10px] uppercase tracking-wider text-muted">
+        <p className="mb-1 px-1 font-mono text-label uppercase tracking-wider text-muted">
           {label} ({list.length})
         </p>
         <div className="overflow-hidden rounded-xl border border-brand-border bg-white shadow-sm">
@@ -425,12 +425,12 @@ export function FornitoriList({
                       <div className="flex items-center gap-2">
                         <span className="text-[13px] font-semibold text-brand-near-black">{s.name}</span>
                         {!s.active && (
-                          <span className="rounded-full bg-black/[0.05] px-1.5 py-0.5 text-[10px] font-bold text-brand-gray">
+                          <span className="rounded-full bg-black/[0.05] px-1.5 py-0.5 text-label font-bold text-brand-gray">
                             {t.admin.suppliers.archivedBadge}
                           </span>
                         )}
                       </div>
-                      <div className="mt-0.5 font-mono text-[10px] text-muted">
+                      <div className="mt-0.5 font-mono text-label text-muted">
                         {s.macroCategory && `${s.macroCategory} · `}
                         {s.contactName && `${s.contactName} · `}
                         {t.admin.suppliers.cyclesCount(s.cycleCount)}
@@ -439,25 +439,25 @@ export function FornitoriList({
                     <div className="ml-3 flex shrink-0 items-center gap-1.5">
                       <button
                         onClick={(e) => { e.stopPropagation(); setEditingId(s.supplierId); }}
-                        className="rounded-full border border-brand-border px-2.5 py-1 text-[10px] font-semibold text-brand-gray"
+                        className="rounded-full border border-brand-border px-2.5 py-1 text-label font-semibold text-brand-gray"
                       >
                         {t.admin.common.edit}
                       </button>
                       <button
                         onClick={(e) => { e.stopPropagation(); handleArchive(s); }}
-                        className="rounded-full border border-brand-border px-2.5 py-1 text-[10px] font-semibold text-brand-gray"
+                        className="rounded-full border border-brand-border px-2.5 py-1 text-label font-semibold text-brand-gray"
                       >
                         {s.active ? t.admin.common.archive : t.admin.common.restore}
                       </button>
                       {s.cycleCount === 0 && (
                         <button
                           onClick={(e) => { e.stopPropagation(); handleDelete(s); }}
-                          className="rounded-full border border-brand-red/30 px-2.5 py-1 text-[10px] font-semibold text-brand-red"
+                          className="rounded-full border border-brand-red/30 px-2.5 py-1 text-label font-semibold text-brand-red"
                         >
                           ✕
                         </button>
                       )}
-                      <span className="text-[11px] text-muted">
+                      <span className="text-label text-muted">
                         {expandedId === s.supplierId ? "▲" : "▼"}
                       </span>
                     </div>
@@ -467,7 +467,7 @@ export function FornitoriList({
                   {expandedId === s.supplierId && (
                     <div className="bg-black/[0.01] px-4 py-3">
                       {(s.phone || s.email || s.address) && (
-                        <div className="mb-3 space-y-0.5 font-mono text-[11px] text-brand-gray">
+                        <div className="mb-3 space-y-0.5 font-mono text-label text-brand-gray">
                           {s.phone && <div>📞 {s.phone}</div>}
                           {s.email && <div>✉ {s.email}</div>}
                           {s.address && <div>📍 {s.address}</div>}
@@ -478,7 +478,7 @@ export function FornitoriList({
                       {/* Catalog Section */}
                       <div className="mb-4">
                         <div className="mb-2 flex items-center justify-between">
-                          <p className="font-mono text-[10px] uppercase tracking-wider text-muted">
+                          <p className="font-mono text-label uppercase tracking-wider text-muted">
                             {t.admin.suppliers.catalogLabel}
                           </p>
                           <button
@@ -486,7 +486,7 @@ export function FornitoriList({
                               setAddingCatalogFor(addingCatalogFor === s.supplierId ? null : s.supplierId);
                               setEditingCatalogId(null);
                             }}
-                            className="text-[11px] font-semibold text-accent-text"
+                            className="text-label font-semibold text-accent-text"
                           >
                             {t.admin.suppliers.addCatalogProduct}
                           </button>
@@ -513,13 +513,13 @@ export function FornitoriList({
                                   <div className="text-[12px]">
                                     <span className="font-semibold text-brand-near-black">{cp.name}</span>
                                     {cp.variant && <span className="ml-1 text-brand-gray">· {cp.variant}</span>}
-                                    {cp.format && <span className="ml-1 font-mono text-[10px] text-muted">({cp.format})</span>}
+                                    {cp.format && <span className="ml-1 font-mono text-label text-muted">({cp.format})</span>}
                                   </div>
                                   <div className="flex items-center gap-3">
                                     <span className="font-mono text-[12px] font-semibold text-brand-near-black">
                                       {formatEur(parseFloat(cp.unitPrice))}
                                       {cp.pricePerKg && (
-                                        <span className="ml-1 text-[10px] text-muted">
+                                        <span className="ml-1 text-label text-muted">
                                           ({formatEur(parseFloat(cp.pricePerKg))}/kg)
                                         </span>
                                       )}
@@ -530,13 +530,13 @@ export function FornitoriList({
                                           setEditingCatalogId(cp.catalogProductId);
                                           setAddingCatalogFor(null);
                                         }}
-                                        className="text-[10px] font-semibold text-brand-gray"
+                                        className="text-label font-semibold text-brand-gray"
                                       >
                                         {t.admin.common.edit}
                                       </button>
                                       <button
                                         onClick={() => handleArchiveCatalogProduct(cp.catalogProductId)}
-                                        className="text-[10px] font-semibold text-brand-gray"
+                                        className="text-label font-semibold text-brand-gray"
                                       >
                                         {t.admin.common.archive}
                                       </button>

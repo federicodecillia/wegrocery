@@ -11,8 +11,8 @@ import type { PaymentSettingsInput, StripeKeyState } from "@/lib/payments/settin
 const card = "rounded-xl border border-brand-border bg-white p-4 shadow-sm";
 const inputCls =
   "w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-accent/30";
-const labelCls = "mb-1 block text-[11px] font-semibold uppercase tracking-wide text-brand-gray";
-const helpCls = "mt-1 text-[11px] leading-snug text-brand-gray";
+const labelCls = "mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray";
+const helpCls = "mt-1 text-label leading-snug text-brand-gray";
 
 export function PaymentSettingsForm({
   initial,
@@ -144,7 +144,7 @@ export function PaymentSettingsForm({
             <span className="flex items-center gap-2 text-[13px] font-bold text-brand-near-black">
               {s.onlineTitle}
               {stripeKey.usable && !stripeKey.livemode && (
-                <span className="rounded-full bg-primary-soft px-2 py-0.5 font-mono text-[10px] font-semibold text-primary-text">
+                <span className="rounded-full bg-primary-soft px-2 py-0.5 font-mono text-label font-semibold text-primary-text">
                   {s.testMode}
                 </span>
               )}
@@ -174,7 +174,7 @@ export function PaymentSettingsForm({
         {isPending ? t.admin.common.saving : t.admin.common.save}
       </button>
       {savedAt && (
-        <p className="text-center font-mono text-[10px] text-muted">
+        <p className="text-center font-mono text-label text-muted">
           {s.lastSaved(
             formatDateTime(savedAt, { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" }),
           )}

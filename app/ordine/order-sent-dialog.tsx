@@ -55,7 +55,7 @@ export function OrderSentDialog({
             </p>
           )}
 
-          <p className="mt-3 text-[11px] leading-[1.45] text-muted">
+          <p className="mt-3 text-label leading-[1.45] text-muted">
             {orderCloseAt
               ? t.order.editableUntil(formatDateTime(orderCloseAt))
               : t.order.editableUntilClose}
