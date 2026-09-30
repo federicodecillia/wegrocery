@@ -32,7 +32,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ├── lib/
 │   ├── db/
 │   │   ├── schema.ts           # Drizzle tables: members, order_cycles, products, orders, order_drafts,
-│   │   │                       #   ledger_entries, payments, app_settings, notifications, audit_log, suppliers, supplier_products
+│   │   │                       #   ledger_entries, payments, refunds, app_settings, notifications, audit_log, suppliers, supplier_products
 │   │   ├── queries.ts          # All read queries + getUnreadNotificationCount
 │   │   └── client.ts           # Neon connection (DATABASE_URL)
 │   ├── actions/
@@ -50,7 +50,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 │                               #   access.ts: pure checkAccess/sessionClaims (edge-safe, used by middleware)
 ├── middleware.ts                # Redirect unauthenticated to /login
 ├── auth.ts                     # Auth.js config (Google provider, member whitelist callback)
-├── drizzle/                    # SQL migrations (0000–0019)
+├── drizzle/                    # SQL migrations (0000–0020)
 └── public/logo.png
 ```
 
@@ -249,6 +249,7 @@ User interaction → Server Action ("use server") → auth check → DB mutation
   - `order_closed` — cycle closure
   - `topup_received` — admin records a topup (or a Stripe top-up/refund lands)
   - `payout_sent` (category `wallet_topup`), `manual_charge_recorded` and `membership_fee_charged` (category `order_charge`) — admin records an outgoing movement in Cassa
+  - `refund_failed` (category `wallet_topup`) — a Stripe refund failed after being accepted: the member and every active admin
   - `order_corrected` — admin edits a member's order via `adminEditClosedOrder`
   - `order_adjusted` — closed-cycle shipping recompute (only members whose share moved) OR per-line "actual delivered" rectification
   - `cycle_opened` — a cycle is created (always created already-open, so this is the single emit point, in `adminCreateCycle`)
@@ -288,17 +289,18 @@ all in `lib/roles.ts`:
 | `order_cycles` | Weekly order windows; one `open` at a time |
 | `products` | Per-cycle product list |
 | `orders` | Order lines per member per cycle |
-| `ledger_entries` | Balance: `topup` (+), `order_charge` (−), `shipping_charge` (−), `correction` (±), `payout` / `manual_charge` / `membership_fee` (−, Cassa, reason required), legacy `adjustment`. Manual rows carry `method` (bonifico/contanti/satispay/altro) and `external_ref` (CRO/TRN, unique on `upper(trim())`, migration 0018) |
+| `ledger_entries` | Balance: `topup` (+), `order_charge` (−), `shipping_charge` (−), `correction` (±), `payout` / `manual_charge` / `membership_fee` (−, Cassa, reason required), `refund_failed` (+, a Stripe refund that did not go through), legacy `adjustment`. Manual rows carry `method` (bonifico/contanti/satispay/altro) and `external_ref` (CRO/TRN, unique on `upper(trim())`, migration 0018). Rows of a refund carry `refund_id` (unique with `type`) |
 | `orders.actual_quantity` / `actual_line_total` | Recorded after delivery when the supplier weighed something different from what was ordered (e.g. 1 kg → 800 g). NULL = delivered as ordered. |
 | `notifications` | Per-member or per-role messages with `read_at` |
-| `payments` | Online top-ups (Stripe Checkout): `status` pending → succeeded / failed / expired → partially_refunded / refunded, amounts in integer cents |
+| `payments` | Online top-ups (Stripe Checkout): `status` pending → succeeded / failed / expired → partially_refunded / refunded, amounts in integer cents; `refunded_cents` = sum of its `pending` / `succeeded` refunds |
+| `refunds` | Stripe refunds, one row each (`ref_*`): `status` requested → pending / succeeded → failed / canceled, `reason` (only `dashboard` until the app starts refunds), `stripe_refund_id`. Written only by `upsertStripeRefund` (`lib/payments/refund-store.ts`). Pre-1.15.0 refunds were imported by migration 0020 (`created_by = 'import'`, no Stripe id until an event names them) |
 | `app_settings` | Payment settings from admin → Impostazioni, one row (`id = 1`): `payment_mode` (only `wallet` until pay-per-order), `min_balance` / `max_balance`, bank transfer on/off with holder and IBAN, online payments on/off. No row = brand defaults. Read only through `getPaymentSettings` (`lib/payments/get-settings.ts`) |
 | `order_drafts` | A member's unconfirmed edits on an open cycle (`member_id`, `cycle_id`, `lines` jsonb), autosaved by the order form; `saveOrder` and the cycle close delete them in their batch |
 | `audit_log` | Append-only admin action log |
 | `suppliers` | Supplier registry |
 | `supplier_products` | Supplier product catalog (source for cycle products) |
 
-ID prefix convention: `cyc_*`, `mem_*`, `prd_*`, `ord_*`, `led_*`, `not_*`, `aud_*`, `sup_*`, `spr_*`, `pay_*`.
+ID prefix convention: `cyc_*`, `mem_*`, `prd_*`, `ord_*`, `led_*`, `not_*`, `aud_*`, `sup_*`, `spr_*`, `pay_*`, `ref_*`.
 
 ### Key Business Rules
 
@@ -368,11 +370,23 @@ All four emit `order_adjusted` or `order_corrected` notifications and `audit_log
   `livemode` differs from the key's. `lib/payments/webhook.ts` maps events
   (`planWebhookAction`, pure) and applies each as ONE SQL statement: a guarded
   `UPDATE payments ... WHERE status = 'pending'` feeding the ledger `INSERT`,
-  so a replayed or concurrent event writes nothing. Refunds post the delta of
-  the cumulative `charge.amount_refunded` as a negative `correction`
-  (`FOR UPDATE` serialises concurrent refunds); a refund that arrives before
-  its credit answers 500 so Stripe retries it. An amount/currency mismatch is
-  not credited: it is logged and audited as `stripe_topup_mismatch`.
+  so a replayed or concurrent event writes nothing. An amount/currency
+  mismatch is not credited: it is logged and audited as `stripe_topup_mismatch`.
+- **Refunds** (table `refunds`, since 1.15.0): one idempotent entry point,
+  `upsertStripeRefund` (`lib/payments/refund-store.ts`), fed by the
+  `refund.created` / `refund.updated` / `refund.failed` events and by
+  `charge.refunded`, which re-lists the charge's refunds as a safety net. It
+  finds the row by Stripe id, then by `metadata.refundId`, then adopts an
+  imported pre-1.15.0 row of the same payment and amount; otherwise it
+  creates one (`reason = 'dashboard'`). Transitions are pure
+  (`planRefundTransition`, `lib/payments/refunds.ts`) and written as one
+  guarded statement: the first `pending` / `succeeded` posts the negative
+  `correction`, a `failed` / `canceled` after that posts `refund_failed` (+)
+  and notifies the member and every admin (return it by bank transfer), and
+  `payments.refunded_cents` moves with the ledger row. A refund that arrives
+  before its credit answers 500 so Stripe retries it. The endpoint must
+  subscribe to the three `refund.*` events: without them `charge.refunded`
+  still records refunds, but not their failures.
 - Ledger rows with a `payment_id` cannot be edited or deleted from Cassa (they show as online; `method` stays NULL).
 - Staging (Vercel Authentication on): the Stripe sandbox endpoint URL needs
   `?x-vercel-protection-bypass=<Protection Bypass for Automation secret>`.

@@ -18,6 +18,16 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ---
 
+## [1.15.0] — 2026-09-30
+
+*Card refunds you can follow.*
+
+### Added
+- ⚠️ **Refunds that do not go through.** If a card refund fails after it was sent, the amount goes back on the balance, History shows "Refund failed", and the member and the admins are told how it will be returned.
+
+### Changed
+- 💳 **Card refunds recorded one by one.** Every refund of an online top-up is recorded once, as soon as Stripe accepts it, even when it arrives in more than one step (migration `0020`).
+
 ## [1.14.1] — 2026-09-30
 
 *Tidier amounts in Settings.*
@@ -390,6 +400,7 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ---
 
+[1.15.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.15.0
 [1.14.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.14.1
 [1.14.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.14.0
 [1.13.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.13.0
