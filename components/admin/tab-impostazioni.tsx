@@ -1,10 +1,10 @@
-import { formatDecimalInput } from "@/lib/i18n/format";
+import { formatAmountInput } from "@/lib/i18n/format";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
 import { PaymentSettingsForm } from "./impostazioni-form";
 
 // An amount in euros as the form's text input shows it; "" = no limit.
 function toInput(euros: number | null): string {
-  return euros === null ? "" : formatDecimalInput(String(euros));
+  return euros === null ? "" : formatAmountInput(euros);
 }
 
 export async function TabImpostazioni() {
