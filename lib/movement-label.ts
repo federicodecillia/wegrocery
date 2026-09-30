@@ -22,6 +22,8 @@ export type MovementKind =
   | "refund"
   | "online_refund"
   | "refund_failed"
+  | "order_payment"
+  | "order_refund"
   | "adjustment"
   | "payout"
   | "manual_charge"
@@ -43,6 +45,11 @@ export function movementKind(entry: LedgerMovement): MovementKind {
     case "refund_failed":
       // A card refund Stripe could not pay: the money is back on the balance.
       return "refund_failed";
+    case "order_payment":
+    case "order_refund":
+      // Pay-per-order: the payment that confirmed an order, and money going
+      // back to the card it came from.
+      return entry.type;
     case "adjustment":
       // Legacy type of unknown intent (opening balances included): neutral.
       return "adjustment";
@@ -64,6 +71,8 @@ export function movementLabel(entry: LedgerMovement, labels: MovementLabels): st
     refund: labels.refund,
     online_refund: labels.onlineTopupRefund,
     refund_failed: labels.refundFailed,
+    order_payment: labels.orderPayment,
+    order_refund: labels.orderRefund,
     adjustment: labels.correction,
     payout: labels.payout,
     manual_charge: labels.manualCharge,

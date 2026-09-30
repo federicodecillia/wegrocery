@@ -66,6 +66,44 @@ export const it = {
     pickup: "Ritiro",
   },
   order: {
+    // Pagamento per ordine (modalità 2)
+    pay: {
+      products: "Prodotti",
+      shipping: "Spedizione",
+      fee: "Spese di gestione e preparazione ordine (stima)",
+      feeHint: "A conti chiusi ti rimborsiamo quello che non è servito.",
+      alreadyPaid: "Già pagato",
+      toPay: "Da pagare",
+      nothingToPay: "Niente da pagare",
+      confirmAndPay: (amount: string) => `Conferma e paga ${amount}`,
+      confirm: "Conferma",
+      redirecting: "Ti porto al pagamento...",
+      cancelOrder: "Annulla ordine",
+      cancelTitle: "Annullare l'ordine?",
+      cancelMessage: (amount: string) =>
+        `L'ordine viene cancellato e ti rimborsiamo ${amount} sulla carta con cui hai pagato. Di solito arriva in 5-10 giorni.`,
+      cancelMessageNoRefund: "L'ordine viene cancellato.",
+      cancelConfirm: "Sì, annulla",
+      cancelled: "Ordine annullato. Il rimborso è partito.",
+      cancelledNoRefund: "Ordine annullato.",
+      confirmed: "Ordine confermato.",
+      verifying: "Pagamento in verifica: tra qualche istante il tuo ordine risulta confermato.",
+      paid: "Pagamento ricevuto: il tuo ordine è confermato.",
+      lateRefunded: "Il pagamento è arrivato quando l'ordine non poteva più accettarlo: te lo rimborsiamo per intero sulla carta.",
+      payCancelled: "Pagamento annullato: non ti è stato addebitato nulla e l'ordine non è cambiato.",
+      supplement: (cycle: string) => `Integrazione ordine: ${cycle}`,
+      lineProducts: (cycle: string) => `Prodotti: ${cycle}`,
+      unavailable: "I pagamenti online non sono disponibili in questo momento. Contatta chi gestisce il gruppo.",
+      inProgress: "Un tuo pagamento per questo ordine è in verifica: aspetta qualche istante e ricarica la pagina.",
+      tooHigh: (max: string) => `L'importo supera ${max}: contatta chi gestisce la cassa.`,
+      changed: "Qualcosa è cambiato mentre confermavi: ricontrolla l'ordine e riprova.",
+      minimumNote: (amount: string) =>
+        `L'importo minimo di un pagamento è ${amount}: la differenza ti torna a conti chiusi.`,
+      statusDraft: (amount: string) => `Bozza da pagare: ${amount}`,
+      statusPaid: (amount: string) => `Confermato e pagato: ${amount}`,
+      statusChanges: (amount: string) => `Modifiche da pagare: +${amount}`,
+      statusChangesNoPay: "Modifiche da confermare",
+    },
     yourOrder: "Il tuo ordine",
     noOpenOrders: "Nessun ordine aperto",
     noOpenOrdersHint: "Torna quando l'ordine sarà aperto.",
@@ -141,6 +179,8 @@ export const it = {
     refund: "Rimborso",
     onlineTopupRefund: "Rimborso ricarica online",
     refundFailed: "Rimborso non riuscito",
+    orderPayment: "Pagamento ordine",
+    orderRefund: "Rimborso sulla carta",
     payout: "Restituzione saldo",
     manualCharge: "Addebito",
     membershipFee: "Quota associativa",
@@ -443,6 +483,12 @@ export const it = {
       shippingProportional: "Proporzionale",
       shippingFixedHint: "Importo addebitato a ogni socio con un ordine.",
       shippingProportionalHint: "Costo totale spedizione: viene diviso tra i soci in proporzione al valore del loro ordine.",
+      handlingFeeLabel: "Spese di gestione e preparazione ordine",
+      handlingFeePercent: "% sui prodotti",
+      handlingFeeFixed: "Importo fisso",
+      handlingFeeHint: "È una stima che ogni socio paga con l'ordine: a conti chiusi gli torna quello che non è servito.",
+      handlingFeeEditWarning: "Chi ha già pagato non viene ricalcolato: la differenza si pareggia a conti chiusi.",
+      handlingFeeDisplay: (fee: string) => `Spese di gestione: ${fee}`,
       shippingManualTitle: "Gestita manualmente per socio",
       shippingManualDescription: "Le quote di spedizione sono state importate dalla distinta fornitore e variano per socio. Le voci nel saldo dei soci restano invariate finché non carichi una nuova distinta.",
       shippingProportionalDisplay: (amount: string) => `${amount} totali (proporzionale al valore ordine)`,
@@ -467,6 +513,8 @@ export const it = {
       closingCycle: "Chiusura…",
       closeCycleConfirm: (title: string) =>
         `Chiudere "${title}"?\n\nVerranno generati gli addebiti per tutti i soci con ordini.`,
+      perOrderCloseWarning: (drafts: number, pending: number) =>
+        `Bozze non pagate: ${drafts} (restano fuori dall'ordine). Pagamenti in corso: ${pending} (se arrivano dopo la chiusura vengono rimborsati).`,
       cycleClosed: (n: number) => `Ciclo chiuso. ${n} addebiti generati.`,
       editClosedBanner:
         "Stai modificando un ciclo gia' chiuso. Le modifiche alle spese di spedizione ricalcoleranno gli addebiti dei soci e invieranno una notifica di rettifica. Chiusura ordini e livello di accesso non sono modificabili a ciclo chiuso.",
@@ -590,6 +638,12 @@ export const it = {
     treasury: {
       tabLabel: "Cassa",
       balancesTitle: (n: number) => `Saldi soci (${n})`,
+      pendingRefundsTitle: (n: number) => (n === 1 ? "1 rimborso in attesa di Stripe" : `${n} rimborsi in attesa di Stripe`),
+      pendingRefundsHint: "Stripe non ha ancora ricevuto questi rimborsi, di solito per un errore di rete. Riprovare è sicuro: nessuno viene rimborsato due volte.",
+      pendingRefundsRetry: "Riprova i rimborsi",
+      pendingRefundsRetrying: "Invio...",
+      pendingRefundsResult: (sent: number, failed: number, waiting: number) =>
+        `Inviati ${sent}, rifiutati ${failed}, ancora in attesa ${waiting}`,
       totalBalance: "Saldo totale",
       activeMembersHint: "membri abilitati",
       avgBalance: "Saldo medio",
@@ -1052,6 +1106,10 @@ export const it = {
       `È stato chiuso "${title}". Ti è stato addebitato ${total}.`,
     orderClosedBodyWithShipping: (title: string, total: string, order: string, shipping: string) =>
       `È stato chiuso "${title}". Ti è stato addebitato ${total} (ordine ${order} + spedizione ${shipping}).`,
+    orderClosedPerOrderBody: (title: string, total: string) =>
+      `È stato chiuso "${title}". Il costo del tuo ordine per ora è ${total}: è provvisorio fino alle pesate e alla distinta del fornitore. A conti chiusi ti rimborsiamo la differenza con quanto hai pagato.`,
+    cycleCancelledPerOrderBody: (title: string, reason: string) =>
+      `L'ordine "${title}" è stato annullato: ${reason}. Quanto hai pagato ti torna sulla carta a conti chiusi.`,
     topupReceivedTitle: "Ricarica registrata",
     onlineTopupTitle: "Ricarica ricevuta",
     onlineTopupBody: (amount: string, balance: string) =>
@@ -1064,6 +1122,21 @@ export const it = {
       `Il rimborso di ${amount} sulla carta non è andato a buon fine e l'importo è tornato sul tuo saldo (ora ${balance}). Chi gestisce la cassa te lo restituirà con un bonifico.`,
     refundFailedAdminBody: (amount: string, name: string) =>
       `Il rimborso di ${amount} sulla carta di ${name} non è andato a buon fine e l'importo è tornato sul suo saldo. Restituiscilo con un bonifico: Cassa → Movimento in uscita → Restituzione.`,
+    orderPaidTitle: "Ordine confermato e pagato",
+    orderPaidBody: (cycle: string, amount: string, products: string, shipping: string, fee: string) =>
+      `Il tuo ordine per "${cycle}" è confermato. Hai pagato ${amount}: prodotti ${products}, spedizione ${shipping}, spese di gestione e preparazione ordine (stima) ${fee}. A conti chiusi ti rimborsiamo quello che non è servito.`,
+    orderPaidShortBody: (cycle: string, amount: string) =>
+      `Il tuo ordine per "${cycle}" è confermato. Hai pagato ${amount}.`,
+    orderRefundTitle: "Rimborso in arrivo",
+    orderRefundCancelledBody: (amount: string) =>
+      `Hai annullato l'ordine: ti rimborsiamo ${amount} sulla carta con cui hai pagato. Di solito arriva in 5-10 giorni.`,
+    orderRefundLateBody: (amount: string) =>
+      `Il tuo pagamento è arrivato quando gli ordini erano già chiusi, quindi l'ordine non è stato registrato. Ti rimborsiamo ${amount} sulla carta con cui hai pagato: di solito arriva in 5-10 giorni.`,
+    orderRefundBody: (amount: string) =>
+      `Ti rimborsiamo ${amount} sulla carta con cui hai pagato l'ordine. Di solito arriva in 5-10 giorni.`,
+    refundRejectedTitle: "Rimborso rifiutato da Stripe",
+    refundRejectedAdminBody: (amount: string, name: string) =>
+      `Stripe ha rifiutato il rimborso di ${amount} a ${name}. L'importo resta tra i pagamenti del suo ordine: controlla il pagamento su Stripe e, se serve, restituiscilo con un bonifico.`,
     topupReceivedBody: (amount: string, balance: string) =>
       `È stata registrata una ricarica di ${amount} sul tuo saldo. Nuovo saldo: ${balance}.`,
     orderModifiedTitle: "Ordine modificato",
@@ -1113,6 +1186,10 @@ export const it = {
     shippingAdjusted: "Spedizione rettificata",
     shippingFromSupplier: "Spedizione da distinta fornitore",
     cycleCancelled: "Annullamento ciclo",
+    orderPayment: "Pagamento ordine",
+    orderRefund: "Rimborso sulla carta",
+    orderRefundCancelled: "Rimborso sulla carta: ordine annullato",
+    orderRefundLate: "Rimborso sulla carta: pagamento arrivato a ordini chiusi",
   },
   fields: {
     title: "Titolo",
@@ -1128,6 +1205,7 @@ export const it = {
     invalidQuantity: "Quantità non valida",
     invalidRole: "Ruolo non valido",
     invalidAccessLevel: "Livello di accesso non valido",
+    handlingFeeInvalid: "Spese di gestione non valide: un numero con al massimo due decimali, la percentuale fino a 100",
     cycleNotOpen: "Il ciclo non è più aperto",
     accessDenied: "Non hai accesso a questo ciclo",
     membershipInactive: (renewUrl: string | null) =>

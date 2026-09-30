@@ -12,6 +12,7 @@ import {
   timestamp,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
+import type { OrderSnapshot } from "@/lib/payments/order-payment";
 
 export const members = pgTable(
   "members",
@@ -76,6 +77,13 @@ export const orderCycles = pgTable("order_cycles", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
   closedAt: timestamp("closed_at", { withTimezone: true }),
   supplierId: text("supplier_id").references(() => suppliers.supplierId),
+  // The group's payment mode when the cycle was created, fixed for its life
+  // (drizzle/0021_pay_per_order.sql): 'wallet' | 'per_order'.
+  paymentMode: text("payment_mode").notNull().default("wallet"),
+  // The "handling and order preparation" share of a 'per_order' cycle:
+  // 'percent' of the products or a 'fixed' amount. NULL on wallet cycles.
+  handlingFeeType: text("handling_fee_type"),
+  handlingFeeValue: numeric("handling_fee_value", { precision: 10, scale: 2 }),
 });
 
 export const supplierProducts = pgTable("supplier_products", {
@@ -227,8 +235,22 @@ export const payments = pgTable(
     paymentIntentId: text("payment_intent_id").unique(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
+    // drizzle/0021_pay_per_order.sql. 'topup' | 'order' | 'balance'; an
+    // 'order' payment confirms the order of cycle_id and carries what it
+    // charged for (OrderSnapshot, lib/payments/order-payment.ts).
+    kind: text("kind").notNull().default("topup"),
+    cycleId: text("cycle_id").references(() => orderCycles.cycleId),
+    orderSnapshot: jsonb("order_snapshot").$type<OrderSnapshot>(),
   },
-  (table) => [index("payments_member_id_idx").on(table.memberId)],
+  (table) => [
+    index("payments_member_id_idx").on(table.memberId),
+    index("payments_member_cycle_idx").on(table.memberId, table.cycleId),
+    check("payments_kind_check", sql`${table.kind} IN ('topup', 'order', 'balance')`),
+    check(
+      "payments_order_complete_check",
+      sql`${table.kind} <> 'order' OR (${table.cycleId} IS NOT NULL AND ${table.orderSnapshot} IS NOT NULL)`,
+    ),
+  ],
 );
 
 // Stripe refunds (drizzle/0020_stripe_refunds.sql), one row per refund of a
@@ -366,6 +388,11 @@ export const ledgerEntries = pgTable(
     uniqueIndex("ledger_entries_external_ref_uniq")
       .on(sql`upper(trim(${table.externalRef}))`)
       .where(sql`${table.externalRef} IS NOT NULL`),
+    // An order or balance payment is credited at most once per cycle
+    // (drizzle/0021_pay_per_order.sql).
+    uniqueIndex("ledger_entries_payment_cycle_credit_uniq")
+      .on(table.paymentId, sql`coalesce(${table.cycleId}, '')`)
+      .where(sql`${table.type} IN ('order_payment', 'balance_payment')`),
     // One debit and at most one reversal per refund (drizzle/0020_stripe_refunds.sql).
     uniqueIndex("ledger_entries_refund_type_uniq")
       .on(table.refundId, table.type)

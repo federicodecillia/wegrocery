@@ -11,17 +11,23 @@ import {
   getOrderDraft,
 } from "@/lib/db/queries";
 import { saveOrder } from "@/lib/actions/order";
+import { cancelOrder, startOrderPayment } from "@/lib/actions/order-payment";
+import { PendingRefresh } from "@/components/ricarica/pending-refresh";
+import { getDb } from "@/lib/db/client";
+import { getOrderPaymentStatus } from "@/lib/db/queries";
+import { getCycleCoverageCents } from "@/lib/payments/order-confirm";
+import type { HandlingFee } from "@/lib/payments/order-payment";
+import { orderLinesKey, resumeDraft } from "@/lib/order-draft";
 import { canAccessCycle } from "@/lib/roles";
 import { resolveOrderCycle } from "@/lib/order-cycle";
-import { resumeDraft } from "@/lib/order-draft";
 import Link from "next/link";
 
 export default async function OrdinePage({
   searchParams,
 }: {
-  searchParams: Promise<{ cycleId?: string }>;
+  searchParams: Promise<{ cycleId?: string; esito?: string; session_id?: string }>;
 }) {
-  const { cycleId: searchCycleId } = await searchParams;
+  const { cycleId: searchCycleId, esito, session_id: sessionId } = await searchParams;
 
   const session = await requireUserSession();
   const role = getUserRole(session);
@@ -70,8 +76,53 @@ export default async function OrdinePage({
     new Set(cycleProducts.map((p) => p.productId)),
   );
 
+  // Pay-per-order cycle: the order is confirmed by paying it.
+  const feeType = openCycle.handlingFeeType;
+  const fee: HandlingFee | null =
+    openCycle.paymentMode === "per_order" &&
+    (feeType === "percent" || feeType === "fixed") &&
+    openCycle.handlingFeeValue !== null
+      ? { type: feeType, value: Number(openCycle.handlingFeeValue) }
+      : null;
+  const [coveredCents, payment] = fee
+    ? await Promise.all([
+        getCycleCoverageCents(getDb(), memberId, openCycle.cycleId),
+        getOrderPaymentStatus(memberId, openCycle.cycleId, esito === "ok" ? sessionId : undefined),
+      ])
+    : [0, null];
+  // What the way back from Stripe says; the payment row is the truth (only
+  // the signed webhook moves it), never the redirect.
+  const notice =
+    !fee || !esito
+      ? null
+      : esito === "annullato"
+        ? { tone: "info" as const, text: t.order.pay.payCancelled, pending: false }
+        : payment === "pending"
+          ? { tone: "info" as const, text: t.order.pay.verifying, pending: true }
+          : payment === "succeeded"
+            ? { tone: "ok" as const, text: t.order.pay.paid, pending: false }
+            : payment === "refunded"
+              ? { tone: "info" as const, text: t.order.pay.lateRefunded, pending: false }
+            : payment === "failed"
+              ? { tone: "error" as const, text: t.topup.resultFailed, pending: false }
+              : null;
+
   return (
     <AppShell email={session.user.email} isAdmin={role === "admin"} memberId={memberId}>
+      {notice && (
+        <div
+          className={`mb-4 rounded-[14px] border p-[12px_14px] text-[14px] ${
+            notice.tone === "ok"
+              ? "border-accent bg-accent-soft text-brand-near-black"
+              : notice.tone === "error"
+                ? "border-brand-red/30 bg-brand-red-light text-brand-red"
+                : "border-primary-mid bg-primary-soft text-brand-near-black"
+          }`}
+        >
+          {notice.text}
+          {notice.pending && <PendingRefresh />}
+        </div>
+      )}
       {activeCycles.length > 1 && (
         <div className="mb-6 flex gap-2 overflow-x-auto pb-2 no-scrollbar">
           {activeCycles.map((c) => (
@@ -93,7 +144,9 @@ export default async function OrdinePage({
         // A new cycle is a new form: switching cycles must not carry over the
         // previous cycle's draft and saved quantities (client state survives
         // a search-param navigation).
-        key={openCycle!.cycleId}
+        // On a pay-per-order cycle the confirmed order changes under the
+        // page when the webhook lands: start again from what the server has.
+        key={fee ? `${openCycle.cycleId}:${orderLinesKey(existingLines)}:${coveredCents}` : openCycle!.cycleId}
         cycleId={openCycle!.cycleId}
         cycleTitle={openCycle!.title}
         supplierName={openCycle!.supplierName}
@@ -116,6 +169,23 @@ export default async function OrdinePage({
         resumedDraft={resumedDraft}
         balance={balance}
         saveAction={saveOrder}
+        payPerOrder={
+          fee
+            ? {
+                fee,
+                shipping: {
+                  mode: openCycle.shippingMode,
+                  fixedCents:
+                    openCycle.shippingCostPerMember === null
+                      ? null
+                      : Math.round(Number(openCycle.shippingCostPerMember) * 100),
+                },
+                coveredCents,
+                payAction: startOrderPayment,
+                cancelAction: cancelOrder,
+              }
+            : undefined
+        }
       />
     </AppShell>
   );

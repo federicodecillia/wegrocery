@@ -17,6 +17,7 @@ import {
 import { buildCycleHistory, type CycleHistoryEntry } from "@/lib/cycle-history";
 import { normalizeEmail } from "@/lib/member-email";
 import { normalizeDraftLines } from "@/lib/order-draft";
+import type { HandlingFee } from "@/lib/payments/order-payment";
 
 // Matches the login email or alias; stored addresses are normalized on write.
 export async function getMemberByEmail(email: string) {
@@ -108,6 +109,58 @@ export async function getOpenCycles(includeExpired = false) {
     .orderBy(asc(orderCycles.orderCloseAt));
   // The supplier's name rides along for the /ordine header and cycle picker.
   return rows.map((r) => ({ ...r.order_cycles, supplierName: r.suppliers?.name ?? null }));
+}
+
+// Where the member's order payment for a cycle stands, for the notice on the
+// way back from Stripe: the payment of `sessionId` when given, else nothing.
+// "failed" covers an expired session too; "refunded" a payment the app gave
+// back because the order could no longer take it.
+export async function getOrderPaymentStatus(
+  memberId: string,
+  cycleId: string,
+  sessionId: string | undefined,
+): Promise<"pending" | "succeeded" | "refunded" | "failed" | null> {
+  if (!sessionId) return null;
+  const db = getDb();
+  const [row] = await db
+    .select({ status: payments.status })
+    .from(payments)
+    .where(
+      and(
+        eq(payments.checkoutSessionId, sessionId),
+        eq(payments.memberId, memberId),
+        eq(payments.cycleId, cycleId),
+      ),
+    )
+    .limit(1);
+  if (!row) return null;
+  if (row.status === "pending") return "pending";
+  if (row.status === "failed" || row.status === "expired") return "failed";
+  // Refunded right away: it arrived after the close or a product left the cycle.
+  return row.status === "succeeded" ? "succeeded" : "refunded";
+}
+
+// Refunds the app asked for that Stripe has not answered (refunds.status =
+// 'requested'): the Cassa tab offers to send them again.
+export async function getRequestedRefundCount(): Promise<number> {
+  const { rows } = await getDb().execute<{ n: number }>(
+    sql`SELECT count(*)::int AS n FROM refunds WHERE status = 'requested'`,
+  );
+  return rows[0]?.n ?? 0;
+}
+
+// The handling fee of the most recent pay-per-order cycle: the default of the
+// next one. null before the first.
+export async function getLastHandlingFee(): Promise<HandlingFee | null> {
+  const db = getDb();
+  const [row] = await db
+    .select({ type: orderCycles.handlingFeeType, value: orderCycles.handlingFeeValue })
+    .from(orderCycles)
+    .where(and(eq(orderCycles.paymentMode, "per_order"), isNotNull(orderCycles.handlingFeeType)))
+    .orderBy(desc(orderCycles.createdAt))
+    .limit(1);
+  if (!row || (row.type !== "percent" && row.type !== "fixed") || row.value === null) return null;
+  return { type: row.type, value: Number(row.value) };
 }
 
 export async function getCycleProducts(cycleId: string) {
@@ -482,9 +535,18 @@ export async function getOpenCycleStats(cycleId: string) {
     })
     .from(orders)
     .where(eq(orders.cycleId, cycleId));
+  // Pay-per-order: drafts nobody paid stay out of the order at the close, and
+  // a Checkout still open may complete after it (then it is refunded).
+  const { rows } = await db.execute<{ drafts: number; pending: number }>(sql`
+    SELECT
+      (SELECT count(*)::int FROM order_drafts WHERE cycle_id = ${cycleId}) AS drafts,
+      (SELECT count(*)::int FROM payments WHERE cycle_id = ${cycleId} AND kind = 'order' AND status = 'pending') AS pending
+  `);
   return {
     orderCount: parseInt(result?.orderCount ?? "0"),
     grandTotal: parseFloat(result?.grandTotal ?? "0"),
+    unpaidDrafts: rows[0]?.drafts ?? 0,
+    pendingPayments: rows[0]?.pending ?? 0,
   };
 }
 

@@ -66,6 +66,44 @@ export const en: Strings = {
     pickup: "Pickup",
   },
   order: {
+    // Pay per order (mode 2)
+    pay: {
+      products: "Products",
+      shipping: "Shipping",
+      fee: "Handling and order preparation (estimate)",
+      feeHint: "When the cycle is settled we refund what was not needed.",
+      alreadyPaid: "Already paid",
+      toPay: "To pay",
+      nothingToPay: "Nothing to pay",
+      confirmAndPay: (amount: string) => `Confirm and pay ${amount}`,
+      confirm: "Confirm",
+      redirecting: "Taking you to the payment...",
+      cancelOrder: "Cancel order",
+      cancelTitle: "Cancel the order?",
+      cancelMessage: (amount: string) =>
+        `The order is deleted and we refund ${amount} to the card you paid with. It usually takes 5-10 days.`,
+      cancelMessageNoRefund: "The order is deleted.",
+      cancelConfirm: "Yes, cancel it",
+      cancelled: "Order cancelled. The refund is on its way.",
+      cancelledNoRefund: "Order cancelled.",
+      confirmed: "Order confirmed.",
+      verifying: "Payment being verified: your order will show as confirmed in a moment.",
+      paid: "Payment received: your order is confirmed.",
+      lateRefunded: "The payment arrived when the order could no longer take it: we are refunding it in full to your card.",
+      payCancelled: "Payment cancelled: you were not charged and your order did not change.",
+      supplement: (cycle: string) => `Order supplement: ${cycle}`,
+      lineProducts: (cycle: string) => `Products: ${cycle}`,
+      unavailable: "Online payments are not available right now. Contact whoever runs the group.",
+      inProgress: "A payment of yours for this order is being verified: wait a moment and reload the page.",
+      tooHigh: (max: string) => `The amount is above ${max}: contact the treasurer.`,
+      changed: "Something changed while you were confirming: check the order and try again.",
+      minimumNote: (amount: string) =>
+        `The minimum payment is ${amount}: the difference comes back to you when the cycle is settled.`,
+      statusDraft: (amount: string) => `Draft to pay: ${amount}`,
+      statusPaid: (amount: string) => `Confirmed and paid: ${amount}`,
+      statusChanges: (amount: string) => `Changes to pay: +${amount}`,
+      statusChangesNoPay: "Changes to confirm",
+    },
     yourOrder: "Your order",
     noOpenOrders: "No open orders",
     noOpenOrdersHint: "Come back when the order is open.",
@@ -141,6 +179,8 @@ export const en: Strings = {
     refund: "Refund",
     onlineTopupRefund: "Online top-up refund",
     refundFailed: "Refund failed",
+    orderPayment: "Order payment",
+    orderRefund: "Refund to card",
     payout: "Balance returned",
     manualCharge: "Charge",
     membershipFee: "Membership fee",
@@ -441,6 +481,12 @@ export const en: Strings = {
       shippingProportional: "Proportional",
       shippingFixedHint: "Amount charged to each member with an order.",
       shippingProportionalHint: "Total shipping cost: split among members in proportion to their order value.",
+      handlingFeeLabel: "Handling and order preparation",
+      handlingFeePercent: "% of the products",
+      handlingFeeFixed: "Fixed amount",
+      handlingFeeHint: "An estimate each member pays with the order: what is not needed goes back when the cycle is settled.",
+      handlingFeeEditWarning: "Members who have already paid are not recalculated: the difference is evened out at settlement.",
+      handlingFeeDisplay: (fee: string) => `Handling: ${fee}`,
       shippingManualTitle: "Managed manually per member",
       shippingManualDescription: "Shipping shares were imported from the supplier order sheet and vary by member. Member balance entries remain unchanged until you upload a new order sheet.",
       shippingProportionalDisplay: (amount: string) => `${amount} total (proportional to order value)`,
@@ -465,6 +511,8 @@ export const en: Strings = {
       closingCycle: "Closing…",
       closeCycleConfirm: (title: string) =>
         `Close "${title}"?\n\nCharges will be generated for all members with orders.`,
+      perOrderCloseWarning: (drafts: number, pending: number) =>
+        `Unpaid drafts: ${drafts} (they stay out of the order). Payments in progress: ${pending} (refunded if they arrive after the close).`,
       cycleClosed: (n: number) => `Cycle closed. ${n} charges generated.`,
       editClosedBanner:
         "You are editing a closed cycle. Shipping cost changes will recalculate member charges and send adjustment notifications. Order closing date and access level cannot be changed after closure.",
@@ -587,6 +635,12 @@ export const en: Strings = {
     treasury: {
       tabLabel: "Treasury",
       balancesTitle: (n: number) => `Member balances (${n})`,
+      pendingRefundsTitle: (n: number) => (n === 1 ? "1 refund waiting for Stripe" : `${n} refunds waiting for Stripe`),
+      pendingRefundsHint: "Stripe has not received these refunds yet, usually because of a network error. Retrying is safe: nobody is refunded twice.",
+      pendingRefundsRetry: "Retry the refunds",
+      pendingRefundsRetrying: "Sending...",
+      pendingRefundsResult: (sent: number, failed: number, waiting: number) =>
+        `Sent ${sent}, rejected ${failed}, still waiting ${waiting}`,
       totalBalance: "Total balance",
       activeMembersHint: "enabled members",
       avgBalance: "Average balance",
@@ -1046,6 +1100,10 @@ export const en: Strings = {
       `"${title}" has been closed. You have been charged ${total}.`,
     orderClosedBodyWithShipping: (title: string, total: string, order: string, shipping: string) =>
       `"${title}" has been closed. You have been charged ${total} (order ${order} + shipping ${shipping}).`,
+    orderClosedPerOrderBody: (title: string, total: string) =>
+      `"${title}" is closed. Your order costs ${total} for now: it is provisional until the weighing and the supplier's sheet. When the cycle is settled we refund the difference with what you paid.`,
+    cycleCancelledPerOrderBody: (title: string, reason: string) =>
+      `The cycle "${title}" was cancelled: ${reason}. What you paid comes back to your card when the cycle is settled.`,
     topupReceivedTitle: "Top-up recorded",
     onlineTopupTitle: "Top-up received",
     onlineTopupBody: (amount: string, balance: string) =>
@@ -1058,6 +1116,21 @@ export const en: Strings = {
       `The ${amount} refund to your card did not go through, so the amount is back on your balance (now ${balance}). The treasurer will return it by bank transfer.`,
     refundFailedAdminBody: (amount: string, name: string) =>
       `The ${amount} card refund to ${name} did not go through and the amount is back on their balance. Return it by bank transfer: Treasury → Outgoing movement → Payout.`,
+    orderPaidTitle: "Order confirmed and paid",
+    orderPaidBody: (cycle: string, amount: string, products: string, shipping: string, fee: string) =>
+      `Your order for "${cycle}" is confirmed. You paid ${amount}: products ${products}, shipping ${shipping}, handling and order preparation (estimate) ${fee}. When the cycle is settled we refund what was not needed.`,
+    orderPaidShortBody: (cycle: string, amount: string) =>
+      `Your order for "${cycle}" is confirmed. You paid ${amount}.`,
+    orderRefundTitle: "Refund on its way",
+    orderRefundCancelledBody: (amount: string) =>
+      `You cancelled your order: we are refunding ${amount} to the card you paid with. It usually takes 5-10 days.`,
+    orderRefundLateBody: (amount: string) =>
+      `Your payment arrived after orders had closed, so the order was not recorded. We are refunding ${amount} to the card you paid with: it usually takes 5-10 days.`,
+    orderRefundBody: (amount: string) =>
+      `We are refunding ${amount} to the card you paid your order with. It usually takes 5-10 days.`,
+    refundRejectedTitle: "Refund rejected by Stripe",
+    refundRejectedAdminBody: (amount: string, name: string) =>
+      `Stripe rejected the refund of ${amount} to ${name}. The amount stays among the payments of their order: check the payment on Stripe and, if needed, return it by bank transfer.`,
     topupReceivedBody: (amount: string, balance: string) =>
       `A top-up of ${amount} has been recorded on your balance. New balance: ${balance}.`,
     orderModifiedTitle: "Order updated",
@@ -1107,6 +1180,10 @@ export const en: Strings = {
     shippingAdjusted: "Shipping adjusted",
     shippingFromSupplier: "Shipping from supplier sheet",
     cycleCancelled: "Cycle cancellation",
+    orderPayment: "Order payment",
+    orderRefund: "Refund to card",
+    orderRefundCancelled: "Refund to card: order cancelled",
+    orderRefundLate: "Refund to card: payment arrived after orders closed",
   },
   fields: {
     title: "Title",
@@ -1122,6 +1199,7 @@ export const en: Strings = {
     invalidQuantity: "Invalid quantity",
     invalidRole: "Invalid role",
     invalidAccessLevel: "Invalid access level",
+    handlingFeeInvalid: "Invalid handling fee: a number with at most two decimals, a percentage up to 100",
     cycleNotOpen: "The cycle is no longer open",
     accessDenied: "You don't have access to this cycle",
     membershipInactive: (renewUrl: string | null) =>

@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { eq, and, ne, sql, inArray } from "drizzle-orm";
+import { eq, and, notInArray, sql, inArray } from "drizzle-orm";
 import { requireAdmin } from "@/lib/auth/session";
 import { t } from "@/lib/i18n";
 import { formatMoney, formatDate, formatDateTime } from "@/lib/i18n/format";
@@ -12,11 +12,11 @@ import { auditLog, ledgerEntries, members, orderCycles, orderDrafts, orders, pay
 import { upsertCycleProducts } from "@/lib/db/cycle-products";
 import { isUniqueViolation } from "@/lib/db/errors";
 import { ActionError, actionErrorMessage } from "@/lib/action-error";
-import { getMembersByEmails } from "@/lib/db/queries";
+import { getLastHandlingFee, getMembersByEmails } from "@/lib/db/queries";
 import { findEmailConflict, normalizeEmail } from "@/lib/member-email";
 import type { BatchItem } from "drizzle-orm/batch";
 import { orderLinesSnapshot, planClosedOrderEdit } from "@/lib/closed-order-edit";
-import { buildCycleCloseCharges, ordersSnapshot } from "@/lib/cycle-close";
+import { buildCycleCloseCharges, cancelledCycleReversalTypes, ordersSnapshot } from "@/lib/cycle-close";
 import {
   normalizeShippingMode,
   planShippingRecompute,
@@ -50,6 +50,8 @@ import {
 } from "@/lib/notifications/dispatch";
 import { selectCycleAccessMembers } from "@/lib/notifications/reminder";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
+import { parseHandlingFee, resolveCycleFee } from "@/lib/payments/order-payment";
+import { retryRequestedRefunds } from "@/lib/payments/refund-request";
 import { isAboveMaxBalance } from "@/lib/payments/settings";
 import { DEFAULT_ACCESS_LEVEL, normalizeAccessLevel, normalizeRole, type AccessLevel } from "@/lib/roles";
 
@@ -115,6 +117,9 @@ export type CreateCycleInput = {
   shippingMode: ShippingMode;
   shippingCostPerMember: string;
   shippingTotal: string;
+  /** Only read when the group pays per order; omitted = the last cycle's fee. */
+  handlingFeeType?: string;
+  handlingFeeValue?: string;
 };
 
 export async function adminCreateCycle(data: CreateCycleInput): Promise<{error?: string}> {
@@ -133,6 +138,18 @@ export async function adminCreateCycle(data: CreateCycleInput): Promise<{error?:
     if (!accessLevel) return { error: t.errors.invalidAccessLevel };
 
     const db = getDb();
+
+    // The cycle keeps the group's payment mode of this moment for its whole
+    // life; a per_order cycle also gets its handling fee.
+    const { mode: paymentMode } = await getPaymentSettings();
+    const fee = resolveCycleFee(
+      paymentMode,
+      data.handlingFeeType !== undefined && data.handlingFeeValue !== undefined
+        ? { type: data.handlingFeeType, value: data.handlingFeeValue }
+        : undefined,
+      paymentMode === "per_order" ? await getLastHandlingFee() : null,
+    );
+    if ("error" in fee) return { error: t.errors.handlingFeeInvalid };
 
     const cycleId = genId("cyc");
     const now = new Date();
@@ -161,9 +178,12 @@ export async function adminCreateCycle(data: CreateCycleInput): Promise<{error?:
       createdBy: admin.email,
       createdAt: now,
       supplierId: data.supplierId || null,
+      paymentMode,
+      handlingFeeType: fee.fee?.type ?? null,
+      handlingFeeValue: fee.fee ? fee.fee.value.toFixed(2) : null,
     });
 
-    await writeAudit(db, admin.email, "create_cycle", "cycle", cycleId, { ...data, accessLevel });
+    await writeAudit(db, admin.email, "create_cycle", "cycle", cycleId, { ...data, accessLevel, paymentMode });
 
     // Notify members who can see this cycle that it's open. Cycles are always
     // created already-open (no scheduled opens), so this is the single emit
@@ -227,6 +247,7 @@ async function performCycleClose(
         shippingMode: orderCycles.shippingMode,
         shippingCostPerMember: orderCycles.shippingCostPerMember,
         shippingTotal: orderCycles.shippingTotal,
+        paymentMode: orderCycles.paymentMode,
       })
       .from(orderCycles)
       .where(eq(orderCycles.cycleId, cycleId))
@@ -352,8 +373,11 @@ async function performCycleClose(
         charges.summaries.map((s) => s.memberId),
       );
       const items = charges.summaries.map((s) => {
-        const body =
-          s.shippingShare > 0
+        // Pay-per-order: the member paid an estimate; the charge is provisional
+        // until the weighing and the supplier's sheet, then settled.
+        const body = cycle.paymentMode === "per_order"
+          ? t.notificationsServer.orderClosedPerOrderBody(cycle.title, formatMoney(s.orderTotal + s.shippingShare))
+          : s.shippingShare > 0
             ? t.notificationsServer.orderClosedBodyWithShipping(
                 cycle.title,
                 formatMoney(s.orderTotal + s.shippingShare),
@@ -416,12 +440,13 @@ export async function adminCancelClosedCycle(
     if (!reason) return { error: t.errors.cancelReasonRequired };
 
     const [cycle] = await db
-      .select({ status: orderCycles.status, title: orderCycles.title })
+      .select({ status: orderCycles.status, title: orderCycles.title, paymentMode: orderCycles.paymentMode })
       .from(orderCycles)
       .where(eq(orderCycles.cycleId, cycleId))
       .limit(1);
     if (!cycle) return { error: t.errors.cycleNotFound };
     if (cycle.status !== "closed") return { error: t.errors.cycleNotClosed };
+    const reversal = cancelledCycleReversalTypes(cycle.paymentMode, input.refundShipping);
 
     // Atomic compare-and-swap, same guard as performCycleClose: only the
     // caller that flips closed→cancelled proceeds. A concurrent second call
@@ -441,9 +466,11 @@ export async function adminCancelClosedCycle(
         .select({ memberId: ledgerEntries.memberId, net: sql<string>`sum(${ledgerEntries.amount})` })
         .from(ledgerEntries)
         .where(
-          input.refundShipping
+          reversal === null
             ? eq(ledgerEntries.cycleId, cycleId)
-            : and(eq(ledgerEntries.cycleId, cycleId), ne(ledgerEntries.type, "shipping_charge")),
+            : "include" in reversal
+              ? and(eq(ledgerEntries.cycleId, cycleId), inArray(ledgerEntries.type, reversal.include))
+              : and(eq(ledgerEntries.cycleId, cycleId), notInArray(ledgerEntries.type, reversal.exclude)),
         )
         .groupBy(ledgerEntries.memberId);
 
@@ -476,7 +503,10 @@ export async function adminCancelClosedCycle(
             memberId: r.memberId,
             email: emailByMember.get(r.memberId) ?? null,
             title: t.notificationsServer.cycleCancelledTitle,
-            body: t.notificationsServer.cycleCancelledBody(cycle.title, formatMoney(-r.net), reason),
+            body:
+              cycle.paymentMode === "per_order"
+                ? t.notificationsServer.cycleCancelledPerOrderBody(cycle.title, reason)
+                : t.notificationsServer.cycleCancelledBody(cycle.title, formatMoney(-r.net), reason),
             href: `/storico?cycleId=${cycleId}`,
           })),
           "cycle_cancelled",
@@ -785,6 +815,8 @@ export async function adminUpdateCycle(
     shippingMode?: string;
     shippingCostPerMember?: string;
     shippingTotal?: string;
+    handlingFeeType?: string;
+    handlingFeeValue?: string;
   },
 ): Promise<{ error?: string; adjustedMembers?: number }> {
   try {
@@ -800,11 +832,26 @@ export async function adminUpdateCycle(
         shippingMode: orderCycles.shippingMode,
         shippingCostPerMember: orderCycles.shippingCostPerMember,
         shippingTotal: orderCycles.shippingTotal,
+        paymentMode: orderCycles.paymentMode,
       })
       .from(orderCycles)
       .where(eq(orderCycles.cycleId, cycleId))
       .limit(1);
     if (!before) return { error: t.errors.cycleNotFound };
+
+    // The handling fee of a per_order cycle can change only while it is open:
+    // after the close it is what members were charged with.
+    let feePatch: { handlingFeeType: string; handlingFeeValue: string } | null = null;
+    if (
+      before.paymentMode === "per_order" &&
+      before.status === "open" &&
+      data.handlingFeeType !== undefined &&
+      data.handlingFeeValue !== undefined
+    ) {
+      const fee = parseHandlingFee(data.handlingFeeType, data.handlingFeeValue);
+      if ("error" in fee) return { error: t.errors.handlingFeeInvalid };
+      feePatch = { handlingFeeType: fee.type, handlingFeeValue: fee.value.toFixed(2) };
+    }
 
     const dates = parseCycleDates(data);
     if ("error" in dates) return { error: dates.error };
@@ -841,6 +888,7 @@ export async function adminUpdateCycle(
         ...(data.supplierId !== undefined && { supplierId: data.supplierId || null }),
         ...(accessLevel !== undefined && { accessLevel }),
         ...shippingPatch,
+        ...feePatch,
       })
       .where(eq(orderCycles.cycleId, cycleId));
 
@@ -1205,6 +1253,23 @@ export async function adminRecordOutgoingMovement(
 // Returns the defaults the supplier-email dialog needs to pre-fill its
 // fields (To / From / CC / Subject). Used by the client before the admin
 // hits "Invia ora" so they can review and tweak any field.
+// Cassa: sends again the refunds Stripe has not answered (a network error
+// after an order was cancelled or a payment arrived late). Safe to repeat:
+// each refund's id is its Stripe idempotency key.
+export async function adminRetryRequestedRefunds(): Promise<
+  { sent: number; failed: number; waiting: number } | { error: string }
+> {
+  try {
+    const admin = await requireAdmin();
+    const result = await retryRequestedRefunds();
+    await writeAudit(getDb(), admin.email, "retry_refunds", "payment", "", result);
+    revalidatePath("/admin");
+    return result;
+  } catch (e) {
+    return { error: actionErrorMessage(e, t.errors.genericError, "adminRetryRequestedRefunds") };
+  }
+}
+
 export async function adminGetSupplierEmailDefaults(cycleId: string): Promise<
   | {
       ok: true;
