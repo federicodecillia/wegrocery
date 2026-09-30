@@ -239,6 +239,9 @@ User interaction → Server Action ("use server") → auth check → DB mutation
 - Middleware only checks that the session cookie exists (no database); pages and actions check the session: `requireUserSession()` (redirect to `/login`), `requireAdmin()` / `requireActiveMember()` (`lib/auth/session.ts`, the only Server Action guards; `ActionError` otherwise). The admin page applies `checkAccess` (`lib/auth/access.ts`) and redirects non-admins home.
 - Denials land on `/login?error=<code>`; the login page explains each code and links `brand.supportEmail` and `brand.privacyUrl`.
 - `better-auth` is pinned to an exact version; upgrades run `lib/auth/config.int.test.ts` first.
+- Abuse limits: 3 link requests a minute per IP (Better Auth, keyed on `x-vercel-forwarded-for`: outside Vercel every request shares one bucket), plus caps on the emails one address receives (`lib/auth/email-caps.ts`: 5 links an hour, 1 explanation a day, 50 explanations a day overall). The decision and the send run after the response (`defer: after`), so a member's request takes as long as a stranger's.
+- A Google identity whose address Google has not verified is refused, member or not (`lib/auth/identity.ts`). Changing a member's email or alias, or deleting the member, deletes the sign-in identities (and sessions) of the addresses they no longer have.
+- Known limits, not handled yet: a link forwarded by its requester signs the receiver into the requester's account (the confirmation page does not show the address); `auth_rate_limits` and unclicked `auth_verifications` rows are not purged; the token sits in the confirmation page's URL until used.
 
 ### Notifications
 

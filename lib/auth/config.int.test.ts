@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from "vitest";
 import { getDb } from "@/lib/db/client";
 import { describeDb, makeScope } from "@/test/int/fixtures";
-import { createAuth, type Auth, type AuthEmail } from "./config";
+import { createAuth, type Auth, type AuthEmail, type CreateAuthOptions } from "./config";
 
 // Better Auth with the app's configuration on a real database: who gets which
 // email, the link's single use and expiry, the session gate, the rate limit.
@@ -47,7 +47,9 @@ describeDb("sign-in with an email link", () => {
   async function verify(link: string): Promise<Response> {
     const token = new URL(link).searchParams.get("token")!;
     return auth.handler(
-      new Request(`${BASE}/api/auth/magic-link/verify?token=${token}&callbackURL=/ordine&errorCallbackURL=/login`),
+      new Request(`${BASE}/api/auth/magic-link/verify?token=${token}&callbackURL=/ordine&errorCallbackURL=/login`, {
+        headers: { "x-vercel-forwarded-for": nextIp() },
+      }),
     );
   }
 
@@ -61,22 +63,29 @@ describeDb("sign-in with an email link", () => {
     await sql`UPDATE members SET email = ${memberEmail}, alias_email = ${aliasEmail} WHERE member_id = ${scope.memberId}`;
   });
 
-  beforeEach(() => {
-    outbox = [];
-    auth = createAuth(getDb(), {
+  function build(extra: Partial<CreateAuthOptions> = {}): Auth {
+    return createAuth(getDb(), {
       baseURL: BASE,
       rateLimit: true,
       env: { ...process.env, AUTH_SECRET: "test-secret-at-least-32-characters-long!!", NODE_ENV: "test" },
+      // High caps here; the cap test below sets its own.
+      emailCaps: { linksPerAddressPerHour: 100, noticesPerAddressPerDay: 100, noticesPerDay: 1000 },
       sendAuthEmail: async (m) => {
         outbox.push(m);
       },
+      ...extra,
     });
+  }
+
+  beforeEach(() => {
+    outbox = [];
+    auth = build();
   });
 
   afterAll(async () => {
     await sql`DELETE FROM auth_users WHERE lower(email) LIKE ${`${scope.prefix}%`}`;
     await sql`DELETE FROM auth_verifications WHERE value LIKE ${`%${scope.prefix}%`}`;
-    await sql`DELETE FROM auth_rate_limits WHERE key LIKE '%198.51.100.%'`;
+    await sql`DELETE FROM auth_rate_limits WHERE key LIKE '%198.51.100.%' OR key LIKE 'auth-email:%'`;
     await scope.cleanup();
   });
 
@@ -142,5 +151,30 @@ describeDb("sign-in with an email link", () => {
     });
     expect(outbox.at(-1)).toMatchObject({ kind: "invite", email: memberEmail });
     expect(outbox.at(-1)!.url).toContain("/login/conferma");
+  });
+
+  it("decides and sends after the response, so a member's request takes as long as a stranger's", async () => {
+    const tasks: (() => Promise<void>)[] = [];
+    auth = build({ defer: (task) => void tasks.push(task) });
+    const res = await post("/sign-in/magic-link", { email: memberEmail });
+    expect(res.status).toBe(200);
+    expect(outbox).toEqual([]);
+    expect(tasks.length).toBe(1);
+    await tasks[0]();
+    expect(outbox.at(-1)?.kind).toBe("login");
+  });
+
+  it("caps the emails one address can receive", async () => {
+    const capped = `${scope.prefix}.capped@example.invalid`;
+    auth = build({ emailCaps: { linksPerAddressPerHour: 2, noticesPerAddressPerDay: 1, noticesPerDay: 1000 } });
+    for (let i = 0; i < 3; i++) await post("/sign-in/magic-link", { email: capped });
+    expect(outbox.filter((m) => m.email === capped).length).toBe(1); // one notice a day
+    await sql`UPDATE members SET alias_email = ${capped} WHERE member_id = ${scope.memberId}`;
+    try {
+      for (let i = 0; i < 3; i++) await post("/sign-in/magic-link", { email: capped });
+      expect(outbox.filter((m) => m.email === capped && m.kind === "login").length).toBe(2); // two links an hour
+    } finally {
+      await sql`UPDATE members SET alias_email = ${aliasEmail} WHERE member_id = ${scope.memberId}`;
+    }
   });
 });

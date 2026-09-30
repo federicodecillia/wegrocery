@@ -842,6 +842,7 @@ export const en: Strings = {
       inviteSending: "Sending...",
       inviteSent: (name: string) => `Invitation sent to ${name}: they receive a link to sign in.`,
       inviteInactive: "The member is deactivated: reactivate them before inviting.",
+      inviteRefused: "The member cannot sign in right now (for example the card is not active): no link sent.",
       lastLogin: (when: string) => `last sign-in ${when}`,
       neverLoggedIn: "never signed in",
       searchPlaceholder: "Search by name or email…",

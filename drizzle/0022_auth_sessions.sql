@@ -8,7 +8,8 @@
 -- auth_accounts       one per way in of an identity (Google, the email link).
 -- auth_verifications  email-link tokens (stored hashed) and Better Auth's
 --                     internal locks, hence a text id.
--- auth_rate_limits    request counters (3 email links per minute per address).
+-- auth_rate_limits    request counters: 3 email-link requests a minute per IP,
+--                     and caps on the emails one address receives (hashed keys).
 -- members.last_login_at  set at every new session.
 --
 -- APPLY BEFORE DEPLOYING the code that ships with it. Additive only: the old

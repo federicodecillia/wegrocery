@@ -6,9 +6,12 @@ import { eq, sql } from "drizzle-orm";
 import type { getDb } from "@/lib/db/client";
 import { authAccounts, authRateLimits, authSessions, authUsers, authVerifications, members } from "@/lib/db/schema";
 import { normalizeEmail } from "@/lib/member-email";
+import { reportError } from "@/lib/observability";
 import { admitEmail, memberForNewSession } from "./admission";
 import { AUTH_COOKIE_PREFIX } from "./cookie";
+import { DEFAULT_EMAIL_CAPS, mayEmail, type EmailCaps } from "./email-caps";
 import { authEmailKind, carriesLink, type AuthEmailKind } from "./email-kind";
+import { oauthIdentityRefusal } from "./identity";
 import { allowedHosts, fallbackBaseURL, safeCallbackPath } from "./hosts";
 import { demoLogin, devLogin } from "./plugins";
 
@@ -39,6 +42,11 @@ export type CreateAuthOptions = {
   // Better Auth turns its limiter on only in production; tests switch it on here.
   rateLimit?: boolean;
   env?: Env;
+  // Runs the decision and the send of a sign-in email after the response
+  // (the app passes next/server's after()), so the answer takes the same time
+  // for a member and a stranger. Default: right away (tests).
+  defer?: (task: () => Promise<void>) => void | Promise<void>;
+  emailCaps?: EmailCaps;
 };
 
 export function googleCredentials(env: Env): { clientId: string; clientSecret: string } | null {
@@ -81,9 +89,10 @@ export function createAuth(db: Db, options: CreateAuthOptions) {
       // the email link itself. A refusal lands on /login?error=<code>.
       validateUserInfo: async ({ user, source }) => {
         if (source.method !== "oauth" && source.method !== "magic-link") return;
+        const refusal = oauthIdentityRefusal(user, source);
+        if (refusal) return refusal;
         const email = typeof user.email === "string" ? user.email : "";
-        const verified = source.method === "magic-link" || user.emailVerified === true;
-        const admission = await admitEmail(email, { emailVerified: verified });
+        const admission = await admitEmail(email, { emailVerified: true });
         if (admission.kind === "deny") return { error: admission.error };
       },
     },
@@ -93,7 +102,9 @@ export function createAuth(db: Db, options: CreateAuthOptions) {
       // Google's tokens are never kept nor refreshed: the app never calls
       // Google after the sign-in.
       updateAccountOnSignIn: false,
-      accountLinking: { enabled: true, trustedProviders: ["google"] },
+      // Google links to an existing identity only when Google verified the
+      // address (Better Auth's rule without trusted providers).
+      accountLinking: { enabled: true },
     },
     verification: { modelName: "authVerifications" },
     socialProviders: google
@@ -138,7 +149,9 @@ export function createAuth(db: Db, options: CreateAuthOptions) {
               .where(eq(authUsers.id, session.userId))
               .limit(1);
             if (!identity) return false;
-            const memberId = await memberForNewSession(identity.email, identity.name || null);
+            // The name in a sign-in request is whatever the requester typed: never
+            // use it for a new member.
+            const memberId = await memberForNewSession(identity.email, null);
             if (!memberId) return false;
             return { data: { ...session, ipAddress: null, userAgent: null } };
           },
@@ -169,9 +182,17 @@ export function createAuth(db: Db, options: CreateAuthOptions) {
         // Better Auth answers every request the same way; which email goes
         // out (a link, an invitation, or why not) is decided here.
         sendMagicLink: async ({ email, url, token, metadata }) => {
-          const admission = await admitEmail(email, { emailVerified: true });
-          const kind = authEmailKind(admission, metadata?.invite === true);
-          await options.sendAuthEmail({ kind, email, url: carriesLink(kind) ? confirmationURL(url, token) : null });
+          const task = async () => {
+            try {
+              const admission = await admitEmail(email, { emailVerified: true });
+              const kind = authEmailKind(admission, metadata?.invite === true);
+              if (!(await mayEmail(db, email, carriesLink(kind), options.emailCaps ?? DEFAULT_EMAIL_CAPS))) return;
+              await options.sendAuthEmail({ kind, email, url: carriesLink(kind) ? confirmationURL(url, token) : null });
+            } catch (e) {
+              reportError("auth email", e);
+            }
+          };
+          await (options.defer ?? ((t) => t()))(task);
         },
       }),
       ...(env.DEMO_MODE === "true" ? [demoLogin()] : []),

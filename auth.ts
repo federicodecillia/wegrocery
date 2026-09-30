@@ -30,17 +30,16 @@ function authEmailText({ kind, email, url }: AuthEmail): string {
 
 // The app's one Better Auth instance (lib/auth/config.ts has the rules).
 export const betterAuthInstance = createAuth(getDb(), {
+  // Who the address belongs to, which email and the send all run after the
+  // response: a member's request must not take longer than a stranger's.
+  defer: (task) => after(task),
   async sendAuthEmail(message) {
-    // After the response: waiting for Resend here would make a member's
-    // request measurably slower than a stranger's.
-    after(async () => {
-      const result = await sendMail({
-        to: message.email,
-        subject: t.authEmail.subject(message.kind, brand.appName),
-        text: authEmailText(message),
-      });
-      if ("error" in result) reportError("auth email", new Error(result.error), { kind: message.kind });
+    const result = await sendMail({
+      to: message.email,
+      subject: t.authEmail.subject(message.kind, brand.appName),
+      text: authEmailText(message),
     });
+    if ("error" in result) reportError("auth email", new Error(result.error), { kind: message.kind });
   },
 });
 

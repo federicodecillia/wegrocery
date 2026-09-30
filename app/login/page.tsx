@@ -15,9 +15,6 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const session = await auth();
   const params = await searchParams;
   const error = typeof params.error === "string" ? params.error : null;
-  // Set by the signIn callback on denial; echoed back so the member can spot
-  // a sign-in with the wrong Google account.
-  const attemptedEmail = typeof params.email === "string" ? params.email.slice(0, 254) : null;
   const deniedMessage =
     error === "AccessDenied"
       ? t.login.accessDenied
@@ -29,7 +26,9 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             ? t.login.membershipCheckUnavailable
             : error === "LinkInvalid" || error === "INVALID_TOKEN" || error === "EXPIRED_TOKEN"
               ? t.login.linkInvalid
-              : null;
+              : error === "failed_to_create_session" || error === "unable_to_create_session"
+                ? t.login.accessDenied
+                : null;
   const hasGoogleAuth = googleCredentials(process.env) !== null;
   const hasDevLogin = process.env.NODE_ENV !== "production" && Boolean(process.env.AUTH_DEV_LOGIN_EMAIL);
   const isDemo = process.env.DEMO_MODE === "true";
@@ -49,7 +48,6 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         {deniedMessage ? (
           <div className="mt-3 space-y-1 rounded-md border border-red-300 bg-red-50 p-2 text-sm text-red-700">
             <p>{deniedMessage}</p>
-            {attemptedEmail ? <p className="break-all">{t.login.attemptedEmail(attemptedEmail)}</p> : null}
             {error === "MembershipInactive" && brand.membershipUrl ? (
               <p>
                 <a href={brand.membershipUrl} target="_blank" rel="noopener noreferrer" className="font-medium underline">

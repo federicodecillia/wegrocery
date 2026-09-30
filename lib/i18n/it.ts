@@ -845,6 +845,7 @@ export const it = {
       inviteSending: "Invio...",
       inviteSent: (name: string) => `Invito mandato a ${name}: riceve un link per entrare.`,
       inviteInactive: "Il socio è disattivato: riattivalo prima di invitarlo.",
+      inviteRefused: "Il socio ora non può entrare (per esempio la tessera non è attiva): nessun link inviato.",
       lastLogin: (when: string) => `ultimo accesso ${when}`,
       neverLoggedIn: "mai entrato",
       searchPlaceholder: "Cerca per nome o email…",
