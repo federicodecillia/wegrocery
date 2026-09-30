@@ -82,8 +82,8 @@ export function CycleCountdown({ cycleId, title, orderCloseAt, orderOpenAt, pick
             )}
           </div>
         </div>
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-brand-teal/20 bg-brand-teal-light px-2.5 py-0.5 font-mono text-[10px] font-semibold text-brand-teal">
-          <span className="h-1.5 w-1.5 rounded-full bg-brand-teal opacity-75" />
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-accent/20 bg-accent-soft px-2.5 py-0.5 font-mono text-[10px] font-semibold text-accent-text">
+          <span className="h-1.5 w-1.5 rounded-full bg-accent opacity-75" />
           {t.cycle.open}
         </span>
       </div>
@@ -101,7 +101,7 @@ export function CycleCountdown({ cycleId, title, orderCloseAt, orderOpenAt, pick
             <div className="font-mono text-[22px] font-semibold leading-none text-brand-near-black">
               {num}
             </div>
-            <div className="mt-[3px] font-mono text-[10px] uppercase tracking-[0.08em] text-brand-gray-light">
+            <div className="mt-[3px] font-mono text-[10px] uppercase tracking-[0.08em] text-muted">
               {unit}
             </div>
           </div>
@@ -110,18 +110,18 @@ export function CycleCountdown({ cycleId, title, orderCloseAt, orderOpenAt, pick
 
       <div className="h-[3px] overflow-hidden rounded-full bg-black/[0.07]">
         <div
-          className={`h-full rounded-full transition-[width] duration-300 ${danger ? "bg-brand-red" : "bg-brand-teal"}`}
+          className={`h-full rounded-full transition-[width] duration-300 ${danger ? "bg-brand-red" : "bg-accent"}`}
           style={{ width: `${pct}%` }}
         />
       </div>
-      <div className="mt-[5px] font-mono text-[10px] text-brand-gray-light">
+      <div className="mt-[5px] font-mono text-[10px] text-muted">
         {t.cycle.daysRemaining(hoursLeft)}
       </div>
 
       <div className="mt-3">
         <Link
           href={`/ordine?cycleId=${cycleId}`}
-          className="inline-flex w-full items-center justify-center rounded-full bg-brand-orange px-[22px] py-[14px] text-sm font-bold text-white transition-[opacity,transform] duration-150 active:scale-[0.98]"
+          className="inline-flex w-full items-center justify-center rounded-full bg-primary px-[22px] py-[14px] text-sm font-bold text-on-primary transition-[opacity,transform] duration-150 active:scale-[0.98]"
         >
           {t.cycle.goToOrder}
         </Link>

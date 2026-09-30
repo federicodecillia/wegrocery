@@ -14,6 +14,8 @@ export const DEFAULT_PALETTE: Palette = {
 
 const FOREGROUND = "#2d2b29"; // --foreground in globals.css
 const SURFACE = "#ffffff"; // cards are bg-white
+const DANGER_SOFT = "#feecec"; // --red-l in globals.css
+const MUTED = "#6b6b6b"; // secondary text, darkened further if a soft fill needs it
 const AA = 4.5;
 
 export function resolvePalette(theme: BrandTheme): Palette {
@@ -37,6 +39,7 @@ export function deriveRoleVars(theme: BrandTheme): Record<string, string> {
     "--accent-soft": p.accentLight,
     "--on-accent": pickOn(p.accent, FOREGROUND),
     "--accent-text": darkenToContrast(p.accent, [p.background, p.accentLight, SURFACE], AA),
+    "--muted": darkenToContrast(MUTED, [p.background, p.primaryLight, p.accentLight, SURFACE, DANGER_SOFT], AA),
     "--background": p.background,
     "--warm-wh": p.background,
     "--frame": p.frame,

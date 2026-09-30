@@ -87,6 +87,11 @@ var = the neutral WeGrocery brand you see in the demo. Example:
 }
 ```
 
+Theme colours are hex (`#rgb` or `#rrggbb`). Give the fills only: the text
+colour on buttons and the darker shade used for coloured text are computed so
+that everything stays readable (WCAG AA). A palette that cannot reach that
+contrast, or a non-hex value, logs a `[brand]` warning at startup.
+
 Dates are shown and entered in `Europe/Rome` wall time. A group in another
 zone sets `NEXT_PUBLIC_TIME_ZONE` (an IANA name, e.g. `Europe/Lisbon`); it is
 inlined at build time, so redeploy after changing it.

@@ -60,9 +60,9 @@ function InsightCard({
 }) {
   const toneClasses = {
     neutral: "border-brand-border bg-white",
-    warning: "border-brand-orange-mid bg-brand-orange-light",
+    warning: "border-primary-mid bg-primary-soft",
     danger: "border-brand-red/30 bg-brand-red-light",
-    info: "border-brand-teal/20 bg-brand-teal-light",
+    info: "border-accent/20 bg-accent-soft",
   }[tone];
 
   return (
@@ -82,7 +82,7 @@ function InsightCard({
         {value}
       </div>
       {hint && (
-        <div className="mt-0.5 truncate font-mono text-[10px] text-brand-gray-light">
+        <div className="mt-0.5 truncate font-mono text-[10px] text-muted">
           {hint}
         </div>
       )}

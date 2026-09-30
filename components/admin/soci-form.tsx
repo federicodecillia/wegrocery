@@ -67,7 +67,7 @@ export function SociForm({ member, onClose }: { member?: Member; onClose?: () =>
             name="fullName"
             required
             defaultValue={member?.fullName}
-            className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-brand-orange/30"
+            className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-primary/30"
           />
         </div>
         <div>
@@ -79,20 +79,20 @@ export function SociForm({ member, onClose }: { member?: Member; onClose?: () =>
             type="email"
             required
             defaultValue={member?.email}
-            className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-brand-orange/30"
+            className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-primary/30"
           />
         </div>
         <div>
           <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-brand-gray">
             {t.admin.members.aliasEmailLabel}
-            <span className="ml-1 font-normal normal-case text-brand-gray-light">{t.admin.members.aliasEmailHint}</span>
+            <span className="ml-1 font-normal normal-case text-muted">{t.admin.members.aliasEmailHint}</span>
           </label>
           <input
             name="aliasEmail"
             type="email"
             defaultValue={member?.aliasEmail ?? ""}
             placeholder={t.admin.members.aliasEmailPlaceholder}
-            className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-brand-orange/30"
+            className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-primary/30"
           />
         </div>
         <div className="grid grid-cols-2 gap-3">
@@ -103,7 +103,7 @@ export function SociForm({ member, onClose }: { member?: Member; onClose?: () =>
             <select
               name="role"
               defaultValue={normalizeRole(member?.role) ?? DEFAULT_ROLE}
-              className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-brand-orange/30"
+              className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-primary/30"
             >
               {ROLES.map((r) => (
                 <option key={r} value={r}>
@@ -119,7 +119,7 @@ export function SociForm({ member, onClose }: { member?: Member; onClose?: () =>
             <select
               name="active"
               defaultValue={String(member?.active ?? true)}
-              className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-brand-orange/30"
+              className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-primary/30"
             >
               <option value="true">{t.admin.members.statusActive}</option>
               <option value="false">{t.admin.members.statusInactive}</option>
@@ -130,7 +130,7 @@ export function SociForm({ member, onClose }: { member?: Member; onClose?: () =>
       <button
         type="submit"
         disabled={isPending}
-        className="mt-4 w-full rounded-xl bg-brand-orange py-2 text-[13px] font-bold text-white disabled:opacity-60"
+        className="mt-4 w-full rounded-xl bg-primary py-2 text-[13px] font-bold text-on-primary disabled:opacity-60"
       >
         {isPending ? t.admin.common.saving : isEdit ? t.admin.members.submitEdit : t.admin.members.submitAdd}
       </button>
@@ -175,7 +175,7 @@ export function SociList({ members }: { members: Member[] }) {
     if (list.length === 0) return null;
     return (
       <div className="mb-4">
-        <p className="mb-1 px-1 font-mono text-[10px] uppercase tracking-wider text-brand-gray-light">
+        <p className="mb-1 px-1 font-mono text-[10px] uppercase tracking-wider text-muted">
           {label} ({list.length})
         </p>
         <div className="divide-y divide-brand-border rounded-xl border border-brand-border bg-white shadow-sm">
@@ -195,10 +195,10 @@ export function SociList({ members }: { members: Member[] }) {
                       </span>
                     )}
                   </div>
-                  <div className="font-mono text-[10px] text-brand-gray-light">
+                  <div className="font-mono text-[10px] text-muted">
                     {m.email}
                     {m.aliasEmail && (
-                      <span className="ml-1 text-brand-teal">· {m.aliasEmail}</span>
+                      <span className="ml-1 text-accent-text">· {m.aliasEmail}</span>
                     )}
                   </div>
                 </div>
@@ -236,11 +236,11 @@ export function SociList({ members }: { members: Member[] }) {
           placeholder={t.admin.members.searchPlaceholder}
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
-          className="w-full rounded-xl border border-brand-border bg-white px-4 py-2.5 text-[13px] text-brand-near-black placeholder:text-brand-gray-light focus:outline-none focus:ring-2 focus:ring-brand-orange/30"
+          className="w-full rounded-xl border border-brand-border bg-white px-4 py-2.5 text-[13px] text-brand-near-black placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary/30"
         />
       </div>
-      {renderGroup(t.roles.admin, inGroup("admin"), "bg-brand-orange-light text-brand-orange")}
-      {renderGroup(t.roles.attivi, inGroup("attivi"), "bg-brand-teal-light text-brand-teal")}
+      {renderGroup(t.roles.admin, inGroup("admin"), "bg-primary-soft text-primary-text")}
+      {renderGroup(t.roles.attivi, inGroup("attivi"), "bg-accent-soft text-accent-text")}
       {renderGroup(t.roles.utenti, inGroup("utenti"), "bg-black/[0.05] text-brand-gray")}
       {visible.length === 0 && (
         <div className="py-6 text-center text-[12px] text-brand-gray">{t.admin.common.noResults}</div>

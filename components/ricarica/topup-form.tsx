@@ -24,7 +24,7 @@ function toCents(amount: string): number {
 function presetClass(selected: boolean): string {
   return `rounded-[12px] border py-[10px] font-mono text-[15px] font-bold ${
     selected
-      ? "border-brand-orange bg-brand-orange-light text-brand-near-black"
+      ? "border-primary bg-primary-soft text-brand-near-black"
       : "border-brand-border bg-white text-brand-near-black"
   }`;
 }
@@ -97,7 +97,7 @@ export function TopupForm({ presets, minCents, maxCents }: Props) {
         type="button"
         onClick={handlePay}
         disabled={isPending || !valid}
-        className="w-full rounded-full bg-brand-orange px-4 py-[12px] text-[14px] font-bold text-white disabled:opacity-60"
+        className="w-full rounded-full bg-primary px-4 py-[12px] text-[14px] font-bold text-on-primary disabled:opacity-60"
       >
         {isPending ? t.topup.redirecting : valid ? t.topup.payButton(formatMoney(cents / 100)) : t.topup.payButtonNoAmount}
       </button>

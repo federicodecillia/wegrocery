@@ -38,7 +38,7 @@ export function CycleChooser({ cycles }: Props) {
                   .join(" · ")}
               </div>
             </div>
-            <span className="shrink-0 text-[18px] font-bold text-brand-orange" aria-hidden="true">
+            <span className="shrink-0 text-[18px] font-bold text-primary-text" aria-hidden="true">
               →
             </span>
           </Link>

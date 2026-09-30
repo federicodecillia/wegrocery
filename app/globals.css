@@ -1,18 +1,14 @@
 @import "tailwindcss";
 
 :root {
-  --background: #faf8f5;
+  /* Brand colours (--primary, --accent, --background, --frame and the text
+     colours derived from them) are set on <html> by app/layout.tsx from
+     lib/brand/roles.ts. Only colours that no brand changes live here. */
   --foreground: #2d2b29;
-  --frame: #ddd8d0;
-  --orange: #f5a623;
-  --orange-l: #fef3dc;
-  --teal: #00a896;
-  --teal-l: #e0f5f3;
   --gray: #58595b;
-  --gray-l: #adadad;
+  --gray-l: #adadad; /* fills and disabled states only: too light for text */
   --near-blk: #2d2b29;
-  --warm-wh: #faf8f5;
-  --red: #e05252;
+  --red: #c53030;
   --red-l: #feecec;
   --border: rgba(88, 89, 91, 0.1);
   --nav-h: 82px;
@@ -22,10 +18,16 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-brand-frame: var(--frame);
-  --color-brand-orange: var(--orange);
-  --color-brand-orange-light: var(--orange-l);
-  --color-brand-teal: var(--teal);
-  --color-brand-teal-light: var(--teal-l);
+  --color-primary: var(--primary);
+  --color-primary-soft: var(--primary-soft);
+  --color-primary-mid: color-mix(in srgb, var(--primary) 30%, transparent);
+  --color-on-primary: var(--on-primary);
+  --color-primary-text: var(--primary-text);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-on-accent: var(--on-accent);
+  --color-accent-text: var(--accent-text);
+  --color-muted: var(--muted);
   --color-brand-gray: var(--gray);
   --color-brand-gray-light: var(--gray-l);
   --color-brand-near-black: var(--near-blk);
@@ -33,7 +35,6 @@
   --color-brand-red: var(--red);
   --color-brand-red-light: var(--red-l);
   --color-brand-border: var(--border);
-  --color-brand-orange-mid: rgba(245, 166, 35, 0.3);
   --spacing-nav-h: var(--nav-h);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);

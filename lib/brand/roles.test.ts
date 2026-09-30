@@ -35,6 +35,15 @@ describe("brand roles", () => {
     ]);
   });
 
+  it("muted text reads on every light surface of any palette", () => {
+    for (const theme of [{}, { primaryLight: "#dbeafe", accentLight: "#ede9fe" }]) {
+      const v = deriveRoleVars(theme);
+      for (const bg of [v["--background"], v["--primary-soft"], v["--accent-soft"], "#ffffff", "#feecec"]) {
+        expect(contrastRatio(v["--muted"], bg)).toBeGreaterThanOrEqual(4.5);
+      }
+    }
+  });
+
   it("maps background to both surface variables", () => {
     const v = deriveRoleVars({ background: "#ffffff" });
     expect(v["--background"]).toBe("#ffffff");

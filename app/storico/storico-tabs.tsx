@@ -103,7 +103,7 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
                       <div className="text-[14px] font-bold tracking-[-0.01em] text-brand-near-black">
                         {o.title}
                       </div>
-                      <div className="mt-[2px] font-mono text-[10px] text-brand-gray-light">
+                      <div className="mt-[2px] font-mono text-[10px] text-muted">
                         {formatDate(o.pickupDate)}
                       </div>
                     </div>
@@ -115,7 +115,7 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
                         className={`rounded-full px-2.5 py-0.5 font-mono text-[10px] ${
                           o.status === "cancelled"
                             ? "bg-brand-red-light text-brand-red"
-                            : "bg-brand-teal-light text-brand-teal"
+                            : "bg-accent-soft text-accent-text"
                         }`}
                       >
                         {o.status === "open"
@@ -130,7 +130,7 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
                     <div className="px-4 py-[10px]">
                       {o.lines.length > 0 && (
                         <>
-                          <div className="mb-[5px] font-mono text-[10px] text-brand-gray-light">{t.history.products}</div>
+                          <div className="mb-[5px] font-mono text-[10px] text-muted">{t.history.products}</div>
                           <div className="divide-y divide-brand-border rounded-[12px] border border-brand-border bg-[#fdfdfd]">
                             {o.lines.map((l, index) => (
                               <div key={`${l.productName}-${index}`} className="flex items-start gap-3 px-3 py-2.5">
@@ -145,7 +145,7 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
                                   <div className="mt-[2px] text-[11px] leading-snug text-brand-gray">
                                     {[l.supplierName, l.category].filter(Boolean).join(" · ")}
                                   </div>
-                                  <div className="mt-[2px] font-mono text-[10px] text-brand-gray-light">
+                                  <div className="mt-[2px] font-mono text-[10px] text-muted">
                                     {l.quantity} × {formatEur(l.unitPrice)} ={" "}
                                     {l.actualLineTotal !== null && l.actualLineTotal !== l.lineTotal ? (
                                       // Weighed by the supplier: what the member actually pays.
@@ -186,13 +186,13 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
           <div
             className={`mb-4 rounded-[16px] border p-4 ${
               balance < 0
-                ? "border-[#f9c8c8] bg-brand-red-light"
-                : "border-brand-orange-mid bg-brand-orange-light"
+                ? "border-brand-red/30 bg-brand-red-light"
+                : "border-primary-mid bg-primary-soft"
             }`}
           >
             <div
               className={`mb-[6px] font-mono text-[10px] uppercase tracking-[0.10em] ${
-                balance < 0 ? "text-brand-red" : "text-brand-orange"
+                balance < 0 ? "text-brand-red" : "text-primary-text"
               }`}
             >
               {t.history.currentBalance}
@@ -230,14 +230,14 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
                         <div className="truncate text-[13px] font-medium text-brand-near-black">
                           {fullLabel}
                         </div>
-                        <div className="mt-[2px] font-mono text-[10px] text-brand-gray-light">
+                        <div className="mt-[2px] font-mono text-[10px] text-muted">
                           {formatDate(e.entryDate)}
                         </div>
                       </div>
                     </div>
                     <div
                       className={`ml-3 font-mono text-[14px] font-bold ${
-                        isPos ? "text-brand-teal" : "text-brand-red"
+                        isPos ? "text-accent-text" : "text-brand-red"
                       }`}
                     >
                       {formatSignedMoney(e.amount)}

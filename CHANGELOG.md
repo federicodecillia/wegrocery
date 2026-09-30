@@ -18,6 +18,15 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ---
 
+## [Unreleased]
+
+### Changed
+- 👓 **Text you can read.** Buttons, links, labels and amounts now have enough contrast on every screen: dark text on the coloured buttons, darker shades for coloured and grey text, a deeper red for negative amounts.
+- 🎨 **Colours that follow the group's palette.** Text colours are worked out from the brand colours, so a group with a different palette stays readable. Upgrade note: nothing to do; theme colours must be hex (`#rgb` or `#rrggbb`), anything else falls back to the default palette with a `[brand]` warning in the logs.
+
+### Fixed
+- 💶 **Balance on one line.** On Home the balance no longer wraps after the sign in English formats.
+
 ## [1.15.0] — 2026-09-30
 
 *Card refunds you can follow.*

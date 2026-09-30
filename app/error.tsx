@@ -27,7 +27,7 @@ export default function Error({
         <p className="mt-1 text-[13px] text-brand-gray">{error.message || t.common.unexpectedError}</p>
         <button
           onClick={reset}
-          className="mt-4 w-full rounded-xl bg-brand-orange py-2.5 text-[13px] font-bold text-white"
+          className="mt-4 w-full rounded-xl bg-primary py-2.5 text-[13px] font-bold text-on-primary"
         >
           {t.common.retry}
         </button>
