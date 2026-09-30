@@ -128,9 +128,9 @@ variables, plus a staging deployment of the `staging` branch:
 - **Staging** — Preview deployment of the `staging` branch on the
   `porta-moneta` project, reached through its stable branch URL
   (`porta-moneta-git-staging-<scope>.vercel.app`). Env vars scoped to
-  Preview + Git branch `staging`: `DATABASE_URL` → Neon branch `staging`
-  (child of `production`, refreshed with
-  `neonctl branches reset staging --parent`), `EMAIL_REDIRECT_TO`,
+  Preview + Git branch `staging`: `DATABASE_URL` → the Neon branch `dev`, like
+  every Preview (there is no `staging` branch in the Neon project, checked
+  2026-09-30; migrations for staging go to `dev`), `EMAIL_REDIRECT_TO`,
   `APP_BASE_URL`, `WALLYFOR_*`, `STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET`
   (sandbox keys only). The Google OAuth client needs the staging
   branch URL's `/api/auth/callback/google` as an extra redirect URI.
@@ -443,10 +443,10 @@ All four emit `order_adjusted` or `order_corrected` notifications and `audit_log
 - **Vercel Preview deployments use the `dev` Neon branch** (since 2026-07-11:
   `DATABASE_URL` has two entries on the porta-moneta project — Preview → dev
   branch, Production → prod). PR previews share the dev branch with local dev;
-  both are throwaway (reset on demand). The `staging` branch deployment is the
-  exception: its branch-scoped Preview `DATABASE_URL` points at the Neon
-  branch `staging` instead. A per-PR Neon branch integration would be a
-  further upgrade, not required.
+  both are throwaway (reset on demand). The `staging` branch deployment uses
+  `dev` too (the B2.1 Stripe check on staging wrote to it), so apply a
+  migration to `dev` before merging to `staging`. A per-PR Neon branch
+  integration would be a further upgrade, not required.
 - **Migrations** (since 2026-07-11, issue #85): `scripts/db-migrate.mjs` tracks
   applied files in a `_migrations` table — the ledger is baselined on prod,
   demo and dev. Flow for a schema change: write the next `drizzle/NNNN_*.sql`
