@@ -67,11 +67,14 @@ npm run dev          # Start dev server at http://localhost:3000
 npm run build        # Production build
 npm run db:push      # Push Drizzle schema to Neon (needs DATABASE_URL in .env.local)
 npm run db:studio    # Drizzle Studio (visual DB browser)
+npm run doctor       # Configuration status of the env in .env.local (names only)
 npm test             # Unit tests (pure, no database)
 npm run test:int     # Integration tests on a test database (see below)
 ```
 
 **Integration tests** (`*.int.test.ts`, `vitest.int.config.ts`): the real queries against Postgres, for what unit tests cannot show (guarded writes, concurrent events, migrations). They run only with `INT_TEST_DATABASE_URL` set, or with `INT_TEST_USE_DATABASE_URL=1` when the `DATABASE_URL` in the environment is already a test database (e.g. `INT_TEST_USE_DATABASE_URL=1 node --env-file=.env.demo.local node_modules/vitest/vitest.mjs run -c vitest.int.config.ts`); otherwise they are skipped. Never point them at production. Each test builds its rows with `makeScope()` (`test/int/fixtures.ts`): one fake member per run, ids prefixed `int_`, removed in `afterAll`. The setup drops `RESEND_API_KEY` and `STRIPE_SECRET_KEY` from the environment, so a test can neither send an email nor call Stripe. In CI the `integration` job creates a throwaway Neon branch, applies the pending migrations and runs the suite; it needs the `NEON_API_KEY` secret and the `NEON_PROJECT_ID` variable and is skipped without them (forks). `NEON_PROJECT_ID` must be a project with fake data only (the demo), never production: the repository is public, so the job masks the branch's connection string before any step can print it.
+
+**Configuration status**: `configStatus` (`lib/config-status.ts`, pure) lists what a deploy has set up, by variable name and state, never a value: the card in admin → Impostazioni and `npm run doctor` show it. A new migration goes in `lib/migrations.ts` too (a test compares it with `drizzle/`); a new environment variable gets an item there, a line in `.env.example` and a row in `docs/upgrading.md`. `MIGRATE_ON_BUILD=true` (production environment only) makes `npm run build` apply pending migrations first.
 
 **Releases**: open the `staging` → `main` PR with `?template=release.md` (`.github/PULL_REQUEST_TEMPLATE/release.md`): upgrade notes, migration before the merge, smoke test on `/api/health`, rollback.
 
