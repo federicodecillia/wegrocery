@@ -107,6 +107,10 @@ describe("movementKind", () => {
     expect(kind("adjustment", "30.00")).toBe("adjustment");
   });
 
+  it("gives a failed card refund its own kind", () => {
+    expect(kind("refund_failed", "4.00", "pay_1")).toBe("refund_failed");
+  });
+
   it("names the manual movements recorded from Cassa", () => {
     expect(kind("payout", "-12.00")).toBe("payout");
     expect(kind("manual_charge", "-4.00")).toBe("manual_charge");
@@ -145,5 +149,14 @@ describe("movementDateHasTime", () => {
   it("keeps the time of movements the app timestamps", () => {
     expect(movementDateHasTime(new Date("2026-09-23T22:00:00.000Z"))).toBe(true);
     expect(movementDateHasTime(new Date("2026-09-29T14:31:05.123Z"))).toBe(true);
+  });
+});
+
+describe("failed card refunds", () => {
+  it("are labelled and never repeat their fixed note", () => {
+    expect(label("refund_failed", "4.00", "pay_1")).toBe("Rimborso non riuscito");
+    expect(
+      movementText({ type: "refund_failed", amount: "4.00", note: "Rimborso non riuscito", paymentId: "pay_1" }, labels),
+    ).toBe("Rimborso non riuscito");
   });
 });

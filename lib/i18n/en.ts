@@ -140,6 +140,7 @@ export const en: Strings = {
     shipping: "Shipping",
     refund: "Refund",
     onlineTopupRefund: "Online top-up refund",
+    refundFailed: "Refund failed",
     payout: "Balance returned",
     manualCharge: "Charge",
     membershipFee: "Membership fee",
@@ -196,6 +197,7 @@ export const en: Strings = {
     lineItemName: (org: string) => `${org} balance top-up`,
     ledgerNote: "Online top-up",
     refundLedgerNote: "Online top-up refund",
+    refundFailedLedgerNote: "Refund failed",
     atMaximum: "Your balance is already at the maximum the group allows.",
     belowOnlineMinimum: (amount: string) =>
       `You can still top up ${amount}, but online top-ups start at €0.50: use a bank transfer.`,
@@ -691,6 +693,7 @@ export const en: Strings = {
       payoutBadge: "payout",
       manualChargeBadge: "manual charge",
       membershipFeeBadge: "fee",
+      refundFailedBadge: "refund failed",
       entryUpdated: "Entry updated",
       entryDeleted: "Entry deleted",
       deleteConfirm: "Delete this ledger entry?",
@@ -1050,6 +1053,11 @@ export const en: Strings = {
     onlineRefundTitle: "Top-up refunded",
     onlineRefundBody: (amount: string, balance: string) =>
       `${amount} of an online top-up has been refunded to you. Your new balance is ${balance}.`,
+    refundFailedTitle: "Refund failed",
+    refundFailedBody: (amount: string, balance: string) =>
+      `The ${amount} refund to your card did not go through, so the amount is back on your balance (now ${balance}). The treasurer will return it by bank transfer.`,
+    refundFailedAdminBody: (amount: string, name: string) =>
+      `The ${amount} card refund to ${name} did not go through and the amount is back on their balance. Return it by bank transfer: Treasury → Outgoing movement → Payout.`,
     topupReceivedBody: (amount: string, balance: string) =>
       `A top-up of ${amount} has been recorded on your balance. New balance: ${balance}.`,
     orderModifiedTitle: "Order updated",

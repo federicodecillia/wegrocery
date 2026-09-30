@@ -6,6 +6,7 @@ import { describe, expect, it, vi } from "vitest";
 vi.mock("@/lib/db/client", () => ({ getDb: vi.fn() }));
 vi.mock("@/lib/db/queries", () => ({ getMemberBalance: vi.fn() }));
 vi.mock("@/lib/notifications/dispatch", () => ({ dispatchNotification: vi.fn() }));
+vi.mock("./refund-store", () => ({ upsertStripeRefund: vi.fn(), syncChargeRefunds: vi.fn() }));
 
 const { planWebhookAction } = await import("./webhook");
 
@@ -61,10 +62,45 @@ describe("planWebhookAction", () => {
     });
   });
 
-  it("maps a refund to the cumulative refunded amount of its payment intent", () => {
+  it("re-reads the refunds of a refunded charge from Stripe", () => {
     expect(
       planWebhookAction(event("charge.refunded", { payment_intent: { id: "pi_1" }, amount_refunded: 1500 })),
-    ).toEqual({ kind: "refund", paymentIntentId: "pi_1", refundedCents: 1500 });
+    ).toEqual({ kind: "refund_sync", paymentIntentId: "pi_1" });
+  });
+
+  const refund = {
+    id: "re_1",
+    object: "refund",
+    payment_intent: "pi_1",
+    amount: 400,
+    currency: "eur",
+    status: "succeeded",
+    metadata: {},
+  };
+
+  it("hands every refund event to the refund it carries", () => {
+    for (const type of ["refund.created", "refund.updated", "refund.failed"]) {
+      expect(planWebhookAction(event(type, refund))).toEqual({
+        kind: "refund",
+        refund: {
+          stripeRefundId: "re_1",
+          paymentIntentId: "pi_1",
+          amountCents: 400,
+          currency: "eur",
+          status: "succeeded",
+          appRefundId: null,
+        },
+      });
+    }
+  });
+
+  it("ignores refunds that are not of a payment intent", () => {
+    expect(planWebhookAction(event("refund.created", { ...refund, payment_intent: null }))).toEqual({
+      kind: "ignore",
+    });
+    expect(planWebhookAction(event("charge.refunded", { payment_intent: null, amount_refunded: 100 }))).toEqual({
+      kind: "ignore",
+    });
   });
 
   it("ignores everything else", () => {

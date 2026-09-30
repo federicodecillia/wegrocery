@@ -180,6 +180,8 @@ function typeBadge(type: string): { label: string; className: string } {
   switch (type) {
     case "topup":
       return { label: tr.topupBadge, className: badgeTeal };
+    case "refund_failed":
+      return { label: tr.refundFailedBadge, className: badgeTeal };
     case "order_charge":
       return { label: tr.chargeBadge, className: badgeRed };
     case "payout":
