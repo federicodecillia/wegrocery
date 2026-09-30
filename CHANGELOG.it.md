@@ -19,6 +19,13 @@ stanno nella PR.
 
 ---
 
+## [1.14.1] — 30 settembre 2026
+
+*Importi più ordinati nelle Impostazioni.*
+
+### Risolto
+- ⚙️ **Saldo massimo con i centesimi.** Le Impostazioni mostrano un importo salvato come 35,20 € con entrambe le cifre dei centesimi, non più 35,2.
+
 ## [1.14.0] — 29 settembre 2026
 
 *Le impostazioni dei pagamenti in app, e l'ordine che ti aspetta.*
@@ -384,6 +391,7 @@ stanno nella PR.
 
 ---
 
+[1.14.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.14.1
 [1.14.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.14.0
 [1.13.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.13.0
 [1.12.2]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.12.2

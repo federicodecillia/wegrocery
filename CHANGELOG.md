@@ -18,6 +18,13 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ---
 
+## [1.14.1] — 2026-09-30
+
+*Tidier amounts in Settings.*
+
+### Fixed
+- ⚙️ **Maximum balance with cents.** Settings shows a saved amount like 35,20 € with both cent digits, instead of 35,2.
+
 ## [1.14.0] — 2026-09-29
 
 *Payment settings in the app, and orders that wait for you.*
@@ -383,6 +390,7 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ---
 
+[1.14.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.14.1
 [1.14.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.14.0
 [1.13.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.13.0
 [1.12.2]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.12.2
