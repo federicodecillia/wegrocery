@@ -38,6 +38,10 @@ type SerializedCycle = {
   shippingCostPerMember: string | null;
   shippingTotal: string | null;
   status?: string;
+  // Pay-per-order cycles only.
+  paymentMode?: string;
+  handlingFeeType?: string | null;
+  handlingFeeValue?: string | null;
 };
 
 function AccessLevelOptions() {
@@ -426,6 +430,57 @@ function ShippingModeFields({
   );
 }
 
+// The handling fee of a pay-per-order cycle: a percentage of the products or
+// a fixed amount per order.
+function HandlingFeeFields({
+  defaultType,
+  defaultValue,
+  warning,
+}: {
+  defaultType: "percent" | "fixed";
+  defaultValue: string;
+  warning?: string;
+}) {
+  const [type, setType] = useState<"percent" | "fixed">(defaultType);
+  return (
+    <div>
+      <label className={labelCls}>{t.admin.cycle.handlingFeeLabel}</label>
+      <div className="mb-2 flex rounded-lg bg-black/[0.05] p-0.5">
+        {(
+          [
+            { v: "percent", label: t.admin.cycle.handlingFeePercent },
+            { v: "fixed", label: t.admin.cycle.handlingFeeFixed },
+          ] as const
+        ).map((opt) => (
+          <button
+            key={opt.v}
+            type="button"
+            onClick={() => setType(opt.v)}
+            className={`flex-1 rounded-md py-1.5 text-label font-semibold transition-colors ${
+              type === opt.v ? "bg-white text-brand-near-black shadow-sm" : "bg-transparent text-brand-gray"
+            }`}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+      <input type="hidden" name="handlingFeeType" value={type} />
+      <input
+        name="handlingFeeValue"
+        type="number"
+        min="0"
+        max={type === "percent" ? "100" : undefined}
+        step="0.01"
+        required
+        defaultValue={defaultValue}
+        className={`w-full ${inputCls}`}
+      />
+      <p className="mt-1 text-label text-muted">{t.admin.cycle.handlingFeeHint}</p>
+      {warning && <p className="mt-1 text-label text-brand-red">{warning}</p>}
+    </div>
+  );
+}
+
 export function EditCycleForm({
   cycle,
   suppliers,
@@ -438,6 +493,7 @@ export function EditCycleForm({
   isClosed?: boolean;
 }) {
   const [isPending, startTransition] = useTransition();
+  const isPerOrder = cycle.paymentMode === "per_order";
   // Prefill in app-zone wall time: slicing the ISO string would show UTC.
   const closeAtLocal = utcToZonedLocalInput(cycle.orderCloseAt);
   const pickupLocal = utcToZonedLocalInput(cycle.pickupDate);
@@ -486,6 +542,10 @@ export function EditCycleForm({
       : {
           orderCloseAt: fd.get("orderCloseAt") as string,
           accessLevel: fd.get("accessLevel") as string,
+          ...(isPerOrder && {
+            handlingFeeType: fd.get("handlingFeeType") as string,
+            handlingFeeValue: fd.get("handlingFeeValue") as string,
+          }),
         };
     startTransition(async () => {
       const result = await adminUpdateCycle(cycle.cycleId, {
@@ -554,6 +614,14 @@ export function EditCycleForm({
         />
       )}
 
+      {isPerOrder && !isClosed && (
+        <HandlingFeeFields
+          defaultType={cycle.handlingFeeType === "fixed" ? "fixed" : "percent"}
+          defaultValue={cycle.handlingFeeValue ?? ""}
+          warning={t.admin.cycle.handlingFeeEditWarning}
+        />
+      )}
+
 
       <PickupSection
         defPickup1Date={pickupLocal.slice(0, 10)}
@@ -616,7 +684,14 @@ export function EditCycleForm({
 
 // ── Create Cycle Form ─────────────────────────────────────────────────────────
 
-export function CreateCycleForm({ suppliers }: { suppliers: Supplier[] }) {
+export function CreateCycleForm({
+  suppliers,
+  handlingFee,
+}: {
+  suppliers: Supplier[];
+  /** Set when the group pays per order: the fee the new cycle starts from. */
+  handlingFee?: { type: "percent" | "fixed"; value: string } | null;
+}) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [shippingMode, setShippingMode] = useState<"fixed_per_member" | "proportional">(
@@ -639,6 +714,10 @@ export function CreateCycleForm({ suppliers }: { suppliers: Supplier[] }) {
       shippingMode,
       shippingCostPerMember: fd.get("shippingCostPerMember") as string,
       shippingTotal: fd.get("shippingTotal") as string,
+      ...(handlingFee && {
+        handlingFeeType: fd.get("handlingFeeType") as string,
+        handlingFeeValue: fd.get("handlingFeeValue") as string,
+      }),
     };
     startTransition(async () => {
       const result = await adminCreateCycle(data);
@@ -692,6 +771,8 @@ export function CreateCycleForm({ suppliers }: { suppliers: Supplier[] }) {
           defaultPerMember=""
           defaultTotal=""
         />
+
+        {handlingFee && <HandlingFeeFields defaultType={handlingFee.type} defaultValue={handlingFee.value} />}
 
         <PickupSection />
 

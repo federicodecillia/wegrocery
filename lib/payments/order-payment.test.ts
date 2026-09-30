@@ -5,6 +5,7 @@ import {
   ORDER_PAYMENT_MAX_CENTS,
   orderPaymentAmount,
   parseHandlingFee,
+  resolveCycleFee,
 } from "./order-payment";
 
 const fixed = { mode: "fixed_per_member", fixedCents: 300 };
@@ -124,5 +125,21 @@ describe("parseHandlingFee", () => {
     for (const [type, value] of [["other", "10"], ["percent", "-1"], ["percent", ""], ["percent", "101"], ["fixed", "1.234"], ["fixed", "abc"]]) {
       expect(parseHandlingFee(type, value)).toEqual({ error: "invalid" });
     }
+  });
+});
+
+describe("resolveCycleFee", () => {
+  it("gives a wallet cycle no fee, whatever the form sent", () => {
+    expect(resolveCycleFee("wallet", { type: "percent", value: "10" }, null)).toEqual({ fee: null });
+  });
+
+  it("takes the fee typed in the form of a per_order cycle", () => {
+    expect(resolveCycleFee("per_order", { type: "fixed", value: "2" }, null)).toEqual({ fee: { type: "fixed", value: 2 } });
+    expect(resolveCycleFee("per_order", { type: "percent", value: "x" }, null)).toEqual({ error: "invalid" });
+  });
+
+  it("falls back to the last per_order cycle's fee, then to 10%", () => {
+    expect(resolveCycleFee("per_order", undefined, { type: "fixed", value: 3 })).toEqual({ fee: { type: "fixed", value: 3 } });
+    expect(resolveCycleFee("per_order", undefined, null)).toEqual({ fee: { type: "percent", value: 10 } });
   });
 });

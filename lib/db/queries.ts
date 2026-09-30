@@ -17,6 +17,7 @@ import {
 import { buildCycleHistory, type CycleHistoryEntry } from "@/lib/cycle-history";
 import { normalizeEmail } from "@/lib/member-email";
 import { normalizeDraftLines } from "@/lib/order-draft";
+import type { HandlingFee } from "@/lib/payments/order-payment";
 
 // Matches the login email or alias; stored addresses are normalized on write.
 export async function getMemberByEmail(email: string) {
@@ -108,6 +109,20 @@ export async function getOpenCycles(includeExpired = false) {
     .orderBy(asc(orderCycles.orderCloseAt));
   // The supplier's name rides along for the /ordine header and cycle picker.
   return rows.map((r) => ({ ...r.order_cycles, supplierName: r.suppliers?.name ?? null }));
+}
+
+// The handling fee of the most recent pay-per-order cycle: the default of the
+// next one. null before the first.
+export async function getLastHandlingFee(): Promise<HandlingFee | null> {
+  const db = getDb();
+  const [row] = await db
+    .select({ type: orderCycles.handlingFeeType, value: orderCycles.handlingFeeValue })
+    .from(orderCycles)
+    .where(and(eq(orderCycles.paymentMode, "per_order"), isNotNull(orderCycles.handlingFeeType)))
+    .orderBy(desc(orderCycles.createdAt))
+    .limit(1);
+  if (!row || (row.type !== "percent" && row.type !== "fixed") || row.value === null) return null;
+  return { type: row.type, value: Number(row.value) };
 }
 
 export async function getCycleProducts(cycleId: string) {

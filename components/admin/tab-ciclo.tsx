@@ -1,4 +1,6 @@
-import { getAllCycles, getAllSuppliers, getOpenCycles, getOpenCycleStats } from "@/lib/db/queries";
+import { getAllCycles, getAllSuppliers, getLastHandlingFee, getOpenCycles, getOpenCycleStats } from "@/lib/db/queries";
+import { getPaymentSettings } from "@/lib/payments/get-settings";
+import { DEFAULT_HANDLING_FEE } from "@/lib/payments/order-payment";
 import { formatDate } from "@/lib/utils";
 import { Card, CardHeader } from "@/components/ui/card";
 import { t } from "@/lib/i18n";
@@ -13,11 +15,16 @@ import { CancelCycleButton } from "./cancel-cycle-dialog";
 import { ClosedCycleDetails } from "./closed-cycle-details";
 
 export async function TabCiclo() {
-  const [openCycles, cycles, suppliers] = await Promise.all([
+  const [openCycles, cycles, suppliers, settings] = await Promise.all([
     getOpenCycles(true),
     getAllCycles(15),
     getAllSuppliers(),
+    getPaymentSettings(),
   ]);
+  // Pay-per-order groups set the handling fee on each new cycle, starting
+  // from the last one's.
+  const newCycleFee =
+    settings.mode === "per_order" ? ((await getLastHandlingFee()) ?? DEFAULT_HANDLING_FEE) : null;
 
   const statsMap = new Map();
   const now = new Date();
@@ -53,6 +60,9 @@ export async function TabCiclo() {
                   shippingMode: openCycle.shippingMode ?? "fixed_per_member",
                   shippingCostPerMember: openCycle.shippingCostPerMember ?? null,
                   shippingTotal: openCycle.shippingTotal ?? null,
+                  paymentMode: openCycle.paymentMode,
+                  handlingFeeType: openCycle.handlingFeeType,
+                  handlingFeeValue: openCycle.handlingFeeValue,
                 }}
                 stats={{ orderCount: stats?.orderCount ?? 0, grandTotal: stats?.grandTotal ?? 0 }}
                 suppliers={suppliers}
@@ -66,7 +76,10 @@ export async function TabCiclo() {
         </div>
       )}
 
-      <CreateCycleForm suppliers={suppliers} />
+      <CreateCycleForm
+        suppliers={suppliers}
+        handlingFee={newCycleFee && { type: newCycleFee.type, value: String(newCycleFee.value) }}
+      />
 
       {cycles.length > 0 && (
         <Card className="mt-4">

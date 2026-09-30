@@ -12,7 +12,7 @@ import { auditLog, ledgerEntries, members, orderCycles, orderDrafts, orders, pay
 import { upsertCycleProducts } from "@/lib/db/cycle-products";
 import { isUniqueViolation } from "@/lib/db/errors";
 import { ActionError, actionErrorMessage } from "@/lib/action-error";
-import { getMembersByEmails } from "@/lib/db/queries";
+import { getLastHandlingFee, getMembersByEmails } from "@/lib/db/queries";
 import { findEmailConflict, normalizeEmail } from "@/lib/member-email";
 import type { BatchItem } from "drizzle-orm/batch";
 import { orderLinesSnapshot, planClosedOrderEdit } from "@/lib/closed-order-edit";
@@ -50,6 +50,7 @@ import {
 } from "@/lib/notifications/dispatch";
 import { selectCycleAccessMembers } from "@/lib/notifications/reminder";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
+import { parseHandlingFee, resolveCycleFee } from "@/lib/payments/order-payment";
 import { isAboveMaxBalance } from "@/lib/payments/settings";
 import { DEFAULT_ACCESS_LEVEL, normalizeAccessLevel, normalizeRole, type AccessLevel } from "@/lib/roles";
 
@@ -115,6 +116,9 @@ export type CreateCycleInput = {
   shippingMode: ShippingMode;
   shippingCostPerMember: string;
   shippingTotal: string;
+  /** Only read when the group pays per order; omitted = the last cycle's fee. */
+  handlingFeeType?: string;
+  handlingFeeValue?: string;
 };
 
 export async function adminCreateCycle(data: CreateCycleInput): Promise<{error?: string}> {
@@ -133,6 +137,18 @@ export async function adminCreateCycle(data: CreateCycleInput): Promise<{error?:
     if (!accessLevel) return { error: t.errors.invalidAccessLevel };
 
     const db = getDb();
+
+    // The cycle keeps the group's payment mode of this moment for its whole
+    // life; a per_order cycle also gets its handling fee.
+    const { mode: paymentMode } = await getPaymentSettings();
+    const fee = resolveCycleFee(
+      paymentMode,
+      data.handlingFeeType !== undefined && data.handlingFeeValue !== undefined
+        ? { type: data.handlingFeeType, value: data.handlingFeeValue }
+        : undefined,
+      paymentMode === "per_order" ? await getLastHandlingFee() : null,
+    );
+    if ("error" in fee) return { error: t.errors.handlingFeeInvalid };
 
     const cycleId = genId("cyc");
     const now = new Date();
@@ -161,9 +177,12 @@ export async function adminCreateCycle(data: CreateCycleInput): Promise<{error?:
       createdBy: admin.email,
       createdAt: now,
       supplierId: data.supplierId || null,
+      paymentMode,
+      handlingFeeType: fee.fee?.type ?? null,
+      handlingFeeValue: fee.fee ? fee.fee.value.toFixed(2) : null,
     });
 
-    await writeAudit(db, admin.email, "create_cycle", "cycle", cycleId, { ...data, accessLevel });
+    await writeAudit(db, admin.email, "create_cycle", "cycle", cycleId, { ...data, accessLevel, paymentMode });
 
     // Notify members who can see this cycle that it's open. Cycles are always
     // created already-open (no scheduled opens), so this is the single emit
@@ -785,6 +804,8 @@ export async function adminUpdateCycle(
     shippingMode?: string;
     shippingCostPerMember?: string;
     shippingTotal?: string;
+    handlingFeeType?: string;
+    handlingFeeValue?: string;
   },
 ): Promise<{ error?: string; adjustedMembers?: number }> {
   try {
@@ -800,11 +821,26 @@ export async function adminUpdateCycle(
         shippingMode: orderCycles.shippingMode,
         shippingCostPerMember: orderCycles.shippingCostPerMember,
         shippingTotal: orderCycles.shippingTotal,
+        paymentMode: orderCycles.paymentMode,
       })
       .from(orderCycles)
       .where(eq(orderCycles.cycleId, cycleId))
       .limit(1);
     if (!before) return { error: t.errors.cycleNotFound };
+
+    // The handling fee of a per_order cycle can change only while it is open:
+    // after the close it is what members were charged with.
+    let feePatch: { handlingFeeType: string; handlingFeeValue: string } | null = null;
+    if (
+      before.paymentMode === "per_order" &&
+      before.status === "open" &&
+      data.handlingFeeType !== undefined &&
+      data.handlingFeeValue !== undefined
+    ) {
+      const fee = parseHandlingFee(data.handlingFeeType, data.handlingFeeValue);
+      if ("error" in fee) return { error: t.errors.handlingFeeInvalid };
+      feePatch = { handlingFeeType: fee.type, handlingFeeValue: fee.value.toFixed(2) };
+    }
 
     const dates = parseCycleDates(data);
     if ("error" in dates) return { error: dates.error };
@@ -841,6 +877,7 @@ export async function adminUpdateCycle(
         ...(data.supplierId !== undefined && { supplierId: data.supplierId || null }),
         ...(accessLevel !== undefined && { accessLevel }),
         ...shippingPatch,
+        ...feePatch,
       })
       .where(eq(orderCycles.cycleId, cycleId));
 

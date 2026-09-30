@@ -109,3 +109,18 @@ export function parseHandlingFee(type: string, value: string): HandlingFee | { e
   if (type === "percent" && n > 100) return { error: "invalid" };
   return { type, value: n };
 }
+
+export const DEFAULT_HANDLING_FEE: HandlingFee = { type: "percent", value: 10 };
+
+// The fee a new cycle gets: none in wallet mode; in per_order what the form
+// sent, else the last per_order cycle's, else the default.
+export function resolveCycleFee(
+  mode: "wallet" | "per_order",
+  input: { type: string; value: string } | undefined,
+  lastFee: HandlingFee | null,
+): { fee: HandlingFee | null } | { error: "invalid" } {
+  if (mode === "wallet") return { fee: null };
+  if (!input) return { fee: lastFee ?? DEFAULT_HANDLING_FEE };
+  const parsed = parseHandlingFee(input.type, input.value);
+  return "error" in parsed ? parsed : { fee: parsed };
+}
