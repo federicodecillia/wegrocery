@@ -26,6 +26,9 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 - 🧭 **Configuration status.** Settings shows what this installation has connected (database, sign-in, email, payments...) and what is missing, by name only; `npm run doctor` prints the same. Upgrade notes per version are in `docs/upgrading.md`, and `MIGRATE_ON_BUILD=true` applies migrations at every production build (optional).
 - 💳 **Pay per order, groundwork.** The app can now take an order's payment with Stripe, refund it when the order is cancelled or the payment arrives after the close, and retry a refund from Treasury. Not selectable yet: it becomes an option in Settings with the settlement. Upgrade note: apply `drizzle/0021_pay_per_order.sql` before deploying; no new variables, no new Stripe events.
 
+### Changed
+- 🔕 **No email by default when a cycle opens.** New members get the "cycle open" notice in the app only and can turn the email on in their preferences; members who already chose keep their choice.
+
 ## [1.16.1] — 2026-09-30
 
 *A desktop layout, and the groundwork to watch the app's health.*

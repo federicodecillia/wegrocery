@@ -27,6 +27,9 @@ stanno nella PR.
 - 🧭 **Stato della configurazione.** In Impostazioni si vede cosa è collegato in questa installazione (database, accesso, email, pagamenti...) e cosa manca, solo per nome; `npm run doctor` stampa lo stesso. Le note di aggiornamento per versione stanno in `docs/upgrading.md`, e `MIGRATE_ON_BUILD=true` applica le migrazioni a ogni build di produzione (facoltativo).
 - 💳 **Pagamento per ordine, le basi.** L'app ora sa incassare il pagamento di un ordine con Stripe, rimborsarlo se l'ordine viene annullato o se il pagamento arriva a ordini chiusi, e riprovare un rimborso dalla Cassa. Non ancora selezionabile: diventa un'opzione in Impostazioni insieme al conguaglio. Nota di aggiornamento: applicare `drizzle/0021_pay_per_order.sql` prima del deploy; nessuna variabile nuova, nessun evento Stripe nuovo.
 
+### Modificato
+- 🔕 **Niente email predefinita all'apertura del ciclo.** Chi non ha scelto riceve l'avviso "ciclo aperto" solo nell'app e può accendere l'email nelle preferenze; chi aveva già scelto mantiene la sua scelta.
+
 ## [1.16.1] — 30 settembre 2026
 
 *Un layout da computer, e le basi per tenere d'occhio la salute dell'app.*

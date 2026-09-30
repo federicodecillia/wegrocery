@@ -72,6 +72,9 @@ export const it = {
       shipping: "Spedizione",
       fee: "Spese di gestione e preparazione ordine (stima)",
       feeHint: "A conti chiusi ti rimborsiamo quello che non è servito.",
+      refundDifference: (amount: string) =>
+        `Hai pagato ${amount} in più di quanto costa ora l'ordine: te li rimborsiamo sulla carta a conti chiusi.`,
+      dueDifference: (amount: string) => `Mancano ${amount}: si regolano a conti chiusi.`,
       alreadyPaid: "Già pagato",
       toPay: "Da pagare",
       nothingToPay: "Niente da pagare",
