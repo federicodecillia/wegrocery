@@ -196,6 +196,7 @@ export const it = {
     lineItemName: (org: string) => `Ricarica credito ${org}`,
     ledgerNote: "Ricarica online",
     refundLedgerNote: "Rimborso ricarica online",
+    refundFailedLedgerNote: "Rimborso non riuscito",
     atMaximum: "Il tuo saldo è già al massimo consentito dal gruppo.",
     belowOnlineMinimum: (amount: string) =>
       `Puoi ricaricare ancora ${amount}, ma la ricarica online parte da 0,50 €: usa il bonifico.`,
@@ -1056,6 +1057,11 @@ export const it = {
     onlineRefundTitle: "Ricarica rimborsata",
     onlineRefundBody: (amount: string, balance: string) =>
       `Ti sono stati rimborsati ${amount} di una ricarica online. Il tuo nuovo credito è ${balance}.`,
+    refundFailedTitle: "Rimborso non riuscito",
+    refundFailedBody: (amount: string, balance: string) =>
+      `Il rimborso di ${amount} sulla carta non è andato a buon fine e l'importo è tornato sul tuo saldo (ora ${balance}). Chi gestisce la cassa te lo restituirà con un bonifico.`,
+    refundFailedAdminBody: (amount: string, name: string) =>
+      `Il rimborso di ${amount} sulla carta di ${name} non è andato a buon fine e l'importo è tornato sul suo saldo. Restituiscilo con un bonifico: Cassa → Movimento in uscita → Restituzione.`,
     topupReceivedBody: (amount: string, balance: string) =>
       `È stata registrata una ricarica di ${amount} sul tuo saldo. Nuovo saldo: ${balance}.`,
     orderModifiedTitle: "Ordine modificato",

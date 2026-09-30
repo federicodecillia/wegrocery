@@ -50,6 +50,10 @@ describe("categoryForType", () => {
     expect(categoryForType("membership_fee_charged")).toBe("order_charge");
   });
 
+  it("files a failed card refund under top-ups", () => {
+    expect(categoryForType("refund_failed")).toBe("wallet_topup");
+  });
+
   it("returns null for unknown types", () => {
     expect(categoryForType("shipping_charge")).toBeNull();
     expect(categoryForType("something_new")).toBeNull();
