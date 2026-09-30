@@ -56,7 +56,10 @@ const buildInstance = () => createAuth(getDb(), {
 // role, active, memberId and fullName are read from the members table on every
 // request, so a deactivated or deleted member is signed out at once.
 export async function auth(): Promise<AppSession | null> {
-  const session = await getAuthInstance().api.getSession({ headers: await headers() });
+  // headers() first: it marks the page dynamic before anything touches the
+  // database (a statically prerendered page must not open it at build time).
+  const requestHeaders = await headers();
+  const session = await getAuthInstance().api.getSession({ headers: requestHeaders });
   if (!session) return null;
   const member = await findMemberByLoginEmail(session.user.email);
   const claims = sessionClaims(member);
@@ -66,5 +69,6 @@ export async function auth(): Promise<AppSession | null> {
 
 // Server Action: ends this browser's session.
 export async function signOut(): Promise<void> {
-  await getAuthInstance().api.signOut({ headers: await headers() });
+  const requestHeaders = await headers();
+  await getAuthInstance().api.signOut({ headers: requestHeaders });
 }
