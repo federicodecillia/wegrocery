@@ -1,0 +1,86 @@
+import { sql, type SQL } from "drizzle-orm";
+
+// Money invariants every installation must keep, checked read-only every
+// night after the backup (scripts/check-invariants.mts) and in the
+// integration tests. Each check returns the ids that break it, never member
+// data. An empty result everywhere = the books add up.
+
+export type InvariantCheck = { name: string; description: string; query: SQL };
+
+export const INVARIANT_CHECKS: InvariantCheck[] = [
+  {
+    name: "payment_refunded_cents",
+    description: "payments.refunded_cents equals the sum of its pending or succeeded refunds",
+    query: sql`
+      SELECT p.payment_id AS id FROM payments p
+      LEFT JOIN refunds r ON r.payment_id = p.payment_id AND r.status IN ('pending', 'succeeded')
+      GROUP BY p.payment_id, p.refunded_cents
+      HAVING p.refunded_cents <> coalesce(sum(r.amount_cents), 0)`,
+  },
+  {
+    name: "refund_debit",
+    description: "every refund Stripe accepted has its debit in the ledger",
+    query: sql`
+      SELECT r.refund_id AS id FROM refunds r
+      WHERE r.status IN ('pending', 'succeeded')
+        AND NOT EXISTS (
+          SELECT 1 FROM ledger_entries l
+          WHERE l.refund_id = r.refund_id AND l.type IN ('correction', 'order_refund')
+        )`,
+  },
+  {
+    name: "refund_reversal",
+    description: "a debited refund that failed later has its refund_failed reversal",
+    query: sql`
+      SELECT r.refund_id AS id FROM refunds r
+      WHERE r.status IN ('failed', 'canceled')
+        AND EXISTS (SELECT 1 FROM ledger_entries l WHERE l.refund_id = r.refund_id AND l.type IN ('correction', 'order_refund'))
+        AND NOT EXISTS (SELECT 1 FROM ledger_entries l WHERE l.refund_id = r.refund_id AND l.type = 'refund_failed')`,
+  },
+  {
+    name: "requested_refund_movement",
+    description: "a refund Stripe has not answered moved no money",
+    query: sql`
+      SELECT DISTINCT r.refund_id AS id FROM refunds r
+      JOIN ledger_entries l ON l.refund_id = r.refund_id
+      WHERE r.status = 'requested'`,
+  },
+  {
+    name: "paid_payment_credit",
+    description: "every paid payment is credited exactly once (top-up or order payment)",
+    query: sql`
+      SELECT p.payment_id AS id FROM payments p
+      WHERE p.status IN ('succeeded', 'partially_refunded', 'refunded')
+        AND (
+          SELECT count(*) FROM ledger_entries l
+          WHERE l.payment_id = p.payment_id
+            AND l.type = CASE p.kind WHEN 'order' THEN 'order_payment' WHEN 'balance' THEN 'balance_payment' ELSE 'topup' END
+        ) <> 1
+        AND p.kind <> 'balance'`,
+  },
+  {
+    name: "unpaid_payment_credit",
+    description: "a payment that was never paid moved no money",
+    query: sql`
+      SELECT DISTINCT p.payment_id AS id FROM payments p
+      JOIN ledger_entries l ON l.payment_id = p.payment_id
+      WHERE p.status IN ('pending', 'failed', 'expired')`,
+  },
+  {
+    name: "closed_cycle_charge",
+    // Cycles closed with no charge at all are history imported from before
+    // the app (their balances came in as opening amounts): not checked.
+    description: "every member with a positive order on a closed cycle was charged for it",
+    query: sql`
+      SELECT o.cycle_id || ':' || o.member_id AS id FROM orders o
+      JOIN order_cycles c ON c.cycle_id = o.cycle_id
+      WHERE c.status IN ('closed', 'cancelled')
+      GROUP BY o.cycle_id, o.member_id
+      HAVING sum(o.line_total) > 0
+        AND NOT EXISTS (
+          SELECT 1 FROM ledger_entries l
+          WHERE l.cycle_id = o.cycle_id AND l.member_id = o.member_id AND l.type = 'order_charge'
+        )
+        AND EXISTS (SELECT 1 FROM ledger_entries l WHERE l.cycle_id = o.cycle_id AND l.type = 'order_charge')`,
+  },
+];

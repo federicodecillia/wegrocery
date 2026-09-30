@@ -13,6 +13,9 @@ name: Daily Neon Backup
 #   - GDRIVE_BACKUP_PATH  Destination, e.g. `gdrive:PortaMoneta/GAS-Backups`
 #
 # Restore: see AGENTS.md → "Backup & Restore" section.
+#
+# After the backup, the `invariants` job checks read-only that the books add
+# up (lib/invariants.ts): a failure fails the run and GitHub emails the owner.
 
 on:
   schedule:
@@ -112,3 +115,26 @@ jobs:
         run: |
           rm -f gas-backup-*.sql.gz
           rm -f "$HOME/.config/rclone/rclone.conf"
+
+  invariants:
+    needs: backup
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      # SELECT only; prints check names and row ids, never member data.
+      - name: Check the money invariants
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: node node_modules/tsx/dist/cli.mjs scripts/check-invariants.mts
+
