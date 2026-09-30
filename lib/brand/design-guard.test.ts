@@ -46,6 +46,10 @@ describe("design guard", () => {
     expect(hits(/(?<![\w-])text-(primary|accent)(?![-\w])/)).toEqual([]);
   });
 
+  it("has no text under 12px", () => {
+    expect(hits(/text-\[(9|10|11)px\]/)).toEqual([]);
+  });
+
   it("has no hard-coded brand hex", () => {
     expect(hits(/#(a07020|f5a623|f9c8c8)/i)).toEqual([]);
   });

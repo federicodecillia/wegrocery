@@ -34,7 +34,7 @@ export async function TabOrdini({ cycleId, memberId }: Props) {
         {selectedMember && (
           <div className="rounded-xl border border-brand-border bg-white px-4 py-3 shadow-sm">
             <div className="text-[13px] font-bold text-brand-near-black">{selectedMember.fullName}</div>
-            <div className="mt-0.5 font-mono text-[10px] text-muted">
+            <div className="mt-0.5 font-mono text-label text-muted">
               {selectedMember.email} · {orders.length} cicl{orders.length === 1 ? "o" : "i"} ·{" "}
               {formatEur(orders.reduce((s, o) => s + o.total, 0))} totale
             </div>
@@ -53,14 +53,14 @@ export async function TabOrdini({ cycleId, memberId }: Props) {
                   <div>
                     <div className="text-[13px] font-bold text-brand-near-black">{cycle.cycleTitle}</div>
                     {cycle.pickupDate && (
-                      <div className="mt-0.5 font-mono text-[10px] text-muted">
+                      <div className="mt-0.5 font-mono text-label text-muted">
                         {t.admin.orders.pickupLabel} {formatDate(cycle.pickupDate)}
                       </div>
                     )}
                   </div>
                   <div className="flex items-center gap-2">
                     <span
-                      className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                      className={`rounded-full px-2 py-0.5 text-label font-bold ${
                         cycle.cycleStatus === "open"
                           ? "bg-accent-soft text-accent-text"
                           : "bg-black/[0.05] text-brand-gray"
@@ -82,7 +82,7 @@ export async function TabOrdini({ cycleId, memberId }: Props) {
                         {line.variant && (
                           <span className="text-brand-gray">· {line.variant}</span>
                         )}
-                        <span className="font-mono text-[11px] text-muted">
+                        <span className="font-mono text-label text-muted">
                           ×{line.quantity}
                         </span>
                       </span>
@@ -126,16 +126,16 @@ export async function TabOrdini({ cycleId, memberId }: Props) {
       {/* Stats */}
       <div className="grid grid-cols-2 gap-3">
         <div className="rounded-xl bg-primary-soft px-4 py-3">
-          <div className="font-mono text-[10px] uppercase text-brand-gray">{t.admin.orders.membersLabel}</div>
+          <div className="font-mono text-label uppercase text-brand-gray">{t.admin.orders.membersLabel}</div>
           <div className="text-[24px] font-bold text-brand-near-black">{summary.orderCount}</div>
         </div>
         <div className="rounded-xl bg-accent-soft px-4 py-3">
-          <div className="font-mono text-[10px] uppercase text-brand-gray">{t.admin.orders.totalLabel}</div>
+          <div className="font-mono text-label uppercase text-brand-gray">{t.admin.orders.totalLabel}</div>
           <div className="text-[24px] font-bold text-brand-near-black">
             {formatEur(summary.grandTotal)}
           </div>
           {summary.shippingTotal > 0 && (
-            <div className="mt-0.5 font-mono text-[10px] text-muted">
+            <div className="mt-0.5 font-mono text-label text-muted">
               {t.admin.orders.productsBreakdown(formatEur(summary.productsTotal), formatEur(summary.shippingTotal))}
             </div>
           )}
@@ -167,7 +167,7 @@ export async function TabOrdini({ cycleId, memberId }: Props) {
           <Card>
             <CardHeader>
               <h3 className="text-[13px] font-bold text-brand-near-black">{t.admin.orders.perProductTitle}</h3>
-              <p className="mt-0.5 text-[11px] text-brand-gray">
+              <p className="mt-0.5 text-label text-brand-gray">
                 {t.admin.orders.perProductSubtitle}
               </p>
             </CardHeader>
@@ -178,7 +178,7 @@ export async function TabOrdini({ cycleId, memberId }: Props) {
                     <span className="text-[16px] leading-none">{getProductEmoji(p.name)}</span>
                     <span className="text-[13px] font-medium text-brand-near-black">
                       {p.name}
-                      {p.unit && <span className="ml-1 font-mono text-[10px] text-muted">/{p.unit}</span>}
+                      {p.unit && <span className="ml-1 font-mono text-label text-muted">/{p.unit}</span>}
                     </span>
                     {p.variant && (
                       <span className="text-[12px] text-brand-gray">{p.variant}</span>

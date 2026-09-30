@@ -87,7 +87,7 @@ export function CatalogProductForm({
 
   const inputCls =
     "w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-accent/30";
-  const labelCls = "mb-1 block text-[11px] font-semibold uppercase tracking-wide text-brand-gray";
+  const labelCls = "mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray";
 
   return (
     <form onSubmit={handleSubmit} className="mb-4 rounded-xl border border-brand-border bg-white p-4 shadow-sm">
@@ -391,7 +391,7 @@ export function CatalogLoadForm({
         <p className="text-[13px] font-bold text-brand-near-black">{t.admin.products.loadFromCatalogTitle}</p>
         <button
           onClick={() => setSelected(new Set(catalogProducts.map((p) => p.catalogProductId)))}
-          className="text-[11px] font-semibold text-accent-text"
+          className="text-label font-semibold text-accent-text"
         >
           {t.admin.products.selectAll}
         </button>
@@ -413,7 +413,7 @@ export function CatalogLoadForm({
               {p.name}
               {p.variant && <span className="ml-1 text-[12px] text-brand-gray">{p.variant}</span>}
               {p.format && (
-                <span className="ml-1 font-mono text-[10px] text-muted">({p.format})</span>
+                <span className="ml-1 font-mono text-label text-muted">({p.format})</span>
               )}
             </div>
             <div className="font-mono text-[12px] font-semibold text-brand-near-black">
@@ -491,13 +491,13 @@ export function EditCycleProductForm({
 
   const inputCls =
     "w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-accent/30";
-  const labelCls = "mb-1 block text-[11px] font-semibold uppercase tracking-wide text-brand-gray";
+  const labelCls = "mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray";
 
   return (
     <form onSubmit={handleSubmit} className="my-2 rounded-lg border border-brand-border bg-[#fdfdfd] p-3 shadow-sm">
       <div className="mb-2 flex items-center justify-between">
         <p className="text-[12px] font-bold text-brand-near-black">{t.admin.products.editCatalogProduct}</p>
-        <button type="button" onClick={onClose} className="text-[11px] text-brand-gray">
+        <button type="button" onClick={onClose} className="text-label text-brand-gray">
           ✕ {t.admin.common.cancel}
         </button>
       </div>
@@ -610,7 +610,7 @@ export function ProductListItem({
 
   return (
     <div className="flex items-center gap-3 px-4 py-2.5 hover:bg-brand-warm-white/50 group">
-      <span className="w-6 shrink-0 font-mono text-[11px] text-muted">
+      <span className="w-6 shrink-0 font-mono text-label text-muted">
         {index + 1}
       </span>
       <span className="shrink-0 text-[16px] leading-none">{emoji}</span>
@@ -620,7 +620,7 @@ export function ProductListItem({
           <span className="ml-1.5 text-[12px] text-brand-gray">{product.variant}</span>
         )}
         {product.format && (
-          <span className="ml-1.5 font-mono text-[10px] text-muted">
+          <span className="ml-1.5 font-mono text-label text-muted">
             {product.format}
           </span>
         )}
@@ -631,14 +631,14 @@ export function ProductListItem({
             {formatEur(parseFloat(product.unitPrice))}
           </div>
           {product.pricePerKg && (
-            <div className="font-mono text-[10px] text-muted">
+            <div className="font-mono text-label text-muted">
               ({formatEur(parseFloat(product.pricePerKg))}/kg)
             </div>
           )}
         </div>
         <button
           onClick={() => setIsEditing(true)}
-          className="rounded-full bg-white px-2 py-1 text-[11px] font-bold text-accent-text shadow-sm ring-1 ring-inset ring-accent/20 hover:bg-accent hover:text-on-accent transition-colors opacity-0 group-hover:opacity-100"
+          className="rounded-full bg-white px-2 py-1 text-label font-bold text-accent-text shadow-sm ring-1 ring-inset ring-accent/20 hover:bg-accent hover:text-on-accent transition-colors opacity-0 group-hover:opacity-100"
         >
           {t.admin.common.edit}
         </button>
@@ -692,13 +692,13 @@ export function CatalogManager({
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-[14px] font-bold text-brand-near-black">{supplierName}</h3>
-          <p className="text-[11px] text-brand-gray">{t.admin.products.catalogCount(products.length)}</p>
+          <p className="text-label text-brand-gray">{t.admin.products.catalogCount(products.length)}</p>
         </div>
         <div className="flex gap-2">
           <CatalogCsvActions supplierId={supplierId} />
           <button
             onClick={() => setShowAdd(true)}
-            className="rounded-lg bg-accent px-3 py-1.5 text-[11px] font-bold text-on-accent transition-transform active:scale-95"
+            className="rounded-lg bg-accent px-3 py-1.5 text-label font-bold text-on-accent transition-transform active:scale-95"
           >
             {t.admin.products.addProductButton}
           </button>
@@ -730,11 +730,11 @@ export function CatalogManager({
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <span className="truncate text-[13px] font-medium text-brand-near-black">{p.name}</span>
-                  {!p.active && <span className="rounded bg-brand-gray-light px-1 py-0.5 text-[10px] font-bold uppercase text-brand-gray">{t.admin.products.archivedBadge}</span>}
+                  {!p.active && <span className="rounded bg-brand-gray-light px-1 py-0.5 text-label font-bold uppercase text-brand-gray">{t.admin.products.archivedBadge}</span>}
                 </div>
-                <div className="flex items-center gap-2 text-[11px] text-brand-gray">
+                <div className="flex items-center gap-2 text-label text-brand-gray">
                   {p.variant && <span>{p.variant}</span>}
-                  {p.format && <span className="font-mono text-[10px] text-muted">({p.format})</span>}
+                  {p.format && <span className="font-mono text-label text-muted">({p.format})</span>}
                   {p.category && <span className="rounded-full bg-accent-soft px-2 text-accent-text">{p.category}</span>}
                 </div>
               </div>
@@ -743,20 +743,20 @@ export function CatalogManager({
                   {formatEur(parseFloat(p.unitPrice))}
                 </div>
                 {p.pricePerKg && (
-                  <div className="font-mono text-[10px] text-muted">
+                  <div className="font-mono text-label text-muted">
                     ({formatEur(parseFloat(p.pricePerKg))}/kg)
                   </div>
                 )}
                 <div className="mt-1 flex justify-end gap-2">
                   <button
                     onClick={() => setEditingId(p.catalogProductId)}
-                    className="text-[10px] font-bold text-accent-text hover:underline"
+                    className="text-label font-bold text-accent-text hover:underline"
                   >
                     {t.admin.common.edit}
                   </button>
                   <button
                     onClick={() => handleArchive(p.catalogProductId, !p.active)}
-                    className="text-[10px] font-bold text-brand-gray hover:text-brand-near-black hover:underline"
+                    className="text-label font-bold text-brand-gray hover:text-brand-near-black hover:underline"
                   >
                     {p.active ? t.admin.common.archive : t.admin.common.restore}
                   </button>

@@ -59,7 +59,7 @@ export default async function HomePage() {
         }`}
       >
         <div
-          className={`mb-[10px] font-mono text-[10px] font-semibold uppercase tracking-[0.13em] ${
+          className={`mb-[10px] font-mono text-label font-semibold uppercase tracking-[0.13em] ${
             isNegative ? "text-brand-red" : "text-primary-text"
           }`}
         >
@@ -86,7 +86,7 @@ export default async function HomePage() {
           }`}
         >
           <div className="flex-1 bg-white/60 p-[9px_13px]">
-            <div className="mb-[3px] font-mono text-[10px] uppercase tracking-[0.07em] text-primary-text">
+            <div className="mb-[3px] font-mono text-label uppercase tracking-[0.07em] text-primary-text">
               {t.home.thisOrder}
             </div>
             <div className="font-mono text-[13px] font-bold text-brand-near-black">
@@ -98,7 +98,7 @@ export default async function HomePage() {
               isNegative ? "border-l border-brand-red/30" : "border-l border-primary-mid"
             }`}
           >
-            <div className="mb-[3px] font-mono text-[10px] uppercase tracking-[0.07em] text-primary-text">
+            <div className="mb-[3px] font-mono text-label uppercase tracking-[0.07em] text-primary-text">
               {t.home.afterOrder}
             </div>
             <div
@@ -121,7 +121,7 @@ export default async function HomePage() {
           </div>
         ) : (
           <div className="mt-[10px] text-right">
-            <Link href="/ricarica" className="font-mono text-[11px] font-bold uppercase tracking-widest text-primary-text">
+            <Link href="/ricarica" className="font-mono text-label font-bold uppercase tracking-widest text-primary-text">
               {t.home.rechargeLink} →
             </Link>
           </div>
@@ -153,12 +153,12 @@ export default async function HomePage() {
               {myLines.length > 0 ? (
                 <div className="overflow-hidden rounded-[18px] border border-brand-border bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
                   <div className="flex items-center justify-between border-b border-brand-border px-4 py-[14px]">
-                    <span className="font-mono text-[10px] uppercase tracking-[0.1em] text-brand-gray">
+                    <span className="font-mono text-label uppercase tracking-[0.1em] text-brand-gray">
                       {t.home.yourOrder}
                     </span>
                     <Link
                       href={`/ordine?cycleId=${cycle.cycleId}`}
-                      className="rounded-full border border-brand-border px-[13px] py-[5px] font-mono text-[11px] font-bold uppercase tracking-widest text-brand-near-black"
+                      className="rounded-full border border-brand-border px-[13px] py-[5px] font-mono text-label font-bold uppercase tracking-widest text-brand-near-black"
                     >
                       {t.home.editButton}
                     </Link>
@@ -180,7 +180,7 @@ export default async function HomePage() {
                               {p?.name ?? "?"}
                             </div>
                             {meta && (
-                              <div className="mt-[1px] font-mono text-[11px] text-brand-gray">{meta}</div>
+                              <div className="mt-[1px] font-mono text-label text-brand-gray">{meta}</div>
                             )}
                           </div>
                         </div>
@@ -215,11 +215,11 @@ export default async function HomePage() {
         <div className="mb-[14px] flex items-center justify-between rounded-[18px] border border-brand-border bg-white p-[18px] shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
           <div>
             <div className="text-[15px] font-bold">{t.home.noOpenOrders}</div>
-            <div className="font-mono text-[10px] text-muted">
+            <div className="font-mono text-label text-muted">
               {t.home.noOpenOrdersHint}
             </div>
           </div>
-          <span className="rounded-full bg-black/[0.06] px-2.5 py-1 font-mono text-[10px] text-brand-gray">
+          <span className="rounded-full bg-black/[0.06] px-2.5 py-1 font-mono text-label text-brand-gray">
             {t.home.closed}
           </span>
         </div>
@@ -229,12 +229,12 @@ export default async function HomePage() {
       {recentMovements.length > 0 && (
         <div className="mt-[4px]">
           <div className="mb-[10px] flex items-center justify-between">
-            <span className="font-mono text-[10px] uppercase tracking-[0.1em] text-brand-gray">
+            <span className="font-mono text-label uppercase tracking-[0.1em] text-brand-gray">
               {t.home.recentMovements}
             </span>
             <Link
               href="/storico"
-              className="font-mono text-[10px] font-bold text-primary-text"
+              className="font-mono text-label font-bold text-primary-text"
             >
               {t.home.seeAll}
             </Link>
@@ -249,7 +249,7 @@ export default async function HomePage() {
               >
                 <div>
                   <div className="text-[13px] font-medium text-brand-near-black">{label}</div>
-                  <div className="mt-[2px] font-mono text-[10px] text-muted">
+                  <div className="mt-[2px] font-mono text-label text-muted">
                     {formatDateShort(e.entryDate)}
                   </div>
                 </div>

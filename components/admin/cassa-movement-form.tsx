@@ -19,7 +19,7 @@ import { MemberCombobox, type PickerMember } from "./member-combobox";
 
 const inputCls =
   "w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-accent/30";
-const labelCls = "mb-1 block text-[11px] font-semibold uppercase tracking-wide text-brand-gray";
+const labelCls = "mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray";
 
 function todayInput(): string {
   return utcToZonedLocalInput(new Date()).slice(0, 10);
@@ -100,7 +100,7 @@ function Recap({
       <dl className="divide-y divide-brand-border rounded-lg border border-brand-border">
         {lines.map((line) => (
           <div key={line.label} className="flex items-baseline justify-between gap-3 px-3 py-2">
-            <dt className="shrink-0 text-[11px] font-semibold uppercase tracking-wide text-brand-gray">{line.label}</dt>
+            <dt className="shrink-0 text-label font-semibold uppercase tracking-wide text-brand-gray">{line.label}</dt>
             <dd className="min-w-0 break-words text-right text-[13px] text-brand-near-black">{line.value}</dd>
           </div>
         ))}
@@ -438,7 +438,7 @@ export function OutgoingMovementForm({ members }: { members: PickerMember[] }) {
               </label>
             ))}
           </div>
-          <p className="mt-1 text-[11px] text-brand-gray">{t.admin.treasury.kindHints[kind]}</p>
+          <p className="mt-1 text-label text-brand-gray">{t.admin.treasury.kindHints[kind]}</p>
         </fieldset>
         <MemberCombobox
           members={members}
@@ -464,7 +464,7 @@ export function OutgoingMovementForm({ members }: { members: PickerMember[] }) {
                   <button
                     type="button"
                     onClick={() => setAmount(formatDecimalInput(member.balance.toFixed(2)))}
-                    className="mt-1 text-left text-[11px] font-semibold text-accent-text underline"
+                    className="mt-1 text-left text-label font-semibold text-accent-text underline"
                   >
                     {t.admin.treasury.payoutAll} ({formatMoney(member.balance)})
                   </button>
@@ -541,9 +541,9 @@ export function OutgoingMovementForm({ members }: { members: PickerMember[] }) {
       >
         <span>
           <span className="block text-[13px] font-bold text-brand-near-black">{t.admin.treasury.outgoingTitle}</span>
-          <span className="block text-[11px] text-brand-gray">{t.admin.treasury.outgoingHint}</span>
+          <span className="block text-label text-brand-gray">{t.admin.treasury.outgoingHint}</span>
         </span>
-        <span aria-hidden className="text-[11px] text-muted">
+        <span aria-hidden className="text-label text-muted">
           {open ? "▲" : "▼"}
         </span>
       </button>

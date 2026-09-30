@@ -24,6 +24,7 @@ stanno nella PR.
 ### Modificato
 - 👓 **Testi che si leggono.** Pulsanti, link, etichette e importi hanno ora abbastanza contrasto in ogni schermata: testo scuro sui pulsanti colorati, tonalità più scure per i testi colorati e grigi, un rosso più profondo per gli importi negativi.
 - 🎨 **Colori che seguono la palette del gruppo.** I colori dei testi si calcolano dai colori del brand, così un gruppo con un'altra palette resta leggibile. Nota di aggiornamento: nessuna azione richiesta; i colori del tema devono essere esadecimali (`#rgb` o `#rrggbb`), altrimenti si usa la palette di default con un avviso `[brand]` nei log.
+- 🔎 **Niente sotto i 12 px.** Etichette, badge e didascalie che erano a 10 o 11 px sono ora a 12 px, e da telefono i campi dei form non ingrandiscono più la pagina quando li tocchi.
 
 ### Risolto
 - 💶 **Saldo su una riga.** In Home il saldo non va più a capo dopo il segno nei formati inglesi.

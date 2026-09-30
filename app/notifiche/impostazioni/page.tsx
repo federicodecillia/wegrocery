@@ -19,7 +19,7 @@ export default async function NotificationSettingsPage() {
       <div className="mb-4">
         <Link
           href="/notifiche"
-          className="font-mono text-[11px] font-bold uppercase tracking-widest text-brand-gray"
+          className="font-mono text-label font-bold uppercase tracking-widest text-brand-gray"
         >
           ← {t.notifications.settings.back}
         </Link>

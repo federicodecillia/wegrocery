@@ -175,7 +175,7 @@ export function EmojiPicker({ name, value, onChange }: Props) {
               )}
             </div>
 
-            <div className="flex items-center justify-between border-t border-brand-border bg-brand-warm-white px-3 py-2 text-[10px] text-brand-gray">
+            <div className="flex items-center justify-between border-t border-brand-border bg-brand-warm-white px-3 py-2 text-label text-brand-gray">
               <span>{t.common.emojiCountOf(filtered.length, EMOJI_CATALOG.length)}</span>
               <button
                 type="button"

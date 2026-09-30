@@ -84,7 +84,7 @@ export function ClosedCycleDetails({
     return (
       <button
         onClick={handleOpen}
-        className="rounded-lg bg-accent/10 px-3 py-1 text-[11px] font-bold text-accent-text hover:bg-accent/20"
+        className="rounded-lg bg-accent/10 px-3 py-1 text-label font-bold text-accent-text hover:bg-accent/20"
       >
         {label}
       </button>
@@ -129,7 +129,7 @@ export function ClosedCycleDetails({
             <div className="py-20 text-center text-brand-gray">{t.admin.closedCycleDetails.noOrders}</div>
           ) : (
             <div className="space-y-8">
-              <div className="flex items-center gap-2 rounded-lg bg-primary/5 px-3 py-2 text-[11px] text-brand-gray">
+              <div className="flex items-center gap-2 rounded-lg bg-primary/5 px-3 py-2 text-label text-brand-gray">
                 <span className="text-[13px]">👆</span>
                 <span>{t.admin.closedCycleDetails.rectifyHint}</span>
               </div>
@@ -149,7 +149,7 @@ export function ClosedCycleDetails({
                             onClick={() =>
                               setEditTarget({ kind: "edit", memberId, memberName })
                             }
-                            className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-bold text-primary-text hover:bg-primary/20"
+                            className="rounded-full bg-primary/10 px-2.5 py-0.5 text-label font-bold text-primary-text hover:bg-primary/20"
                           >
                             {t.admin.closedCycleDetails.editQtyButton}
                           </button>
@@ -166,12 +166,12 @@ export function ClosedCycleDetails({
                             <span className="shrink-0 text-[16px]">🚚</span>
                             <div className="min-w-0">
                               <div className="font-medium">{t.admin.closedCycleDetails.shippingLine}</div>
-                              <div className="text-[10px] text-brand-gray">
+                              <div className="text-label text-brand-gray">
                                 {t.admin.closedCycleDetails.shippingQuota}
                               </div>
                             </div>
                           </div>
-                          <span className="shrink-0 font-mono text-[11px] font-bold text-brand-near-black">
+                          <span className="shrink-0 font-mono text-label font-bold text-brand-near-black">
                             {formatEur(memberShipping)}
                           </span>
                         </div>
@@ -243,17 +243,17 @@ function OrderLineRow({ line, onSaved }: { line: OrderDetail; onSaved: () => voi
             <div className="truncate font-medium">
               {line.productName} {line.variant && <span className="text-brand-gray">({line.variant})</span>}
               {adjusted && (
-                <span className="ml-1 rounded-full bg-primary/15 px-1.5 py-px text-[10px] font-bold uppercase tracking-wide text-primary-text">
+                <span className="ml-1 rounded-full bg-primary/15 px-1.5 py-px text-label font-bold uppercase tracking-wide text-primary-text">
                   {t.admin.closedCycleDetails.adjustedBadge}
                 </span>
               )}
             </div>
-            <div className="truncate text-[10px] text-brand-gray">
+            <div className="truncate text-label text-brand-gray">
               {[line.supplierName ?? line.productSupplier, line.category, line.format].filter(Boolean).join(" · ")}
             </div>
           </div>
         </div>
-        <span className="shrink-0 text-right font-mono text-[11px] text-brand-gray">
+        <span className="shrink-0 text-right font-mono text-label text-brand-gray">
           {adjusted ? (
             <>
               {/* Original (struck): same `qty × unit_price = total` format
@@ -397,7 +397,7 @@ function OrderLineEditForm({
 
   return (
     <div className="space-y-2 rounded-lg border border-primary/30 bg-primary-soft px-2.5 py-2">
-      <div className="flex items-center gap-2 text-[11px] text-brand-near-black">
+      <div className="flex items-center gap-2 text-label text-brand-near-black">
         <span className="text-[14px]">{line.emoji || getProductEmoji(line.productName)}</span>
         <span className="font-bold">{line.productName}</span>
         <span className="font-mono text-brand-gray">
@@ -405,7 +405,7 @@ function OrderLineEditForm({
         </span>
       </div>
       <div className="grid grid-cols-2 gap-2">
-        <label className="flex flex-col gap-0.5 text-[10px] font-semibold uppercase tracking-wide text-brand-gray">
+        <label className="flex flex-col gap-0.5 text-label font-semibold uppercase tracking-wide text-brand-gray">
           {t.admin.closedCycleDetails.qtyReceived(unit)}
           <input
             type="text"
@@ -416,7 +416,7 @@ function OrderLineEditForm({
             className="rounded-md border border-brand-border bg-white px-2 py-1.5 text-[13px] font-mono text-brand-near-black focus:outline-none focus:ring-2 focus:ring-primary/40"
           />
         </label>
-        <label className="flex flex-col gap-0.5 text-[10px] font-semibold uppercase tracking-wide text-brand-gray">
+        <label className="flex flex-col gap-0.5 text-label font-semibold uppercase tracking-wide text-brand-gray">
           {t.admin.closedCycleDetails.totalEur}
           <input
             type="text"
@@ -436,7 +436,7 @@ function OrderLineEditForm({
           type="button"
           onClick={handleSave}
           disabled={isPending}
-          className="flex-1 rounded-md bg-primary px-2 py-1.5 text-[11px] font-bold text-on-primary disabled:opacity-60"
+          className="flex-1 rounded-md bg-primary px-2 py-1.5 text-label font-bold text-on-primary disabled:opacity-60"
         >
           {isPending ? t.admin.common.saving : t.admin.common.save}
         </button>
@@ -444,7 +444,7 @@ function OrderLineEditForm({
           type="button"
           onClick={onCancel}
           disabled={isPending}
-          className="rounded-md border border-brand-border bg-white px-2 py-1.5 text-[11px] font-bold text-brand-gray"
+          className="rounded-md border border-brand-border bg-white px-2 py-1.5 text-label font-bold text-brand-gray"
         >
           {t.admin.common.cancel}
         </button>

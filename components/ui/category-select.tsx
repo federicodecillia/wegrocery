@@ -141,7 +141,7 @@ export function CategorySelect({ name, value, extra = [], placeholder = t.common
               }`}
             >
               <span>{opt}</span>
-              {normalizeCategory(opt) === normalizeCategory(selected) && <span className="text-[11px] text-accent-text">✓</span>}
+              {normalizeCategory(opt) === normalizeCategory(selected) && <span className="text-label text-accent-text">✓</span>}
             </button>
           ))}
 
@@ -166,7 +166,7 @@ export function CategorySelect({ name, value, extra = [], placeholder = t.common
                 <button
                   type="button"
                   onClick={confirmAdd}
-                  className="rounded-md bg-accent px-2 py-1 text-[11px] font-bold text-on-accent"
+                  className="rounded-md bg-accent px-2 py-1 text-label font-bold text-on-accent"
                 >
                   OK
                 </button>
@@ -176,7 +176,7 @@ export function CategorySelect({ name, value, extra = [], placeholder = t.common
                     setAdding(false);
                     setNewCat("");
                   }}
-                  className="rounded-md px-2 py-1 text-[11px] text-brand-gray"
+                  className="rounded-md px-2 py-1 text-label text-brand-gray"
                 >
                   ✕
                 </button>

@@ -53,14 +53,14 @@ export function SociForm({ member, onClose }: { member?: Member; onClose?: () =>
           {isEdit ? t.admin.members.editMember(member.fullName) : t.admin.members.addMember}
         </p>
         {isEdit && onClose && (
-          <button type="button" onClick={onClose} className="text-[11px] text-brand-gray">
+          <button type="button" onClick={onClose} className="text-label text-brand-gray">
             ✕ {t.admin.common.cancel}
           </button>
         )}
       </div>
       <div className="space-y-3">
         <div>
-          <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-brand-gray">
+          <label className="mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray">
             {t.admin.members.nameLabel}
           </label>
           <input
@@ -71,7 +71,7 @@ export function SociForm({ member, onClose }: { member?: Member; onClose?: () =>
           />
         </div>
         <div>
-          <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-brand-gray">
+          <label className="mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray">
             {t.admin.members.emailLabel}
           </label>
           <input
@@ -83,7 +83,7 @@ export function SociForm({ member, onClose }: { member?: Member; onClose?: () =>
           />
         </div>
         <div>
-          <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-brand-gray">
+          <label className="mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray">
             {t.admin.members.aliasEmailLabel}
             <span className="ml-1 font-normal normal-case text-muted">{t.admin.members.aliasEmailHint}</span>
           </label>
@@ -97,7 +97,7 @@ export function SociForm({ member, onClose }: { member?: Member; onClose?: () =>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-brand-gray">
+            <label className="mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray">
               {t.admin.members.roleLabel}
             </label>
             <select
@@ -113,7 +113,7 @@ export function SociForm({ member, onClose }: { member?: Member; onClose?: () =>
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-brand-gray">
+            <label className="mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray">
               {t.admin.members.statusLabel}
             </label>
             <select
@@ -175,7 +175,7 @@ export function SociList({ members }: { members: Member[] }) {
     if (list.length === 0) return null;
     return (
       <div className="mb-4">
-        <p className="mb-1 px-1 font-mono text-[10px] uppercase tracking-wider text-muted">
+        <p className="mb-1 px-1 font-mono text-label uppercase tracking-wider text-muted">
           {label} ({list.length})
         </p>
         <div className="divide-y divide-brand-border rounded-xl border border-brand-border bg-white shadow-sm">
@@ -190,12 +190,12 @@ export function SociList({ members }: { members: Member[] }) {
                   <div className="flex items-center gap-2">
                     <span className="text-[13px] font-medium text-brand-near-black">{m.fullName}</span>
                     {!m.active && (
-                      <span className="rounded-full bg-brand-red-light px-1.5 py-0.5 text-[10px] font-bold text-brand-red">
+                      <span className="rounded-full bg-brand-red-light px-1.5 py-0.5 text-label font-bold text-brand-red">
                         {t.admin.members.inactiveBadge}
                       </span>
                     )}
                   </div>
-                  <div className="font-mono text-[10px] text-muted">
+                  <div className="font-mono text-label text-muted">
                     {m.email}
                     {m.aliasEmail && (
                       <span className="ml-1 text-accent-text">· {m.aliasEmail}</span>
@@ -203,19 +203,19 @@ export function SociList({ members }: { members: Member[] }) {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${roleColor}`}>
+                  <span className={`rounded-full px-2 py-0.5 text-label font-semibold ${roleColor}`}>
                     {getRoleLabel(m.role)}
                   </span>
                   <button
                     onClick={() => setEditingId(m.memberId)}
-                    className="rounded-full border border-brand-border px-2.5 py-1 text-[10px] font-semibold text-brand-gray"
+                    className="rounded-full border border-brand-border px-2.5 py-1 text-label font-semibold text-brand-gray"
                   >
                     {t.admin.common.edit}
                   </button>
                   <button
                     onClick={() => handleDelete(m)}
                     disabled={deletingId}
-                    className="rounded-full border border-brand-red/30 px-2.5 py-1 text-[10px] font-semibold text-brand-red disabled:opacity-40"
+                    className="rounded-full border border-brand-red/30 px-2.5 py-1 text-label font-semibold text-brand-red disabled:opacity-40"
                   >
                     ✕
                   </button>

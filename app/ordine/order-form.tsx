@@ -342,12 +342,12 @@ export function OrderForm({
           <h1 className="text-[20px] font-black tracking-[-0.03em] text-brand-near-black">
             {t.order.yourOrder}
           </h1>
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-accent/20 bg-accent-soft px-2.5 py-0.5 font-mono text-[10px] font-semibold text-accent-text">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-accent/20 bg-accent-soft px-2.5 py-0.5 font-mono text-label font-semibold text-accent-text">
             <span className="h-1.5 w-1.5 rounded-full bg-accent opacity-75" />
             {t.cycle.open}
           </span>
         </div>
-        <p className="font-mono text-[10px] text-brand-gray mt-[3px]">
+        <p className="font-mono text-label text-brand-gray mt-[3px]">
           {cycleTitle}
           {supplierName ? ` · ${supplierName}` : ""}
           {orderCloseAt ? ` · ${t.cycle.closes(formatDateTime(orderCloseAt))}` : ""}
@@ -447,7 +447,7 @@ export function OrderForm({
       {isEditing && groups.map(({ category, products: prods }) => (
         <div key={category}>
           {category && (
-            <div className="pt-4 pb-2 font-mono text-[10px] uppercase tracking-[0.10em] text-muted">
+            <div className="pt-4 pb-2 font-mono text-label uppercase tracking-[0.10em] text-muted">
               {category === "Altro" ? t.order.otherCategory : category}
             </div>
           )}
@@ -466,12 +466,12 @@ export function OrderForm({
                   <div className="min-w-0 flex-1">
                     <div className="text-[14px] font-medium text-brand-near-black">{p.name}</div>
                     <div className="mt-[2px] flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                      {meta && <span className="font-mono text-[11px] text-brand-gray">{meta}</span>}
-                      <span className="font-mono text-[11px] font-semibold text-primary-text">
+                      {meta && <span className="font-mono text-label text-brand-gray">{meta}</span>}
+                      <span className="font-mono text-label font-semibold text-primary-text">
                         {formatEur(parseFloat(p.unitPrice))}
                       </span>
                       {p.pricePerKg && (
-                        <span className="font-mono text-[10px] text-muted">
+                        <span className="font-mono text-label text-muted">
                           ({formatEur(parseFloat(p.pricePerKg))}/kg)
                         </span>
                       )}
@@ -523,7 +523,7 @@ export function OrderForm({
           <div className="border-t border-brand-border bg-brand-warm-white/97 px-5 py-3.5 backdrop-blur-sm">
             <div className="mb-3 flex items-end justify-between">
               <div>
-                <div className="font-mono text-[10px] uppercase tracking-[0.09em] text-muted">
+                <div className="font-mono text-label uppercase tracking-[0.09em] text-muted">
                   {t.order.totalOrder}
                 </div>
                 <div className="mt-[2px] text-[24px] font-black tracking-[-0.03em] text-brand-near-black">
@@ -531,7 +531,7 @@ export function OrderForm({
                 </div>
               </div>
               <div className="text-right">
-                <div className="font-mono text-[10px] uppercase tracking-[0.09em] text-muted">
+                <div className="font-mono text-label uppercase tracking-[0.09em] text-muted">
                   {t.order.balanceAfter}
                 </div>
                 <div

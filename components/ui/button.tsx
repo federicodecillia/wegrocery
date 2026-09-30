@@ -26,7 +26,7 @@ const variants: Record<ButtonVariant, string> = {
   teal: "bg-accent text-on-accent",
   red: "bg-brand-red text-white",
   ghost:
-    "bg-transparent border border-brand-border text-brand-near-black font-mono text-[11px] tracking-widest uppercase",
+    "bg-transparent border border-brand-border text-brand-near-black font-mono text-label tracking-widest uppercase",
   outline: "bg-transparent border border-brand-border text-brand-near-black",
 };
 

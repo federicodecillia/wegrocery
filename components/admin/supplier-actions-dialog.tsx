@@ -190,11 +190,11 @@ export function SupplierActionsDialog({
     });
   }
 
-  const labelCls = "block text-[10px] font-semibold uppercase tracking-wide text-brand-gray";
+  const labelCls = "block text-label font-semibold uppercase tracking-wide text-brand-gray";
   const inputCls =
     "w-full rounded-lg border border-brand-border bg-white px-2.5 py-1.5 text-[12px] font-mono text-brand-near-black focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:bg-brand-warm-white";
   const sectionTitleCls = "flex items-center gap-2 text-[13px] font-bold text-brand-near-black";
-  const sectionDescCls = "mb-2 text-[11px] text-brand-gray";
+  const sectionDescCls = "mb-2 text-label text-brand-gray";
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
@@ -209,7 +209,7 @@ export function SupplierActionsDialog({
               <Dialog.Title className="text-[15px] font-bold text-brand-near-black">
                 {t.admin.supplierActions.dialogTitle(supplierName)}
               </Dialog.Title>
-              <p className="mt-0.5 text-[11px] text-brand-gray">{t.admin.supplierActions.cycleLabel(cycleTitle)}</p>
+              <p className="mt-0.5 text-label text-brand-gray">{t.admin.supplierActions.cycleLabel(cycleTitle)}</p>
             </div>
             <button
               onClick={() => onOpenChange(false)}
@@ -267,7 +267,7 @@ export function SupplierActionsDialog({
                       placeholder={t.admin.supplierActions.senderPlaceholder}
                       className={inputCls}
                     />
-                    <p className="mt-0.5 text-[10px] text-muted">
+                    <p className="mt-0.5 text-label text-muted">
                       {t.admin.supplierActions.senderHint}
                     </p>
                   </div>
@@ -314,10 +314,10 @@ export function SupplierActionsDialog({
                 type="file"
                 accept=".xlsx,.ods,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.oasis.opendocument.spreadsheet,text/csv"
                 onChange={onFileChange}
-                className="block w-full cursor-pointer rounded-xl border border-dashed border-primary/40 bg-white px-3 py-2 text-[12px] file:mr-3 file:rounded-lg file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-[11px] file:font-bold file:text-on-primary"
+                className="block w-full cursor-pointer rounded-xl border border-dashed border-primary/40 bg-white px-3 py-2 text-[12px] file:mr-3 file:rounded-lg file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-label file:font-bold file:text-on-primary"
               />
               {fileName && (
-                <p className="mt-1 text-[11px] text-brand-gray">
+                <p className="mt-1 text-label text-brand-gray">
                   {t.admin.importWizard.fileInfo(fileName)}
                 </p>
               )}
@@ -409,17 +409,17 @@ function PreviewSection({
 }) {
   return (
     <div className="overflow-hidden rounded-lg border border-brand-border bg-white">
-      <div className="border-b border-brand-border bg-black/[0.02] px-3 py-1.5 text-[11px] font-bold text-brand-near-black">
+      <div className="border-b border-brand-border bg-black/[0.02] px-3 py-1.5 text-label font-bold text-brand-near-black">
         {title} <span className="font-normal text-brand-gray">({rows.length})</span>
       </div>
       {rows.length === 0 ? (
-        <div className="px-3 py-2 text-[11px] text-brand-gray">{empty}</div>
+        <div className="px-3 py-2 text-label text-brand-gray">{empty}</div>
       ) : (
         <ul className="divide-y divide-brand-border">
           {rows.map((r) => (
             <li key={r.key} className="flex items-center justify-between px-3 py-1.5 text-[12px]">
               <span className="truncate pr-2 text-brand-near-black">{r.left}</span>
-              <span className="shrink-0 font-mono text-[11px]">
+              <span className="shrink-0 font-mono text-label">
                 <span className="text-muted line-through">{formatEur(r.oldVal)}</span>
                 <span className="mx-1 text-brand-gray">→</span>
                 <span className="font-bold text-brand-near-black">{formatEur(r.newVal)}</span>
