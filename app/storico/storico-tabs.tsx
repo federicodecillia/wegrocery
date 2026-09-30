@@ -63,7 +63,7 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
           <button
             key={tabKey}
             onClick={() => setTab(tabKey)}
-            className={`flex-1 rounded-[10px] py-[9px] text-[13px] font-semibold transition-all ${
+            className={`flex-1 rounded-[10px] py-[9px] text-[14px] font-semibold transition-all ${
               tab === tabKey
                 ? "bg-white text-brand-near-black shadow-[0_1px_4px_rgba(45,43,41,0.10)]"
                 : "bg-transparent text-brand-gray"
@@ -81,7 +81,7 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <span className="mb-4 text-4xl">🛒</span>
               <h2 className="text-[16px] font-bold text-brand-near-black">{t.history.noOrders}</h2>
-              <p className="mt-1 text-[13px] text-brand-gray">{t.history.noOrdersHint}</p>
+              <p className="mt-1 text-[14px] text-brand-gray">{t.history.noOrdersHint}</p>
             </div>
           ) : (
             orderHistory.map((o) => {
@@ -138,7 +138,7 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
                                   {l.emoji || getProductEmoji(l.productName)}
                                 </span>
                                 <div className="min-w-0 flex-1">
-                                  <div className="text-[13px] font-semibold text-brand-near-black">
+                                  <div className="text-[14px] font-semibold text-brand-near-black">
                                     {l.productName}
                                     {l.variant && <span className="ml-1 font-normal text-brand-gray">{l.variant}</span>}
                                   </div>
@@ -210,7 +210,7 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <span className="mb-4 text-4xl">💰</span>
               <h2 className="text-[16px] font-bold text-brand-near-black">{t.history.noMovements}</h2>
-              <p className="mt-1 text-[13px] text-brand-gray">{t.history.noMovementsHint}</p>
+              <p className="mt-1 text-[14px] text-brand-gray">{t.history.noMovementsHint}</p>
             </div>
           ) : (
             <div className="overflow-hidden rounded-[18px] border border-brand-border bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
@@ -227,7 +227,7 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
                     <div className="flex min-w-0 flex-1 items-center gap-3">
                       <MovementIcon kind={movementKind(e)} incoming={isPos} />
                       <div className="min-w-0">
-                        <div className="truncate text-[13px] font-medium text-brand-near-black">
+                        <div className="truncate text-[14px] font-medium text-brand-near-black">
                           {fullLabel}
                         </div>
                         <div className="mt-[2px] font-mono text-label text-muted">

@@ -19,6 +19,13 @@ stanno nella PR.
 
 ---
 
+## [Non rilasciato]
+
+### Modificato
+- 🖥️ **Un vero layout da computer.** Da computer il menu passa in alto e le pagine tengono una larghezza comoda da leggere; solo Admin usa la finestra larga, e in Cassa i form stanno accanto ai saldi dei soci.
+- 🔤 **Testi di lettura un po' più grandi.** Descrizioni ed elenchi nelle pagine dei soci passano da 13 a 14 px.
+- ✉️ **La tua email, senza ingombro.** Da telefono non occupa più una riga sotto il logo: la trovi nella pagina Notifiche.
+
 ## [1.16.0] — 30 settembre 2026
 
 *Testi che si leggono, con i colori di qualsiasi gruppo.*

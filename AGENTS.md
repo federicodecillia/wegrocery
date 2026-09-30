@@ -23,8 +23,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 │   ├── login/page.tsx          # Login with Google
 │   └── api/auth/[...nextauth]/ # Auth.js route handler
 ├── components/
-│   ├── app-shell.tsx           # Async layout wrapper: header (logo + bell + logout) + bottom nav
-│   ├── bottom-nav.tsx          # 5-item bottom nav (home/ordine/storico/guida/admin)
+│   ├── app-shell.tsx           # Async layout wrapper: header (logo + email + bell + logout, top nav from lg) + bottom nav
+│   ├── bottom-nav.tsx          # 5-item bottom nav, hidden from lg
+│   ├── top-nav.tsx             # Same items in the header, from lg
+│   ├── nav-items.ts            # Nav items + isItemActive (icons in nav-icon.tsx)
+│   ├── shell-width.ts          # SHELL_WIDTH: member vs admin card widths
+│   ├── shell-skeleton.tsx      # Skeleton mirroring AppShell, used by loading.tsx files
 │   ├── notification-bell.tsx   # Bell icon with red unread badge
 │   ├── home/cycle-countdown.tsx
 │   ├── admin/                  # Admin tab components (one per tab)
@@ -568,9 +572,11 @@ Rules (enforced by `lib/brand/design-guard.test.ts`):
 Key patterns:
 - **Saldo hero card**: primary-soft (positive) or red-light (negative), 70px balance amount
 - **Pill steppers** in order form: zero-state (single + btn) vs has-qty state (−/qty/+)
-- **Bottom nav**: 5 tabs, primary-text active state, SVG icons
+- **Navigation**: 5 items from `nav-items.ts`. `BottomNav` up to `lg`, `TopNav` (in the header) from `lg`; never both
 - **Notification bell**: in header, red badge with count, links to `/notifiche`
-- Shell `max-w-[480px]`, `md:max-w-[640px]`, `lg:max-w-[960px]`, centered; `bg-brand-frame` frames the app
+- Shell `max-w-[480px]`, `md:max-w-[640px]`, centered; `bg-brand-frame` frames the app. Only Admin (`<AppShell width="admin">`) adds `lg:max-w-[960px]`. Widths live in `shell-width.ts`; a route with a non-default width needs its own `loading.tsx` (see `app/admin/loading.tsx`)
+- Member pages: reading text is 14px; mono amounts and labels keep their own sizes
+- The email is in the header from `sm`; on phones it is on the Notifications page
 
 ### Known Gotchas
 

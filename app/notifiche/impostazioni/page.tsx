@@ -27,7 +27,7 @@ export default async function NotificationSettingsPage() {
       <h1 className="mb-1 text-[20px] font-black tracking-[-0.03em] text-brand-near-black">
         {t.notifications.settings.title}
       </h1>
-      <p className="mb-5 text-[13px] leading-snug text-brand-gray">
+      <p className="mb-5 text-[14px] leading-snug text-brand-gray">
         {t.notifications.settings.intro}
       </p>
 

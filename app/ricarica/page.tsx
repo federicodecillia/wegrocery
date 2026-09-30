@@ -108,7 +108,7 @@ export default async function RicaricaPage({
           <h2 className="mb-1 text-[16px] font-extrabold text-brand-near-black">{t.topup.onlineTitle}</h2>
           {ceilingCents === null ? (
             // Only a maximum can leave nothing for Stripe (topupCeilingCents).
-            <p className="text-[13px] text-brand-gray">
+            <p className="text-[14px] text-brand-gray">
               {maxBalanceCents !== null &&
               roomCents !== null &&
               topupBlockReason(balanceCents, maxBalanceCents) === "belowMinimum"
@@ -117,7 +117,7 @@ export default async function RicaricaPage({
             </p>
           ) : (
             <>
-              <p className="mb-4 text-[13px] text-brand-gray">{t.topup.onlineHint}</p>
+              <p className="mb-4 text-[14px] text-brand-gray">{t.topup.onlineHint}</p>
               <TopupForm
                 presets={topupPresets(balanceCents, ceilingCents)}
                 minCents={TOPUP_MIN_CENTS}
@@ -135,9 +135,9 @@ export default async function RicaricaPage({
           <h2 className="mb-1 text-[16px] font-extrabold text-brand-near-black">{t.topup.bankTitle}</h2>
           {bank ? (
             <>
-              <p className="mb-3 text-[13px] text-brand-gray">{t.topup.bankHint}</p>
+              <p className="mb-3 text-[14px] text-brand-gray">{t.topup.bankHint}</p>
               {roomCents !== null && (
-                <p className="mb-3 text-[13px] font-semibold text-brand-near-black">
+                <p className="mb-3 text-[14px] font-semibold text-brand-near-black">
                   {roomCents > 0 ? t.topup.bankRoom(formatMoney(roomCents / 100)) : t.topup.atMaximum}
                 </p>
               )}
@@ -149,7 +149,7 @@ export default async function RicaricaPage({
               />
             </>
           ) : (
-            <p className="text-[13px] text-brand-gray">{t.topup.bankUnavailable}</p>
+            <p className="text-[14px] text-brand-gray">{t.topup.bankUnavailable}</p>
           )}
         </section>
       )}

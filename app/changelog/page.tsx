@@ -39,7 +39,7 @@ export default async function ChangelogPage({
           <h1 className="text-[20px] font-black tracking-[-0.03em] text-brand-near-black">
             {t.title}
           </h1>
-          <p className="mt-1 text-[13px] text-brand-gray">{t.subtitle}</p>
+          <p className="mt-1 text-[14px] text-brand-gray">{t.subtitle}</p>
         </div>
         <LanguageToggle current={lang} />
       </div>
@@ -102,7 +102,7 @@ function VersionBlock({
             </h3>
             <ul className="space-y-2">
               {s.items.map((item, idx) => (
-                <li key={idx} className="text-[13px] leading-[1.5] text-brand-near-black">
+                <li key={idx} className="text-[14px] leading-[1.5] text-brand-near-black">
                   <InlineMarkdown text={item.text} />
                   {item.subitems.length > 0 && (
                     <ul className="mt-1 ml-4 list-disc space-y-0.5 text-[12px] text-brand-gray">

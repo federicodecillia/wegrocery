@@ -1,5 +1,5 @@
 import { ShellSkeleton } from "@/components/shell-skeleton";
 
 export default function Loading() {
-  return <ShellSkeleton />;
+  return <ShellSkeleton width="admin" />;
 }

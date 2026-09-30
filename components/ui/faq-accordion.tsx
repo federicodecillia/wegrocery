@@ -34,7 +34,7 @@ export function FaqAccordion({ faqs }: { faqs: Faq[] }) {
             </svg>
           </button>
           {open === i && (
-            <p className="pb-[14px] text-[13px] leading-relaxed text-brand-gray">{faq.a}</p>
+            <p className="pb-[14px] text-[14px] leading-relaxed text-brand-gray">{faq.a}</p>
           )}
         </div>
       ))}
