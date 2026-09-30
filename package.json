@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "node scripts/migrate-on-build.mjs && next build",
     "start": "next start",
     "lint": "next lint",
     "db:push": "node --env-file=.env.local node_modules/drizzle-kit/bin.cjs push",
@@ -12,7 +12,8 @@
     "db:studio": "node --env-file=.env.local node_modules/drizzle-kit/bin.cjs studio",
     "db:seed:demo": "node --env-file=.env.demo.local node_modules/tsx/dist/cli.mjs scripts/seed-demo.ts",
     "test": "vitest run",
-    "test:int": "vitest run -c vitest.int.config.ts"
+    "test:int": "vitest run -c vitest.int.config.ts",
+    "doctor": "node --env-file-if-exists=.env.local node_modules/tsx/dist/cli.mjs scripts/doctor.mts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.1",
