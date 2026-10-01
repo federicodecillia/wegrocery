@@ -174,3 +174,37 @@ describe("buildCycleHistory", () => {
     expect(entry.lines.map((l) => l.supplierName)).toEqual(["Apicoltura Bianchi", "Cascina Rossi"]);
   });
 });
+
+describe("buildCycleHistory, pay-per-order cycles", () => {
+  const perOrder = (id: string, status = "closed") => ({ ...cycle(id, status), paymentMode: "per_order" });
+  const money = (c: ReturnType<typeof perOrder>, net: string, shipping: string, paid: string, refunded: string) => ({
+    ...c,
+    net,
+    shipping,
+    paid,
+    refunded,
+  });
+
+  it("sets what was paid and refunded against the costs, and adds up to the net", () => {
+    const c = perOrder("cyc_po");
+    const [settled] = buildCycleHistory([line(c, "Patate", "8.00")], [money(c, "0.00", "1.00", "14.20", "5.20")]);
+    expect(settled).toMatchObject({ paymentMode: "per_order", charged: true, paid: 14.2, refunded: 5.2, corrections: 0 });
+    const cents = (n: number) => Math.round(n * 100);
+    expect(
+      cents(settled.paid) - cents(settled.productsTotal) - cents(settled.shipping) + cents(settled.corrections) -
+        cents(settled.refunded),
+    ).toBe(cents(settled.net));
+  });
+
+  it("keeps an open cycle uncharged even though its payment is on the ledger", () => {
+    const c = perOrder("cyc_po_open", "open");
+    const [open] = buildCycleHistory([line(c, "Patate", "8.00")], [money(c, "14.20", "0", "14.20", "0")]);
+    expect(open).toMatchObject({ charged: false, paid: 14.2, refunded: 0, corrections: 0 });
+  });
+
+  it("leaves wallet cycles as they were", () => {
+    const c = cycle("cyc_w");
+    const [w] = buildCycleHistory([line(c, "Patate", "8.00")], [ledger(c, "-9.00", "1.00")]);
+    expect(w).toMatchObject({ paymentMode: "wallet", paid: 0, refunded: 0, corrections: 0 });
+  });
+});
