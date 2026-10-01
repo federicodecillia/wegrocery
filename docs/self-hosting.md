@@ -168,13 +168,24 @@ with notes in the CHANGELOG. Before updating, read
 [upgrading.md](upgrading.md): it lists, per version, the migrations, new
 variables and Stripe events.
 
-The deploy made a copy of the code, not a fork, so bring the new version in
-with git:
+The button copies the code into a new repository with a history of its own,
+so the first update needs one extra step to link it to WeGrocery's. From a
+clone of your repository:
 
 ```bash
-git clone https://github.com/<you>/<your repository>.git
-cd <your repository>
 git remote add upstream https://github.com/federicodecillia/wegrocery.git
+git fetch upstream
+git merge -s ours --allow-unrelated-histories --no-edit upstream/main
+git read-tree -u --reset upstream/main
+git commit -m "Update WeGrocery"
+git push
+```
+
+This replaces the code with the new version (the group's identity lives in
+environment variables, not in the code) and links the two histories. Every
+later update is just:
+
+```bash
 git pull upstream main
 git push
 ```
