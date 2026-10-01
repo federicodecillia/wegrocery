@@ -1421,7 +1421,7 @@ export const en: Strings = {
     invalidQuantity: "Invalid quantity",
     invalidRole: "Invalid role",
     invalidAccessLevel: "Invalid access level",
-    handlingFeeInvalid: "Invalid handling fee: a number with at most two decimals, a percentage up to 100",
+    handlingFeeInvalid: "Invalid order preparation fee: a number with at most two decimals, up to 25% or 10",
     cycleNotOpen: "The cycle is no longer open",
     accessDenied: "You don't have access to this cycle",
     membershipInactive: (renewUrl: string | null) =>

@@ -1427,7 +1427,7 @@ export const it = {
     invalidQuantity: "Quantità non valida",
     invalidRole: "Ruolo non valido",
     invalidAccessLevel: "Livello di accesso non valido",
-    handlingFeeInvalid: "Spese di gestione non valide: un numero con al massimo due decimali, la percentuale fino a 100",
+    handlingFeeInvalid: "Spese di preparazione non valide: un numero con al massimo due decimali, fino al 25% o a 10 €",
     cycleNotOpen: "Il ciclo non è più aperto",
     accessDenied: "Non hai accesso a questo ciclo",
     membershipInactive: (renewUrl: string | null) =>

@@ -5,6 +5,7 @@ import {
   formatMoney,
   formatDate,
   formatDateTime,
+  formatHandlingFee,
   formatSignedMoney,
   formatTime,
   resolveTimeZone,
@@ -99,5 +100,12 @@ describe("resolveTimeZone", () => {
   });
   test("falls back to Europe/Rome on an invalid zone instead of crashing Intl", () => {
     expect(resolveTimeZone("Mars/Olympus")).toBe("Europe/Rome");
+  });
+});
+
+describe("formatHandlingFee", () => {
+  test("shows a percentage with its sign and a fixed fee as money", () => {
+    expect(formatHandlingFee({ type: "percent", value: 10 })).toBe("10%");
+    expect(formatHandlingFee({ type: "fixed", value: 1.5 })).toBe(formatMoney(1.5));
   });
 });

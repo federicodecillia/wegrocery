@@ -64,6 +64,11 @@ export function formatNumber(value: number, maxDecimals = 3): string {
   return new Intl.NumberFormat(tag, { maximumFractionDigits: maxDecimals }).format(value);
 }
 
+// A cycle's order preparation fee as the admin set it: "10%", "7,5%", "1,50 €".
+export function formatHandlingFee(fee: { type: "percent" | "fixed"; value: number }): string {
+  return fee.type === "percent" ? `${formatNumber(fee.value, 2)}%` : formatMoney(fee.value);
+}
+
 // Pre-fills for editable numeric <input>s: Italian admins type decimal commas,
 // everyone else gets dots. The parse direction tolerates both separators.
 export function formatDecimalInput(value: number | string): string {

@@ -9,10 +9,34 @@ import { TOPUP_MIN_CENTS } from "./config";
 export const ORDER_PAYMENT_MIN_CENTS = TOPUP_MIN_CENTS;
 export const ORDER_PAYMENT_MAX_CENTS = 100_000;
 
-// The cycle's "handling and order preparation" share: a percentage of the
-// products or a fixed amount in the currency unit. An estimate: what is not
-// spent goes back to the member when the cycle is settled.
+// The cycle's order preparation fee: a percentage of the products or a fixed amount per member, in the currency unit. Charged at the close (handling_charge) and kept by the group.
 export type HandlingFee = { type: "percent" | "fixed"; value: number };
+
+// The highest fee a cycle form accepts: a guard against typos (50 for 5),
+// which in wallet mode would only show once the charges are written.
+export const HANDLING_FEE_MAX = { percent: 25, fixed: 10 } as const;
+
+// The fee on a member's products, in cents. One rule for the Checkout
+// estimate, the close and the summaries (lib/invariants.ts has it in SQL):
+// a percentage is taken in hundredths of a percent, so half a cent goes up
+// whatever floating point would make of it.
+export function handlingFeeCents(productsCents: number, fee: HandlingFee | null): number {
+  if (!fee || productsCents <= 0) return 0;
+  if (fee.type === "fixed") return Math.round(fee.value * 100);
+  const hundredths = Math.round(fee.value * 100);
+  return Math.floor((productsCents * hundredths + 5000) / 10000);
+}
+
+// A cycle row's fee, null when it has none.
+export function cycleHandlingFee(cycle: {
+  handlingFeeType: string | null;
+  handlingFeeValue: string | null;
+}): HandlingFee | null {
+  if ((cycle.handlingFeeType !== "percent" && cycle.handlingFeeType !== "fixed") || cycle.handlingFeeValue === null) {
+    return null;
+  }
+  return { type: cycle.handlingFeeType, value: Number(cycle.handlingFeeValue) };
+}
 
 export type OrderAmount = {
   productsCents: number;
@@ -35,14 +59,9 @@ export function orderPaymentAmount(input: {
 }): OrderAmount {
   const { productsCents, shipping, fee } = input;
   const hasProducts = productsCents > 0;
-  // Proportional (and manual) shipping is only known at the close: the fee
-  // covers it until the settlement.
+  // Proportional (and manual) shipping is only known at the close: the member pays it at settlement.
   const shippingCents = hasProducts && shipping.mode === "fixed_per_member" ? (shipping.fixedCents ?? 0) : 0;
-  const feeCents = !hasProducts
-    ? 0
-    : fee.type === "percent"
-      ? Math.round((productsCents * fee.value) / 100)
-      : Math.round(fee.value * 100);
+  const feeCents = handlingFeeCents(productsCents, fee);
   const requiredCents = productsCents + shippingCents + feeCents;
   const coveredCents = Math.max(0, input.coveredCents);
   const due = requiredCents - coveredCents;
@@ -100,28 +119,28 @@ export function cancelRefunds(
     .filter((r) => r.amountCents > 0);
 }
 
-// The cycle form's fee: "10", "7,5", "1.50". At most two decimals, no sign;
-// a percentage at most 100.
+// The cycle form's fee: "10", "7,5", "1.50". At most two decimals, no sign, at most HANDLING_FEE_MAX.
 export function parseHandlingFee(type: string, value: string): HandlingFee | { error: "invalid" } {
   if (type !== "percent" && type !== "fixed") return { error: "invalid" };
   const trimmed = value.trim();
   if (!/^\d{1,5}([.,]\d{1,2})?$/.test(trimmed)) return { error: "invalid" };
   const n = Number(trimmed.replace(",", "."));
-  if (type === "percent" && n > 100) return { error: "invalid" };
+  if (n > HANDLING_FEE_MAX[type]) return { error: "invalid" };
   return { type, value: n };
 }
 
 export const DEFAULT_HANDLING_FEE: HandlingFee = { type: "percent", value: 10 };
 
-// The fee a new cycle gets: none in wallet mode; in per_order what the form
-// sent, else the last per_order cycle's, else the default.
+// The fee a cycle gets from its form: "none" (wallet only: a per_order cycle
+// always has one, drizzle/0021) or a valid fee. When the form sent nothing:
+// the last cycle's of the same mode, else none in wallet mode and 10% per order.
 export function resolveCycleFee(
   mode: "wallet" | "per_order",
   input: { type: string; value: string } | undefined,
   lastFee: HandlingFee | null,
 ): { fee: HandlingFee | null } | { error: "invalid" } {
-  if (mode === "wallet") return { fee: null };
-  if (!input) return { fee: lastFee ?? DEFAULT_HANDLING_FEE };
+  if (!input) return { fee: lastFee ?? (mode === "per_order" ? DEFAULT_HANDLING_FEE : null) };
+  if (input.type === "none") return mode === "per_order" ? { error: "invalid" } : { fee: null };
   const parsed = parseHandlingFee(input.type, input.value);
   return "error" in parsed ? parsed : { fee: parsed };
 }
