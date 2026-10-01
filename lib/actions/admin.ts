@@ -290,7 +290,9 @@ async function performCycleClose(
       ),
     };
 
-    const charges = buildCycleCloseCharges(memberTotals, cycle, alreadyCharged);
+    const charges = buildCycleCloseCharges(memberTotals, cycle, {
+      alreadyCharged: { ...alreadyCharged, handling: new Set() },
+    });
     const now = new Date();
 
     // 1. Row-lock the cycle: saveOrder takes the same lock first in its own
