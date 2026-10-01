@@ -2,7 +2,7 @@ import { afterAll, beforeAll, expect, it, vi } from "vitest";
 import { getDb } from "@/lib/db/client";
 import { describeDb, makeScope } from "@/test/int/fixtures";
 import type { RefundApi } from "./refund-request";
-import { previewSettlement, settleCycle } from "./settlement-store";
+import { getSettlementStatus, previewSettlement, settleCycle } from "./settlement-store";
 
 // "Chiudi i conti" on a real database: refunds of what was paid in excess,
 // amounts due, write-offs under Stripe's minimum, members paying outside the
@@ -60,6 +60,7 @@ describeDb("settlement of a pay-per-order cycle", () => {
   });
 
   it("previews one action per member", async () => {
+    expect(await getSettlementStatus(getDb(), cycleId)).toBe("to_settle");
     expect(await byMember()).toEqual({
       [excess]: { kind: "refund", refunds: [{ paymentId: `${scope.prefix}_pay_e`, amountCents: 550 }], excessCents: 0 },
       [short]: { kind: "due", dueCents: 230 },
@@ -87,6 +88,20 @@ describeDb("settlement of a pay-per-order cycle", () => {
     expect(second).toMatchObject({ refundsSent: 0, writeOffs: 0 });
     expect(api.refunds.create).toHaveBeenCalledTimes(1);
     expect(await net(excess)).toBe("0.00");
+    // An amount due left unpaid does not reopen the cycle.
+    expect(await getSettlementStatus(getDb(), cycleId)).toBe("settled");
+  });
+
+  it("says when a correction after the settlement needs another run, and when a refund is waiting or failed", async () => {
+    await scope.addLedger("e_late", excess, "correction", 1, cycleId);
+    expect(await getSettlementStatus(getDb(), cycleId)).toBe("needs_update");
+    await sql`INSERT INTO refunds (refund_id, payment_id, member_id, cycle_id, amount_cents, status, reason,
+        stripe_refund_id, created_by, created_at, updated_at)
+      VALUES (${`settle_${scope.prefix}_pay_e_9`}, ${`${scope.prefix}_pay_e`}, ${excess}, ${cycleId}, 100, 'requested',
+        'settlement', NULL, 'int-test', now(), now())`;
+    expect(await getSettlementStatus(getDb(), cycleId)).toBe("refunds_pending");
+    await sql`UPDATE refunds SET status = 'failed' WHERE refund_id = ${`settle_${scope.prefix}_pay_e_9`}`;
+    expect(await getSettlementStatus(getDb(), cycleId)).toBe("refund_failed");
   });
 
   it("refuses an open cycle", async () => {

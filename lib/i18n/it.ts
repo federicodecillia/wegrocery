@@ -531,6 +531,13 @@ export const it = {
       },
       excess: (amount: string) => `${amount} oltre il pagato`,
       excessHint: "Una parte supera quanto pagato con la carta (per esempio un accredito): restituiscila dalla Cassa.",
+      status: {
+        to_settle: "Chiudi i conti",
+        refunds_pending: "Rimborsi in corso",
+        settled: "Conti chiusi",
+        needs_update: "Da aggiornare: chiudi di nuovo i conti",
+        refund_failed: "Rimborso non riuscito",
+      },
       confirm: "Chiudi i conti",
       running: "In corso...",
       done: (sent: number, waiting: number, due: number, writeOffs: number) =>

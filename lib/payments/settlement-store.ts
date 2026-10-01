@@ -246,3 +246,26 @@ async function notifyDue(db: Db, cycleId: string, title: string, due: MemberSett
     new Date(),
   );
 }
+
+// Where a closed pay-per-order cycle stands, as Admin → Ciclo shows it.
+// A member's unpaid amount due does not count: it is theirs to pay.
+export type SettlementStatus = "to_settle" | "refunds_pending" | "settled" | "needs_update" | "refund_failed";
+
+export async function getSettlementStatus(db: Db, cycleId: string): Promise<SettlementStatus> {
+  const [preview, { rows }] = await Promise.all([
+    previewSettlement(db, cycleId),
+    db.execute<{ waiting: number; failed: number }>(sql`
+      SELECT count(*) FILTER (WHERE reason = 'settlement' AND status IN ('requested', 'pending'))::integer AS waiting,
+             count(*) FILTER (WHERE status = 'failed')::integer AS failed
+      FROM refunds WHERE cycle_id = ${cycleId}`),
+  ]);
+  // Money the card payments can still take back. What goes beyond them is
+  // given back in Cassa, outside the cycle, so it never reopens it.
+  const owedBack = preview.members.some((m) => m.plan.kind === "refund" && m.plan.refunds.length > 0);
+  const toWriteOff = preview.members.some((m) => m.plan.kind === "writeOff");
+  if ((rows[0]?.failed ?? 0) > 0 && owedBack) return "refund_failed";
+  if (preview.cycle.settledAt === null) return "to_settle";
+  if ((rows[0]?.waiting ?? 0) > 0) return "refunds_pending";
+  if (owedBack || toWriteOff) return "needs_update";
+  return "settled";
+}

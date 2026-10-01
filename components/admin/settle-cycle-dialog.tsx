@@ -7,6 +7,15 @@ import { formatMoney } from "@/lib/i18n/format";
 import { formatDate } from "@/lib/utils";
 import { toast } from "@/components/ui/toast";
 import { t } from "@/lib/i18n";
+import type { SettlementStatus } from "@/lib/payments/settlement-store";
+
+const STATUS_CLASSES: Record<SettlementStatus, string> = {
+  to_settle: "bg-primary-soft text-primary-text",
+  refunds_pending: "bg-black/[0.06] text-brand-gray",
+  settled: "bg-accent-soft text-accent-text",
+  needs_update: "bg-brand-red-light text-brand-red",
+  refund_failed: "bg-brand-red-light text-brand-red",
+};
 
 // "Chiudi i conti" of a pay-per-order cycle, closed or cancelled: a preview of
 // what each member gets (card refund, amount due, write-off) and the
@@ -15,10 +24,12 @@ export function SettleCycleButton({
   cycleId,
   cycleTitle,
   settledAt,
+  status,
 }: {
   cycleId: string;
   cycleTitle: string;
   settledAt: string | null;
+  status: SettlementStatus;
 }) {
   const [open, setOpen] = useState(false);
   const [rows, setRows] = useState<SettlementPreviewRow[] | null>(null);
@@ -56,13 +67,8 @@ export function SettleCycleButton({
 
   return (
     <>
-      <button
-        onClick={load}
-        className={`rounded-lg px-3 py-1 text-label font-bold ${
-          settledAt ? "bg-accent-soft text-accent-text" : "bg-primary-soft text-primary-text"
-        }`}
-      >
-        {settledAt ? s.settledButton(formatDate(settledAt)) : s.openButton}
+      <button onClick={load} className={`rounded-lg px-3 py-1 text-label font-bold ${STATUS_CLASSES[status]}`}>
+        {status === "settled" && settledAt ? s.settledButton(formatDate(settledAt)) : s.status[status]}
       </button>
       <Dialog.Root open={open} onOpenChange={setOpen}>
         <Dialog.Portal>
@@ -109,7 +115,8 @@ export function SettleCycleButton({
               </button>
               <button
                 onClick={settle}
-                disabled={isPending || rows === null || pending.length === 0}
+                // A cycle never settled can be closed even with everyone square.
+                disabled={isPending || rows === null || (pending.length === 0 && settledAt !== null)}
                 className="flex-1 rounded-full bg-primary py-2 text-[13px] font-bold text-on-primary disabled:opacity-40"
               >
                 {isPending ? s.running : s.confirm}

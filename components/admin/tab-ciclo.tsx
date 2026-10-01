@@ -1,5 +1,7 @@
 import { getAllCycles, getAllSuppliers, getLastHandlingFee, getOpenCycles, getOpenCycleStats } from "@/lib/db/queries";
+import { getDb } from "@/lib/db/client";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
+import { getSettlementStatus, type SettlementStatus } from "@/lib/payments/settlement-store";
 import { DEFAULT_HANDLING_FEE } from "@/lib/payments/order-payment";
 import { formatDate } from "@/lib/utils";
 import { Card, CardHeader } from "@/components/ui/card";
@@ -26,6 +28,15 @@ export async function TabCiclo() {
   // from the last one's.
   const newCycleFee =
     settings.mode === "per_order" ? ((await getLastHandlingFee()) ?? DEFAULT_HANDLING_FEE) : null;
+
+  // Where each closed or cancelled pay-per-order cycle stands.
+  const settlementStatus = new Map<string, SettlementStatus>(
+    await Promise.all(
+      cycles
+        .filter((c) => c.paymentMode === "per_order" && (c.status === "closed" || c.status === "cancelled"))
+        .map(async (c) => [c.cycleId, await getSettlementStatus(getDb(), c.cycleId)] as const),
+    ),
+  );
 
   const statsMap = new Map();
   const now = new Date();
@@ -151,11 +162,12 @@ export async function TabCiclo() {
                     />
                     <ClosedCycleDetails cycleId={c.cycleId} cycleTitle={c.title} />
                     <CancelCycleButton cycleId={c.cycleId} cycleTitle={c.title} />
-                    {c.paymentMode === "per_order" && (
+                    {settlementStatus.has(c.cycleId) && (
                       <SettleCycleButton
                         cycleId={c.cycleId}
                         cycleTitle={c.title}
                         settledAt={c.settledAt?.toISOString() ?? null}
+                        status={settlementStatus.get(c.cycleId)!}
                       />
                     )}
                   </div>
@@ -163,6 +175,14 @@ export async function TabCiclo() {
                 {c.status === "cancelled" && (
                   <div className="mt-2 flex flex-wrap items-center gap-1.5">
                     <ClosedCycleDetails cycleId={c.cycleId} cycleTitle={c.title} />
+                    {settlementStatus.has(c.cycleId) && (
+                      <SettleCycleButton
+                        cycleId={c.cycleId}
+                        cycleTitle={c.title}
+                        settledAt={c.settledAt?.toISOString() ?? null}
+                        status={settlementStatus.get(c.cycleId)!}
+                      />
+                    )}
                   </div>
                 )}
               </div>

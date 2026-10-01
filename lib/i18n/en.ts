@@ -529,6 +529,13 @@ export const en: Strings = {
       },
       excess: (amount: string) => `${amount} beyond what was paid`,
       excessHint: "Part of it is more than was paid by card (for example a credit): return it from Treasury.",
+      status: {
+        to_settle: "Settle accounts",
+        refunds_pending: "Refunds in progress",
+        settled: "Accounts settled",
+        needs_update: "Out of date: settle again",
+        refund_failed: "Refund failed",
+      },
       confirm: "Settle accounts",
       running: "Running...",
       done: (sent: number, waiting: number, due: number, writeOffs: number) =>
