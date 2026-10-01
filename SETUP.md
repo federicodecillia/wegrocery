@@ -5,7 +5,7 @@ follow [docs/self-hosting.md](docs/self-hosting.md) instead.
 
 ## Prerequisites
 
-- Node.js 24 (CI uses it; anything from 20.6 runs)
+- Node.js 24 (CI uses it; anything from 20.19 runs)
 - A Postgres database: a free [Neon](https://neon.tech) project, or a branch
   of one, works best (the app uses Neon's serverless driver)
 

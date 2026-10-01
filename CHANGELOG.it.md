@@ -19,10 +19,15 @@ stanno nella PR.
 
 ---
 
-## [Non rilasciato]
+## [1.20.0] — 1 ottobre 2026
+
+*Notifiche che dicono cosa coprono, una Cassa che dà un nome a ogni movimento e Next.js 16 sotto il cofano.*
 
 ### Modificato
 - 🔔 **Preferenze di notifica più chiare.** I quattro gruppi dicono cosa coprono: nuovo ciclo aperto, addebiti e pagamenti (compresi il conguaglio e le conferme dei pagamenti online), modifiche all'ordine (compreso un ciclo annullato) e saldo e rimborsi. Le tue scelte salvate restano; le conferme di pagamento ora seguono "Addebiti e pagamenti".
+
+- 🧰 **Next.js 16 e TypeScript 7.** Stessa app, fondamenta più nuove; a chi la installa da sé serve Node.js 20.19 o successivo, e il lint si lancia con `npm run lint`.
+- 🌙 **Controllo notturno più solido.** Il controllo dei conti non aspetta più il backup, e una notte fallita o bloccata apre una issue su GitHub.
 
 ### Risolto
 - 🏷️ **Cassa dà un nome a ogni movimento.** I vecchi rimborsi e pagamenti con carta, le spedizioni e le rettifiche mostravano nel badge un codice tecnico come `ORDER_REFUND`; ora si leggono "rimborso carta", "pagamento ordine", "spedizione" e così via, e un tipo sconosciuto mostra un semplice "movimento".

@@ -18,10 +18,14 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ---
 
-## [Unreleased]
+## [1.20.0] — 2026-10-01
+
+*Notification settings that say what they cover, a Cassa that names every movement, and Next.js 16 underneath.*
 
 ### Changed
 - 🔔 **Clearer notification preferences.** The four groups now say what they cover: new cycle opened, charges and payments (including the settlement and online payment confirmations), order changes (including a cancelled cycle) and balance and refunds. Your saved choices are kept; payment confirmations now follow "Charges and payments".
+- 🧰 **Next.js 16 and TypeScript 7.** Same app, newer foundations; self-hosters need Node.js 20.19 or later, and lint now runs with `npm run lint`.
+- 🌙 **A sturdier nightly check.** The nightly money check no longer waits for the backup, and a failed or stuck night opens a GitHub issue.
 
 ### Fixed
 - 🏷️ **Cassa names every movement.** Older card refunds and payments, shipping and corrections showed a raw code such as `ORDER_REFUND` in the movement badge; they now read "card refund", "order payment", "shipping" and so on, and an unknown type shows a plain "movement".
