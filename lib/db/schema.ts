@@ -33,6 +33,9 @@ export const members = pgTable(
     // Set at every new session (drizzle/0022_auth_sessions.sql); NULL = never
     // signed in since the email link arrived.
     lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
+    // Pays outside the app in pay-per-order mode: confirms orders without
+    // Stripe, settled from Treasury (drizzle/0024_settlement.sql).
+    paysOffline: boolean("pays_offline").notNull().default(false),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
   },
@@ -88,6 +91,8 @@ export const orderCycles = pgTable("order_cycles", {
   // 'percent' of the products or a 'fixed' amount. NULL on wallet cycles.
   handlingFeeType: text("handling_fee_type"),
   handlingFeeValue: numeric("handling_fee_value", { precision: 10, scale: 2 }),
+  // Last settlement of a pay-per-order cycle (drizzle/0024_settlement.sql).
+  settledAt: timestamp("settled_at", { withTimezone: true }),
 });
 
 export const supplierProducts = pgTable("supplier_products", {
