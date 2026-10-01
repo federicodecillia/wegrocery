@@ -23,6 +23,10 @@ describe("isAdminEditableLedgerType", () => {
     expect(isAdminEditableLedgerType("shipping_charge")).toBe(false);
   });
 
+  it("keeps the order preparation fee out of the Cassa editor, like the other close charges", () => {
+    expect(isAdminEditableLedgerType("handling_charge")).toBe(false);
+  });
+
   it("allows manual movements", () => {
     expect(isAdminEditableLedgerType("topup")).toBe(true);
     expect(isAdminEditableLedgerType("correction")).toBe(true);
