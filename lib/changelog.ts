@@ -37,11 +37,14 @@ const FILE_BY_LANG: Record<ChangelogLanguage, string> = {
 };
 
 /** Reads + parses a changelog file. The files live inside the Next.js app
- * root (process.cwd() at runtime), so Vercel includes them in the deploy. */
+ * root (process.cwd() at runtime), so Vercel includes them in the deploy.
+ * They are shipped by `outputFileTracingIncludes` in next.config.ts; the
+ * turbopackIgnore comment keeps Turbopack from tracing the whole project for
+ * this dynamic path (Next.js 16 builds with Turbopack). */
 export async function loadChangelog(
   lang: ChangelogLanguage,
 ): Promise<ChangelogVersion[]> {
-  const filePath = path.join(process.cwd(), FILE_BY_LANG[lang]);
+  const filePath = path.join(/*turbopackIgnore: true*/ process.cwd(), FILE_BY_LANG[lang]);
   const raw = await readFile(filePath, "utf8");
   return parseChangelog(raw);
 }
