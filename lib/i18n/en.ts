@@ -1199,6 +1199,9 @@ export const en: Strings = {
       `Your order for "${cycle}" is confirmed. You paid ${amount}: products ${products}, shipping ${shipping}, handling and order preparation (estimate) ${fee}. When the cycle is settled we refund what was not needed.`,
     orderPaidShortBody: (cycle: string, amount: string) =>
       `Your order for "${cycle}" is confirmed. You paid ${amount}.`,
+    settlementDueTitle: "Amount due",
+    settlementDueBody: (cycle: string, amount: string) =>
+      `The final costs of "${cycle}" are more than you paid: ${amount} is due. You can pay it from Top up with "Pay now".`,
     orderRefundTitle: "Refund on its way",
     orderRefundCancelledBody: (amount: string) =>
       `You cancelled your order: we are refunding ${amount} to the card you paid with. It usually takes 5-10 days.`,
@@ -1254,6 +1257,7 @@ export const en: Strings = {
       `The cycle "${title}" was cancelled: ${reason}. We refunded you ${amount}.`,
   },
   ledger: {
+    writeOff: "Write-off below the minimum payment",
     correctedOn: (date: string) => `corrected on ${date}`,
     correctedBy: "Movement corrected",
     deletedBy: "Movement cancelled",

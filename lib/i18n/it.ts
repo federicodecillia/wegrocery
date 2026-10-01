@@ -1205,6 +1205,9 @@ export const it = {
       `Il tuo ordine per "${cycle}" è confermato. Hai pagato ${amount}: prodotti ${products}, spedizione ${shipping}, spese di gestione e preparazione ordine (stima) ${fee}. A conti chiusi ti rimborsiamo quello che non è servito.`,
     orderPaidShortBody: (cycle: string, amount: string) =>
       `Il tuo ordine per "${cycle}" è confermato. Hai pagato ${amount}.`,
+    settlementDueTitle: "Da saldare",
+    settlementDueBody: (cycle: string, amount: string) =>
+      `I costi definitivi di "${cycle}" superano quanto hai pagato: mancano ${amount}. Puoi saldarli da Ricarica con "Paga ora".`,
     orderRefundTitle: "Rimborso in arrivo",
     orderRefundCancelledBody: (amount: string) =>
       `Hai annullato l'ordine: ti rimborsiamo ${amount} sulla carta con cui hai pagato. Di solito arriva in 5-10 giorni.`,
@@ -1260,6 +1263,7 @@ export const it = {
       `Il ciclo "${title}" è stato annullato: ${reason}. Ti abbiamo riaccreditato ${amount}.`,
   },
   ledger: {
+    writeOff: "Abbuono sotto il minimo di pagamento",
     correctedOn: (date: string) => `corretto il ${date}`,
     correctedBy: "Movimento corretto",
     deletedBy: "Movimento annullato",
