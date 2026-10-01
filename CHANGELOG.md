@@ -20,6 +20,9 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ## [Unreleased]
 
+### Changed
+- 🔔 **Clearer notification preferences.** The four groups now say what they cover: new cycle opened, charges and payments (including the settlement and online payment confirmations), order changes (including a cancelled cycle) and balance and refunds. Your saved choices are kept; payment confirmations now follow "Charges and payments".
+
 ## [1.19.0] — 2026-10-01
 
 *Install it for your own group in half an hour, and an order preparation fee that is a real, checked charge.*

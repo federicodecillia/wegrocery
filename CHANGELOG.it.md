@@ -21,6 +21,9 @@ stanno nella PR.
 
 ## [Non rilasciato]
 
+### Modificato
+- 🔔 **Preferenze di notifica più chiare.** I quattro gruppi dicono cosa coprono: nuovo ciclo aperto, addebiti e pagamenti (compresi il conguaglio e le conferme dei pagamenti online), modifiche all'ordine (compreso un ciclo annullato) e saldo e rimborsi. Le tue scelte salvate restano; le conferme di pagamento ora seguono "Addebiti e pagamenti".
+
 ## [1.19.0] — 1 ottobre 2026
 
 *Installarla per il proprio gruppo in mezz'ora, e spese di preparazione che diventano un addebito vero e controllato.*
