@@ -111,8 +111,9 @@ When handling an advisory:
 - **Verify an override before adding one.** Forcing a transitive major can
   break its consumer: `brace-expansion` 5.x exports an object from its
   CommonJS entry while `minimatch` does `const expand = require(...)` and calls
-  it as a function. `sharp` is a safe override — Next.js still declares
-  `^0.34.5` even on 16.2.12, so there is no upstream fix coming.
+  it as a function. `sharp` was a safe override while Next.js declared
+  `^0.34.x`; Next.js 16.3 declares `^0.35.4` itself, so the override is gone
+  (re-add it if a future release lags behind a `libvips` fix).
 - **Confirm the fix landed** by comparing each alert's `first_patched_version`
   against the resolved tree, not by trusting the bump.
 - **`better-auth` is pinned to an exact version on purpose** and sits in Dependabot's `ignore` list: sign-in upgrades are a deliberate decision, tested with `lib/auth/config.int.test.ts`.
