@@ -228,7 +228,7 @@ export const it = {
     dueHint: "I costi definitivi dei cicli chiusi superano quanto hai pagato.",
     payNow: (amount: string) => `Paga ora ${amount}`,
     creditLabel: "Credito",
-    creditHint: "Hai pagato più del costo definitivo dei tuoi ordini: la differenza è un tuo credito, te la restituisce l'associazione.",
+    creditHint: "Hai pagato più del costo definitivo dei tuoi ordini: la differenza è un credito a tuo favore e l'associazione te la restituisce.",
     nothingDue: "Non hai nulla da saldare.",
     goToOrder: "Vai all'ordine",
     lineItem: (org: string) => `Saldo dovuto a ${org}`,

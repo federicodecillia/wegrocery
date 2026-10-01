@@ -54,7 +54,7 @@ describe.each([
 
 describe("balance credit hint", () => {
   it("says the difference is the member's credit", () => {
-    expect(italian.balance.creditHint).toMatch(/tuo credito/);
+    expect(italian.balance.creditHint).toMatch(/credito a tuo favore/);
     expect(en.balance.creditHint).toMatch(/your credit/);
   });
 });
