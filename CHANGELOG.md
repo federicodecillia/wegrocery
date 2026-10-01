@@ -23,8 +23,10 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 ### Added
 - 🚀 **Run it for your group.** A step-by-step guide (`docs/self-hosting.md`) with a Deploy to Vercel button that creates the project and its Neon database and applies every migration at the first build; `docs/brand.example.json` lists every brand field.
 - 👑 **First admin of a new installation.** The address in `BOOTSTRAP_ADMIN_EMAIL` becomes admin at its first sign-in, only while the group has no admin; Configuration status says when the variable can go.
+- 🧾 **Order preparation fee.** A cycle can charge a fee for bank fees and running costs, in both payment modes: a percentage of the products or a fixed amount per member, up to 25% or €10. Members see it before ordering; it is charged at the close as its own movement and checked every night. Upgrade note: apply `drizzle/0026_handling_charge.sql` right before deploying when `MIGRATE_ON_BUILD` is off.
 
 ### Changed
+- 💳 **Pay per order: the fee is a cost, not an estimate.** The group keeps it; settlement evens out products and shipping only. With proportional shipping each member pays their share at settlement.
 - 🩹 **New installations no longer fail on the home page.** Three cycle columns were missing from the migrations; one more migration adds them (a no-op on existing installations). A CI test now compares the whole schema with a migrated empty database. Upgrade note: apply `drizzle/0025_schema_catch_up.sql`.
 - 🧭 **Configuration status spots brand mistakes.** A brand field the app does not know (a typo) or a brand that does not parse shows up, with the reason, in Settings and in `npm run doctor`.
 - 🏗️ **Migrations at build on production only.** With `MIGRATE_ON_BUILD=true` preview builds no longer migrate: only production builds (and builds outside Vercel) do.

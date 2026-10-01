@@ -71,8 +71,8 @@ export const it = {
     pay: {
       products: "Prodotti",
       shipping: "Spedizione",
-      fee: "Spese di gestione e preparazione ordine (stima)",
-      feeHint: "A conti chiusi ti rimborsiamo quello che non è servito.",
+      fee: "Spese di preparazione ordine",
+      feeHint: "Le spese di preparazione restano all'associazione. Spedizione e pesate si regolano a conti chiusi.",
       refundDifference: (amount: string) =>
         `Hai pagato ${amount} in più di quanto costa ora l'ordine: te li rimborsiamo sulla carta a conti chiusi.`,
       dueDifference: (amount: string) => `Mancano ${amount}: si regolano a conti chiusi.`,
@@ -200,7 +200,7 @@ export const it = {
     paid: "Pagato",
     refunded: "Rimborsato sulla carta",
     cycleNetPerOrder: "Netto del ciclo",
-    settledAtClose: "A conti chiusi ti rimborsiamo quello che non è servito.",
+    settledAtClose: "A conti chiusi si regola la differenza su prodotti e spedizione.",
     chargedAtClose: "Sarà addebitato sul saldo alla chiusura del ciclo.",
     received: (quantity: string) => `ricevuti ${quantity}`,
     detailDescription: "Dettagli del movimento selezionato",
@@ -408,7 +408,7 @@ export const it = {
       {
         n: 2,
         title: "Scegli i prodotti",
-        body: "Tocca il tab Ordine in basso e scegli i prodotti con i pulsanti + e −. Sotto il totale vedi prodotti, spedizione e spese di gestione e preparazione ordine.",
+        body: "Tocca il tab Ordine in basso e scegli i prodotti con i pulsanti + e −. Sotto il totale vedi prodotti, spedizione e spese di preparazione ordine.",
       },
       {
         n: 3,
@@ -418,7 +418,7 @@ export const it = {
       {
         n: 4,
         title: "Conti chiusi",
-        body: "Dopo il ritiro, con i costi definitivi, ti rimborsiamo sulla carta quello che non è servito. Se i costi hanno superato quanto hai pagato, in Home trovi \"Da saldare\" con il pulsante \"Paga ora\".",
+        body: "Dopo il ritiro, con i costi definitivi, si regola la differenza su prodotti e spedizione: quello che hai pagato in più ti torna sulla carta. Se i costi hanno superato quanto hai pagato, in Home trovi \"Da saldare\" con il pulsante \"Paga ora\".",
       },
       { n: 5, title: "Storico", body: "Nel tab Storico vedi per ogni ciclo quanto hai pagato, i costi, i rimborsi e il netto." },
       {
@@ -450,6 +450,11 @@ export const it = {
         a: "Il saldo è il tuo credito presso l'associazione. Alla chiusura dell'ordine il costo viene addebitato automaticamente. Per ricaricare apri la pagina Ricarica dalla card del saldo in Home. Con il bonifico il saldo si aggiorna quando chi gestisce la cassa lo registra; con il pagamento online, se l'associazione l'ha attivato, si aggiorna appena il pagamento è confermato.",
       },
       {
+        wallet: true,
+        q: "Cosa sono le spese di preparazione ordine?",
+        a: "Se il ciclo le prevede, una quota per le commissioni bancarie e le spese di gestione dell'associazione: una percentuale dei prodotti o un importo fisso. Le vedi nel riepilogo dell'ordine e ti vengono addebitate alla chiusura, insieme all'ordine.",
+      },
+      {
         q: "Posso modificare l'ordine dopo averlo confermato?",
         a: 'Sì, finché l\'ordine è aperto. Il tab Ordine mostra il tuo ordine confermato: premi "Modifica ordine" per cambiare le quantità e riconfermare, oppure "Cancella ordine" per rimuoverlo del tutto, così alla chiusura non ti viene addebitato nulla.',
       },
@@ -479,11 +484,11 @@ export const it = {
     faqPerOrder: [
       {
         q: "Come si paga l'ordine?",
-        a: "Con la carta, quando confermi l'ordine. Paghi prodotti, spedizione e una quota per le spese di gestione e preparazione ordine. Se modifichi l'ordine e il totale sale paghi solo la differenza; se scende, la differenza ti torna a conti chiusi.",
+        a: "Con la carta, quando confermi l'ordine. Paghi prodotti, spedizione e le spese di preparazione ordine. Se modifichi l'ordine e il totale sale paghi solo la differenza; se scende, la differenza ti torna a conti chiusi.",
       },
       {
-        q: "Cosa sono le spese di gestione e preparazione ordine?",
-        a: "Una stima dei costi che l'associazione sostiene per l'ordine (per esempio pesate e spedizioni divise tra i soci). Non è un ricarico: a conti chiusi ti rimborsiamo tutto quello che non è servito.",
+        q: "Cosa sono le spese di preparazione ordine?",
+        a: "Una quota per le commissioni bancarie e le spese di gestione dell'associazione, decisa per ogni ciclo: una percentuale dei prodotti o un importo fisso. La vedi prima di confermare e resta all'associazione.",
       },
       {
         q: "Quando arrivano i rimborsi?",
@@ -673,7 +678,7 @@ export const it = {
       handlingFeeEditWarning: "Chi ha già pagato con la quota precedente salda la differenza al conguaglio.",
       perOrderProportionalNote: "Con la spedizione proporzionale la quota di ciascuno si conosce solo alla chiusura: ogni socio la pagherà al conguaglio.",
       closeFeeNote: (fee: string) => `Spese di preparazione: ${fee} a ogni socio con un ordine.`,
-      handlingFeeDisplay: (fee: string) => `Spese di gestione: ${fee}`,
+      handlingFeeDisplay: (fee: string) => `Spese di preparazione ordine: ${fee}`,
       shippingManualTitle: "Gestita manualmente per socio",
       shippingManualDescription: "Le quote di spedizione sono state importate dalla distinta fornitore e variano per socio. Le voci nel saldo dei soci restano invariate finché non carichi una nuova distinta.",
       shippingProportionalDisplay: (amount: string) => `${amount} totali (proporzionale al valore ordine)`,
@@ -1327,7 +1332,7 @@ export const it = {
     orderClosedBodyWithFee: (title: string, total: string, order: string, shipping: string | null, fee: string) =>
       `È stato chiuso "${title}". Ti è stato addebitato ${total} (ordine ${order}${shipping ? ` + spedizione ${shipping}` : ""} + spese di preparazione ${fee}).`,
     orderClosedPerOrderBody: (title: string, total: string) =>
-      `È stato chiuso "${title}". Il costo del tuo ordine per ora è ${total}: è provvisorio fino alle pesate e alla distinta del fornitore. A conti chiusi ti rimborsiamo la differenza con quanto hai pagato.`,
+      `È stato chiuso "${title}". Il costo del tuo ordine per ora è ${total}: è provvisorio fino alle pesate e alla distinta del fornitore. A conti chiusi si regola la differenza con quanto hai pagato.`,
     cycleCancelledPerOrderBody: (title: string, reason: string) =>
       `L'ordine "${title}" è stato annullato: ${reason}. Quanto hai pagato ti torna sulla carta a conti chiusi.`,
     topupReceivedTitle: "Ricarica registrata",
@@ -1344,7 +1349,7 @@ export const it = {
       `Il rimborso di ${amount} sulla carta di ${name} non è andato a buon fine e l'importo è tornato sul suo saldo. Restituiscilo con un bonifico: Cassa → Movimento in uscita → Restituzione.`,
     orderPaidTitle: "Ordine confermato e pagato",
     orderPaidBody: (cycle: string, amount: string, products: string, shipping: string, fee: string) =>
-      `Il tuo ordine per "${cycle}" è confermato. Hai pagato ${amount}: prodotti ${products}, spedizione ${shipping}, spese di gestione e preparazione ordine (stima) ${fee}. A conti chiusi ti rimborsiamo quello che non è servito.`,
+      `Il tuo ordine per "${cycle}" è confermato. Hai pagato ${amount}: prodotti ${products}, spedizione ${shipping}, spese di preparazione ordine ${fee}. A conti chiusi si regola la differenza su prodotti e spedizione.`,
     orderPaidShortBody: (cycle: string, amount: string) =>
       `Il tuo ordine per "${cycle}" è confermato. Hai pagato ${amount}.`,
     balancePaidTitle: "Saldo pagato",
