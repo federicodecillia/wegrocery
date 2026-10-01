@@ -2,10 +2,10 @@
 // unit tested. Per cycle it sets what the member got (the order lines at
 // their effective cost) against what the ledger moved, so the figures of a
 // charged cycle add up to the balance:
-//   -productsTotal - shipping + corrections === net
+//   -productsTotal - shipping - handling + corrections === net
 // A pay-per-order cycle adds what the member paid and what went back to the
 // card (spec "UI per modalità": pagato, costi, rimborsato, netto):
-//   paid - productsTotal - shipping + corrections - refunded === net
+//   paid - productsTotal - shipping - handling + corrections - refunded === net
 
 type CycleMeta = {
   cycleId: string;
@@ -38,6 +38,7 @@ export type HistoryLineRow = CycleMeta & {
 export type HistoryLedgerRow = CycleMeta & {
   net: string;
   shipping: string;
+  handling?: string; // the order preparation fee charged, positive
   // Pay-per-order: order and balance payments, positive, and the refunds to
   // the card net of the failed ones, positive.
   paid?: string;
@@ -74,9 +75,10 @@ export type CycleHistoryEntry = {
   paid: number;
   refunded: number;
   // Costs, positive: the lines at coalesce(actual_line_total, line_total),
-  // and the shipping charged.
+  // the shipping and the order preparation fee charged.
   productsTotal: number;
   shipping: number;
+  handling: number;
   // Signed like the ledger (+ = credit to the member): what products and
   // shipping do not explain (a cancellation refund, a manual correction),
   // and the member's net on the cycle, SUM(amount) WHERE cycle_id.
@@ -138,6 +140,7 @@ export function buildCycleHistory(
       const ledger = ledgerByCycle.get(meta.cycleId);
       const netCents = ledger ? toCents(ledger.net) : 0;
       const shippingCents = ledger ? toCents(ledger.shipping) : 0;
+      const handlingCents = ledger?.handling ? toCents(ledger.handling) : 0;
       const paymentMode = meta.paymentMode === "per_order" ? "per_order" : "wallet";
       const paidCents = ledger?.paid ? toCents(ledger.paid) : 0;
       const refundedCents = ledger?.refunded ? toCents(ledger.refunded) : 0;
@@ -157,8 +160,9 @@ export function buildCycleHistory(
         refunded: refundedCents / 100,
         productsTotal: productsCents / 100,
         shipping: shippingCents / 100,
+        handling: handlingCents / 100,
         corrections: charged
-          ? (netCents + productsCents + shippingCents - paidCents + refundedCents) / 100
+          ? (netCents + productsCents + shippingCents + handlingCents - paidCents + refundedCents) / 100
           : 0,
         net: netCents / 100,
       };

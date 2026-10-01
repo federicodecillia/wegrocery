@@ -20,7 +20,13 @@ import { getDb } from "@/lib/db/client";
 import { getConsolidatedBalanceCents } from "@/lib/payments/balance-due";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
 import { getCycleCoverageCents } from "@/lib/payments/order-confirm";
-import { homeOrderStatus, orderPaymentAmount, type HomeOrderStatus } from "@/lib/payments/order-payment";
+import {
+  cycleHandlingFee,
+  handlingFeeCents,
+  homeOrderStatus,
+  orderPaymentAmount,
+  type HomeOrderStatus,
+} from "@/lib/payments/order-payment";
 import { formatDateShort, formatEur, getProductEmoji } from "@/lib/utils";
 import { canAccessCycle } from "@/lib/roles";
 import { movementText } from "@/lib/movement-label";
@@ -53,7 +59,9 @@ export default async function HomePage() {
         getMemberOrderLines(memberId, cycle.cycleId),
       ]);
       const orderTotal = myLines.reduce((s, l) => s + parseFloat(l.lineTotal), 0);
-      return { cycle, cycleProducts, myLines, orderTotal, payStatus: await payStatusOf(cycle, cycleProducts, myLines.length > 0) };
+      // The order preparation fee a wallet member will be charged at the close (estimate).
+      const feeCents = payPerOrder ? 0 : handlingFeeCents(Math.round(orderTotal * 100), cycleHandlingFee(cycle));
+      return { cycle, cycleProducts, myLines, orderTotal, feeCents, payStatus: await payStatusOf(cycle, cycleProducts, myLines.length > 0) };
     })
   );
 
@@ -85,7 +93,7 @@ export default async function HomePage() {
     return homeOrderStatus({ hasConfirmedOrder, draft, coveredCents });
   }
 
-  const globalOrderTotal = cycleDataList.reduce((sum, d) => sum + (isNaN(d.orderTotal) ? 0 : d.orderTotal), 0);
+  const globalOrderTotal = cycleDataList.reduce((sum, d) => sum + (isNaN(d.orderTotal) ? 0 : d.orderTotal + d.feeCents / 100), 0);
   const afterBalance = (balance || 0) - globalOrderTotal;
 
   const isNegative = balance < 0;
@@ -155,6 +163,9 @@ export default async function HomePage() {
             </div>
           </div>
         </div>
+        {cycleDataList.some((d) => d.feeCents > 0) && (
+          <p className="mt-[6px] text-label text-muted">{t.home.feeIncluded}</p>
+        )}
         {isNegative ? (
           <div className="mt-[12px]">
             <Link

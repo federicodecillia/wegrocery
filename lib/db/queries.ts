@@ -416,6 +416,7 @@ export async function getMemberStorico(memberId: string): Promise<CycleHistoryEn
         ...cycle,
         net: sql<string>`sum(${ledgerEntries.amount})`,
         shipping: sql<string>`-coalesce(sum(${ledgerEntries.amount}) filter (where ${ledgerEntries.type} = 'shipping_charge' and ${ledgerEntries.reversedBy} is null), 0)`,
+        handling: sql<string>`-coalesce(sum(${ledgerEntries.amount}) filter (where ${ledgerEntries.type} = 'handling_charge' and ${ledgerEntries.reversedBy} is null), 0)`,
         paid: sql<string>`coalesce(sum(${ledgerEntries.amount}) filter (where ${ledgerEntries.type} in ('order_payment', 'balance_payment') and ${ledgerEntries.reversedBy} is null), 0)`,
         refunded: sql<string>`-coalesce(sum(${ledgerEntries.amount}) filter (where ${ledgerEntries.type} in ('order_refund', 'refund_failed') and ${ledgerEntries.reversedBy} is null), 0)`,
       })
