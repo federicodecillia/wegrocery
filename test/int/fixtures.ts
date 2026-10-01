@@ -14,6 +14,11 @@ export const testSql = ((strings: TemplateStringsArray, ...values: unknown[]) =>
   return client(strings, ...values);
 }) as Sql;
 
+export function rawClient(): Sql {
+  client ??= neon(process.env.DATABASE_URL!);
+  return client;
+}
+
 // A whole SQL statement as text (a migration file's), no parameters.
 export async function runSql(statement: string): Promise<void> {
   client ??= neon(process.env.DATABASE_URL!);
@@ -143,7 +148,12 @@ export function makeScope(label: string) {
       const like = `${prefix}%`;
       await sql`DELETE FROM notifications WHERE member_id = ${memberId} OR body LIKE ${`%${memberName}%`}`;
       await sql`DELETE FROM audit_log WHERE entity_id LIKE ${like}`;
-      await sql`DELETE FROM ledger_entries WHERE member_id = ${memberId} OR entry_id LIKE ${like}`;
+      // The ledger is append-only (drizzle/0023): the cleanup deletes in a
+      // transaction that switches the guard off for itself only.
+      await rawClient().transaction((tx) => [
+        tx`SELECT set_config('wegrocery.ledger_maintenance', 'on', true)`,
+        tx`DELETE FROM ledger_entries WHERE member_id = ${memberId} OR entry_id LIKE ${like}`,
+      ]);
       await sql`DELETE FROM refunds WHERE member_id = ${memberId}`;
       await sql`DELETE FROM payments WHERE member_id = ${memberId}`;
       await sql`DELETE FROM order_drafts WHERE member_id = ${memberId}`;

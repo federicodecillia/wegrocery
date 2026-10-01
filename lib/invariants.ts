@@ -80,7 +80,26 @@ export const INVARIANT_CHECKS: InvariantCheck[] = [
         AND NOT EXISTS (
           SELECT 1 FROM ledger_entries l
           WHERE l.cycle_id = o.cycle_id AND l.member_id = o.member_id AND l.type = 'order_charge'
+            AND l.reversed_by IS NULL
         )
         AND EXISTS (SELECT 1 FROM ledger_entries l WHERE l.cycle_id = o.cycle_id AND l.type = 'order_charge')`,
+  },
+  {
+    name: "reversal_pairs",
+    description: "every reversal cancels exactly its movement, which points back at it",
+    query: sql`
+      SELECT r.entry_id AS id FROM ledger_entries r
+      LEFT JOIN ledger_entries o ON o.entry_id = r.reverses
+      WHERE r.type = 'reversal'
+        AND (o.entry_id IS NULL OR o.reversed_by IS DISTINCT FROM r.entry_id OR r.amount <> -o.amount
+             OR r.member_id <> o.member_id)`,
+  },
+  {
+    name: "reversed_without_reversal",
+    description: "a movement marked reversed has its reversal row",
+    query: sql`
+      SELECT o.entry_id AS id FROM ledger_entries o
+      WHERE o.reversed_by IS NOT NULL
+        AND NOT EXISTS (SELECT 1 FROM ledger_entries r WHERE r.entry_id = o.reversed_by AND r.reverses = o.entry_id)`,
   },
 ];

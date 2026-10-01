@@ -20,6 +20,9 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ## [Unreleased]
 
+### Changed
+- 🧾 **Corrections never rewrite history.** Editing or deleting a movement in Treasury, recomputing shipping on a closed cycle or importing the supplier's sheet now cancel the movement with a reversal and, when needed, add the corrected one; members see one movement marked "corrected on". Upgrade note: apply `drizzle/0023_ledger_append_only.sql` right before deploying (it makes the database refuse changes to past movements).
+
 ## [1.17.0] — 2026-09-30
 
 *Sign in with an email link, and the groundwork for paying each order.*

@@ -21,6 +21,9 @@ stanno nella PR.
 
 ## [Non rilasciato]
 
+### Modificato
+- 🧾 **Le correzioni non riscrivono la storia.** Modificare o eliminare un movimento in Cassa, ricalcolare la spedizione di un ciclo chiuso o importare la distinta del fornitore ora annullano il movimento con uno storno e, se serve, aggiungono quello corretto; i soci vedono un solo movimento con "corretto il". Nota di aggiornamento: applicare `drizzle/0023_ledger_append_only.sql` subito prima del deploy (il database rifiuta da quel momento le modifiche ai movimenti passati).
+
 ## [1.17.0] — 30 settembre 2026
 
 *Accesso con un link via email, e le basi per pagare ogni ordine.*

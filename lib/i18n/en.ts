@@ -184,6 +184,7 @@ export const en: Strings = {
     refundFailed: "Refund failed",
     orderPayment: "Order payment",
     orderRefund: "Refund to card",
+    reversal: "Reversal",
     payout: "Balance returned",
     manualCharge: "Charge",
     membershipFee: "Membership fee",
@@ -1253,6 +1254,10 @@ export const en: Strings = {
       `The cycle "${title}" was cancelled: ${reason}. We refunded you ${amount}.`,
   },
   ledger: {
+    correctedOn: (date: string) => `corrected on ${date}`,
+    correctedBy: "Movement corrected",
+    deletedBy: "Movement cancelled",
+    reversal: "Reversal",
     orderCharge: "Order charge",
     shippingAdjusted: "Shipping adjusted",
     shippingFromSupplier: "Shipping from supplier sheet",

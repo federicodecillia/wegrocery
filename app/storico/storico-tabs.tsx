@@ -10,7 +10,7 @@ import { MovementIcon } from "@/components/movement-icon";
 import { movementKind, movementText } from "@/lib/movement-label";
 import { MovementDetailDialog, type MovementDetail } from "./movement-detail";
 
-type LedgerEntry = MovementDetail & { entryId: string };
+type LedgerEntry = MovementDetail & { entryId: string; correctedAt?: string | null };
 
 type Props = {
   orderHistory: CycleHistoryEntry[];
@@ -232,6 +232,7 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
                         </div>
                         <div className="mt-[2px] font-mono text-label text-muted">
                           {formatDate(e.entryDate)}
+                          {e.correctedAt && ` · ${t.ledger.correctedOn(formatDate(e.correctedAt))}`}
                         </div>
                       </div>
                     </div>

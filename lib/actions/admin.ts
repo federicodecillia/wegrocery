@@ -54,6 +54,8 @@ import {
 import { selectCycleAccessMembers } from "@/lib/notifications/reminder";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
 import { parseHandlingFee, resolveCycleFee } from "@/lib/payments/order-payment";
+import { reverseEntry, reverseEntrySql } from "@/lib/ledger-reversal";
+import { liveLedger } from "@/lib/db/ledger-live";
 import { retryRequestedRefunds } from "@/lib/payments/refund-request";
 import { isAboveMaxBalance } from "@/lib/payments/settings";
 import { DEFAULT_ACCESS_LEVEL, normalizeAccessLevel, normalizeRole, type AccessLevel } from "@/lib/roles";
@@ -276,6 +278,7 @@ async function performCycleClose(
         and(
           eq(ledgerEntries.cycleId, cycleId),
           inArray(ledgerEntries.type, ["order_charge", "shipping_charge"]),
+          liveLedger,
         ),
       );
     const alreadyCharged = {
@@ -472,8 +475,8 @@ export async function adminCancelClosedCycle(
           reversal === null
             ? eq(ledgerEntries.cycleId, cycleId)
             : "include" in reversal
-              ? and(eq(ledgerEntries.cycleId, cycleId), inArray(ledgerEntries.type, reversal.include))
-              : and(eq(ledgerEntries.cycleId, cycleId), notInArray(ledgerEntries.type, reversal.exclude)),
+              ? and(eq(ledgerEntries.cycleId, cycleId), inArray(ledgerEntries.type, reversal.include), liveLedger)
+              : and(eq(ledgerEntries.cycleId, cycleId), notInArray(ledgerEntries.type, reversal.exclude), liveLedger),
         )
         .groupBy(ledgerEntries.memberId);
 
@@ -659,7 +662,7 @@ async function prepareShippingRecompute(
         amount: ledgerEntries.amount,
       })
       .from(ledgerEntries)
-      .where(and(eq(ledgerEntries.cycleId, cycleId), eq(ledgerEntries.type, "shipping_charge"))),
+      .where(and(eq(ledgerEntries.cycleId, cycleId), eq(ledgerEntries.type, "shipping_charge"), liveLedger)),
   ]);
   const plan = planShippingRecompute(
     cycle,
@@ -667,14 +670,19 @@ async function prepareShippingRecompute(
     rows,
   );
 
-  // Rows are rewritten in place, never deleted, so the audit trail stays.
+  // The ledger is append-only: a changed share is reversed and posted again
+  // (nothing posted again when it drops to zero).
   const statements: BatchItem<"pg">[] = [];
   for (const u of plan.updates) {
     statements.push(
-      db
-        .update(ledgerEntries)
-        .set({ amount: u.amount, note: t.ledger.shippingAdjusted, updatedAt: now, updatedBy: adminEmail })
-        .where(eq(ledgerEntries.entryId, u.entryId)),
+      db.execute(
+        reverseEntrySql({
+          entryId: u.entryId,
+          note: t.ledger.shippingAdjusted,
+          by: adminEmail,
+          ...(parseFloat(u.amount) !== 0 && { replacement: { amount: u.amount, note: t.ledger.shippingAdjusted } }),
+        }),
+      ),
     );
   }
   if (plan.inserts.length > 0) {
@@ -706,7 +714,7 @@ async function prepareShippingRecompute(
                     = ${ordersSnapshot(totals)}::jsonb
                 AND (SELECT coalesce(jsonb_object_agg(entry_id, amount::text), '{}'::jsonb)
                      FROM ledger_entries
-                     WHERE cycle_id = ${cycleId} AND type = 'shipping_charge')
+                     WHERE cycle_id = ${cycleId} AND type = 'shipping_charge' AND reversed_by IS NULL)
                     = ${shippingRowsSnapshot(rows)}::jsonb`;
 
   return { plan, statements, guard };
@@ -1046,6 +1054,7 @@ async function possibleDuplicateWarning(
       and(
         eq(ledgerEntries.memberId, memberId),
         eq(ledgerEntries.type, plan.type),
+        liveLedger,
         sql`${ledgerEntries.entryDate} BETWEEN ${from.toISOString()} AND ${to.toISOString()}`,
       ),
     );
@@ -1926,12 +1935,16 @@ export async function adminUpdateLedgerEntry(
       if (excess) return { error: t.admin.treasury.movementErrors.payoutExceedsBalance(formatMoney(excess.limit)) };
     }
 
+    // The ledger is append-only: the movement is reversed and replaced.
     const after = { ...before, amount: data.amount.toFixed(2), note: data.note };
-    await db
-      .update(ledgerEntries)
-      .set({ amount: after.amount, note: after.note, updatedBy: admin.email, updatedAt: new Date() })
-      .where(eq(ledgerEntries.entryId, entryId));
-    await writeAudit(db, admin.email, "update_ledger", "ledger", entryId, { before, after });
+    const corrected = await reverseEntry(db, {
+      entryId,
+      note: t.ledger.correctedBy,
+      by: admin.email,
+      replacement: { amount: after.amount, note: after.note ?? "" },
+    });
+    if (!corrected) return { error: t.errors.ledgerEntryNotFound };
+    await writeAudit(db, admin.email, "update_ledger", "ledger", entryId, { before, after, ...corrected });
     revalidatePath("/admin");
     revalidatePath("/");
     revalidatePath("/storico");
@@ -1954,8 +1967,10 @@ export async function adminDeleteLedgerEntry(entryId: string): Promise<{ error?:
     if (!isAdminEditableLedgerType(before.type)) return { error: t.errors.ledgerEntryNotEditable };
     if (before.paymentId) return { error: t.errors.ledgerEntryFromOnlinePayment };
 
-    await db.delete(ledgerEntries).where(eq(ledgerEntries.entryId, entryId));
-    await writeAudit(db, admin.email, "delete_ledger", "ledger", entryId, { before, after: null });
+    // The ledger is append-only: the movement is reversed, not deleted.
+    const reversed = await reverseEntry(db, { entryId, note: t.ledger.deletedBy, by: admin.email });
+    if (!reversed) return { error: t.errors.ledgerEntryNotFound };
+    await writeAudit(db, admin.email, "delete_ledger", "ledger", entryId, { before, after: null, ...reversed });
     revalidatePath("/admin");
     revalidatePath("/");
     revalidatePath("/storico");
@@ -2549,6 +2564,7 @@ export async function adminApplyDistintaImport(input: {
           and(
             eq(ledgerEntries.cycleId, input.cycleId),
             eq(ledgerEntries.type, "shipping_charge"),
+            liveLedger,
           ),
         );
       const existingByMember = new Map(existing.map((e) => [e.memberId, e.entryId]));
@@ -2557,15 +2573,16 @@ export async function adminApplyDistintaImport(input: {
         const newAmount = -s.newShipping; // ledger stores it as negative charge
         const prev = existingByMember.get(s.memberId);
         if (prev) {
-          await db
-            .update(ledgerEntries)
-            .set({
-              amount: newAmount.toFixed(2),
-              note: t.ledger.shippingFromSupplier,
-              updatedAt: now,
-              updatedBy: admin.email,
-            })
-            .where(eq(ledgerEntries.entryId, prev));
+          // Append-only: the share is reversed and posted again with the
+          // supplier's figure (nothing posted again when it is zero).
+          await reverseEntry(db, {
+            entryId: prev,
+            note: t.ledger.shippingFromSupplier,
+            by: admin.email,
+            ...(s.newShipping > 0 && {
+              replacement: { amount: newAmount.toFixed(2), note: t.ledger.shippingFromSupplier },
+            }),
+          });
         } else if (s.newShipping > 0) {
           await db.insert(ledgerEntries).values({
             entryId: genId("led"),

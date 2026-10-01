@@ -364,6 +364,12 @@ export const ledgerEntries = pgTable(
     externalRef: text("external_ref"),
     // The refund this row debits or reverses (migration 0020), NULL otherwise.
     refundId: text("refund_id").references(() => refunds.refundId),
+    // Append-only corrections (drizzle/0023_ledger_append_only.sql): the
+    // 'reversal' row cancelling this one; on a reversal, the row it cancels;
+    // on a correcting row, the row it replaces. lib/ledger-reversal.ts writes them.
+    reversedBy: text("reversed_by"),
+    reverses: text("reverses"),
+    replaces: text("replaces"),
   },
   (table) => [
     index("ledger_entries_member_id_idx").on(table.memberId),
@@ -373,9 +379,11 @@ export const ledgerEntries = pgTable(
     check("ledger_entries_amount_not_nan", sql`${table.amount} <> 'NaN'`),
     // At most one order/shipping charge per member per cycle: the backstop
     // against double charging (drizzle/0013_unique_cycle_charges.sql).
-    uniqueIndex("ledger_entries_cycle_member_charge_uniq")
+    uniqueIndex("ledger_entries_cycle_member_charge_live_uniq")
       .on(table.cycleId, table.memberId, table.type)
-      .where(sql`${table.type} IN ('order_charge', 'shipping_charge')`),
+      .where(sql`${table.type} IN ('order_charge', 'shipping_charge') AND ${table.reversedBy} IS NULL`),
+    uniqueIndex("ledger_entries_reverses_uniq").on(table.reverses).where(sql`${table.reverses} IS NOT NULL`),
+    check("ledger_entries_reversal_check", sql`(${table.type} = 'reversal') = (${table.reverses} IS NOT NULL)`),
     // A payment is credited at most once (drizzle/0016_stripe_payments.sql).
     uniqueIndex("ledger_entries_payment_topup_uniq")
       .on(table.paymentId)

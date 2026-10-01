@@ -1,4 +1,5 @@
 import { and, eq } from "drizzle-orm";
+import { liveLedger } from "@/lib/db/ledger-live";
 import ExcelJS from "exceljs";
 import { getDb } from "@/lib/db/client";
 import {
@@ -361,7 +362,7 @@ async function buildPreviewFromRaw(c: Collected): Promise<DistintaImportPreview>
   const shippingRows = await db
     .select({ memberId: ledgerEntries.memberId, amount: ledgerEntries.amount })
     .from(ledgerEntries)
-    .where(and(eq(ledgerEntries.cycleId, cycleId), eq(ledgerEntries.type, "shipping_charge")));
+    .where(and(eq(ledgerEntries.cycleId, cycleId), eq(ledgerEntries.type, "shipping_charge"), liveLedger));
   const shippingByMember = new Map<string, number>(
     shippingRows.map((s) => [s.memberId, Math.abs(parseFloat(s.amount))]),
   );
