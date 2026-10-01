@@ -12,6 +12,7 @@ import {
   SupplierActionsButton,
 } from "./ciclo-forms";
 import { CancelCycleButton } from "./cancel-cycle-dialog";
+import { SettleCycleButton } from "./settle-cycle-dialog";
 import { ClosedCycleDetails } from "./closed-cycle-details";
 
 export async function TabCiclo() {
@@ -150,6 +151,13 @@ export async function TabCiclo() {
                     />
                     <ClosedCycleDetails cycleId={c.cycleId} cycleTitle={c.title} />
                     <CancelCycleButton cycleId={c.cycleId} cycleTitle={c.title} />
+                    {c.paymentMode === "per_order" && (
+                      <SettleCycleButton
+                        cycleId={c.cycleId}
+                        cycleTitle={c.title}
+                        settledAt={c.settledAt?.toISOString() ?? null}
+                      />
+                    )}
                   </div>
                 )}
                 {c.status === "cancelled" && (

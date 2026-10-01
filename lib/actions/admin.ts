@@ -57,6 +57,8 @@ import { parseHandlingFee, resolveCycleFee } from "@/lib/payments/order-payment"
 import { reverseEntry, reverseEntrySql } from "@/lib/ledger-reversal";
 import { liveLedger } from "@/lib/db/ledger-live";
 import { retryRequestedRefunds } from "@/lib/payments/refund-request";
+import { previewSettlement, settleCycle, type SettleResult } from "@/lib/payments/settlement-store";
+import { getStripe } from "@/lib/payments/stripe";
 import { isAboveMaxBalance } from "@/lib/payments/settings";
 import { DEFAULT_ACCESS_LEVEL, normalizeAccessLevel, normalizeRole, type AccessLevel } from "@/lib/roles";
 
@@ -1267,6 +1269,60 @@ export async function adminRecordOutgoingMovement(
 // Returns the defaults the supplier-email dialog needs to pre-fill its
 // fields (To / From / CC / Subject). Used by the client before the admin
 // hits "Invia ora" so they can review and tweak any field.
+// Ciclo: "Chiudi i conti" of a pay-per-order cycle (lib/payments/settlement*).
+export type SettlementPreviewRow = {
+  memberId: string;
+  fullName: string;
+  netCents: number;
+  action: "settled" | "offline" | "refund" | "due" | "writeOff";
+  amountCents: number;
+  excessCents: number;
+};
+
+export async function adminPreviewSettlement(
+  cycleId: string,
+): Promise<{ rows: SettlementPreviewRow[]; settledAt: string | null } | { error: string }> {
+  try {
+    await requireAdmin();
+    const preview = await previewSettlement(getDb(), cycleId);
+    return {
+      settledAt: preview.cycle.settledAt ? new Date(preview.cycle.settledAt).toISOString() : null,
+      rows: preview.members.map((m) => ({
+        memberId: m.memberId,
+        fullName: m.fullName,
+        netCents: m.netCents,
+        action: m.plan.kind,
+        amountCents:
+          m.plan.kind === "refund"
+            ? m.plan.refunds.reduce((s, r) => s + r.amountCents, 0)
+            : m.plan.kind === "due"
+              ? m.plan.dueCents
+              : m.plan.kind === "writeOff"
+                ? m.plan.cents
+                : 0,
+        excessCents: m.plan.kind === "refund" ? m.plan.excessCents : 0,
+      })),
+    };
+  } catch (e) {
+    return { error: actionErrorMessage(e, t.errors.genericError, "adminPreviewSettlement") };
+  }
+}
+
+export async function adminSettleCycle(cycleId: string): Promise<SettleResult | { error: string }> {
+  try {
+    const admin = await requireAdmin();
+    const db = getDb();
+    const result = await settleCycle(db, cycleId, { by: admin.email, stripe: getStripe() });
+    await writeAudit(db, admin.email, "settle_cycle", "cycle", cycleId, result);
+    revalidatePath("/admin");
+    revalidatePath("/storico");
+    revalidatePath("/");
+    return result;
+  } catch (e) {
+    return { error: actionErrorMessage(e, t.errors.genericError, "adminSettleCycle") };
+  }
+}
+
 // Cassa: sends again the refunds Stripe has not answered (a network error
 // after an order was cancelled or a payment arrived late). Safe to repeat:
 // each refund's id is its Stripe idempotency key.

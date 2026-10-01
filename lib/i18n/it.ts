@@ -441,6 +441,29 @@ export const it = {
     admin: "Solo admin",
   },
   admin: {
+    settlement: {
+      openButton: "Chiudi i conti",
+      settledButton: (date: string) => `Conti chiusi il ${date}`,
+      title: (cycle: string) => `Chiudi i conti: ${cycle}`,
+      intro:
+        "Con i costi definitivi (pesate e distinta) l'app restituisce sulla carta quello che ogni socio ha pagato in più, chiede di saldare a chi ha pagato meno e abbuona le differenze sotto 0,50 €. Si può rifare in qualsiasi momento.",
+      loading: "Calcolo...",
+      empty: "Nessun socio su questo ciclo.",
+      net: (amount: string) => `netto del ciclo ${amount}`,
+      action: {
+        settled: () => "In pari",
+        offline: () => "Paga fuori app: segue la Cassa",
+        refund: (amount: string) => `Rimborso ${amount}`,
+        due: (amount: string) => `Da saldare ${amount}`,
+        writeOff: (amount: string) => `Abbuono ${amount}`,
+      },
+      excess: (amount: string) => `${amount} oltre il pagato`,
+      excessHint: "Una parte supera quanto pagato con la carta (per esempio un accredito): restituiscila dalla Cassa.",
+      confirm: "Chiudi i conti",
+      running: "In corso...",
+      done: (sent: number, waiting: number, due: number, writeOffs: number) =>
+        `Rimborsi inviati ${sent}, in attesa ${waiting}, da saldare ${due}, abbuoni ${writeOffs}`,
+    },
     configStatus: {
       title: "Stato della configurazione",
       intro:

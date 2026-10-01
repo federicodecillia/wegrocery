@@ -439,6 +439,29 @@ export const en: Strings = {
     admin: "Admin only",
   },
   admin: {
+    settlement: {
+      openButton: "Settle accounts",
+      settledButton: (date: string) => `Settled on ${date}`,
+      title: (cycle: string) => `Settle accounts: ${cycle}`,
+      intro:
+        "With the final costs (weighing and supplier sheet) the app refunds to the card what each member paid in excess, asks those who paid less to settle, and writes off gaps under 0.50. It can run again at any time.",
+      loading: "Calculating...",
+      empty: "No members on this cycle.",
+      net: (amount: string) => `cycle net ${amount}`,
+      action: {
+        settled: () => "Even",
+        offline: () => "Pays outside the app: Treasury",
+        refund: (amount: string) => `Refund ${amount}`,
+        due: (amount: string) => `Due ${amount}`,
+        writeOff: (amount: string) => `Write-off ${amount}`,
+      },
+      excess: (amount: string) => `${amount} beyond what was paid`,
+      excessHint: "Part of it is more than was paid by card (for example a credit): return it from Treasury.",
+      confirm: "Settle accounts",
+      running: "Running...",
+      done: (sent: number, waiting: number, due: number, writeOffs: number) =>
+        `Refunds sent ${sent}, waiting ${waiting}, due ${due}, write-offs ${writeOffs}`,
+    },
     configStatus: {
       title: "Configuration status",
       intro:

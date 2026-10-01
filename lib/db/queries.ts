@@ -524,6 +524,8 @@ export async function getAllCycles(limit = 30) {
       shippingMode: orderCycles.shippingMode,
       shippingCostPerMember: orderCycles.shippingCostPerMember,
       shippingTotal: orderCycles.shippingTotal,
+      paymentMode: orderCycles.paymentMode,
+      settledAt: orderCycles.settledAt,
     })
     .from(orderCycles)
     .leftJoin(suppliers, eq(orderCycles.supplierId, suppliers.supplierId))
