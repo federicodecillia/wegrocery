@@ -1180,6 +1180,28 @@ export const en: Strings = {
       importAddedToCycle: (n: number) => `${n} in cycle`,
     },
     settings: {
+      mode: {
+        title: "Payment mode",
+        wallet: "Wallet: members top up a balance and orders are charged when the cycle closes.",
+        perOrder: "Pay per order: each member pays their order by card; once costs are final the app refunds the difference or asks for what is due.",
+        current: (label: string) => `Current mode: ${label}`,
+        walletName: "wallet",
+        perOrderName: "pay per order",
+        switchTo: (label: string) => `Switch to ${label}`,
+        blockedTitle: "To change mode:",
+        blockers: {
+          running_cycles: "close or cancel the running cycles.",
+          unsettled_cycles: "settle the cycles paid per order (Admin → Cycle → Settle accounts).",
+          currency: "pay per order is only available in euros.",
+          stripe_unavailable: "this deploy needs a usable Stripe key.",
+        },
+        summary: (neg: number, negAmount: string, pos: number, posAmount: string) =>
+          `Balances today: ${neg} negative (${negAmount}) and ${pos} positive (${posAmount}).`,
+        toPerOrderEffect: "After the change a negative balance becomes an amount due and a positive one a credit to give back in Treasury.",
+        toWalletEffect: "After the change an amount due goes back to a negative balance and members top up as before.",
+        confirm: (label: string) => `Switch to ${label}? Cycles already created keep their mode.`,
+        changed: "Payment mode changed.",
+      },
       tabLabel: "Settings",
       defaultsNotice: "These are the group's default values: check them and save. Until you save, the app uses these.",
       limitsTitle: "Balance limits",

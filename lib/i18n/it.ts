@@ -1183,6 +1183,28 @@ export const it = {
       importAddedToCycle: (n: number) => `${n} nel ciclo`,
     },
     settings: {
+      mode: {
+        title: "Modalità di pagamento",
+        wallet: "Borsellino: i soci ricaricano un saldo e gli ordini si addebitano alla chiusura.",
+        perOrder: "Pagamento per ordine: ogni socio paga il suo ordine con la carta; a costi definitivi l'app rimborsa la differenza o chiede di saldare.",
+        current: (label: string) => `Modalità attuale: ${label}`,
+        walletName: "borsellino",
+        perOrderName: "pagamento per ordine",
+        switchTo: (label: string) => `Passa a ${label}`,
+        blockedTitle: "Per cambiare modalità:",
+        blockers: {
+          running_cycles: "chiudi o annulla i cicli in corso.",
+          unsettled_cycles: "chiudi i conti dei cicli pagati per ordine (Admin → Ciclo → Chiudi i conti).",
+          currency: "il pagamento per ordine è disponibile solo in euro.",
+          stripe_unavailable: "serve una chiave Stripe valida su questo deploy.",
+        },
+        summary: (neg: number, negAmount: string, pos: number, posAmount: string) =>
+          `Saldi di oggi: ${neg} negativi (${negAmount}) e ${pos} positivi (${posAmount}).`,
+        toPerOrderEffect: "Dopo il cambio un saldo negativo diventa \"Da saldare\" e uno positivo un credito da restituire in Cassa.",
+        toWalletEffect: "Dopo il cambio un \"Da saldare\" torna saldo negativo e i soci ricaricano come prima.",
+        confirm: (label: string) => `Passare a ${label}? I cicli già creati restano nella loro modalità.`,
+        changed: "Modalità cambiata.",
+      },
       tabLabel: "Impostazioni",
       defaultsNotice:
         "Questi sono i valori predefiniti del gruppo: controllali e salva. Finché non salvi, l'app usa questi.",
