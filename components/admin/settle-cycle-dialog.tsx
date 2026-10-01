@@ -119,7 +119,7 @@ export function SettleCycleButton({
                 disabled={isPending || rows === null || (pending.length === 0 && settledAt !== null)}
                 className="flex-1 rounded-full bg-primary py-2 text-[13px] font-bold text-on-primary disabled:opacity-40"
               >
-                {isPending ? s.running : s.confirm}
+                {isPending && rows !== null ? s.running : s.confirm}
               </button>
             </div>
           </Dialog.Content>
