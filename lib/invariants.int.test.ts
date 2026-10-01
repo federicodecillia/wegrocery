@@ -63,4 +63,25 @@ describeDb("money invariants", () => {
     expect(found.paid_payment_credit).toEqual([p.paymentId]);
     expect(found.closed_cycle_charge).toEqual([`${cycleId}:${scope.memberId}`]);
   });
+
+  it("checks balance payments and settled pay-per-order cycles", async () => {
+    const { cycleId } = await scope.createCycle("settled", { paymentMode: "per_order" });
+    await scope.createPaidOrderPayment("set", cycleId, 1000);
+    await scope.addLedger("set_oc", scope.memberId, "order_charge", -8, cycleId);
+    await sql`UPDATE order_cycles SET status = 'closed', closed_at = now(), settled_at = now() WHERE cycle_id = ${cycleId}`;
+    // A balance payment credited for less than it took.
+    const balanceId = scope.id("bal");
+    await sql`INSERT INTO payments (payment_id, member_id, provider, status, amount_cents, currency, refunded_cents,
+        checkout_session_id, created_at, updated_at, kind)
+      VALUES (${balanceId}, ${scope.memberId}, 'stripe', 'succeeded', 500, 'eur', 0, ${`cs_${balanceId}`}, now(), now(),
+        'balance')`;
+    await sql`INSERT INTO ledger_entries (entry_id, member_id, entry_date, type, amount, note, created_by, created_at, payment_id)
+      VALUES (${scope.id("led_bal")}, ${scope.memberId}, now(), 'balance_payment', 3, 'int-test', 'stripe', now(), ${balanceId})`;
+    const found = await breaks();
+    expect(found.paid_balance_credit).toEqual([balanceId]);
+    // 2 € left on a settled cycle with no refund asked for.
+    expect(found.settled_cycle_credit).toEqual([`${cycleId}:${scope.memberId}`]);
+    await scope.createRequestedRefund(`settle_${scope.id("set")}_1`, `${scope.prefix}_pay_set`, cycleId, 200, "settlement");
+    expect((await breaks()).settled_cycle_credit).toEqual([]);
+  });
 });

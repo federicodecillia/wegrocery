@@ -102,4 +102,29 @@ export const INVARIANT_CHECKS: InvariantCheck[] = [
       WHERE o.reversed_by IS NOT NULL
         AND NOT EXISTS (SELECT 1 FROM ledger_entries r WHERE r.entry_id = o.reversed_by AND r.reverses = o.entry_id)`,
   },
+  {
+    name: "paid_balance_credit",
+    description: "every paid balance payment is credited for its whole amount, split over its parts",
+    query: sql`
+      SELECT p.payment_id AS id FROM payments p
+      WHERE p.kind = 'balance' AND p.status IN ('succeeded', 'partially_refunded', 'refunded')
+        AND coalesce((SELECT round(sum(l.amount) * 100) FROM ledger_entries l
+                      WHERE l.payment_id = p.payment_id AND l.type = 'balance_payment'), 0) <> p.amount_cents`,
+  },
+  {
+    name: "settled_cycle_credit",
+    // A negative net is an amount due the member has not paid yet; money left
+    // over means a correction came after the settlement (run Chiudi i conti
+    // again) or more than the card payments has to go back through Cassa.
+    description: "after a settlement no member keeps money on a pay-per-order cycle",
+    query: sql`
+      SELECT c.cycle_id || ':' || l.member_id AS id FROM order_cycles c
+      JOIN ledger_entries l ON l.cycle_id = c.cycle_id
+      JOIN members m ON m.member_id = l.member_id
+      WHERE c.payment_mode = 'per_order' AND c.settled_at IS NOT NULL AND NOT m.pays_offline
+      GROUP BY c.cycle_id, l.member_id
+      HAVING round(sum(l.amount) * 100) - coalesce((
+        SELECT sum(r.amount_cents) FROM refunds r
+        WHERE r.cycle_id = c.cycle_id AND r.member_id = l.member_id AND r.status = 'requested'), 0) > 0`,
+  },
 ];
