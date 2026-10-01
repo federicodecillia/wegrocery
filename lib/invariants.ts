@@ -70,7 +70,9 @@ export const INVARIANT_CHECKS: InvariantCheck[] = [
   {
     name: "closed_cycle_charge",
     // Cycles closed with no charge at all are history imported from before
-    // the app (their balances came in as opening amounts): not checked.
+    // the app (their balances came in as opening amounts): not checked. A
+    // negative correction on the cycle counts as a charge: an order added
+    // after the close is charged by hand in Cassa.
     description: "every member with a positive order on a closed cycle was charged for it",
     query: sql`
       SELECT o.cycle_id || ':' || o.member_id AS id FROM orders o
@@ -80,7 +82,8 @@ export const INVARIANT_CHECKS: InvariantCheck[] = [
       HAVING sum(o.line_total) > 0
         AND NOT EXISTS (
           SELECT 1 FROM ledger_entries l
-          WHERE l.cycle_id = o.cycle_id AND l.member_id = o.member_id AND l.type = 'order_charge'
+          WHERE l.cycle_id = o.cycle_id AND l.member_id = o.member_id
+            AND (l.type = 'order_charge' OR (l.type = 'correction' AND l.amount < 0))
             AND l.reversed_by IS NULL
         )
         AND EXISTS (SELECT 1 FROM ledger_entries l WHERE l.cycle_id = o.cycle_id AND l.type = 'order_charge')`,

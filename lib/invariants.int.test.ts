@@ -84,4 +84,16 @@ describeDb("money invariants", () => {
     await scope.createRequestedRefund(`settle_${scope.id("set")}_1`, `${scope.prefix}_pay_set`, cycleId, 200, "settlement");
     expect((await breaks()).settled_cycle_credit).toEqual([]);
   });
+
+  it("accepts an order charged by hand in Cassa after the close", async () => {
+    const { cycleId, productIds } = await scope.createCycle("manual", { products: [{ name: "Pears", unitPrice: 4 }] });
+    const other = await scope.createExtraMember("other");
+    await sql`INSERT INTO orders (order_line_id, cycle_id, member_id, product_id, quantity, unit_price_snapshot,
+        line_total, updated_at)
+      VALUES (${scope.id("mline")}, ${cycleId}, ${scope.memberId}, ${productIds[0]}, 2, 4, 8, now())`;
+    await sql`UPDATE order_cycles SET status = 'closed' WHERE cycle_id = ${cycleId}`;
+    await scope.addLedger("m_other", other, "order_charge", -5, cycleId);
+    await scope.addLedger("m_hand", scope.memberId, "correction", -8, cycleId);
+    expect((await breaks()).closed_cycle_charge).not.toContain(`${cycleId}:${scope.memberId}`);
+  });
 });
