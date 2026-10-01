@@ -1327,7 +1327,7 @@ export const en: Strings = {
     orderPaidShortBody: (cycle: string, amount: string) =>
       `Your order for "${cycle}" is confirmed. You paid ${amount}.`,
     balancePaidTitle: "Balance paid",
-    balancePaidBody: (amount: string) => `We received your payment of ${amount}. Nothing is due anymore.`,
+    balancePaidBody: (amount: string) => `We received your payment of ${amount}, thank you.`,
     settlementDueTitle: "Amount due",
     settlementDueBody: (cycle: string, amount: string) =>
       `The final costs of "${cycle}" are more than you paid: ${amount} is due. You can pay it from Top up with "Pay now".`,

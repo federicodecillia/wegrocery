@@ -78,4 +78,47 @@ describeDb("amount due in pay-per-order", () => {
     expect(rows.map((r) => `${r.cycle_id ?? "-"} ${r.amount}`)).toEqual([`${settledA} 2.30`, `${settledB} 1.00`, "- 0.70"]);
     expect(await getConsolidatedBalanceCents(getDb(), scope.memberId)).toBe(0);
   });
+
+  it("leaves out a settled cycle on which the card still owes the member money", async () => {
+    // A correction after the settlement: 3.00 the next Chiudi i conti sends
+    // back to the card, so it is not a credit the association hands out.
+    const { cycleId: late } = await scope.createCycle("late", { paymentMode: "per_order" });
+    await scope.createPaidOrderPayment("late", late, 1000);
+    await scope.addLedger("late_oc", scope.memberId, "order_charge", -7, late);
+    await sql`UPDATE order_cycles SET status = 'closed', closed_at = now(), settled_at = now() WHERE cycle_id = ${late}`;
+    expect(await getConsolidatedBalanceCents(getDb(), scope.memberId)).toBe(0);
+  });
+
+  it("books a payment on the debts as they are when it lands, even from a closed Checkout", async () => {
+    const { cycleId: d } = await scope.createCycle("d", { paymentMode: "per_order" });
+    await scope.createPaidOrderPayment("d", d, 500);
+    await scope.addLedger("d_oc", scope.memberId, "order_charge", -6.5, d);
+    await sql`UPDATE order_cycles SET status = 'closed', closed_at = now(), settled_at = now() WHERE cycle_id = ${d}`;
+    // Opened when the debt was on another cycle, and expired before the money came.
+    const paymentId = scope.id("bal2");
+    await sql`INSERT INTO payments (payment_id, member_id, provider, status, amount_cents, currency, refunded_cents,
+        checkout_session_id, created_at, updated_at, kind, order_snapshot)
+      VALUES (${paymentId}, ${scope.memberId}, 'stripe', 'expired', 150, 'eur', 0, ${`cs_${paymentId}`}, now(), now(),
+        'balance', ${JSON.stringify({ parts: [{ cycleId: settledA, cents: 150 }] })}::jsonb)`;
+    const event = {
+      id: `evt_${paymentId}`,
+      type: "checkout.session.completed",
+      livemode: false,
+      data: {
+        object: {
+          id: `cs_${paymentId}`,
+          metadata: { paymentId, memberId: scope.memberId, kind: "balance" },
+          payment_status: "paid",
+          amount_total: 150,
+          currency: "eur",
+          payment_intent: `pi_${paymentId}`,
+        },
+      },
+    } as unknown as Stripe.Event;
+    await applyWebhookAction(planWebhookAction(event));
+    await applyWebhookAction(planWebhookAction(event));
+    const rows = await sql`SELECT cycle_id, amount::text AS amount FROM ledger_entries WHERE payment_id = ${paymentId}`;
+    expect(rows.map((r) => `${r.cycle_id} ${r.amount}`)).toEqual([`${d} 1.50`]);
+    expect(await getConsolidatedBalanceCents(getDb(), scope.memberId)).toBe(0);
+  });
 });

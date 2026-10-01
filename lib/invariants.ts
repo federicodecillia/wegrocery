@@ -1,4 +1,5 @@
 import { sql, type SQL } from "drizzle-orm";
+import { owedBackToCardSql } from "./payments/settlement-sql";
 
 // Money invariants every installation must keep, checked read-only every
 // night after the backup (scripts/check-invariants.mts) and in the
@@ -113,26 +114,17 @@ export const INVARIANT_CHECKS: InvariantCheck[] = [
   },
   {
     name: "settled_cycle_credit",
-    // A negative net is an amount due the member has not paid yet. Money left
-    // that the card payments can still take back means a correction came
-    // after the settlement: run Chiudi i conti again. What goes beyond the
-    // card payments is given back in Cassa, outside the cycle, so it is not
-    // counted here.
+    // A negative net is an amount due the member has not paid yet. Money the
+    // card payments can still take back means a correction came after the
+    // settlement: run Chiudi i conti again. What goes beyond them (or sits on
+    // a payment whose refund failed) is given back in Cassa, outside the
+    // cycle, so it is not counted (lib/payments/settlement-sql.ts).
     description: "after a settlement no member keeps money on a pay-per-order cycle that could go back to the card",
     query: sql`
-      SELECT c.cycle_id || ':' || l.member_id AS id FROM order_cycles c
-      JOIN ledger_entries l ON l.cycle_id = c.cycle_id
-      JOIN members m ON m.member_id = l.member_id
-      WHERE c.payment_mode = 'per_order' AND c.settled_at IS NOT NULL AND NOT m.pays_offline
-      GROUP BY c.cycle_id, l.member_id
-      HAVING round(sum(l.amount) * 100) - coalesce((
-          SELECT sum(r.amount_cents) FROM refunds r
-          WHERE r.cycle_id = c.cycle_id AND r.member_id = l.member_id AND r.status = 'requested'), 0) > 0
-        AND coalesce((
-          SELECT sum(p.amount_cents - p.refunded_cents - coalesce((
-            SELECT sum(r.amount_cents) FROM refunds r WHERE r.payment_id = p.payment_id AND r.status = 'requested'), 0))
-          FROM payments p
-          WHERE p.cycle_id = c.cycle_id AND p.member_id = l.member_id AND p.kind = 'order'
-            AND p.status IN ('succeeded', 'partially_refunded')), 0) > 0`,
+      SELECT mc.cycle_id || ':' || mc.member_id AS id
+      FROM (SELECT DISTINCT l.cycle_id, l.member_id FROM ledger_entries l
+            JOIN order_cycles c ON c.cycle_id = l.cycle_id
+            WHERE c.payment_mode = 'per_order' AND c.settled_at IS NOT NULL) mc
+      WHERE ${owedBackToCardSql(sql.raw("mc.member_id"), sql.raw("mc.cycle_id"))}`,
   },
 ];

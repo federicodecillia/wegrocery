@@ -100,8 +100,17 @@ describeDb("settlement of a pay-per-order cycle", () => {
       VALUES (${`settle_${scope.prefix}_pay_e_9`}, ${`${scope.prefix}_pay_e`}, ${excess}, ${cycleId}, 100, 'requested',
         'settlement', NULL, 'int-test', now(), now())`;
     expect(await getSettlementStatus(getDb(), cycleId)).toBe("refunds_pending");
-    await sql`UPDATE refunds SET status = 'failed' WHERE refund_id = ${`settle_${scope.prefix}_pay_e_9`}`;
+    await sql`UPDATE refunds SET status = 'failed', updated_at = now() WHERE refund_id = ${`settle_${scope.prefix}_pay_e_9`}`;
     expect(await getSettlementStatus(getDb(), cycleId)).toBe("refund_failed");
+  });
+
+  it("never sends a card refund again on a payment whose refund failed: the rest goes back from Cassa", async () => {
+    expect((await byMember())[excess]).toEqual({ kind: "refund", refunds: [], excessCents: 100 });
+    const api = stripe();
+    await settleCycle(getDb(), cycleId, { by: "admin@example.invalid", stripe: api });
+    expect(api.refunds.create).not.toHaveBeenCalled();
+    // Running it again is how the admin takes note of the failure.
+    expect(await getSettlementStatus(getDb(), cycleId)).toBe("settled");
   });
 
   it("refuses an open cycle", async () => {

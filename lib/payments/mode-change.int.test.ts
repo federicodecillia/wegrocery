@@ -29,7 +29,11 @@ describeDb("payment mode change state", () => {
     expect(closed.runningCycles).toBe(before.runningCycles);
     expect(closed.unsettledCycles).toBe(before.unsettledCycles + 1);
 
+    // Settled, but the 10.00 paid and never charged can still go back to the
+    // card: not settled yet.
     await sql`UPDATE order_cycles SET settled_at = now() WHERE cycle_id = ${cycleId}`;
+    expect((await readModeChangeState(getDb())).unsettledCycles).toBe(before.unsettledCycles + 1);
+    await scope.addLedger("charge", scope.memberId, "order_charge", -10, cycleId);
     expect((await readModeChangeState(getDb())).unsettledCycles).toBe(before.unsettledCycles);
   });
 });

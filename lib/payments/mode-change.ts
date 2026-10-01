@@ -1,6 +1,7 @@
 import { sql, type SQL } from "drizzle-orm";
 import type { PaymentMode } from "./settings";
 import type { Db } from "./effects";
+import { owedBackToCardSql } from "./settlement-sql";
 
 // Changing the payment mode in Impostazioni (spec, "Cambio modalità"): only
 // with no cycle running and every per_order cycle settled, and pay-per-order
@@ -31,12 +32,19 @@ export function modeChangeBlockers(input: {
 export const runningCyclesSql: SQL = sql`
   (SELECT count(*)::integer FROM order_cycles WHERE status NOT IN ('closed', 'cancelled'))`;
 
-// Closed per_order cycles with money or charges on them, not settled yet.
+// Closed per_order cycles with money or charges on them and not settled:
+// never settled, settlement refunds still on their way, or a member the card
+// still owes money to.
 export const unsettledCyclesSql: SQL = sql`
   (SELECT count(*)::integer FROM order_cycles c
-   WHERE c.payment_mode = 'per_order' AND c.status IN ('closed', 'cancelled') AND c.settled_at IS NULL
+   WHERE c.payment_mode = 'per_order' AND c.status IN ('closed', 'cancelled')
      AND (EXISTS (SELECT 1 FROM ledger_entries l WHERE l.cycle_id = c.cycle_id)
-          OR EXISTS (SELECT 1 FROM payments p WHERE p.cycle_id = c.cycle_id)))`;
+          OR EXISTS (SELECT 1 FROM payments p WHERE p.cycle_id = c.cycle_id))
+     AND (c.settled_at IS NULL
+          OR EXISTS (SELECT 1 FROM refunds r WHERE r.cycle_id = c.cycle_id AND r.reason = 'settlement'
+                       AND r.status IN ('requested', 'pending'))
+          OR EXISTS (SELECT 1 FROM (SELECT DISTINCT l.member_id FROM ledger_entries l WHERE l.cycle_id = c.cycle_id) mm
+                     WHERE ${owedBackToCardSql(sql.raw("mm.member_id"), sql.raw("c.cycle_id"))})))`;
 
 export type ModeChangeState = {
   runningCycles: number;

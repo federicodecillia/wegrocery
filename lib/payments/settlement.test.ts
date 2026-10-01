@@ -56,5 +56,15 @@ describe("planMemberSettlement", () => {
 
   it("leaves members who pay outside the app to Treasury", () => {
     expect(planMemberSettlement({ ...base, netCents: 900, paysOffline: true })).toEqual({ kind: "offline" });
+    expect(planMemberSettlement({ ...base, netCents: -900, paysOffline: true })).toEqual({ kind: "offline" });
+  });
+
+  it("still refunds the card payments of a member switched to paying outside the app", () => {
+    const paid = { paymentId: "p1", createdAt: new Date(1), amountCents: 3000, refundedCents: 0, requestedCents: 0 };
+    expect(planMemberSettlement({ ...base, netCents: 500, paysOffline: true, payments: [paid] })).toEqual({
+      kind: "refund",
+      refunds: [{ paymentId: "p1", amountCents: 500 }],
+      excessCents: 0,
+    });
   });
 });

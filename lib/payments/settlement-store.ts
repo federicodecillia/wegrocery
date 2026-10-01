@@ -36,6 +36,7 @@ type PaymentRow = {
   amount_cents: number;
   refunded_cents: number;
   requested: number;
+  failed: boolean;
 };
 
 function memberNetsSql(cycleId: string) {
@@ -67,9 +68,10 @@ export async function previewSettlement(db: Db, cycleId: string): Promise<Settle
     db.execute<PaymentRow>(sql`
       SELECT p.payment_id, p.member_id, p.created_at, p.amount_cents, p.refunded_cents,
         coalesce((SELECT sum(r.amount_cents) FROM refunds r
-                  WHERE r.payment_id = p.payment_id AND r.status = 'requested'), 0)::integer AS requested
+                  WHERE r.payment_id = p.payment_id AND r.status = 'requested'), 0)::integer AS requested,
+        EXISTS (SELECT 1 FROM refunds r WHERE r.payment_id = p.payment_id AND r.status = 'failed') AS failed
       FROM payments p
-      WHERE p.cycle_id = ${cycleId} AND p.kind IN ('order', 'balance')
+      WHERE p.cycle_id = ${cycleId} AND p.kind = 'order'
         AND p.status IN ('succeeded', 'partially_refunded', 'refunded')`),
   ]);
   const paymentsByMember = new Map<string, SettlementPayment[]>();
@@ -78,7 +80,10 @@ export async function previewSettlement(db: Db, cycleId: string): Promise<Settle
     list.push({
       paymentId: p.payment_id,
       createdAt: new Date(p.created_at),
-      amountCents: p.amount_cents,
+      // A payment whose refund failed takes no card refund again: what it
+      // still holds goes back by bank transfer from Cassa (lib/payments/
+      // settlement-sql.ts says the same for the status and the nightly check).
+      amountCents: p.failed ? p.refunded_cents + p.requested : p.amount_cents,
       refundedCents: p.refunded_cents,
       requestedCents: p.requested,
     });
@@ -254,16 +259,20 @@ export type SettlementStatus = "to_settle" | "refunds_pending" | "settled" | "ne
 export async function getSettlementStatus(db: Db, cycleId: string): Promise<SettlementStatus> {
   const [preview, { rows }] = await Promise.all([
     previewSettlement(db, cycleId),
+    // A failed refund shows until the admin runs Chiudi i conti again (which
+    // moves settled_at past it): the money then goes back from Cassa.
     db.execute<{ waiting: number; failed: number }>(sql`
       SELECT count(*) FILTER (WHERE reason = 'settlement' AND status IN ('requested', 'pending'))::integer AS waiting,
-             count(*) FILTER (WHERE status = 'failed')::integer AS failed
-      FROM refunds WHERE cycle_id = ${cycleId}`),
+             count(*) FILTER (WHERE status = 'failed' AND (c.settled_at IS NULL OR updated_at > c.settled_at))::integer
+               AS failed
+      FROM refunds, (SELECT settled_at FROM order_cycles WHERE cycle_id = ${cycleId}) c
+      WHERE cycle_id = ${cycleId}`),
   ]);
   // Money the card payments can still take back. What goes beyond them is
   // given back in Cassa, outside the cycle, so it never reopens it.
   const owedBack = preview.members.some((m) => m.plan.kind === "refund" && m.plan.refunds.length > 0);
   const toWriteOff = preview.members.some((m) => m.plan.kind === "writeOff");
-  if ((rows[0]?.failed ?? 0) > 0 && owedBack) return "refund_failed";
+  if ((rows[0]?.failed ?? 0) > 0) return "refund_failed";
   if (preview.cycle.settledAt === null) return "to_settle";
   if ((rows[0]?.waiting ?? 0) > 0) return "refunds_pending";
   if (owedBack || toWriteOff) return "needs_update";

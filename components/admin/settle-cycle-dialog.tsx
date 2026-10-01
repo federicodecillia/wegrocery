@@ -115,8 +115,9 @@ export function SettleCycleButton({
               </button>
               <button
                 onClick={settle}
-                // A cycle never settled can be closed even with everyone square.
-                disabled={isPending || rows === null || (pending.length === 0 && settledAt !== null)}
+                // A cycle never settled can be closed even with everyone square,
+                // and a run also resends the refunds still waiting.
+                disabled={isPending || rows === null || (pending.length === 0 && status === "settled")}
                 className="flex-1 rounded-full bg-primary py-2 text-[13px] font-bold text-on-primary disabled:opacity-40"
               >
                 {isPending && rows !== null ? s.running : s.confirm}

@@ -33,9 +33,15 @@ export type SettlementPlan =
   | { kind: "due"; dueCents: number }
   | { kind: "writeOff"; cents: number };
 
+const refundableOf = (p: SettlementPayment) => p.amountCents - p.refundedCents - p.requestedCents;
+
 export function planMemberSettlement(input: SettlementInput): SettlementPlan {
-  if (input.paysOffline) return { kind: "offline" };
   const target = input.netCents - input.requestedCents;
+  // A member who pays outside the app is followed by Treasury, except for
+  // money they paid by card before the switch: that still goes back to it.
+  if (input.paysOffline && !(target > 0 && input.payments.some((p) => refundableOf(p) > 0))) {
+    return { kind: "offline" };
+  }
   if (target === 0) return { kind: "settled" };
   if (target < 0) {
     const due = -target;
@@ -48,7 +54,7 @@ export function planMemberSettlement(input: SettlementInput): SettlementPlan {
   );
   for (const p of newestFirst) {
     if (left === 0) break;
-    const refundable = p.amountCents - p.refundedCents - p.requestedCents;
+    const refundable = refundableOf(p);
     if (refundable <= 0) continue;
     const amount = Math.min(refundable, left);
     refunds.push({ paymentId: p.paymentId, amountCents: amount });

@@ -1333,7 +1333,7 @@ export const it = {
     orderPaidShortBody: (cycle: string, amount: string) =>
       `Il tuo ordine per "${cycle}" è confermato. Hai pagato ${amount}.`,
     balancePaidTitle: "Saldo pagato",
-    balancePaidBody: (amount: string) => `Abbiamo ricevuto il tuo pagamento di ${amount}. Non hai più nulla da saldare.`,
+    balancePaidBody: (amount: string) => `Abbiamo ricevuto il tuo pagamento di ${amount}, grazie.`,
     settlementDueTitle: "Da saldare",
     settlementDueBody: (cycle: string, amount: string) =>
       `I costi definitivi di "${cycle}" superano quanto hai pagato: mancano ${amount}. Puoi saldarli da Ricarica con "Paga ora".`,
