@@ -242,6 +242,7 @@ export function OrderForm({
       unitPrice: parseFloat(p.unitPrice),
     }));
   const savedTotal = totalOf(savedQty);
+  const savedWalletFeeCents = payPerOrder ? 0 : handlingFeeCents(Math.round(savedTotal * 100), walletFee ?? null);
 
   function changeQty(productId: string, delta: number) {
     setDraft((prev) => {
@@ -474,7 +475,8 @@ export function OrderForm({
         <OrderSummary
           lines={confirmedLines}
           total={savedTotal}
-          balanceAfter={balance - savedTotal - handlingFeeCents(Math.round(savedTotal * 100), walletFee ?? null) / 100}
+          balanceAfter={balance - savedTotal - savedWalletFeeCents / 100}
+          feeEstimateCents={savedWalletFeeCents}
           payment={
             payPerOrder
               ? {
