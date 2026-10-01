@@ -1,7 +1,9 @@
+import { sql as dsql } from "drizzle-orm";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { getDb } from "@/lib/db/client";
 import { describeDb, makeScope } from "@/test/int/fixtures";
-import { INVARIANT_CHECKS } from "./invariants";
+import { handlingFeeCentsSql, INVARIANT_CHECKS } from "./invariants";
+import { handlingFeeCents } from "./payments/order-payment";
 
 // Each check finds the break it describes, and nothing in consistent rows.
 describeDb("money invariants", () => {
@@ -95,5 +97,72 @@ describeDb("money invariants", () => {
     await scope.addLedger("m_other", other, "order_charge", -5, cycleId);
     await scope.addLedger("m_hand", scope.memberId, "correction", -8, cycleId);
     expect((await breaks()).closed_cycle_charge).not.toContain(`${cycleId}:${scope.memberId}`);
+  });
+
+  it("recomputes the fee in SQL exactly like handlingFeeCents", async () => {
+    const cases: [number, "percent" | "fixed", string][] = [
+      [2000, "percent", "10.00"], [1005, "percent", "10.00"], [1004, "percent", "10.00"],
+      [1000, "percent", "1.25"], [333, "percent", "7.50"], [9_999_999, "percent", "25.00"],
+      [500, "fixed", "1.50"], [500, "fixed", "0.29"], [0, "percent", "10.00"],
+    ];
+    for (const [base, type, value] of cases) {
+      const { rows } = await getDb().execute<{ cents: string }>(
+        dsql`SELECT (${handlingFeeCentsSql(dsql`${base}::numeric`, dsql`${type}::text`, dsql`${value}::numeric`)})::text AS cents`,
+      );
+      expect(Number(rows[0].cents)).toBe(handlingFeeCents(base, { type, value: Number(value) }));
+    }
+  });
+
+  it("checks the order preparation fee of every close, to the cent", async () => {
+    const other = await scope.createExtraMember("fee_other");
+    const at = "2026-10-01T10:00:00Z";
+    const insert = (name: string, member: string, type: string, amount: number, cycleId: string) =>
+      sql`INSERT INTO ledger_entries (entry_id, member_id, entry_date, type, amount, cycle_id, created_by, created_at)
+        VALUES (${scope.id(name)}, ${member}, ${at}, ${type}, ${amount}, ${cycleId}, 'int-test', ${at})`;
+    const closedCycle = async (name: string, fee: { type: "percent" | "fixed"; value: number } | null) => {
+      const { cycleId } = await scope.createCycle(name, { fee });
+      await sql`UPDATE order_cycles SET status = 'closed', closed_at = now() WHERE cycle_id = ${cycleId}`;
+      return cycleId;
+    };
+
+    // Right: 10% of 10.05 is 1.01, at the instant of the order charge.
+    const ok = await closedCycle("fee_ok", { type: "percent", value: 10 });
+    await insert("ok_oc", scope.memberId, "order_charge", -10.05, ok);
+    await insert("ok_hc", scope.memberId, "handling_charge", -1.01, ok);
+    // Wrong amount.
+    const wrong = await closedCycle("fee_wrong", { type: "percent", value: 10 });
+    await insert("w_oc", scope.memberId, "order_charge", -10.05, wrong);
+    await insert("w_hc", scope.memberId, "handling_charge", -1.0, wrong);
+    // One member charged, the other missing.
+    const missing = await closedCycle("fee_missing", { type: "fixed", value: 1 });
+    await insert("m_oc1", scope.memberId, "order_charge", -4, missing);
+    await insert("m_hc1", scope.memberId, "handling_charge", -1, missing);
+    await insert("m_oc2", other, "order_charge", -6, missing);
+    // A fee on a cycle that has none.
+    const nofee = await closedCycle("fee_none", null);
+    await insert("n_oc", scope.memberId, "order_charge", -5, nofee);
+    await insert("n_hc", scope.memberId, "handling_charge", -0.5, nofee);
+    // Closed before B3: a fee on the cycle but no handling_charge at all, not checked.
+    const legacy = await closedCycle("fee_legacy", { type: "percent", value: 10 });
+    await insert("l_oc", scope.memberId, "order_charge", -10, legacy);
+    // Every member's fee rounds to zero (1% of 0.40 = 0.4 cents): the close wrote no handling_charge, silent.
+    const zero = await closedCycle("fee_zero", { type: "percent", value: 1 });
+    await insert("z_oc1", scope.memberId, "order_charge", -0.4, zero);
+    await insert("z_oc2", other, "order_charge", -0.4, zero);
+    // Mixed: one member's fee rounds to zero (no row), the other's is 1.00 and charged right.
+    const mixed = await closedCycle("fee_mixed", { type: "percent", value: 1 });
+    await insert("x_oc1", scope.memberId, "order_charge", -0.4, mixed);
+    await insert("x_oc2", other, "order_charge", -100, mixed);
+    await insert("x_hc2", other, "handling_charge", -1, mixed);
+
+    const found = (await breaks()).handling_charge_matches;
+    expect(found).toContain(`${wrong}:${scope.memberId}`);
+    expect(found).toContain(`${missing}:${other}`);
+    expect(found).toContain(`${nofee}:${scope.memberId}`);
+    expect(found).not.toContain(`${ok}:${scope.memberId}`);
+    expect(found).not.toContain(`${missing}:${scope.memberId}`);
+    expect(found.some((id) => id.startsWith(legacy))).toBe(false);
+    expect(found.some((id) => id.startsWith(zero))).toBe(false);
+    expect(found.some((id) => id.startsWith(mixed))).toBe(false);
   });
 });

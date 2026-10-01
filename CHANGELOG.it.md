@@ -21,6 +21,21 @@ stanno nella PR.
 
 ## [Non rilasciato]
 
+## [1.19.0] — 1 ottobre 2026
+
+*Installarla per il proprio gruppo in mezz'ora, e spese di preparazione che diventano un addebito vero e controllato.*
+
+### Aggiunto
+- 🚀 **Installala per il tuo gruppo.** Una guida passo passo (`docs/self-hosting.md`, in inglese) con il pulsante Deploy to Vercel, che crea il progetto e il suo database Neon e applica tutte le migrazioni al primo build; `docs/brand.example.json` elenca tutti i campi del brand.
+- 👑 **Primo admin di un'installazione nuova.** L'indirizzo in `BOOTSTRAP_ADMIN_EMAIL` diventa admin al primo accesso, solo finché il gruppo non ha un admin; lo Stato della configurazione dice quando togliere la variabile.
+- 🧾 **Spese di preparazione ordine.** Un ciclo può addebitare una quota per commissioni bancarie e spese di gestione, in entrambe le modalità di pagamento: una percentuale dei prodotti o un importo fisso per socio, fino al 25% o a 10 €. I soci la vedono prima di ordinare; si addebita alla chiusura come movimento a sé e viene controllata ogni notte. Nota di aggiornamento: applica `drizzle/0026_handling_charge.sql` subito prima del deploy se `MIGRATE_ON_BUILD` è spento.
+
+### Modificato
+- 💳 **Pagamento per ordine: la quota è un costo, non una stima.** Resta all'associazione; il conguaglio regola solo prodotti e spedizione. Con la spedizione proporzionale ogni socio paga la sua parte al conguaglio.
+- 🩹 **Le installazioni nuove non si rompono più nella home.** Tre colonne dei cicli mancavano nelle migrazioni; una migrazione in più le aggiunge (non fa nulla sulle installazioni esistenti). Un test in CI confronta tutto lo schema con un database vuoto migrato. Nota di aggiornamento: applica `drizzle/0025_schema_catch_up.sql`.
+- 🧭 **Lo Stato della configurazione trova gli errori del brand.** Un campo che l'app non conosce (un errore di battitura) o un brand che non si legge compaiono, con il motivo, in Impostazioni e in `npm run doctor`.
+- 🏗️ **Migrazioni al build solo in produzione.** Con `MIGRATE_ON_BUILD=true` i build di anteprima non migrano più: lo fanno solo quelli di produzione (e quelli fuori da Vercel).
+
 ## [1.18.0] — 1 ottobre 2026
 
 *Pagare ogni ordine con la carta, chiudere i conti a fine ciclo, e un registro che non riscrive mai la storia.*
@@ -454,6 +469,7 @@ stanno nella PR.
 
 ---
 
+[1.19.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.19.0
 [1.18.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.18.0
 [1.17.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.17.0
 [1.16.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.16.1

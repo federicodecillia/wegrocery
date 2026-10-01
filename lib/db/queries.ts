@@ -18,7 +18,7 @@ import {
 import { buildCycleHistory, type CycleHistoryEntry } from "@/lib/cycle-history";
 import { normalizeEmail } from "@/lib/member-email";
 import { normalizeDraftLines } from "@/lib/order-draft";
-import type { HandlingFee } from "@/lib/payments/order-payment";
+import { cycleHandlingFee, type HandlingFee } from "@/lib/payments/order-payment";
 
 // Matches the login email or alias; stored addresses are normalized on write.
 export async function getMemberByEmail(email: string) {
@@ -150,18 +150,17 @@ export async function getRequestedRefundCount(): Promise<number> {
   return rows[0]?.n ?? 0;
 }
 
-// The handling fee of the most recent pay-per-order cycle: the default of the
-// next one. null before the first.
-export async function getLastHandlingFee(): Promise<HandlingFee | null> {
+// The handling fee of the most recent cycle in this payment mode: the default
+// of the next one. null when that cycle had none, or before the first.
+export async function getLastHandlingFee(mode: "wallet" | "per_order"): Promise<HandlingFee | null> {
   const db = getDb();
   const [row] = await db
-    .select({ type: orderCycles.handlingFeeType, value: orderCycles.handlingFeeValue })
+    .select({ handlingFeeType: orderCycles.handlingFeeType, handlingFeeValue: orderCycles.handlingFeeValue })
     .from(orderCycles)
-    .where(and(eq(orderCycles.paymentMode, "per_order"), isNotNull(orderCycles.handlingFeeType)))
+    .where(eq(orderCycles.paymentMode, mode))
     .orderBy(desc(orderCycles.createdAt))
     .limit(1);
-  if (!row || (row.type !== "percent" && row.type !== "fixed") || row.value === null) return null;
-  return { type: row.type, value: Number(row.value) };
+  return row ? cycleHandlingFee(row) : null;
 }
 
 export async function getCycleProducts(cycleId: string) {
@@ -417,6 +416,7 @@ export async function getMemberStorico(memberId: string): Promise<CycleHistoryEn
         ...cycle,
         net: sql<string>`sum(${ledgerEntries.amount})`,
         shipping: sql<string>`-coalesce(sum(${ledgerEntries.amount}) filter (where ${ledgerEntries.type} = 'shipping_charge' and ${ledgerEntries.reversedBy} is null), 0)`,
+        handling: sql<string>`-coalesce(sum(${ledgerEntries.amount}) filter (where ${ledgerEntries.type} = 'handling_charge' and ${ledgerEntries.reversedBy} is null), 0)`,
         paid: sql<string>`coalesce(sum(${ledgerEntries.amount}) filter (where ${ledgerEntries.type} in ('order_payment', 'balance_payment') and ${ledgerEntries.reversedBy} is null), 0)`,
         refunded: sql<string>`-coalesce(sum(${ledgerEntries.amount}) filter (where ${ledgerEntries.type} in ('order_refund', 'refund_failed') and ${ledgerEntries.reversedBy} is null), 0)`,
       })

@@ -257,7 +257,7 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
 }
 
 // What the cycle moved on the balance, as the ledger sums it. Products and
-// shipping are costs, so they read negative like the rows they add up to.
+// shipping and the preparation fee are costs, so they read negative like the rows they add up to.
 function CycleTotals({ entry }: { entry: CycleHistoryEntry }) {
   const perOrder = entry.paymentMode === "per_order";
   if (!entry.charged) {
@@ -274,6 +274,9 @@ function CycleTotals({ entry }: { entry: CycleHistoryEntry }) {
       <TotalRow label={t.history.products} value={formatSignedMoney(-entry.productsTotal)} />
       {entry.shipping !== 0 && (
         <TotalRow label={t.history.shipping} value={formatSignedMoney(-entry.shipping)} />
+      )}
+      {entry.handling !== 0 && (
+        <TotalRow label={t.history.handlingFee} value={formatSignedMoney(-entry.handling)} />
       )}
       {entry.corrections !== 0 && (
         <TotalRow label={t.history.corrections} value={formatSignedMoney(entry.corrections)} />

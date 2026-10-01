@@ -21,9 +21,9 @@ import { expireOpenCheckouts } from "@/lib/payments/order-checkout";
 import { cancelOrderWrite, confirmOrderWithoutPayment, getCycleCoverageCents } from "@/lib/payments/order-confirm";
 import {
   checkoutLineItems,
+  cycleHandlingFee,
   ORDER_PAYMENT_MAX_CENTS,
   orderPaymentAmount,
-  type HandlingFee,
   type OrderSnapshot,
 } from "@/lib/payments/order-payment";
 import { sendRequestedRefund } from "@/lib/payments/refund-request";
@@ -61,13 +61,6 @@ function genId(prefix: string): string {
 
 const cents = (euros: string | number) => Math.round(Number(euros) * 100);
 
-function cycleFee(cycle: { handlingFeeType: string | null; handlingFeeValue: string | null }): HandlingFee | null {
-  if ((cycle.handlingFeeType !== "percent" && cycle.handlingFeeType !== "fixed") || cycle.handlingFeeValue === null) {
-    return null;
-  }
-  return { type: cycle.handlingFeeType, value: Number(cycle.handlingFeeValue) };
-}
-
 export async function startOrderPayment(
   cycleId: string,
   lines: { productId: string; quantity: number }[],
@@ -83,7 +76,7 @@ export async function startOrderPayment(
     if (!member || !cycle || !canAccessCycle(cycle.accessLevel, member.role)) {
       return refuse("cycle_not_open", t.errors.cycleNotOpen);
     }
-    const fee = cycleFee(cycle);
+    const fee = cycleHandlingFee(cycle);
     // A member who pays outside the app confirms with saveOrder instead.
     if (cycle.paymentMode !== "per_order" || settings.mode !== "per_order" || !fee || member.paysOffline) {
       return refuse("cycle_not_open", t.errors.cycleNotOpen);

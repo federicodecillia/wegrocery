@@ -382,11 +382,14 @@ export const ledgerEntries = pgTable(
     // A NaN amount makes the member's balance NaN forever
     // (drizzle/0012_ledger_amount_checks.sql).
     check("ledger_entries_amount_not_nan", sql`${table.amount} <> 'NaN'`),
-    // At most one order/shipping charge per member per cycle: the backstop
-    // against double charging (drizzle/0013_unique_cycle_charges.sql).
-    uniqueIndex("ledger_entries_cycle_member_charge_live_uniq")
+    // At most one order/shipping/handling charge per member per cycle: the
+    // backstop against double charging (drizzle/0013_unique_cycle_charges.sql,
+    // widened by 0026_handling_charge.sql).
+    uniqueIndex("ledger_entries_cycle_member_system_charge_live_uniq")
       .on(table.cycleId, table.memberId, table.type)
-      .where(sql`${table.type} IN ('order_charge', 'shipping_charge') AND ${table.reversedBy} IS NULL`),
+      .where(
+        sql`${table.type} IN ('order_charge', 'shipping_charge', 'handling_charge') AND ${table.reversedBy} IS NULL`,
+      ),
     uniqueIndex("ledger_entries_reverses_uniq").on(table.reverses).where(sql`${table.reverses} IS NOT NULL`),
     check("ledger_entries_reversal_check", sql`(${table.type} = 'reversal') = (${table.reverses} IS NOT NULL)`),
     // A payment is credited at most once (drizzle/0016_stripe_payments.sql).

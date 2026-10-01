@@ -1,5 +1,7 @@
+import { readFileSync } from "node:fs";
 import { describe, it, expect } from "vitest";
-import { parseBrandConfig } from "./parse";
+import { brandUnknownFields, parseBrandConfig } from "./parse";
+import { brandContrastWarnings } from "./roles";
 import { DEFAULT_BRAND } from "./default";
 
 describe("parseBrandConfig", () => {
@@ -100,5 +102,32 @@ describe("parseBrandConfig", () => {
       parseBrandConfig(JSON.stringify({ bankTransfer: { holder: "X", iban: "not an iban" } })),
     ).toThrow(/bankTransfer/);
     expect(() => parseBrandConfig(JSON.stringify({ bankTransfer: "IT60..." }))).toThrow(/bankTransfer/);
+  });
+});
+
+describe("brandUnknownFields", () => {
+  it("names the fields the app does not read, typos included", () => {
+    const raw = JSON.stringify({ appname: "GAS", locale: "it", theme: { primary: "#000", secondary: "#fff" } });
+    expect(brandUnknownFields(raw)).toEqual(["brand.appname", "brand.theme.secondary"]);
+  });
+
+  it("is empty for a brand with known fields only, or no brand, or one that does not parse", () => {
+    expect(brandUnknownFields(JSON.stringify({ appName: "GAS", theme: { primary: "#000" } }))).toEqual([]);
+    expect(brandUnknownFields(undefined)).toEqual([]);
+    expect(brandUnknownFields("{not json")).toEqual([]);
+  });
+});
+
+describe("docs/brand.example.json", () => {
+  const raw = readFileSync("docs/brand.example.json", "utf8");
+
+  it("parses, and names every field the app reads, no other", () => {
+    const b = parseBrandConfig(raw);
+    expect(brandUnknownFields(raw)).toEqual([]);
+    expect(Object.keys(JSON.parse(raw)).sort()).toEqual(Object.keys(DEFAULT_BRAND).sort());
+    expect(Object.keys(b.theme).sort()).toEqual(
+      ["accent", "accentLight", "background", "frame", "primary", "primaryLight"],
+    );
+    expect(brandContrastWarnings(b.theme)).toEqual([]);
   });
 });

@@ -18,7 +18,7 @@ export async function adminGetCycleOrderDetails(cycleId: string) {
     await requireAdmin();
     const db = getDb();
 
-    const [rows, shippingRows] = await Promise.all([
+    const [rows, shippingRows, handlingRows] = await Promise.all([
       db
         .select({
           orderLineId: orders.orderLineId,
@@ -61,17 +61,36 @@ export async function adminGetCycleOrderDetails(cycleId: string) {
           ),
         )
         .groupBy(ledgerEntries.memberId, members.fullName),
+      db
+        .select({
+          memberId: ledgerEntries.memberId,
+          memberName: members.fullName,
+          amount: sql<string>`coalesce(sum(${ledgerEntries.amount}), '0')`,
+        })
+        .from(ledgerEntries)
+        .innerJoin(members, eq(ledgerEntries.memberId, members.memberId))
+        .where(
+          and(
+            eq(ledgerEntries.cycleId, cycleId),
+            eq(ledgerEntries.type, "handling_charge"),
+            liveLedger,
+          ),
+        )
+        .groupBy(ledgerEntries.memberId, members.fullName),
     ]);
 
-    // Shipping is stored as a negative ledger charge; report it as a
-    // positive cost so the modal can add it to the per-member subtotal.
-    const shipping = shippingRows.map((r) => ({
+    // Shipping and the order preparation fee are stored as negative ledger
+    // charges; report them as positive costs so the modal can add them to
+    // the per-member subtotal.
+    const toCost = (r: { memberId: string; memberName: string; amount: string }) => ({
       memberId: r.memberId,
       memberName: r.memberName,
       amount: Math.abs(parseFloat(r.amount)),
-    }));
+    });
+    const shipping = shippingRows.map(toCost);
+    const handling = handlingRows.map(toCost);
 
-    return { success: true, orders: rows, shipping };
+    return { success: true, orders: rows, shipping, handling };
   } catch (e) {
     return { error: e instanceof Error ? e.message : t.errors.genericError };
   }

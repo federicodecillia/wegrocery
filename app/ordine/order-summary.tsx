@@ -18,6 +18,8 @@ type Props = {
   lines: ConfirmedLine[];
   total: number;
   balanceAfter: number;
+  /** Wallet: the order preparation fee estimate already inside balanceAfter, in cents; 0 = none. */
+  feeEstimateCents?: number;
   /** Pay-per-order: what the order costs now and what the member paid for this cycle, shown instead of the balance. */
   payment?: { amount: OrderAmount; paidCents: number };
   orderCloseAt: string | null;
@@ -33,6 +35,7 @@ export function OrderSummary({
   lines,
   total,
   balanceAfter,
+  feeEstimateCents = 0,
   payment,
   orderCloseAt,
   isPending,
@@ -110,6 +113,9 @@ export function OrderSummary({
                 >
                   {formatSignedMoney(balanceAfter)}
                 </div>
+                {feeEstimateCents > 0 && (
+                  <div className="mt-[2px] text-label text-muted">{t.order.feeEstimate(formatEur(feeEstimateCents / 100))}</div>
+                )}
               </div>
             )}
           </div>

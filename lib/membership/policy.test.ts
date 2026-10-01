@@ -5,6 +5,7 @@ import {
   existingMemberSignIn,
   fullNameFromProfile,
   loginErrorPath,
+  matchesBootstrapEmail,
   newUserSignIn,
   orderMembershipOutcome,
   raisesOrderTotal,
@@ -50,6 +51,17 @@ describe("existingMemberSignIn", () => {
       kind: "allow",
       logError: true,
     });
+  });
+});
+
+describe("matchesBootstrapEmail", () => {
+  it("matches the configured address, ignoring case and spaces", () => {
+    expect(matchesBootstrapEmail("anna@example.org", " Anna@Example.org ")).toBe(true);
+  });
+  it("never matches when the variable is unset or blank, or for another address", () => {
+    expect(matchesBootstrapEmail("anna@example.org", undefined)).toBe(false);
+    expect(matchesBootstrapEmail("anna@example.org", "  ")).toBe(false);
+    expect(matchesBootstrapEmail("bruno@example.org", "anna@example.org")).toBe(false);
   });
 });
 

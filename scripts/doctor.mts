@@ -6,7 +6,7 @@
 //   node --env-file=.env.x node_modules/tsx/dist/cli.mjs scripts/doctor.mts
 import { neon } from "@neondatabase/serverless";
 import { brandContrastWarnings } from "@/lib/brand/roles";
-import { parseBrandConfig } from "@/lib/brand/parse";
+import { brandUnknownFields, parseBrandConfig } from "@/lib/brand/parse";
 import { configStatus } from "@/lib/config-status";
 
 async function appliedMigrations(): Promise<string[] | null> {
@@ -20,10 +20,32 @@ async function appliedMigrations(): Promise<string[] | null> {
   }
 }
 
-const brand = parseBrandConfig(process.env.NEXT_PUBLIC_BRAND_JSON);
+async function hasActiveAdmin(): Promise<boolean | null> {
+  const url = process.env.DATABASE_URL?.trim();
+  if (!url) return null;
+  try {
+    const rows = await neon(url)`SELECT 1 FROM members WHERE role = 'admin' AND active LIMIT 1`;
+    return rows.length > 0;
+  } catch {
+    return null;
+  }
+}
+
+// An invalid brand stops the build; here it is reported with the others.
+const rawBrand = process.env.NEXT_PUBLIC_BRAND_JSON;
+let brandError: string | null = null;
+let brandWarnings: string[] = [];
+try {
+  brandWarnings = brandContrastWarnings(parseBrandConfig(rawBrand).theme);
+} catch (e) {
+  brandError = (e as Error).message;
+}
 const items = configStatus(process.env, {
   appliedMigrations: await appliedMigrations(),
-  brandWarnings: brandContrastWarnings(brand.theme),
+  brandWarnings,
+  brandError,
+  brandUnknownFields: brandUnknownFields(rawBrand),
+  hasActiveAdmin: await hasActiveAdmin(),
 });
 
 const MARK = { ok: "ok     ", missing: "MISSING", warning: "CHECK  ", off: "off    " } as const;

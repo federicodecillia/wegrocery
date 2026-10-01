@@ -8,6 +8,7 @@ import { formatDecimalInput, formatNumber } from "@/lib/i18n/format";
 import { toast } from "@/components/ui/toast";
 import { EditClosedOrderModal } from "./edit-closed-order-modal";
 import { t } from "@/lib/i18n";
+import { closedCycleGrandTotal, closedCycleMemberTotal } from "@/lib/closed-cycle-totals";
 
 type OrderDetail = {
   orderLineId: string;
@@ -54,6 +55,7 @@ export function ClosedCycleDetails({
   const [loading, setLoading] = useState(false);
   const [orderDetails, setOrderDetails] = useState<OrderDetail[]>([]);
   const [shipping, setShipping] = useState<MemberShipping[]>([]);
+  const [handling, setHandling] = useState<MemberShipping[]>([]);
   const [editTarget, setEditTarget] = useState<
     { kind: "edit"; memberId: string; memberName: string } | { kind: "create" } | null
   >(null);
@@ -67,6 +69,7 @@ export function ClosedCycleDetails({
       } else {
         setOrderDetails(result.orders || []);
         setShipping(result.shipping || []);
+        setHandling(result.handling || []);
       }
     } catch {
       toast.error(t.admin.closedCycleDetails.errorLoading);
@@ -101,8 +104,8 @@ export function ClosedCycleDetails({
     parseFloat(l.actualLineTotal ?? l.lineTotal);
   const shippingByMember = new Map(shipping.map((s) => [s.memberId, s.amount]));
   const linesTotal = orderDetails.reduce((s, l) => s + effectiveTotal(l), 0);
-  const shippingTotal = shipping.reduce((s, m) => s + m.amount, 0);
-  const grandTotal = linesTotal + shippingTotal;
+  const handlingByMember = new Map(handling.map((h) => [h.memberId, h.amount]));
+  const grandTotal = closedCycleGrandTotal({ products: linesTotal, shipping, handling });
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
@@ -137,7 +140,12 @@ export function ClosedCycleDetails({
                 const productsTotal = lines.reduce((s, l) => s + effectiveTotal(l), 0);
                 const memberId = lines[0]?.memberId;
                 const memberShipping = memberId ? shippingByMember.get(memberId) ?? 0 : 0;
-                const total = productsTotal + memberShipping;
+                const memberHandling = memberId ? handlingByMember.get(memberId) ?? 0 : 0;
+                const total = closedCycleMemberTotal({
+                  products: productsTotal,
+                  shipping: memberShipping,
+                  handling: memberHandling,
+                });
                 return (
                   <div key={memberName} className="space-y-2">
                     <div className="flex flex-wrap items-center justify-between gap-2 border-b border-accent/20 pb-1">
@@ -173,6 +181,19 @@ export function ClosedCycleDetails({
                           </div>
                           <span className="shrink-0 font-mono text-label font-bold text-brand-near-black">
                             {formatEur(memberShipping)}
+                          </span>
+                        </div>
+                      )}
+                      {memberHandling > 0 && (
+                        <div className="flex items-start justify-between gap-3 rounded-lg px-1.5 py-1 text-[12px] text-brand-near-black">
+                          <div className="flex min-w-0 flex-1 gap-2">
+                            <span className="shrink-0 text-[16px]">🧺</span>
+                            <div className="min-w-0">
+                              <div className="font-medium">{t.history.handlingFee}</div>
+                            </div>
+                          </div>
+                          <span className="shrink-0 font-mono text-label font-bold text-brand-near-black">
+                            {formatEur(memberHandling)}
                           </span>
                         </div>
                       )}

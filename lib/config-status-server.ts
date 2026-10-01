@@ -1,10 +1,12 @@
 import { sql } from "drizzle-orm";
 import { brand, brandContrastWarnings } from "@/lib/brand";
+import { brandUnknownFields } from "@/lib/brand/parse";
 import { configStatus, type ConfigItem } from "@/lib/config-status";
 import { getDb } from "@/lib/db/client";
 
 // The configuration status of this deploy (lib/config-status.ts) with the
-// facts only the server knows: the migrations the database has applied.
+// facts only the server knows: the migrations the database has applied and
+// whether it has an admin. The brand parsed, or the app would not be running.
 export async function getConfigStatus(): Promise<ConfigItem[]> {
   let applied: string[] | null = null;
   try {
@@ -13,5 +15,18 @@ export async function getConfigStatus(): Promise<ConfigItem[]> {
   } catch {
     // No _migrations table (a schema pushed by hand) or no database.
   }
-  return configStatus(process.env, { appliedMigrations: applied, brandWarnings: brandContrastWarnings(brand.theme) });
+  let hasActiveAdmin: boolean | null = null;
+  try {
+    const { rows } = await getDb().execute(sql`SELECT 1 FROM members WHERE role = 'admin' AND active LIMIT 1`);
+    hasActiveAdmin = rows.length > 0;
+  } catch {
+    // No database: the database item already says so.
+  }
+  return configStatus(process.env, {
+    appliedMigrations: applied,
+    brandWarnings: brandContrastWarnings(brand.theme),
+    brandError: null,
+    brandUnknownFields: brandUnknownFields(process.env.NEXT_PUBLIC_BRAND_JSON),
+    hasActiveAdmin,
+  });
 }

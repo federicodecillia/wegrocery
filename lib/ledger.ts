@@ -1,11 +1,11 @@
 // Pure rules for admin edits to ledger entries, extracted so they can be unit
 // tested ("use server" modules can only export async functions).
 
-// Charges written by the system at cycle close (and by the shipping
-// recompute / distinta import). An admin fixes them with a new `correction`
+// Charges written by the system at cycle close (order, shipping, order
+// preparation fee) and by the shipping recompute / distinta import. An admin fixes them with a new `correction`
 // entry, never by editing or deleting the row: the original charge is the
 // reference every later correction is computed against.
-const SYSTEM_CHARGE_TYPES = new Set(["order_charge", "shipping_charge"]);
+const SYSTEM_CHARGE_TYPES = new Set(["order_charge", "shipping_charge", "handling_charge"]);
 
 export function isAdminEditableLedgerType(type: string): boolean {
   return !SYSTEM_CHARGE_TYPES.has(type);

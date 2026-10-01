@@ -11,7 +11,7 @@ import { formatMoney, formatDate, formatDateTime } from "@/lib/i18n/format";
 import { parseCycleDates } from "@/lib/cycle-dates";
 import { brand } from "@/lib/brand";
 import { getDb } from "@/lib/db/client";
-import { auditLog, authUsers, ledgerEntries, members, orderCycles, orderDrafts, orders, payments, products, suppliers, supplierProducts } from "@/lib/db/schema";
+import { auditLog, authUsers, ledgerEntries, members, orderCycles, orders, payments, products, suppliers, supplierProducts } from "@/lib/db/schema";
 import { upsertCycleProducts } from "@/lib/db/cycle-products";
 import { isUniqueViolation } from "@/lib/db/errors";
 import { ActionError, actionErrorMessage } from "@/lib/action-error";
@@ -19,7 +19,8 @@ import { getLastHandlingFee, getMembersByEmails } from "@/lib/db/queries";
 import { findEmailConflict, normalizeEmail } from "@/lib/member-email";
 import type { BatchItem } from "drizzle-orm/batch";
 import { orderLinesSnapshot, planClosedOrderEdit } from "@/lib/closed-order-edit";
-import { buildCycleCloseCharges, cancelledCycleReversalTypes, ordersSnapshot } from "@/lib/cycle-close";
+import { cancelledCycleReversalTypes, ordersSnapshot } from "@/lib/cycle-close";
+import { performCycleClose, setOpenCycleFee } from "@/lib/cycle-close-store";
 import {
   normalizeShippingMode,
   planShippingRecompute,
@@ -53,7 +54,7 @@ import {
 } from "@/lib/notifications/dispatch";
 import { selectCycleAccessMembers } from "@/lib/notifications/reminder";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
-import { parseHandlingFee, resolveCycleFee } from "@/lib/payments/order-payment";
+import { resolveCycleFee, type HandlingFee } from "@/lib/payments/order-payment";
 import { reverseEntry, reverseEntrySql } from "@/lib/ledger-reversal";
 import { liveLedger } from "@/lib/db/ledger-live";
 import { retryRequestedRefunds } from "@/lib/payments/refund-request";
@@ -124,7 +125,7 @@ export type CreateCycleInput = {
   shippingMode: ShippingMode;
   shippingCostPerMember: string;
   shippingTotal: string;
-  /** Only read when the group pays per order; omitted = the last cycle's fee. */
+  /** "none" (wallet only), "percent" or "fixed"; omitted = the last cycle's fee of the same mode. */
   handlingFeeType?: string;
   handlingFeeValue?: string;
 };
@@ -147,14 +148,14 @@ export async function adminCreateCycle(data: CreateCycleInput): Promise<{error?:
     const db = getDb();
 
     // The cycle keeps the group's payment mode of this moment for its whole
-    // life; a per_order cycle also gets its handling fee.
+    // life, with its handling fee.
     const { mode: paymentMode } = await getPaymentSettings();
     const fee = resolveCycleFee(
       paymentMode,
       data.handlingFeeType !== undefined && data.handlingFeeValue !== undefined
         ? { type: data.handlingFeeType, value: data.handlingFeeValue }
         : undefined,
-      paymentMode === "per_order" ? await getLastHandlingFee() : null,
+      await getLastHandlingFee(paymentMode),
     );
     if ("error" in fee) return { error: t.errors.handlingFeeInvalid };
 
@@ -231,184 +232,6 @@ export async function adminCreateCycle(data: CreateCycleInput): Promise<{error?:
   } catch (e) {
     return { error: e instanceof Error ? e.message : t.errors.cycleCreationError };
   }
-}
-
-// Internal: performs the actual close-cycle work. Status flip, every
-// order_charge and every shipping_charge are committed together in a single
-// db.batch (one Neon transaction), so a failure can no longer leave a cycle
-// reopened with charges already posted. Notifications go out after the
-// commit, best-effort. Returns chargesGenerated.
-// Callers are responsible for requireAdmin(), audit log, and revalidation.
-const CLOSE_ATTEMPTS = 3;
-
-async function performCycleClose(
-  db: ReturnType<typeof getDb>,
-  cycleId: string,
-  adminEmail: string,
-): Promise<{ chargesGenerated: number }> {
-  for (let attempt = 1; attempt <= CLOSE_ATTEMPTS; attempt++) {
-    const [cycle] = await db
-      .select({
-        status: orderCycles.status,
-        title: orderCycles.title,
-        shippingMode: orderCycles.shippingMode,
-        shippingCostPerMember: orderCycles.shippingCostPerMember,
-        shippingTotal: orderCycles.shippingTotal,
-        paymentMode: orderCycles.paymentMode,
-      })
-      .from(orderCycles)
-      .where(eq(orderCycles.cycleId, cycleId))
-      .limit(1);
-    if (!cycle) throw new ActionError(t.errors.cycleNotFound);
-    if (cycle.status !== "open") throw new ActionError(t.errors.cycleNotFoundOrAlreadyClosed);
-
-    const memberTotals = await db
-      .select({
-        memberId: orders.memberId,
-        total: sql<string>`sum(${orders.lineTotal})`,
-      })
-      .from(orders)
-      .where(eq(orders.cycleId, cycleId))
-      .groupBy(orders.memberId);
-
-    // A cycle closed by the pre-atomic code could have been reopened with
-    // some charges already posted: never charge those members twice.
-    const existingCharges = await db
-      .select({ memberId: ledgerEntries.memberId, type: ledgerEntries.type })
-      .from(ledgerEntries)
-      .where(
-        and(
-          eq(ledgerEntries.cycleId, cycleId),
-          inArray(ledgerEntries.type, ["order_charge", "shipping_charge"]),
-          liveLedger,
-        ),
-      );
-    const alreadyCharged = {
-      order: new Set(existingCharges.filter((c) => c.type === "order_charge").map((c) => c.memberId)),
-      shipping: new Set(
-        existingCharges.filter((c) => c.type === "shipping_charge").map((c) => c.memberId),
-      ),
-    };
-
-    const charges = buildCycleCloseCharges(memberTotals, cycle, alreadyCharged);
-    const now = new Date();
-
-    // 1. Row-lock the cycle: saveOrder takes the same lock first in its own
-    //    batch (saveOrderDraft a shared one), so from here on no member write
-    //    can commit on this cycle.
-    // 2. Guard, in a fresh statement snapshot taken after the lock: the cycle
-    //    must still be open and the orders must be exactly the ones the
-    //    charges were computed from. Otherwise 1/0 aborts the whole batch.
-    // 3. Flip the status, drop the cycle's order drafts (they never become
-    //    orders) and post every charge in the same transaction.
-    const lockCycle = db.execute(
-      sql`SELECT 1 FROM order_cycles WHERE cycle_id = ${cycleId} FOR UPDATE`,
-    );
-    const guard = db.execute(
-      sql`SELECT 1 / (CASE WHEN
-            (SELECT status FROM order_cycles WHERE cycle_id = ${cycleId}) = 'open'
-            AND (SELECT coalesce(jsonb_object_agg(g.member_id, g.total::text), '{}'::jsonb)
-                 FROM (SELECT member_id, sum(line_total) AS total FROM orders
-                       WHERE cycle_id = ${cycleId} GROUP BY member_id) g)
-                = ${ordersSnapshot(memberTotals)}::jsonb
-          THEN 1 ELSE 0 END) AS close_guard`,
-    );
-    const flipStatus = db
-      .update(orderCycles)
-      .set({ status: "closed", closedAt: now })
-      .where(and(eq(orderCycles.cycleId, cycleId), eq(orderCycles.status, "open")));
-    const deleteDrafts = db.delete(orderDrafts).where(eq(orderDrafts.cycleId, cycleId));
-    const statements: BatchItem<"pg">[] = [lockCycle, guard, flipStatus, deleteDrafts];
-    if (charges.orderCharges.length > 0) {
-      statements.push(
-        db.insert(ledgerEntries).values(
-          charges.orderCharges.map((c) => ({
-            entryId: genId("led"),
-            memberId: c.memberId,
-            entryDate: now,
-            type: "order_charge",
-            amount: c.amount,
-            cycleId,
-            note: t.ledger.orderCharge,
-            createdBy: adminEmail,
-            createdAt: now,
-          })),
-        ),
-      );
-    }
-    if (charges.shippingCharges.length > 0) {
-      statements.push(
-        db.insert(ledgerEntries).values(
-          charges.shippingCharges.map((c) => ({
-            entryId: genId("led"),
-            memberId: c.memberId,
-            entryDate: now,
-            type: "shipping_charge",
-            amount: c.amount,
-            cycleId,
-            note:
-              cycle.shippingMode === "proportional"
-                ? "Spedizione (quota proporzionale)"
-                : "Spedizione",
-            createdBy: adminEmail,
-            createdAt: now,
-          })),
-        ),
-      );
-    }
-
-    try {
-      await db.batch(statements as [BatchItem<"pg">, ...BatchItem<"pg">[]]);
-    } catch (e) {
-      // 22012 = division_by_zero, i.e. the guard fired: either the cycle is
-      // no longer open (concurrent close) or an order changed under us.
-      if (!(e instanceof Error && /22012|division by zero/i.test(e.message))) throw e;
-      const [current] = await db
-        .select({ status: orderCycles.status })
-        .from(orderCycles)
-        .where(eq(orderCycles.cycleId, cycleId))
-        .limit(1);
-      if (current?.status !== "open") throw new ActionError(t.errors.cycleNotFoundOrAlreadyClosed);
-      continue; // orders changed: recompute from fresh totals
-    }
-
-    // Committed. One notification per charged member; bodies differ per
-    // member (order + optional shipping). A delivery failure is logged, never
-    // rolled back onto the (already committed) close.
-    try {
-      const emailByMember = await getMemberEmails(
-        db,
-        charges.summaries.map((s) => s.memberId),
-      );
-      const items = charges.summaries.map((s) => {
-        // Pay-per-order: the member paid an estimate; the charge is provisional
-        // until the weighing and the supplier's sheet, then settled.
-        const body = cycle.paymentMode === "per_order"
-          ? t.notificationsServer.orderClosedPerOrderBody(cycle.title, formatMoney(s.orderTotal + s.shippingShare))
-          : s.shippingShare > 0
-            ? t.notificationsServer.orderClosedBodyWithShipping(
-                cycle.title,
-                formatMoney(s.orderTotal + s.shippingShare),
-                formatMoney(s.orderTotal),
-                formatMoney(s.shippingShare),
-              )
-            : t.notificationsServer.orderClosedBody(cycle.title, formatMoney(s.orderTotal));
-        return {
-          memberId: s.memberId,
-          email: emailByMember.get(s.memberId) ?? null,
-          title: t.notificationsServer.orderClosedTitle,
-          body,
-          href: `/storico?cycleId=${cycleId}`,
-        };
-      });
-      if (items.length > 0) await dispatchWithBodies(db, items, "order_closed", now);
-    } catch (notifyError) {
-      console.error("[order_closed] dispatch failed:", notifyError);
-    }
-
-    return { chargesGenerated: charges.orderCharges.length };
-  }
-  throw new ActionError(t.errors.cycleCloseOrdersChanged);
 }
 
 export async function adminCloseCycle(
@@ -853,18 +676,19 @@ export async function adminUpdateCycle(
       .limit(1);
     if (!before) return { error: t.errors.cycleNotFound };
 
-    // The handling fee of a per_order cycle can change only while it is open:
-    // after the close it is what members were charged with.
-    let feePatch: { handlingFeeType: string; handlingFeeValue: string } | null = null;
-    if (
-      before.paymentMode === "per_order" &&
-      before.status === "open" &&
-      data.handlingFeeType !== undefined &&
-      data.handlingFeeValue !== undefined
-    ) {
-      const fee = parseHandlingFee(data.handlingFeeType, data.handlingFeeValue);
-      if ("error" in fee) return { error: t.errors.handlingFeeInvalid };
-      feePatch = { handlingFeeType: fee.type, handlingFeeValue: fee.value.toFixed(2) };
+    // The fee changes only while the cycle is open: after the close it is
+    // what members were charged with (setOpenCycleFee and drizzle/0026
+    // enforce it against a concurrent close too).
+    let fee: HandlingFee | null | undefined;
+    if (data.handlingFeeType !== undefined && data.handlingFeeValue !== undefined) {
+      if (before.status !== "open") return { error: t.errors.handlingFeeLocked };
+      const resolved = resolveCycleFee(
+        before.paymentMode === "per_order" ? "per_order" : "wallet",
+        { type: data.handlingFeeType, value: data.handlingFeeValue },
+        null,
+      );
+      if ("error" in resolved) return { error: t.errors.handlingFeeInvalid };
+      fee = resolved.fee;
     }
 
     const dates = parseCycleDates(data);
@@ -885,6 +709,10 @@ export async function adminUpdateCycle(
     // shipping and notify every member. See resolveShippingUpdate.
     const { patch: shippingPatch, changed: shippingChanged } = resolveShippingUpdate(before, data);
 
+    if (fee !== undefined && !(await setOpenCycleFee(db, cycleId, fee))) {
+      return { error: t.errors.handlingFeeLocked };
+    }
+
     await db
       .update(orderCycles)
       .set({
@@ -902,7 +730,6 @@ export async function adminUpdateCycle(
         ...(data.supplierId !== undefined && { supplierId: data.supplierId || null }),
         ...(accessLevel !== undefined && { accessLevel }),
         ...shippingPatch,
-        ...feePatch,
       })
       .where(eq(orderCycles.cycleId, cycleId));
 

@@ -17,7 +17,7 @@ import { PendingRefresh } from "@/components/ricarica/pending-refresh";
 import { getDb } from "@/lib/db/client";
 import { getOrderPaymentStatus } from "@/lib/db/queries";
 import { getCycleCoverageCents } from "@/lib/payments/order-confirm";
-import type { HandlingFee } from "@/lib/payments/order-payment";
+import { cycleHandlingFee, type HandlingFee } from "@/lib/payments/order-payment";
 import { orderLinesKey, resumeDraft } from "@/lib/order-draft";
 import { canAccessCycle } from "@/lib/roles";
 import { resolveOrderCycle } from "@/lib/order-cycle";
@@ -80,14 +80,9 @@ export default async function OrdinePage({
 
   // Pay-per-order cycle: the order is confirmed by paying it, unless the
   // member pays outside the app (then the wallet form, as in wallet mode).
-  const feeType = openCycle.handlingFeeType;
+  const cycleFee = cycleHandlingFee(openCycle);
   const fee: HandlingFee | null =
-    openCycle.paymentMode === "per_order" &&
-    !member?.paysOffline &&
-    (feeType === "percent" || feeType === "fixed") &&
-    openCycle.handlingFeeValue !== null
-      ? { type: feeType, value: Number(openCycle.handlingFeeValue) }
-      : null;
+    openCycle.paymentMode === "per_order" && !member?.paysOffline ? cycleFee : null;
   const [coveredCents, payment] = fee
     ? await Promise.all([
         getCycleCoverageCents(getDb(), memberId, openCycle.cycleId),
@@ -173,6 +168,9 @@ export default async function OrdinePage({
         resumedDraft={resumedDraft}
         balance={balance}
         saveAction={saveOrder}
+        // Card payers already see the fee in the Checkout summary; wallet (and
+        // offline) members see it here as an estimate.
+        walletFee={fee ? null : cycleFee}
         payPerOrder={
           fee
             ? {

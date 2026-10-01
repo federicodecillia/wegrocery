@@ -32,6 +32,7 @@ export const en: Strings = {
     balanceTitle: "Your balance",
     balanceToTopUp: "To top up",
     thisOrder: "This order",
+    feeIncluded: "Includes the order preparation fee (estimate).",
     afterOrder: "After order",
     rechargeButton: "Recharge balance →",
     rechargeLink: "Top up",
@@ -70,8 +71,8 @@ export const en: Strings = {
     pay: {
       products: "Products",
       shipping: "Shipping",
-      fee: "Handling and order preparation (estimate)",
-      feeHint: "When the cycle is settled we refund what was not needed.",
+      fee: "Order preparation fee",
+      feeHint: "The order preparation fee stays with the group. Shipping and weighing are settled when the cycle is closed.",
       refundDifference: (amount: string) =>
         `You paid ${amount} more than the order costs now: we refund it to your card when the cycle is settled.`,
       dueDifference: (amount: string) => `${amount} still to pay: settled when the cycle closes its accounts.`,
@@ -116,6 +117,7 @@ export const en: Strings = {
     emptyCatalogHint: "The order is open but products haven't been added yet. Check back soon.",
     reproposeLastOrder: "Repeat last order",
     totalOrder: "Order total",
+    feeEstimate: (amount: string) => `Includes the order preparation fee (estimate): ${amount}`,
     balanceAfter: "Balance after",
     confirmOrder: "Confirm order",
     saving: "Saving...",
@@ -181,6 +183,7 @@ export const en: Strings = {
     onlineTopup: "Online top-up",
     topup: "Top-up",
     shipping: "Shipping",
+    handlingFee: "Order preparation fee",
     refund: "Refund",
     onlineTopupRefund: "Online top-up refund",
     refundFailed: "Refund failed",
@@ -197,7 +200,7 @@ export const en: Strings = {
     paid: "Paid",
     refunded: "Refunded to card",
     cycleNetPerOrder: "Cycle net",
-    settledAtClose: "Once the cycle is settled we refund what was not needed.",
+    settledAtClose: "When the cycle is settled, any difference on products and shipping is evened out.",
     chargedAtClose: "It will be charged to your balance when the cycle closes.",
     received: (quantity: string) => `received ${quantity}`,
     detailDescription: "Details of the selected movement",
@@ -405,7 +408,7 @@ export const en: Strings = {
       {
         n: 2,
         title: "Choose your products",
-        body: "Tap the Order tab and choose products with the + and − buttons. Below the total you see products, shipping and handling and order preparation.",
+        body: "Tap the Order tab and choose products with the + and − buttons. Below the total you see products, shipping and the order preparation fee.",
       },
       {
         n: 3,
@@ -415,7 +418,7 @@ export const en: Strings = {
       {
         n: 4,
         title: "Settlement",
-        body: "After pickup, once costs are final, we refund to your card what was not needed. If costs went above what you paid, the Home page shows an amount due with a \"Pay now\" button.",
+        body: "After pickup, once costs are final, any difference on products and shipping is evened out: what you paid in excess comes back to your card. If costs went above what you paid, the Home page shows an amount due with a \"Pay now\" button.",
       },
       { n: 5, title: "History", body: "The History tab shows, for each cycle, what you paid, the costs, the refunds and the net." },
       {
@@ -447,6 +450,11 @@ export const en: Strings = {
         a: "Your balance is your credit with the buying group. When an order closes, the cost is automatically deducted. To top up, open the Top up page from the balance card on Home. With a bank transfer your balance updates when the treasurer records it; with online payment, if the group has enabled it, it updates as soon as the payment is confirmed.",
       },
       {
+        wallet: true,
+        q: "What is the order preparation fee?",
+        a: "If the cycle has one, a share for the group's bank fees and running costs: a percentage of the products or a fixed amount. You see it in the order summary and it is charged when the cycle closes, together with the order.",
+      },
+      {
         q: "Can I edit or cancel my order after confirming it?",
         a: 'Yes, as long as the order is open. The Order tab shows your confirmed order: press "Edit order" to change quantities and confirm again, or "Cancel order" to remove it entirely so nothing is charged at closing.',
       },
@@ -476,11 +484,11 @@ export const en: Strings = {
     faqPerOrder: [
       {
         q: "How do I pay for my order?",
-        a: "By card, when you confirm the order. You pay products, shipping and a share for handling and order preparation. If you edit the order and the total goes up you only pay the difference; if it goes down, the difference comes back at settlement.",
+        a: "By card, when you confirm the order. You pay products, shipping and the order preparation fee. If you edit the order and the total goes up you only pay the difference; if it goes down, the difference comes back at settlement.",
       },
       {
-        q: "What is the handling and order preparation share?",
-        a: "An estimate of what the association spends on the order (for example weighing and shipping shared between members). It is not a markup: at settlement we refund everything that was not needed.",
+        q: "What is the order preparation fee?",
+        a: "A share for the group's bank fees and running costs, set for each cycle: a percentage of the products or a fixed amount. You see it before confirming and the group keeps it.",
       },
       {
         q: "When do refunds arrive?",
@@ -551,6 +559,7 @@ export const en: Strings = {
         database: "Database",
         authSecret: "Session key",
         signIn: "Sign-in (email link, optional Google)",
+        firstAdmin: "First admin",
         brand: "Group name, logo and colours",
         baseUrl: "App address in emails",
         email: "Sending email",
@@ -559,6 +568,11 @@ export const en: Strings = {
         sentry: "Error reporting (Sentry)",
       } as Record<string, string>,
       notes: {
+        noAdmin: "No admin yet: set BOOTSTRAP_ADMIN_EMAIL and sign in with that address.",
+        bootstrapWaiting: "The first sign-in with this address creates the admin.",
+        bootstrapDone: "An admin exists: the variable is ignored and can be removed.",
+        invalidBrand: "The brand is not valid and the app does not build:",
+        unknownBrandFields: "Fields the app does not know (a typo?), ignored:",
         pendingMigrations: "Migrations to apply before using the new features:",
         databaseUnreachable: "Cannot read the list of migrations: check the database or run npm run doctor.",
         defaultBrand: "No brand set: the app uses WeGrocery's name and colours.",
@@ -654,12 +668,15 @@ export const en: Strings = {
       shippingProportional: "Proportional",
       shippingFixedHint: "Amount charged to each member with an order.",
       shippingProportionalHint: "Total shipping cost: split among members in proportion to their order value.",
-      handlingFeeLabel: "Handling and order preparation",
+      handlingFeeLabel: "Order preparation fee",
+      handlingFeeNone: "None",
       handlingFeePercent: "% of the products",
       handlingFeeFixed: "Fixed amount",
-      handlingFeeHint: "An estimate each member pays with the order: what is not needed goes back when the cycle is settled.",
-      handlingFeeEditWarning: "Members who have already paid are not recalculated: the difference is evened out at settlement.",
-      handlingFeeDisplay: (fee: string) => `Handling: ${fee}`,
+      handlingFeeHint: "Kept by the group for bank fees and running costs: charged at the close, on the products ordered. At most 25% or 10.",
+      handlingFeeEditWarning: "Members who already paid with the previous fee settle the difference at settlement.",
+      perOrderProportionalNote: "With proportional shipping each member's share is known only at the close: every member pays it at settlement.",
+      closeFeeNote: (fee: string) => `Order preparation fee: ${fee} to every member with an order.`,
+      handlingFeeDisplay: (fee: string) => `Order preparation fee: ${fee}`,
       shippingManualTitle: "Managed manually per member",
       shippingManualDescription: "Shipping shares were imported from the supplier order sheet and vary by member. Member balance entries remain unchanged until you upload a new order sheet.",
       shippingProportionalDisplay: (amount: string) => `${amount} total (proportional to order value)`,
@@ -919,6 +936,7 @@ export const en: Strings = {
       chargeBadge: "charge",
       payoutBadge: "payout",
       manualChargeBadge: "manual charge",
+      handlingBadge: "prep. fee",
       membershipFeeBadge: "fee",
       refundFailedBadge: "refund failed",
       entryUpdated: "Entry updated",
@@ -1305,8 +1323,10 @@ export const en: Strings = {
       `"${title}" has been closed. You have been charged ${total}.`,
     orderClosedBodyWithShipping: (title: string, total: string, order: string, shipping: string) =>
       `"${title}" has been closed. You have been charged ${total} (order ${order} + shipping ${shipping}).`,
+    orderClosedBodyWithFee: (title: string, total: string, order: string, shipping: string | null, fee: string) =>
+      `"${title}" has been closed. You have been charged ${total} (order ${order}${shipping ? ` + shipping ${shipping}` : ""} + order preparation fee ${fee}).`,
     orderClosedPerOrderBody: (title: string, total: string) =>
-      `"${title}" is closed. Your order costs ${total} for now: it is provisional until the weighing and the supplier's sheet. When the cycle is settled we refund the difference with what you paid.`,
+      `"${title}" is closed. Your order costs ${total} for now: it is provisional until the weighing and the supplier's sheet. When the cycle is settled, the difference with what you paid is evened out.`,
     cycleCancelledPerOrderBody: (title: string, reason: string) =>
       `The cycle "${title}" was cancelled: ${reason}. What you paid comes back to your card when the cycle is settled.`,
     topupReceivedTitle: "Top-up recorded",
@@ -1323,7 +1343,7 @@ export const en: Strings = {
       `The ${amount} card refund to ${name} did not go through and the amount is back on their balance. Return it by bank transfer: Treasury → Outgoing movement → Payout.`,
     orderPaidTitle: "Order confirmed and paid",
     orderPaidBody: (cycle: string, amount: string, products: string, shipping: string, fee: string) =>
-      `Your order for "${cycle}" is confirmed. You paid ${amount}: products ${products}, shipping ${shipping}, handling and order preparation (estimate) ${fee}. When the cycle is settled we refund what was not needed.`,
+      `Your order for "${cycle}" is confirmed. You paid ${amount}: products ${products}, shipping ${shipping}, order preparation fee ${fee}. When the cycle is settled, any difference on products and shipping is evened out.`,
     orderPaidShortBody: (cycle: string, amount: string) =>
       `Your order for "${cycle}" is confirmed. You paid ${amount}.`,
     balancePaidTitle: "Balance paid",
@@ -1392,6 +1412,7 @@ export const en: Strings = {
     deletedBy: "Movement cancelled",
     reversal: "Reversal",
     orderCharge: "Order charge",
+    handlingCharge: "Order preparation fee",
     shippingAdjusted: "Shipping adjusted",
     shippingFromSupplier: "Shipping from supplier sheet",
     cycleCancelled: "Cycle cancellation",
@@ -1415,7 +1436,8 @@ export const en: Strings = {
     invalidQuantity: "Invalid quantity",
     invalidRole: "Invalid role",
     invalidAccessLevel: "Invalid access level",
-    handlingFeeInvalid: "Invalid handling fee: a number with at most two decimals, a percentage up to 100",
+    handlingFeeLocked: "The cycle is already closed: the order preparation fee can no longer change.",
+    handlingFeeInvalid: "Invalid order preparation fee: a number with at most two decimals, up to 25% or 10",
     cycleNotOpen: "The cycle is no longer open",
     accessDenied: "You don't have access to this cycle",
     membershipInactive: (renewUrl: string | null) =>

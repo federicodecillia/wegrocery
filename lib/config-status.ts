@@ -15,12 +15,19 @@ export type ConfigFacts = {
   appliedMigrations: readonly string[] | null;
   // brandContrastWarnings() of the deploy's theme.
   brandWarnings: readonly string[];
+  // Why NEXT_PUBLIC_BRAND_JSON does not parse (parseBrandConfig's error); null = it does.
+  brandError: string | null;
+  // brandUnknownFields() of NEXT_PUBLIC_BRAND_JSON.
+  brandUnknownFields: readonly string[];
+  // Whether the members table has an active admin; null = it could not be read.
+  hasActiveAdmin: boolean | null;
 };
 
 export type ConfigItemId =
   | "database"
   | "authSecret"
   | "signIn"
+  | "firstAdmin"
   | "brand"
   | "baseUrl"
   | "email"
@@ -93,6 +100,30 @@ function signIn(env: Env): ConfigItem {
   return google ? { ...base, status: "warning", note: "googleOnly" } : { ...base, status: "missing" };
 }
 
+// A new installation has no admin: BOOTSTRAP_ADMIN_EMAIL names the address
+// that becomes one at its first sign-in (lib/auth/admission.ts). Once an
+// admin exists the variable is ignored and can go.
+function firstAdmin(env: Env, facts: ConfigFacts): ConfigItem {
+  const base = { id: "firstAdmin", required: false, vars: ["BOOTSTRAP_ADMIN_EMAIL"] } as const;
+  const bootstrap = set(env.BOOTSTRAP_ADMIN_EMAIL);
+  if (facts.hasActiveAdmin === true) {
+    return bootstrap ? { ...base, status: "warning", note: "bootstrapDone" } : { ...base, status: "ok" };
+  }
+  if (bootstrap) return { ...base, status: "ok", note: "bootstrapWaiting" };
+  return facts.hasActiveAdmin === false ? { ...base, status: "missing", note: "noAdmin" } : { ...base, status: "ok" };
+}
+
+function brandItem(env: Env, facts: ConfigFacts): ConfigItem {
+  const base = { id: "brand", required: false, vars: ["NEXT_PUBLIC_BRAND_JSON"] } as const;
+  if (facts.brandError) return { ...base, status: "missing", note: "invalidBrand", detail: [facts.brandError] };
+  if (!set(env.NEXT_PUBLIC_BRAND_JSON)) return { ...base, status: "warning", note: "defaultBrand" };
+  if (facts.brandUnknownFields.length > 0) {
+    return { ...base, status: "warning", note: "unknownBrandFields", detail: facts.brandUnknownFields };
+  }
+  if (facts.brandWarnings.length > 0) return { ...base, status: "warning", note: "contrast", detail: facts.brandWarnings };
+  return { ...base, status: "ok" };
+}
+
 export function configStatus(env: Env, facts: ConfigFacts): ConfigItem[] {
   const wallyfor = [set(env.WALLYFOR_API_KEY), set(env.WALLYFOR_MERCHANT_ID)];
   return [
@@ -104,16 +135,8 @@ export function configStatus(env: Env, facts: ConfigFacts): ConfigItem[] {
       status: set(env.AUTH_SECRET) ? "ok" : "missing",
     },
     signIn(env),
-    {
-      id: "brand",
-      required: false,
-      vars: ["NEXT_PUBLIC_BRAND_JSON"],
-      ...(!set(env.NEXT_PUBLIC_BRAND_JSON)
-        ? { status: "warning" as const, note: "defaultBrand" }
-        : facts.brandWarnings.length > 0
-          ? { status: "warning" as const, note: "contrast", detail: facts.brandWarnings }
-          : { status: "ok" as const }),
-    },
+    firstAdmin(env, facts),
+    brandItem(env, facts),
     {
       id: "baseUrl",
       required: false,

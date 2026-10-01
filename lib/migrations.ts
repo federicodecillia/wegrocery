@@ -27,4 +27,6 @@ export const MIGRATIONS = [
   "0022_auth_sessions.sql",
   "0023_ledger_append_only.sql",
   "0024_settlement.sql",
+  "0025_schema_catch_up.sql",
+  "0026_handling_charge.sql",
 ] as const;
