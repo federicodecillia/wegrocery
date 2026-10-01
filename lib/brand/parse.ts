@@ -93,3 +93,24 @@ export function parseBrandConfig(raw: string | undefined): BrandConfig {
 
   return { ...DEFAULT_BRAND, ...o, theme: { ...DEFAULT_BRAND.theme, ...theme } } as BrandConfig;
 }
+
+// The fields of NEXT_PUBLIC_BRAND_JSON the app does not read, as
+// "brand.<field>": a typo there would silently fall back to the default.
+// Empty when the JSON does not parse (parseBrandConfig says why).
+export function brandUnknownFields(raw: string | undefined): string[] {
+  let o: unknown;
+  try {
+    o = raw ? JSON.parse(raw) : null;
+  } catch {
+    return [];
+  }
+  if (typeof o !== "object" || o === null || Array.isArray(o)) return [];
+  const known = new Set<string>(Object.keys(DEFAULT_BRAND));
+  const unknown = Object.keys(o).filter((k) => !known.has(k)).map((k) => `brand.${k}`);
+  const theme = (o as Record<string, unknown>).theme;
+  if (typeof theme === "object" && theme !== null && !Array.isArray(theme)) {
+    const themeKnown = new Set<string>(THEME_FIELDS);
+    for (const k of Object.keys(theme)) if (!themeKnown.has(k)) unknown.push(`brand.theme.${k}`);
+  }
+  return unknown;
+}

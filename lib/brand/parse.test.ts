@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseBrandConfig } from "./parse";
+import { brandUnknownFields, parseBrandConfig } from "./parse";
 import { DEFAULT_BRAND } from "./default";
 
 describe("parseBrandConfig", () => {
@@ -100,5 +100,18 @@ describe("parseBrandConfig", () => {
       parseBrandConfig(JSON.stringify({ bankTransfer: { holder: "X", iban: "not an iban" } })),
     ).toThrow(/bankTransfer/);
     expect(() => parseBrandConfig(JSON.stringify({ bankTransfer: "IT60..." }))).toThrow(/bankTransfer/);
+  });
+});
+
+describe("brandUnknownFields", () => {
+  it("names the fields the app does not read, typos included", () => {
+    const raw = JSON.stringify({ appname: "GAS", locale: "it", theme: { primary: "#000", secondary: "#fff" } });
+    expect(brandUnknownFields(raw)).toEqual(["brand.appname", "brand.theme.secondary"]);
+  });
+
+  it("is empty for a brand with known fields only, or no brand, or one that does not parse", () => {
+    expect(brandUnknownFields(JSON.stringify({ appName: "GAS", theme: { primary: "#000" } }))).toEqual([]);
+    expect(brandUnknownFields(undefined)).toEqual([]);
+    expect(brandUnknownFields("{not json")).toEqual([]);
   });
 });

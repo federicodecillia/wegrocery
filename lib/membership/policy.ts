@@ -2,6 +2,7 @@
 // limit. No I/O here: auth.ts and lib/actions/order.ts do the lookups and the
 // writes, these functions decide.
 
+import { normalizeEmail } from "@/lib/member-email";
 import type { MembershipResult } from "./wallyfor";
 
 export type LoginError = "AccessDenied" | "NotMember" | "MembershipInactive" | "MembershipCheckUnavailable";
@@ -47,6 +48,16 @@ export function newUserSignIn(
   if (result.status === "invalid") return { kind: "deny", error: "NotMember" };
   // Fail closed: we cannot tell a stranger from a member.
   return { kind: "deny", error: "MembershipCheckUnavailable", logError: true };
+}
+
+/**
+ * The first admin of a new installation: the address in BOOTSTRAP_ADMIN_EMAIL.
+ * The caller also checks that the group has no active admin yet; after that
+ * the variable is ignored.
+ */
+export function matchesBootstrapEmail(address: string, configured: string | undefined): boolean {
+  const wanted = normalizeEmail(configured);
+  return wanted !== null && wanted === normalizeEmail(address);
 }
 
 export function loginErrorPath(error: LoginError, email?: string | null): string {
