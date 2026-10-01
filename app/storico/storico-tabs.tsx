@@ -259,11 +259,18 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
 // What the cycle moved on the balance, as the ledger sums it. Products and
 // shipping are costs, so they read negative like the rows they add up to.
 function CycleTotals({ entry }: { entry: CycleHistoryEntry }) {
+  const perOrder = entry.paymentMode === "per_order";
   if (!entry.charged) {
-    return <p className="mt-[10px] font-mono text-label text-brand-gray">{t.history.chargedAtClose}</p>;
+    return (
+      <div className="mt-[10px] space-y-[3px] font-mono text-label text-brand-gray">
+        {perOrder && entry.paid !== 0 && <TotalRow label={t.history.paid} value={formatSignedMoney(entry.paid)} />}
+        <p>{perOrder ? t.history.settledAtClose : t.history.chargedAtClose}</p>
+      </div>
+    );
   }
   return (
     <div className="mt-[10px] space-y-[3px] font-mono text-label text-brand-gray">
+      {perOrder && <TotalRow label={t.history.paid} value={formatSignedMoney(entry.paid)} />}
       <TotalRow label={t.history.products} value={formatSignedMoney(-entry.productsTotal)} />
       {entry.shipping !== 0 && (
         <TotalRow label={t.history.shipping} value={formatSignedMoney(-entry.shipping)} />
@@ -271,8 +278,11 @@ function CycleTotals({ entry }: { entry: CycleHistoryEntry }) {
       {entry.corrections !== 0 && (
         <TotalRow label={t.history.corrections} value={formatSignedMoney(entry.corrections)} />
       )}
+      {perOrder && entry.refunded !== 0 && (
+        <TotalRow label={t.history.refunded} value={formatSignedMoney(-entry.refunded)} />
+      )}
       <div className="flex justify-between border-t border-brand-border pt-[5px] text-[12px] font-bold text-brand-near-black">
-        <span>{t.history.cycleNet}</span>
+        <span>{perOrder ? t.history.cycleNetPerOrder : t.history.cycleNet}</span>
         <span>{formatSignedMoney(entry.net)}</span>
       </div>
     </div>

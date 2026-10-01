@@ -172,4 +172,9 @@ describe("pay-per-order movements", () => {
     expect(movementKind({ type: "order_payment", amount: 25, paymentId: "pay_1" })).toBe("order_payment");
     expect(movementKind({ type: "order_refund", amount: -7, paymentId: "pay_1" })).toBe("order_refund");
   });
+
+  it("names the payment of an amount due", () => {
+    expect(movementLabel({ type: "balance_payment", amount: 4, paymentId: "pay_1" }, labels)).toBe("Saldo pagato");
+    expect(movementKind({ type: "balance_payment", amount: 4, paymentId: "pay_1" })).toBe("balance_payment");
+  });
 });

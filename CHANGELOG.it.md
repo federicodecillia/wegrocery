@@ -21,6 +21,13 @@ stanno nella PR.
 
 ## [Non rilasciato]
 
+### Aggiunto
+- 💳 **Pagamento per ordine, selezionabile.** Gli admin possono passare il gruppo al pagamento di ogni ordine con la carta da Impostazioni, quando nessun ciclo è in corso; la card elenca cosa impedisce il cambio e i saldi prima di confermare. Nota di aggiornamento: applicare `drizzle/0024_settlement.sql` prima del deploy; il pagamento per ordine richiede l'euro e una chiave Stripe valida.
+- 🧮 **Chiudi i conti.** Su un ciclo pagato per ordine, chiuso o annullato, "Chiudi i conti" rimborsa sulla carta quello che ogni socio ha pagato oltre i costi definitivi, chiede quanto manca e abbuona le differenze sotto 0,50 €. Il ciclo mostra a che punto è: da conguagliare, rimborsi in corso, conti chiusi, da aggiornare, rimborso non riuscito.
+- 🔴 **Da saldare e credito.** Se i costi hanno superato quanto pagato, Home e la pagina dei saldi mostrano "Da saldare" con "Paga ora"; i nuovi pagamenti d'ordine aspettano che sia saldato. Un credito compare come denaro che l'associazione restituisce.
+- 🧾 **Paga fuori app.** Nel pagamento per ordine un admin può segnare chi paga in contanti: conferma gli ordini senza carta, il tesoriere registra i soldi e il conguaglio lo esclude.
+- 📚 **Storico e guida del pagamento per ordine.** Ogni ciclo nello Storico mostra pagato, costi, rimborsi e netto; guida e FAQ spiegano la quota, il conguaglio e i tempi dei rimborsi.
+
 ### Modificato
 - 🧾 **Le correzioni non riscrivono la storia.** Modificare o eliminare un movimento in Cassa, ricalcolare la spedizione di un ciclo chiuso o importare la distinta del fornitore ora annullano il movimento con uno storno e, se serve, aggiungono quello corretto; i soci vedono un solo movimento con "corretto il". Nota di aggiornamento: applicare `drizzle/0023_ledger_append_only.sql` subito prima del deploy (il database rifiuta da quel momento le modifiche ai movimenti passati).
 

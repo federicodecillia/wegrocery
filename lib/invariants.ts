@@ -1,4 +1,5 @@
 import { sql, type SQL } from "drizzle-orm";
+import { owedBackToCardSql } from "./payments/settlement-sql";
 
 // Money invariants every installation must keep, checked read-only every
 // night after the backup (scripts/check-invariants.mts) and in the
@@ -69,7 +70,9 @@ export const INVARIANT_CHECKS: InvariantCheck[] = [
   {
     name: "closed_cycle_charge",
     // Cycles closed with no charge at all are history imported from before
-    // the app (their balances came in as opening amounts): not checked.
+    // the app (their balances came in as opening amounts): not checked. A
+    // negative correction on the cycle counts as a charge: an order added
+    // after the close is charged by hand in Cassa.
     description: "every member with a positive order on a closed cycle was charged for it",
     query: sql`
       SELECT o.cycle_id || ':' || o.member_id AS id FROM orders o
@@ -79,7 +82,8 @@ export const INVARIANT_CHECKS: InvariantCheck[] = [
       HAVING sum(o.line_total) > 0
         AND NOT EXISTS (
           SELECT 1 FROM ledger_entries l
-          WHERE l.cycle_id = o.cycle_id AND l.member_id = o.member_id AND l.type = 'order_charge'
+          WHERE l.cycle_id = o.cycle_id AND l.member_id = o.member_id
+            AND (l.type = 'order_charge' OR (l.type = 'correction' AND l.amount < 0))
             AND l.reversed_by IS NULL
         )
         AND EXISTS (SELECT 1 FROM ledger_entries l WHERE l.cycle_id = o.cycle_id AND l.type = 'order_charge')`,
@@ -101,5 +105,29 @@ export const INVARIANT_CHECKS: InvariantCheck[] = [
       SELECT o.entry_id AS id FROM ledger_entries o
       WHERE o.reversed_by IS NOT NULL
         AND NOT EXISTS (SELECT 1 FROM ledger_entries r WHERE r.entry_id = o.reversed_by AND r.reverses = o.entry_id)`,
+  },
+  {
+    name: "paid_balance_credit",
+    description: "every paid balance payment is credited for its whole amount, split over its parts",
+    query: sql`
+      SELECT p.payment_id AS id FROM payments p
+      WHERE p.kind = 'balance' AND p.status IN ('succeeded', 'partially_refunded', 'refunded')
+        AND coalesce((SELECT round(sum(l.amount) * 100) FROM ledger_entries l
+                      WHERE l.payment_id = p.payment_id AND l.type = 'balance_payment'), 0) <> p.amount_cents`,
+  },
+  {
+    name: "settled_cycle_credit",
+    // A negative net is an amount due the member has not paid yet. Money the
+    // card payments can still take back means a correction came after the
+    // settlement: run Chiudi i conti again. What goes beyond them (or sits on
+    // a payment whose refund failed) is given back in Cassa, outside the
+    // cycle, so it is not counted (lib/payments/settlement-sql.ts).
+    description: "after a settlement no member keeps money on a pay-per-order cycle that could go back to the card",
+    query: sql`
+      SELECT mc.cycle_id || ':' || mc.member_id AS id
+      FROM (SELECT DISTINCT l.cycle_id, l.member_id FROM ledger_entries l
+            JOIN order_cycles c ON c.cycle_id = l.cycle_id
+            WHERE c.payment_mode = 'per_order' AND c.settled_at IS NOT NULL) mc
+      WHERE ${owedBackToCardSql(sql.raw("mc.member_id"), sql.raw("mc.cycle_id"))}`,
   },
 ];

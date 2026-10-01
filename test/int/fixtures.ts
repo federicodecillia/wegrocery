@@ -34,6 +34,7 @@ export function makeScope(label: string) {
   const memberId = `${prefix}_mem`;
   const memberName = `Int test ${label} ${run}`;
   const sql = testSql;
+  const extraMembers: string[] = [];
 
   return {
     prefix,
@@ -68,18 +69,19 @@ export function makeScope(label: string) {
       name: string,
       cycleId: string,
       amountCents: number,
+      member: string = memberId,
     ): Promise<{ paymentId: string; paymentIntentId: string }> {
       const paymentId = `${prefix}_pay_${name}`;
       const paymentIntentId = `pi_${prefix}_${name}`;
       await sql`INSERT INTO payments (payment_id, member_id, provider, status, amount_cents, currency,
           refunded_cents, checkout_session_id, payment_intent_id, created_at, updated_at, kind, cycle_id,
           order_snapshot)
-        VALUES (${paymentId}, ${memberId}, 'stripe', 'succeeded', ${amountCents}, 'eur', 0,
+        VALUES (${paymentId}, ${member}, 'stripe', 'succeeded', ${amountCents}, 'eur', 0,
           ${`cs_${prefix}_${name}`}, ${paymentIntentId}, now(), now(), 'order', ${cycleId},
           ${JSON.stringify({ lines: [] })}::jsonb)`;
       await sql`INSERT INTO ledger_entries (entry_id, member_id, entry_date, type, amount, cycle_id, note,
           created_by, created_at, payment_id)
-        VALUES (${`${prefix}_led_${name}`}, ${memberId}, now(), 'order_payment', ${amountCents}::numeric / 100,
+        VALUES (${`${prefix}_led_${name}`}, ${member}, now(), 'order_payment', ${amountCents}::numeric / 100,
           ${cycleId}, 'Order payment', 'stripe', now(), ${paymentId})`;
       return { paymentId, paymentIntentId };
     },
@@ -99,6 +101,22 @@ export function makeScope(label: string) {
         VALUES (${paymentId}, ${memberId}, 'stripe', 'pending', ${amountCents}, 'eur', 0, ${sessionId}, now(),
           now(), 'order', ${cycleId}, ${JSON.stringify({ lines })}::jsonb)`;
       return { paymentId, sessionId, paymentIntentId: `pi_${prefix}_${name}` };
+    },
+
+    // A second fake member in the same run, for tests that need several.
+    async createExtraMember(name: string, opts: { paysOffline?: boolean } = {}): Promise<string> {
+      const id = `${prefix}_mem_${name}`;
+      await sql`INSERT INTO members (member_id, full_name, email, role, active, created_at, updated_at, pays_offline)
+        VALUES (${id}, ${`${memberName} ${name}`}, ${`${prefix}.${name}@example.invalid`}, 'utenti', true, now(), now(),
+          ${opts.paysOffline ?? false})`;
+      extraMembers.push(id);
+      return id;
+    },
+
+    // A ledger row on a cycle (a charge, a correction), for any member of the run.
+    async addLedger(name: string, member: string, type: string, amount: number, cycleId: string | null): Promise<void> {
+      await sql`INSERT INTO ledger_entries (entry_id, member_id, entry_date, type, amount, cycle_id, note, created_by, created_at)
+        VALUES (${`${prefix}_led_${name}`}, ${member}, now(), ${type}, ${amount}, ${cycleId}, 'int-test', 'int-test', now())`;
     },
 
     // A refund the app has asked for and Stripe has not answered yet.
@@ -146,6 +164,16 @@ export function makeScope(label: string) {
 
     async cleanup(): Promise<void> {
       const like = `${prefix}%`;
+      for (const extra of extraMembers) {
+        await sql`DELETE FROM notifications WHERE member_id = ${extra}`;
+        await rawClient().transaction((tx) => [
+          tx`SELECT set_config('wegrocery.ledger_maintenance', 'on', true)`,
+          tx`DELETE FROM ledger_entries WHERE member_id = ${extra}`,
+        ]);
+        await sql`DELETE FROM refunds WHERE member_id = ${extra}`;
+        await sql`DELETE FROM payments WHERE member_id = ${extra}`;
+        await sql`DELETE FROM orders WHERE member_id = ${extra}`;
+      }
       await sql`DELETE FROM notifications WHERE member_id = ${memberId} OR body LIKE ${`%${memberName}%`}`;
       await sql`DELETE FROM audit_log WHERE entity_id LIKE ${like}`;
       // The ledger is append-only (drizzle/0023): the cleanup deletes in a
@@ -159,7 +187,7 @@ export function makeScope(label: string) {
       await sql`DELETE FROM order_drafts WHERE member_id = ${memberId}`;
       await sql`DELETE FROM orders WHERE member_id = ${memberId}`;
       await sql`DELETE FROM notification_preferences WHERE member_id = ${memberId}`;
-      await sql`DELETE FROM members WHERE member_id = ${memberId}`;
+      await sql`DELETE FROM members WHERE member_id = ${memberId} OR member_id = ANY(${extraMembers})`;
       await sql`DELETE FROM order_drafts WHERE cycle_id LIKE ${like}`;
       await sql`DELETE FROM orders WHERE cycle_id LIKE ${like}`;
       await sql`DELETE FROM products WHERE cycle_id LIKE ${like}`;

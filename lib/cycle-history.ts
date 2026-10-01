@@ -3,6 +3,9 @@
 // their effective cost) against what the ledger moved, so the figures of a
 // charged cycle add up to the balance:
 //   -productsTotal - shipping + corrections === net
+// A pay-per-order cycle adds what the member paid and what went back to the
+// card (spec "UI per modalità": pagato, costi, rimborsato, netto):
+//   paid - productsTotal - shipping + corrections - refunded === net
 
 type CycleMeta = {
   cycleId: string;
@@ -10,6 +13,8 @@ type CycleMeta = {
   pickupDate: Date | null;
   cycleStatus: string;
   cycleCreatedAt: Date;
+  // "wallet" when left out.
+  paymentMode?: string;
 };
 
 // One of the member's order lines, with its cycle.
@@ -33,6 +38,10 @@ export type HistoryLineRow = CycleMeta & {
 export type HistoryLedgerRow = CycleMeta & {
   net: string;
   shipping: string;
+  // Pay-per-order: order and balance payments, positive, and the refunds to
+  // the card net of the failed ones, positive.
+  paid?: string;
+  refunded?: string;
 };
 
 export type CycleHistoryLine = {
@@ -55,10 +64,15 @@ export type CycleHistoryEntry = {
   title: string;
   pickupDate: Date | null;
   status: string;
+  paymentMode: "wallet" | "per_order";
   lines: CycleHistoryLine[];
   // False while the cycle is open with nothing on the ledger yet (closing
-  // posts the charges): the lines are a pending order, not a movement.
+  // posts the charges): the lines are a pending order, not a movement. A
+  // pay-per-order cycle is charged only once closed, whatever it was paid.
   charged: boolean;
+  // Pay-per-order, positive; 0 for wallet cycles.
+  paid: number;
+  refunded: number;
   // Costs, positive: the lines at coalesce(actual_line_total, line_total),
   // and the shipping charged.
   productsTotal: number;
@@ -124,17 +138,28 @@ export function buildCycleHistory(
       const ledger = ledgerByCycle.get(meta.cycleId);
       const netCents = ledger ? toCents(ledger.net) : 0;
       const shippingCents = ledger ? toCents(ledger.shipping) : 0;
-      const charged = ledger !== undefined || meta.cycleStatus !== "open";
+      const paymentMode = meta.paymentMode === "per_order" ? "per_order" : "wallet";
+      const paidCents = ledger?.paid ? toCents(ledger.paid) : 0;
+      const refundedCents = ledger?.refunded ? toCents(ledger.refunded) : 0;
+      const charged =
+        paymentMode === "per_order"
+          ? meta.cycleStatus !== "open"
+          : ledger !== undefined || meta.cycleStatus !== "open";
       return {
         cycleId: meta.cycleId,
         title: meta.cycleTitle,
         pickupDate: meta.pickupDate,
         status: meta.cycleStatus,
+        paymentMode,
         lines,
         charged,
+        paid: paidCents / 100,
+        refunded: refundedCents / 100,
         productsTotal: productsCents / 100,
         shipping: shippingCents / 100,
-        corrections: charged ? (netCents + productsCents + shippingCents) / 100 : 0,
+        corrections: charged
+          ? (netCents + productsCents + shippingCents - paidCents + refundedCents) / 100
+          : 0,
         net: netCents / 100,
       };
     });
