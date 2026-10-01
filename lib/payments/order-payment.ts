@@ -9,7 +9,9 @@ import { TOPUP_MIN_CENTS } from "./config";
 export const ORDER_PAYMENT_MIN_CENTS = TOPUP_MIN_CENTS;
 export const ORDER_PAYMENT_MAX_CENTS = 100_000;
 
-// The cycle's order preparation fee: a percentage of the products or a fixed amount per member, in the currency unit. Charged at the close (handling_charge) and kept by the group.
+// The cycle's order preparation fee: a percentage of the products or a fixed
+// amount per member, in the currency unit. Charged at the close
+// (handling_charge) and kept by the group.
 export type HandlingFee = { type: "percent" | "fixed"; value: number };
 
 // The highest fee a cycle form accepts: a guard against typos (50 for 5),
@@ -29,13 +31,23 @@ export function handlingFeeCents(productsCents: number, fee: HandlingFee | null)
 
 // A cycle row's fee, null when it has none.
 export function cycleHandlingFee(cycle: {
-  handlingFeeType: string | null;
-  handlingFeeValue: string | null;
+  handlingFeeType?: string | null;
+  handlingFeeValue?: string | null;
 }): HandlingFee | null {
-  if ((cycle.handlingFeeType !== "percent" && cycle.handlingFeeType !== "fixed") || cycle.handlingFeeValue === null) {
+  if (
+    (cycle.handlingFeeType !== "percent" && cycle.handlingFeeType !== "fixed") ||
+    cycle.handlingFeeValue == null
+  ) {
     return null;
   }
   return { type: cycle.handlingFeeType, value: Number(cycle.handlingFeeValue) };
+}
+
+// Whether two fees charge the same: same type and the same value to the cent
+// (the database keeps two decimals).
+export function sameHandlingFee(a: HandlingFee | null, b: HandlingFee | null): boolean {
+  if (!a || !b) return a === b;
+  return a.type === b.type && Math.round(a.value * 100) === Math.round(b.value * 100);
 }
 
 export type OrderAmount = {
@@ -59,7 +71,8 @@ export function orderPaymentAmount(input: {
 }): OrderAmount {
   const { productsCents, shipping, fee } = input;
   const hasProducts = productsCents > 0;
-  // Proportional (and manual) shipping is only known at the close: the member pays it at settlement.
+  // Proportional (and manual) shipping is only known at the close: the member
+  // pays it at settlement.
   const shippingCents = hasProducts && shipping.mode === "fixed_per_member" ? (shipping.fixedCents ?? 0) : 0;
   const feeCents = handlingFeeCents(productsCents, fee);
   const requiredCents = productsCents + shippingCents + feeCents;

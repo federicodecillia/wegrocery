@@ -87,8 +87,9 @@ export const orderCycles = pgTable("order_cycles", {
   // The group's payment mode when the cycle was created, fixed for its life
   // (drizzle/0021_pay_per_order.sql): 'wallet' | 'per_order'.
   paymentMode: text("payment_mode").notNull().default("wallet"),
-  // The "handling and order preparation" share of a 'per_order' cycle:
-  // 'percent' of the products or a 'fixed' amount. NULL on wallet cycles.
+  // The order preparation fee of the cycle (a 'per_order' cycle always has
+  // one; a wallet cycle since drizzle/0026_handling_charge.sql may):
+  // 'percent' of the products or a 'fixed' amount. NULL = no fee.
   handlingFeeType: text("handling_fee_type"),
   handlingFeeValue: numeric("handling_fee_value", { precision: 10, scale: 2 }),
   // Last settlement of a pay-per-order cycle (drizzle/0024_settlement.sql).

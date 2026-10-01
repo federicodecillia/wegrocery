@@ -9,14 +9,15 @@ staging, in the Git branch they build from).
 | URL | `gas.portamoneta.org` | branch URL of `staging` on `porta-moneta` (see below) | `wegrocery-demo.vercel.app` |
 | Vercel project | `porta-moneta` (client: Porta Moneta) | `porta-moneta`, Preview deployment | `wegrocery-demo` |
 | Git branch | `main` | `staging` | `main` |
-| Database | production Neon (real members) | Neon branch `staging` (copy of production) | separate demo Neon (fake data) |
+| Database | production Neon (real members) | Neon branch `dev` (a copy of production, shared with local dev and previews) | separate demo Neon (fake data) |
 | `DEMO_MODE` | unset | unset | `true` |
 | Auth | Google OAuth + member whitelist | same, with the staging redirect URI | one-click Socio/Admin demo login |
 | Outbound email | Resend | redirected to `EMAIL_REDIRECT_TO` | disabled |
-| Data | real, persistent | real copy, resettable | reseeded nightly |
+| Data | real, persistent | real copy, resettable (reset on demand) | reseeded nightly |
 
-Local dev and ordinary PR previews keep using the Neon branch `dev`
-(see AGENTS.md → "Database environments & access").
+There is no Neon branch named `staging`: the staging deployment, local dev and
+ordinary PR previews all use the Neon branch `dev`, which is why a reset of
+`dev` also resets staging (see AGENTS.md → "Database environments & access").
 
 ## One codebase, env-driven differences
 
@@ -75,8 +76,8 @@ need to be set:
 
 | Variable | Staging value |
 |---|---|
-| `DATABASE_URL` | connection string of the Neon branch `staging` |
-| `EMAIL_REDIRECT_TO` | the tester's inbox (every email goes there, cc dropped, subject tagged `[STAGING -> <recipient>]`; broadcasts to all members are capped to 3 samples) |
+| `DATABASE_URL` | connection string of the Neon branch `dev` (the database every Preview uses) |
+| `EMAIL_REDIRECT_TO` | the tester's inbox (every email goes there, cc dropped, subject tagged `[STAGING -> <recipient>]`; broadcasts to all members are capped to 3 samples). Scoped to the `staging` branch only: ordinary PR previews, on the same `dev` database, have no value and refuse to send any email |
 | `APP_BASE_URL` | the staging branch URL, so email links do not point at production |
 | `WALLYFOR_*` | membership-check credentials (the same read-only check as production) |
 | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | Stripe **sandbox** keys only (the app refuses live keys outside production). The sandbox webhook endpoint is `<staging URL>/api/stripe/webhook?x-vercel-protection-bypass=<secret>`, with the secret from Settings → Deployment Protection → Protection Bypass for Automation |
@@ -98,26 +99,25 @@ https://<staging branch URL>/api/auth/callback/google
 Only the stable branch URL works: per-commit URLs change on every push and
 cannot be whitelisted.
 
-### Neon branch `staging`
+### Database: the Neon branch `dev`
 
-`staging` is a copy-on-write child of `production` in project
-`porta-moneta-app-gas`. Create it once:
+Staging runs on the Neon branch `dev` of project `porta-moneta-app-gas`, a
+copy-on-write child of `production` that local development and ordinary PR
+previews use as well. It is throwaway data: there is no separate `staging`
+branch in the Neon project (checked 2026-09-30). Because the data is a copy of
+production, the real member addresses are in it, and `EMAIL_REDIRECT_TO` is
+what keeps staging from mailing them.
+
+Refresh it from current production data (this **destroys** everything written
+on `dev`, so on staging and on every preview too, including migrations not yet
+on production):
 
 ```bash
-npx -y neonctl branches create --name staging --parent production \
+npx -y neonctl branches reset dev --parent \
   --project-id small-breeze-14972344 --org-id org-gentle-violet-55538692
 ```
 
-Refresh it from current production data (this
-**destroys** everything written on staging, including migrations not yet on
-production):
-
-```bash
-npx -y neonctl branches reset staging --parent \
-  --project-id small-breeze-14972344 --org-id org-gentle-violet-55538692
-```
-
-After a reset, re-apply the pending migrations to staging (next section).
+After a reset, re-apply the pending migrations to `dev` (next section).
 
 ## Database migrations
 
@@ -127,9 +127,10 @@ records applied files in `_migrations`. Order: **staging first, then
 production**, then demo.
 
 ```bash
-# 1. staging (connection string of the Neon branch "staging")
-DATABASE_URL="…staging…" node scripts/db-migrate.mjs --status
-DATABASE_URL="…staging…" node scripts/db-migrate.mjs
+# 1. staging = the Neon branch "dev" (what `npm run db:migrate` targets
+#    with .env.local)
+DATABASE_URL="…dev…" node scripts/db-migrate.mjs --status
+DATABASE_URL="…dev…" node scripts/db-migrate.mjs
 
 # 2. production — only at promotion time, with explicit confirmation,
 #    after running the pre-flight query from the file header

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { it as italian } from "@/lib/i18n/it";
-import { movementDateHasTime, movementKind, movementLabel, movementRecorder, movementText } from "./movement-label";
+import { LEDGER_TYPES, movementDateHasTime, movementKind, movementLabel, movementRecorder, movementText } from "./movement-label";
 
 const labels = italian.history;
 
@@ -42,6 +42,13 @@ describe("movementLabel", () => {
 
   it("falls back to a generic label for a type it does not know", () => {
     expect(label("mystery", "-1.00")).toBe("Movimento");
+  });
+
+  it("names every type the database can hold, never the generic fallback", () => {
+    for (const type of LEDGER_TYPES) {
+      expect(label(type, "5.00"), type).not.toBe(labels.otherMovement);
+      expect(label(type, "-5.00"), type).not.toBe(labels.otherMovement);
+    }
   });
 
   it("names a reversal of the append-only ledger", () => {

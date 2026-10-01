@@ -129,8 +129,10 @@ variables, plus a staging deployment of the `staging` branch:
   `porta-moneta` project, reached through its stable branch URL
   (`porta-moneta-git-staging-<scope>.vercel.app`). Env vars scoped to
   Preview + Git branch `staging`: `DATABASE_URL` → the Neon branch `dev`, like
-  every Preview (there is no `staging` branch in the Neon project, checked
-  2026-09-30; migrations for staging go to `dev`), `EMAIL_REDIRECT_TO`,
+  every Preview (a copy of production; there is no `staging` branch in the Neon
+  project, checked 2026-09-30; migrations for staging go to `dev`),
+  `EMAIL_REDIRECT_TO` (set only on the `staging` branch: other previews share
+  `dev` but have none, so they refuse to send email),
   `APP_BASE_URL`, `WALLYFOR_*`, `STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET`
   (sandbox keys only). The Google OAuth client needs the staging
   branch URL's `/api/auth/callback/google` as an extra redirect URI.

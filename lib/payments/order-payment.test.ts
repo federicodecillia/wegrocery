@@ -7,6 +7,7 @@ import {
   coveredCents,
   cycleHandlingFee,
   handlingFeeCents,
+  sameHandlingFee,
   ORDER_PAYMENT_MAX_CENTS,
   orderPaymentAmount,
   parseHandlingFee,
@@ -174,10 +175,25 @@ describe("parseHandlingFee", () => {
     expect(parseHandlingFee("fixed", "10.01")).toEqual({ error: "invalid" });
   });
 
-  it("rejects an unknown type, a sign, a blank and a percentage above 100", () => {
+  it("rejects an unknown type, a sign, a blank, text, extra decimals and a value over the cap", () => {
     for (const [type, value] of [["other", "10"], ["percent", "-1"], ["percent", ""], ["percent", "101"], ["fixed", "1.234"], ["fixed", "abc"]]) {
       expect(parseHandlingFee(type, value)).toEqual({ error: "invalid" });
     }
+  });
+});
+
+describe("sameHandlingFee", () => {
+  it("treats no fee as equal to no fee only", () => {
+    expect(sameHandlingFee(null, null)).toBe(true);
+    expect(sameHandlingFee(null, { type: "fixed", value: 0 })).toBe(false);
+    expect(sameHandlingFee({ type: "percent", value: 10 }, null)).toBe(false);
+  });
+
+  it("compares the type and the value to the cent", () => {
+    expect(sameHandlingFee({ type: "percent", value: 10 }, { type: "percent", value: 10 })).toBe(true);
+    expect(sameHandlingFee({ type: "fixed", value: 1.5 }, { type: "fixed", value: 1.5 })).toBe(true);
+    expect(sameHandlingFee({ type: "percent", value: 10 }, { type: "fixed", value: 10 })).toBe(false);
+    expect(sameHandlingFee({ type: "percent", value: 10 }, { type: "percent", value: 10.01 })).toBe(false);
   });
 });
 
@@ -185,6 +201,12 @@ describe("resolveCycleFee", () => {
   it("gives a wallet cycle the fee of its form, or none", () => {
     expect(resolveCycleFee("wallet", { type: "percent", value: "5" }, null)).toEqual({ fee: { type: "percent", value: 5 } });
     expect(resolveCycleFee("wallet", { type: "none", value: "" }, null)).toEqual({ fee: null });
+  });
+
+  it("refuses an invalid fee on a wallet cycle too, instead of dropping it", () => {
+    expect(resolveCycleFee("wallet", { type: "percent", value: "x" }, null)).toEqual({ error: "invalid" });
+    expect(resolveCycleFee("wallet", { type: "percent", value: "26" }, null)).toEqual({ error: "invalid" });
+    expect(resolveCycleFee("wallet", { type: "other", value: "5" }, null)).toEqual({ error: "invalid" });
   });
 
   it("refuses no fee on a per_order cycle", () => {
