@@ -1326,6 +1326,7 @@ export const en: Strings = {
     amountZero: "Amount cannot be zero",
     amountSignChange: "An entry's sign cannot change: to reverse it, record a new entry.",
     ledgerEntryNotFound: "Entry not found",
+    ledgerEntryAlreadyCorrected: "The movement was already corrected or cancelled: reload the page.",
     ledgerEntryFromOnlinePayment:
       "This entry belongs to an online payment: refund it from Stripe or record a correction instead.",
     ledgerEntryNotEditable:

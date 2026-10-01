@@ -77,4 +77,23 @@ describeDb("append-only ledger", () => {
     // And a second live share for the same member and cycle is still refused.
     await expect(insert("s2", "shipping_charge", -1, cycleId)).rejects.toThrow(/charge_live_uniq/);
   });
+
+  it("frees a cancelled movement's bank reference and keeps it on a corrected one", async () => {
+    const ref = `CRO-${scope.prefix}`;
+    const id = scope.id("ref1");
+    await sql`INSERT INTO ledger_entries (entry_id, member_id, entry_date, type, amount, note, created_by, created_at, method, external_ref)
+      VALUES (${id}, ${scope.memberId}, now(), 'topup', 40, 'x', 'int-test', now(), 'bonifico', ${ref})`;
+    const edited = await reverseEntry(getDb(), {
+      entryId: id,
+      note: "Corretto",
+      by: "admin@example.invalid",
+      replacement: { amount: "45.00", note: "x" },
+    });
+    const [repl] = await sql`SELECT external_ref FROM ledger_entries WHERE entry_id = ${edited!.replacementId!}`;
+    expect(repl.external_ref).toBe(ref);
+    // Cancelling the corrected one frees the reference for a new recording.
+    await reverseEntry(getDb(), { entryId: edited!.replacementId!, note: "Annullato", by: "admin@example.invalid" });
+    await sql`INSERT INTO ledger_entries (entry_id, member_id, entry_date, type, amount, note, created_by, created_at, method, external_ref)
+      VALUES (${scope.id("ref2")}, ${scope.memberId}, now(), 'topup', 45, 'x', 'int-test', now(), 'bonifico', ${ref})`;
+  });
 });

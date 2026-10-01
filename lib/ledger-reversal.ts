@@ -8,8 +8,8 @@ import type { getDb } from "@/lib/db/client";
 // reversed (once: a second attempt finds it already reversed and writes
 // nothing), the reversal and the replacement are inserted together. Both keep
 // the original's date (when the money moved); created_at says when. The
-// replacement does not repeat a bank reference: it stays on the original,
-// still reserved against being recorded twice.
+// replacement carries the bank reference on: only rows still in force reserve
+// it, so a cancelled transfer can be recorded again.
 
 type Db = ReturnType<typeof getDb>;
 
@@ -30,9 +30,9 @@ export function reverseEntrySql(input: ReverseInput, ids = { reversalId: newId()
     ? sql`,
       repl AS (
         INSERT INTO ledger_entries
-          (entry_id, member_id, entry_date, type, amount, cycle_id, note, created_by, created_at, method, replaces)
+          (entry_id, member_id, entry_date, type, amount, cycle_id, note, created_by, created_at, method, external_ref, replaces)
         SELECT ${ids.replacementId}, member_id, entry_date, type, ${input.replacement.amount}::numeric, cycle_id,
-               ${input.replacement.note}, ${input.by}, now(), method, entry_id
+               ${input.replacement.note}, ${input.by}, now(), method, external_ref, entry_id
         FROM orig
         RETURNING entry_id
       )`
@@ -41,7 +41,7 @@ export function reverseEntrySql(input: ReverseInput, ids = { reversalId: newId()
     WITH orig AS (
       UPDATE ledger_entries SET reversed_by = ${ids.reversalId}
       WHERE entry_id = ${input.entryId} AND reversed_by IS NULL AND type <> 'reversal'
-      RETURNING entry_id, member_id, entry_date, type, amount, cycle_id, method
+      RETURNING entry_id, member_id, entry_date, type, amount, cycle_id, method, external_ref
     ),
     rev AS (
       INSERT INTO ledger_entries

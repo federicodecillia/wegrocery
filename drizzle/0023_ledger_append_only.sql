@@ -11,8 +11,11 @@
 --                             "edit", a recomputed shipping share): the one it
 --                             replaces, which has been reversed.
 --
--- The one-charge-per-member-and-cycle index now counts only rows still in
--- force (not reversed), so a shipping share can be reversed and posted again.
+-- The one-charge-per-member-and-cycle index and the one-recording-per-bank-
+-- reference index now count only rows still in force (not reversed): a
+-- shipping share can be reversed and posted again, and a cancelled bank
+-- transfer can be recorded again. Each new index is built before the old one
+-- is dropped, so the backstop never lapses.
 --
 -- The trigger rejects UPDATE (except setting reversed_by once) and DELETE.
 -- Maintenance that must delete rows (the integration tests' cleanup) sets
@@ -35,11 +38,17 @@ ALTER TABLE ledger_entries
   DROP CONSTRAINT IF EXISTS ledger_entries_reversal_check,
   ADD CONSTRAINT ledger_entries_reversal_check CHECK ((type = 'reversal') = (reverses IS NOT NULL));
 --> statement-breakpoint
-DROP INDEX IF EXISTS ledger_entries_cycle_member_charge_uniq;
---> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS ledger_entries_cycle_member_charge_live_uniq
   ON ledger_entries (cycle_id, member_id, type)
   WHERE type IN ('order_charge', 'shipping_charge') AND reversed_by IS NULL;
+--> statement-breakpoint
+DROP INDEX IF EXISTS ledger_entries_cycle_member_charge_uniq;
+--> statement-breakpoint
+CREATE UNIQUE INDEX IF NOT EXISTS ledger_entries_external_ref_live_uniq
+  ON ledger_entries (upper(trim(external_ref)))
+  WHERE external_ref IS NOT NULL AND reversed_by IS NULL;
+--> statement-breakpoint
+DROP INDEX IF EXISTS ledger_entries_external_ref_uniq;
 --> statement-breakpoint
 CREATE OR REPLACE FUNCTION ledger_entries_append_only() RETURNS trigger
 LANGUAGE plpgsql AS $fn$

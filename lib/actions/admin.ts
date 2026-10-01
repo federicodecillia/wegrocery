@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { getAuthInstance } from "@/auth";
 import { admitEmail } from "@/lib/auth/admission";
-import { eq, and, notInArray, sql, inArray } from "drizzle-orm";
+import { eq, and, isNull, notInArray, sql, inArray } from "drizzle-orm";
 import { requireAdmin } from "@/lib/auth/session";
 import { t } from "@/lib/i18n";
 import { formatMoney, formatDate, formatDateTime } from "@/lib/i18n/format";
@@ -755,9 +755,10 @@ async function notifyShippingChanges(
 
 // Re-splits a closed cycle's shipping_charge entries after its shipping
 // settings changed (adminUpdateCycle); adminEditClosedOrder runs the same plan
-// inside its own batch. Existing rows are updated in place, members with no
-// row who now owe a share get one, a member left with no effective total is
-// reversed to 0, and only members whose share moved are notified. A manual
+// inside its own batch. A changed share is reversed and posted again (the
+// ledger is append-only), members with no row who now owe a share get one, a
+// member left with no effective total is only reversed, and only members whose
+// share moved are notified. A manual
 // (distinta-imported) cycle is left alone. Returns those members' ids.
 //
 // The writes are one guarded batch, planned again from fresh state when a
@@ -1033,7 +1034,8 @@ async function externalRefTakenMessage(
     .select({ entryDate: ledgerEntries.entryDate, fullName: members.fullName })
     .from(ledgerEntries)
     .innerJoin(members, eq(ledgerEntries.memberId, members.memberId))
-    .where(sql`upper(trim(${ledgerEntries.externalRef})) = upper(trim(${ref}))`)
+    // Only movements in force hold a reference: a cancelled one frees it.
+    .where(and(sql`upper(trim(${ledgerEntries.externalRef})) = upper(trim(${ref}))`, isNull(ledgerEntries.reversedBy)))
     .limit(1);
   if (!taken) return null;
   return t.admin.treasury.movementErrors.refTakenBy(ref, taken.fullName, formatDate(taken.entryDate));
@@ -1943,7 +1945,7 @@ export async function adminUpdateLedgerEntry(
       by: admin.email,
       replacement: { amount: after.amount, note: after.note ?? "" },
     });
-    if (!corrected) return { error: t.errors.ledgerEntryNotFound };
+    if (!corrected) return { error: t.errors.ledgerEntryAlreadyCorrected };
     await writeAudit(db, admin.email, "update_ledger", "ledger", entryId, { before, after, ...corrected });
     revalidatePath("/admin");
     revalidatePath("/");
@@ -1969,7 +1971,7 @@ export async function adminDeleteLedgerEntry(entryId: string): Promise<{ error?:
 
     // The ledger is append-only: the movement is reversed, not deleted.
     const reversed = await reverseEntry(db, { entryId, note: t.ledger.deletedBy, by: admin.email });
-    if (!reversed) return { error: t.errors.ledgerEntryNotFound };
+    if (!reversed) return { error: t.errors.ledgerEntryAlreadyCorrected };
     await writeAudit(db, admin.email, "delete_ledger", "ledger", entryId, { before, after: null, ...reversed });
     revalidatePath("/admin");
     revalidatePath("/");
@@ -2575,7 +2577,7 @@ export async function adminApplyDistintaImport(input: {
         if (prev) {
           // Append-only: the share is reversed and posted again with the
           // supplier's figure (nothing posted again when it is zero).
-          await reverseEntry(db, {
+          const reversed = await reverseEntry(db, {
             entryId: prev,
             note: t.ledger.shippingFromSupplier,
             by: admin.email,
@@ -2583,6 +2585,8 @@ export async function adminApplyDistintaImport(input: {
               replacement: { amount: newAmount.toFixed(2), note: t.ledger.shippingFromSupplier },
             }),
           });
+          // Another import got there first: its figure stands, nothing to report here.
+          if (!reversed) continue;
         } else if (s.newShipping > 0) {
           await db.insert(ledgerEntries).values({
             entryId: genId("led"),

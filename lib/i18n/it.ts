@@ -1333,6 +1333,7 @@ export const it = {
     amountZero: "L'importo non può essere zero",
     amountSignChange: "Il segno del movimento non può cambiare: per stornarlo registra un nuovo movimento.",
     ledgerEntryNotFound: "Movimento non trovato",
+    ledgerEntryAlreadyCorrected: "Il movimento è già stato corretto o annullato: ricarica la pagina.",
     ledgerEntryFromOnlinePayment:
       "Movimento di un pagamento online: per correggerlo fai un rimborso da Stripe o registra una rettifica.",
     ledgerEntryNotEditable:

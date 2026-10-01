@@ -397,9 +397,9 @@ export const ledgerEntries = pgTable(
     check("ledger_entries_external_ref_not_blank", sql`trim(${table.externalRef}) <> ''`),
     // The same bank transfer cannot be recorded twice, whatever the case or
     // the surrounding spaces of its reference.
-    uniqueIndex("ledger_entries_external_ref_uniq")
+    uniqueIndex("ledger_entries_external_ref_live_uniq")
       .on(sql`upper(trim(${table.externalRef}))`)
-      .where(sql`${table.externalRef} IS NOT NULL`),
+      .where(sql`${table.externalRef} IS NOT NULL AND ${table.reversedBy} IS NULL`),
     // An order or balance payment is credited at most once per cycle
     // (drizzle/0021_pay_per_order.sql).
     uniqueIndex("ledger_entries_payment_cycle_credit_uniq")

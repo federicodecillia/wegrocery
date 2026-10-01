@@ -59,7 +59,12 @@ const payId = (k) => `pay_stgcheck_${k}`;
 async function cleanup() {
   await sql`DELETE FROM notifications WHERE member_id = ${M} OR body LIKE ${`%${NAME}%`}`;
   await sql`DELETE FROM audit_log WHERE entity_id = ANY(${Object.keys(CASES).map(payId)})`;
-  await sql`DELETE FROM ledger_entries WHERE member_id = ${M}`;
+  // The ledger is append-only (drizzle/0023): delete with the guard off for
+  // this transaction only.
+  await sql.transaction((tx) => [
+    tx`SELECT set_config('wegrocery.ledger_maintenance', 'on', true)`,
+    tx`DELETE FROM ledger_entries WHERE member_id = ${M}`,
+  ]);
   await sql`DELETE FROM refunds WHERE member_id = ${M}`;
   await sql`DELETE FROM payments WHERE member_id = ${M}`;
   await sql`DELETE FROM members WHERE member_id = ${M}`;
