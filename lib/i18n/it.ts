@@ -283,7 +283,7 @@ export const it = {
     settings: {
       title: "Preferenze notifiche",
       link: "Preferenze notifiche",
-      intro: "Scegli come vuoi essere avvisato per ogni tipo di notifica.",
+      intro: "Scegli come vuoi essere avvisato per ogni gruppo di notifiche.",
       channelApp: "App",
       channelEmail: "Email",
       saved: "Preferenze aggiornate",
@@ -291,20 +291,20 @@ export const it = {
       back: "Notifiche",
       categories: {
         cycle_opened: {
-          label: "Apertura ciclo",
-          hint: "Quando apre un nuovo ciclo d'ordine.",
+          label: "Nuovo ciclo aperto",
+          hint: "Quando si apre un ciclo d'ordine a cui puoi partecipare.",
         },
         order_charge: {
-          label: "Addebito ordine",
-          hint: "Quando il ciclo si chiude e ti viene addebitato l'ordine, o quando la cassa registra un addebito o la quota associativa.",
+          label: "Addebiti e pagamenti",
+          hint: "Addebito dell'ordine alla chiusura del ciclo (spesa, spedizione, spese di preparazione), conguaglio da saldare, quota associativa e addebiti della cassa, conferma dei pagamenti online.",
         },
         order_updates: {
           label: "Modifiche all'ordine",
-          hint: "Quando l'admin rettifica il tuo ordine o la spedizione.",
+          hint: "Quando l'admin corregge il tuo ordine, le quantità consegnate o la spedizione, o annulla il ciclo.",
         },
         wallet_topup: {
-          label: "Accredito cassa",
-          hint: "Quando viene registrata una ricarica sul tuo saldo o ti viene restituito del saldo.",
+          label: "Saldo e rimborsi",
+          hint: "Ricariche, saldo restituito e rimborsi con carta, anche quelli non riusciti.",
         },
       },
     },

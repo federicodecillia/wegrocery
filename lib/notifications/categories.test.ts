@@ -121,8 +121,37 @@ describe("channelsForType", () => {
 });
 
 describe("pay-per-order notification types", () => {
-  it("files a paid order under order updates and a refund on its way under the wallet", () => {
-    expect(categoryForType("order_paid")).toBe("order_updates");
+  // Each preference voice must match its hint: everything the member is
+  // charged or pays (order paid online, balance paid) sits under
+  // "Charges and payments"; only money coming back sits under the wallet.
+  it("files payments under order_charge and refunds under the wallet", () => {
+    expect(categoryForType("order_paid")).toBe("order_charge");
+    expect(categoryForType("balance_paid")).toBe("order_charge");
+    expect(categoryForType("settlement_due")).toBe("order_charge");
     expect(categoryForType("order_refund_sent")).toBe("wallet_topup");
+  });
+});
+
+describe("full type to category map", () => {
+  it("pins every known type", () => {
+    const expected: Record<string, string> = {
+      cycle_opened: "cycle_opened",
+      order_closed: "order_charge",
+      settlement_due: "order_charge",
+      manual_charge_recorded: "order_charge",
+      membership_fee_charged: "order_charge",
+      order_paid: "order_charge",
+      balance_paid: "order_charge",
+      order_adjusted: "order_updates",
+      order_corrected: "order_updates",
+      cycle_cancelled: "order_updates",
+      topup_received: "wallet_topup",
+      payout_sent: "wallet_topup",
+      order_refund_sent: "wallet_topup",
+      refund_failed: "wallet_topup",
+    };
+    for (const [type, category] of Object.entries(expected)) {
+      expect(categoryForType(type), type).toBe(category);
+    }
   });
 });

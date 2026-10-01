@@ -283,7 +283,7 @@ export const en: Strings = {
     settings: {
       title: "Notification preferences",
       link: "Notification preferences",
-      intro: "Choose how you want to be notified for each type of notification.",
+      intro: "Choose how you want to be notified for each group of notifications.",
       channelApp: "App",
       channelEmail: "Email",
       saved: "Preferences updated",
@@ -291,20 +291,20 @@ export const en: Strings = {
       back: "Notifications",
       categories: {
         cycle_opened: {
-          label: "Cycle opened",
-          hint: "When a new order cycle opens.",
+          label: "New cycle opened",
+          hint: "When an order cycle you can take part in opens.",
         },
         order_charge: {
-          label: "Order charge",
-          hint: "When the cycle closes and your order is charged, or the treasurer records a charge or the membership fee.",
+          label: "Charges and payments",
+          hint: "Your order being charged when the cycle closes (groceries, shipping, preparation fee), a settlement to pay, the membership fee and charges recorded by the treasurer, confirmation of online payments.",
         },
         order_updates: {
-          label: "Order updates",
-          hint: "When the admin adjusts your order or shipping.",
+          label: "Order changes",
+          hint: "When the admin corrects your order, the delivered quantities or the shipping, or cancels the cycle.",
         },
         wallet_topup: {
-          label: "Wallet top-up",
-          hint: "When a top-up is recorded on your balance or part of your balance is paid back to you.",
+          label: "Balance and refunds",
+          hint: "Top-ups, balance paid back to you and card refunds, including failed ones.",
         },
       },
     },

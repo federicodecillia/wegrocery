@@ -21,6 +21,9 @@ stanno nella PR.
 
 ## [Non rilasciato]
 
+### Modificato
+- 🔔 **Preferenze di notifica più chiare.** I quattro gruppi dicono cosa coprono: nuovo ciclo aperto, addebiti e pagamenti (compresi il conguaglio e le conferme dei pagamenti online), modifiche all'ordine (compreso un ciclo annullato) e saldo e rimborsi. Le tue scelte salvate restano; le conferme di pagamento ora seguono "Addebiti e pagamenti".
+
 ### Risolto
 - 🏷️ **Cassa dà un nome a ogni movimento.** I vecchi rimborsi e pagamenti con carta, le spedizioni e le rettifiche mostravano nel badge un codice tecnico come `ORDER_REFUND`; ora si leggono "rimborso carta", "pagamento ordine", "spedizione" e così via, e un tipo sconosciuto mostra un semplice "movimento".
 - ✏️ **Modificare un ciclo dopo la chiusura.** Salvare titolo o ritiro di un ciclo da un modulo aperto prima della chiusura non fallisce più con "le spese non si possono più cambiare" quando le spese non sono state toccate.
