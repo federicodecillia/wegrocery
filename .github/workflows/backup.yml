@@ -14,8 +14,12 @@ name: Daily Neon Backup
 #
 # Restore: see AGENTS.md → "Backup & Restore" section.
 #
-# After the backup, the `invariants` job checks read-only that the books add
-# up (lib/invariants.ts): a failure fails the run and GitHub emails the owner.
+# Alongside the backup, the `invariants` job checks read-only that the books
+# add up (lib/invariants.ts). It does not wait for the backup: a stuck or
+# failed dump must never hide a money problem. If either job fails or is
+# cancelled (a timeout counts as cancelled, and GitHub's failure email may not
+# fire for that), the `notify` job opens an issue, or comments on the one
+# already open.
 
 on:
   schedule:
@@ -28,17 +32,32 @@ jobs:
     timeout-minutes: 15
 
     steps:
+      # The install usually takes ~12 s, but once (2026-10-01) it hung with no
+      # output until the job timeout. Every network command is now bounded and
+      # retried, so a stalled mirror costs about a minute, not the whole job.
       - name: Install PostgreSQL 17 client (matches Neon)
+        timeout-minutes: 8
         run: |
           set -euo pipefail
+          retry() {
+            local n=0
+            until "$@"; do
+              n=$((n + 1))
+              if [ "$n" -ge 3 ]; then echo "giving up: $*" >&2; return 1; fi
+              echo "attempt $n failed, retrying: $*" >&2
+              sleep $((n * 10))
+            done
+          }
+          APT_OPTS="-o Acquire::Retries=3 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20 -o DPkg::Lock::Timeout=60"
           sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc \
+          retry sudo curl -fsSL --connect-timeout 10 --max-time 30 \
+            https://www.postgresql.org/media/keys/ACCC4CF8.asc \
             -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc
           echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] \
             https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" \
             | sudo tee /etc/apt/sources.list.d/pgdg.list > /dev/null
-          sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends postgresql-client-17
+          retry sudo timeout -k 10 90 apt-get $APT_OPTS update
+          retry sudo timeout -k 10 120 apt-get $APT_OPTS install -y --no-install-recommends postgresql-client-17
           # The Ubuntu runner pre-installs pg-client 16 and the /usr/bin/pg_dump
           # wrapper picks it instead of 17. Prepend the v17 bin dir to PATH so
           # subsequent steps see pg_dump 17.
@@ -46,6 +65,7 @@ jobs:
           /usr/lib/postgresql/17/bin/pg_dump --version
 
       - name: Install rclone
+        timeout-minutes: 3
         run: |
           set -euo pipefail
           curl -fsSL https://rclone.org/install.sh | sudo bash
@@ -117,7 +137,6 @@ jobs:
           rm -f "$HOME/.config/rclone/rclone.conf"
 
   invariants:
-    needs: backup
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -138,3 +157,30 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: node node_modules/tsx/dist/cli.mjs scripts/check-invariants.mts
 
+  notify:
+    needs: [backup, invariants]
+    if: ${{ always() && (contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: Open or update the alert issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          BACKUP: ${{ needs.backup.result }}
+          INVARIANTS: ${{ needs.invariants.result }}
+        run: |
+          set -euo pipefail
+          TITLE="Nightly backup/invariants run needs attention"
+          BODY="$(date -u +%F): backup ${BACKUP}, invariants ${INVARIANTS}. Run: ${RUN_URL}"
+          # One open issue at a time: later failures comment on it instead of
+          # opening a new one every night.
+          OPEN=$(gh issue list --state open --search "in:title \"${TITLE}\"" --json number --jq '.[0].number // empty')
+          if [ -n "$OPEN" ]; then
+            gh issue comment "$OPEN" --body "$BODY"
+          else
+            gh issue create --title "$TITLE" --body "$BODY"
+          fi
