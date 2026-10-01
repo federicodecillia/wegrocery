@@ -14,8 +14,8 @@ status*, or `npm run doctor` from a checkout with your environment.
    DATABASE_URL="postgres://…" node scripts/db-migrate.mjs --status
    DATABASE_URL="postgres://…" node scripts/db-migrate.mjs
    ```
-   Or set `MIGRATE_ON_BUILD=true` on the production environment of your
-   Vercel project: every production build applies them first, and a failing
+   Or set `MIGRATE_ON_BUILD=true` on your Vercel project: every production
+   build applies them first (preview builds never do), and a failing
    migration stops the deploy.
 3. Add any new environment variable and any new Stripe webhook event listed
    below.
@@ -27,7 +27,8 @@ Every migration is additive and can run twice without harm.
 
 | Version | Migration | Environment | Stripe webhook events |
 |---|---|---|---|
-| unreleased | `0023_ledger_append_only.sql` (right before deploying), `0024_settlement.sql` | none | none |
+| unreleased (after 1.18.0) | none | `BOOTSTRAP_ADMIN_EMAIL` (new installations only); `MIGRATE_ON_BUILD` now runs on production builds only | none |
+| 1.18.0 (unreleased) | `0023_ledger_append_only.sql` (right before deploying), `0024_settlement.sql` | none | none |
 | 1.17.0 | `0021_pay_per_order.sql`, `0022_auth_sessions.sql` | email (`RESEND_API_KEY`, `MAIL_FROM`) needed for the email link; Google now optional; everyone signs in again once | none |
 | 1.16.1 | none | `SENTRY_DSN` (optional) | none |
 | 1.16.0 | none | theme colours in `NEXT_PUBLIC_BRAND_JSON` must be hex | none |

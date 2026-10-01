@@ -27,9 +27,13 @@ stanno nella PR.
 - 🔴 **Da saldare e credito.** Se i costi hanno superato quanto pagato, Home e la pagina dei saldi mostrano "Da saldare" con "Paga ora"; i nuovi pagamenti d'ordine aspettano che sia saldato. Un credito compare come denaro che l'associazione restituisce.
 - 🧾 **Paga fuori app.** Nel pagamento per ordine un admin può segnare chi paga in contanti: conferma gli ordini senza carta, il tesoriere registra i soldi e il conguaglio lo esclude.
 - 📚 **Storico e guida del pagamento per ordine.** Ogni ciclo nello Storico mostra pagato, costi, rimborsi e netto; guida e FAQ spiegano la quota, il conguaglio e i tempi dei rimborsi.
+- 🚀 **Installala per il tuo gruppo.** Una guida passo passo (`docs/self-hosting.md`, in inglese) con il pulsante Deploy to Vercel, che crea il progetto e il suo database Neon e applica tutte le migrazioni al primo build; `docs/brand.example.json` elenca tutti i campi del brand.
+- 👑 **Primo admin di un'installazione nuova.** L'indirizzo in `BOOTSTRAP_ADMIN_EMAIL` diventa admin al primo accesso, solo finché il gruppo non ha un admin; lo Stato della configurazione dice quando togliere la variabile.
 
 ### Modificato
 - 🧾 **Le correzioni non riscrivono la storia.** Modificare o eliminare un movimento in Cassa, ricalcolare la spedizione di un ciclo chiuso o importare la distinta del fornitore ora annullano il movimento con uno storno e, se serve, aggiungono quello corretto; i soci vedono un solo movimento con "corretto il". Nota di aggiornamento: applicare `drizzle/0023_ledger_append_only.sql` subito prima del deploy (il database rifiuta da quel momento le modifiche ai movimenti passati).
+- 🧭 **Lo Stato della configurazione trova gli errori del brand.** Un campo che l'app non conosce (un errore di battitura) o un brand che non si legge compaiono, con il motivo, in Impostazioni e in `npm run doctor`.
+- 🏗️ **Migrazioni al build solo in produzione.** Con `MIGRATE_ON_BUILD=true` i build di anteprima non migrano più: lo fanno solo quelli di produzione (e quelli fuori da Vercel).
 
 ## [1.17.0] — 30 settembre 2026
 

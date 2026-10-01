@@ -26,9 +26,13 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 - 🔴 **Amount due and credit.** When costs went beyond what a member paid, Home and the balances page show "Amount due" with "Pay now"; new order payments wait until it is paid. A credit shows as money the association gives back.
 - 🧾 **Pays outside the app.** In pay-per-order an admin can mark a member who pays in cash: they confirm orders without the card, the treasurer records the money, and the settlement leaves them out.
 - 📚 **History and guide for pay per order.** Each cycle in History shows what was paid, the costs, the refunds and the net; the guide and FAQ explain the handling share, the settlement and refund times.
+- 🚀 **Run it for your group.** A step-by-step guide (`docs/self-hosting.md`) with a Deploy to Vercel button that creates the project and its Neon database and applies every migration at the first build; `docs/brand.example.json` lists every brand field.
+- 👑 **First admin of a new installation.** The address in `BOOTSTRAP_ADMIN_EMAIL` becomes admin at its first sign-in, only while the group has no admin; Configuration status says when the variable can go.
 
 ### Changed
 - 🧾 **Corrections never rewrite history.** Editing or deleting a movement in Treasury, recomputing shipping on a closed cycle or importing the supplier's sheet now cancel the movement with a reversal and, when needed, add the corrected one; members see one movement marked "corrected on". Upgrade note: apply `drizzle/0023_ledger_append_only.sql` right before deploying (it makes the database refuse changes to past movements).
+- 🧭 **Configuration status spots brand mistakes.** A brand field the app does not know (a typo) or a brand that does not parse shows up, with the reason, in Settings and in `npm run doctor`.
+- 🏗️ **Migrations at build on production only.** With `MIGRATE_ON_BUILD=true` preview builds no longer migrate: only production builds (and builds outside Vercel) do.
 
 ## [1.17.0] — 2026-09-30
 

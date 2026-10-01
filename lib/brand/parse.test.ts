@@ -1,5 +1,7 @@
+import { readFileSync } from "node:fs";
 import { describe, it, expect } from "vitest";
 import { brandUnknownFields, parseBrandConfig } from "./parse";
+import { brandContrastWarnings } from "./roles";
 import { DEFAULT_BRAND } from "./default";
 
 describe("parseBrandConfig", () => {
@@ -113,5 +115,19 @@ describe("brandUnknownFields", () => {
     expect(brandUnknownFields(JSON.stringify({ appName: "GAS", theme: { primary: "#000" } }))).toEqual([]);
     expect(brandUnknownFields(undefined)).toEqual([]);
     expect(brandUnknownFields("{not json")).toEqual([]);
+  });
+});
+
+describe("docs/brand.example.json", () => {
+  const raw = readFileSync("docs/brand.example.json", "utf8");
+
+  it("parses, and names every field the app reads, no other", () => {
+    const b = parseBrandConfig(raw);
+    expect(brandUnknownFields(raw)).toEqual([]);
+    expect(Object.keys(JSON.parse(raw)).sort()).toEqual(Object.keys(DEFAULT_BRAND).sort());
+    expect(Object.keys(b.theme).sort()).toEqual(
+      ["accent", "accentLight", "background", "frame", "primary", "primaryLight"],
+    );
+    expect(brandContrastWarnings(b.theme)).toEqual([]);
   });
 });
