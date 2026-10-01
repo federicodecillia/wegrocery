@@ -84,7 +84,7 @@ Add these in Vercel → Settings → Environment Variables, then redeploy
   | `description`, `orgName` | Description for search engines; legal name in email signatures |
   | `locale` | `"en"` or `"it"`: the language of the app and the emails |
   | `currency` | ISO code, e.g. `"EUR"` |
-  | `logoUrl` | Absolute URL of the logo (square works best) |
+  | `logoUrl` | The logo: `/logo.png` is WeGrocery's, or the absolute URL of yours (square works best) |
   | `headerShowName` | `false` when the logo already contains the name |
   | `supportEmail`, `techEmail` | Who members and admins write to |
   | `archiveCcEmail` | Copy of every supplier order email, or `null` |

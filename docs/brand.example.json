@@ -5,7 +5,7 @@
   "orgName": "Riverside Buying Club",
   "locale": "en",
   "currency": "EUR",
-  "logoUrl": "https://example.org/riverside-logo.png",
+  "logoUrl": "/logo.png",
   "headerShowName": true,
   "supportEmail": "hello@riverside.example",
   "techEmail": "tech@riverside.example",
