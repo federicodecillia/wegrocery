@@ -98,6 +98,8 @@ export const en: Strings = {
       lineProducts: (cycle: string) => `Products: ${cycle}`,
       unavailable: "Online payments are not available right now. Contact whoever runs the group.",
       inProgress: "A payment of yours for this order is being verified: wait a moment and reload the page.",
+      balanceDue: (amount: string) =>
+        `Before paying a new order, settle what is due from previous cycles (${amount}). You can still edit the draft, reduce or cancel the order.`,
       tooHigh: (max: string) => `The amount is above ${max}: contact the treasurer.`,
       changed: "Something changed while you were confirming: check the order and try again.",
       minimumNote: (amount: string) =>
@@ -211,6 +213,21 @@ export const en: Strings = {
       partially_refunded: "Partly refunded",
       refunded: "Refunded",
     },
+  },
+  balance: {
+    title: "Your balances",
+    dueLabel: "Amount due",
+    dueHint: "The final costs of closed cycles are more than you paid.",
+    payNow: (amount: string) => `Pay now ${amount}`,
+    creditLabel: "Credit",
+    creditHint: "You paid more than was needed: the association will give it back.",
+    nothingDue: "Nothing is due.",
+    goToOrder: "Go to order",
+    lineItem: (org: string) => `Amount due to ${org}`,
+    nothingToPay: "Nothing is due.",
+    inProgress: "A balance payment of yours is being verified: wait a moment and reload the page.",
+    resultPending: "Payment being verified: your balance updates in a moment.",
+    resultPaid: (amount: string) => `Payment of ${amount} received, thank you.`,
   },
   topup: {
     title: "Top up your balance",
@@ -1222,6 +1239,8 @@ export const en: Strings = {
       `Your order for "${cycle}" is confirmed. You paid ${amount}: products ${products}, shipping ${shipping}, handling and order preparation (estimate) ${fee}. When the cycle is settled we refund what was not needed.`,
     orderPaidShortBody: (cycle: string, amount: string) =>
       `Your order for "${cycle}" is confirmed. You paid ${amount}.`,
+    balancePaidTitle: "Balance paid",
+    balancePaidBody: (amount: string) => `We received your payment of ${amount}. Nothing is due anymore.`,
     settlementDueTitle: "Amount due",
     settlementDueBody: (cycle: string, amount: string) =>
       `The final costs of "${cycle}" are more than you paid: ${amount} is due. You can pay it from Top up with "Pay now".`,
@@ -1293,6 +1312,7 @@ export const en: Strings = {
     orderRefund: "Refund to card",
     orderRefundCancelled: "Refund to card: order cancelled",
     orderRefundLate: "Refund to card: payment arrived after orders closed",
+    balancePayment: "Balance paid",
   },
   fields: {
     title: "Title",

@@ -159,6 +159,17 @@ describe("order payments", () => {
     });
   });
 
+  it("routes a paid balance session to the balance credit", () => {
+    expect(plan({ paymentId: "pay_1", kind: "balance" })).toEqual({
+      kind: "balance_credit",
+      paymentId: "pay_1",
+      sessionId: "cs_1",
+      amountCents: 2500,
+      currency: "eur",
+      paymentIntentId: "pi_1",
+    });
+  });
+
   it("keeps a session without kind, or an order without its cycle, a top-up credit", () => {
     expect(plan({ paymentId: "pay_1" }).kind).toBe("credit");
     expect(plan({ paymentId: "pay_1", kind: "order" }).kind).toBe("credit");

@@ -62,6 +62,8 @@ const TYPE_TO_CATEGORY: Record<string, NotificationCategory> = {
   order_refund_sent: "wallet_topup",
   // Settlement of a pay-per-order cycle: the member owes the difference.
   settlement_due: "order_charge",
+  // The member paid what they owed.
+  balance_paid: "wallet_topup",
 };
 
 export function categoryForType(type: string): NotificationCategory | null {

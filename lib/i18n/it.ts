@@ -100,6 +100,8 @@ export const it = {
       inProgress: "Un tuo pagamento per questo ordine è in verifica: aspetta qualche istante e ricarica la pagina.",
       tooHigh: (max: string) => `L'importo supera ${max}: contatta chi gestisce la cassa.`,
       changed: "Qualcosa è cambiato mentre confermavi: ricontrolla l'ordine e riprova.",
+      balanceDue: (amount: string) =>
+        `Prima di pagare un nuovo ordine salda quanto manca dai cicli precedenti (${amount}). Puoi comunque modificare la bozza, ridurre o annullare l'ordine.`,
       minimumNote: (amount: string) =>
         `L'importo minimo di un pagamento è ${amount}: la differenza ti torna a conti chiusi.`,
       statusDraft: (amount: string) => `Bozza da pagare: ${amount}`,
@@ -211,6 +213,21 @@ export const it = {
       partially_refunded: "Rimborsato in parte",
       refunded: "Rimborsato",
     },
+  },
+  balance: {
+    title: "I tuoi saldi",
+    dueLabel: "Da saldare",
+    dueHint: "I costi definitivi dei cicli chiusi superano quanto hai pagato.",
+    payNow: (amount: string) => `Paga ora ${amount}`,
+    creditLabel: "Credito",
+    creditHint: "Hai pagato più di quanto è servito: te lo restituisce l'associazione.",
+    nothingDue: "Non hai nulla da saldare.",
+    goToOrder: "Vai all'ordine",
+    lineItem: (org: string) => `Saldo dovuto a ${org}`,
+    nothingToPay: "Non hai nulla da saldare.",
+    inProgress: "Un tuo pagamento del saldo è in verifica: aspetta qualche istante e ricarica la pagina.",
+    resultPending: "Pagamento in verifica: tra qualche istante il saldo risulta aggiornato.",
+    resultPaid: (amount: string) => `Pagamento di ${amount} ricevuto, grazie.`,
   },
   topup: {
     title: "Ricarica il saldo",
@@ -1228,6 +1245,8 @@ export const it = {
       `Il tuo ordine per "${cycle}" è confermato. Hai pagato ${amount}: prodotti ${products}, spedizione ${shipping}, spese di gestione e preparazione ordine (stima) ${fee}. A conti chiusi ti rimborsiamo quello che non è servito.`,
     orderPaidShortBody: (cycle: string, amount: string) =>
       `Il tuo ordine per "${cycle}" è confermato. Hai pagato ${amount}.`,
+    balancePaidTitle: "Saldo pagato",
+    balancePaidBody: (amount: string) => `Abbiamo ricevuto il tuo pagamento di ${amount}. Non hai più nulla da saldare.`,
     settlementDueTitle: "Da saldare",
     settlementDueBody: (cycle: string, amount: string) =>
       `I costi definitivi di "${cycle}" superano quanto hai pagato: mancano ${amount}. Puoi saldarli da Ricarica con "Paga ora".`,
@@ -1299,6 +1318,7 @@ export const it = {
     orderRefund: "Rimborso sulla carta",
     orderRefundCancelled: "Rimborso sulla carta: ordine annullato",
     orderRefundLate: "Rimborso sulla carta: pagamento arrivato a ordini chiusi",
+    balancePayment: "Saldo pagato",
   },
   fields: {
     title: "Titolo",
