@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **WeGrocery** is an open-source, white-label web app for food co-ops and buying groups (born as the Porta Moneta GAS app, now its first client deployment). Members log in with Google, place weekly orders, and track their balance. Admins manage cycles, products, suppliers, and member topups. Branding/locale per deployment via `NEXT_PUBLIC_BRAND_JSON` (see `lib/brand` and `lib/i18n`).
 
-**Stack**: Next.js 15 App Router · Postgres (Neon serverless) · Better Auth (email link, optional Google) · Drizzle ORM · Tailwind CSS v4 · Vercel
+**Stack**: Next.js 16 App Router · Postgres (Neon serverless) · Better Auth (email link, optional Google) · Drizzle ORM · Tailwind CSS v4 · Vercel
 
 **Live**: gas.portamoneta.org
 
@@ -51,8 +51,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 │   ├── email/                  # Resend wrapper + supplier-email templates
 │   ├── csv/                    # Server-side CSV builders (e.g. supplier aggregated export)
 │   └── auth/                   # session.ts: requireUserSession(), requireAdmin(), requireActiveMember(), getUserRole()
-│                               #   access.ts: pure checkAccess/sessionClaims (edge-safe, used by middleware)
-├── middleware.ts                # Redirect unauthenticated to /login
+│                               #   access.ts: pure checkAccess/sessionClaims (no imports, used by proxy.ts)
+├── proxy.ts                     # Redirect unauthenticated to /login (Next.js 16's middleware)
 ├── auth.ts                     # Better Auth instance, auth() (session + member), signOut()
 ├── drizzle/                    # SQL migrations (0000–0020)
 └── public/logo.png
@@ -65,6 +65,8 @@ All commands from repo root:
 ```bash
 npm run dev          # Start dev server at http://localhost:3000
 npm run build        # Production build
+npx tsc --noEmit     # Type check (TypeScript 7 native `tsc`, see "Dev toolchain")
+npm run lint         # ESLint CLI (flat config, eslint.config.mjs), zero warnings; `next lint` no longer exists
 npm run db:push      # Push Drizzle schema to Neon (needs DATABASE_URL in .env.local)
 npm run db:studio    # Drizzle Studio (visual DB browser)
 npm run doctor       # Configuration status of the env in .env.local (names only)
@@ -78,7 +80,7 @@ npm run test:int     # Integration tests on a test database (see below)
 
 **Append-only ledger** (since `drizzle/0023_ledger_append_only.sql`): a trigger refuses every UPDATE and DELETE on `ledger_entries`, except setting `reversed_by` once. A correction is `reverseEntry` / `reverseEntrySql` (`lib/ledger-reversal.ts`): a `reversal` row with the opposite amount (`reverses` → the original, which gets `reversed_by`), plus, for an edit, a replacement of the same type (`replaces` → the original, same entry date, no bank reference). Cassa "edit" and "delete", the shipping recompute of a closed cycle and the supplier-sheet import all work this way. **Any filter by type must use `liveLedger`** (`lib/db/ledger-live.ts`: not reversed, not a reversal), or a corrected movement counts twice; plain sums (balances, a cycle's net) are the same either way. Movement lists show live rows only, a replacement with "corrected on <date>". The one-charge-per-member-and-cycle index counts live rows only. Maintenance that must delete rows sets `wegrocery.ledger_maintenance = on` in its own transaction (the integration tests' cleanup); the demo's TRUNCATE does not fire the trigger.
 
-**Money invariants**: `lib/invariants.ts` lists read-only checks that must return no rows (refunded cents match the refunds, every accepted refund is debited, every paid payment credited once, every closed-cycle order charged...). The nightly backup workflow runs them on production after the dump (`scripts/check-invariants.mts`, job `invariants`); a failure fails the run. Run them on any database with `node --env-file=<env> node_modules/tsx/dist/cli.mjs scripts/check-invariants.mts`. A new money rule gets a check there and a case in `lib/invariants.int.test.ts`.
+**Money invariants**: `lib/invariants.ts` lists read-only checks that must return no rows (refunded cents match the refunds, every accepted refund is debited, every paid payment credited once, every closed-cycle order charged...). The nightly backup workflow runs them on production (`scripts/check-invariants.mts`, job `invariants`, independent of the dump so a failed backup never skips it); a failure fails the run and the `notify` job opens (or comments on) a GitHub issue. Run them on any database with `node --env-file=<env> node_modules/tsx/dist/cli.mjs scripts/check-invariants.mts`. A new money rule gets a check there and a case in `lib/invariants.int.test.ts`.
 
 **Releases**: open the `staging` → `main` PR with `?template=release.md` (`.github/PULL_REQUEST_TEMPLATE/release.md`): upgrade notes, migration before the merge, smoke test on `/api/health`, rollback.
 
@@ -89,6 +91,21 @@ npm run test:int     # Integration tests on a test database (see below)
 **Deploy**: push to `main` → Vercel auto-deploys production. Development PRs target `staging` and are tested on its Preview deployment before `staging` → `main`; other branches create ordinary preview deployments.
 
 **Vercel Root Directory**: repo root (empty / not set)
+
+## Dev toolchain
+
+- **TypeScript 7 runs `tsc`; TypeScript 6 serves the compiler API.** TS 7 ships
+  without a JavaScript API, and typescript-eslint (peer `typescript <6.1`)
+  needs one. `package.json` therefore has `"typescript": "npm:@typescript/typescript6"`
+  (what `require("typescript")` resolves to: ESLint) next to
+  `"@typescript/native": "npm:typescript@^7"` (provides the `tsc` binary: CI,
+  `npx tsc --noEmit`, and `next build`, which uses the project-local `tsc` CLI).
+  This is the side-by-side setup of the TS 7 announcement. Collapse it into a
+  plain `typescript@^7` once typescript-eslint supports TS 7 (planned with the 7.1 API).
+- **ESLint stays on 9** (`eslint-config-next` 16.3 and its canary bundle
+  `eslint-plugin-react` / `-import` / `-jsx-a11y`, none of which support ESLint 10;
+  `react/display-name` crashes). Tracked in #111.
+- **`@types/node` 24** matches the Node major in CI, `SETUP.md` and Vercel's default.
 
 ## Dependencies and security advisories
 
@@ -110,8 +127,9 @@ When handling an advisory:
 - **Verify an override before adding one.** Forcing a transitive major can
   break its consumer: `brace-expansion` 5.x exports an object from its
   CommonJS entry while `minimatch` does `const expand = require(...)` and calls
-  it as a function. `sharp` is a safe override — Next.js still declares
-  `^0.34.5` even on 16.2.12, so there is no upstream fix coming.
+  it as a function. `sharp` was a safe override while Next.js declared
+  `^0.34.x`; Next.js 16.3 declares `^0.35.4` itself, so the override is gone
+  (re-add it if a future release lags behind a `libvips` fix).
 - **Confirm the fix landed** by comparing each alert's `first_patched_version`
   against the resolved tree, not by trusting the bump.
 - **`better-auth` is pinned to an exact version on purpose** and sits in Dependabot's `ignore` list: sign-in upgrades are a deliberate decision, tested with `lib/auth/config.int.test.ts`.
@@ -129,8 +147,10 @@ variables, plus a staging deployment of the `staging` branch:
   `porta-moneta` project, reached through its stable branch URL
   (`porta-moneta-git-staging-<scope>.vercel.app`). Env vars scoped to
   Preview + Git branch `staging`: `DATABASE_URL` → the Neon branch `dev`, like
-  every Preview (there is no `staging` branch in the Neon project, checked
-  2026-09-30; migrations for staging go to `dev`), `EMAIL_REDIRECT_TO`,
+  every Preview (a copy of production; there is no `staging` branch in the Neon
+  project, checked 2026-09-30; migrations for staging go to `dev`),
+  `EMAIL_REDIRECT_TO` (set only on the `staging` branch: other previews share
+  `dev` but have none, so they refuse to send email),
   `APP_BASE_URL`, `WALLYFOR_*`, `STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET`
   (sandbox keys only). The Google OAuth client needs the staging
   branch URL's `/api/auth/callback/google` as an extra redirect URI.
@@ -238,7 +258,7 @@ User interaction → Server Action ("use server") → auth check → DB mutation
 - **Admin → Soci → Invita** emails a member the same link with a welcome text (`adminInviteMember`, `metadata.invite`): the onboarding of groups without the card check.
 - Demo (`DEMO_MODE=true`) and local development (`AUTH_DEV_LOGIN_EMAIL`, never in production) sign in through their own endpoints (`lib/auth/plugins.ts`); the session hook still requires an active member.
 - HTTP: only the endpoints in `lib/auth/public-endpoints.ts` answer (email link request and verify; Google's two where configured; demo and dev where enabled); everything else is a 404. Hosts accepted and used in links (`lib/auth/hosts.ts`): `APP_BASE_URL`, Vercel's production URL, a preview's own URLs, localhost under `next dev`.
-- Middleware only checks that the session cookie exists (no database); pages and actions check the session: `requireUserSession()` (redirect to `/login`), `requireAdmin()` / `requireActiveMember()` (`lib/auth/session.ts`, the only Server Action guards; `ActionError` otherwise). The admin page applies `checkAccess` (`lib/auth/access.ts`) and redirects non-admins home.
+- `proxy.ts` (Next.js 16's renamed middleware, Node runtime) only checks that the session cookie exists (no database); pages and actions check the session: `requireUserSession()` (redirect to `/login`), `requireAdmin()` / `requireActiveMember()` (`lib/auth/session.ts`, the only Server Action guards; `ActionError` otherwise). The admin page applies `checkAccess` (`lib/auth/access.ts`) and redirects non-admins home.
 - Denials land on `/login?error=<code>`; the login page explains each code and links `brand.supportEmail` and `brand.privacyUrl`.
 - `better-auth` is pinned to an exact version; upgrades run `lib/auth/config.int.test.ts` first.
 - Abuse limits: 3 link requests a minute per IP (Better Auth, keyed on `x-vercel-forwarded-for`: outside Vercel every request shares one bucket), plus caps on the emails one address receives (`lib/auth/email-caps.ts`: 5 links an hour, 1 explanation a day, 50 explanations a day overall). The decision and the send run after the response (`defer: after`), so a member's request takes as long as a stranger's.
@@ -258,7 +278,7 @@ User interaction → Server Action ("use server") → auth check → DB mutation
   - `cycle_opened` — a cycle is created (always created already-open, so this is the single emit point, in `adminCreateCycle`)
   - `cycle_closing_reminder` — **retired in v1.9.0.** No longer emitted. Rows sent while the feature existed remain in members' inboxes and fall through `categoryForType` to the unknown-type branch: rendered in-app, never emailed. Do not reintroduce the name for something else.
 - **All emission goes through `lib/notifications/dispatch.ts`** (`dispatchNotification` for single members, `dispatchWithBodies` for per-member bodies like cycle close, `dispatchToMembers` for broadcasts). Never insert into `notifications` directly — dispatch is where channel preferences are honoured.
-- **Preferences** (`notification_preferences`, sparse: absent row = code default). Categories + defaults live in `lib/notifications/categories.ts`: `cycle_opened`, `order_charge`, `order_updates`, `wallet_topup`: app on, email off by default (since 1.17.0 also `cycle_opened`, to save the email quota for sign-in links; saved preferences are kept). Members edit them at `/notifiche/impostazioni` (bell → ⚙) via `updateNotificationPreference`. Raw `type` values are unchanged in the DB; `categoryForType` maps them (unknown type → in-app only, never email). Stored rows for retired categories are ignored by `resolvePreferences`, so removing a category needs no data migration.
+- **Preferences** (`notification_preferences`, sparse: absent row = code default). Categories + defaults live in `lib/notifications/categories.ts`: `cycle_opened`, `order_charge`, `order_updates`, `wallet_topup`: app on, email off by default (since 1.17.0 also `cycle_opened`, to save the email quota for sign-in links; saved preferences are kept). The keys are stable (saved preferences key on them) but the member-facing voices are named for what they cover: `cycle_opened` "Nuovo ciclo aperto", `order_charge` "Addebiti e pagamenti" (`order_closed`, `settlement_due`, `order_paid`, `balance_paid`, `manual_charge_recorded`, `membership_fee_charged`), `order_updates` "Modifiche all'ordine" (`order_adjusted`, `order_corrected`, `cycle_cancelled`), `wallet_topup` "Saldo e rimborsi" (`topup_received`, `payout_sent`, `order_refund_sent`, `refund_failed`). A new type goes under the voice whose hint it fits, and the hint in `lib/i18n/it.ts`/`en.ts` is updated with it. Members edit them at `/notifiche/impostazioni` (bell → ⚙) via `updateNotificationPreference`. Raw `type` values are unchanged in the DB; `categoryForType` maps them (unknown type → in-app only, never email). Stored rows for retired categories are ignored by `resolvePreferences`, so removing a category needs no data migration.
 - **Cycle-open audience** is gated by `canAccessCycle(accessLevel, role)` (an admin-only cycle only notifies admins); balance-change notifications (charge/updates/top-up) are personal.
 - **No cron.** The app has no scheduled server work: the only `api/` route is `api/auth`. The closing-reminder cron was removed in v1.9.0 — GitHub executed 13% of its `*/15` schedule, so a reminder that had to fire inside a window was never reliable, and the feature was not worth the machinery. If a future feature needs scheduling, decide the mechanism first (Vercel Cron needs a paid plan for sub-daily; the account is Hobby).
 - `AppShell` fetches `getUnreadNotificationCount(memberId)` and passes it to `NotificationBell`
@@ -373,7 +393,7 @@ All four emit `order_adjusted` or `order_corrected` notifications and `audit_log
   back at the deploy the member is on. `/ricarica` only displays the payment
   row's status; **only the signed webhook credits**.
 - Webhook `app/api/stripe/webhook/route.ts`, excluded from the auth
-  middleware, verifies the signature on the raw body and rejects events whose
+  proxy, verifies the signature on the raw body and rejects events whose
   `livemode` differs from the key's. `lib/payments/webhook.ts` maps events
   (`planWebhookAction`, pure) and applies each as ONE SQL statement: a guarded
   `UPDATE payments ... WHERE status = 'pending'` feeding the ledger `INSERT`,
@@ -588,3 +608,13 @@ Key patterns:
 - Every page that renders `AppShell` must pass `memberId={session.user.memberId!}`.
 - All Server Actions use `requireUserSession()` / `requireAdmin()` — never trust client payloads for auth.
 - `revalidatePath()` must be called after mutations so Server Components re-fetch fresh data.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

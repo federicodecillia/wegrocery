@@ -6,7 +6,7 @@ import { hasSessionCookie } from "@/lib/auth/cookie";
 // open Admin, the page checks (lib/auth/session.ts). /login does not bounce a
 // signed-in visitor from here: with a stale cookie, /login -> / -> /login
 // would loop; the login page checks the real session.
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   if (pathname === "/login" || pathname.startsWith("/login/") || hasSessionCookie(request.cookies)) {
     return NextResponse.next();

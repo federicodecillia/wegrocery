@@ -20,7 +20,7 @@ import { findEmailConflict, normalizeEmail } from "@/lib/member-email";
 import type { BatchItem } from "drizzle-orm/batch";
 import { orderLinesSnapshot, planClosedOrderEdit } from "@/lib/closed-order-edit";
 import { cancelledCycleReversalTypes, ordersSnapshot } from "@/lib/cycle-close";
-import { performCycleClose, setOpenCycleFee } from "@/lib/cycle-close-store";
+import { performCycleClose, updateCycleFee } from "@/lib/cycle-close-store";
 import {
   normalizeShippingMode,
   planShippingRecompute,
@@ -125,7 +125,7 @@ export type CreateCycleInput = {
   shippingMode: ShippingMode;
   shippingCostPerMember: string;
   shippingTotal: string;
-  /** "none" (wallet only), "percent" or "fixed"; omitted = the last cycle's fee of the same mode. */
+  /** "none" (wallet cycles only), "percent" or "fixed". Omitted: the last cycle's fee of the same payment mode. */
   handlingFeeType?: string;
   handlingFeeValue?: string;
 };
@@ -677,11 +677,11 @@ export async function adminUpdateCycle(
     if (!before) return { error: t.errors.cycleNotFound };
 
     // The fee changes only while the cycle is open: after the close it is
-    // what members were charged with (setOpenCycleFee and drizzle/0026
-    // enforce it against a concurrent close too).
+    // what members were charged with. A form that still carries the unchanged
+    // fee is fine on a closed cycle (updateCycleFee; drizzle/0026 enforces
+    // the lock in the database too, against a concurrent close).
     let fee: HandlingFee | null | undefined;
     if (data.handlingFeeType !== undefined && data.handlingFeeValue !== undefined) {
-      if (before.status !== "open") return { error: t.errors.handlingFeeLocked };
       const resolved = resolveCycleFee(
         before.paymentMode === "per_order" ? "per_order" : "wallet",
         { type: data.handlingFeeType, value: data.handlingFeeValue },
@@ -709,7 +709,7 @@ export async function adminUpdateCycle(
     // shipping and notify every member. See resolveShippingUpdate.
     const { patch: shippingPatch, changed: shippingChanged } = resolveShippingUpdate(before, data);
 
-    if (fee !== undefined && !(await setOpenCycleFee(db, cycleId, fee))) {
+    if (fee !== undefined && !(await updateCycleFee(db, cycleId, fee))) {
       return { error: t.errors.handlingFeeLocked };
     }
 

@@ -5,7 +5,7 @@ follow [docs/self-hosting.md](docs/self-hosting.md) instead.
 
 ## Prerequisites
 
-- Node.js 24 (CI uses it; anything from 20.6 runs)
+- Node.js 24 (CI uses it; anything from 20.19 runs)
 - A Postgres database: a free [Neon](https://neon.tech) project, or a branch
   of one, works best (the app uses Neon's serverless driver)
 
@@ -64,7 +64,7 @@ Google sign-in, if you set it up, needs the redirect URI
 ## 5. Tests
 
 ```bash
-npx tsc --noEmit && npx next lint && npx vitest run   # what CI runs on every PR
+npx tsc --noEmit && npm run lint && npx vitest run   # what CI runs on every PR
 ```
 
 Integration tests (`*.int.test.ts`) run the real queries on a database with

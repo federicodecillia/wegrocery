@@ -123,11 +123,11 @@ describe("buildCycleCloseCharges with an order preparation fee", () => {
   });
 
   it("writes no fee row without a fee, or when it rounds to zero", () => {
-    expect(buildCycleCloseCharges([{ memberId: "a", total: "5.00" }], fixed, { fee: null }).handlingCharges).toEqual([]);
-    expect(
-      buildCycleCloseCharges([{ memberId: "a", total: "0.40" }], fixed, { fee: { type: "percent", value: 0.01 } })
-        .handlingCharges,
-    ).toEqual([]);
+    const noFee = buildCycleCloseCharges([{ memberId: "a", total: "5.00" }], fixed, { fee: null });
+    expect(noFee.handlingCharges).toEqual([]);
+    const tinyFee = { type: "percent", value: 0.01 } as const;
+    const rounded = buildCycleCloseCharges([{ memberId: "a", total: "0.40" }], fixed, { fee: tinyFee });
+    expect(rounded.handlingCharges).toEqual([]);
   });
 
   it("never charges the fee twice to a member already charged", () => {

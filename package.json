@@ -1,12 +1,12 @@
 {
   "name": "wegrocery",
-  "version": "1.19.0",
+  "version": "1.20.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "node scripts/migrate-on-build.mjs && next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint . --max-warnings 0",
     "db:push": "node --env-file=.env.local node_modules/drizzle-kit/bin.cjs push",
     "db:migrate": "node --env-file=.env.local scripts/db-migrate.mjs",
     "db:studio": "node --env-file=.env.local node_modules/drizzle-kit/bin.cjs studio",
@@ -27,31 +27,31 @@
     "exceljs": "^4.4.0",
     "fast-xml-parser": "^5.11.1",
     "fflate": "^0.8.3",
-    "next": "^15.5.26",
+    "next": "^16.3.8",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
-    "resend": "^6.29.0",
+    "resend": "^6.30.0",
     "sonner": "^2.0.8",
     "stripe": "^22.6.2",
     "tailwind-merge": "^3.7.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.3",
-    "@types/node": "^22.20.4",
+    "@types/node": "^24.19.0",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.6",
+    "@typescript/native": "npm:typescript@^7.0.2",
     "drizzle-kit": "^0.31.11",
     "eslint": "^9.39.5",
-    "eslint-config-next": "^15.5.26",
+    "eslint-config-next": "^16.3.8",
     "tailwindcss": "^4.1.14",
     "tsx": "^4.23.15",
-    "typescript": "^5.9.3",
-    "vitest": "^5.0.1"
+    "typescript": "npm:@typescript/typescript6@^6.0.2",
+    "vitest": "^5.0.2"
   },
   "overrides": {
     "esbuild": "^0.28.1",
     "postcss": "^8.5.10",
-    "sharp": "^0.35.4",
     "uuid": "^11.1.1"
   }
 }
