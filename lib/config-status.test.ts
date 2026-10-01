@@ -2,7 +2,13 @@ import { readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { configStatus, MIGRATIONS, type ConfigFacts, type ConfigItem } from "./config-status";
 
-const facts: ConfigFacts = { appliedMigrations: [...MIGRATIONS], brandWarnings: [] };
+const facts: ConfigFacts = {
+  appliedMigrations: [...MIGRATIONS],
+  brandWarnings: [],
+  brandError: null,
+  brandUnknownFields: [],
+  hasActiveAdmin: true,
+};
 const complete = {
   DATABASE_URL: "postgres://x",
   AUTH_SECRET: "s",
@@ -40,7 +46,7 @@ describe("configStatus", () => {
   });
 
   it("flags what a deploy cannot run without", () => {
-    const items = configStatus({}, { appliedMigrations: null, brandWarnings: [] });
+    const items = configStatus({}, { ...facts, appliedMigrations: null });
     expect(item(items, "database")).toMatchObject({ status: "missing", required: true });
     expect(item(items, "authSecret")).toMatchObject({ status: "missing", required: true });
     expect(item(items, "signIn")).toMatchObject({ status: "missing", required: true });
@@ -55,9 +61,9 @@ describe("configStatus", () => {
   });
 
   it("names the migrations not applied yet, and a database it cannot read", () => {
-    const pending = configStatus(complete, { appliedMigrations: MIGRATIONS.slice(0, -1), brandWarnings: [] });
+    const pending = configStatus(complete, { ...facts, appliedMigrations: MIGRATIONS.slice(0, -1) });
     expect(item(pending, "database")).toMatchObject({ status: "warning", note: "pendingMigrations", detail: [MIGRATIONS.at(-1)] });
-    const unreachable = configStatus(complete, { appliedMigrations: null, brandWarnings: [] });
+    const unreachable = configStatus(complete, { ...facts, appliedMigrations: null });
     expect(item(unreachable, "database")).toMatchObject({ status: "warning", note: "databaseUnreachable" });
   });
 
@@ -95,6 +101,35 @@ describe("configStatus", () => {
       note: "contrast",
       detail: ["a", "b"],
     });
+  });
+
+  it("names a brand that does not parse, and the fields it does not know", () => {
+    expect(item(configStatus(complete, { ...facts, brandError: "brand.locale must be \"it\" or \"en\"" }), "brand")).toMatchObject({
+      status: "missing",
+      note: "invalidBrand",
+      detail: ['brand.locale must be "it" or "en"'],
+    });
+    expect(item(configStatus(complete, { ...facts, brandUnknownFields: ["brand.appname"] }), "brand")).toMatchObject({
+      status: "warning",
+      note: "unknownBrandFields",
+      detail: ["brand.appname"],
+    });
+  });
+
+  it("tells a new installation how to get its first admin, and when the variable can go", () => {
+    const noAdmin = { ...facts, hasActiveAdmin: false };
+    expect(item(configStatus(complete, noAdmin), "firstAdmin")).toMatchObject({
+      status: "missing",
+      note: "noAdmin",
+      vars: ["BOOTSTRAP_ADMIN_EMAIL"],
+    });
+    const waiting = configStatus({ ...complete, BOOTSTRAP_ADMIN_EMAIL: "anna@example.org" }, noAdmin);
+    expect(item(waiting, "firstAdmin")).toMatchObject({ status: "ok", note: "bootstrapWaiting" });
+    const done = configStatus({ ...complete, BOOTSTRAP_ADMIN_EMAIL: "anna@example.org" }, facts);
+    expect(item(done, "firstAdmin")).toMatchObject({ status: "warning", note: "bootstrapDone" });
+    expect(item(configStatus(complete, facts), "firstAdmin")).toMatchObject({ status: "ok" });
+    expect(item(configStatus(complete, { ...facts, hasActiveAdmin: null }), "firstAdmin").status).toBe("ok");
+    expect(JSON.stringify(waiting)).not.toContain("anna@example.org");
   });
 
   it("warns when email links would have no address", () => {

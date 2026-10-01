@@ -21,6 +21,15 @@ stanno nella PR.
 
 ## [Non rilasciato]
 
+### Aggiunto
+- 🚀 **Installala per il tuo gruppo.** Una guida passo passo (`docs/self-hosting.md`, in inglese) con il pulsante Deploy to Vercel, che crea il progetto e il suo database Neon e applica tutte le migrazioni al primo build; `docs/brand.example.json` elenca tutti i campi del brand.
+- 👑 **Primo admin di un'installazione nuova.** L'indirizzo in `BOOTSTRAP_ADMIN_EMAIL` diventa admin al primo accesso, solo finché il gruppo non ha un admin; lo Stato della configurazione dice quando togliere la variabile.
+
+### Modificato
+- 🩹 **Le installazioni nuove non si rompono più nella home.** Tre colonne dei cicli mancavano nelle migrazioni; una migrazione in più le aggiunge (non fa nulla sulle installazioni esistenti). Un test in CI confronta tutto lo schema con un database vuoto migrato. Nota di aggiornamento: applica `drizzle/0025_schema_catch_up.sql`.
+- 🧭 **Lo Stato della configurazione trova gli errori del brand.** Un campo che l'app non conosce (un errore di battitura) o un brand che non si legge compaiono, con il motivo, in Impostazioni e in `npm run doctor`.
+- 🏗️ **Migrazioni al build solo in produzione.** Con `MIGRATE_ON_BUILD=true` i build di anteprima non migrano più: lo fanno solo quelli di produzione (e quelli fuori da Vercel).
+
 ## [1.18.0] — 1 ottobre 2026
 
 *Pagare ogni ordine con la carta, chiudere i conti a fine ciclo, e un registro che non riscrive mai la storia.*

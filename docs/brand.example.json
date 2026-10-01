@@ -1,0 +1,25 @@
+{
+  "appName": "Riverside Buying Club",
+  "shortName": "Riverside",
+  "description": "Group orders and shared ledger for the Riverside buying club",
+  "orgName": "Riverside Buying Club",
+  "locale": "en",
+  "currency": "EUR",
+  "logoUrl": "/logo.png",
+  "headerShowName": true,
+  "supportEmail": "hello@riverside.example",
+  "techEmail": "tech@riverside.example",
+  "archiveCcEmail": null,
+  "privacyUrl": "https://riverside.example/privacy",
+  "membershipUrl": null,
+  "minBalance": null,
+  "bankTransfer": null,
+  "theme": {
+    "primary": "#237032",
+    "primaryLight": "#ebfbee",
+    "accent": "#1971c2",
+    "accentLight": "#e7f5ff",
+    "background": "#ffffff",
+    "frame": "#f1f3f5"
+  }
+}

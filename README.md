@@ -72,8 +72,13 @@ nothing you do is permanent.
 
 ## White-label: run it for YOUR group
 
+**[docs/self-hosting.md](docs/self-hosting.md)** takes a group from nothing
+to a working installation in about 30 minutes, with a Deploy to Vercel
+button that creates the project and its database: no code to touch.
+
 Every deployment is branded by one env var, `NEXT_PUBLIC_BRAND_JSON`. No env
-var = the neutral WeGrocery brand you see in the demo. Example:
+var = the neutral WeGrocery brand you see in the demo. Example (every field:
+[docs/brand.example.json](docs/brand.example.json)):
 
 ```json
 {
@@ -241,10 +246,8 @@ fail-fast at build time in `lib/brand`. Dates and money are formatted with
 
 ## Local development
 
-See [SETUP.md](SETUP.md) for the full step-by-step setup
-(env vars from Vercel, `AUTH_SECRET` and `DATABASE_URL` for the Sensitive
-vars that `vercel env pull` doesn't export, schema sync via Drizzle Kit,
-etc.).
+See [SETUP.md](SETUP.md) for the full step-by-step setup (environment,
+database, a local admin, tests).
 
 Quick start once `.env.local` is in place:
 

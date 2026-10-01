@@ -2,8 +2,13 @@ import { eq, or, sql } from "drizzle-orm";
 import { getDb } from "@/lib/db/client";
 import { members } from "@/lib/db/schema";
 import { normalizeEmail } from "@/lib/member-email";
-import { provisionVerifiedMember, recordMembershipCheck } from "@/lib/membership/members";
-import { existingMemberSignIn, newUserSignIn, type LoginError } from "@/lib/membership/policy";
+import {
+  hasActiveAdmin,
+  provisionBootstrapAdmin,
+  provisionVerifiedMember,
+  recordMembershipCheck,
+} from "@/lib/membership/members";
+import { existingMemberSignIn, matchesBootstrapEmail, newUserSignIn, type LoginError } from "@/lib/membership/policy";
 import { checkMembership, checkMembershipAny, isMembershipCheckEnabled, type MembershipResult } from "@/lib/membership/wallyfor";
 
 // Who may sign in with an email address: the decisions of
@@ -14,6 +19,8 @@ import { checkMembership, checkMembershipAny, isMembershipCheckEnabled, type Mem
 export type Admission =
   | { kind: "member"; memberId: string }
   | { kind: "provision" }
+  // The first admin of a new installation (BOOTSTRAP_ADMIN_EMAIL).
+  | { kind: "bootstrapAdmin" }
   | { kind: "deny"; error: LoginError };
 
 export type MemberRow = {
@@ -60,6 +67,9 @@ export async function admitEmail(email: string, opts: { emailVerified: boolean }
   const address = normalizeEmail(email);
   if (!address) return { kind: "deny", error: "AccessDenied" };
   const member = await findMemberByLoginEmail(address);
+  if (!member && matchesBootstrapEmail(address, process.env.BOOTSTRAP_ADMIN_EMAIL) && !(await hasActiveAdmin())) {
+    return { kind: "bootstrapAdmin" };
+  }
   const checkEnabled = isMembershipCheckEnabled();
 
   let decision = member
@@ -92,11 +102,15 @@ export async function admitEmail(email: string, opts: { emailVerified: boolean }
 }
 
 // At session creation: the member behind the address, created now when the
-// card check admitted a newcomer. null = no session.
+// card check admitted a newcomer, or for the first admin. null = no session.
 export async function memberForNewSession(email: string, name: string | null): Promise<string | null> {
   const found = await findMemberByLoginEmail(email);
   if (found) return found.active ? found.memberId : null;
   const admission = await admitEmail(email, { emailVerified: true });
+  if (admission.kind === "bootstrapAdmin") {
+    if (!(await provisionBootstrapAdmin(normalizeEmail(email)!))) return null;
+    return (await findMemberByLoginEmail(email))?.memberId ?? null;
+  }
   if (admission.kind !== "provision") return null;
   const provisioned = await provisionVerifiedMember(normalizeEmail(email)!, name);
   if (!provisioned.active) return null;
