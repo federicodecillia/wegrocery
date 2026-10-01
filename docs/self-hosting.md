@@ -29,12 +29,19 @@ The button walks you through:
 
 1. **Git repository**: Vercel creates a copy of WeGrocery in your GitHub
    account. Name it as you like.
-2. **Neon**: add the database it proposes (the free plan is enough to
-   start). It sets `DATABASE_URL` on the project for you.
+2. **Neon**: add the database it proposes: pick the region closest to your
+   members, switch **Auth off** (WeGrocery has its own sign-in; Neon Auth
+   would only add tables and variables you do not use) and keep the free
+   plan, enough to start. It sets `DATABASE_URL` on the project for you.
 3. **Environment variables**: the five in step 2 below.
-4. **Deploy**. The first build applies every migration to the empty database
+4. **Deploy**. The build applies every migration to the empty database
    (`MIGRATE_ON_BUILD`), then the app goes live at
    `https://<project>.vercel.app`.
+
+Vercel may start a first build before your variables are saved. That build
+runs without them and does not create the tables: when the project shows
+them under Settings → Environment Variables, open Deployments → ⋯ →
+**Redeploy** on the latest one. The redeploy applies the migrations.
 
 ## 2. The variables the deploy asks for
 
