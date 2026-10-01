@@ -41,15 +41,21 @@ updates:
       # reach us through Dependabot alerts.
       - dependency-name: better-auth
       # The majors below are already triaged and tracked: Next 16 in #110, the
-      # dev toolchain in #111. Closing their PRs is not enough — Dependabot
+      # dev toolchain in #111. Closing their PRs is not enough: Dependabot
       # recreates a closed PR on the next weekly run, and each one costs two red
-      # Vercel preview builds and the failure emails that come with them. Lifting
-      # these entries is part of doing the upgrade, not a separate decision.
+      # Vercel preview builds and the failure emails that come with them.
       #
-      # eslint and eslint-config-next are peer-coupled and must move together:
-      # eslint-config-next@15 requires eslint ^9, so bumping eslint alone fails
-      # at npm install, before the build even starts. That is why they cannot be
-      # left to two different major groups.
+      # eslint stays on 9 (and with it eslint-config-next, peer-coupled): the
+      # react, import and jsx-a11y plugins it bundles do not support ESLint 10
+      # yet (react/display-name crashes on context.getFilename). Lift both
+      # entries when eslint-config-next ships a version that does.
+      #
+      # typescript: the `typescript` package is an alias of @typescript/typescript6
+      # (typescript-eslint needs the compiler API, which TS 7 does not have) and
+      # `@typescript/native` is the real TS 7 that runs tsc. Bumping either major
+      # on its own would break the pairing; move them together, by hand.
+      #
+      # @types/node follows the Node major Vercel and CI run (24), not the newest.
       - dependency-name: next
         update-types: ["version-update:semver-major"]
       - dependency-name: eslint-config-next
@@ -57,6 +63,8 @@ updates:
       - dependency-name: eslint
         update-types: ["version-update:semver-major"]
       - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@typescript/native"
         update-types: ["version-update:semver-major"]
       - dependency-name: "@types/node"
         update-types: ["version-update:semver-major"]

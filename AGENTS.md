@@ -65,6 +65,7 @@ All commands from repo root:
 ```bash
 npm run dev          # Start dev server at http://localhost:3000
 npm run build        # Production build
+npx tsc --noEmit     # Type check (TypeScript 7 native `tsc`, see "Dev toolchain")
 npm run lint         # ESLint CLI (flat config, eslint.config.mjs), zero warnings; `next lint` no longer exists
 npm run db:push      # Push Drizzle schema to Neon (needs DATABASE_URL in .env.local)
 npm run db:studio    # Drizzle Studio (visual DB browser)
@@ -90,6 +91,21 @@ npm run test:int     # Integration tests on a test database (see below)
 **Deploy**: push to `main` → Vercel auto-deploys production. Development PRs target `staging` and are tested on its Preview deployment before `staging` → `main`; other branches create ordinary preview deployments.
 
 **Vercel Root Directory**: repo root (empty / not set)
+
+## Dev toolchain
+
+- **TypeScript 7 runs `tsc`; TypeScript 6 serves the compiler API.** TS 7 ships
+  without a JavaScript API, and typescript-eslint (peer `typescript <6.1`)
+  needs one. `package.json` therefore has `"typescript": "npm:@typescript/typescript6"`
+  (what `require("typescript")` resolves to: ESLint) next to
+  `"@typescript/native": "npm:typescript@^7"` (provides the `tsc` binary: CI,
+  `npx tsc --noEmit`, and `next build`, which uses the project-local `tsc` CLI).
+  This is the side-by-side setup of the TS 7 announcement. Collapse it into a
+  plain `typescript@^7` once typescript-eslint supports TS 7 (planned with the 7.1 API).
+- **ESLint stays on 9** (`eslint-config-next` 16.3 and its canary bundle
+  `eslint-plugin-react` / `-import` / `-jsx-a11y`, none of which support ESLint 10;
+  `react/display-name` crashes). Tracked in #111.
+- **`@types/node` 24** matches the Node major in CI, `SETUP.md` and Vercel's default.
 
 ## Dependencies and security advisories
 
