@@ -21,6 +21,10 @@ stanno nella PR.
 
 ## [Non rilasciato]
 
+## [1.18.0] — 1 ottobre 2026
+
+*Pagare ogni ordine con la carta, chiudere i conti a fine ciclo, e un registro che non riscrive mai la storia.*
+
 ### Aggiunto
 - 💳 **Pagamento per ordine, selezionabile.** Gli admin possono passare il gruppo al pagamento di ogni ordine con la carta da Impostazioni, quando nessun ciclo è in corso; la card elenca cosa impedisce il cambio e i saldi prima di confermare. Nota di aggiornamento: applicare `drizzle/0024_settlement.sql` prima del deploy; il pagamento per ordine richiede l'euro e una chiave Stripe valida.
 - 🧮 **Chiudi i conti.** Su un ciclo pagato per ordine, chiuso o annullato, "Chiudi i conti" rimborsa sulla carta quello che ogni socio ha pagato oltre i costi definitivi, chiede quanto manca e abbuona le differenze sotto 0,50 €. Il ciclo mostra a che punto è: da conguagliare, rimborsi in corso, conti chiusi, da aggiornare, rimborso non riuscito.
@@ -450,6 +454,7 @@ stanno nella PR.
 
 ---
 
+[1.18.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.18.0
 [1.17.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.17.0
 [1.16.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.16.1
 [1.16.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.16.0

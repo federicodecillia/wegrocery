@@ -27,7 +27,7 @@ Every migration is additive and can run twice without harm.
 
 | Version | Migration | Environment | Stripe webhook events |
 |---|---|---|---|
-| unreleased | `0023_ledger_append_only.sql` (right before deploying), `0024_settlement.sql` | none | none |
+| 1.18.0 | `0023_ledger_append_only.sql` (right before deploying), `0024_settlement.sql` | none | none |
 | 1.17.0 | `0021_pay_per_order.sql`, `0022_auth_sessions.sql` | email (`RESEND_API_KEY`, `MAIL_FROM`) needed for the email link; Google now optional; everyone signs in again once | none |
 | 1.16.1 | none | `SENTRY_DSN` (optional) | none |
 | 1.16.0 | none | theme colours in `NEXT_PUBLIC_BRAND_JSON` must be hex | none |

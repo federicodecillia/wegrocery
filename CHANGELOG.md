@@ -20,6 +20,10 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ## [Unreleased]
 
+## [1.18.0] — 2026-10-01
+
+*Pay each order by card, settle accounts after the cycle, and a ledger that never rewrites history.*
+
 ### Added
 - 💳 **Pay per order, selectable.** Admins can switch the group to paying each order by card in Settings, once no cycle is running; the card lists what stops the change and the balances before confirming. Upgrade note: apply `drizzle/0024_settlement.sql` before deploying; pay per order needs euros and a usable Stripe key.
 - 🧮 **Settle accounts.** On a closed or cancelled pay-per-order cycle, "Settle accounts" refunds to the card what each member paid beyond the final costs, asks for what is missing and writes off differences under €0.50. The cycle shows where it stands: to settle, refunds in progress, settled, out of date, refund failed.
@@ -449,6 +453,7 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ---
 
+[1.18.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.18.0
 [1.17.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.17.0
 [1.16.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.16.1
 [1.16.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.16.0
