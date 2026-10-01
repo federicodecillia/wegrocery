@@ -113,6 +113,10 @@ export const INVARIANT_CHECKS: InvariantCheck[] = [
     // all (closed before B3, or every fee rounded to zero) are not checked.
     // The ledger is append-only: the close's order_charge stays readable
     // even when reversed later.
+    // The check asserts existence, not count: duplicates are prevented by
+    // the live unique index of migration 0026. Reversing a handling_charge
+    // and writing a replacement keeps firing (the replacement has a new
+    // created_at): the supported repair is a `correction` row.
     description: "every close charged the order preparation fee once, to the cent, and only with a fee",
     query: sql`
       SELECT oc.cycle_id || ':' || oc.member_id AS id

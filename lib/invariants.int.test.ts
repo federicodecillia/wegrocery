@@ -142,9 +142,18 @@ describeDb("money invariants", () => {
     const nofee = await closedCycle("fee_none", null);
     await insert("n_oc", scope.memberId, "order_charge", -5, nofee);
     await insert("n_hc", scope.memberId, "handling_charge", -0.5, nofee);
-    // Closed before B3, or every fee rounded to zero: no handling_charge at all, not checked.
+    // Closed before B3: a fee on the cycle but no handling_charge at all, not checked.
     const legacy = await closedCycle("fee_legacy", { type: "percent", value: 10 });
     await insert("l_oc", scope.memberId, "order_charge", -10, legacy);
+    // Every member's fee rounds to zero (1% of 0.40 = 0.4 cents): the close wrote no handling_charge, silent.
+    const zero = await closedCycle("fee_zero", { type: "percent", value: 1 });
+    await insert("z_oc1", scope.memberId, "order_charge", -0.4, zero);
+    await insert("z_oc2", other, "order_charge", -0.4, zero);
+    // Mixed: one member's fee rounds to zero (no row), the other's is 1.00 and charged right.
+    const mixed = await closedCycle("fee_mixed", { type: "percent", value: 1 });
+    await insert("x_oc1", scope.memberId, "order_charge", -0.4, mixed);
+    await insert("x_oc2", other, "order_charge", -100, mixed);
+    await insert("x_hc2", other, "handling_charge", -1, mixed);
 
     const found = (await breaks()).handling_charge_matches;
     expect(found).toContain(`${wrong}:${scope.memberId}`);
@@ -153,5 +162,7 @@ describeDb("money invariants", () => {
     expect(found).not.toContain(`${ok}:${scope.memberId}`);
     expect(found).not.toContain(`${missing}:${scope.memberId}`);
     expect(found.some((id) => id.startsWith(legacy))).toBe(false);
+    expect(found.some((id) => id.startsWith(zero))).toBe(false);
+    expect(found.some((id) => id.startsWith(mixed))).toBe(false);
   });
 });
