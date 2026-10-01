@@ -5,6 +5,26 @@ import type { Strings } from "@/lib/i18n";
 
 type MovementLabels = Strings["history"];
 
+// Every `ledger_entries.type` the database can hold (migrations 0000-0026):
+// the types the app writes plus the legacy `adjustment`. A new one is added
+// here, in `movementKind` and in the Cassa badges (`lib/ledger-badge.ts`).
+export const LEDGER_TYPES = [
+  "topup",
+  "order_charge",
+  "shipping_charge",
+  "handling_charge",
+  "correction",
+  "adjustment",
+  "payout",
+  "manual_charge",
+  "membership_fee",
+  "refund_failed",
+  "reversal",
+  "order_payment",
+  "order_refund",
+  "balance_payment",
+] as const;
+
 export type LedgerMovement = {
   type: string;
   amount: string | number;

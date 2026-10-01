@@ -13,7 +13,7 @@ import { t } from "@/lib/i18n";
 import { formatHandlingFee, formatMoney } from "@/lib/i18n/format";
 import { dispatchWithBodies, getMemberEmails } from "@/lib/notifications/dispatch";
 import { genId, type Db } from "@/lib/payments/effects";
-import { cycleHandlingFee, type HandlingFee } from "@/lib/payments/order-payment";
+import { cycleHandlingFee, sameHandlingFee, type HandlingFee } from "@/lib/payments/order-payment";
 
 const CLOSE_ATTEMPTS = 3;
 
@@ -215,4 +215,20 @@ export async function setOpenCycleFee(db: Db, cycleId: string, fee: HandlingFee 
     .where(and(eq(orderCycles.cycleId, cycleId), eq(orderCycles.status, "open")))
     .returning({ cycleId: orderCycles.cycleId });
   return rows.length > 0;
+}
+
+// Saves the fee a cycle form sent: changed while the cycle is open, and
+// accepted untouched on a closed one. A form opened before the close and
+// saved after it (to fix a title, say) still carries the fee it was loaded
+// with: that is not an attempt to change what members were charged. False
+// when the cycle is closed (or gone) and the fee differs.
+export async function updateCycleFee(db: Db, cycleId: string, fee: HandlingFee | null): Promise<boolean> {
+  if (await setOpenCycleFee(db, cycleId, fee)) return true;
+  const [current] = await db
+    .select({ type: orderCycles.handlingFeeType, value: orderCycles.handlingFeeValue })
+    .from(orderCycles)
+    .where(eq(orderCycles.cycleId, cycleId))
+    .limit(1);
+  if (!current) return false;
+  return sameHandlingFee(cycleHandlingFee({ handlingFeeType: current.type, handlingFeeValue: current.value }), fee);
 }

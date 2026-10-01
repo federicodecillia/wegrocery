@@ -142,14 +142,16 @@ describeDb("money invariants", () => {
     const nofee = await closedCycle("fee_none", null);
     await insert("n_oc", scope.memberId, "order_charge", -5, nofee);
     await insert("n_hc", scope.memberId, "handling_charge", -0.5, nofee);
-    // Closed before B3: a fee on the cycle but no handling_charge at all, not checked.
+    // Closed before B3: a fee on the cycle but no handling_charge at all, not checked
+    // (this case and fee_zero pin the "cycle has a handling_charge" guard).
     const legacy = await closedCycle("fee_legacy", { type: "percent", value: 10 });
     await insert("l_oc", scope.memberId, "order_charge", -10, legacy);
     // Every member's fee rounds to zero (1% of 0.40 = 0.4 cents): the close wrote no handling_charge, silent.
     const zero = await closedCycle("fee_zero", { type: "percent", value: 1 });
     await insert("z_oc1", scope.memberId, "order_charge", -0.4, zero);
     await insert("z_oc2", other, "order_charge", -0.4, zero);
-    // Mixed: one member's fee rounds to zero (no row), the other's is 1.00 and charged right.
+    // Mixed: one member's fee rounds to zero (no row), the other's is 1.00 and charged right
+    // (the only case where the cycle has fee rows and a member owes none: it pins the "fee > 0" guard).
     const mixed = await closedCycle("fee_mixed", { type: "percent", value: 1 });
     await insert("x_oc1", scope.memberId, "order_charge", -0.4, mixed);
     await insert("x_oc2", other, "order_charge", -100, mixed);

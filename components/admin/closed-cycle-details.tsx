@@ -8,7 +8,7 @@ import { formatDecimalInput, formatNumber } from "@/lib/i18n/format";
 import { toast } from "@/components/ui/toast";
 import { EditClosedOrderModal } from "./edit-closed-order-modal";
 import { t } from "@/lib/i18n";
-import { closedCycleGrandTotal, closedCycleMemberTotal } from "@/lib/closed-cycle-totals";
+import { closedCycleGrandTotal, closedCycleMemberRows, closedCycleMemberTotal } from "@/lib/closed-cycle-totals";
 
 type OrderDetail = {
   orderLineId: string;
@@ -94,17 +94,12 @@ export function ClosedCycleDetails({
     );
   }
 
-  // Group by member
-  const grouped = orderDetails.reduce((acc: Record<string, OrderDetail[]>, ord) => {
-    if (!acc[ord.memberName]) acc[ord.memberName] = [];
-    acc[ord.memberName].push(ord);
-    return acc;
-  }, {});
+  // One row per member: those with order lines, then those charged shipping
+  // or the fee with no line left.
+  const memberRows = closedCycleMemberRows(orderDetails, shipping, handling);
   const effectiveTotal = (l: OrderDetail) =>
     parseFloat(l.actualLineTotal ?? l.lineTotal);
-  const shippingByMember = new Map(shipping.map((s) => [s.memberId, s.amount]));
   const linesTotal = orderDetails.reduce((s, l) => s + effectiveTotal(l), 0);
-  const handlingByMember = new Map(handling.map((h) => [h.memberId, h.amount]));
   const grandTotal = closedCycleGrandTotal({ products: linesTotal, shipping, handling });
 
   return (
@@ -114,7 +109,7 @@ export function ClosedCycleDetails({
           <div>
             <h3 className="text-[16px] font-black text-brand-near-black">{cycleTitle}</h3>
             <p className="text-[12px] text-brand-gray">
-              {t.admin.closedCycleDetails.membersAndTotal(Object.keys(grouped).length, formatEur(grandTotal))}
+              {t.admin.closedCycleDetails.membersAndTotal(memberRows.length, formatEur(grandTotal))}
             </p>
           </div>
           <button
@@ -128,7 +123,7 @@ export function ClosedCycleDetails({
         <div className="flex-1 overflow-y-auto p-5">
           {loading ? (
             <div className="py-20 text-center text-brand-gray">{t.admin.closedCycleDetails.loading}</div>
-          ) : orderDetails.length === 0 ? (
+          ) : memberRows.length === 0 ? (
             <div className="py-20 text-center text-brand-gray">{t.admin.closedCycleDetails.noOrders}</div>
           ) : (
             <div className="space-y-8">
@@ -136,32 +131,27 @@ export function ClosedCycleDetails({
                 <span className="text-[13px]">👆</span>
                 <span>{t.admin.closedCycleDetails.rectifyHint}</span>
               </div>
-              {Object.entries(grouped).map(([memberName, lines]) => {
+              {memberRows.map(({ memberId, memberName, lines, shipping: memberShipping, handling: memberHandling }) => {
                 const productsTotal = lines.reduce((s, l) => s + effectiveTotal(l), 0);
-                const memberId = lines[0]?.memberId;
-                const memberShipping = memberId ? shippingByMember.get(memberId) ?? 0 : 0;
-                const memberHandling = memberId ? handlingByMember.get(memberId) ?? 0 : 0;
                 const total = closedCycleMemberTotal({
                   products: productsTotal,
                   shipping: memberShipping,
                   handling: memberHandling,
                 });
                 return (
-                  <div key={memberName} className="space-y-2">
+                  <div key={memberId} className="space-y-2">
                     <div className="flex flex-wrap items-center justify-between gap-2 border-b border-accent/20 pb-1">
                       <span className="text-[14px] font-bold text-brand-near-black">{memberName}</span>
                       <div className="flex items-center gap-3">
                         <span className="text-[13px] font-black text-accent-text">{formatEur(total)}</span>
-                        {memberId && (
-                          <button
-                            onClick={() =>
-                              setEditTarget({ kind: "edit", memberId, memberName })
-                            }
-                            className="rounded-full bg-primary/10 px-2.5 py-0.5 text-label font-bold text-primary-text hover:bg-primary/20"
-                          >
-                            {t.admin.closedCycleDetails.editQtyButton}
-                          </button>
-                        )}
+                        <button
+                          onClick={() =>
+                            setEditTarget({ kind: "edit", memberId, memberName })
+                          }
+                          className="rounded-full bg-primary/10 px-2.5 py-0.5 text-label font-bold text-primary-text hover:bg-primary/20"
+                        >
+                          {t.admin.closedCycleDetails.editQtyButton}
+                        </button>
                       </div>
                     </div>
                     <div className="space-y-1 pl-2">

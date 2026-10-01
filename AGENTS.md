@@ -78,7 +78,7 @@ npm run test:int     # Integration tests on a test database (see below)
 
 **Append-only ledger** (since `drizzle/0023_ledger_append_only.sql`): a trigger refuses every UPDATE and DELETE on `ledger_entries`, except setting `reversed_by` once. A correction is `reverseEntry` / `reverseEntrySql` (`lib/ledger-reversal.ts`): a `reversal` row with the opposite amount (`reverses` → the original, which gets `reversed_by`), plus, for an edit, a replacement of the same type (`replaces` → the original, same entry date, no bank reference). Cassa "edit" and "delete", the shipping recompute of a closed cycle and the supplier-sheet import all work this way. **Any filter by type must use `liveLedger`** (`lib/db/ledger-live.ts`: not reversed, not a reversal), or a corrected movement counts twice; plain sums (balances, a cycle's net) are the same either way. Movement lists show live rows only, a replacement with "corrected on <date>". The one-charge-per-member-and-cycle index counts live rows only. Maintenance that must delete rows sets `wegrocery.ledger_maintenance = on` in its own transaction (the integration tests' cleanup); the demo's TRUNCATE does not fire the trigger.
 
-**Money invariants**: `lib/invariants.ts` lists read-only checks that must return no rows (refunded cents match the refunds, every accepted refund is debited, every paid payment credited once, every closed-cycle order charged...). The nightly backup workflow runs them on production after the dump (`scripts/check-invariants.mts`, job `invariants`); a failure fails the run. Run them on any database with `node --env-file=<env> node_modules/tsx/dist/cli.mjs scripts/check-invariants.mts`. A new money rule gets a check there and a case in `lib/invariants.int.test.ts`.
+**Money invariants**: `lib/invariants.ts` lists read-only checks that must return no rows (refunded cents match the refunds, every accepted refund is debited, every paid payment credited once, every closed-cycle order charged...). The nightly backup workflow runs them on production (`scripts/check-invariants.mts`, job `invariants`, independent of the dump so a failed backup never skips it); a failure fails the run and the `notify` job opens (or comments on) a GitHub issue. Run them on any database with `node --env-file=<env> node_modules/tsx/dist/cli.mjs scripts/check-invariants.mts`. A new money rule gets a check there and a case in `lib/invariants.int.test.ts`.
 
 **Releases**: open the `staging` → `main` PR with `?template=release.md` (`.github/PULL_REQUEST_TEMPLATE/release.md`): upgrade notes, migration before the merge, smoke test on `/api/health`, rollback.
 
@@ -129,8 +129,10 @@ variables, plus a staging deployment of the `staging` branch:
   `porta-moneta` project, reached through its stable branch URL
   (`porta-moneta-git-staging-<scope>.vercel.app`). Env vars scoped to
   Preview + Git branch `staging`: `DATABASE_URL` → the Neon branch `dev`, like
-  every Preview (there is no `staging` branch in the Neon project, checked
-  2026-09-30; migrations for staging go to `dev`), `EMAIL_REDIRECT_TO`,
+  every Preview (a copy of production; there is no `staging` branch in the Neon
+  project, checked 2026-09-30; migrations for staging go to `dev`),
+  `EMAIL_REDIRECT_TO` (set only on the `staging` branch: other previews share
+  `dev` but have none, so they refuse to send email),
   `APP_BASE_URL`, `WALLYFOR_*`, `STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET`
   (sandbox keys only). The Google OAuth client needs the staging
   branch URL's `/api/auth/callback/google` as an extra redirect URI.

@@ -24,6 +24,12 @@ stanno nella PR.
 ### Modificato
 - 🔔 **Preferenze di notifica più chiare.** I quattro gruppi dicono cosa coprono: nuovo ciclo aperto, addebiti e pagamenti (compresi il conguaglio e le conferme dei pagamenti online), modifiche all'ordine (compreso un ciclo annullato) e saldo e rimborsi. Le tue scelte salvate restano; le conferme di pagamento ora seguono "Addebiti e pagamenti".
 
+### Risolto
+- 🏷️ **Cassa dà un nome a ogni movimento.** I vecchi rimborsi e pagamenti con carta, le spedizioni e le rettifiche mostravano nel badge un codice tecnico come `ORDER_REFUND`; ora si leggono "rimborso carta", "pagamento ordine", "spedizione" e così via, e un tipo sconosciuto mostra un semplice "movimento".
+- ✏️ **Modificare un ciclo dopo la chiusura.** Salvare titolo o ritiro di un ciclo da un modulo aperto prima della chiusura non fallisce più con "le spese non si possono più cambiare" quando le spese non sono state toccate.
+- 👥 **I dettagli del ciclo chiuso elencano ogni socio addebitato.** Un socio con spedizione o spese di preparazione ma senza più righe d'ordine ora compare nell'elenco, così i soci mostrati tornano con il totale.
+- 💬 **Messaggio sul credito più chiaro.** La scheda dei saldi dice ora che la differenza pagata è un tuo credito; in inglese due messaggi dell'admin indicano anche il tetto delle spese in euro.
+
 ## [1.19.0] — 1 ottobre 2026
 
 *Installarla per il proprio gruppo in mezz'ora, e spese di preparazione che diventano un addebito vero e controllato.*
