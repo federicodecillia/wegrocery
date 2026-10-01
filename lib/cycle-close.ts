@@ -1,6 +1,6 @@
 // Pure part of closing a cycle, extracted from performCycleClose in
-// lib/actions/admin.ts so it can be unit tested ("use server" modules can
-// only export async functions). The action turns these rows into ledger
+// lib/cycle-close-store.ts so it can be unit tested. The store turns these
+// rows (order, shipping and order preparation fee charges) into ledger
 // inserts and runs them, together with the status flip, in one db.batch.
 
 import { handlingFeeCents, type HandlingFee } from "./payments/order-payment";

@@ -527,6 +527,7 @@ export function EditCycleForm({
 }) {
   const [isPending, startTransition] = useTransition();
   const isPerOrder = cycle.paymentMode === "per_order";
+  const cycleFee = cycleHandlingFee(cycle);
   // Prefill in app-zone wall time: slicing the ISO string would show UTC.
   const closeAtLocal = utcToZonedLocalInput(cycle.orderCloseAt);
   const pickupLocal = utcToZonedLocalInput(cycle.pickupDate);
@@ -647,8 +648,8 @@ export function EditCycleForm({
 
       {!isClosed && (
         <HandlingFeeFields
-          defaultType={cycle.handlingFeeType === "fixed" || cycle.handlingFeeType === "percent" ? cycle.handlingFeeType : "none"}
-          defaultValue={cycle.handlingFeeValue ?? ""}
+          defaultType={cycleFee?.type ?? "none"}
+          defaultValue={cycleFee ? String(cycleFee.value) : ""}
           allowNone={!isPerOrder}
           warning={isPerOrder ? t.admin.cycle.handlingFeeEditWarning : undefined}
           note={isPerOrder && shippingMode === "proportional" ? t.admin.cycle.perOrderProportionalNote : null}
@@ -809,7 +810,11 @@ export function CreateCycleForm({
           defaultType={handlingFee?.type ?? "none"}
           defaultValue={handlingFee?.value ?? ""}
           allowNone={paymentMode === "wallet"}
-          note={paymentMode === "per_order" && shippingMode === "proportional" ? t.admin.cycle.perOrderProportionalNote : null}
+          note={
+            paymentMode === "per_order" && shippingMode === "proportional"
+              ? t.admin.cycle.perOrderProportionalNote
+              : null
+          }
         />
 
         <PickupSection />

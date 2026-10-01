@@ -1,7 +1,8 @@
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { getDb } from "@/lib/db/client";
 import { describeDb, makeScope } from "@/test/int/fixtures";
-import { closeGuardSql, performCycleClose, setOpenCycleFee } from "./cycle-close-store";
+import type { Db } from "@/lib/payments/effects";
+import { closeGuardSql, performCycleClose, setOpenCycleFee, updateCycleFee } from "./cycle-close-store";
 
 // Closing a cycle on a real database: products, shipping and the order
 // preparation fee in one batch, a single close, and a fee that cannot move
@@ -99,6 +100,68 @@ describeDb("cycle close", () => {
     await expect(guard()).resolves.toBeDefined();
     await setOpenCycleFee(getDb(), cycleId, { type: "percent", value: 5 });
     await expect(guard()).rejects.toThrow(/division by zero|22012/);
+  });
+
+  it("passes the guard of an open cycle with no fee, until a fee is set", async () => {
+    const { cycleId } = await scope.createCycle("nullguard");
+    const none = { type: null, value: null };
+    const guard = () => getDb().batch([getDb().execute(closeGuardSql(cycleId, "{}", none))]);
+    await expect(guard()).resolves.toBeDefined();
+    await setOpenCycleFee(getDb(), cycleId, { type: "fixed", value: 1 });
+    await expect(guard()).rejects.toThrow(/division by zero|22012/);
+  });
+
+  it("restarts the close with the new fee when it changed between the read and the batch", async () => {
+    const { cycleId, productIds } = await scope.createCycle("restart", {
+      fee: { type: "percent", value: 10 },
+      products: [{ name: "Rice", unitPrice: 10 }],
+    });
+    await order(cycleId, productIds[0], scope.memberId, 1, 10);
+    // The first batch finds the fee moved under it: the guard aborts it and the
+    // close plans again from fresh data. The fee changes just before the batch
+    // runs, after performCycleClose has read the cycle and built the charges.
+    const real = getDb();
+    let changed = false;
+    const db = new Proxy(real, {
+      get(target, prop, receiver) {
+        const value = Reflect.get(target, prop, receiver);
+        if (prop !== "batch") return typeof value === "function" ? value.bind(target) : value;
+        return async (statements: Parameters<typeof real.batch>[0]) => {
+          if (!changed) {
+            changed = true;
+            await setOpenCycleFee(real, cycleId, { type: "percent", value: 5 });
+          }
+          return real.batch(statements);
+        };
+      },
+    }) as Db;
+    expect(await performCycleClose(db, cycleId, admin)).toEqual({ chargesGenerated: 1 });
+    expect(changed).toBe(true);
+    expect((await charges(cycleId)).map((r) => [r.type, r.amount])).toEqual([
+      ["handling_charge", "-0.50"],
+      ["order_charge", "-10.00"],
+    ]);
+  });
+
+  it("saves a form's fee: changed while open, tolerated unchanged after the close, refused changed", async () => {
+    const { cycleId } = await scope.createCycle("formfee", { fee: { type: "percent", value: 10 } });
+    expect(await updateCycleFee(getDb(), cycleId, { type: "fixed", value: 2 })).toBe(true);
+    await sql`UPDATE order_cycles SET status = 'closed', closed_at = now() WHERE cycle_id = ${cycleId}`;
+    // A form opened before the close, saved after it to fix the title.
+    expect(await updateCycleFee(getDb(), cycleId, { type: "fixed", value: 2 })).toBe(true);
+    expect(await updateCycleFee(getDb(), cycleId, { type: "fixed", value: 3 })).toBe(false);
+    expect(await updateCycleFee(getDb(), cycleId, { type: "percent", value: 2 })).toBe(false);
+    expect(await updateCycleFee(getDb(), cycleId, null)).toBe(false);
+    const [c] = await sql`SELECT handling_fee_type, handling_fee_value::text AS value FROM order_cycles
+      WHERE cycle_id = ${cycleId}`;
+    expect(c).toEqual({ handling_fee_type: "fixed", value: "2.00" });
+  });
+
+  it("tolerates 'no fee' after the close of a cycle without one", async () => {
+    const { cycleId } = await scope.createCycle("formnofee");
+    await sql`UPDATE order_cycles SET status = 'closed', closed_at = now() WHERE cycle_id = ${cycleId}`;
+    expect(await updateCycleFee(getDb(), cycleId, null)).toBe(true);
+    expect(await updateCycleFee(getDb(), cycleId, { type: "percent", value: 5 })).toBe(false);
   });
 
   it("changes the fee of an open cycle, never of a closed one", async () => {
