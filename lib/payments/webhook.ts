@@ -3,6 +3,7 @@ import { sql } from "drizzle-orm";
 import { getDb } from "@/lib/db/client";
 import { t } from "@/lib/i18n";
 import { formatMoney } from "@/lib/i18n/format";
+import { applyBalanceCredit, type BalanceCreditAction } from "./balance-due";
 import { audit, genId, notifyMember } from "./effects";
 import { applyOrderCredit, type OrderCreditAction } from "./order-credit";
 import { syncChargeRefunds, upsertStripeRefund } from "./refund-store";
@@ -20,6 +21,7 @@ export type WebhookAction =
       paymentIntentId: string | null;
     }
   | OrderCreditAction
+  | BalanceCreditAction
   | { kind: "close"; paymentId: string; sessionId: string; status: "failed" | "expired" }
   | { kind: "refund"; refund: StripeRefundInput }
   | { kind: "refund_sync"; paymentIntentId: string }
@@ -42,13 +44,24 @@ export function planWebhookAction(event: Stripe.Event): WebhookAction {
       if (!paymentId || session.payment_status !== "paid") return { kind: "ignore" };
       if (session.amount_total == null || !session.currency) return { kind: "ignore" };
       // An order payment (pay-per-order) becomes the member's order on its
-      // cycle; anything else is a top-up.
+      // cycle, a balance payment settles what the member owes; anything else
+      // is a top-up.
       const cycleId = session.metadata?.cycleId;
       if (session.metadata?.kind === "order" && cycleId) {
         return {
           kind: "order_credit",
           paymentId,
           cycleId,
+          sessionId: session.id,
+          amountCents: session.amount_total,
+          currency: session.currency,
+          paymentIntentId: idOf(session.payment_intent),
+        };
+      }
+      if (session.metadata?.kind === "balance") {
+        return {
+          kind: "balance_credit",
+          paymentId,
           sessionId: session.id,
           amountCents: session.amount_total,
           currency: session.currency,
@@ -108,6 +121,7 @@ export async function applyWebhookAction(action: WebhookAction): Promise<void> {
   if (action.kind === "refund") return upsertStripeRefund(action.refund);
   if (action.kind === "refund_sync") return syncChargeRefunds(action.paymentIntentId);
   if (action.kind === "order_credit") return applyOrderCredit(action);
+  if (action.kind === "balance_credit") return applyBalanceCredit(action);
   const db = getDb();
 
   if (action.kind === "credit") {

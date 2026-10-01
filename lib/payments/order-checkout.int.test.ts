@@ -60,4 +60,18 @@ describeDb("expiring open order checkouts", () => {
     expect(await expireOpenCheckouts(getDb(), stripe({}).api, scope.memberId, cycleId)).toBe("clear");
     expect(await status(d.paymentId)).toBe("failed");
   });
+
+  it("expires the member's open balance checkouts and leaves the order ones alone", async () => {
+    const order = await scope.createPendingOrderPayment("o", cycleId, 500, []);
+    const balanceId = scope.id("bal");
+    await sql`INSERT INTO payments (payment_id, member_id, provider, status, amount_cents, currency, refunded_cents,
+        checkout_session_id, created_at, updated_at, kind)
+      VALUES (${balanceId}, ${scope.memberId}, 'stripe', 'pending', 400, 'eur', 0, ${`cs_${balanceId}`}, now(), now(),
+        'balance')`;
+    const s = stripe({ [order.sessionId]: "open", [`cs_${balanceId}`]: "open" });
+    expect(await expireOpenCheckouts(getDb(), s.api, scope.memberId, null, "balance")).toBe("clear");
+    expect(await status(balanceId)).toBe("expired");
+    expect(await status(order.paymentId)).toBe("pending");
+    await sql`UPDATE payments SET status = 'expired' WHERE payment_id = ${order.paymentId}`;
+  });
 });

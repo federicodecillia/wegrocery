@@ -14,10 +14,19 @@ type Member = {
   aliasEmail: string | null;
   role: string;
   active: boolean;
+  paysOffline?: boolean;
   lastLoginAt?: string | null;
 };
 
-export function SociForm({ member, onClose }: { member?: Member; onClose?: () => void }) {
+export function SociForm({
+  member,
+  onClose,
+  offlineOption = false,
+}: {
+  member?: Member;
+  onClose?: () => void;
+  offlineOption?: boolean;
+}) {
   const [isPending, startTransition] = useTransition();
   const isEdit = !!member;
 
@@ -31,6 +40,8 @@ export function SociForm({ member, onClose }: { member?: Member; onClose?: () =>
       aliasEmail: (fd.get("aliasEmail") as string) || undefined,
       role: fd.get("role") as string,
       active: fd.get("active") === "true",
+      // Left out when the option is hidden, so the saved value stays.
+      paysOffline: offlineOption ? fd.get("paysOffline") === "on" : undefined,
     };
     startTransition(async () => {
       try {
@@ -128,6 +139,20 @@ export function SociForm({ member, onClose }: { member?: Member; onClose?: () =>
             </select>
           </div>
         </div>
+        {offlineOption && (
+          <label className="flex items-start gap-2 text-[13px] text-brand-near-black">
+            <input
+              name="paysOffline"
+              type="checkbox"
+              defaultChecked={member?.paysOffline ?? false}
+              className="mt-[2px] accent-primary"
+            />
+            <span>
+              <span className="font-semibold">{t.admin.members.paysOfflineLabel}</span>
+              <span className="block text-label text-muted">{t.admin.members.paysOfflineHint}</span>
+            </span>
+          </label>
+        )}
       </div>
       <button
         type="submit"
@@ -142,7 +167,7 @@ export function SociForm({ member, onClose }: { member?: Member; onClose?: () =>
 
 // ── Member list ───────────────────────────────────────────────────────────────
 
-export function SociList({ members }: { members: Member[] }) {
+export function SociList({ members, offlineOption = false }: { members: Member[]; offlineOption?: boolean }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [filter, setFilter] = useState("");
   const [deletingId, startDeleteTransition] = useTransition();
@@ -193,7 +218,7 @@ export function SociList({ members }: { members: Member[] }) {
           {list.map((m) =>
             editingId === m.memberId ? (
               <div key={m.memberId} className="p-4">
-                <SociForm member={m} onClose={() => setEditingId(null)} />
+                <SociForm member={m} onClose={() => setEditingId(null)} offlineOption={offlineOption} />
               </div>
             ) : (
               <div key={m.memberId} className="flex items-center justify-between px-4 py-3">
@@ -203,6 +228,11 @@ export function SociList({ members }: { members: Member[] }) {
                     {!m.active && (
                       <span className="rounded-full bg-brand-red-light px-1.5 py-0.5 text-label font-bold text-brand-red">
                         {t.admin.members.inactiveBadge}
+                      </span>
+                    )}
+                    {offlineOption && m.paysOffline && (
+                      <span className="rounded-full bg-primary-soft px-1.5 py-0.5 text-label font-bold text-primary-text">
+                        {t.admin.members.paysOfflineBadge}
                       </span>
                     )}
                   </div>

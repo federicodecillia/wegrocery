@@ -15,6 +15,7 @@ import { raisesOrderTotal } from "@/lib/membership/policy";
 import { isMembershipCheckEnabled } from "@/lib/membership/wallyfor";
 import { reportError } from "@/lib/observability";
 import { normalizeDraftLines } from "@/lib/order-draft";
+import { getConsolidatedBalanceCents } from "@/lib/payments/balance-due";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
 import { expireOpenCheckouts } from "@/lib/payments/order-checkout";
 import { cancelOrderWrite, confirmOrderWithoutPayment, getCycleCoverageCents } from "@/lib/payments/order-confirm";
@@ -26,6 +27,7 @@ import {
   type OrderSnapshot,
 } from "@/lib/payments/order-payment";
 import { sendRequestedRefund } from "@/lib/payments/refund-request";
+import { SETTLEMENT_MIN_DUE_CENTS } from "@/lib/payments/settlement";
 import { getStripe } from "@/lib/payments/stripe";
 import { requestOrigin } from "@/lib/request-origin";
 import { canAccessCycle } from "@/lib/roles";
@@ -42,6 +44,7 @@ export type OrderPaymentErrorCode =
   | "in_progress"
   | "too_high"
   | "changed"
+  | "balance_due"
   | "unexpected";
 
 export type OrderPaymentResult =
@@ -81,7 +84,8 @@ export async function startOrderPayment(
       return refuse("cycle_not_open", t.errors.cycleNotOpen);
     }
     const fee = cycleFee(cycle);
-    if (cycle.paymentMode !== "per_order" || settings.mode !== "per_order" || !fee) {
+    // A member who pays outside the app confirms with saveOrder instead.
+    if (cycle.paymentMode !== "per_order" || settings.mode !== "per_order" || !fee || member.paysOffline) {
       return refuse("cycle_not_open", t.errors.cycleNotOpen);
     }
 
@@ -136,8 +140,13 @@ export async function startOrderPayment(
       return { status: "confirmed" };
     }
 
-    // Something to pay: Stripe Checkout.
+    // Something to pay: Stripe Checkout, unless an amount due from earlier
+    // cycles is still open (the draft can still change, reduce or cancel).
     if (!stripe) return refuse("unavailable", t.order.pay.unavailable);
+    const dueCents = -(await getConsolidatedBalanceCents(db, memberId));
+    if (dueCents >= SETTLEMENT_MIN_DUE_CENTS) {
+      return refuse("balance_due", t.order.pay.balanceDue(formatMoney(dueCents / 100)));
+    }
 
     // The draft is what the member will find if they come back without paying.
     await db

@@ -1,6 +1,7 @@
 "use server";
 
 import { eq, and, asc, sql } from "drizzle-orm";
+import { liveLedger } from "@/lib/db/ledger-live";
 import { requireAdmin } from "@/lib/auth/session";
 import { t } from "@/lib/i18n";
 import { getDb } from "@/lib/db/client";
@@ -56,6 +57,7 @@ export async function adminGetCycleOrderDetails(cycleId: string) {
           and(
             eq(ledgerEntries.cycleId, cycleId),
             eq(ledgerEntries.type, "shipping_charge"),
+            liveLedger,
           ),
         )
         .groupBy(ledgerEntries.memberId, members.fullName),

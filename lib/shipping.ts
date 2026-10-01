@@ -124,13 +124,13 @@ export function computeShippingShares(
   return shares;
 }
 
-// A closed cycle's shipping_charge ledger row. There is at most one per member
-// (unique index, drizzle/0013_unique_cycle_charges.sql).
+// A closed cycle's shipping_charge ledger row in force. There is at most one
+// per member (unique index on rows not reversed, drizzle/0023).
 export type ShippingChargeRow = { entryId: string; memberId: string; amount: string };
 
 export type ShippingRecomputePlan = {
-  // Existing rows rewritten in place with a new ledger amount. A reversal is
-  // an update to "0.00": shipping rows are never deleted.
+  // Existing rows to correct: reversed and, unless the new amount is "0.00",
+  // posted again (lib/ledger-reversal.ts; the ledger is append-only).
   updates: Array<{ entryId: string; memberId: string; amount: string }>;
   // Members without a shipping row who now owe a share.
   inserts: Array<{ memberId: string; amount: string }>;

@@ -1,17 +1,20 @@
 import { and, eq } from "drizzle-orm";
-import { redirect } from "next/navigation";
+import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
+import { BalanceDueCard } from "@/components/balance/balance-due-card";
 import { CopyField } from "@/components/ricarica/copy-field";
 import { PendingRefresh } from "@/components/ricarica/pending-refresh";
 import { TopupForm } from "@/components/ricarica/topup-form";
 import { getUserRole, requireUserSession } from "@/lib/auth/session";
 import { getDb } from "@/lib/db/client";
-import { getMemberBalance } from "@/lib/db/queries";
+import { getMemberBalance, getMemberById } from "@/lib/db/queries";
 import { payments } from "@/lib/db/schema";
 import { t } from "@/lib/i18n";
 import { formatMoney } from "@/lib/i18n/format";
 import { TOPUP_MIN_CENTS, topupBlockReason, topupCeilingCents, topupPresets } from "@/lib/payments/config";
+import { getConsolidatedBalanceCents } from "@/lib/payments/balance-due";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
+import { SETTLEMENT_MIN_DUE_CENTS } from "@/lib/payments/settlement";
 
 function compactIban(iban: string): string {
   return iban.replace(/\s+/g, "").toUpperCase();
@@ -30,16 +33,20 @@ async function resultFor(memberId: string, esito?: string, sessionId?: string): 
   if (esito === "annullato") return { tone: "info", text: t.topup.resultCancelled };
   if (esito !== "ok" || !sessionId) return null;
   const [payment] = await getDb()
-    .select({ status: payments.status, amountCents: payments.amountCents })
+    .select({ status: payments.status, amountCents: payments.amountCents, kind: payments.kind })
     .from(payments)
     .where(and(eq(payments.checkoutSessionId, sessionId), eq(payments.memberId, memberId)))
     .limit(1);
   if (!payment) return null;
-  if (payment.status === "pending") return { tone: "info", text: t.topup.resultPending, pending: true };
+  const balance = payment.kind === "balance";
+  if (payment.status === "pending") {
+    return { tone: "info", text: balance ? t.balance.resultPending : t.topup.resultPending, pending: true };
+  }
   if (payment.status === "failed" || payment.status === "expired") {
     return { tone: "error", text: t.topup.resultFailed };
   }
-  return { tone: "ok", text: t.topup.resultCredited(formatMoney(payment.amountCents / 100)) };
+  const amount = formatMoney(payment.amountCents / 100);
+  return { tone: "ok", text: balance ? t.balance.resultPaid(amount) : t.topup.resultCredited(amount) };
 }
 
 const TONE_CLASSES = {
@@ -58,14 +65,40 @@ export default async function RicaricaPage({
   const memberId = session.user.memberId!;
   const { esito, session_id } = await searchParams;
 
-  const [balance, result, settings] = await Promise.all([
+  const [balance, result, settings, member] = await Promise.all([
     getMemberBalance(memberId),
     resultFor(memberId, esito, session_id),
     getPaymentSettings(),
+    getMemberById(memberId),
   ]);
-  // A pay-per-order group has no wallet to top up.
-  if (settings.mode === "per_order") redirect("/");
-  const online = settings.onlineTopupAvailable;
+  // A pay-per-order group has no wallet to top up: this page shows what is
+  // due or the credit. A member who pays outside the app sees the wallet
+  // view, with the bank details only.
+  const payPerOrder = settings.mode === "per_order";
+  if (payPerOrder && !member?.paysOffline) {
+    const cents = await getConsolidatedBalanceCents(getDb(), memberId);
+    return (
+      <AppShell email={session.user.email} isAdmin={role === "admin"} memberId={memberId}>
+        <h1 className="mb-4 text-[22px] font-black tracking-[-0.02em] text-brand-near-black">{t.balance.title}</h1>
+        {result && (
+          <div className={`mb-4 rounded-[14px] border p-[12px_14px] text-[14px] ${TONE_CLASSES[result.tone]}`}>
+            {result.text}
+            {result.pending && <PendingRefresh />}
+          </div>
+        )}
+        <BalanceDueCard cents={cents} canPay={settings.onlineTopupAvailable} />
+        {cents > -SETTLEMENT_MIN_DUE_CENTS && cents <= 0 && (
+          <div className="flex items-center justify-between rounded-[18px] border border-brand-border bg-white p-[18px] shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+            <span className="text-[14px] text-brand-gray">{t.balance.nothingDue}</span>
+            <Link href="/ordine" className="rounded-full bg-primary px-4 py-[10px] text-[14px] font-bold text-on-primary">
+              {t.balance.goToOrder}
+            </Link>
+          </div>
+        )}
+      </AppShell>
+    );
+  }
+  const online = settings.onlineTopupAvailable && !payPerOrder;
   const bank = settings.bankTransfer;
   // The group's maximum balance, in cents: online top-ups stop there, the
   // bank section says how much still fits.

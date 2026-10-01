@@ -100,6 +100,8 @@ export const it = {
       inProgress: "Un tuo pagamento per questo ordine è in verifica: aspetta qualche istante e ricarica la pagina.",
       tooHigh: (max: string) => `L'importo supera ${max}: contatta chi gestisce la cassa.`,
       changed: "Qualcosa è cambiato mentre confermavi: ricontrolla l'ordine e riprova.",
+      balanceDue: (amount: string) =>
+        `Prima di pagare un nuovo ordine salda quanto manca dai cicli precedenti (${amount}). Puoi comunque modificare la bozza, ridurre o annullare l'ordine.`,
       minimumNote: (amount: string) =>
         `L'importo minimo di un pagamento è ${amount}: la differenza ti torna a conti chiusi.`,
       statusDraft: (amount: string) => `Bozza da pagare: ${amount}`,
@@ -184,12 +186,18 @@ export const it = {
     refundFailed: "Rimborso non riuscito",
     orderPayment: "Pagamento ordine",
     orderRefund: "Rimborso sulla carta",
+    balancePayment: "Saldo pagato",
+    reversal: "Storno",
     payout: "Restituzione saldo",
     manualCharge: "Addebito",
     membershipFee: "Quota associativa",
     otherMovement: "Movimento",
     corrections: "Correzioni",
     cycleNet: "Totale sul saldo",
+    paid: "Pagato",
+    refunded: "Rimborsato sulla carta",
+    cycleNetPerOrder: "Netto del ciclo",
+    settledAtClose: "A conti chiusi ti rimborsiamo quello che non è servito.",
     chargedAtClose: "Sarà addebitato sul saldo alla chiusura del ciclo.",
     received: (quantity: string) => `ricevuti ${quantity}`,
     detailDescription: "Dettagli del movimento selezionato",
@@ -210,6 +218,21 @@ export const it = {
       partially_refunded: "Rimborsato in parte",
       refunded: "Rimborsato",
     },
+  },
+  balance: {
+    title: "I tuoi saldi",
+    dueLabel: "Da saldare",
+    dueHint: "I costi definitivi dei cicli chiusi superano quanto hai pagato.",
+    payNow: (amount: string) => `Paga ora ${amount}`,
+    creditLabel: "Credito",
+    creditHint: "Hai pagato più di quanto è servito: te lo restituisce l'associazione.",
+    nothingDue: "Non hai nulla da saldare.",
+    goToOrder: "Vai all'ordine",
+    lineItem: (org: string) => `Saldo dovuto a ${org}`,
+    nothingToPay: "Non hai nulla da saldare.",
+    inProgress: "Un tuo pagamento del saldo è in verifica: aspetta qualche istante e ricarica la pagina.",
+    resultPending: "Pagamento in verifica: tra qualche istante il saldo risulta aggiornato.",
+    resultPaid: (amount: string) => `Pagamento di ${amount} ricevuto, grazie.`,
   },
   topup: {
     title: "Ricarica il saldo",
@@ -376,6 +399,31 @@ export const it = {
         body: "Quando un ciclo viene chiuso o un bonifico viene registrato, vedrai un pallino rosso sulla campanella in alto. Toccala per leggere le notifiche.",
       },
     ] as { n: number; title: string; body: string }[],
+    // Pay-per-order groups (app_settings.payment_mode = 'per_order').
+    howToStepsPerOrder: [
+      { n: 1, title: "Guarda l'ordine aperto", body: "Nella Home vedi i cicli aperti e a che punto è il tuo ordine." },
+      {
+        n: 2,
+        title: "Scegli i prodotti",
+        body: "Tocca il tab Ordine in basso e scegli i prodotti con i pulsanti + e −. Sotto il totale vedi prodotti, spedizione e spese di gestione e preparazione ordine.",
+      },
+      {
+        n: 3,
+        title: "Conferma e paga",
+        body: 'Premi "Conferma e paga" e paga con la carta. Finché il ciclo è aperto puoi modificare: se l\'ordine sale paghi solo la differenza.',
+      },
+      {
+        n: 4,
+        title: "Conti chiusi",
+        body: "Dopo il ritiro, con i costi definitivi, ti rimborsiamo sulla carta quello che non è servito. Se i costi hanno superato quanto hai pagato, in Home trovi \"Da saldare\" con il pulsante \"Paga ora\".",
+      },
+      { n: 5, title: "Storico", body: "Nel tab Storico vedi per ogni ciclo quanto hai pagato, i costi, i rimborsi e il netto." },
+      {
+        n: 6,
+        title: "Notifiche",
+        body: "Ti avvisiamo quando il pagamento è confermato, quando parte un rimborso e se c'è qualcosa da saldare. Tocca la campanella in alto per leggerle.",
+      },
+    ] as { n: number; title: string; body: string }[],
     newsTitle: "Novità",
     newsSubtitle: "Cosa è cambiato",
     seeAllNews: "Vedi tutte le novità →",
@@ -394,6 +442,7 @@ export const it = {
         a: "Quando c'è un ordine aperto puoi ordinare. La Home mostra i giorni e le ore rimanenti alla chiusura. Oltre quel termine non puoi più modificare l'ordine.",
       },
       {
+        wallet: true,
         q: "Come funziona il saldo?",
         a: "Il saldo è il tuo credito presso l'associazione. Alla chiusura dell'ordine il costo viene addebitato automaticamente. Per ricaricare apri la pagina Ricarica dalla card del saldo in Home. Con il bonifico il saldo si aggiorna quando chi gestisce la cassa lo registra; con il pagamento online, se l'associazione l'ha attivato, si aggiorna appena il pagamento è confermato.",
       },
@@ -402,6 +451,7 @@ export const it = {
         a: 'Sì, finché l\'ordine è aperto. Il tab Ordine mostra il tuo ordine confermato: premi "Modifica ordine" per cambiare le quantità e riconfermare, oppure "Cancella ordine" per rimuoverlo del tutto, così alla chiusura non ti viene addebitato nulla.',
       },
       {
+        wallet: true,
         q: "Cosa succede se il saldo è negativo?",
         a: "Puoi ordinare finché resti entro il limite di credito fissato dall'associazione (se previsto): l'app ti avvisa quando vai in negativo e blocca il salvataggio oltre il limite. Ricordati di ricaricare al più presto per coprire il debito.",
       },
@@ -410,6 +460,7 @@ export const it = {
         a: 'Su iPhone (Safari): tocca l\'icona di condivisione → "Aggiungi a schermata Home". Su Android (Chrome): tocca i tre puntini → "Aggiungi a schermata Home".',
       },
       {
+        wallet: true,
         q: "Cosa succede se il mio saldo è insufficiente?",
         a: "L'app ti permette di ordinare anche se il saldo è basso o negativo (fino al limite di credito fissato dall'associazione, se previsto, contando anche gli ordini già inviati e non ancora addebitati), per non impedirti di fare la spesa. Oltre il limite l'ordine non viene salvato finché non ricarichi. Tuttavia, è fondamentale ricaricare prontamente per mantenere l'associazione in salute e permettere il pagamento dei fornitori.",
       },
@@ -420,6 +471,28 @@ export const it = {
       {
         q: "Come funzionano le notifiche?",
         a: "L'app ti avvisa automaticamente quando un ciclo viene chiuso (con l'importo addebitato) e quando un bonifico viene registrato da chi gestisce la cassa. La campanella in alto nell'app mostra il numero di notifiche non lette. Toccala per vederle tutte e marcarle come lette.",
+      },
+    ] as { q: string; a: string; wallet?: boolean }[],
+    faqPerOrder: [
+      {
+        q: "Come si paga l'ordine?",
+        a: "Con la carta, quando confermi l'ordine. Paghi prodotti, spedizione e una quota per le spese di gestione e preparazione ordine. Se modifichi l'ordine e il totale sale paghi solo la differenza; se scende, la differenza ti torna a conti chiusi.",
+      },
+      {
+        q: "Cosa sono le spese di gestione e preparazione ordine?",
+        a: "Una stima dei costi che l'associazione sostiene per l'ordine (per esempio pesate e spedizioni divise tra i soci). Non è un ricarico: a conti chiusi ti rimborsiamo tutto quello che non è servito.",
+      },
+      {
+        q: "Quando arrivano i rimborsi?",
+        a: "Dopo la chiusura dei conti del ciclo, sulla carta con cui hai pagato. Di solito arrivano in 5-10 giorni. Se annulli l'ordine mentre il ciclo è aperto il rimborso parte subito.",
+      },
+      {
+        q: "Cos'è \"Da saldare\"?",
+        a: 'Se i costi definitivi di un ciclo superano quanto hai pagato, la differenza compare in Home come "Da saldare". La paghi con "Paga ora". Finché resta da saldare non puoi pagare nuovi ordini, ma puoi modificare o annullare quelli già fatti.',
+      },
+      {
+        q: "Vedo un credito: cosa devo fare?",
+        a: "Niente: è denaro che l'associazione ti deve e che ti restituisce chi gestisce la cassa.",
       },
     ] as { q: string; a: string }[],
     contactEmoji: "📬",
@@ -440,6 +513,36 @@ export const it = {
     admin: "Solo admin",
   },
   admin: {
+    settlement: {
+      openButton: "Chiudi i conti",
+      settledButton: (date: string) => `Conti chiusi il ${date}`,
+      title: (cycle: string) => `Chiudi i conti: ${cycle}`,
+      intro:
+        "Con i costi definitivi (pesate e distinta) l'app restituisce sulla carta quello che ogni socio ha pagato in più, chiede di saldare a chi ha pagato meno e abbuona le differenze sotto 0,50 €. Si può rifare in qualsiasi momento.",
+      loading: "Calcolo...",
+      empty: "Nessun socio su questo ciclo.",
+      net: (amount: string) => `netto del ciclo ${amount}`,
+      action: {
+        settled: () => "In pari",
+        offline: () => "Paga fuori app: segue la Cassa",
+        refund: (amount: string) => `Rimborso ${amount}`,
+        due: (amount: string) => `Da saldare ${amount}`,
+        writeOff: (amount: string) => `Abbuono ${amount}`,
+      },
+      excess: (amount: string) => `${amount} oltre il pagato`,
+      excessHint: "Una parte supera quanto pagato con la carta (per esempio un accredito): restituiscila dalla Cassa.",
+      status: {
+        to_settle: "Chiudi i conti",
+        refunds_pending: "Rimborsi in corso",
+        settled: "Conti chiusi",
+        needs_update: "Da aggiornare: chiudi di nuovo i conti",
+        refund_failed: "Rimborso non riuscito",
+      },
+      confirm: "Chiudi i conti",
+      running: "In corso...",
+      done: (sent: number, waiting: number, due: number, writeOffs: number) =>
+        `Rimborsi inviati ${sent}, in attesa ${waiting}, da saldare ${due}, abbuoni ${writeOffs}`,
+    },
     configStatus: {
       title: "Stato della configurazione",
       intro:
@@ -844,6 +947,9 @@ export const it = {
       submitAdd: "Aggiungi socio",
       submitEdit: "Aggiorna",
       inactiveBadge: "disabilitato",
+      paysOfflineLabel: "Paga fuori app",
+      paysOfflineHint: "Conferma gli ordini senza pagare online; il tesoriere registra i pagamenti in Cassa. Escluso dal conguaglio.",
+      paysOfflineBadge: "paga fuori app",
       invite: "Invita",
       inviteSending: "Invio...",
       inviteSent: (name: string) => `Invito mandato a ${name}: riceve un link per entrare.`,
@@ -1139,6 +1245,28 @@ export const it = {
       importAddedToCycle: (n: number) => `${n} nel ciclo`,
     },
     settings: {
+      mode: {
+        title: "Modalità di pagamento",
+        wallet: "Borsellino: i soci ricaricano un saldo e gli ordini si addebitano alla chiusura.",
+        perOrder: "Pagamento per ordine: ogni socio paga il suo ordine con la carta; a costi definitivi l'app rimborsa la differenza o chiede di saldare.",
+        current: (label: string) => `Modalità attuale: ${label}`,
+        walletName: "borsellino",
+        perOrderName: "pagamento per ordine",
+        switchTo: (label: string) => `Passa a ${label}`,
+        blockedTitle: "Per cambiare modalità:",
+        blockers: {
+          running_cycles: "chiudi o annulla i cicli in corso.",
+          unsettled_cycles: "chiudi i conti dei cicli pagati per ordine (Admin → Ciclo → Chiudi i conti).",
+          currency: "il pagamento per ordine è disponibile solo in euro.",
+          stripe_unavailable: "serve una chiave Stripe valida su questo deploy.",
+        },
+        summary: (neg: number, negAmount: string, pos: number, posAmount: string) =>
+          `Saldi di oggi: ${neg} negativi (${negAmount}) e ${pos} positivi (${posAmount}).`,
+        toPerOrderEffect: "Dopo il cambio un saldo negativo diventa \"Da saldare\" e uno positivo un credito da restituire in Cassa.",
+        toWalletEffect: "Dopo il cambio un \"Da saldare\" torna saldo negativo e i soci ricaricano come prima.",
+        confirm: (label: string) => `Passare a ${label}? I cicli già creati restano nella loro modalità.`,
+        changed: "Modalità cambiata.",
+      },
       tabLabel: "Impostazioni",
       defaultsNotice:
         "Questi sono i valori predefiniti del gruppo: controllali e salva. Finché non salvi, l'app usa questi.",
@@ -1204,6 +1332,11 @@ export const it = {
       `Il tuo ordine per "${cycle}" è confermato. Hai pagato ${amount}: prodotti ${products}, spedizione ${shipping}, spese di gestione e preparazione ordine (stima) ${fee}. A conti chiusi ti rimborsiamo quello che non è servito.`,
     orderPaidShortBody: (cycle: string, amount: string) =>
       `Il tuo ordine per "${cycle}" è confermato. Hai pagato ${amount}.`,
+    balancePaidTitle: "Saldo pagato",
+    balancePaidBody: (amount: string) => `Abbiamo ricevuto il tuo pagamento di ${amount}, grazie.`,
+    settlementDueTitle: "Da saldare",
+    settlementDueBody: (cycle: string, amount: string) =>
+      `I costi definitivi di "${cycle}" superano quanto hai pagato: mancano ${amount}. Puoi saldarli da Ricarica con "Paga ora".`,
     orderRefundTitle: "Rimborso in arrivo",
     orderRefundCancelledBody: (amount: string) =>
       `Hai annullato l'ordine: ti rimborsiamo ${amount} sulla carta con cui hai pagato. Di solito arriva in 5-10 giorni.`,
@@ -1259,6 +1392,11 @@ export const it = {
       `Il ciclo "${title}" è stato annullato: ${reason}. Ti abbiamo riaccreditato ${amount}.`,
   },
   ledger: {
+    writeOff: "Abbuono sotto il minimo di pagamento",
+    correctedOn: (date: string) => `corretto il ${date}`,
+    correctedBy: "Movimento corretto",
+    deletedBy: "Movimento annullato",
+    reversal: "Storno",
     orderCharge: "Addebito ordine",
     shippingAdjusted: "Spedizione rettificata",
     shippingFromSupplier: "Spedizione da distinta fornitore",
@@ -1267,6 +1405,7 @@ export const it = {
     orderRefund: "Rimborso sulla carta",
     orderRefundCancelled: "Rimborso sulla carta: ordine annullato",
     orderRefundLate: "Rimborso sulla carta: pagamento arrivato a ordini chiusi",
+    balancePayment: "Saldo pagato",
   },
   fields: {
     title: "Titolo",
@@ -1328,6 +1467,7 @@ export const it = {
     amountZero: "L'importo non può essere zero",
     amountSignChange: "Il segno del movimento non può cambiare: per stornarlo registra un nuovo movimento.",
     ledgerEntryNotFound: "Movimento non trovato",
+    ledgerEntryAlreadyCorrected: "Il movimento è già stato corretto o annullato: ricarica la pagina.",
     ledgerEntryFromOnlinePayment:
       "Movimento di un pagamento online: per correggerlo fai un rimborso da Stripe o registra una rettifica.",
     ledgerEntryNotEditable:

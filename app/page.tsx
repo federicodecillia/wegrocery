@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
+import { BalanceDueCard } from "@/components/balance/balance-due-card";
 import { CycleCountdown } from "@/components/home/cycle-countdown";
 import { NextPickupCard } from "@/components/home/next-pickup-card";
 import { t } from "@/lib/i18n";
@@ -8,6 +9,7 @@ import { getUserRole, requireUserSession } from "@/lib/auth/session";
 import {
   getCycleProducts,
   getMemberBalance,
+  getMemberById,
   getMemberLedger,
   getMemberOrderLines,
   getNextMemberPickup,
@@ -15,6 +17,7 @@ import {
   getOrderDraft,
 } from "@/lib/db/queries";
 import { getDb } from "@/lib/db/client";
+import { getConsolidatedBalanceCents } from "@/lib/payments/balance-due";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
 import { getCycleCoverageCents } from "@/lib/payments/order-confirm";
 import { homeOrderStatus, orderPaymentAmount, type HomeOrderStatus } from "@/lib/payments/order-payment";
@@ -27,16 +30,19 @@ export default async function HomePage() {
   const role = getUserRole(session);
   const memberId = session.user.memberId!;
 
-  const [balance, openCycles, recentMovements, nextPickup, settings] = await Promise.all([
+  const [balance, openCycles, recentMovements, nextPickup, settings, member] = await Promise.all([
     getMemberBalance(memberId),
     getOpenCycles(),
     getMemberLedger(memberId, 4),
     getNextMemberPickup(memberId),
     getPaymentSettings(),
+    getMemberById(memberId),
   ]);
-  // A pay-per-order group has no wallet: no balance card, and each cycle
-  // says where its order stands instead.
-  const payPerOrder = settings.mode === "per_order";
+  // A pay-per-order group has no wallet: no balance card, each cycle says
+  // where its order stands, and the amount due or the credit comes first. A
+  // member who pays outside the app keeps the wallet view.
+  const payPerOrder = settings.mode === "per_order" && !member?.paysOffline;
+  const consolidatedCents = payPerOrder ? await getConsolidatedBalanceCents(getDb(), memberId) : 0;
 
   const activeCycles = openCycles.filter((c) => canAccessCycle(c.accessLevel, role));
 
@@ -57,7 +63,7 @@ export default async function HomePage() {
     hasConfirmedOrder: boolean,
   ): Promise<HomeOrderStatus> {
     const feeType = cycle.handlingFeeType;
-    if (cycle.paymentMode !== "per_order" || (feeType !== "percent" && feeType !== "fixed") || cycle.handlingFeeValue === null) {
+    if (!payPerOrder || cycle.paymentMode !== "per_order" || (feeType !== "percent" && feeType !== "fixed") || cycle.handlingFeeValue === null) {
       return null;
     }
     const [coveredCents, draftLines] = await Promise.all([
@@ -169,6 +175,8 @@ export default async function HomePage() {
 
         </>
       )}
+
+      {payPerOrder && <BalanceDueCard cents={consolidatedCents} canPay={settings.onlineTopupAvailable} />}
 
       {/* ── Prossimo ritiro card ── */}
       {nextPickup && <NextPickupCard pickup={nextPickup} />}

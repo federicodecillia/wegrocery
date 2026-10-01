@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { getAuthInstance } from "@/auth";
 import { admitEmail } from "@/lib/auth/admission";
-import { eq, and, notInArray, sql, inArray } from "drizzle-orm";
+import { eq, and, isNull, notInArray, sql, inArray } from "drizzle-orm";
 import { requireAdmin } from "@/lib/auth/session";
 import { t } from "@/lib/i18n";
 import { formatMoney, formatDate, formatDateTime } from "@/lib/i18n/format";
@@ -54,7 +54,11 @@ import {
 import { selectCycleAccessMembers } from "@/lib/notifications/reminder";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
 import { parseHandlingFee, resolveCycleFee } from "@/lib/payments/order-payment";
+import { reverseEntry, reverseEntrySql } from "@/lib/ledger-reversal";
+import { liveLedger } from "@/lib/db/ledger-live";
 import { retryRequestedRefunds } from "@/lib/payments/refund-request";
+import { previewSettlement, settleCycle, type SettleResult } from "@/lib/payments/settlement-store";
+import { getStripe } from "@/lib/payments/stripe";
 import { isAboveMaxBalance } from "@/lib/payments/settings";
 import { DEFAULT_ACCESS_LEVEL, normalizeAccessLevel, normalizeRole, type AccessLevel } from "@/lib/roles";
 
@@ -276,6 +280,7 @@ async function performCycleClose(
         and(
           eq(ledgerEntries.cycleId, cycleId),
           inArray(ledgerEntries.type, ["order_charge", "shipping_charge"]),
+          liveLedger,
         ),
       );
     const alreadyCharged = {
@@ -472,8 +477,8 @@ export async function adminCancelClosedCycle(
           reversal === null
             ? eq(ledgerEntries.cycleId, cycleId)
             : "include" in reversal
-              ? and(eq(ledgerEntries.cycleId, cycleId), inArray(ledgerEntries.type, reversal.include))
-              : and(eq(ledgerEntries.cycleId, cycleId), notInArray(ledgerEntries.type, reversal.exclude)),
+              ? and(eq(ledgerEntries.cycleId, cycleId), inArray(ledgerEntries.type, reversal.include), liveLedger)
+              : and(eq(ledgerEntries.cycleId, cycleId), notInArray(ledgerEntries.type, reversal.exclude), liveLedger),
         )
         .groupBy(ledgerEntries.memberId);
 
@@ -659,7 +664,7 @@ async function prepareShippingRecompute(
         amount: ledgerEntries.amount,
       })
       .from(ledgerEntries)
-      .where(and(eq(ledgerEntries.cycleId, cycleId), eq(ledgerEntries.type, "shipping_charge"))),
+      .where(and(eq(ledgerEntries.cycleId, cycleId), eq(ledgerEntries.type, "shipping_charge"), liveLedger)),
   ]);
   const plan = planShippingRecompute(
     cycle,
@@ -667,14 +672,19 @@ async function prepareShippingRecompute(
     rows,
   );
 
-  // Rows are rewritten in place, never deleted, so the audit trail stays.
+  // The ledger is append-only: a changed share is reversed and posted again
+  // (nothing posted again when it drops to zero).
   const statements: BatchItem<"pg">[] = [];
   for (const u of plan.updates) {
     statements.push(
-      db
-        .update(ledgerEntries)
-        .set({ amount: u.amount, note: t.ledger.shippingAdjusted, updatedAt: now, updatedBy: adminEmail })
-        .where(eq(ledgerEntries.entryId, u.entryId)),
+      db.execute(
+        reverseEntrySql({
+          entryId: u.entryId,
+          note: t.ledger.shippingAdjusted,
+          by: adminEmail,
+          ...(parseFloat(u.amount) !== 0 && { replacement: { amount: u.amount, note: t.ledger.shippingAdjusted } }),
+        }),
+      ),
     );
   }
   if (plan.inserts.length > 0) {
@@ -706,7 +716,7 @@ async function prepareShippingRecompute(
                     = ${ordersSnapshot(totals)}::jsonb
                 AND (SELECT coalesce(jsonb_object_agg(entry_id, amount::text), '{}'::jsonb)
                      FROM ledger_entries
-                     WHERE cycle_id = ${cycleId} AND type = 'shipping_charge')
+                     WHERE cycle_id = ${cycleId} AND type = 'shipping_charge' AND reversed_by IS NULL)
                     = ${shippingRowsSnapshot(rows)}::jsonb`;
 
   return { plan, statements, guard };
@@ -747,9 +757,10 @@ async function notifyShippingChanges(
 
 // Re-splits a closed cycle's shipping_charge entries after its shipping
 // settings changed (adminUpdateCycle); adminEditClosedOrder runs the same plan
-// inside its own batch. Existing rows are updated in place, members with no
-// row who now owe a share get one, a member left with no effective total is
-// reversed to 0, and only members whose share moved are notified. A manual
+// inside its own batch. A changed share is reversed and posted again (the
+// ledger is append-only), members with no row who now owe a share get one, a
+// member left with no effective total is only reversed, and only members whose
+// share moved are notified. A manual
 // (distinta-imported) cycle is left alone. Returns those members' ids.
 //
 // The writes are one guarded batch, planned again from fresh state when a
@@ -1025,7 +1036,8 @@ async function externalRefTakenMessage(
     .select({ entryDate: ledgerEntries.entryDate, fullName: members.fullName })
     .from(ledgerEntries)
     .innerJoin(members, eq(ledgerEntries.memberId, members.memberId))
-    .where(sql`upper(trim(${ledgerEntries.externalRef})) = upper(trim(${ref}))`)
+    // Only movements in force hold a reference: a cancelled one frees it.
+    .where(and(sql`upper(trim(${ledgerEntries.externalRef})) = upper(trim(${ref}))`, isNull(ledgerEntries.reversedBy)))
     .limit(1);
   if (!taken) return null;
   return t.admin.treasury.movementErrors.refTakenBy(ref, taken.fullName, formatDate(taken.entryDate));
@@ -1046,6 +1058,7 @@ async function possibleDuplicateWarning(
       and(
         eq(ledgerEntries.memberId, memberId),
         eq(ledgerEntries.type, plan.type),
+        liveLedger,
         sql`${ledgerEntries.entryDate} BETWEEN ${from.toISOString()} AND ${to.toISOString()}`,
       ),
     );
@@ -1256,6 +1269,60 @@ export async function adminRecordOutgoingMovement(
 // Returns the defaults the supplier-email dialog needs to pre-fill its
 // fields (To / From / CC / Subject). Used by the client before the admin
 // hits "Invia ora" so they can review and tweak any field.
+// Ciclo: "Chiudi i conti" of a pay-per-order cycle (lib/payments/settlement*).
+export type SettlementPreviewRow = {
+  memberId: string;
+  fullName: string;
+  netCents: number;
+  action: "settled" | "offline" | "refund" | "due" | "writeOff";
+  amountCents: number;
+  excessCents: number;
+};
+
+export async function adminPreviewSettlement(
+  cycleId: string,
+): Promise<{ rows: SettlementPreviewRow[]; settledAt: string | null } | { error: string }> {
+  try {
+    await requireAdmin();
+    const preview = await previewSettlement(getDb(), cycleId);
+    return {
+      settledAt: preview.cycle.settledAt ? new Date(preview.cycle.settledAt).toISOString() : null,
+      rows: preview.members.map((m) => ({
+        memberId: m.memberId,
+        fullName: m.fullName,
+        netCents: m.netCents,
+        action: m.plan.kind,
+        amountCents:
+          m.plan.kind === "refund"
+            ? m.plan.refunds.reduce((s, r) => s + r.amountCents, 0)
+            : m.plan.kind === "due"
+              ? m.plan.dueCents
+              : m.plan.kind === "writeOff"
+                ? m.plan.cents
+                : 0,
+        excessCents: m.plan.kind === "refund" ? m.plan.excessCents : 0,
+      })),
+    };
+  } catch (e) {
+    return { error: actionErrorMessage(e, t.errors.genericError, "adminPreviewSettlement") };
+  }
+}
+
+export async function adminSettleCycle(cycleId: string): Promise<SettleResult | { error: string }> {
+  try {
+    const admin = await requireAdmin();
+    const db = getDb();
+    const result = await settleCycle(db, cycleId, { by: admin.email, stripe: getStripe() });
+    await writeAudit(db, admin.email, "settle_cycle", "cycle", cycleId, result);
+    revalidatePath("/admin");
+    revalidatePath("/storico");
+    revalidatePath("/");
+    return result;
+  } catch (e) {
+    return { error: actionErrorMessage(e, t.errors.genericError, "adminSettleCycle") };
+  }
+}
+
 // Cassa: sends again the refunds Stripe has not answered (a network error
 // after an order was cancelled or a payment arrived late). Safe to repeat:
 // each refund's id is its Stripe idempotency key.
@@ -1926,12 +1993,16 @@ export async function adminUpdateLedgerEntry(
       if (excess) return { error: t.admin.treasury.movementErrors.payoutExceedsBalance(formatMoney(excess.limit)) };
     }
 
+    // The ledger is append-only: the movement is reversed and replaced.
     const after = { ...before, amount: data.amount.toFixed(2), note: data.note };
-    await db
-      .update(ledgerEntries)
-      .set({ amount: after.amount, note: after.note, updatedBy: admin.email, updatedAt: new Date() })
-      .where(eq(ledgerEntries.entryId, entryId));
-    await writeAudit(db, admin.email, "update_ledger", "ledger", entryId, { before, after });
+    const corrected = await reverseEntry(db, {
+      entryId,
+      note: t.ledger.correctedBy,
+      by: admin.email,
+      replacement: { amount: after.amount, note: after.note ?? "" },
+    });
+    if (!corrected) return { error: t.errors.ledgerEntryAlreadyCorrected };
+    await writeAudit(db, admin.email, "update_ledger", "ledger", entryId, { before, after, ...corrected });
     revalidatePath("/admin");
     revalidatePath("/");
     revalidatePath("/storico");
@@ -1954,8 +2025,10 @@ export async function adminDeleteLedgerEntry(entryId: string): Promise<{ error?:
     if (!isAdminEditableLedgerType(before.type)) return { error: t.errors.ledgerEntryNotEditable };
     if (before.paymentId) return { error: t.errors.ledgerEntryFromOnlinePayment };
 
-    await db.delete(ledgerEntries).where(eq(ledgerEntries.entryId, entryId));
-    await writeAudit(db, admin.email, "delete_ledger", "ledger", entryId, { before, after: null });
+    // The ledger is append-only: the movement is reversed, not deleted.
+    const reversed = await reverseEntry(db, { entryId, note: t.ledger.deletedBy, by: admin.email });
+    if (!reversed) return { error: t.errors.ledgerEntryAlreadyCorrected };
+    await writeAudit(db, admin.email, "delete_ledger", "ledger", entryId, { before, after: null, ...reversed });
     revalidatePath("/admin");
     revalidatePath("/");
     revalidatePath("/storico");
@@ -2045,6 +2118,9 @@ export type UpsertMemberInput = {
   aliasEmail?: string;
   role: string;
   active: boolean;
+  // Pay-per-order: the member pays outside the app (Cassa), so orders are
+  // confirmed without Stripe and the settlement leaves them out.
+  paysOffline?: boolean;
 };
 
 // Emails and aliases share one namespace (lib/member-email.ts). The message
@@ -2101,6 +2177,7 @@ export async function adminUpsertMember(data: UpsertMemberInput): Promise<{ erro
             aliasEmail,
             role,
             active: data.active,
+            ...(data.paysOffline === undefined ? {} : { paysOffline: data.paysOffline }),
             updatedAt: now,
           })
           .where(eq(members.memberId, data.memberId));
@@ -2114,6 +2191,7 @@ export async function adminUpsertMember(data: UpsertMemberInput): Promise<{ erro
           aliasEmail,
           role,
           active: data.active,
+          paysOffline: data.paysOffline ?? false,
           createdAt: now,
           updatedAt: now,
         });
@@ -2549,6 +2627,7 @@ export async function adminApplyDistintaImport(input: {
           and(
             eq(ledgerEntries.cycleId, input.cycleId),
             eq(ledgerEntries.type, "shipping_charge"),
+            liveLedger,
           ),
         );
       const existingByMember = new Map(existing.map((e) => [e.memberId, e.entryId]));
@@ -2557,15 +2636,18 @@ export async function adminApplyDistintaImport(input: {
         const newAmount = -s.newShipping; // ledger stores it as negative charge
         const prev = existingByMember.get(s.memberId);
         if (prev) {
-          await db
-            .update(ledgerEntries)
-            .set({
-              amount: newAmount.toFixed(2),
-              note: t.ledger.shippingFromSupplier,
-              updatedAt: now,
-              updatedBy: admin.email,
-            })
-            .where(eq(ledgerEntries.entryId, prev));
+          // Append-only: the share is reversed and posted again with the
+          // supplier's figure (nothing posted again when it is zero).
+          const reversed = await reverseEntry(db, {
+            entryId: prev,
+            note: t.ledger.shippingFromSupplier,
+            by: admin.email,
+            ...(s.newShipping > 0 && {
+              replacement: { amount: newAmount.toFixed(2), note: t.ledger.shippingFromSupplier },
+            }),
+          });
+          // Another import got there first: its figure stands, nothing to report here.
+          if (!reversed) continue;
         } else if (s.newShipping > 0) {
           await db.insert(ledgerEntries).values({
             entryId: genId("led"),

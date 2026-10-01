@@ -24,6 +24,8 @@ export type MovementKind =
   | "refund_failed"
   | "order_payment"
   | "order_refund"
+  | "balance_payment"
+  | "reversal"
   | "adjustment"
   | "payout"
   | "manual_charge"
@@ -45,10 +47,14 @@ export function movementKind(entry: LedgerMovement): MovementKind {
     case "refund_failed":
       // A card refund Stripe could not pay: the money is back on the balance.
       return "refund_failed";
+    case "reversal":
+      // Hidden from the lists (lib/db/ledger-live.ts); named for any other view.
+      return "reversal";
     case "order_payment":
     case "order_refund":
-      // Pay-per-order: the payment that confirmed an order, and money going
-      // back to the card it came from.
+    case "balance_payment":
+      // Pay-per-order: the payment that confirmed an order, money going back
+      // to the card it came from, and the payment of an amount due.
       return entry.type;
     case "adjustment":
       // Legacy type of unknown intent (opening balances included): neutral.
@@ -73,6 +79,8 @@ export function movementLabel(entry: LedgerMovement, labels: MovementLabels): st
     refund_failed: labels.refundFailed,
     order_payment: labels.orderPayment,
     order_refund: labels.orderRefund,
+    balance_payment: labels.balancePayment,
+    reversal: labels.reversal,
     adjustment: labels.correction,
     payout: labels.payout,
     manual_charge: labels.manualCharge,

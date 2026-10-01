@@ -63,4 +63,37 @@ describeDb("money invariants", () => {
     expect(found.paid_payment_credit).toEqual([p.paymentId]);
     expect(found.closed_cycle_charge).toEqual([`${cycleId}:${scope.memberId}`]);
   });
+
+  it("checks balance payments and settled pay-per-order cycles", async () => {
+    const { cycleId } = await scope.createCycle("settled", { paymentMode: "per_order" });
+    await scope.createPaidOrderPayment("set", cycleId, 1000);
+    await scope.addLedger("set_oc", scope.memberId, "order_charge", -8, cycleId);
+    await sql`UPDATE order_cycles SET status = 'closed', closed_at = now(), settled_at = now() WHERE cycle_id = ${cycleId}`;
+    // A balance payment credited for less than it took.
+    const balanceId = scope.id("bal");
+    await sql`INSERT INTO payments (payment_id, member_id, provider, status, amount_cents, currency, refunded_cents,
+        checkout_session_id, created_at, updated_at, kind)
+      VALUES (${balanceId}, ${scope.memberId}, 'stripe', 'succeeded', 500, 'eur', 0, ${`cs_${balanceId}`}, now(), now(),
+        'balance')`;
+    await sql`INSERT INTO ledger_entries (entry_id, member_id, entry_date, type, amount, note, created_by, created_at, payment_id)
+      VALUES (${scope.id("led_bal")}, ${scope.memberId}, now(), 'balance_payment', 3, 'int-test', 'stripe', now(), ${balanceId})`;
+    const found = await breaks();
+    expect(found.paid_balance_credit).toEqual([balanceId]);
+    // 2 € left on a settled cycle with no refund asked for.
+    expect(found.settled_cycle_credit).toEqual([`${cycleId}:${scope.memberId}`]);
+    await scope.createRequestedRefund(`settle_${scope.id("set")}_1`, `${scope.prefix}_pay_set`, cycleId, 200, "settlement");
+    expect((await breaks()).settled_cycle_credit).toEqual([]);
+  });
+
+  it("accepts an order charged by hand in Cassa after the close", async () => {
+    const { cycleId, productIds } = await scope.createCycle("manual", { products: [{ name: "Pears", unitPrice: 4 }] });
+    const other = await scope.createExtraMember("other");
+    await sql`INSERT INTO orders (order_line_id, cycle_id, member_id, product_id, quantity, unit_price_snapshot,
+        line_total, updated_at)
+      VALUES (${scope.id("mline")}, ${cycleId}, ${scope.memberId}, ${productIds[0]}, 2, 4, 8, now())`;
+    await sql`UPDATE order_cycles SET status = 'closed' WHERE cycle_id = ${cycleId}`;
+    await scope.addLedger("m_other", other, "order_charge", -5, cycleId);
+    await scope.addLedger("m_hand", scope.memberId, "correction", -8, cycleId);
+    expect((await breaks()).closed_cycle_charge).not.toContain(`${cycleId}:${scope.memberId}`);
+  });
 });

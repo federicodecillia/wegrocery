@@ -33,6 +33,9 @@ export const members = pgTable(
     // Set at every new session (drizzle/0022_auth_sessions.sql); NULL = never
     // signed in since the email link arrived.
     lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
+    // Pays outside the app in pay-per-order mode: confirms orders without
+    // Stripe, settled from Treasury (drizzle/0024_settlement.sql).
+    paysOffline: boolean("pays_offline").notNull().default(false),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
   },
@@ -88,6 +91,8 @@ export const orderCycles = pgTable("order_cycles", {
   // 'percent' of the products or a 'fixed' amount. NULL on wallet cycles.
   handlingFeeType: text("handling_fee_type"),
   handlingFeeValue: numeric("handling_fee_value", { precision: 10, scale: 2 }),
+  // Last settlement of a pay-per-order cycle (drizzle/0024_settlement.sql).
+  settledAt: timestamp("settled_at", { withTimezone: true }),
 });
 
 export const supplierProducts = pgTable("supplier_products", {
@@ -364,6 +369,12 @@ export const ledgerEntries = pgTable(
     externalRef: text("external_ref"),
     // The refund this row debits or reverses (migration 0020), NULL otherwise.
     refundId: text("refund_id").references(() => refunds.refundId),
+    // Append-only corrections (drizzle/0023_ledger_append_only.sql): the
+    // 'reversal' row cancelling this one; on a reversal, the row it cancels;
+    // on a correcting row, the row it replaces. lib/ledger-reversal.ts writes them.
+    reversedBy: text("reversed_by"),
+    reverses: text("reverses"),
+    replaces: text("replaces"),
   },
   (table) => [
     index("ledger_entries_member_id_idx").on(table.memberId),
@@ -373,9 +384,11 @@ export const ledgerEntries = pgTable(
     check("ledger_entries_amount_not_nan", sql`${table.amount} <> 'NaN'`),
     // At most one order/shipping charge per member per cycle: the backstop
     // against double charging (drizzle/0013_unique_cycle_charges.sql).
-    uniqueIndex("ledger_entries_cycle_member_charge_uniq")
+    uniqueIndex("ledger_entries_cycle_member_charge_live_uniq")
       .on(table.cycleId, table.memberId, table.type)
-      .where(sql`${table.type} IN ('order_charge', 'shipping_charge')`),
+      .where(sql`${table.type} IN ('order_charge', 'shipping_charge') AND ${table.reversedBy} IS NULL`),
+    uniqueIndex("ledger_entries_reverses_uniq").on(table.reverses).where(sql`${table.reverses} IS NOT NULL`),
+    check("ledger_entries_reversal_check", sql`(${table.type} = 'reversal') = (${table.reverses} IS NOT NULL)`),
     // A payment is credited at most once (drizzle/0016_stripe_payments.sql).
     uniqueIndex("ledger_entries_payment_topup_uniq")
       .on(table.paymentId)
@@ -389,9 +402,9 @@ export const ledgerEntries = pgTable(
     check("ledger_entries_external_ref_not_blank", sql`trim(${table.externalRef}) <> ''`),
     // The same bank transfer cannot be recorded twice, whatever the case or
     // the surrounding spaces of its reference.
-    uniqueIndex("ledger_entries_external_ref_uniq")
+    uniqueIndex("ledger_entries_external_ref_live_uniq")
       .on(sql`upper(trim(${table.externalRef}))`)
-      .where(sql`${table.externalRef} IS NOT NULL`),
+      .where(sql`${table.externalRef} IS NOT NULL AND ${table.reversedBy} IS NULL`),
     // An order or balance payment is credited at most once per cycle
     // (drizzle/0021_pay_per_order.sql).
     uniqueIndex("ledger_entries_payment_cycle_credit_uniq")

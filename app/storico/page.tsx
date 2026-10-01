@@ -30,6 +30,7 @@ export default async function StoricoPage() {
           cycleTitle: e.cycleTitle,
           method: e.method,
           externalRef: e.externalRef,
+          correctedAt: e.correctedAt ? new Date(e.correctedAt).toISOString() : null,
           paymentStatus: e.paymentStatus,
           recordedBy: movementRecorder(e),
         }))}

@@ -5,6 +5,7 @@ import { AppShell } from "@/components/app-shell";
 import { FaqAccordion } from "@/components/ui/faq-accordion";
 import { getUserRole, requireUserSession } from "@/lib/auth/session";
 import { loadChangelog, splitInlineBold } from "@/lib/changelog";
+import { getPaymentSettings } from "@/lib/payments/get-settings";
 
 export default async function GuidaPage() {
   const session = await requireUserSession();
@@ -13,7 +14,12 @@ export default async function GuidaPage() {
   // Pull the most recent released version (skip the [Unreleased] block) for
   // the teaser, in the deploy's locale — same default as /changelog, where
   // users can still switch language explicitly.
-  const versions = await loadChangelog(brand.locale);
+  const [versions, settings] = await Promise.all([loadChangelog(brand.locale), getPaymentSettings()]);
+  // Pay-per-order groups read their own steps, and the wallet answers give
+  // way to the payment and settlement ones.
+  const perOrder = settings.mode === "per_order";
+  const steps = perOrder ? t.guide.howToStepsPerOrder : t.guide.howToSteps;
+  const faqs = perOrder ? [...t.guide.faq.filter((f) => !f.wallet), ...t.guide.faqPerOrder] : t.guide.faq;
   const latest = versions.find((v) => v.date !== null) ?? null;
 
   return (
@@ -24,10 +30,10 @@ export default async function GuidaPage() {
 
       {/* How-to steps */}
       <div className="mb-6 rounded-[18px] border border-accent/20 bg-accent-soft p-[18px]">
-        {t.guide.howToSteps.map((step, i) => (
+        {steps.map((step, i) => (
           <div
             key={step.n}
-            className={`flex gap-3 ${i < t.guide.howToSteps.length - 1 ? "mb-3" : ""}`}
+            className={`flex gap-3 ${i < steps.length - 1 ? "mb-3" : ""}`}
           >
             <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-accent font-mono text-label font-bold text-on-accent">
               {step.n}
@@ -101,7 +107,7 @@ export default async function GuidaPage() {
       <h2 className="mb-[14px] text-[18px] font-extrabold tracking-[-0.02em] text-brand-near-black">
         {t.guide.faqTitle}
       </h2>
-      <FaqAccordion faqs={t.guide.faq} />
+      <FaqAccordion faqs={faqs} />
 
       {/* Contact card */}
       <div className="mt-6 rounded-[18px] border border-brand-border bg-white p-6 text-center shadow-[0_1px_2px_rgba(0,0,0,0.04)]">

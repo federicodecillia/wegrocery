@@ -18,8 +18,11 @@ export function PaymentSettingsForm({
   initial,
   stripeKey,
   savedAt,
+  showLimits = true,
 }: {
   initial: PaymentSettingsInput;
+  // The balance limits only apply to the wallet mode.
+  showLimits?: boolean;
   stripeKey: StripeKeyState;
   // ISO date of the last save; null while the values are the defaults.
   savedAt: string | null;
@@ -54,44 +57,46 @@ export function PaymentSettingsForm({
         </p>
       )}
 
-      <section className={card}>
-        <h3 className="text-[13px] font-bold text-brand-near-black">{s.limitsTitle}</h3>
-        <p className="mb-3 mt-1 text-[12px] text-brand-gray">{s.limitsHint}</p>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="min-w-0">
-            <label htmlFor="settings-overdraft" className={labelCls}>
-              {s.overdraftLabel}
-            </label>
-            <input
-              id="settings-overdraft"
-              type="text"
-              inputMode="decimal"
-              autoComplete="off"
-              value={values.maxOverdraft}
-              onChange={(e) => update("maxOverdraft", e.target.value)}
-              placeholder={s.noLimit}
-              className={inputCls}
-            />
-            <p className={helpCls}>{s.overdraftHelp}</p>
+      {showLimits && (
+        <section className={card}>
+          <h3 className="text-[13px] font-bold text-brand-near-black">{s.limitsTitle}</h3>
+          <p className="mb-3 mt-1 text-[12px] text-brand-gray">{s.limitsHint}</p>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="min-w-0">
+              <label htmlFor="settings-overdraft" className={labelCls}>
+                {s.overdraftLabel}
+              </label>
+              <input
+                id="settings-overdraft"
+                type="text"
+                inputMode="decimal"
+                autoComplete="off"
+                value={values.maxOverdraft}
+                onChange={(e) => update("maxOverdraft", e.target.value)}
+                placeholder={s.noLimit}
+                className={inputCls}
+              />
+              <p className={helpCls}>{s.overdraftHelp}</p>
+            </div>
+            <div className="min-w-0">
+              <label htmlFor="settings-max-balance" className={labelCls}>
+                {s.maxBalanceLabel}
+              </label>
+              <input
+                id="settings-max-balance"
+                type="text"
+                inputMode="decimal"
+                autoComplete="off"
+                value={values.maxBalance}
+                onChange={(e) => update("maxBalance", e.target.value)}
+                placeholder={s.noLimit}
+                className={inputCls}
+              />
+              <p className={helpCls}>{s.maxBalanceHelp}</p>
+            </div>
           </div>
-          <div className="min-w-0">
-            <label htmlFor="settings-max-balance" className={labelCls}>
-              {s.maxBalanceLabel}
-            </label>
-            <input
-              id="settings-max-balance"
-              type="text"
-              inputMode="decimal"
-              autoComplete="off"
-              value={values.maxBalance}
-              onChange={(e) => update("maxBalance", e.target.value)}
-              placeholder={s.noLimit}
-              className={inputCls}
-            />
-            <p className={helpCls}>{s.maxBalanceHelp}</p>
-          </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       <section className={card}>
         <label className="flex items-start justify-between gap-3">

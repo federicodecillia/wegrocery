@@ -1,5 +1,6 @@
 import { and, asc, desc, eq, inArray, isNotNull, isNull, or, sql } from "drizzle-orm";
 import { getDb } from "./client";
+import { liveLedger } from "./ledger-live";
 import {
   ledgerEntries,
   members,
@@ -356,6 +357,8 @@ export async function getMemberLedger(memberId: string, limit = 50) {
       paymentId: ledgerEntries.paymentId,
       method: ledgerEntries.method,
       externalRef: ledgerEntries.externalRef,
+      // Set on a movement that corrects another: when it was corrected.
+      correctedAt: sql<Date | null>`case when ${ledgerEntries.replaces} is not null then ${ledgerEntries.createdAt} end`,
       cycleTitle: orderCycles.title,
       paymentStatus: payments.status,
       recorderName: sql<string | null>`(
@@ -368,7 +371,9 @@ export async function getMemberLedger(memberId: string, limit = 50) {
     .from(ledgerEntries)
     .leftJoin(orderCycles, eq(orderCycles.cycleId, ledgerEntries.cycleId))
     .leftJoin(payments, eq(payments.paymentId, ledgerEntries.paymentId))
-    .where(eq(ledgerEntries.memberId, memberId))
+    // A corrected movement shows once, as its replacement; a cancelled one
+    // and the reversals not at all (their sum is zero).
+    .where(and(eq(ledgerEntries.memberId, memberId), liveLedger))
     .orderBy(desc(ledgerEntries.entryDate))
     .limit(limit);
 }
@@ -381,6 +386,7 @@ export async function getMemberStorico(memberId: string): Promise<CycleHistoryEn
     pickupDate: orderCycles.pickupDate,
     cycleStatus: orderCycles.status,
     cycleCreatedAt: orderCycles.createdAt,
+    paymentMode: orderCycles.paymentMode,
   };
   const [lineRows, ledgerRows] = await Promise.all([
     db
@@ -410,7 +416,9 @@ export async function getMemberStorico(memberId: string): Promise<CycleHistoryEn
       .select({
         ...cycle,
         net: sql<string>`sum(${ledgerEntries.amount})`,
-        shipping: sql<string>`-coalesce(sum(${ledgerEntries.amount}) filter (where ${ledgerEntries.type} = 'shipping_charge'), 0)`,
+        shipping: sql<string>`-coalesce(sum(${ledgerEntries.amount}) filter (where ${ledgerEntries.type} = 'shipping_charge' and ${ledgerEntries.reversedBy} is null), 0)`,
+        paid: sql<string>`coalesce(sum(${ledgerEntries.amount}) filter (where ${ledgerEntries.type} in ('order_payment', 'balance_payment') and ${ledgerEntries.reversedBy} is null), 0)`,
+        refunded: sql<string>`-coalesce(sum(${ledgerEntries.amount}) filter (where ${ledgerEntries.type} in ('order_refund', 'refund_failed') and ${ledgerEntries.reversedBy} is null), 0)`,
       })
       .from(ledgerEntries)
       .innerJoin(orderCycles, eq(ledgerEntries.cycleId, orderCycles.cycleId))
@@ -421,6 +429,7 @@ export async function getMemberStorico(memberId: string): Promise<CycleHistoryEn
         orderCycles.pickupDate,
         orderCycles.status,
         orderCycles.createdAt,
+        orderCycles.paymentMode,
       ),
   ]);
   return buildCycleHistory(lineRows, ledgerRows);
@@ -519,6 +528,8 @@ export async function getAllCycles(limit = 30) {
       shippingMode: orderCycles.shippingMode,
       shippingCostPerMember: orderCycles.shippingCostPerMember,
       shippingTotal: orderCycles.shippingTotal,
+      paymentMode: orderCycles.paymentMode,
+      settledAt: orderCycles.settledAt,
     })
     .from(orderCycles)
     .leftJoin(suppliers, eq(orderCycles.supplierId, suppliers.supplierId))
@@ -656,6 +667,7 @@ export async function getAdminCycleSummary(cycleId: string): Promise<CycleSummar
         and(
           eq(ledgerEntries.cycleId, cycleId),
           eq(ledgerEntries.type, "shipping_charge"),
+          liveLedger,
         ),
       )
       .groupBy(ledgerEntries.memberId),
@@ -965,6 +977,8 @@ export type LedgerEntryItem = {
   paymentId: string | null;
   method: string | null;
   externalRef: string | null;
+  // When this movement replaced a corrected one (append-only ledger).
+  correctedAt: string | null;
 };
 
 export async function getAllMembersLedger(): Promise<Record<string, LedgerEntryItem[]>> {
@@ -981,9 +995,12 @@ export async function getAllMembersLedger(): Promise<Record<string, LedgerEntryI
       paymentId: ledgerEntries.paymentId,
       method: ledgerEntries.method,
       externalRef: ledgerEntries.externalRef,
+      replaces: ledgerEntries.replaces,
+      createdAt: ledgerEntries.createdAt,
     })
     .from(ledgerEntries)
     .leftJoin(orderCycles, eq(ledgerEntries.cycleId, orderCycles.cycleId))
+    .where(liveLedger)
     .orderBy(desc(ledgerEntries.entryDate), desc(ledgerEntries.createdAt));
 
   const result: Record<string, LedgerEntryItem[]> = {};
@@ -999,6 +1016,7 @@ export async function getAllMembersLedger(): Promise<Record<string, LedgerEntryI
       paymentId: row.paymentId ?? null,
       method: row.method ?? null,
       externalRef: row.externalRef ?? null,
+      correctedAt: row.replaces ? row.createdAt.toISOString() : null,
     });
   }
   return result;
@@ -1172,6 +1190,7 @@ export async function getAnalyticsOverview(
         and(
           eq(orderCycles.status, "closed"),
           eq(ledgerEntries.type, "shipping_charge"),
+          liveLedger,
           ...(nonEmpty(filters?.cycleIds) ? [inArray(ledgerEntries.cycleId, filters!.cycleIds!)] : []),
           ...(nonEmpty(filters?.memberIds) ? [inArray(ledgerEntries.memberId, filters!.memberIds!)] : []),
           ...(nonEmpty(filters?.supplierIds) ? [inArray(orderCycles.supplierId, filters!.supplierIds!)] : []),
@@ -1319,6 +1338,7 @@ export async function getCycleRevenueTrend(
     .where(
       and(
         eq(ledgerEntries.type, "shipping_charge"),
+        liveLedger,
         ...(nonEmpty(filters?.cycleIds) ? [inArray(ledgerEntries.cycleId, filters!.cycleIds!)] : []),
         ...(nonEmpty(filters?.memberIds) ? [inArray(ledgerEntries.memberId, filters!.memberIds!)] : []),
       ),

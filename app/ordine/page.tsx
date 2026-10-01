@@ -6,6 +6,7 @@ import { getUserRole, requireUserSession } from "@/lib/auth/session";
 import {
   getCycleProducts,
   getMemberBalance,
+  getMemberById,
   getMemberOrderLines,
   getOpenCycles,
   getOrderDraft,
@@ -33,9 +34,10 @@ export default async function OrdinePage({
   const role = getUserRole(session);
   const memberId = session.user.memberId!;
 
-  const [balance, openCycles] = await Promise.all([
+  const [balance, openCycles, member] = await Promise.all([
     getMemberBalance(memberId),
     getOpenCycles(),
+    getMemberById(memberId),
   ]);
 
   const activeCycles = openCycles.filter((c) => canAccessCycle(c.accessLevel, role));
@@ -76,10 +78,12 @@ export default async function OrdinePage({
     new Set(cycleProducts.map((p) => p.productId)),
   );
 
-  // Pay-per-order cycle: the order is confirmed by paying it.
+  // Pay-per-order cycle: the order is confirmed by paying it, unless the
+  // member pays outside the app (then the wallet form, as in wallet mode).
   const feeType = openCycle.handlingFeeType;
   const fee: HandlingFee | null =
     openCycle.paymentMode === "per_order" &&
+    !member?.paysOffline &&
     (feeType === "percent" || feeType === "fixed") &&
     openCycle.handlingFeeValue !== null
       ? { type: feeType, value: Number(openCycle.handlingFeeValue) }

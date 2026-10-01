@@ -98,6 +98,8 @@ export const en: Strings = {
       lineProducts: (cycle: string) => `Products: ${cycle}`,
       unavailable: "Online payments are not available right now. Contact whoever runs the group.",
       inProgress: "A payment of yours for this order is being verified: wait a moment and reload the page.",
+      balanceDue: (amount: string) =>
+        `Before paying a new order, settle what is due from previous cycles (${amount}). You can still edit the draft, reduce or cancel the order.`,
       tooHigh: (max: string) => `The amount is above ${max}: contact the treasurer.`,
       changed: "Something changed while you were confirming: check the order and try again.",
       minimumNote: (amount: string) =>
@@ -184,12 +186,18 @@ export const en: Strings = {
     refundFailed: "Refund failed",
     orderPayment: "Order payment",
     orderRefund: "Refund to card",
+    balancePayment: "Balance paid",
+    reversal: "Reversal",
     payout: "Balance returned",
     manualCharge: "Charge",
     membershipFee: "Membership fee",
     otherMovement: "Movement",
     corrections: "Adjustments",
     cycleNet: "Net on your balance",
+    paid: "Paid",
+    refunded: "Refunded to card",
+    cycleNetPerOrder: "Cycle net",
+    settledAtClose: "Once the cycle is settled we refund what was not needed.",
     chargedAtClose: "It will be charged to your balance when the cycle closes.",
     received: (quantity: string) => `received ${quantity}`,
     detailDescription: "Details of the selected movement",
@@ -210,6 +218,21 @@ export const en: Strings = {
       partially_refunded: "Partly refunded",
       refunded: "Refunded",
     },
+  },
+  balance: {
+    title: "Your balances",
+    dueLabel: "Amount due",
+    dueHint: "The final costs of closed cycles are more than you paid.",
+    payNow: (amount: string) => `Pay now ${amount}`,
+    creditLabel: "Credit",
+    creditHint: "You paid more than was needed: the association will give it back.",
+    nothingDue: "Nothing is due.",
+    goToOrder: "Go to order",
+    lineItem: (org: string) => `Amount due to ${org}`,
+    nothingToPay: "Nothing is due.",
+    inProgress: "A balance payment of yours is being verified: wait a moment and reload the page.",
+    resultPending: "Payment being verified: your balance updates in a moment.",
+    resultPaid: (amount: string) => `Payment of ${amount} received, thank you.`,
   },
   topup: {
     title: "Top up your balance",
@@ -376,6 +399,31 @@ export const en: Strings = {
         body: "When a cycle closes or a transfer is registered, you'll see a red dot on the bell icon at the top. Tap it to read your notifications.",
       },
     ] as { n: number; title: string; body: string }[],
+    // Pay-per-order groups (app_settings.payment_mode = 'per_order').
+    howToStepsPerOrder: [
+      { n: 1, title: "Check the open order", body: "The Home page shows the open cycles and where your order stands." },
+      {
+        n: 2,
+        title: "Choose your products",
+        body: "Tap the Order tab and choose products with the + and − buttons. Below the total you see products, shipping and handling and order preparation.",
+      },
+      {
+        n: 3,
+        title: "Confirm and pay",
+        body: 'Tap "Confirm and pay" and pay by card. While the cycle is open you can edit: if the order goes up you only pay the difference.',
+      },
+      {
+        n: 4,
+        title: "Settlement",
+        body: "After pickup, once costs are final, we refund to your card what was not needed. If costs went above what you paid, the Home page shows an amount due with a \"Pay now\" button.",
+      },
+      { n: 5, title: "History", body: "The History tab shows, for each cycle, what you paid, the costs, the refunds and the net." },
+      {
+        n: 6,
+        title: "Notifications",
+        body: "We let you know when a payment is confirmed, when a refund is sent and when something is due. Tap the bell at the top to read them.",
+      },
+    ] as { n: number; title: string; body: string }[],
     newsTitle: "News",
     newsSubtitle: "What's new",
     seeAllNews: "See all updates →",
@@ -394,6 +442,7 @@ export const en: Strings = {
         a: "You can order when there's an open order. The Home screen shows the days and hours remaining until closure. After that deadline, you can no longer edit your order.",
       },
       {
+        wallet: true,
         q: "How does the balance work?",
         a: "Your balance is your credit with the buying group. When an order closes, the cost is automatically deducted. To top up, open the Top up page from the balance card on Home. With a bank transfer your balance updates when the treasurer records it; with online payment, if the group has enabled it, it updates as soon as the payment is confirmed.",
       },
@@ -402,6 +451,7 @@ export const en: Strings = {
         a: 'Yes, as long as the order is open. The Order tab shows your confirmed order: press "Edit order" to change quantities and confirm again, or "Cancel order" to remove it entirely so nothing is charged at closing.',
       },
       {
+        wallet: true,
         q: "What happens if my balance is negative?",
         a: "You can order as long as you stay within the credit limit set by the group (if any): the app warns you when you go negative and blocks the save beyond the limit. Remember to top up as soon as possible to cover the debt.",
       },
@@ -410,6 +460,7 @@ export const en: Strings = {
         a: 'On iPhone (Safari): tap the share icon → "Add to Home Screen". On Android (Chrome): tap the three dots → "Add to Home Screen".',
       },
       {
+        wallet: true,
         q: "What if my balance is insufficient?",
         a: "The app lets you order even if your balance is low or negative (up to the credit limit set by the group, if any, also counting orders already sent but not yet charged) so you can still shop. Beyond the limit the order is not saved until you top up. However, it's essential to recharge promptly to keep the buying group healthy and allow payment to suppliers.",
       },
@@ -420,6 +471,28 @@ export const en: Strings = {
       {
         q: "How do notifications work?",
         a: "The app notifies you automatically when a cycle closes (with the amount deducted) and when a transfer is registered by whoever manages the treasury. The bell icon at the top shows the number of unread notifications. Tap it to see all of them and mark them as read.",
+      },
+    ] as { q: string; a: string; wallet?: boolean }[],
+    faqPerOrder: [
+      {
+        q: "How do I pay for my order?",
+        a: "By card, when you confirm the order. You pay products, shipping and a share for handling and order preparation. If you edit the order and the total goes up you only pay the difference; if it goes down, the difference comes back at settlement.",
+      },
+      {
+        q: "What is the handling and order preparation share?",
+        a: "An estimate of what the association spends on the order (for example weighing and shipping shared between members). It is not a markup: at settlement we refund everything that was not needed.",
+      },
+      {
+        q: "When do refunds arrive?",
+        a: "After the cycle is settled, on the card you paid with. They usually take 5-10 days. If you cancel your order while the cycle is open the refund starts right away.",
+      },
+      {
+        q: "What is an amount due?",
+        a: 'If the final costs of a cycle are more than you paid, the difference shows on the Home page as an amount due. Pay it with "Pay now". Until it is paid you cannot pay new orders, but you can still edit or cancel the ones you placed.',
+      },
+      {
+        q: "I see a credit: what should I do?",
+        a: "Nothing: it is money the association owes you, and the treasurer gives it back.",
       },
     ] as { q: string; a: string }[],
     contactEmoji: "📬",
@@ -438,6 +511,36 @@ export const en: Strings = {
     admin: "Admin only",
   },
   admin: {
+    settlement: {
+      openButton: "Settle accounts",
+      settledButton: (date: string) => `Settled on ${date}`,
+      title: (cycle: string) => `Settle accounts: ${cycle}`,
+      intro:
+        "With the final costs (weighing and supplier sheet) the app refunds to the card what each member paid in excess, asks those who paid less to settle, and writes off gaps under 0.50. It can run again at any time.",
+      loading: "Calculating...",
+      empty: "No members on this cycle.",
+      net: (amount: string) => `cycle net ${amount}`,
+      action: {
+        settled: () => "Even",
+        offline: () => "Pays outside the app: Treasury",
+        refund: (amount: string) => `Refund ${amount}`,
+        due: (amount: string) => `Due ${amount}`,
+        writeOff: (amount: string) => `Write-off ${amount}`,
+      },
+      excess: (amount: string) => `${amount} beyond what was paid`,
+      excessHint: "Part of it is more than was paid by card (for example a credit): return it from Treasury.",
+      status: {
+        to_settle: "Settle accounts",
+        refunds_pending: "Refunds in progress",
+        settled: "Accounts settled",
+        needs_update: "Out of date: settle again",
+        refund_failed: "Refund failed",
+      },
+      confirm: "Settle accounts",
+      running: "Running...",
+      done: (sent: number, waiting: number, due: number, writeOffs: number) =>
+        `Refunds sent ${sent}, waiting ${waiting}, due ${due}, write-offs ${writeOffs}`,
+    },
     configStatus: {
       title: "Configuration status",
       intro:
@@ -841,6 +944,9 @@ export const en: Strings = {
       submitAdd: "Add member",
       submitEdit: "Update",
       inactiveBadge: "disabled",
+      paysOfflineLabel: "Pays outside the app",
+      paysOfflineHint: "Confirms orders without paying online; the treasurer records payments in Treasury. Left out of the settlement.",
+      paysOfflineBadge: "pays outside the app",
       invite: "Invite",
       inviteSending: "Sending...",
       inviteSent: (name: string) => `Invitation sent to ${name}: they receive a link to sign in.`,
@@ -1136,6 +1242,28 @@ export const en: Strings = {
       importAddedToCycle: (n: number) => `${n} in cycle`,
     },
     settings: {
+      mode: {
+        title: "Payment mode",
+        wallet: "Wallet: members top up a balance and orders are charged when the cycle closes.",
+        perOrder: "Pay per order: each member pays their order by card; once costs are final the app refunds the difference or asks for what is due.",
+        current: (label: string) => `Current mode: ${label}`,
+        walletName: "wallet",
+        perOrderName: "pay per order",
+        switchTo: (label: string) => `Switch to ${label}`,
+        blockedTitle: "To change mode:",
+        blockers: {
+          running_cycles: "close or cancel the running cycles.",
+          unsettled_cycles: "settle the cycles paid per order (Admin → Cycle → Settle accounts).",
+          currency: "pay per order is only available in euros.",
+          stripe_unavailable: "this deploy needs a usable Stripe key.",
+        },
+        summary: (neg: number, negAmount: string, pos: number, posAmount: string) =>
+          `Balances today: ${neg} negative (${negAmount}) and ${pos} positive (${posAmount}).`,
+        toPerOrderEffect: "After the change a negative balance becomes an amount due and a positive one a credit to give back in Treasury.",
+        toWalletEffect: "After the change an amount due goes back to a negative balance and members top up as before.",
+        confirm: (label: string) => `Switch to ${label}? Cycles already created keep their mode.`,
+        changed: "Payment mode changed.",
+      },
       tabLabel: "Settings",
       defaultsNotice: "These are the group's default values: check them and save. Until you save, the app uses these.",
       limitsTitle: "Balance limits",
@@ -1198,6 +1326,11 @@ export const en: Strings = {
       `Your order for "${cycle}" is confirmed. You paid ${amount}: products ${products}, shipping ${shipping}, handling and order preparation (estimate) ${fee}. When the cycle is settled we refund what was not needed.`,
     orderPaidShortBody: (cycle: string, amount: string) =>
       `Your order for "${cycle}" is confirmed. You paid ${amount}.`,
+    balancePaidTitle: "Balance paid",
+    balancePaidBody: (amount: string) => `We received your payment of ${amount}, thank you.`,
+    settlementDueTitle: "Amount due",
+    settlementDueBody: (cycle: string, amount: string) =>
+      `The final costs of "${cycle}" are more than you paid: ${amount} is due. You can pay it from Top up with "Pay now".`,
     orderRefundTitle: "Refund on its way",
     orderRefundCancelledBody: (amount: string) =>
       `You cancelled your order: we are refunding ${amount} to the card you paid with. It usually takes 5-10 days.`,
@@ -1253,6 +1386,11 @@ export const en: Strings = {
       `The cycle "${title}" was cancelled: ${reason}. We refunded you ${amount}.`,
   },
   ledger: {
+    writeOff: "Write-off below the minimum payment",
+    correctedOn: (date: string) => `corrected on ${date}`,
+    correctedBy: "Movement corrected",
+    deletedBy: "Movement cancelled",
+    reversal: "Reversal",
     orderCharge: "Order charge",
     shippingAdjusted: "Shipping adjusted",
     shippingFromSupplier: "Shipping from supplier sheet",
@@ -1261,6 +1399,7 @@ export const en: Strings = {
     orderRefund: "Refund to card",
     orderRefundCancelled: "Refund to card: order cancelled",
     orderRefundLate: "Refund to card: payment arrived after orders closed",
+    balancePayment: "Balance paid",
   },
   fields: {
     title: "Title",
@@ -1321,6 +1460,7 @@ export const en: Strings = {
     amountZero: "Amount cannot be zero",
     amountSignChange: "An entry's sign cannot change: to reverse it, record a new entry.",
     ledgerEntryNotFound: "Entry not found",
+    ledgerEntryAlreadyCorrected: "The movement was already corrected or cancelled: reload the page.",
     ledgerEntryFromOnlinePayment:
       "This entry belongs to an online payment: refund it from Stripe or record a correction instead.",
     ledgerEntryNotEditable:
