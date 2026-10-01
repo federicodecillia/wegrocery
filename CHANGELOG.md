@@ -20,6 +20,13 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ## [Unreleased]
 
+### Added
+- 💳 **Pay per order, selectable.** Admins can switch the group to paying each order by card in Settings, once no cycle is running; the card lists what stops the change and the balances before confirming. Upgrade note: apply `drizzle/0024_settlement.sql` before deploying; pay per order needs euros and a usable Stripe key.
+- 🧮 **Settle accounts.** On a closed or cancelled pay-per-order cycle, "Settle accounts" refunds to the card what each member paid beyond the final costs, asks for what is missing and writes off differences under €0.50. The cycle shows where it stands: to settle, refunds in progress, settled, out of date, refund failed.
+- 🔴 **Amount due and credit.** When costs went beyond what a member paid, Home and the balances page show "Amount due" with "Pay now"; new order payments wait until it is paid. A credit shows as money the association gives back.
+- 🧾 **Pays outside the app.** In pay-per-order an admin can mark a member who pays in cash: they confirm orders without the card, the treasurer records the money, and the settlement leaves them out.
+- 📚 **History and guide for pay per order.** Each cycle in History shows what was paid, the costs, the refunds and the net; the guide and FAQ explain the handling share, the settlement and refund times.
+
 ### Changed
 - 🧾 **Corrections never rewrite history.** Editing or deleting a movement in Treasury, recomputing shipping on a closed cycle or importing the supplier's sheet now cancel the movement with a reversal and, when needed, add the corrected one; members see one movement marked "corrected on". Upgrade note: apply `drizzle/0023_ledger_append_only.sql` right before deploying (it makes the database refuse changes to past movements).
 
