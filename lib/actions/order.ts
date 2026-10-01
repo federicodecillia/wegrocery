@@ -98,14 +98,17 @@ export async function saveOrder(
     );
 
     // A pay-per-order cycle is confirmed by paying it (startOrderPayment),
-    // never by this wallet path.
-    if (cycle.paymentMode === "per_order") {
+    // never by this wallet path, except for a member who pays outside the app
+    // (members.pays_offline): their order is confirmed as here, without the
+    // balance limits, and the treasurer records the money in Cassa.
+    const offline = cycle.paymentMode === "per_order" && member.paysOffline;
+    if (cycle.paymentMode === "per_order" && !offline) {
       return { success: false, error: t.errors.cycleNotOpen, code: "cycle_not_open" };
     }
 
     // Uncharged order totals: needed by the credit limit and to tell whether
     // this save raises the cycle's order (trimming/cancelling is never blocked).
-    const { minBalance } = await getPaymentSettings();
+    const minBalance = offline ? null : (await getPaymentSettings()).minBalance;
     const checkEnabled = isMembershipCheckEnabled() && member.role !== "admin";
     const pending =
       minBalance !== null || checkEnabled

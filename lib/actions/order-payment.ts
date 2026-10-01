@@ -84,7 +84,8 @@ export async function startOrderPayment(
       return refuse("cycle_not_open", t.errors.cycleNotOpen);
     }
     const fee = cycleFee(cycle);
-    if (cycle.paymentMode !== "per_order" || settings.mode !== "per_order" || !fee) {
+    // A member who pays outside the app confirms with saveOrder instead.
+    if (cycle.paymentMode !== "per_order" || settings.mode !== "per_order" || !fee || member.paysOffline) {
       return refuse("cycle_not_open", t.errors.cycleNotOpen);
     }
 

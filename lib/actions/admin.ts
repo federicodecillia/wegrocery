@@ -2118,6 +2118,9 @@ export type UpsertMemberInput = {
   aliasEmail?: string;
   role: string;
   active: boolean;
+  // Pay-per-order: the member pays outside the app (Cassa), so orders are
+  // confirmed without Stripe and the settlement leaves them out.
+  paysOffline?: boolean;
 };
 
 // Emails and aliases share one namespace (lib/member-email.ts). The message
@@ -2174,6 +2177,7 @@ export async function adminUpsertMember(data: UpsertMemberInput): Promise<{ erro
             aliasEmail,
             role,
             active: data.active,
+            ...(data.paysOffline === undefined ? {} : { paysOffline: data.paysOffline }),
             updatedAt: now,
           })
           .where(eq(members.memberId, data.memberId));
@@ -2187,6 +2191,7 @@ export async function adminUpsertMember(data: UpsertMemberInput): Promise<{ erro
           aliasEmail,
           role,
           active: data.active,
+          paysOffline: data.paysOffline ?? false,
           createdAt: now,
           updatedAt: now,
         });
