@@ -20,6 +20,10 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ## [Unreleased]
 
+## [1.19.0] — 2026-10-01
+
+*Install it for your own group in half an hour, and an order preparation fee that is a real, checked charge.*
+
 ### Added
 - 🚀 **Run it for your group.** A step-by-step guide (`docs/self-hosting.md`) with a Deploy to Vercel button that creates the project and its Neon database and applies every migration at the first build; `docs/brand.example.json` lists every brand field.
 - 👑 **First admin of a new installation.** The address in `BOOTSTRAP_ADMIN_EMAIL` becomes admin at its first sign-in, only while the group has no admin; Configuration status says when the variable can go.
@@ -464,6 +468,7 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ---
 
+[1.19.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.19.0
 [1.18.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.18.0
 [1.17.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.17.0
 [1.16.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.16.1
