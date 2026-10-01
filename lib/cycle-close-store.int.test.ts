@@ -93,9 +93,12 @@ describeDb("cycle close", () => {
   it("aborts the close batch when the fee changed after it was read", async () => {
     const { cycleId } = await scope.createCycle("guard", { fee: { type: "percent", value: 10 } });
     const read = { type: "percent", value: "10.00" };
-    await expect(getDb().execute(closeGuardSql(cycleId, "{}", read))).resolves.toBeDefined();
+    // Inside db.batch, as performCycleClose runs it: the driver error comes
+    // back raw (a lone execute() would wrap it in DrizzleQueryError).
+    const guard = () => getDb().batch([getDb().execute(closeGuardSql(cycleId, "{}", read))]);
+    await expect(guard()).resolves.toBeDefined();
     await setOpenCycleFee(getDb(), cycleId, { type: "percent", value: 5 });
-    await expect(getDb().execute(closeGuardSql(cycleId, "{}", read))).rejects.toThrow(/division by zero|22012/);
+    await expect(guard()).rejects.toThrow(/division by zero|22012/);
   });
 
   it("changes the fee of an open cycle, never of a closed one", async () => {
