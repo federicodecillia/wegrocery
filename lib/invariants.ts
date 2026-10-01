@@ -8,6 +8,23 @@ import { owedBackToCardSql } from "./payments/settlement-sql";
 
 export type InvariantCheck = { name: string; description: string; query: SQL };
 
+// handlingFeeCents (lib/payments/order-payment.ts) in SQL, with the same
+// integer rounding: the nightly check recomputes each fee to the cent.
+export function handlingFeeCentsSql(baseCents: SQL, feeType: SQL, feeValue: SQL): SQL {
+  return sql`(CASE
+    WHEN ${baseCents} <= 0 OR ${feeType} IS NULL OR ${feeValue} IS NULL THEN 0
+    WHEN ${feeType} = 'fixed' THEN round(${feeValue} * 100)
+    ELSE floor((${baseCents} * round(${feeValue} * 100) + 5000) / 10000)
+  END)`;
+}
+
+// The fee a close owes on one of its order_charge rows (alias oc, cycle c).
+const closeFeeCents = handlingFeeCentsSql(
+  sql.raw("round(-oc.amount * 100)"),
+  sql.raw("c.handling_fee_type"),
+  sql.raw("c.handling_fee_value"),
+);
+
 export const INVARIANT_CHECKS: InvariantCheck[] = [
   {
     name: "payment_refunded_cents",
@@ -87,6 +104,40 @@ export const INVARIANT_CHECKS: InvariantCheck[] = [
             AND l.reversed_by IS NULL
         )
         AND EXISTS (SELECT 1 FROM ledger_entries l WHERE l.cycle_id = o.cycle_id AND l.type = 'order_charge')`,
+  },
+  {
+    name: "handling_charge_matches",
+    // Since the order preparation fee (Lotto B3) a close writes, with each
+    // order_charge, its handling_charge in the same batch (same created_at),
+    // of exactly the fee on that charge. Cycles with no handling_charge at
+    // all (closed before B3, or every fee rounded to zero) are not checked.
+    // The ledger is append-only: the close's order_charge stays readable
+    // even when reversed later.
+    // The check asserts existence, not count: duplicates are prevented by
+    // the live unique index of migration 0026. Reversing a handling_charge
+    // and writing a replacement keeps firing (the replacement has a new
+    // created_at): the supported repair is a `correction` row.
+    description: "every close charged the order preparation fee once, to the cent, and only with a fee",
+    query: sql`
+      SELECT oc.cycle_id || ':' || oc.member_id AS id
+      FROM ledger_entries oc
+      JOIN order_cycles c ON c.cycle_id = oc.cycle_id
+      WHERE oc.type = 'order_charge' AND c.status IN ('closed', 'cancelled')
+        AND EXISTS (SELECT 1 FROM ledger_entries h0 WHERE h0.cycle_id = oc.cycle_id AND h0.type = 'handling_charge')
+        AND ${closeFeeCents} > 0
+        AND NOT EXISTS (
+          SELECT 1 FROM ledger_entries h
+          WHERE h.cycle_id = oc.cycle_id AND h.member_id = oc.member_id AND h.type = 'handling_charge'
+            AND h.created_at = oc.created_at AND round(-h.amount * 100) = ${closeFeeCents})
+      UNION
+      SELECT h.cycle_id || ':' || h.member_id AS id
+      FROM ledger_entries h
+      JOIN order_cycles c ON c.cycle_id = h.cycle_id
+      WHERE h.type = 'handling_charge'
+        AND NOT EXISTS (
+          SELECT 1 FROM ledger_entries oc
+          WHERE oc.cycle_id = h.cycle_id AND oc.member_id = h.member_id AND oc.type = 'order_charge'
+            AND oc.created_at = h.created_at AND round(-h.amount * 100) = ${closeFeeCents})`,
   },
   {
     name: "reversal_pairs",

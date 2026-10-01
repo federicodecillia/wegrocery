@@ -185,6 +185,8 @@ function typeBadge(type: string): { label: string; className: string } {
       return { label: tr.refundFailedBadge, className: badgeTeal };
     case "order_charge":
       return { label: tr.chargeBadge, className: badgeRed };
+    case "handling_charge":
+      return { label: tr.handlingBadge, className: badgeRed };
     case "payout":
       return { label: tr.payoutBadge, className: badgeOrange };
     case "manual_charge":

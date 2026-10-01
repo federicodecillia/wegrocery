@@ -5,6 +5,8 @@ import {
   homeOrderStatus,
   paidDifference,
   coveredCents,
+  cycleHandlingFee,
+  handlingFeeCents,
   ORDER_PAYMENT_MAX_CENTS,
   orderPaymentAmount,
   parseHandlingFee,
@@ -116,12 +118,60 @@ describe("cancelRefunds", () => {
   });
 });
 
+describe("handlingFeeCents", () => {
+  it("takes a percentage of the products, half a cent up, in integers", () => {
+    expect(handlingFeeCents(2000, pct10)).toBe(200);
+    expect(handlingFeeCents(1005, pct10)).toBe(101); // 100.5
+    expect(handlingFeeCents(1004, pct10)).toBe(100); // 100.4
+    expect(handlingFeeCents(1000, { type: "percent", value: 1.25 })).toBe(13); // 12.5
+    expect(handlingFeeCents(333, { type: "percent", value: 7.5 })).toBe(25); // 24.975
+    expect(handlingFeeCents(9_999_999, { type: "percent", value: 25 })).toBe(2_500_000);
+  });
+
+  it("charges a fixed amount once per member with products", () => {
+    expect(handlingFeeCents(1, { type: "fixed", value: 1.5 })).toBe(150);
+    expect(handlingFeeCents(5000, { type: "fixed", value: 0.29 })).toBe(29);
+  });
+
+  it("is zero without products or without a fee", () => {
+    expect(handlingFeeCents(0, pct10)).toBe(0);
+    expect(handlingFeeCents(-100, { type: "fixed", value: 1 })).toBe(0);
+    expect(handlingFeeCents(2000, null)).toBe(0);
+    expect(handlingFeeCents(2000, { type: "percent", value: 0 })).toBe(0);
+  });
+
+  it("is the fee the Checkout estimate shows", () => {
+    for (const productsCents of [1, 333, 1004, 1005, 2000, 12_345]) {
+      expect(orderPaymentAmount({ productsCents, shipping: fixed, fee: pct10, coveredCents: 0 }).feeCents).toBe(
+        handlingFeeCents(productsCents, pct10),
+      );
+    }
+  });
+});
+
+describe("cycleHandlingFee", () => {
+  it("reads the cycle's columns, null when it has no fee", () => {
+    expect(cycleHandlingFee({ handlingFeeType: "fixed", handlingFeeValue: "1.50" })).toEqual({ type: "fixed", value: 1.5 });
+    expect(cycleHandlingFee({ handlingFeeType: null, handlingFeeValue: null })).toBeNull();
+    expect(cycleHandlingFee({ handlingFeeType: "percent", handlingFeeValue: null })).toBeNull();
+    expect(cycleHandlingFee({ handlingFeeType: "other", handlingFeeValue: "1" })).toBeNull();
+  });
+});
+
 describe("parseHandlingFee", () => {
   it("reads a percentage or a fixed amount with a comma or a dot", () => {
     expect(parseHandlingFee("percent", "10")).toEqual({ type: "percent", value: 10 });
     expect(parseHandlingFee("percent", "7,5")).toEqual({ type: "percent", value: 7.5 });
     expect(parseHandlingFee("fixed", "1.50")).toEqual({ type: "fixed", value: 1.5 });
     expect(parseHandlingFee("fixed", "0")).toEqual({ type: "fixed", value: 0 });
+  });
+
+  it("accepts up to 25% or 10 and refuses more: a guard against typos", () => {
+    expect(parseHandlingFee("percent", "25")).toEqual({ type: "percent", value: 25 });
+    expect(parseHandlingFee("fixed", "10")).toEqual({ type: "fixed", value: 10 });
+    expect(parseHandlingFee("percent", "26")).toEqual({ error: "invalid" });
+    expect(parseHandlingFee("percent", "25.01")).toEqual({ error: "invalid" });
+    expect(parseHandlingFee("fixed", "10.01")).toEqual({ error: "invalid" });
   });
 
   it("rejects an unknown type, a sign, a blank and a percentage above 100", () => {
@@ -132,8 +182,18 @@ describe("parseHandlingFee", () => {
 });
 
 describe("resolveCycleFee", () => {
-  it("gives a wallet cycle no fee, whatever the form sent", () => {
-    expect(resolveCycleFee("wallet", { type: "percent", value: "10" }, null)).toEqual({ fee: null });
+  it("gives a wallet cycle the fee of its form, or none", () => {
+    expect(resolveCycleFee("wallet", { type: "percent", value: "5" }, null)).toEqual({ fee: { type: "percent", value: 5 } });
+    expect(resolveCycleFee("wallet", { type: "none", value: "" }, null)).toEqual({ fee: null });
+  });
+
+  it("refuses no fee on a per_order cycle", () => {
+    expect(resolveCycleFee("per_order", { type: "none", value: "" }, null)).toEqual({ error: "invalid" });
+  });
+
+  it("starts a wallet cycle from the last wallet cycle's fee, else none", () => {
+    expect(resolveCycleFee("wallet", undefined, { type: "fixed", value: 1 })).toEqual({ fee: { type: "fixed", value: 1 } });
+    expect(resolveCycleFee("wallet", undefined, null)).toEqual({ fee: null });
   });
 
   it("takes the fee typed in the form of a per_order cycle", () => {

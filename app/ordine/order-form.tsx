@@ -11,7 +11,7 @@ import type { SaveOrderLine, SaveOrderResult } from "@/lib/actions/order";
 import { discardOrderDraft, loadLastOrderForPrefill, saveOrderDraft } from "@/lib/actions/order";
 import type { OrderPaymentResult } from "@/lib/actions/order-payment";
 import { draftSyncAction, orderLinesKey, type ResumedDraft } from "@/lib/order-draft";
-import { ORDER_PAYMENT_MIN_CENTS, orderPaymentAmount, type HandlingFee } from "@/lib/payments/order-payment";
+import { ORDER_PAYMENT_MIN_CENTS, handlingFeeCents, orderPaymentAmount, type HandlingFee } from "@/lib/payments/order-payment";
 import { OrderSentDialog } from "./order-sent-dialog";
 import { OrderSummary, type ConfirmedLine } from "./order-summary";
 
@@ -47,6 +47,8 @@ type Props = {
   // there is no wallet balance to show. Amounts here are for display; the
   // server computes them again.
   payPerOrder?: PayPerOrder;
+  // Wallet (and paying-offline) members: the cycle's order preparation fee, charged at the close; an estimate here.
+  walletFee?: HandlingFee | null;
 };
 
 export type PayPerOrder = {
@@ -104,6 +106,7 @@ export function OrderForm({
   balance,
   saveAction,
   payPerOrder,
+  walletFee,
 }: Props) {
   const productMap = new Map(products.map((p) => [p.productId, p]));
 
@@ -213,7 +216,8 @@ export function OrderForm({
   }
 
   const orderTotal = totalOf(draft);
-  const afterBalance = balance - orderTotal;
+  const walletFeeCents = payPerOrder ? 0 : handlingFeeCents(Math.round(orderTotal * 100), walletFee ?? null);
+  const afterBalance = balance - orderTotal - walletFeeCents / 100;
   // Pay-per-order: what confirming the draft costs now.
   const payAmount = payPerOrder
     ? orderPaymentAmount({
@@ -238,6 +242,7 @@ export function OrderForm({
       unitPrice: parseFloat(p.unitPrice),
     }));
   const savedTotal = totalOf(savedQty);
+  const savedWalletFeeCents = payPerOrder ? 0 : handlingFeeCents(Math.round(savedTotal * 100), walletFee ?? null);
 
   function changeQty(productId: string, delta: number) {
     setDraft((prev) => {
@@ -470,7 +475,8 @@ export function OrderForm({
         <OrderSummary
           lines={confirmedLines}
           total={savedTotal}
-          balanceAfter={balance - savedTotal}
+          balanceAfter={balance - savedTotal - savedWalletFeeCents / 100}
+          feeEstimateCents={savedWalletFeeCents}
           payment={
             payPerOrder
               ? {
@@ -644,6 +650,9 @@ export function OrderForm({
                   >
                     {formatSignedMoney(afterBalance)}
                   </div>
+                  {walletFeeCents > 0 && (
+                    <div className="mt-[2px] text-label text-muted">{t.order.feeEstimate(formatEur(walletFeeCents / 100))}</div>
+                  )}
                 </div>
               )}
             </div>

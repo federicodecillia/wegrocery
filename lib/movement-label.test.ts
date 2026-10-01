@@ -17,6 +17,7 @@ describe("movementLabel", () => {
   it("names the charges a cycle close posts", () => {
     expect(label("order_charge", "-18.40")).toBe("Ordine");
     expect(label("shipping_charge", "-2.00")).toBe("Spedizione");
+    expect(label("handling_charge", "-1.01")).toBe("Spese di preparazione");
   });
 
   it("names a correction by its direction", () => {
@@ -101,6 +102,7 @@ describe("movementKind", () => {
   it("gives the order and its shipping their own kinds", () => {
     expect(kind("order_charge", "-18.40")).toBe("order");
     expect(kind("shipping_charge", "-2.00")).toBe("shipping");
+    expect(movementKind({ type: "handling_charge", amount: "-1.01", paymentId: null })).toBe("handling");
   });
 
   it("splits corrections into refunds, online refunds and adjustments", () => {

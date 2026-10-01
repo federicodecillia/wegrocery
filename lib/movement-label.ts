@@ -19,6 +19,7 @@ export type MovementKind =
   | "online_topup"
   | "order"
   | "shipping"
+  | "handling"
   | "refund"
   | "online_refund"
   | "refund_failed"
@@ -41,6 +42,8 @@ export function movementKind(entry: LedgerMovement): MovementKind {
       return "order";
     case "shipping_charge":
       return "shipping";
+    case "handling_charge":
+      return "handling";
     case "correction":
       if (amount > 0) return "refund";
       return entry.paymentId ? "online_refund" : "adjustment";
@@ -74,6 +77,7 @@ export function movementLabel(entry: LedgerMovement, labels: MovementLabels): st
     online_topup: labels.onlineTopup,
     order: labels.orderCharge,
     shipping: labels.shipping,
+    handling: labels.handlingFee,
     refund: labels.refund,
     online_refund: labels.onlineTopupRefund,
     refund_failed: labels.refundFailed,

@@ -40,15 +40,15 @@ function line(
   };
 }
 
-// `shipping` is the cost charged, positive; `net` is signed like the ledger.
-function ledger(c: ReturnType<typeof cycle>, net: string, shipping = "0"): HistoryLedgerRow {
-  return { ...c, net, shipping };
+// `shipping` and `handling` are costs charged, positive; `net` is signed like the ledger.
+function ledger(c: ReturnType<typeof cycle>, net: string, shipping = "0", handling = "0"): HistoryLedgerRow {
+  return { ...c, net, shipping, handling };
 }
 
-// The four figures the Orders tab shows must add up to the ledger net.
+// The figures the Orders tab shows must add up to the ledger net.
 function expectAddsUp(e: CycleHistoryEntry) {
   const cents = (n: number) => Math.round(n * 100);
-  expect(cents(-e.productsTotal) - cents(e.shipping) + cents(e.corrections)).toBe(cents(e.net));
+  expect(cents(-e.productsTotal) - cents(e.shipping) - cents(e.handling) + cents(e.corrections)).toBe(cents(e.net));
 }
 
 describe("buildCycleHistory", () => {
@@ -64,6 +64,7 @@ describe("buildCycleHistory", () => {
       charged: false,
       productsTotal: 20,
       shipping: 0,
+      handling: 0,
       corrections: 0,
       net: 0,
     });
@@ -102,6 +103,13 @@ describe("buildCycleHistory", () => {
       unit: "kg",
     });
     expect(entry.lines[1]).toMatchObject({ lineTotal: 16, actualQuantity: null, actualLineTotal: null });
+    expectAddsUp(entry);
+  });
+
+  it("shows the order preparation fee on its own row, not among the corrections", () => {
+    const closed = cycle("cyc_fee", "closed");
+    const [entry] = buildCycleHistory([line(closed, "Pane", "10.00")], [ledger(closed, "-13.00", "2.00", "1.00")]);
+    expect(entry).toMatchObject({ productsTotal: 10, shipping: 2, handling: 1, corrections: 0, net: -13 });
     expectAddsUp(entry);
   });
 

@@ -43,6 +43,14 @@ describeFresh("a new installation", () => {
     expect(missing).toEqual([]);
   });
 
+  it("has the guards of the order preparation fee (0026)", async () => {
+    const [idx] = await sql`SELECT indexdef FROM pg_indexes
+      WHERE indexname = 'ledger_entries_cycle_member_system_charge_live_uniq'`;
+    expect(idx?.indexdef).toMatch(/handling_charge/);
+    expect(await sql`SELECT 1 FROM pg_indexes WHERE indexname = 'ledger_entries_cycle_member_charge_live_uniq'`).toHaveLength(0);
+    expect(await sql`SELECT 1 FROM pg_trigger WHERE tgname = 'order_cycles_fee_frozen'`).toHaveLength(1);
+  });
+
   it("refuses a stranger", async () => {
     expect(await admitEmail("stranger@example.invalid", { emailVerified: true })).toEqual({
       kind: "deny",
