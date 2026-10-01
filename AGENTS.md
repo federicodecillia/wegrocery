@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **WeGrocery** is an open-source, white-label web app for food co-ops and buying groups (born as the Porta Moneta GAS app, now its first client deployment). Members log in with Google, place weekly orders, and track their balance. Admins manage cycles, products, suppliers, and member topups. Branding/locale per deployment via `NEXT_PUBLIC_BRAND_JSON` (see `lib/brand` and `lib/i18n`).
 
-**Stack**: Next.js 15 App Router · Postgres (Neon serverless) · Better Auth (email link, optional Google) · Drizzle ORM · Tailwind CSS v4 · Vercel
+**Stack**: Next.js 16 App Router · Postgres (Neon serverless) · Better Auth (email link, optional Google) · Drizzle ORM · Tailwind CSS v4 · Vercel
 
 **Live**: gas.portamoneta.org
 
@@ -51,8 +51,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 │   ├── email/                  # Resend wrapper + supplier-email templates
 │   ├── csv/                    # Server-side CSV builders (e.g. supplier aggregated export)
 │   └── auth/                   # session.ts: requireUserSession(), requireAdmin(), requireActiveMember(), getUserRole()
-│                               #   access.ts: pure checkAccess/sessionClaims (edge-safe, used by middleware)
-├── middleware.ts                # Redirect unauthenticated to /login
+│                               #   access.ts: pure checkAccess/sessionClaims (no imports, used by proxy.ts)
+├── proxy.ts                     # Redirect unauthenticated to /login (Next.js 16's middleware)
 ├── auth.ts                     # Better Auth instance, auth() (session + member), signOut()
 ├── drizzle/                    # SQL migrations (0000–0020)
 └── public/logo.png
@@ -65,6 +65,7 @@ All commands from repo root:
 ```bash
 npm run dev          # Start dev server at http://localhost:3000
 npm run build        # Production build
+npm run lint         # ESLint CLI (flat config, eslint.config.mjs), zero warnings; `next lint` no longer exists
 npm run db:push      # Push Drizzle schema to Neon (needs DATABASE_URL in .env.local)
 npm run db:studio    # Drizzle Studio (visual DB browser)
 npm run doctor       # Configuration status of the env in .env.local (names only)
@@ -110,8 +111,9 @@ When handling an advisory:
 - **Verify an override before adding one.** Forcing a transitive major can
   break its consumer: `brace-expansion` 5.x exports an object from its
   CommonJS entry while `minimatch` does `const expand = require(...)` and calls
-  it as a function. `sharp` is a safe override — Next.js still declares
-  `^0.34.5` even on 16.2.12, so there is no upstream fix coming.
+  it as a function. `sharp` was a safe override while Next.js declared
+  `^0.34.x`; Next.js 16.3 declares `^0.35.4` itself, so the override is gone
+  (re-add it if a future release lags behind a `libvips` fix).
 - **Confirm the fix landed** by comparing each alert's `first_patched_version`
   against the resolved tree, not by trusting the bump.
 - **`better-auth` is pinned to an exact version on purpose** and sits in Dependabot's `ignore` list: sign-in upgrades are a deliberate decision, tested with `lib/auth/config.int.test.ts`.
@@ -240,7 +242,7 @@ User interaction → Server Action ("use server") → auth check → DB mutation
 - **Admin → Soci → Invita** emails a member the same link with a welcome text (`adminInviteMember`, `metadata.invite`): the onboarding of groups without the card check.
 - Demo (`DEMO_MODE=true`) and local development (`AUTH_DEV_LOGIN_EMAIL`, never in production) sign in through their own endpoints (`lib/auth/plugins.ts`); the session hook still requires an active member.
 - HTTP: only the endpoints in `lib/auth/public-endpoints.ts` answer (email link request and verify; Google's two where configured; demo and dev where enabled); everything else is a 404. Hosts accepted and used in links (`lib/auth/hosts.ts`): `APP_BASE_URL`, Vercel's production URL, a preview's own URLs, localhost under `next dev`.
-- Middleware only checks that the session cookie exists (no database); pages and actions check the session: `requireUserSession()` (redirect to `/login`), `requireAdmin()` / `requireActiveMember()` (`lib/auth/session.ts`, the only Server Action guards; `ActionError` otherwise). The admin page applies `checkAccess` (`lib/auth/access.ts`) and redirects non-admins home.
+- `proxy.ts` (Next.js 16's renamed middleware, Node runtime) only checks that the session cookie exists (no database); pages and actions check the session: `requireUserSession()` (redirect to `/login`), `requireAdmin()` / `requireActiveMember()` (`lib/auth/session.ts`, the only Server Action guards; `ActionError` otherwise). The admin page applies `checkAccess` (`lib/auth/access.ts`) and redirects non-admins home.
 - Denials land on `/login?error=<code>`; the login page explains each code and links `brand.supportEmail` and `brand.privacyUrl`.
 - `better-auth` is pinned to an exact version; upgrades run `lib/auth/config.int.test.ts` first.
 - Abuse limits: 3 link requests a minute per IP (Better Auth, keyed on `x-vercel-forwarded-for`: outside Vercel every request shares one bucket), plus caps on the emails one address receives (`lib/auth/email-caps.ts`: 5 links an hour, 1 explanation a day, 50 explanations a day overall). The decision and the send run after the response (`defer: after`), so a member's request takes as long as a stranger's.
@@ -375,7 +377,7 @@ All four emit `order_adjusted` or `order_corrected` notifications and `audit_log
   back at the deploy the member is on. `/ricarica` only displays the payment
   row's status; **only the signed webhook credits**.
 - Webhook `app/api/stripe/webhook/route.ts`, excluded from the auth
-  middleware, verifies the signature on the raw body and rejects events whose
+  proxy, verifies the signature on the raw body and rejects events whose
   `livemode` differs from the key's. `lib/payments/webhook.ts` maps events
   (`planWebhookAction`, pure) and applies each as ONE SQL statement: a guarded
   `UPDATE payments ... WHERE status = 'pending'` feeding the ledger `INSERT`,
@@ -590,3 +592,13 @@ Key patterns:
 - Every page that renders `AppShell` must pass `memberId={session.user.memberId!}`.
 - All Server Actions use `requireUserSession()` / `requireAdmin()` — never trust client payloads for auth.
 - `revalidatePath()` must be called after mutations so Server Components re-fetch fresh data.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

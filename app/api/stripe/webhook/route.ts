@@ -4,7 +4,7 @@ import { getStripe } from "@/lib/payments/stripe";
 import { applyWebhookAction, planWebhookAction } from "@/lib/payments/webhook";
 
 // Stripe -> app notifications for online payments and their refunds. Public
-// (excluded from the auth middleware): authenticity comes from the signature,
+// (excluded from the auth proxy): authenticity comes from the signature,
 // verified on the raw body with STRIPE_WEBHOOK_SECRET. Amounts always come
 // from the signed event or from Stripe's API, never from the success redirect.
 // The endpoint subscribes to REQUIRED_STRIPE_EVENTS (lib/payments/config.ts).

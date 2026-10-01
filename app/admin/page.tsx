@@ -45,7 +45,7 @@ function TabSkeleton() {
 
 export default async function AdminPage({ searchParams }: { searchParams: SearchParams }) {
   const session = await requireUserSession();
-  // Same rule as middleware.ts and requireAdmin: role admin and an active member.
+  // Same rule as proxy.ts and requireAdmin: role admin and an active member.
   if (!checkAccess(session.user, "admin").ok) redirect("/");
 
   const {

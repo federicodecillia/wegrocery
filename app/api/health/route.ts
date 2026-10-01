@@ -3,7 +3,7 @@ import { getDb } from "@/lib/db/client";
 import packageJson from "@/package.json";
 
 // Liveness for uptime monitors and for the post-deploy smoke test. Public
-// (excluded from the auth middleware): it says only whether the app answers
+// (excluded from the auth proxy): it says only whether the app answers
 // and reaches its database, never any data or configuration.
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

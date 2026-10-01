@@ -40,7 +40,7 @@ on serverless Postgres, deployed on Vercel.
 
 - **Co-ops, GAS groups, buying clubs** that need an ordering + balance tool:
   run it yourself for free, or [get a turnkey instance](#want-this-for-your-group).
-- **Developers** looking for a production-grade Next.js 15 / Server Actions /
+- **Developers** looking for a production-grade Next.js 16 / Server Actions /
   Drizzle / Neon example to learn from — contributions welcome.
 - **Anyone evaluating the work** — recruiters, collaborators, potential clients.
 
@@ -111,7 +111,7 @@ The full operating model is documented in
 
 ## Stack
 
-- **Next.js 15** App Router + React 19 + TypeScript strict mode
+- **Next.js 16** App Router + React 19 + TypeScript strict mode
 - **Postgres** on [Neon](https://neon.tech) (HTTP driver, serverless)
 - **Drizzle ORM** with hand-written migrations
 - **Better Auth**: sign-in with an email link (optional Google), only for addresses in the `members` table (or with a valid membership card, where that check is set up)
@@ -147,7 +147,7 @@ analytics dashboard is rendered with pure CSS and inline SVG.
 │   └── auth/session.ts        # requireUserSession(), requireAdmin()
 ├── drizzle/                   # Hand-written SQL migrations
 ├── auth.ts                    # Better Auth instance and auth()
-├── middleware.ts              # Auth gate (redirect to /login)
+├── proxy.ts                   # Auth gate (redirect to /login)
 └── SETUP.md                   # Step-by-step local setup guide
 ```
 

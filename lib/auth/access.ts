@@ -1,6 +1,6 @@
-// Pure access decisions shared by middleware.ts, the page guard and the
+// Pure access decisions shared by proxy.ts, the page guard and the
 // Server Action guards in ./session.ts, and the session refresh in auth.ts.
-// No imports on purpose: the middleware bundles this file for the edge runtime.
+// No imports on purpose: it stays dependency-free so any runtime can load it.
 
 /** The session fields the guards read. auth() reads them from the members table on every request. */
 export type SessionUser =

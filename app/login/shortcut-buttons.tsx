@@ -15,6 +15,9 @@ export function ShortcutButtons({ demo, dev }: { demo: boolean; dev: boolean }) 
       headers: { "content-type": "application/json" },
       body: JSON.stringify(body),
     });
+    // A full navigation on purpose: the sign-in just set the session cookie and
+    // the whole app (server data, client router cache) must start from it.
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
     if (response.ok) window.location.assign("/");
     else setBusy(false);
   }

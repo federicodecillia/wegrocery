@@ -60,7 +60,7 @@ export async function requireAdmin(): Promise<GuardedMember> {
   return requireAccess("admin");
 }
 
-// Same rule as middleware.ts and requireUserSession. `active` and `memberId`
+// Same rule as proxy.ts and requireUserSession. `active` and `memberId`
 // are re-read from the members table on every request by auth(), so
 // a deactivated admin loses access immediately, not at token expiry.
 async function requireAccess(need: "member" | "admin"): Promise<GuardedMember> {
