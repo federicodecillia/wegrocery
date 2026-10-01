@@ -32,6 +32,7 @@ stanno nella PR.
 
 ### Modificato
 - 🧾 **Le correzioni non riscrivono la storia.** Modificare o eliminare un movimento in Cassa, ricalcolare la spedizione di un ciclo chiuso o importare la distinta del fornitore ora annullano il movimento con uno storno e, se serve, aggiungono quello corretto; i soci vedono un solo movimento con "corretto il". Nota di aggiornamento: applicare `drizzle/0023_ledger_append_only.sql` subito prima del deploy (il database rifiuta da quel momento le modifiche ai movimenti passati).
+- 🩹 **Le installazioni nuove non si rompono più nella home.** Tre colonne dei cicli mancavano nelle migrazioni; una migrazione in più le aggiunge (non fa nulla sulle installazioni esistenti). Un test in CI confronta tutto lo schema con un database vuoto migrato. Nota di aggiornamento: applica `drizzle/0025_schema_catch_up.sql`.
 - 🧭 **Lo Stato della configurazione trova gli errori del brand.** Un campo che l'app non conosce (un errore di battitura) o un brand che non si legge compaiono, con il motivo, in Impostazioni e in `npm run doctor`.
 - 🏗️ **Migrazioni al build solo in produzione.** Con `MIGRATE_ON_BUILD=true` i build di anteprima non migrano più: lo fanno solo quelli di produzione (e quelli fuori da Vercel).
 

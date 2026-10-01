@@ -31,6 +31,7 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ### Changed
 - 🧾 **Corrections never rewrite history.** Editing or deleting a movement in Treasury, recomputing shipping on a closed cycle or importing the supplier's sheet now cancel the movement with a reversal and, when needed, add the corrected one; members see one movement marked "corrected on". Upgrade note: apply `drizzle/0023_ledger_append_only.sql` right before deploying (it makes the database refuse changes to past movements).
+- 🩹 **New installations no longer fail on the home page.** Three cycle columns were missing from the migrations; one more migration adds them (a no-op on existing installations). A CI test now compares the whole schema with a migrated empty database. Upgrade note: apply `drizzle/0025_schema_catch_up.sql`.
 - 🧭 **Configuration status spots brand mistakes.** A brand field the app does not know (a typo) or a brand that does not parse shows up, with the reason, in Settings and in `npm run doctor`.
 - 🏗️ **Migrations at build on production only.** With `MIGRATE_ON_BUILD=true` preview builds no longer migrate: only production builds (and builds outside Vercel) do.
 

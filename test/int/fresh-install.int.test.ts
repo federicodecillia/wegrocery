@@ -1,4 +1,7 @@
 import { readdirSync } from "node:fs";
+import { is } from "drizzle-orm";
+import { getTableConfig, PgTable } from "drizzle-orm/pg-core";
+import * as schema from "@/lib/db/schema";
 import { afterAll, describe, expect, it } from "vitest";
 import { admitEmail, memberForNewSession } from "@/lib/auth/admission";
 import { testSql as sql } from "./fixtures";
@@ -25,6 +28,19 @@ describeFresh("a new installation", () => {
     const applied = await sql`SELECT name FROM _migrations ORDER BY name`;
     expect(applied.map((r) => r.name)).toEqual(files);
     expect(await sql`SELECT 1 FROM members`).toHaveLength(0);
+  });
+
+  it("has every table and column the code's schema declares", async () => {
+    const missing: string[] = [];
+    for (const value of Object.values(schema)) {
+      if (!is(value, PgTable)) continue;
+      const { name, columns } = getTableConfig(value);
+      const rows = await sql`SELECT column_name FROM information_schema.columns
+        WHERE table_schema = 'public' AND table_name = ${name}`;
+      const have = new Set(rows.map((r) => String(r.column_name)));
+      for (const c of columns) if (!have.has(c.name)) missing.push(`${name}.${c.name}`);
+    }
+    expect(missing).toEqual([]);
   });
 
   it("refuses a stranger", async () => {
