@@ -20,6 +20,9 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ## [Unreleased]
 
+### Fixed
+- 🏷️ **Cassa names every movement.** Older card refunds and payments, shipping and corrections showed a raw code such as `ORDER_REFUND` in the movement badge; they now read "card refund", "order payment", "shipping" and so on, and an unknown type shows a plain "movement".
+
 ## [1.19.0] — 2026-10-01
 
 *Install it for your own group in half an hour, and an order preparation fee that is a real, checked charge.*

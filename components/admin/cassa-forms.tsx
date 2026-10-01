@@ -15,6 +15,7 @@ import {
   isOutgoingLedgerType,
 } from "@/lib/ledger";
 import type { LedgerEntryItem, MemberWithBalance } from "@/lib/db/queries";
+import { ledgerBadge } from "@/lib/ledger-badge";
 import { isAboveMaxBalance } from "@/lib/payments/settings";
 
 // ── Summary Cards ─────────────────────────────────────────────────────────────
@@ -170,34 +171,6 @@ type LedgerEntry = {
   correctedAt?: string | null;
 };
 
-const badgeTeal = "bg-accent-soft text-accent-text";
-const badgeRed = "bg-brand-red-light text-brand-red";
-const badgeOrange = "bg-primary-soft text-brand-near-black";
-const badgeGray = "bg-black/[0.05] text-brand-gray";
-
-// Label and colour of a row's type badge; other types show their raw name.
-function typeBadge(type: string): { label: string; className: string } {
-  const tr = t.admin.treasury;
-  switch (type) {
-    case "topup":
-      return { label: tr.topupBadge, className: badgeTeal };
-    case "refund_failed":
-      return { label: tr.refundFailedBadge, className: badgeTeal };
-    case "order_charge":
-      return { label: tr.chargeBadge, className: badgeRed };
-    case "handling_charge":
-      return { label: tr.handlingBadge, className: badgeRed };
-    case "payout":
-      return { label: tr.payoutBadge, className: badgeOrange };
-    case "manual_charge":
-      return { label: tr.manualChargeBadge, className: badgeRed };
-    case "membership_fee":
-      return { label: tr.membershipFeeBadge, className: badgeRed };
-    default:
-      return { label: type, className: badgeGray };
-  }
-}
-
 // "Bonifico · CRO…" for a manual movement, "Online" for a Stripe row (credit
 // or refund), "" when the row records neither.
 function movementDetails(entry: LedgerEntry): string {
@@ -247,7 +220,7 @@ export function LedgerEntryRow({ entry }: { entry: LedgerEntry }) {
 
   const amountNum = parseFloat(entry.amount);
   const details = movementDetails(entry);
-  const badge = typeBadge(entry.type);
+  const badge = ledgerBadge({ ...entry, paymentId: entry.paymentId ?? null }, t.admin.treasury);
 
   if (editing && isEditable) {
     return (

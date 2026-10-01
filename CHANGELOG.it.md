@@ -21,6 +21,9 @@ stanno nella PR.
 
 ## [Non rilasciato]
 
+### Risolto
+- 🏷️ **Cassa dà un nome a ogni movimento.** I vecchi rimborsi e pagamenti con carta, le spedizioni e le rettifiche mostravano nel badge un codice tecnico come `ORDER_REFUND`; ora si leggono "rimborso carta", "pagamento ordine", "spedizione" e così via, e un tipo sconosciuto mostra un semplice "movimento".
+
 ## [1.19.0] — 1 ottobre 2026
 
 *Installarla per il proprio gruppo in mezz'ora, e spese di preparazione che diventano un addebito vero e controllato.*
