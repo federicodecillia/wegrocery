@@ -20,7 +20,7 @@ import { findEmailConflict, normalizeEmail } from "@/lib/member-email";
 import type { BatchItem } from "drizzle-orm/batch";
 import { orderLinesSnapshot, planClosedOrderEdit } from "@/lib/closed-order-edit";
 import { cancelledCycleReversalTypes, ordersSnapshot } from "@/lib/cycle-close";
-import { performCycleClose } from "@/lib/cycle-close-store";
+import { performCycleClose, setOpenCycleFee } from "@/lib/cycle-close-store";
 import {
   normalizeShippingMode,
   planShippingRecompute,
@@ -54,7 +54,7 @@ import {
 } from "@/lib/notifications/dispatch";
 import { selectCycleAccessMembers } from "@/lib/notifications/reminder";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
-import { parseHandlingFee, resolveCycleFee } from "@/lib/payments/order-payment";
+import { resolveCycleFee, type HandlingFee } from "@/lib/payments/order-payment";
 import { reverseEntry, reverseEntrySql } from "@/lib/ledger-reversal";
 import { liveLedger } from "@/lib/db/ledger-live";
 import { retryRequestedRefunds } from "@/lib/payments/refund-request";
@@ -125,7 +125,7 @@ export type CreateCycleInput = {
   shippingMode: ShippingMode;
   shippingCostPerMember: string;
   shippingTotal: string;
-  /** Only read when the group pays per order; omitted = the last cycle's fee. */
+  /** "none" (wallet only), "percent" or "fixed"; omitted = the last cycle's fee of the same mode. */
   handlingFeeType?: string;
   handlingFeeValue?: string;
 };
@@ -148,14 +148,14 @@ export async function adminCreateCycle(data: CreateCycleInput): Promise<{error?:
     const db = getDb();
 
     // The cycle keeps the group's payment mode of this moment for its whole
-    // life; a per_order cycle also gets its handling fee.
+    // life, with its handling fee.
     const { mode: paymentMode } = await getPaymentSettings();
     const fee = resolveCycleFee(
       paymentMode,
       data.handlingFeeType !== undefined && data.handlingFeeValue !== undefined
         ? { type: data.handlingFeeType, value: data.handlingFeeValue }
         : undefined,
-      paymentMode === "per_order" ? await getLastHandlingFee() : null,
+      await getLastHandlingFee(paymentMode),
     );
     if ("error" in fee) return { error: t.errors.handlingFeeInvalid };
 
@@ -676,18 +676,19 @@ export async function adminUpdateCycle(
       .limit(1);
     if (!before) return { error: t.errors.cycleNotFound };
 
-    // The handling fee of a per_order cycle can change only while it is open:
-    // after the close it is what members were charged with.
-    let feePatch: { handlingFeeType: string; handlingFeeValue: string } | null = null;
-    if (
-      before.paymentMode === "per_order" &&
-      before.status === "open" &&
-      data.handlingFeeType !== undefined &&
-      data.handlingFeeValue !== undefined
-    ) {
-      const fee = parseHandlingFee(data.handlingFeeType, data.handlingFeeValue);
-      if ("error" in fee) return { error: t.errors.handlingFeeInvalid };
-      feePatch = { handlingFeeType: fee.type, handlingFeeValue: fee.value.toFixed(2) };
+    // The fee changes only while the cycle is open: after the close it is
+    // what members were charged with (setOpenCycleFee and drizzle/0026
+    // enforce it against a concurrent close too).
+    let fee: HandlingFee | null | undefined;
+    if (data.handlingFeeType !== undefined && data.handlingFeeValue !== undefined) {
+      if (before.status !== "open") return { error: t.errors.handlingFeeLocked };
+      const resolved = resolveCycleFee(
+        before.paymentMode === "per_order" ? "per_order" : "wallet",
+        { type: data.handlingFeeType, value: data.handlingFeeValue },
+        null,
+      );
+      if ("error" in resolved) return { error: t.errors.handlingFeeInvalid };
+      fee = resolved.fee;
     }
 
     const dates = parseCycleDates(data);
@@ -708,6 +709,10 @@ export async function adminUpdateCycle(
     // shipping and notify every member. See resolveShippingUpdate.
     const { patch: shippingPatch, changed: shippingChanged } = resolveShippingUpdate(before, data);
 
+    if (fee !== undefined && !(await setOpenCycleFee(db, cycleId, fee))) {
+      return { error: t.errors.handlingFeeLocked };
+    }
+
     await db
       .update(orderCycles)
       .set({
@@ -725,7 +730,6 @@ export async function adminUpdateCycle(
         ...(data.supplierId !== undefined && { supplierId: data.supplierId || null }),
         ...(accessLevel !== undefined && { accessLevel }),
         ...shippingPatch,
-        ...feePatch,
       })
       .where(eq(orderCycles.cycleId, cycleId));
 

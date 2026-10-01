@@ -3,7 +3,8 @@
 import { useState, useTransition, useEffect, useCallback } from "react";
 import { toast } from "@/components/ui/toast";
 import { t } from "@/lib/i18n";
-import { formatMoney, formatDateTime } from "@/lib/i18n/format";
+import { formatMoney, formatDateTime, formatHandlingFee } from "@/lib/i18n/format";
+import { HANDLING_FEE_MAX, cycleHandlingFee } from "@/lib/payments/order-payment";
 import { utcToZonedLocalInput } from "@/lib/i18n/zoned-time";
 import {
   adminCloseCycle,
@@ -70,6 +71,14 @@ export function OpenCycleCard({
     cycle.paymentMode === "per_order" && ((stats.unpaidDrafts ?? 0) > 0 || (stats.pendingPayments ?? 0) > 0)
       ? t.admin.cycle.perOrderCloseWarning(stats.unpaidDrafts ?? 0, stats.pendingPayments ?? 0)
       : null;
+  // Said before closing: a typo in the fee shows here, not on the charges.
+  const fee = cycleHandlingFee({
+    handlingFeeType: cycle.handlingFeeType ?? null,
+    handlingFeeValue: cycle.handlingFeeValue ?? null,
+  });
+  const closeWarning =
+    [perOrderWarning, fee ? t.admin.cycle.closeFeeNote(formatHandlingFee(fee)) : null].filter(Boolean).join("\n\n") ||
+    null;
 
   return (
     <Card className="mb-4 border-l-4 border-l-accent">
@@ -106,11 +115,11 @@ export function OpenCycleCard({
           >
             {editing ? t.admin.common.cancel : t.admin.common.edit}
           </button>
-          <CycleReviewCloseButton cycleId={cycle.cycleId} cycleTitle={cycle.title} />
+          <CycleReviewCloseButton cycleId={cycle.cycleId} cycleTitle={cycle.title} warning={closeWarning} />
           <CloseCycleButton
             cycleId={cycle.cycleId}
             cycleTitle={cycle.title}
-            warning={perOrderWarning}
+            warning={closeWarning}
           />
         </div>
       </CardHeader>
@@ -443,28 +452,34 @@ function ShippingModeFields({
   );
 }
 
-// The handling fee of a pay-per-order cycle: a percentage of the products or
-// a fixed amount per order.
+type FeeChoice = "none" | "percent" | "fixed";
+
+// The order preparation fee of a cycle: a percentage of the products, a fixed
+// amount per member, or (wallet cycles only) none.
 function HandlingFeeFields({
   defaultType,
   defaultValue,
+  allowNone,
   warning,
+  note,
 }: {
-  defaultType: "percent" | "fixed";
+  defaultType: FeeChoice;
   defaultValue: string;
+  allowNone: boolean;
   warning?: string;
+  note?: string | null;
 }) {
-  const [type, setType] = useState<"percent" | "fixed">(defaultType);
+  const [type, setType] = useState<FeeChoice>(defaultType);
+  const options: { v: FeeChoice; label: string }[] = [
+    ...(allowNone ? [{ v: "none" as const, label: t.admin.cycle.handlingFeeNone }] : []),
+    { v: "percent", label: t.admin.cycle.handlingFeePercent },
+    { v: "fixed", label: t.admin.cycle.handlingFeeFixed },
+  ];
   return (
     <div>
       <label className={labelCls}>{t.admin.cycle.handlingFeeLabel}</label>
       <div className="mb-2 flex rounded-lg bg-black/[0.05] p-0.5">
-        {(
-          [
-            { v: "percent", label: t.admin.cycle.handlingFeePercent },
-            { v: "fixed", label: t.admin.cycle.handlingFeeFixed },
-          ] as const
-        ).map((opt) => (
+        {options.map((opt) => (
           <button
             key={opt.v}
             type="button"
@@ -478,17 +493,22 @@ function HandlingFeeFields({
         ))}
       </div>
       <input type="hidden" name="handlingFeeType" value={type} />
-      <input
-        name="handlingFeeValue"
-        type="number"
-        min="0"
-        max={type === "percent" ? "100" : undefined}
-        step="0.01"
-        required
-        defaultValue={defaultValue}
-        className={`w-full ${inputCls}`}
-      />
+      {type === "none" ? (
+        <input type="hidden" name="handlingFeeValue" value="" />
+      ) : (
+        <input
+          name="handlingFeeValue"
+          type="number"
+          min="0"
+          max={String(HANDLING_FEE_MAX[type])}
+          step="0.01"
+          required
+          defaultValue={defaultValue}
+          className={`w-full ${inputCls}`}
+        />
+      )}
       <p className="mt-1 text-label text-muted">{t.admin.cycle.handlingFeeHint}</p>
+      {note && <p className="mt-1 text-label text-brand-gray">{note}</p>}
       {warning && <p className="mt-1 text-label text-brand-red">{warning}</p>}
     </div>
   );
@@ -555,10 +575,8 @@ export function EditCycleForm({
       : {
           orderCloseAt: fd.get("orderCloseAt") as string,
           accessLevel: fd.get("accessLevel") as string,
-          ...(isPerOrder && {
-            handlingFeeType: fd.get("handlingFeeType") as string,
-            handlingFeeValue: fd.get("handlingFeeValue") as string,
-          }),
+          handlingFeeType: fd.get("handlingFeeType") as string,
+          handlingFeeValue: fd.get("handlingFeeValue") as string,
         };
     startTransition(async () => {
       const result = await adminUpdateCycle(cycle.cycleId, {
@@ -627,11 +645,13 @@ export function EditCycleForm({
         />
       )}
 
-      {isPerOrder && !isClosed && (
+      {!isClosed && (
         <HandlingFeeFields
-          defaultType={cycle.handlingFeeType === "fixed" ? "fixed" : "percent"}
+          defaultType={cycle.handlingFeeType === "fixed" || cycle.handlingFeeType === "percent" ? cycle.handlingFeeType : "none"}
           defaultValue={cycle.handlingFeeValue ?? ""}
-          warning={t.admin.cycle.handlingFeeEditWarning}
+          allowNone={!isPerOrder}
+          warning={isPerOrder ? t.admin.cycle.handlingFeeEditWarning : undefined}
+          note={isPerOrder && shippingMode === "proportional" ? t.admin.cycle.perOrderProportionalNote : null}
         />
       )}
 
@@ -699,11 +719,13 @@ export function EditCycleForm({
 
 export function CreateCycleForm({
   suppliers,
+  paymentMode,
   handlingFee,
 }: {
   suppliers: Supplier[];
-  /** Set when the group pays per order: the fee the new cycle starts from. */
-  handlingFee?: { type: "percent" | "fixed"; value: string } | null;
+  paymentMode: "wallet" | "per_order";
+  /** The fee the new cycle starts from; null = none. */
+  handlingFee: { type: "percent" | "fixed"; value: string } | null;
 }) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -727,10 +749,8 @@ export function CreateCycleForm({
       shippingMode,
       shippingCostPerMember: fd.get("shippingCostPerMember") as string,
       shippingTotal: fd.get("shippingTotal") as string,
-      ...(handlingFee && {
-        handlingFeeType: fd.get("handlingFeeType") as string,
-        handlingFeeValue: fd.get("handlingFeeValue") as string,
-      }),
+      handlingFeeType: fd.get("handlingFeeType") as string,
+      handlingFeeValue: fd.get("handlingFeeValue") as string,
     };
     startTransition(async () => {
       const result = await adminCreateCycle(data);
@@ -785,7 +805,12 @@ export function CreateCycleForm({
           defaultTotal=""
         />
 
-        {handlingFee && <HandlingFeeFields defaultType={handlingFee.type} defaultValue={handlingFee.value} />}
+        <HandlingFeeFields
+          defaultType={handlingFee?.type ?? "none"}
+          defaultValue={handlingFee?.value ?? ""}
+          allowNone={paymentMode === "wallet"}
+          note={paymentMode === "per_order" && shippingMode === "proportional" ? t.admin.cycle.perOrderProportionalNote : null}
+        />
 
         <PickupSection />
 

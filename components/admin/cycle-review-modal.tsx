@@ -25,6 +25,8 @@ type ProductRow = {
 type Props = {
   cycleId: string;
   cycleTitle: string;
+  /** Extra text for the close confirmation (unpaid orders, the fee charged). */
+  warning?: string | null;
 };
 
 // Modal that lets the admin review per-product order totals and adjust
@@ -32,7 +34,7 @@ type Props = {
 // for the "actual weight differs from ordered weight" workflow — the admin
 // types the corrected price (e.g. €2.40/kg instead of €2.00/kg) and the
 // server action recomputes every order line and ledger charge.
-export function CycleReviewCloseButton({ cycleId, cycleTitle }: Props) {
+export function CycleReviewCloseButton({ cycleId, cycleTitle, warning }: Props) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -47,6 +49,7 @@ export function CycleReviewCloseButton({ cycleId, cycleTitle }: Props) {
         <CycleReviewModal
           cycleId={cycleId}
           cycleTitle={cycleTitle}
+          warning={warning}
           onClose={() => setOpen(false)}
         />
       )}
@@ -57,6 +60,7 @@ export function CycleReviewCloseButton({ cycleId, cycleTitle }: Props) {
 function CycleReviewModal({
   cycleId,
   cycleTitle,
+  warning,
   onClose,
 }: Props & { onClose: () => void }) {
   const [rows, setRows] = useState<ProductRow[] | null>(null);
@@ -131,7 +135,7 @@ function CycleReviewModal({
       adjustments.length === 0
         ? t.admin.cycleReview.confirmNoAdjustments(cycleTitle)
         : t.admin.cycleReview.confirmWithAdjustments(cycleTitle, adjustments.length, totalDelta >= 0 ? `+${formatMoney(totalDelta)}` : `-${formatMoney(-totalDelta)}`);
-    if (!window.confirm(message)) return;
+    if (!window.confirm(warning ? `${message}\n\n${warning}` : message)) return;
 
     startTransition(async () => {
       try {

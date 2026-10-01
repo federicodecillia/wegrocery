@@ -24,10 +24,10 @@ export async function TabCiclo() {
     getAllSuppliers(),
     getPaymentSettings(),
   ]);
-  // Pay-per-order groups set the handling fee on each new cycle, starting
-  // from the last one's.
-  const newCycleFee =
-    settings.mode === "per_order" ? ((await getLastHandlingFee()) ?? DEFAULT_HANDLING_FEE) : null;
+  // Each new cycle starts from the last fee of the same payment mode: none in
+  // wallet mode, 10% per order, until one is set.
+  const lastFee = await getLastHandlingFee(settings.mode);
+  const newCycleFee = lastFee ?? (settings.mode === "per_order" ? DEFAULT_HANDLING_FEE : null);
 
   // Where each closed or cancelled pay-per-order cycle stands.
   const settlementStatus = new Map<string, SettlementStatus>(
@@ -95,6 +95,7 @@ export async function TabCiclo() {
 
       <CreateCycleForm
         suppliers={suppliers}
+        paymentMode={settings.mode}
         handlingFee={newCycleFee && { type: newCycleFee.type, value: String(newCycleFee.value) }}
       />
 
