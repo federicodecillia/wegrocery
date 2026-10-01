@@ -1,5 +1,5 @@
 // Member emails and aliases (login keys). No imports: auth.ts, and through it
-// the edge middleware, uses this file.
+// the request path, uses this file.
 
 /**
  * The one normalization for a member email or alias, whether it is stored or
