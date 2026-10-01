@@ -1319,6 +1319,8 @@ export const it = {
       `È stato chiuso "${title}". Ti è stato addebitato ${total}.`,
     orderClosedBodyWithShipping: (title: string, total: string, order: string, shipping: string) =>
       `È stato chiuso "${title}". Ti è stato addebitato ${total} (ordine ${order} + spedizione ${shipping}).`,
+    orderClosedBodyWithFee: (title: string, total: string, order: string, shipping: string | null, fee: string) =>
+      `È stato chiuso "${title}". Ti è stato addebitato ${total} (ordine ${order}${shipping ? ` + spedizione ${shipping}` : ""} + spese di preparazione ${fee}).`,
     orderClosedPerOrderBody: (title: string, total: string) =>
       `È stato chiuso "${title}". Il costo del tuo ordine per ora è ${total}: è provvisorio fino alle pesate e alla distinta del fornitore. A conti chiusi ti rimborsiamo la differenza con quanto hai pagato.`,
     cycleCancelledPerOrderBody: (title: string, reason: string) =>

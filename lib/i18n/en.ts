@@ -1313,6 +1313,8 @@ export const en: Strings = {
       `"${title}" has been closed. You have been charged ${total}.`,
     orderClosedBodyWithShipping: (title: string, total: string, order: string, shipping: string) =>
       `"${title}" has been closed. You have been charged ${total} (order ${order} + shipping ${shipping}).`,
+    orderClosedBodyWithFee: (title: string, total: string, order: string, shipping: string | null, fee: string) =>
+      `"${title}" has been closed. You have been charged ${total} (order ${order}${shipping ? ` + shipping ${shipping}` : ""} + order preparation fee ${fee}).`,
     orderClosedPerOrderBody: (title: string, total: string) =>
       `"${title}" is closed. Your order costs ${total} for now: it is provisional until the weighing and the supplier's sheet. When the cycle is settled we refund the difference with what you paid.`,
     cycleCancelledPerOrderBody: (title: string, reason: string) =>
