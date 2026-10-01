@@ -1,4 +1,5 @@
 import { and, eq, sql } from "drizzle-orm";
+import { liveLedger } from "@/lib/db/ledger-live";
 import ExcelJS from "exceljs";
 import { t } from "@/lib/i18n";
 import { brand } from "@/lib/brand";
@@ -154,7 +155,7 @@ export async function buildSupplierDistinta(cycleId: string): Promise<DistintaBu
     .select({ memberId: ledgerEntries.memberId, amount: ledgerEntries.amount })
     .from(ledgerEntries)
     .where(
-      and(eq(ledgerEntries.cycleId, cycleId), eq(ledgerEntries.type, "shipping_charge")),
+      and(eq(ledgerEntries.cycleId, cycleId), eq(ledgerEntries.type, "shipping_charge"), liveLedger),
     );
   const shippingByMember = new Map<string, number>(
     shippingRows.map((r) => [r.memberId, Math.abs(parseFloat(r.amount))]),

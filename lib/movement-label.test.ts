@@ -40,7 +40,11 @@ describe("movementLabel", () => {
   });
 
   it("falls back to a generic label for a type it does not know", () => {
-    expect(label("reversal", "-1.00")).toBe("Movimento");
+    expect(label("mystery", "-1.00")).toBe("Movimento");
+  });
+
+  it("names a reversal of the append-only ledger", () => {
+    expect(label("reversal", "-1.00")).toBe("Storno");
   });
 
   it("accepts numeric amounts and treats a sign-less correction as a correction", () => {

@@ -167,6 +167,7 @@ type LedgerEntry = {
   paymentId?: string | null;
   method?: string | null;
   externalRef?: string | null;
+  correctedAt?: string | null;
 };
 
 const badgeTeal = "bg-accent-soft text-accent-text";
@@ -409,6 +410,7 @@ export function CassaInlineList({
                       <div key={entry.entryId}>
                         <div className="px-4 pt-2 font-mono text-label text-muted">
                           {entry.entryDate ? formatDate(entry.entryDate) : "—"}
+                          {entry.correctedAt && ` · ${t.ledger.correctedOn(formatDate(entry.correctedAt))}`}
                         </div>
                         <LedgerEntryRow entry={entry} />
                       </div>

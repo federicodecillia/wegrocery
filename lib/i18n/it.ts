@@ -184,6 +184,7 @@ export const it = {
     refundFailed: "Rimborso non riuscito",
     orderPayment: "Pagamento ordine",
     orderRefund: "Rimborso sulla carta",
+    reversal: "Storno",
     payout: "Restituzione saldo",
     manualCharge: "Addebito",
     membershipFee: "Quota associativa",
@@ -1259,6 +1260,10 @@ export const it = {
       `Il ciclo "${title}" è stato annullato: ${reason}. Ti abbiamo riaccreditato ${amount}.`,
   },
   ledger: {
+    correctedOn: (date: string) => `corretto il ${date}`,
+    correctedBy: "Movimento corretto",
+    deletedBy: "Movimento annullato",
+    reversal: "Storno",
     orderCharge: "Addebito ordine",
     shippingAdjusted: "Spedizione rettificata",
     shippingFromSupplier: "Spedizione da distinta fornitore",
@@ -1328,6 +1333,7 @@ export const it = {
     amountZero: "L'importo non può essere zero",
     amountSignChange: "Il segno del movimento non può cambiare: per stornarlo registra un nuovo movimento.",
     ledgerEntryNotFound: "Movimento non trovato",
+    ledgerEntryAlreadyCorrected: "Il movimento è già stato corretto o annullato: ricarica la pagina.",
     ledgerEntryFromOnlinePayment:
       "Movimento di un pagamento online: per correggerlo fai un rimborso da Stripe o registra una rettifica.",
     ledgerEntryNotEditable:
