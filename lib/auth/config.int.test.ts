@@ -4,7 +4,8 @@ import { describeDb, makeScope } from "@/test/int/fixtures";
 import { createAuth, type Auth, type AuthEmail, type CreateAuthOptions } from "./config";
 
 // Better Auth with the app's configuration on a real database: who gets which
-// email, the link's single use and expiry, the session gate, the rate limit.
+// email, the link's (and its code's) single use and expiry, the session gate,
+// the rate limit.
 const BASE = "http://localhost:3000";
 
 function cookieOf(response: Response): string {
@@ -53,6 +54,12 @@ describeDb("sign-in with an email link", () => {
     );
   }
 
+  function signInWithCode(email: string, otp: string, ip = nextIp()): Promise<Response> {
+    return post("/sign-in/email-otp", { email, otp }, ip);
+  }
+
+  const wrongCode = (code: string) => String((Number(code) + 1) % 1_000_000).padStart(6, "0");
+
   async function sessionEmail(cookie: string): Promise<string | null> {
     const s = await auth.api.getSession({ headers: new Headers({ cookie }) });
     return s?.user.email ?? null;
@@ -84,7 +91,7 @@ describeDb("sign-in with an email link", () => {
 
   afterAll(async () => {
     await sql`DELETE FROM auth_users WHERE lower(email) LIKE ${`${scope.prefix}%`}`;
-    await sql`DELETE FROM auth_verifications WHERE value LIKE ${`%${scope.prefix}%`}`;
+    await sql`DELETE FROM auth_verifications WHERE value LIKE ${`%${scope.prefix}%`} OR identifier LIKE ${`%${scope.prefix}%`}`;
     await sql`DELETE FROM auth_rate_limits WHERE key LIKE '%198.51.100.%' OR key LIKE 'auth-email:%'`;
     await scope.cleanup();
   });
@@ -98,7 +105,7 @@ describeDb("sign-in with an email link", () => {
     expect(link.searchParams.get("token")).toBeTruthy();
 
     const stranger = await requestLink(strangerEmail);
-    expect(stranger).toEqual({ kind: "notMember", email: strangerEmail, url: null });
+    expect(stranger).toEqual({ kind: "notMember", email: strangerEmail, url: null, code: null });
   });
 
   it("signs the member in once per link, and records the time", async () => {
@@ -176,5 +183,69 @@ describeDb("sign-in with an email link", () => {
     } finally {
       await sql`UPDATE members SET alias_email = ${aliasEmail} WHERE member_id = ${scope.memberId}`;
     }
+  });
+
+  it("sends a code with the link that signs the member in once", async () => {
+    const { code } = await requestLink(memberEmail);
+    expect(code).toMatch(/^\d{6}$/);
+    const first = await signInWithCode(memberEmail, code!);
+    expect(first.status).toBe(200);
+    expect(await sessionEmail(cookieOf(first))).toBe(memberEmail);
+    expect((await signInWithCode(memberEmail, code!)).status).toBe(400);
+  });
+
+  it("accepts the code of an alias, typed in any case", async () => {
+    const { code } = await requestLink(aliasEmail);
+    const res = await signInWithCode(aliasEmail.toUpperCase(), code!);
+    expect(res.status).toBe(200);
+    expect(await sessionEmail(cookieOf(res))).toBe(aliasEmail);
+  });
+
+  it("burns a code after three wrong tries", async () => {
+    const { code } = await requestLink(memberEmail);
+    for (let i = 0; i < 3; i++) expect((await signInWithCode(memberEmail, wrongCode(code!))).status).toBe(400);
+    expect((await signInWithCode(memberEmail, code!)).status).toBe(403);
+    expect((await signInWithCode(memberEmail, code!)).status).toBe(400);
+  });
+
+  it("keeps only the latest code of an address", async () => {
+    const older = (await requestLink(memberEmail)).code!;
+    const latest = (await requestLink(memberEmail)).code!;
+    if (older !== latest) expect((await signInWithCode(memberEmail, older)).status).toBe(400);
+    expect((await signInWithCode(memberEmail, latest)).status).toBe(200);
+  });
+
+  it("refuses an expired code", async () => {
+    const { code } = await requestLink(memberEmail);
+    await sql`UPDATE auth_verifications SET expires_at = now() - interval '1 minute'
+      WHERE identifier = ${`sign-in-otp-${memberEmail}`}`;
+    expect((await signInWithCode(memberEmail, code!)).status).toBe(400);
+  });
+
+  it("sends no code to a stranger, and a guessed code signs nobody in", async () => {
+    const { code } = await requestLink(strangerEmail);
+    expect(code).toBeNull();
+    const res = await signInWithCode(strangerEmail, "123456");
+    expect(res.status).toBe(400);
+    expect(cookieOf(res)).not.toContain("session_token=");
+  });
+
+  it("creates no session for a member deactivated after the code went out", async () => {
+    const { code } = await requestLink(memberEmail);
+    await sql`UPDATE members SET active = false WHERE member_id = ${scope.memberId}`;
+    try {
+      const res = await signInWithCode(memberEmail, code!);
+      expect(res.status).toBe(400);
+      expect(cookieOf(res)).not.toContain("session_token=");
+    } finally {
+      await sql`UPDATE members SET active = true WHERE member_id = ${scope.memberId}`;
+    }
+  });
+
+  it("allows five code tries a minute from one address", async () => {
+    const ip = nextIp();
+    const statuses = [];
+    for (let i = 0; i < 6; i++) statuses.push((await signInWithCode(strangerEmail, "000000", ip)).status);
+    expect(statuses).toEqual([400, 400, 400, 400, 400, 429]);
   });
 });

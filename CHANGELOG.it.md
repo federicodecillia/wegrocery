@@ -19,6 +19,17 @@ stanno nella PR.
 
 ---
 
+## [1.21.0] — 3 ottobre 2026
+
+*Entrare con il codice dell'email, e l'app sulla schermata Home del telefono.*
+
+### Aggiunte
+- 🔢 **Entra anche con un codice.** L'email di accesso ora contiene anche un codice di 6 cifre: scrivilo nella pagina di accesso quando il link si apre nel browser sbagliato o su un altro dispositivo. Vale 15 minuti come il link, tre tentativi per codice.
+- 📱 **Installa l'app sul telefono.** Da telefono la Home propone di aggiungere l'app alla schermata Home (il pulsante Installa su Android, i passaggi su iPhone), con icone ricavate dal logo del tuo gruppo; la Guida lo spiega.
+
+### Risolto
+- 🧩 **La descrizione dell'app torna raggiungibile.** Stava dietro l'accesso: un browser che la chiedeva senza sessione (sempre, dalla pagina di accesso) riceveva la pagina di login, quindi l'app non si installava bene.
+
 ## [1.20.0] — 1 ottobre 2026
 
 *Notifiche che dicono cosa coprono, una Cassa che dà un nome a ogni movimento e Next.js 16 sotto il cofano.*
@@ -483,6 +494,8 @@ stanno nella PR.
 
 ---
 
+[1.21.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.21.0
+[1.20.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.20.0
 [1.19.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.19.0
 [1.18.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.18.0
 [1.17.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.17.0
