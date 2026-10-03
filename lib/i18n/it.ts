@@ -311,12 +311,18 @@ export const it = {
   },
   login: {
     demoMessage: "Demo pubblica: entra con un click, senza registrazione.",
-    continueMessage: "Scrivi la tua email: ti mandiamo un link per entrare.",
+    continueMessage: "Scrivi la tua email: ti mandiamo un link e un codice per entrare.",
     emailLabel: "La tua email",
     emailPlaceholder: "nome@esempio.it",
     sendLink: "Mandami il link",
     sending: "Invio...",
-    sent: "Controlla la posta: se l'indirizzo è di un socio trovi il link per entrare (vale 15 minuti). Guarda anche nello spam.",
+    sent: "Controlla la posta: se l'indirizzo è di un socio trovi il link e il codice per entrare (valgono 15 minuti). Guarda anche nello spam.",
+    codeLabel: "Hai ricevuto il codice? Scrivilo qui",
+    codeButton: "Entra",
+    codeVerifying: "Verifica...",
+    codeInvalid: "Codice errato o scaduto. Controlla di usare l'ultimo codice ricevuto.",
+    codeTooManyAttempts: "Troppi tentativi con questo codice: chiedine uno nuovo.",
+    changeEmail: "Cambia indirizzo",
     rateLimited: "Troppe richieste: aspetta un minuto e riprova.",
     failed: "Non siamo riusciti a mandare la richiesta. Riprova.",
     or: "oppure",
@@ -346,11 +352,11 @@ export const it = {
   },
   authEmail: {
     subject: (kind: string, app: string) =>
-      kind === "invite" ? `Sei invitato su ${app}` : kind === "login" ? `Il tuo link per entrare in ${app}` : `Accesso a ${app}`,
-    login: (app: string, url: string, minutes: number) =>
-      `Ciao,\n\nper entrare in ${app} apri questo link e tocca "Entra":\n\n${url}\n\nIl link vale ${minutes} minuti e una sola volta. Se non l'hai chiesto tu, ignora questa email.`,
-    invite: (app: string, url: string, minutes: number) =>
-      `Ciao,\n\nsei stato invitato su ${app}, l'app del gruppo d'acquisto per ordinare e vedere il tuo saldo.\n\nPer entrare apri questo link e tocca "Entra":\n\n${url}\n\nIl link vale ${minutes} minuti. Quando scade, chiedine uno nuovo dalla pagina di accesso con questa stessa email.`,
+      kind === "invite" ? `Sei invitato su ${app}` : kind === "login" ? `Il tuo link e codice per entrare in ${app}` : `Accesso a ${app}`,
+    login: (app: string, url: string, code: string, minutes: number) =>
+      `Ciao,\n\nper entrare in ${app} apri questo link e tocca "Entra":\n\n${url}\n\nOppure scrivi questo codice nella pagina di accesso:\n\n${code}\n\nLink e codice valgono ${minutes} minuti e una sola volta; vale solo l'ultimo codice ricevuto. Se non l'hai chiesto tu, ignora questa email.`,
+    invite: (app: string, url: string, code: string, minutes: number) =>
+      `Ciao,\n\nsei stato invitato su ${app}, l'app del gruppo d'acquisto per ordinare e vedere il tuo saldo.\n\nPer entrare apri questo link e tocca "Entra":\n\n${url}\n\nOppure scrivi questo codice nella pagina di accesso:\n\n${code}\n\nLink e codice valgono ${minutes} minuti. Quando scade, chiedine uno nuovo dalla pagina di accesso con questa stessa email.`,
     notMember: (app: string, email: string, support: string) =>
       `Ciao,\n\nqualcuno ha chiesto di entrare in ${app} con l'indirizzo ${email}, che non risulta tra i soci. Se sei socio con un altro indirizzo usa quello; se pensi sia un errore scrivi a ${support}.\n\nSe non l'hai chiesto tu, ignora questa email.`,
     accountInactive: (app: string, support: string) =>
@@ -359,6 +365,14 @@ export const it = {
       `Ciao,\n\nla tua tessera non risulta attiva per l'anno in corso, quindi non puoi entrare in ${app}.${renew ? ` Puoi rinnovarla qui: ${renew}` : ""}\n\nPer dubbi scrivi a ${support}.`,
     checkUnavailable: (app: string) =>
       `Ciao,\n\nin questo momento non riusciamo a verificare la tua tessera, quindi non possiamo mandarti il link per entrare in ${app}. Riprova tra qualche minuto.`,
+  },
+  install: {
+    title: "Installa l'app sul telefono",
+    promptBody: "Aggiungila alla schermata Home: si apre come un'app, senza la barra del browser.",
+    iosBody:
+      "Tocca Condividi (il quadrato con la freccia in su), poi \"Aggiungi alla schermata Home\". Al primo accesso dall'app usa il codice che ricevi via email.",
+    installButton: "Installa",
+    dismiss: "Non ora",
   },
   logout: {
     confirmTitle: "Uscire?",
@@ -432,6 +446,10 @@ export const it = {
     seeAllNews: "Vedi tutte le novità →",
     faqTitle: "Domande frequenti",
     faq: [
+      {
+        q: "Posso installare l'app sul telefono?",
+        a: "Sì. Su Android apri l'app con Chrome e tocca \"Installa\" (o dal menu ⋮ \"Aggiungi a schermata Home\"). Su iPhone aprila con Safari, tocca Condividi e poi \"Aggiungi alla schermata Home\". Al primo accesso dall'app installata usa il codice di 6 cifre che arriva via email insieme al link.",
+      },
       {
         q: "Come è organizzata l'app?",
         a: "L'app è divisa in 4 tab: Home, Ordine, Storico, Guida. Il tab Admin è visibile solo agli amministratori.",

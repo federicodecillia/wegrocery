@@ -6,6 +6,7 @@ import { ConfirmDialogProvider } from "@/components/ui/confirm-dialog";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { brand, deriveRoleVars, resolvePalette } from "@/lib/brand";
+import { APPLE_TOUCH_ICON, iconPath } from "@/lib/pwa/icons";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -49,7 +50,7 @@ export default function RootLayout({
       style={deriveRoleVars(brand.theme) as React.CSSProperties}
     >
       <head>
-        <link rel="apple-touch-icon" href={brand.logoUrl} />
+        <link rel="apple-touch-icon" sizes="180x180" href={iconPath(APPLE_TOUCH_ICON)} />
       </head>
       <body className="text-brand-near-black flex min-h-full flex-col">
         {children}

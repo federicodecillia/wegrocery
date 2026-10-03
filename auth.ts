@@ -10,13 +10,13 @@ import { sendMail } from "@/lib/email/resend";
 import { t } from "@/lib/i18n";
 import { reportError } from "@/lib/observability";
 
-function authEmailText({ kind, email, url }: AuthEmail): string {
+function authEmailText({ kind, email, url, code }: AuthEmail): string {
   const e = t.authEmail;
   switch (kind) {
     case "login":
-      return e.login(brand.appName, url!, MAGIC_LINK_MINUTES);
+      return e.login(brand.appName, url!, code!, MAGIC_LINK_MINUTES);
     case "invite":
-      return e.invite(brand.appName, url!, MAGIC_LINK_MINUTES);
+      return e.invite(brand.appName, url!, code!, MAGIC_LINK_MINUTES);
     case "notMember":
       return e.notMember(brand.appName, email, brand.supportEmail);
     case "accountInactive":

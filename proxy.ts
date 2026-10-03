@@ -16,9 +16,10 @@ export function proxy(request: NextRequest) {
 
 // api/auth is Better Auth (its own allowlist), api/stripe/webhook is called by
 // Stripe and authenticated by its signature, api/health is a public liveness
-// check that returns no data.
+// check that returns no data. The web app manifest is fetched by the browser without
+// cookies: behind the redirect the app could not be installed.
 export const config = {
   matcher: [
-    "/((?!api/auth|api/stripe/webhook|api/health$|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!api/auth|api/stripe/webhook|api/health$|manifest.webmanifest$|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

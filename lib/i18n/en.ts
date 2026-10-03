@@ -311,12 +311,18 @@ export const en: Strings = {
   },
   login: {
     demoMessage: "Public demo: enter with one click, no registration required.",
-    continueMessage: "Enter your email: we'll send you a link to sign in.",
+    continueMessage: "Enter your email: we'll send you a link and a code to sign in.",
     emailLabel: "Your email",
     emailPlaceholder: "name@example.com",
     sendLink: "Send me the link",
     sending: "Sending...",
-    sent: "Check your inbox: if the address belongs to a member you'll find the sign-in link (valid for 15 minutes). Check spam too.",
+    sent: "Check your inbox: if the address belongs to a member you'll find the sign-in link and code (valid for 15 minutes). Check spam too.",
+    codeLabel: "Got the code? Type it here",
+    codeButton: "Sign in",
+    codeVerifying: "Checking...",
+    codeInvalid: "Wrong or expired code. Make sure you use the latest code you received.",
+    codeTooManyAttempts: "Too many tries with this code: ask for a new one.",
+    changeEmail: "Use another address",
     rateLimited: "Too many requests: wait a minute and try again.",
     failed: "We couldn't send the request. Try again.",
     or: "or",
@@ -346,11 +352,11 @@ export const en: Strings = {
   },
   authEmail: {
     subject: (kind: string, app: string) =>
-      kind === "invite" ? `You're invited to ${app}` : kind === "login" ? `Your link to sign in to ${app}` : `Signing in to ${app}`,
-    login: (app: string, url: string, minutes: number) =>
-      `Hi,\n\nto sign in to ${app} open this link and tap "Sign in":\n\n${url}\n\nThe link is valid for ${minutes} minutes and works once. If you didn't ask for it, ignore this email.`,
-    invite: (app: string, url: string, minutes: number) =>
-      `Hi,\n\nyou've been invited to ${app}, the buying group's app to order and see your balance.\n\nTo sign in open this link and tap "Sign in":\n\n${url}\n\nThe link is valid for ${minutes} minutes. When it expires, ask for a new one from the sign-in page with this same email.`,
+      kind === "invite" ? `You're invited to ${app}` : kind === "login" ? `Your link and code to sign in to ${app}` : `Signing in to ${app}`,
+    login: (app: string, url: string, code: string, minutes: number) =>
+      `Hi,\n\nto sign in to ${app} open this link and tap "Sign in":\n\n${url}\n\nOr type this code on the sign-in page:\n\n${code}\n\nThe link and the code are valid for ${minutes} minutes and work once; only the latest code works. If you didn't ask for it, ignore this email.`,
+    invite: (app: string, url: string, code: string, minutes: number) =>
+      `Hi,\n\nyou've been invited to ${app}, the buying group's app to order and see your balance.\n\nTo sign in open this link and tap "Sign in":\n\n${url}\n\nOr type this code on the sign-in page:\n\n${code}\n\nThe link and the code are valid for ${minutes} minutes. When it expires, ask for a new one from the sign-in page with this same email.`,
     notMember: (app: string, email: string, support: string) =>
       `Hi,\n\nsomeone asked to sign in to ${app} with ${email}, which is not a member's address. If you're a member with another address, use that one; if you think this is a mistake write to ${support}.\n\nIf you didn't ask, ignore this email.`,
     accountInactive: (app: string, support: string) =>
@@ -359,6 +365,14 @@ export const en: Strings = {
       `Hi,\n\nyour membership card is not active for this year, so you can't sign in to ${app}.${renew ? ` You can renew it here: ${renew}` : ""}\n\nQuestions: ${support}.`,
     checkUnavailable: (app: string) =>
       `Hi,\n\nwe can't check your membership card right now, so we can't send you the link to sign in to ${app}. Try again in a few minutes.`,
+  },
+  install: {
+    title: "Install the app on your phone",
+    promptBody: "Add it to your home screen: it opens like an app, without the browser bar.",
+    iosBody:
+      "Tap Share (the square with the arrow up), then \"Add to Home Screen\". The first time you sign in from the app, use the code you get by email.",
+    installButton: "Install",
+    dismiss: "Not now",
   },
   logout: {
     confirmTitle: "Sign out?",
@@ -432,6 +446,10 @@ export const en: Strings = {
     seeAllNews: "See all updates →",
     faqTitle: "Frequently asked questions",
     faq: [
+      {
+        q: "Can I install the app on my phone?",
+        a: "Yes. On Android open the app in Chrome and tap \"Install\" (or \"Add to Home screen\" from the ⋮ menu). On iPhone open it in Safari, tap Share, then \"Add to Home Screen\". The first time you sign in from the installed app, use the 6-digit code that comes by email with the link.",
+      },
       {
         q: "How is the app organized?",
         a: "The app is divided into 4 tabs: Home, Order, History, and Guide. The Admin tab is only visible to administrators.",
