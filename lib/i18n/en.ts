@@ -366,6 +366,14 @@ export const en: Strings = {
     checkUnavailable: (app: string) =>
       `Hi,\n\nwe can't check your membership card right now, so we can't send you the link to sign in to ${app}. Try again in a few minutes.`,
   },
+  install: {
+    title: "Install the app on your phone",
+    promptBody: "Add it to your home screen: it opens like an app, without the browser bar.",
+    iosBody:
+      "Tap Share (the square with the arrow up), then \"Add to Home Screen\". The first time you sign in from the app, use the code you get by email.",
+    installButton: "Install",
+    dismiss: "Not now",
+  },
   logout: {
     confirmTitle: "Sign out?",
     confirmMessage: (appName: string) => `You will be signed out of ${appName}.`,
@@ -438,6 +446,10 @@ export const en: Strings = {
     seeAllNews: "See all updates →",
     faqTitle: "Frequently asked questions",
     faq: [
+      {
+        q: "Can I install the app on my phone?",
+        a: "Yes. On Android open the app in Chrome and tap \"Install\" (or \"Add to Home screen\" from the ⋮ menu). On iPhone open it in Safari, tap Share, then \"Add to Home Screen\". The first time you sign in from the installed app, use the 6-digit code that comes by email with the link.",
+      },
       {
         q: "How is the app organized?",
         a: "The app is divided into 4 tabs: Home, Order, History, and Guide. The Admin tab is only visible to administrators.",

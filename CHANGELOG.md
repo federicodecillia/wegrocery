@@ -22,6 +22,10 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ### Added
 - 🔢 **Sign in with a code too.** The sign-in email now also carries a 6-digit code: type it on the sign-in page when the link opens in the wrong browser or on another device. Same 15 minutes as the link, three tries per code.
+- 📱 **Install the app on your phone.** On a phone the home page offers to add the app to the home screen (the install button on Android, the steps on iPhone), with icons drawn from your group's logo; the Guide explains it too.
+
+### Fixed
+- 🧩 **The app description is reachable again.** It sat behind the sign-in: a browser asking for it without the session (always, on the sign-in page) got the sign-in page instead, so the app did not install properly.
 
 ## [1.20.0] — 2026-10-01
 

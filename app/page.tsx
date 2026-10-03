@@ -3,6 +3,7 @@ import { AppShell } from "@/components/app-shell";
 import { BalanceDueCard } from "@/components/balance/balance-due-card";
 import { CycleCountdown } from "@/components/home/cycle-countdown";
 import { NextPickupCard } from "@/components/home/next-pickup-card";
+import { InstallPrompt } from "@/components/install-prompt";
 import { t } from "@/lib/i18n";
 import { formatSignedMoney } from "@/lib/i18n/format";
 import { getUserRole, requireUserSession } from "@/lib/auth/session";
@@ -346,6 +347,9 @@ export default async function HomePage() {
           })}
         </div>
       )}
+
+      {/* Last, so appearing after hydration moves nothing above it. */}
+      <InstallPrompt />
     </AppShell>
   );
 }

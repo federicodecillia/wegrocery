@@ -596,6 +596,7 @@ Rules (enforced by `lib/brand/design-guard.test.ts`):
 Key patterns:
 - **Saldo hero card**: primary-soft (positive) or red-light (negative), 70px balance amount
 - **Pill steppers** in order form: zero-state (single + btn) vs has-qty state (−/qty/+)
+- **Installable app (PWA)**: `app/manifest.ts` (public: `proxy.ts` lets `manifest.webmanifest` and `.png` through) lists icons drawn at build time from `brand.logoUrl` by `app/icons/[file]/route.tsx` (sizes in `lib/pwa/icons.ts`; a logo that cannot be loaded becomes a letter, never a failed build). `components/install-prompt.tsx` sits last on Home, phones only (`lib/pwa/install-hint.ts`); no service worker.
 - **Navigation**: 5 items from `nav-items.ts`. `BottomNav` up to `lg`, `TopNav` (in the header) from `lg`; never both
 - **Notification bell**: in header, red badge with count, links to `/notifiche`
 - Shell `max-w-[480px]`, `md:max-w-[640px]`, centered; `bg-brand-frame` frames the app. Only Admin (`<AppShell width="admin">`) adds `lg:max-w-[960px]`. Widths live in `shell-width.ts`; a route with a non-default width needs its own `loading.tsx` (see `app/admin/loading.tsx`)

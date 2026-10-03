@@ -366,6 +366,14 @@ export const it = {
     checkUnavailable: (app: string) =>
       `Ciao,\n\nin questo momento non riusciamo a verificare la tua tessera, quindi non possiamo mandarti il link per entrare in ${app}. Riprova tra qualche minuto.`,
   },
+  install: {
+    title: "Installa l'app sul telefono",
+    promptBody: "Aggiungila alla schermata Home: si apre come un'app, senza la barra del browser.",
+    iosBody:
+      "Tocca Condividi (il quadrato con la freccia in su), poi \"Aggiungi alla schermata Home\". Al primo accesso dall'app usa il codice che ricevi via email.",
+    installButton: "Installa",
+    dismiss: "Non ora",
+  },
   logout: {
     confirmTitle: "Uscire?",
     confirmMessage: (appName: string) => `Verrai disconnesso da ${appName}.`,
@@ -438,6 +446,10 @@ export const it = {
     seeAllNews: "Vedi tutte le novità →",
     faqTitle: "Domande frequenti",
     faq: [
+      {
+        q: "Posso installare l'app sul telefono?",
+        a: "Sì. Su Android apri l'app con Chrome e tocca \"Installa\" (o dal menu ⋮ \"Aggiungi a schermata Home\"). Su iPhone aprila con Safari, tocca Condividi e poi \"Aggiungi alla schermata Home\". Al primo accesso dall'app installata usa il codice di 6 cifre che arriva via email insieme al link.",
+      },
       {
         q: "Come è organizzata l'app?",
         a: "L'app è divisa in 4 tab: Home, Ordine, Storico, Guida. Il tab Admin è visibile solo agli amministratori.",
