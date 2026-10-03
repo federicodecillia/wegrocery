@@ -18,7 +18,9 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ---
 
-## [Unreleased]
+## [1.21.0] — 2026-10-03
+
+*Sign in with a code from the email, and the app on your phone's home screen.*
 
 ### Added
 - 🔢 **Sign in with a code too.** The sign-in email now also carries a 6-digit code: type it on the sign-in page when the link opens in the wrong browser or on another device. Same 15 minutes as the link, three tries per code.
@@ -490,6 +492,8 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ---
 
+[1.21.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.21.0
+[1.20.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.20.0
 [1.19.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.19.0
 [1.18.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.18.0
 [1.17.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.17.0

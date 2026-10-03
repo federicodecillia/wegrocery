@@ -19,7 +19,9 @@ stanno nella PR.
 
 ---
 
-## [Non rilasciato]
+## [1.21.0] — 3 ottobre 2026
+
+*Entrare con il codice dell'email, e l'app sulla schermata Home del telefono.*
 
 ### Aggiunte
 - 🔢 **Entra anche con un codice.** L'email di accesso ora contiene anche un codice di 6 cifre: scrivilo nella pagina di accesso quando il link si apre nel browser sbagliato o su un altro dispositivo. Vale 15 minuti come il link, tre tentativi per codice.
@@ -492,6 +494,8 @@ stanno nella PR.
 
 ---
 
+[1.21.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.21.0
+[1.20.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.20.0
 [1.19.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.19.0
 [1.18.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.18.0
 [1.17.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.17.0
