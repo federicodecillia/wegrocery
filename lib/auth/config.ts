@@ -1,7 +1,8 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { APIError, createAuthMiddleware } from "better-auth/api";
 import { nextCookies } from "better-auth/next-js";
-import { magicLink } from "better-auth/plugins";
+import { emailOTP, magicLink } from "better-auth/plugins";
 import { eq, sql } from "drizzle-orm";
 import type { getDb } from "@/lib/db/client";
 import { authAccounts, authRateLimits, authSessions, authUsers, authVerifications, members } from "@/lib/db/schema";
@@ -24,7 +25,7 @@ import { demoLogin, devLogin } from "./plugins";
 type Env = Record<string, string | undefined>;
 type Db = ReturnType<typeof getDb>;
 
-// The "15 minuti" of the email: change them together.
+// The "15 minuti" of the email (link and code): change them together.
 export const MAGIC_LINK_MINUTES = 15;
 const DAY_SECONDS = 24 * 60 * 60;
 
@@ -33,6 +34,8 @@ export type AuthEmail = {
   email: string;
   // The confirmation page on this deploy, for the kinds that carry a link.
   url: string | null;
+  // The 6-digit code that works like the link (typed on /login), same kinds.
+  code: string | null;
 };
 
 export type CreateAuthOptions = {
@@ -71,7 +74,15 @@ export function createAuth(db: Db, options: CreateAuthOptions) {
   const google = googleCredentials(env);
   const devEmail = normalizeEmail(env.AUTH_DEV_LOGIN_EMAIL);
 
-  return betterAuth({
+  // The code goes out in the link's email, so it is issued here rather than
+  // through the plugin's own send endpoint (closed, see public-endpoints.ts).
+  // Only the latest code of an address works: earlier ones are dropped.
+  async function issueSignInCode(email: string): Promise<string> {
+    await db.delete(authVerifications).where(eq(authVerifications.identifier, `sign-in-otp-${email.toLowerCase()}`));
+    return instance.api.createVerificationOTP({ body: { email, type: "sign-in" } });
+  }
+
+  const instance = betterAuth({
     secret: env.AUTH_SECRET,
     baseURL: options.baseURL ?? {
       // Never empty (Better Auth refuses that): the fallback's host at least.
@@ -85,10 +96,10 @@ export function createAuth(db: Db, options: CreateAuthOptions) {
     }),
     user: {
       modelName: "authUsers",
-      // Google (every time) and a first email-link sign-in: the same gate as
+      // Google (every time) and a first email-link or code sign-in: the same gate as
       // the email link itself. A refusal lands on /login?error=<code>.
       validateUserInfo: async ({ user, source }) => {
-        if (source.method !== "oauth" && source.method !== "magic-link") return;
+        if (source.method !== "oauth" && source.method !== "magic-link" && source.method !== "email-otp") return;
         const refusal = oauthIdentityRefusal(user, source);
         if (refusal) return refusal;
         const email = typeof user.email === "string" ? user.email : "";
@@ -119,6 +130,18 @@ export function createAuth(db: Db, options: CreateAuthOptions) {
           },
         }
       : undefined,
+    // A code is issued only to an address the admission let in; this rechecks
+    // it when the code is typed, so an address refused since gets the same 400
+    // as a wrong code instead of a session the hook below refuses (a 500).
+    hooks: {
+      before: createAuthMiddleware(async (ctx) => {
+        if (ctx.path !== "/sign-in/email-otp") return;
+        const email = typeof ctx.body?.email === "string" ? ctx.body.email : "";
+        if ((await admitEmail(email, { emailVerified: true })).kind === "deny") {
+          throw new APIError("BAD_REQUEST", { message: "Invalid OTP" });
+        }
+      }),
+    },
     onAPIError: { errorURL: "/login?error=AccessDenied" },
     rateLimit: {
       enabled: options.rateLimit ?? env.NODE_ENV === "production",
@@ -126,6 +149,8 @@ export function createAuth(db: Db, options: CreateAuthOptions) {
       modelName: "authRateLimits",
       customRules: {
         "/sign-in/magic-link": { window: 60, max: 3 },
+        // On top of the 3 tries a code allows and the codes an address receives (email-caps.ts).
+        "/sign-in/email-otp": { window: 60, max: 5 },
         "/demo/sign-in": { window: 60, max: 30 },
       },
     },
@@ -187,7 +212,13 @@ export function createAuth(db: Db, options: CreateAuthOptions) {
               const admission = await admitEmail(email, { emailVerified: true });
               const kind = authEmailKind(admission, metadata?.invite === true);
               if (!(await mayEmail(db, email, carriesLink(kind), options.emailCaps ?? DEFAULT_EMAIL_CAPS))) return;
-              await options.sendAuthEmail({ kind, email, url: carriesLink(kind) ? confirmationURL(url, token) : null });
+              const withLink = carriesLink(kind);
+              await options.sendAuthEmail({
+                kind,
+                email,
+                url: withLink ? confirmationURL(url, token) : null,
+                code: withLink ? await issueSignInCode(email) : null,
+              });
             } catch (e) {
               reportError("auth email", e);
             }
@@ -195,12 +226,22 @@ export function createAuth(db: Db, options: CreateAuthOptions) {
           await (options.defer ?? ((t) => t()))(task);
         },
       }),
+      // The code of the link's email (issueSignInCode). The plugin's own sends
+      // are off: its email would carry no admission decision.
+      emailOTP({
+        otpLength: 6,
+        expiresIn: MAGIC_LINK_MINUTES * 60,
+        storeOTP: "hashed",
+        allowedAttempts: 3,
+        sendVerificationOTP: async () => {},
+      }),
       ...(env.DEMO_MODE === "true" ? [demoLogin()] : []),
       ...(env.NODE_ENV !== "production" && devEmail ? [devLogin(devEmail)] : []),
       // Last, as Better Auth wants: lets Server Actions set its cookies.
       nextCookies(),
     ],
   });
+  return instance;
 }
 
 export type Auth = ReturnType<typeof createAuth>;

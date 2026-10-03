@@ -18,6 +18,11 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ---
 
+## [Unreleased]
+
+### Added
+- 🔢 **Sign in with a code too.** The sign-in email now also carries a 6-digit code: type it on the sign-in page when the link opens in the wrong browser or on another device. Same 15 minutes as the link, three tries per code.
+
 ## [1.20.0] — 2026-10-01
 
 *Notification settings that say what they cover, a Cassa that names every movement, and Next.js 16 underneath.*

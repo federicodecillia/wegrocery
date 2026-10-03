@@ -2,8 +2,13 @@ import { describe, expect, it } from "vitest";
 import { isPublicAuthEndpoint } from "./public-endpoints";
 
 describe("isPublicAuthEndpoint", () => {
-  it("opens the email link and nothing else by default", () => {
+  it("opens the email link, its code and nothing else by default", () => {
     expect(isPublicAuthEndpoint("POST", "/api/auth/sign-in/magic-link", {})).toBe(true);
+    expect(isPublicAuthEndpoint("POST", "/api/auth/sign-in/email-otp", {})).toBe(true);
+    // The code goes out only in the link's email: the plugin's own send and check stay closed.
+    expect(isPublicAuthEndpoint("POST", "/api/auth/email-otp/send-verification-otp", {})).toBe(false);
+    expect(isPublicAuthEndpoint("POST", "/api/auth/email-otp/check-verification-otp", {})).toBe(false);
+    expect(isPublicAuthEndpoint("POST", "/api/auth/email-otp/verify-email", {})).toBe(false);
     expect(isPublicAuthEndpoint("GET", "/api/auth/magic-link/verify", {})).toBe(true);
     expect(isPublicAuthEndpoint("POST", "/api/auth/sign-in/social", {})).toBe(false);
     expect(isPublicAuthEndpoint("POST", "/api/auth/demo/sign-in", {})).toBe(false);

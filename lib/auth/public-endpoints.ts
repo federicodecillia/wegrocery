@@ -9,7 +9,7 @@ export function isPublicAuthEndpoint(
   env: Record<string, string | undefined> = process.env,
 ): boolean {
   const get = ["/api/auth/magic-link/verify"];
-  const post = ["/api/auth/sign-in/magic-link"];
+  const post = ["/api/auth/sign-in/magic-link", "/api/auth/sign-in/email-otp"];
   if (googleCredentials(env)) {
     get.push("/api/auth/callback/google");
     post.push("/api/auth/sign-in/social");

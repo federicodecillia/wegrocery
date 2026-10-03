@@ -311,12 +311,18 @@ export const it = {
   },
   login: {
     demoMessage: "Demo pubblica: entra con un click, senza registrazione.",
-    continueMessage: "Scrivi la tua email: ti mandiamo un link per entrare.",
+    continueMessage: "Scrivi la tua email: ti mandiamo un link e un codice per entrare.",
     emailLabel: "La tua email",
     emailPlaceholder: "nome@esempio.it",
     sendLink: "Mandami il link",
     sending: "Invio...",
-    sent: "Controlla la posta: se l'indirizzo è di un socio trovi il link per entrare (vale 15 minuti). Guarda anche nello spam.",
+    sent: "Controlla la posta: se l'indirizzo è di un socio trovi il link e il codice per entrare (valgono 15 minuti). Guarda anche nello spam.",
+    codeLabel: "Hai ricevuto il codice? Scrivilo qui",
+    codeButton: "Entra",
+    codeVerifying: "Verifica...",
+    codeInvalid: "Codice errato o scaduto. Controlla di usare l'ultimo codice ricevuto.",
+    codeTooManyAttempts: "Troppi tentativi con questo codice: chiedine uno nuovo.",
+    changeEmail: "Cambia indirizzo",
     rateLimited: "Troppe richieste: aspetta un minuto e riprova.",
     failed: "Non siamo riusciti a mandare la richiesta. Riprova.",
     or: "oppure",
@@ -346,11 +352,11 @@ export const it = {
   },
   authEmail: {
     subject: (kind: string, app: string) =>
-      kind === "invite" ? `Sei invitato su ${app}` : kind === "login" ? `Il tuo link per entrare in ${app}` : `Accesso a ${app}`,
-    login: (app: string, url: string, minutes: number) =>
-      `Ciao,\n\nper entrare in ${app} apri questo link e tocca "Entra":\n\n${url}\n\nIl link vale ${minutes} minuti e una sola volta. Se non l'hai chiesto tu, ignora questa email.`,
-    invite: (app: string, url: string, minutes: number) =>
-      `Ciao,\n\nsei stato invitato su ${app}, l'app del gruppo d'acquisto per ordinare e vedere il tuo saldo.\n\nPer entrare apri questo link e tocca "Entra":\n\n${url}\n\nIl link vale ${minutes} minuti. Quando scade, chiedine uno nuovo dalla pagina di accesso con questa stessa email.`,
+      kind === "invite" ? `Sei invitato su ${app}` : kind === "login" ? `Il tuo link e codice per entrare in ${app}` : `Accesso a ${app}`,
+    login: (app: string, url: string, code: string, minutes: number) =>
+      `Ciao,\n\nper entrare in ${app} apri questo link e tocca "Entra":\n\n${url}\n\nOppure scrivi questo codice nella pagina di accesso:\n\n${code}\n\nLink e codice valgono ${minutes} minuti e una sola volta; vale solo l'ultimo codice ricevuto. Se non l'hai chiesto tu, ignora questa email.`,
+    invite: (app: string, url: string, code: string, minutes: number) =>
+      `Ciao,\n\nsei stato invitato su ${app}, l'app del gruppo d'acquisto per ordinare e vedere il tuo saldo.\n\nPer entrare apri questo link e tocca "Entra":\n\n${url}\n\nOppure scrivi questo codice nella pagina di accesso:\n\n${code}\n\nLink e codice valgono ${minutes} minuti. Quando scade, chiedine uno nuovo dalla pagina di accesso con questa stessa email.`,
     notMember: (app: string, email: string, support: string) =>
       `Ciao,\n\nqualcuno ha chiesto di entrare in ${app} con l'indirizzo ${email}, che non risulta tra i soci. Se sei socio con un altro indirizzo usa quello; se pensi sia un errore scrivi a ${support}.\n\nSe non l'hai chiesto tu, ignora questa email.`,
     accountInactive: (app: string, support: string) =>

@@ -19,6 +19,11 @@ stanno nella PR.
 
 ---
 
+## [Non rilasciato]
+
+### Aggiunte
+- 🔢 **Entra anche con un codice.** L'email di accesso ora contiene anche un codice di 6 cifre: scrivilo nella pagina di accesso quando il link si apre nel browser sbagliato o su un altro dispositivo. Vale 15 minuti come il link, tre tentativi per codice.
+
 ## [1.20.0] — 1 ottobre 2026
 
 *Notifiche che dicono cosa coprono, una Cassa che dà un nome a ogni movimento e Next.js 16 sotto il cofano.*
