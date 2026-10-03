@@ -101,8 +101,10 @@ export function LoginForm({ googleEnabled, next }: { googleEnabled: boolean; nex
 
   return (
     <div className="space-y-3">
+      {/* Distinct keys: the two forms share a shape, and React would otherwise
+          reuse the email <input> for the code, typed address included. */}
       {sentTo ? (
-        <form className="space-y-2" onSubmit={onCode}>
+        <form key="code" className="space-y-2" onSubmit={onCode}>
           <label htmlFor="code" className="block text-sm font-medium text-brand-near-black">
             {t.login.codeLabel}
           </label>
@@ -128,7 +130,7 @@ export function LoginForm({ googleEnabled, next }: { googleEnabled: boolean; nex
           </p>
         </form>
       ) : (
-        <form className="space-y-2" onSubmit={onSubmit}>
+        <form key="email" className="space-y-2" onSubmit={onSubmit}>
           <label htmlFor="email" className="block text-sm font-medium text-brand-near-black">
             {t.login.emailLabel}
           </label>
