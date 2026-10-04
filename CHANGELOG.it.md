@@ -21,6 +21,10 @@ stanno nella PR.
 
 ## [Non rilasciato]
 
+## [1.22.0] — 4 ottobre 2026
+
+*Una persona, un account: i doppioni ora si possono unire.*
+
 ### Aggiunte
 - 🔗 **Unire due account dello stesso socio.** In Admin → Soci, "Unisci" porta un account doppione dentro quello che resta: ruolo ed email principale restano, l'altro indirizzo diventa la secondaria, e ordini aperti, notifiche e saldo passano. Lo stesso viene proposto se nel modulo di modifica si scrive l'indirizzo di un altro socio. Migrazione `0027_member_merge.sql`.
 
@@ -510,6 +514,7 @@ stanno nella PR.
 
 ---
 
+[1.22.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.22.0
 [1.21.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.21.1
 [1.21.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.21.0
 [1.20.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.20.0

@@ -20,6 +20,10 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ## [Unreleased]
 
+## [1.22.0] — 2026-10-04
+
+*One person, one account: duplicates can now be merged.*
+
 ### Added
 - 🔗 **Merge two accounts of the same member.** In Admin → Members, "Merge" joins a duplicate account into the one that stays: role and primary email stay, the other address becomes the secondary one, and open orders, notifications and balance move over. Typing another member's address in the edit form offers the same. Migration `0027_member_merge.sql`.
 
@@ -508,6 +512,7 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ---
 
+[1.22.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.22.0
 [1.21.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.21.1
 [1.21.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.21.0
 [1.20.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.20.0
