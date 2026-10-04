@@ -20,6 +20,9 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ## [Unreleased]
 
+### Fixed
+- 🗑️ **Deleting a member who never ordered works again.** Admin → Members could not delete an account that had received a notification (almost every new account gets the open-cycle one) and showed a database error; now the account and its notifications go.
+
 ## [1.21.1] — 2026-10-04
 
 *Notes that members can read, and a member list that fits on a phone.*

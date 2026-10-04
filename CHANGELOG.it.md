@@ -21,6 +21,9 @@ stanno nella PR.
 
 ## [Non rilasciato]
 
+### Risolto
+- 🗑️ **Si può di nuovo eliminare un socio che non ha mai ordinato.** In Admin → Soci l'eliminazione falliva con un errore del database se l'account aveva ricevuto una notifica (quasi tutti i nuovi ricevono quella del ciclo aperto); ora l'account si elimina insieme alle sue notifiche.
+
 ## [1.21.1] — 4 ottobre 2026
 
 *Note che i soci possono leggere, e un elenco soci che sta in un telefono.*
