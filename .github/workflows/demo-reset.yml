@@ -6,6 +6,8 @@ name: Nightly Demo Reset
 #
 # Required GitHub repository secret:
 #   - DEMO_DATABASE_URL  Neon DEMO connection string (NOT production)
+# Without it (a client installation, a fork) the job is skipped with a
+# warning instead of failing every night.
 
 on:
   schedule:
@@ -13,7 +15,25 @@ on:
   workflow_dispatch:
 
 jobs:
+  configured:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      enabled: ${{ steps.check.outputs.enabled }}
+    steps:
+      - id: check
+        env:
+          HAS_DB: ${{ secrets.DEMO_DATABASE_URL != '' }}
+        run: |
+          if [ "$HAS_DB" = "true" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::No DEMO_DATABASE_URL secret: demo reset skipped."
+          fi
+
   reset:
+    needs: configured
+    if: needs.configured.outputs.enabled == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
