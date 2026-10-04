@@ -19,6 +19,11 @@ stanno nella PR.
 
 ---
 
+## [Unreleased]
+
+### Modificato
+- 💶 **Tab Cassa più ordinata.** "Nuova ricarica" è chiusa come "Movimento in uscita" e si apre con un tocco; l'elenco dei saldi è diviso in Admin, Attivi e Utenti, come nella tab Soci.
+
 ## [1.21.0] — 3 ottobre 2026
 
 *Entrare con il codice dell'email, e l'app sulla schermata Home del telefono.*

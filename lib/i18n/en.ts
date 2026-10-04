@@ -860,6 +860,7 @@ export const en: Strings = {
       aboveMaxNotice: (balance: string, max: string) =>
         `The balance is now ${balance}, above the group's maximum (${max}). If needed, return the difference with Outgoing movement → Payout.`,
       newTopup: "New top-up",
+      topupHint: "Bank transfer, cash or other payment received from a member",
       memberLabel: "Member *",
       amountLabel: "Amount € *",
       amountPlaceholder: "0.00",
