@@ -10,6 +10,7 @@ export type ConfirmedLine = {
   productId: string;
   name: string;
   meta: string;
+  notes: string | null;
   quantity: number;
   unitPrice: number;
 };
@@ -73,6 +74,9 @@ export function OrderSummary({
                     {l.quantity} × {formatEur(l.unitPrice)}
                     {l.meta ? ` · ${l.meta}` : ""}
                   </div>
+                  {l.notes && (
+                    <div className="mt-[1px] text-label leading-[1.4] text-muted">{l.notes}</div>
+                  )}
                 </div>
               </div>
               <span className="shrink-0 font-mono text-[12px] font-bold text-brand-near-black">
