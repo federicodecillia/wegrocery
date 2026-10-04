@@ -21,6 +21,7 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 ## [Unreleased]
 
 ### Fixed
+- 📝 **Notes reach the members.** The notes an admin writes on a cycle now appear on Home and at the top of the order page, and each product's notes under its name in the order form and the recap. Before, only admins saw them.
 - 📱 **Member list readable on phones.** In Admin → Members the email addresses no longer run under the buttons: the list shows name, last sign-in and actions, the addresses are in the edit form, and on narrow screens the buttons sit below the name.
 
 ## [1.21.0] — 2026-10-03
