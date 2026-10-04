@@ -185,7 +185,9 @@ export function SociList({ members, offlineOption = false }: { members: Member[]
   const visible = query
     ? members.filter(
         (m) =>
-          m.fullName.toLowerCase().includes(query) || m.email.toLowerCase().includes(query),
+          m.fullName.toLowerCase().includes(query) ||
+          m.email.toLowerCase().includes(query) ||
+          (m.aliasEmail?.toLowerCase().includes(query) ?? false),
       )
     : members;
 
@@ -221,10 +223,15 @@ export function SociList({ members, offlineOption = false }: { members: Member[]
                 <SociForm member={m} onClose={() => setEditingId(null)} offlineOption={offlineOption} />
               </div>
             ) : (
-              <div key={m.memberId} className="flex items-center justify-between px-4 py-3">
+              // Stacked on phones, one row from sm. Emails show only in the
+              // edit form: a long address cannot wrap and ran under the buttons.
+              <div
+                key={m.memberId}
+                className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3"
+              >
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[13px] font-medium text-brand-near-black">{m.fullName}</span>
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                    <span className="break-words text-[13px] font-medium text-brand-near-black">{m.fullName}</span>
                     {!m.active && (
                       <span className="rounded-full bg-brand-red-light px-1.5 py-0.5 text-label font-bold text-brand-red">
                         {t.admin.members.inactiveBadge}
@@ -236,32 +243,26 @@ export function SociList({ members, offlineOption = false }: { members: Member[]
                       </span>
                     )}
                   </div>
-                  <div className="font-mono text-label text-muted">
-                    {m.email}
-                    {m.aliasEmail && (
-                      <span className="ml-1 text-accent-text">· {m.aliasEmail}</span>
-                    )}
-                  </div>
                   <div className="text-label text-muted">
                     {m.lastLoginAt ? t.admin.members.lastLogin(formatDate(m.lastLoginAt)) : t.admin.members.neverLoggedIn}
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className={`rounded-full px-2 py-0.5 text-label font-semibold ${roleColor}`}>
+                <div className="flex shrink-0 flex-wrap items-center gap-2">
+                  <span className={`whitespace-nowrap rounded-full px-2 py-0.5 text-label font-semibold ${roleColor}`}>
                     {getRoleLabel(m.role)}
                   </span>
                   {m.active && (
                     <button
                       onClick={() => handleInvite(m)}
                       disabled={inviting}
-                      className="rounded-full border border-brand-border px-2.5 py-1 text-label font-semibold text-accent-text disabled:opacity-40"
+                      className="whitespace-nowrap rounded-full border border-brand-border px-2.5 py-1 text-label font-semibold text-accent-text disabled:opacity-40"
                     >
                       {t.admin.members.invite}
                     </button>
                   )}
                   <button
                     onClick={() => setEditingId(m.memberId)}
-                    className="rounded-full border border-brand-border px-2.5 py-1 text-label font-semibold text-brand-gray"
+                    className="whitespace-nowrap rounded-full border border-brand-border px-2.5 py-1 text-label font-semibold text-brand-gray"
                   >
                     {t.admin.common.edit}
                   </button>

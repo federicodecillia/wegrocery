@@ -14,6 +14,7 @@ import { draftSyncAction, orderLinesKey, type ResumedDraft } from "@/lib/order-d
 import { ORDER_PAYMENT_MIN_CENTS, handlingFeeCents, orderPaymentAmount, type HandlingFee } from "@/lib/payments/order-payment";
 import { OrderSentDialog } from "./order-sent-dialog";
 import { OrderSummary, type ConfirmedLine } from "./order-summary";
+import { CycleNotes } from "@/components/cycle-notes";
 
 type Product = {
   productId: string;
@@ -23,6 +24,7 @@ type Product = {
   unit: string | null;
   unitPrice: string;
   pricePerKg: string | null;
+  notes: string | null;
   category: string | null;
   sortOrder: number;
 };
@@ -37,6 +39,8 @@ type Props = {
   cycleTitle: string;
   supplierName: string | null;
   orderCloseAt: string | null;
+  // The admin's notes on the cycle, shown above the products.
+  cycleNotes: string | null;
   products: Product[];
   existingLines: OrderLine[];
   // Unconfirmed edits found on the server (order_drafts), or null.
@@ -100,6 +104,7 @@ export function OrderForm({
   cycleTitle,
   supplierName,
   orderCloseAt,
+  cycleNotes,
   products,
   existingLines,
   resumedDraft,
@@ -238,6 +243,7 @@ export function OrderForm({
       productId: p.productId,
       name: p.name,
       meta: [p.variant, p.format].filter(Boolean).join(" · "),
+      notes: p.notes,
       quantity: savedQty[p.productId],
       unitPrice: parseFloat(p.unitPrice),
     }));
@@ -438,6 +444,8 @@ export function OrderForm({
         </p>
       </div>
 
+      <CycleNotes notes={cycleNotes} className="mt-3" />
+
       {/* Unconfirmed edits found on arrival (order_drafts). */}
       {isEditing && showDraftBanner && (
         <div className="mt-3 rounded-[14px] border border-primary-mid bg-primary-soft p-[12px_14px]">
@@ -574,6 +582,9 @@ export function OrderForm({
                         </span>
                       )}
                     </div>
+                    {p.notes && (
+                      <p className="mt-[2px] text-label leading-[1.4] text-muted">{p.notes}</p>
+                    )}
                   </div>
                 </div>
                 {qty === 0 ? (

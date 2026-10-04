@@ -19,6 +19,16 @@ stanno nella PR.
 
 ---
 
+## [Non rilasciato]
+
+## [1.21.1] — 4 ottobre 2026
+
+*Note che i soci possono leggere, e un elenco soci che sta in un telefono.*
+
+### Risolto
+- 📝 **Le note arrivano ai soci.** Le note che l'admin scrive su un ciclo ora compaiono in Home e in cima alla pagina Ordine, quelle di ogni prodotto sotto il nome nel modulo d'ordine e nel riepilogo. Prima le vedevano solo gli admin.
+- 📱 **Elenco soci leggibile da telefono.** In Admin → Soci gli indirizzi email non finiscono più sotto i pulsanti: l'elenco mostra nome, ultimo accesso e azioni, gli indirizzi sono nel modulo di modifica, e sugli schermi stretti i pulsanti stanno sotto il nome.
+
 ## [1.21.0] — 3 ottobre 2026
 
 *Entrare con il codice dell'email, e l'app sulla schermata Home del telefono.*
@@ -494,6 +504,7 @@ stanno nella PR.
 
 ---
 
+[1.21.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.21.1
 [1.21.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.21.0
 [1.20.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.20.0
 [1.19.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.19.0

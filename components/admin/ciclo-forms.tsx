@@ -704,6 +704,7 @@ export function EditCycleForm({
           defaultValue={cycle.notes ?? ""}
           className={`w-full ${inputCls}`}
         />
+        <p className="mt-1 text-label text-muted">{t.admin.cycle.notesHint}</p>
       </div>
       <button
         type="submit"
@@ -846,6 +847,7 @@ export function CreateCycleForm({
             rows={2}
             className={`w-full ${inputCls}`}
           />
+          <p className="mt-1 text-label text-muted">{t.admin.cycle.notesHint}</p>
         </div>
       </div>
       {suppliers.length === 0 && (
