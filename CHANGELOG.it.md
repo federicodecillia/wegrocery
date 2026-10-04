@@ -21,6 +21,9 @@ stanno nella PR.
 
 ## [Non rilasciato]
 
+### Aggiunte
+- 🔗 **Unire due account dello stesso socio.** In Admin → Soci, "Unisci" porta un account doppione dentro quello che resta: ruolo ed email principale restano, l'altro indirizzo diventa la secondaria, e ordini aperti, notifiche e saldo passano. Lo stesso viene proposto se nel modulo di modifica si scrive l'indirizzo di un altro socio. Migrazione `0027_member_merge.sql`.
+
 ### Risolto
 - 🗑️ **Si può di nuovo eliminare un socio che non ha mai ordinato.** In Admin → Soci l'eliminazione falliva con un errore del database se l'account aveva ricevuto una notifica (quasi tutti i nuovi ricevono quella del ciclo aperto); ora l'account si elimina insieme alle sue notifiche.
 

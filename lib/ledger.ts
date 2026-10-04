@@ -8,8 +8,12 @@
 // computed against.
 const SYSTEM_CHARGE_TYPES = new Set(["order_charge", "shipping_charge", "handling_charge"]);
 
+// A merge moves a balance as a pair of rows pointing at each other
+// (drizzle/0027_member_merge.sql): editing one would break the pair.
+const NOT_EDITABLE_TYPES = new Set([...SYSTEM_CHARGE_TYPES, "member_merge"]);
+
 export function isAdminEditableLedgerType(type: string): boolean {
-  return !SYSTEM_CHARGE_TYPES.has(type);
+  return !NOT_EDITABLE_TYPES.has(type);
 }
 
 export type LedgerAmountError = "notEditable" | "notFinite" | "zero" | "signChange" | "notPositive";
