@@ -19,6 +19,11 @@ stanno nella PR.
 
 ---
 
+## [Non rilasciato]
+
+### Risolto
+- 📱 **Elenco soci leggibile da telefono.** In Admin → Soci gli indirizzi email non finiscono più sotto i pulsanti: l'elenco mostra nome, ultimo accesso e azioni, gli indirizzi sono nel modulo di modifica, e sugli schermi stretti i pulsanti stanno sotto il nome.
+
 ## [1.21.0] — 3 ottobre 2026
 
 *Entrare con il codice dell'email, e l'app sulla schermata Home del telefono.*
