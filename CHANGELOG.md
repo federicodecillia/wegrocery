@@ -23,6 +23,9 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 ### Changed
 - 💶 **Tidier Cassa tab.** "New top-up" is folded like "Outgoing movement" and opens with a tap; the balances list is split into Admin, Attivi and Utenti, as in the Members tab.
 
+### Fixed
+- 📱 **Member list readable on phones.** In Admin → Members the email addresses no longer run under the buttons: the list shows name, last sign-in and actions, the addresses are in the edit form, and on narrow screens the buttons sit below the name.
+
 ## [1.21.0] — 2026-10-03
 
 *Sign in with a code from the email, and the app on your phone's home screen.*

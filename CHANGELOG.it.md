@@ -19,10 +19,13 @@ stanno nella PR.
 
 ---
 
-## [Unreleased]
+## [Non rilasciato]
 
 ### Modificato
 - 💶 **Tab Cassa più ordinata.** "Nuova ricarica" è chiusa come "Movimento in uscita" e si apre con un tocco; l'elenco dei saldi è diviso in Admin, Attivi e Utenti, come nella tab Soci.
+
+### Risolto
+- 📱 **Elenco soci leggibile da telefono.** In Admin → Soci gli indirizzi email non finiscono più sotto i pulsanti: l'elenco mostra nome, ultimo accesso e azioni, gli indirizzi sono nel modulo di modifica, e sugli schermi stretti i pulsanti stanno sotto il nome.
 
 ## [1.21.0] — 3 ottobre 2026
 
