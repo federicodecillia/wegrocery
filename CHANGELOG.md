@@ -20,6 +20,9 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ## [Unreleased]
 
+### Added
+- 🔗 **Merge two accounts of the same member.** In Admin → Members, "Merge" joins a duplicate account into the one that stays: role and primary email stay, the other address becomes the secondary one, and open orders, notifications and balance move over. Typing another member's address in the edit form offers the same. Migration `0027_member_merge.sql`.
+
 ### Fixed
 - 🗑️ **Deleting a member who never ordered works again.** Admin → Members could not delete an account that had received a notification (almost every new account gets the open-cycle one) and showed a database error; now the account and its notifications go.
 

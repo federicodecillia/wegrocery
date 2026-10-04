@@ -1957,16 +1957,27 @@ export type UpsertMemberInput = {
 
 // Emails and aliases share one namespace (lib/member-email.ts). The message
 // names the member who already holds the address, so the admin can fix it.
+// The holder comes back too: when an existing member is being edited, the
+// form offers to merge the two accounts (lib/actions/admin-members.ts).
+type EmailConflictResult = { error: string; conflict: { memberId: string; fullName: string; address: string } };
+
 async function memberEmailConflict(
   memberId: string | undefined,
   wanted: { email: string; aliasEmail: string | null },
-): Promise<string | null> {
+): Promise<EmailConflictResult | null> {
   const holders = await getMembersByEmails([wanted.email, wanted.aliasEmail].filter((a) => a !== null));
   const conflict = findEmailConflict(memberId, wanted, holders);
-  return conflict ? t.admin.members.emailInUse(conflict.address, conflict.fullName) : null;
+  return conflict
+    ? {
+        error: t.admin.members.emailInUse(conflict.address, conflict.fullName),
+        conflict: { memberId: conflict.memberId, fullName: conflict.fullName, address: conflict.address },
+      }
+    : null;
 }
 
-export async function adminUpsertMember(data: UpsertMemberInput): Promise<{ error?: string }> {
+export async function adminUpsertMember(
+  data: UpsertMemberInput,
+): Promise<{ error?: string; conflict?: EmailConflictResult["conflict"] }> {
   try {
     const admin = await requireAdmin();
     if (!data.fullName?.trim()) return { error: t.errors.fieldRequired(t.fields.name) };
@@ -1982,7 +1993,7 @@ export async function adminUpsertMember(data: UpsertMemberInput): Promise<{ erro
     // A taken address is returned, not thrown: Next.js masks thrown Server
     // Action messages in production, and the admin needs to read this one.
     const conflict = await memberEmailConflict(data.memberId, { email, aliasEmail });
-    if (conflict) return { error: conflict };
+    if (conflict) return conflict;
 
     try {
       if (data.memberId) {
@@ -2033,7 +2044,7 @@ export async function adminUpsertMember(data: UpsertMemberInput): Promise<{ erro
       // A concurrent save took the address after the check above: the unique
       // indexes (migration 0017) reject the write. Report it the same way.
       const raced = isUniqueViolation(e) ? await memberEmailConflict(data.memberId, { email, aliasEmail }) : null;
-      if (raced) return { error: raced };
+      if (raced) return raced;
       throw e;
     }
 

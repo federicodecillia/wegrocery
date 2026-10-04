@@ -2,10 +2,12 @@
 
 import { useState, useTransition } from "react";
 import { toast } from "@/components/ui/toast";
+import { confirm } from "@/components/ui/confirm-dialog";
 import { adminDeleteMember, adminInviteMember, adminUpsertMember, type UpsertMemberInput } from "@/lib/actions/admin";
 import { formatDate } from "@/lib/utils";
 import { DEFAULT_ROLE, ROLES, getRoleLabel, normalizeRole, type Role } from "@/lib/roles";
 import { t } from "@/lib/i18n";
+import { MergeMembersDialog } from "./merge-members-dialog";
 
 type Member = {
   memberId: string;
@@ -16,16 +18,24 @@ type Member = {
   active: boolean;
   paysOffline?: boolean;
   lastLoginAt?: string | null;
+  balance?: number;
+  // Absorbed by another account that stays (lib/members/merge.ts): its name.
+  mergedIntoName?: string | null;
 };
+
+type MergeRequest = { absorbedId: string; survivorId?: string };
 
 export function SociForm({
   member,
   onClose,
   offlineOption = false,
+  onMergeRequest,
 }: {
   member?: Member;
   onClose?: () => void;
   offlineOption?: boolean;
+  // Editing a member and typing another member's address: offer the merge.
+  onMergeRequest?: (request: MergeRequest) => void;
 }) {
   const [isPending, startTransition] = useTransition();
   const isEdit = !!member;
@@ -46,6 +56,16 @@ export function SociForm({
     startTransition(async () => {
       try {
         const result = await adminUpsertMember(data);
+        if (result?.conflict && member && onMergeRequest) {
+          const merge = await confirm({
+            title: t.admin.members.merge.emailHeldTitle,
+            message: t.admin.members.merge.emailHeldPrompt(result.conflict.address, result.conflict.fullName),
+            confirmLabel: t.admin.members.merge.emailHeldConfirm,
+            cancelLabel: t.admin.common.cancel,
+          });
+          if (merge) onMergeRequest({ absorbedId: result.conflict.memberId, survivorId: member.memberId });
+          return;
+        }
         if (result?.error) {
           toast.error(result.error);
           return;
@@ -172,6 +192,16 @@ export function SociList({ members, offlineOption = false }: { members: Member[]
   const [filter, setFilter] = useState("");
   const [deletingId, startDeleteTransition] = useTransition();
   const [inviting, startInviteTransition] = useTransition();
+  const [mergeRequest, setMergeRequest] = useState<MergeRequest | null>(null);
+  // Accounts already absorbed take no part in another merge.
+  const mergeable = members
+    .filter((m) => !m.mergedIntoName)
+    .map((m) => ({ memberId: m.memberId, fullName: m.fullName, email: m.email, active: m.active, balance: m.balance ?? 0 }));
+
+  function requestMerge(request: MergeRequest) {
+    setEditingId(null);
+    setMergeRequest(request);
+  }
 
   function handleInvite(m: Member) {
     startInviteTransition(async () => {
@@ -220,7 +250,12 @@ export function SociList({ members, offlineOption = false }: { members: Member[]
           {list.map((m) =>
             editingId === m.memberId ? (
               <div key={m.memberId} className="p-4">
-                <SociForm member={m} onClose={() => setEditingId(null)} offlineOption={offlineOption} />
+                <SociForm
+                  member={m}
+                  onClose={() => setEditingId(null)}
+                  offlineOption={offlineOption}
+                  onMergeRequest={requestMerge}
+                />
               </div>
             ) : (
               // Stacked on phones, one row from sm. Emails show only in the
@@ -235,6 +270,11 @@ export function SociList({ members, offlineOption = false }: { members: Member[]
                     {!m.active && (
                       <span className="rounded-full bg-brand-red-light px-1.5 py-0.5 text-label font-bold text-brand-red">
                         {t.admin.members.inactiveBadge}
+                      </span>
+                    )}
+                    {m.mergedIntoName && (
+                      <span className="rounded-full bg-black/[0.05] px-1.5 py-0.5 text-label font-bold text-brand-gray">
+                        {t.admin.members.merge.mergedBadge(m.mergedIntoName)}
                       </span>
                     )}
                     {offlineOption && m.paysOffline && (
@@ -258,6 +298,14 @@ export function SociList({ members, offlineOption = false }: { members: Member[]
                       className="whitespace-nowrap rounded-full border border-brand-border px-2.5 py-1 text-label font-semibold text-accent-text disabled:opacity-40"
                     >
                       {t.admin.members.invite}
+                    </button>
+                  )}
+                  {!m.mergedIntoName && (
+                    <button
+                      onClick={() => requestMerge({ absorbedId: m.memberId })}
+                      className="whitespace-nowrap rounded-full border border-brand-border px-2.5 py-1 text-label font-semibold text-brand-gray"
+                    >
+                      {t.admin.members.merge.button}
                     </button>
                   )}
                   <button
@@ -298,6 +346,18 @@ export function SociList({ members, offlineOption = false }: { members: Member[]
       {renderGroup(t.roles.utenti, inGroup("utenti"), "bg-black/[0.05] text-brand-gray")}
       {visible.length === 0 && (
         <div className="py-6 text-center text-[12px] text-brand-gray">{t.admin.common.noResults}</div>
+      )}
+      {mergeRequest && (
+        <MergeMembersDialog
+          key={`${mergeRequest.absorbedId}:${mergeRequest.survivorId ?? ""}`}
+          open
+          onOpenChange={(next) => {
+            if (!next) setMergeRequest(null);
+          }}
+          members={mergeable}
+          absorbedId={mergeRequest.absorbedId}
+          survivorId={mergeRequest.survivorId}
+        />
       )}
     </div>
   );
