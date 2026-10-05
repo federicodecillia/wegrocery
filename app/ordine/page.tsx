@@ -150,6 +150,7 @@ export default async function OrdinePage({
         cycleTitle={openCycle!.title}
         supplierName={openCycle!.supplierName}
         orderCloseAt={openCycle!.orderCloseAt?.toISOString() ?? null}
+        cycleNotes={openCycle.notes}
         products={cycleProducts.map((p) => ({
           productId: p.productId,
           name: p.name,
@@ -157,6 +158,7 @@ export default async function OrdinePage({
           format: p.format,
           unitPrice: p.unitPrice,
           pricePerKg: p.pricePerKg,
+          notes: p.notes,
           unit: p.unit,
           category: p.category,
           sortOrder: p.sortOrder,

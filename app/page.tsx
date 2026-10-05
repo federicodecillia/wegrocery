@@ -2,6 +2,7 @@ import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { BalanceDueCard } from "@/components/balance/balance-due-card";
 import { CycleCountdown } from "@/components/home/cycle-countdown";
+import { CycleNotes } from "@/components/cycle-notes";
 import { NextPickupCard } from "@/components/home/next-pickup-card";
 import { InstallPrompt } from "@/components/install-prompt";
 import { t } from "@/lib/i18n";
@@ -211,6 +212,8 @@ export default async function HomePage() {
                   pickup2EndTime={cycle.pickup2EndTime ?? null}
                 />
               </div>
+
+              <CycleNotes notes={cycle.notes} className="mb-[10px]" />
 
               {payStatus && (
                 <Link

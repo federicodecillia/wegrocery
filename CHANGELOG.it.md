@@ -19,6 +19,26 @@ stanno nella PR.
 
 ---
 
+## [Non rilasciato]
+
+## [1.22.0] — 4 ottobre 2026
+
+*Una persona, un account: i doppioni ora si possono unire.*
+
+### Aggiunte
+- 🔗 **Unire due account dello stesso socio.** In Admin → Soci, "Unisci" porta un account doppione dentro quello che resta: ruolo ed email principale restano, l'altro indirizzo diventa la secondaria, e ordini aperti, notifiche e saldo passano. Lo stesso viene proposto se nel modulo di modifica si scrive l'indirizzo di un altro socio. Migrazione `0027_member_merge.sql`.
+
+### Risolto
+- 🗑️ **Si può di nuovo eliminare un socio che non ha mai ordinato.** In Admin → Soci l'eliminazione falliva con un errore del database se l'account aveva ricevuto una notifica (quasi tutti i nuovi ricevono quella del ciclo aperto); ora l'account si elimina insieme alle sue notifiche.
+
+## [1.21.1] — 4 ottobre 2026
+
+*Note che i soci possono leggere, e un elenco soci che sta in un telefono.*
+
+### Risolto
+- 📝 **Le note arrivano ai soci.** Le note che l'admin scrive su un ciclo ora compaiono in Home e in cima alla pagina Ordine, quelle di ogni prodotto sotto il nome nel modulo d'ordine e nel riepilogo. Prima le vedevano solo gli admin.
+- 📱 **Elenco soci leggibile da telefono.** In Admin → Soci gli indirizzi email non finiscono più sotto i pulsanti: l'elenco mostra nome, ultimo accesso e azioni, gli indirizzi sono nel modulo di modifica, e sugli schermi stretti i pulsanti stanno sotto il nome.
+
 ## [1.21.0] — 3 ottobre 2026
 
 *Entrare con il codice dell'email, e l'app sulla schermata Home del telefono.*
@@ -494,6 +514,8 @@ stanno nella PR.
 
 ---
 
+[1.22.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.22.0
+[1.21.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.21.1
 [1.21.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.21.0
 [1.20.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.20.0
 [1.19.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.19.0
