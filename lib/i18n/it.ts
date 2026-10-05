@@ -337,7 +337,8 @@ export const it = {
     attemptedEmail: (email: string) => `Hai provato ad accedere con: ${email}`,
     notMember:
       "Per accedere devi essere socio con la tessera attiva per l'anno in corso. Usa la stessa email con cui hai fatto la tessera.",
-    membershipInactive: "La tua tessera non risulta attiva per l'anno in corso.",
+    membershipInactive:
+      "La tua tessera non risulta attiva per l'anno in corso. Se hai fatto la tessera con un altro indirizzo email, entra con quello: un admin unirà poi i tuoi account.",
     renewMembership: "Rinnova la tessera",
     membershipCheckUnavailable:
       "Non riusciamo a verificare la tessera in questo momento. Riprova tra qualche minuto.",
@@ -364,7 +365,7 @@ export const it = {
     accountInactive: (app: string, support: string) =>
       `Ciao,\n\nil tuo account su ${app} non è attivo. Per riattivarlo scrivi a ${support}.`,
     membershipInactive: (app: string, renew: string | null, support: string) =>
-      `Ciao,\n\nla tua tessera non risulta attiva per l'anno in corso, quindi non puoi entrare in ${app}.${renew ? ` Puoi rinnovarla qui: ${renew}` : ""}\n\nPer dubbi scrivi a ${support}.`,
+      `Ciao,\n\nla tua tessera non risulta attiva per l'anno in corso, quindi non puoi entrare in ${app}.${renew ? ` Puoi rinnovarla qui: ${renew}` : ""}\n\nSe hai fatto la tessera con un altro indirizzo email, entra con quello: un admin unirà poi i tuoi account.\n\nPer dubbi scrivi a ${support}.`,
     checkUnavailable: (app: string) =>
       `Ciao,\n\nin questo momento non riusciamo a verificare la tua tessera, quindi non possiamo mandarti il link per entrare in ${app}. Riprova tra qualche minuto.`,
   },
@@ -1011,6 +1012,18 @@ export const it = {
       deleted: (name: string) => `${name} eliminato`,
       emailInUse: (email: string, name: string) =>
         `L'indirizzo ${email} è già usato da ${name}: ogni indirizzo può appartenere a un solo socio, come email o come email secondaria.`,
+      duplicates: {
+        title: (n: number) => (n === 1 ? "1 possibile doppione" : `${n} possibili doppioni`),
+        intro:
+          "Account che sembrano della stessa persona, di solito entrata con l'indirizzo della tessera invece di quello che aveva. Controlla e unisci: resta il primo.",
+        reasons: {
+          same_name: "Stesso nome",
+          name_in_address: "Il nome compare nell'indirizzo dell'altro",
+        },
+        merge: "Unisci",
+        dismiss: "Non sono la stessa persona",
+        dismissed: "Coppia nascosta",
+      },
       merge: {
         button: "Unisci",
         title: (name: string) => `Unisci ${name}`,

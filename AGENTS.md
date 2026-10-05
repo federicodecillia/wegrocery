@@ -55,7 +55,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 │                               #   access.ts: pure checkAccess/sessionClaims (no imports, used by proxy.ts)
 ├── proxy.ts                     # Redirect unauthenticated to /login (Next.js 16's middleware)
 ├── auth.ts                     # Better Auth instance, auth() (session + member), signOut()
-├── drizzle/                    # SQL migrations (0000–0027)
+├── drizzle/                    # SQL migrations (0000–0028)
 └── public/logo.png
 ```
 
@@ -372,6 +372,7 @@ One person, two accounts (typically an old address and the one they used at firs
 - The survivor keeps name, role, primary email, preferences; its secondary email becomes the absorbed account's primary by default (one slot: the admin picks, the addresses nobody keeps lose their sign-in identities). Sessions continue: `auth()` resolves the address to the survivor on the next request.
 - Orders on open cycles, drafts and notifications move. Closed-cycle orders stay with their charges (`closed_cycle_charge` pairs them). The balance moves as a `member_merge` pair (`ledger_entries.counterpart`, migration 0027): no ledger row changes member.
 - Refused: both ordered on the same open cycle, an open pay-per-order cycle, a pending payment or refund, an unsettled pay-per-order cycle with movements, absorbing your own account.
+- **Possible duplicates** (`lib/members/duplicates.ts`, pure): active, unmerged pairs with the same name (accents, case and word order ignored, 2+ words) or whose name words (3+ letters, at least two) appear in the other's address; the proposed survivor is the higher role, then the older account. Shown on top of Soci with Merge prefilled; "not the same person" stores the pair in `member_duplicate_dismissals` (migration 0028, cascades on member delete). Typical cause: an old address with no card is refused (`MembershipInactive`), the member signs in with the card's address and the card check provisions a second account; the login message tells them to do exactly that, and the admin merges.
 - An absorbed account with no history is deleted; otherwise it stays inactive with `merged_into`, a `<memberId>@merged.invalid` address and a zero balance. Nightly checks `member_merge_pairs` and `merged_member_empty`.
 
 ### Post-closure adjustments

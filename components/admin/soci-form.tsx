@@ -7,6 +7,8 @@ import { adminDeleteMember, adminInviteMember, adminUpsertMember, type UpsertMem
 import { formatDate } from "@/lib/utils";
 import { DEFAULT_ROLE, ROLES, getRoleLabel, normalizeRole, type Role } from "@/lib/roles";
 import { t } from "@/lib/i18n";
+import type { DuplicatePair } from "@/lib/members/duplicates";
+import { DuplicateMembers } from "./duplicate-members";
 import { MergeMembersDialog } from "./merge-members-dialog";
 
 type Member = {
@@ -187,7 +189,16 @@ export function SociForm({
 
 // ── Member list ───────────────────────────────────────────────────────────────
 
-export function SociList({ members, offlineOption = false }: { members: Member[]; offlineOption?: boolean }) {
+export function SociList({
+  members,
+  offlineOption = false,
+  duplicates = [],
+}: {
+  members: Member[];
+  offlineOption?: boolean;
+  // Possible duplicate accounts (lib/members/duplicates.ts).
+  duplicates?: ReadonlyArray<DuplicatePair>;
+}) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [filter, setFilter] = useState("");
   const [deletingId, startDeleteTransition] = useTransition();
@@ -341,6 +352,11 @@ export function SociList({ members, offlineOption = false }: { members: Member[]
           className="w-full rounded-xl border border-brand-border bg-white px-4 py-2.5 text-[13px] text-brand-near-black placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary/30"
         />
       </div>
+      <DuplicateMembers
+        pairs={duplicates}
+        members={members}
+        onMerge={(p) => requestMerge({ absorbedId: p.absorbedId, survivorId: p.survivorId })}
+      />
       {renderGroup(t.roles.admin, inGroup("admin"), "bg-primary-soft text-primary-text")}
       {renderGroup(t.roles.attivi, inGroup("attivi"), "bg-accent-soft text-accent-text")}
       {renderGroup(t.roles.utenti, inGroup("utenti"), "bg-black/[0.05] text-brand-gray")}

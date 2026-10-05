@@ -20,6 +20,12 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ## [Unreleased]
 
+### Added
+- 👯 **Possible duplicates in Members.** Admin → Members lists accounts that look like the same person (same name, or the name inside the other's address), with Merge already filled in and "Not the same person" to hide a pair. Migration `0028_member_duplicate_dismissals.sql`.
+
+### Changed
+- 🔑 **Clearer message when the card is not found.** A member whose card is not on their address is told to sign in with the address they registered the card with; an admin then merges the two accounts.
+
 ## [1.22.0] — 2026-10-04
 
 *One person, one account: duplicates can now be merged.*

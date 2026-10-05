@@ -21,6 +21,12 @@ stanno nella PR.
 
 ## [Non rilasciato]
 
+### Aggiunte
+- 👯 **Possibili doppioni in Soci.** Admin → Soci elenca gli account che sembrano della stessa persona (stesso nome, o il nome dentro l'indirizzo dell'altro), con Unisci già compilato e "Non sono la stessa persona" per nascondere una coppia. Migrazione `0028_member_duplicate_dismissals.sql`.
+
+### Modificato
+- 🔑 **Messaggio più chiaro quando la tessera non risulta.** Al socio la cui tessera non è sul suo indirizzo viene detto di entrare con l'indirizzo con cui ha fatto la tessera; un admin unisce poi i due account.
+
 ## [1.22.0] — 4 ottobre 2026
 
 *Una persona, un account: i doppioni ora si possono unire.*
