@@ -158,6 +158,27 @@ export const INVARIANT_CHECKS: InvariantCheck[] = [
         AND NOT EXISTS (SELECT 1 FROM ledger_entries r WHERE r.entry_id = o.reversed_by AND r.reverses = o.entry_id)`,
   },
   {
+    name: "member_merge_pairs",
+    description: "every account-merge movement has its opposite on the other account, pointing back",
+    query: sql`
+      SELECT m.entry_id AS id FROM ledger_entries m
+      LEFT JOIN ledger_entries c ON c.entry_id = m.counterpart
+      WHERE m.type = 'member_merge'
+        AND (c.entry_id IS NULL OR c.type <> 'member_merge' OR c.counterpart IS DISTINCT FROM m.entry_id
+             OR c.amount <> -m.amount OR c.member_id = m.member_id)`,
+  },
+  {
+    name: "merged_member_empty",
+    description: "an account merged into another is inactive, with a zero balance and no order on an open cycle",
+    query: sql`
+      SELECT m.member_id AS id FROM members m
+      WHERE m.merged_into IS NOT NULL
+        AND (m.active
+             OR coalesce((SELECT sum(l.amount) FROM ledger_entries l WHERE l.member_id = m.member_id), 0) <> 0
+             OR EXISTS (SELECT 1 FROM orders o JOIN order_cycles c ON c.cycle_id = o.cycle_id
+                        WHERE o.member_id = m.member_id AND c.status = 'open'))`,
+  },
+  {
     name: "paid_balance_credit",
     description: "every paid balance payment is credited for its whole amount, split over its parts",
     query: sql`

@@ -116,6 +116,7 @@ export const en: Strings = {
     emptyCatalog: "Catalog in preparation",
     emptyCatalogHint: "The order is open but products haven't been added yet. Check back soon.",
     reproposeLastOrder: "Repeat last order",
+    cycleNotes: "Order notes",
     totalOrder: "Order total",
     feeEstimate: (amount: string) => `Includes the order preparation fee (estimate): ${amount}`,
     balanceAfter: "Balance after",
@@ -190,6 +191,7 @@ export const en: Strings = {
     orderPayment: "Order payment",
     orderRefund: "Refund to card",
     balancePayment: "Balance paid",
+    memberMerge: "Account merge",
     reversal: "Reversal",
     payout: "Balance returned",
     manualCharge: "Charge",
@@ -335,7 +337,8 @@ export const en: Strings = {
     attemptedEmail: (email: string) => `You tried to sign in with: ${email}`,
     notMember:
       "To sign in you need a membership card that is active for the current year. Use the same email you registered your card with.",
-    membershipInactive: "Your membership card is not active for the current year.",
+    membershipInactive:
+      "Your membership card is not active for the current year. If you registered your card with another email address, sign in with that one: an admin will then merge your accounts.",
     renewMembership: "Renew your membership",
     membershipCheckUnavailable:
       "We can't verify your membership card right now. Please try again in a few minutes.",
@@ -362,7 +365,7 @@ export const en: Strings = {
     accountInactive: (app: string, support: string) =>
       `Hi,\n\nyour account on ${app} is not active. To reactivate it write to ${support}.`,
     membershipInactive: (app: string, renew: string | null, support: string) =>
-      `Hi,\n\nyour membership card is not active for this year, so you can't sign in to ${app}.${renew ? ` You can renew it here: ${renew}` : ""}\n\nQuestions: ${support}.`,
+      `Hi,\n\nyour membership card is not active for this year, so you can't sign in to ${app}.${renew ? ` You can renew it here: ${renew}` : ""}\n\nIf you registered your card with another email address, sign in with that one: an admin will then merge your accounts.\n\nQuestions: ${support}.`,
     checkUnavailable: (app: string) =>
       `Hi,\n\nwe can't check your membership card right now, so we can't send you the link to sign in to ${app}. Try again in a few minutes.`,
   },
@@ -702,6 +705,7 @@ export const en: Strings = {
       supplierLabel: "Supplier",
       accessLabel: "Access",
       accessHint: "Admins see every cycle, active members see Users and Active members cycles, users see only Users cycles.",
+      notesHint: "Shown to members on the order page and on Home.",
       titleLabel: "Title *",
       titlePlaceholder: "e.g. Fruit order 03/05",
       createTitle: "Create new cycle",
@@ -811,7 +815,7 @@ export const en: Strings = {
       helpVarieta: "E.g. Organic, Stark, Granny Smith. Add this if more than one variety exists.",
       helpFormato: 'What you bring to the member for that price. E.g. "2kg bag", "Basket", "Bunch", "Crate".',
       helpPrezzo: "What the member pays for ONE unit (e.g. €5 for the 2kg bag). Decimals with comma or dot.",
-      helpPrezzoKg: "Optional: price per kg as a reference (e.g. €2.50/kg). Handy for weight-based products.",
+      helpPrezzoKg: "Optional: price per kg as a reference (e.g. €2.50/kg), shown to members next to the price. Handy for weight-based products; leave it empty for items sold by the piece or pack.",
       helpCategoria: "Used to group products in the order form. Choose from the list or add a new one.",
       helpIcona: "Emoji shown next to the product. Click to choose or search.",
       helpNote: 'Free-text notes, shown to members. E.g. "Greenhouse-grown", "Consume within 3 days".',
@@ -963,6 +967,7 @@ export const en: Strings = {
       cardRefundBadge: "card refund",
       orderPaymentBadge: "order payment",
       balancePaymentBadge: "balance paid",
+      memberMergeBadge: "account merge",
       reversalBadge: "reversal",
       correctionBadge: "correction",
       otherBadge: "movement",
@@ -1005,6 +1010,60 @@ export const en: Strings = {
       deleted: (name: string) => `${name} deleted`,
       emailInUse: (email: string, name: string) =>
         `The address ${email} is already used by ${name}: an address can belong to one member only, as email or as secondary email.`,
+      duplicates: {
+        title: (n: number) => (n === 1 ? "1 possible duplicate" : `${n} possible duplicates`),
+        intro:
+          "Accounts that look like the same person, usually someone who signed in with their card's address instead of the one they had. Check and merge: the first one stays.",
+        reasons: {
+          same_name: "Same name",
+          name_in_address: "The name appears in the other's address",
+        },
+        merge: "Merge",
+        dismiss: "Not the same person",
+        dismissed: "Pair hidden",
+      },
+      merge: {
+        button: "Merge",
+        title: (name: string) => `Merge ${name}`,
+        intro:
+          "For one person with two accounts. The account that stays keeps its name, role and primary email; from the other it takes the orders on open cycles, the notifications and the balance.",
+        survivorLabel: "Account that stays",
+        absorbedLabel: "Account to merge",
+        swap: "Swap",
+        aliasLabel: "Secondary email after the merge",
+        aliasNone: "None",
+        aliasDropped: (address: string) => `${address} will no longer sign in`,
+        previewTitle: "What happens",
+        previewOrders: (cycles: string) => `The orders on open cycles move to the account that stays: ${cycles}.`,
+        previewBalance: (amount: string) => `The balance of ${amount} moves to the account that stays, as two "Account merge" movements.`,
+        previewDelete: (name: string) => `${name} is deleted: it has no history.`,
+        previewArchive: (name: string) =>
+          `${name} stays deactivated with its history (closed orders and movements), with no addresses and a zero balance.`,
+        previewLogin: (address: string) => `Whoever signs in with ${address} gets the account that stays, without signing in again.`,
+        confirm: "Merge",
+        merging: "Merging…",
+        loading: "Checking…",
+        done: (absorbed: string, survivor: string) => `${absorbed} merged into ${survivor}`,
+        changed: "Something changed meanwhile (an order, a movement): open the merge again and retry.",
+        mergedBadge: (name: string) => `merged into ${name}`,
+        emailHeldTitle: "Another member's address",
+        emailHeldPrompt: (address: string, name: string) =>
+          `${address} already belongs to ${name}. If they are the same person you can merge the two accounts.`,
+        emailHeldConfirm: "Merge the accounts",
+        refusals: {
+          same_member: "Pick two different accounts.",
+          already_merged: (name: string) => `${name} has already been merged into another account.`,
+          survivor_inactive: "The account that stays is deactivated: reactivate it before merging.",
+          absorbing_self: "You cannot merge your own account into another while using it: ask another admin, or swap.",
+          both_ordered: (cycle: string) => `Both have an order on the cycle "${cycle}": cancel one before merging.`,
+          per_order_open: (cycle: string) =>
+            `The account to merge has a paid order on the cycle "${cycle}", still open: merge after its settlement.`,
+          pending_payment: "The account to merge has an online payment in progress: try again in a few minutes.",
+          open_refund: "The account to merge has a refund still in progress: try again once it has arrived.",
+          unsettled_per_order: "The account to merge has movements on a pay-per-order cycle not settled yet: settle it first.",
+          alias_not_offered: "Pick one of the emails offered.",
+        },
+      },
     },
     suppliers: {
       tabLabel: "Suppliers",
@@ -1043,7 +1102,7 @@ export const en: Strings = {
       helpVarieta: "E.g. Organic, Stark, Granny Smith. Add this if more than one variety exists.",
       helpFormato: 'What you bring to the member for that price. E.g. "2kg bag", "Basket", "Bunch".',
       helpPrezzo: "What the member pays for ONE unit. Decimals with comma or dot.",
-      helpPrezzoKg: "Optional: price per kg as a reference. Handy for weight-based products.",
+      helpPrezzoKg: "Optional: price per kg as a reference, shown to members. Leave it empty for items sold by the piece or pack.",
       helpCategoria: "Used to group products in the order form. Choose or add a new one.",
       helpNote: "Free-text notes, shown to members.",
     },
@@ -1448,6 +1507,8 @@ export const en: Strings = {
     orderRefundCancelled: "Refund to card: order cancelled",
     orderRefundLate: "Refund to card: payment arrived after orders closed",
     balancePayment: "Balance paid",
+    memberMergeOut: (name: string) => `Account merge: balance moved to ${name}`,
+    memberMergeIn: (name: string) => `Account merge: balance from ${name}`,
   },
   fields: {
     title: "Title",

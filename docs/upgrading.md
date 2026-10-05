@@ -27,6 +27,8 @@ Every migration is additive and can run twice without harm.
 
 | Version | Migration | Environment | Stripe webhook events |
 |---|---|---|---|
+| Unreleased | `0028_member_duplicate_dismissals.sql` (additive: table `member_duplicate_dismissals`; apply it before deploying) | none | none |
+| 1.22.0 | `0027_member_merge.sql` (additive: `members.merged_into`, `ledger_entries.counterpart`; apply it before deploying) | none | none |
 | 1.21.0 | none | none (the sign-in email now also carries a code; nothing to configure) | none |
 | 1.20.0 | none | none (Node.js 20.19 or later, for Next.js 16) | none |
 | 1.19.0 | `0025_schema_catch_up.sql` (three `order_cycles` columns; a no-op where they exist), `0026_handling_charge.sql` (apply it right before deploying when `MIGRATE_ON_BUILD` is off) | `BOOTSTRAP_ADMIN_EMAIL` (new installations only); `MIGRATE_ON_BUILD` now runs on production builds only | none |

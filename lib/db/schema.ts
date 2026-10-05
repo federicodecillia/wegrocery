@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import {
+  type AnyPgColumn,
   bigint,
   boolean,
   check,
@@ -36,6 +37,10 @@ export const members = pgTable(
     // Pays outside the app in pay-per-order mode: confirms orders without
     // Stripe, settled from Treasury (drizzle/0024_settlement.sql).
     paysOffline: boolean("pays_offline").notNull().default(false),
+    // An account absorbed by another that kept history and could not be
+    // deleted: the member it was merged into (drizzle/0027_member_merge.sql).
+    // Such an account is inactive, with a placeholder address and no balance.
+    mergedInto: text("merged_into").references((): AnyPgColumn => members.memberId),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
   },
@@ -376,6 +381,9 @@ export const ledgerEntries = pgTable(
     reversedBy: text("reversed_by"),
     reverses: text("reverses"),
     replaces: text("replaces"),
+    // On a 'member_merge' row: the opposite row on the other member
+    // (drizzle/0027_member_merge.sql).
+    counterpart: text("counterpart"),
   },
   (table) => [
     index("ledger_entries_member_id_idx").on(table.memberId),
@@ -391,6 +399,8 @@ export const ledgerEntries = pgTable(
       .where(
         sql`${table.type} IN ('order_charge', 'shipping_charge', 'handling_charge') AND ${table.reversedBy} IS NULL`,
       ),
+    uniqueIndex("ledger_entries_counterpart_uniq").on(table.counterpart).where(sql`${table.counterpart} IS NOT NULL`),
+    check("ledger_entries_counterpart_check", sql`(${table.type} = 'member_merge') = (${table.counterpart} IS NOT NULL)`),
     uniqueIndex("ledger_entries_reverses_uniq").on(table.reverses).where(sql`${table.reverses} IS NOT NULL`),
     check("ledger_entries_reversal_check", sql`(${table.type} = 'reversal') = (${table.reverses} IS NOT NULL)`),
     // A payment is credited at most once (drizzle/0016_stripe_payments.sql).
@@ -466,6 +476,27 @@ export const notificationPreferences = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
   },
   (table) => [primaryKey({ columns: [table.memberId, table.category] })],
+);
+
+// Possible duplicate accounts an admin marked "not the same person"
+// (lib/members/duplicates.ts, drizzle/0028_member_duplicate_dismissals.sql).
+export const memberDuplicateDismissals = pgTable(
+  "member_duplicate_dismissals",
+  {
+    memberA: text("member_a")
+      .notNull()
+      .references(() => members.memberId, { onDelete: "cascade" }),
+    memberB: text("member_b")
+      .notNull()
+      .references(() => members.memberId, { onDelete: "cascade" }),
+    dismissedBy: text("dismissed_by").notNull(),
+    dismissedAt: timestamp("dismissed_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.memberA, table.memberB] }),
+    index("member_duplicate_dismissals_b_idx").on(table.memberB),
+    check("member_duplicate_dismissals_order", sql`${table.memberA} < ${table.memberB}`),
+  ],
 );
 
 // ── Sign-in (Better Auth, drizzle/0022_auth_sessions.sql) ────────────────────

@@ -20,10 +20,29 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ## [Unreleased]
 
+### Added
+- 👯 **Possible duplicates in Members.** Admin → Members lists accounts that look like the same person (same name, or the name inside the other's address), with Merge already filled in and "Not the same person" to hide a pair. Migration `0028_member_duplicate_dismissals.sql`.
+
 ### Changed
+- 🔑 **Clearer message when the card is not found.** A member whose card is not on their address is told to sign in with the address they registered the card with; an admin then merges the two accounts.
 - 💶 **Tidier Cassa tab.** "New top-up" is folded like "Outgoing movement" and opens with a tap; the balances list is split into Admin, Attivi and Utenti, as in the Members tab.
 
+## [1.22.0] — 2026-10-04
+
+*One person, one account: duplicates can now be merged.*
+
+### Added
+- 🔗 **Merge two accounts of the same member.** In Admin → Members, "Merge" joins a duplicate account into the one that stays: role and primary email stay, the other address becomes the secondary one, and open orders, notifications and balance move over. Typing another member's address in the edit form offers the same. Migration `0027_member_merge.sql`.
+
 ### Fixed
+- 🗑️ **Deleting a member who never ordered works again.** Admin → Members could not delete an account that had received a notification (almost every new account gets the open-cycle one) and showed a database error; now the account and its notifications go.
+
+## [1.21.1] — 2026-10-04
+
+*Notes that members can read, and a member list that fits on a phone.*
+
+### Fixed
+- 📝 **Notes reach the members.** The notes an admin writes on a cycle now appear on Home and at the top of the order page, and each product's notes under its name in the order form and the recap. Before, only admins saw them.
 - 📱 **Member list readable on phones.** In Admin → Members the email addresses no longer run under the buttons: the list shows name, last sign-in and actions, the addresses are in the edit form, and on narrow screens the buttons sit below the name.
 
 ## [1.21.0] — 2026-10-03
@@ -500,6 +519,8 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ---
 
+[1.22.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.22.0
+[1.21.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.21.1
 [1.21.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.21.0
 [1.20.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.20.0
 [1.19.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.19.0

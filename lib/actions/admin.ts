@@ -11,7 +11,7 @@ import { formatMoney, formatDate, formatDateTime } from "@/lib/i18n/format";
 import { parseCycleDates } from "@/lib/cycle-dates";
 import { brand } from "@/lib/brand";
 import { getDb } from "@/lib/db/client";
-import { auditLog, authUsers, ledgerEntries, members, orderCycles, orders, payments, products, suppliers, supplierProducts } from "@/lib/db/schema";
+import { auditLog, authUsers, ledgerEntries, members, notifications, orderCycles, orders, payments, products, suppliers, supplierProducts } from "@/lib/db/schema";
 import { upsertCycleProducts } from "@/lib/db/cycle-products";
 import { isUniqueViolation } from "@/lib/db/errors";
 import { ActionError, actionErrorMessage } from "@/lib/action-error";
@@ -1924,7 +1924,12 @@ export async function adminDeleteMember(memberId: string): Promise<{ error?: str
       .from(members)
       .where(eq(members.memberId, memberId))
       .limit(1);
-    await db.delete(members).where(eq(members.memberId, memberId));
+    // Notifications have no ON DELETE CASCADE: almost every member has one
+    // (the cycle-open notice), and they mean nothing without the member.
+    await db.batch([
+      db.delete(notifications).where(eq(notifications.memberId, memberId)),
+      db.delete(members).where(eq(members.memberId, memberId)),
+    ]);
     // Its sign-in identities and sessions go with it.
     const addresses = [gone?.email, gone?.aliasEmail].map((a) => normalizeEmail(a)).filter((a): a is string => Boolean(a));
     if (addresses.length > 0) await db.delete(authUsers).where(inArray(sql`lower(${authUsers.email})`, addresses));
@@ -1932,7 +1937,7 @@ export async function adminDeleteMember(memberId: string): Promise<{ error?: str
     revalidatePath("/admin");
     return {};
   } catch (e) {
-    return { error: e instanceof Error ? e.message : t.errors.genericError };
+    return { error: actionErrorMessage(e, t.errors.genericError, "adminDeleteMember") };
   }
 }
 
@@ -1952,16 +1957,27 @@ export type UpsertMemberInput = {
 
 // Emails and aliases share one namespace (lib/member-email.ts). The message
 // names the member who already holds the address, so the admin can fix it.
+// The holder comes back too: when an existing member is being edited, the
+// form offers to merge the two accounts (lib/actions/admin-members.ts).
+type EmailConflictResult = { error: string; conflict: { memberId: string; fullName: string; address: string } };
+
 async function memberEmailConflict(
   memberId: string | undefined,
   wanted: { email: string; aliasEmail: string | null },
-): Promise<string | null> {
+): Promise<EmailConflictResult | null> {
   const holders = await getMembersByEmails([wanted.email, wanted.aliasEmail].filter((a) => a !== null));
   const conflict = findEmailConflict(memberId, wanted, holders);
-  return conflict ? t.admin.members.emailInUse(conflict.address, conflict.fullName) : null;
+  return conflict
+    ? {
+        error: t.admin.members.emailInUse(conflict.address, conflict.fullName),
+        conflict: { memberId: conflict.memberId, fullName: conflict.fullName, address: conflict.address },
+      }
+    : null;
 }
 
-export async function adminUpsertMember(data: UpsertMemberInput): Promise<{ error?: string }> {
+export async function adminUpsertMember(
+  data: UpsertMemberInput,
+): Promise<{ error?: string; conflict?: EmailConflictResult["conflict"] }> {
   try {
     const admin = await requireAdmin();
     if (!data.fullName?.trim()) return { error: t.errors.fieldRequired(t.fields.name) };
@@ -1977,7 +1993,7 @@ export async function adminUpsertMember(data: UpsertMemberInput): Promise<{ erro
     // A taken address is returned, not thrown: Next.js masks thrown Server
     // Action messages in production, and the admin needs to read this one.
     const conflict = await memberEmailConflict(data.memberId, { email, aliasEmail });
-    if (conflict) return { error: conflict };
+    if (conflict) return conflict;
 
     try {
       if (data.memberId) {
@@ -2028,7 +2044,7 @@ export async function adminUpsertMember(data: UpsertMemberInput): Promise<{ erro
       // A concurrent save took the address after the check above: the unique
       // indexes (migration 0017) reject the write. Report it the same way.
       const raced = isUniqueViolation(e) ? await memberEmailConflict(data.memberId, { email, aliasEmail }) : null;
-      if (raced) return { error: raced };
+      if (raced) return raced;
       throw e;
     }
 

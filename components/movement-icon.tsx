@@ -91,6 +91,14 @@ const PATHS: Record<MovementKind, ReactNode> = {
       <polyline points="8 12 11 15 16 10" />
     </>
   ),
+  // Account merge: two branches joining.
+  member_merge: (
+    <>
+      <circle cx="18" cy="18" r="3" />
+      <circle cx="6" cy="6" r="3" />
+      <path d="M6 21V9a9 9 0 0 0 9 9" />
+    </>
+  ),
   // Reversal: a turning arrow.
   reversal: <path d="M3 12a9 9 0 1 0 3-6.7M3 4v4h4" />,
   // Adjustment: pencil.

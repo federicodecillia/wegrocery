@@ -46,6 +46,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 │   │   ├── admin-cycles.ts     # Cycle-specific actions
 │   │   ├── admin-products.ts   # Product/catalog actions
 │   │   ├── admin-settings.ts   # adminUpdatePaymentSettings (Impostazioni tab)
+│   │   ├── admin-members.ts    # previewMemberMerge, adminMergeMembers (Soci → Unisci)
 │   │   ├── notifications.ts    # markNotificationRead, markAllNotificationsRead
 │   │   └── order.ts            # saveOrder, saveOrderDraft, discardOrderDraft (member)
 │   ├── email/                  # Resend wrapper + supplier-email templates
@@ -54,7 +55,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 │                               #   access.ts: pure checkAccess/sessionClaims (no imports, used by proxy.ts)
 ├── proxy.ts                     # Redirect unauthenticated to /login (Next.js 16's middleware)
 ├── auth.ts                     # Better Auth instance, auth() (session + member), signOut()
-├── drizzle/                    # SQL migrations (0000–0020)
+├── drizzle/                    # SQL migrations (0000–0028)
 └── public/logo.png
 ```
 
@@ -308,11 +309,11 @@ all in `lib/roles.ts`:
 
 | Table | Purpose |
 |---|---|
-| `members` | User registry; `role`: admin / attivi / utenti |
+| `members` | User registry; `role`: admin / attivi / utenti; `merged_into` on an account absorbed by a merge (see Member merge) |
 | `order_cycles` | Weekly order windows; one `open` at a time |
 | `products` | Per-cycle product list |
 | `orders` | Order lines per member per cycle |
-| `ledger_entries` | Balance: `topup` (+), `order_charge` (−), `shipping_charge` (−), `correction` (±), `payout` / `manual_charge` / `membership_fee` (−, Cassa, reason required), `refund_failed` (+, a Stripe refund that did not go through), legacy `adjustment`. Manual rows carry `method` (bonifico/contanti/satispay/altro) and `external_ref` (CRO/TRN, unique on `upper(trim())`, migration 0018). Rows of a refund carry `refund_id` (unique with `type`) |
+| `ledger_entries` | Balance: `topup` (+), `order_charge` (−), `shipping_charge` (−), `correction` (±), `payout` / `manual_charge` / `membership_fee` (−, Cassa, reason required), `refund_failed` (+, a Stripe refund that did not go through), `member_merge` (±, a pair with `counterpart`, see Member merge, never editable), legacy `adjustment`. Manual rows carry `method` (bonifico/contanti/satispay/altro) and `external_ref` (CRO/TRN, unique on `upper(trim())`, migration 0018). Rows of a refund carry `refund_id` (unique with `type`) |
 | `orders.actual_quantity` / `actual_line_total` | Recorded after delivery when the supplier weighed something different from what was ordered (e.g. 1 kg → 800 g). NULL = delivered as ordered. |
 | `notifications` | Per-member or per-role messages with `read_at` |
 | `payments` | Online top-ups (Stripe Checkout): `status` pending → succeeded / failed / expired → partially_refunded / refunded, amounts in integer cents; `refunded_cents` = sum of its `pending` / `succeeded` refunds |
@@ -363,6 +364,16 @@ ID prefix convention: `cyc_*`, `mem_*`, `prd_*`, `ord_*`, `led_*`, `not_*`, `aud
   `lower(email)` / `lower(alias_email)` (migration 0017) plus the email-vs-alias
   cross-check in `adminUpsertMember`; `normalizeEmail` (`lib/member-email.ts`)
   is the one normalizer for storing and comparing.
+
+### Member merge
+
+One person, two accounts (typically an old address and the one they used at first sign-in): Admin → Soci → **Unisci**, or the prompt that appears when an admin types another member's address in ✎. Rules in `lib/members/merge.ts` (pure, unit tested), write in `lib/members/merge-store.ts` (one guarded batch: both member rows locked `FOR UPDATE`, the moving cycles locked and still open, a fingerprint of everything the plan read compared again; a change meanwhile aborts with "retry"), actions in `lib/actions/admin-members.ts` (`previewMemberMerge`, `adminMergeMembers`).
+
+- The survivor keeps name, role, primary email, preferences; its secondary email becomes the absorbed account's primary by default (one slot: the admin picks, the addresses nobody keeps lose their sign-in identities). Sessions continue: `auth()` resolves the address to the survivor on the next request.
+- Orders on open cycles, drafts and notifications move. Closed-cycle orders stay with their charges (`closed_cycle_charge` pairs them). The balance moves as a `member_merge` pair (`ledger_entries.counterpart`, migration 0027): no ledger row changes member.
+- Refused: both ordered on the same open cycle, an open pay-per-order cycle, a pending payment or refund, an unsettled pay-per-order cycle with movements, absorbing your own account.
+- **Possible duplicates** (`lib/members/duplicates.ts`, pure): active, unmerged pairs with the same name (accents, case and word order ignored, 2+ words) or whose name words (3+ letters, at least two) appear in the other's address; the proposed survivor is the higher role, then the older account. Shown on top of Soci with Merge prefilled; "not the same person" stores the pair in `member_duplicate_dismissals` (migration 0028, cascades on member delete). Typical cause: an old address with no card is refused (`MembershipInactive`), the member signs in with the card's address and the card check provisions a second account; the login message tells them to do exactly that, and the admin merges.
+- An absorbed account with no history is deleted; otherwise it stays inactive with `merged_into`, a `<memberId>@merged.invalid` address and a zero balance. Nightly checks `member_merge_pairs` and `merged_member_empty`.
 
 ### Post-closure adjustments
 

@@ -27,7 +27,28 @@ on:
   workflow_dispatch:
 
 jobs:
+  # A copy of the repository that never set up backups (a new installation, a
+  # fork) has no DATABASE_URL secret: both jobs are skipped with a warning
+  # instead of failing every night.
+  configured:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      enabled: ${{ steps.check.outputs.enabled }}
+    steps:
+      - id: check
+        env:
+          HAS_DB: ${{ secrets.DATABASE_URL != '' }}
+        run: |
+          if [ "$HAS_DB" = "true" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::No DATABASE_URL secret: backup and invariants skipped."
+          fi
+
   backup:
+    needs: configured
+    if: needs.configured.outputs.enabled == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -137,6 +158,8 @@ jobs:
           rm -f "$HOME/.config/rclone/rclone.conf"
 
   invariants:
+    needs: configured
+    if: needs.configured.outputs.enabled == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -158,7 +181,7 @@ jobs:
         run: node node_modules/tsx/dist/cli.mjs scripts/check-invariants.mts
 
   notify:
-    needs: [backup, invariants]
+    needs: [configured, backup, invariants]
     if: ${{ always() && (contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')) }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
