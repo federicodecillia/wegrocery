@@ -867,6 +867,7 @@ export const it = {
       aboveMaxNotice: (balance: string, max: string) =>
         `Il saldo ora è ${balance}, sopra il massimo del gruppo (${max}). Se serve, restituisci la differenza con Movimento in uscita → Restituzione.`,
       newTopup: "Nuova ricarica",
+      topupHint: "Bonifico, contanti o altro pagamento ricevuto da un socio",
       memberLabel: "Socio *",
       amountLabel: "Importo € *",
       amountPlaceholder: "0,00",

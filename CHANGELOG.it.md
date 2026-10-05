@@ -26,6 +26,7 @@ stanno nella PR.
 
 ### Modificato
 - 🔑 **Messaggio più chiaro quando la tessera non risulta.** Al socio la cui tessera non è sul suo indirizzo viene detto di entrare con l'indirizzo con cui ha fatto la tessera; un admin unisce poi i due account.
+- 💶 **Tab Cassa più ordinata.** "Nuova ricarica" è chiusa come "Movimento in uscita" e si apre con un tocco; l'elenco dei saldi è diviso in Admin, Attivi e Utenti, come nella tab Soci.
 
 ## [1.22.0] — 4 ottobre 2026
 

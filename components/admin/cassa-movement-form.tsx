@@ -164,9 +164,50 @@ function useMovementSubmit(onRecorded: (memberName: string, notice: string | nul
   return { isPending, review, setReview, submit };
 }
 
+// A Cassa form folded behind its title: opened only when the admin needs it,
+// so the balances list stays in view.
+function FoldableCard({
+  title,
+  hint,
+  open,
+  onToggle,
+  children,
+}: {
+  title: string;
+  hint: string;
+  open: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+}) {
+  const panelId = useId();
+  return (
+    <div className="rounded-xl border border-brand-border bg-white p-4 shadow-sm">
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={open}
+        aria-controls={panelId}
+        className="flex w-full items-center justify-between gap-3 text-left"
+      >
+        <span>
+          <span className="block text-[13px] font-bold text-brand-near-black">{title}</span>
+          <span className="block text-label text-brand-gray">{hint}</span>
+        </span>
+        <span aria-hidden className="text-label text-muted">
+          {open ? "▲" : "▼"}
+        </span>
+      </button>
+      <div id={panelId} hidden={!open} className="mt-4">
+        {children}
+      </div>
+    </div>
+  );
+}
+
 // ── Top-up ────────────────────────────────────────────────────────────────────
 
 export function TopupForm({ members }: { members: PickerMember[] }) {
+  const [open, setOpen] = useState(false);
   const [member, setMember] = useState<PickerMember | null>(null);
   const [amount, setAmount] = useState("");
   const [method, setMethod] = useState<ManualPaymentMethod>("bonifico");
@@ -213,9 +254,8 @@ export function TopupForm({ members }: { members: PickerMember[] }) {
     );
   }
 
-  const card = "rounded-xl border border-brand-border bg-white p-4 shadow-sm";
-
-  if (review && member) {
+  let body: React.ReactNode = null;
+  if (open && review && member) {
     const lines: RecapLine[] = [
       { label: t.admin.treasury.recapMember, value: `${member.fullName} (${member.email})` },
       { label: t.admin.treasury.recapAmount, value: formatSignedMoney(parsedAmount) },
@@ -228,107 +268,114 @@ export function TopupForm({ members }: { members: PickerMember[] }) {
         value: `${formatMoney(member.balance)} → ${formatMoney(member.balance + parsedAmount)}`,
       },
     ];
-    return (
-      <div className={card}>
-        <Recap
-          title={t.admin.treasury.recapTitle}
-          lines={lines}
-          review={review}
-          confirmLabel={t.admin.treasury.registerTopup}
-          isPending={isPending}
-          onBack={() => setReview(null)}
-          onConfirm={confirm}
-        />
-      </div>
+    body = (
+      <Recap
+        title={t.admin.treasury.recapTitle}
+        lines={lines}
+        review={review}
+        confirmLabel={t.admin.treasury.registerTopup}
+        isPending={isPending}
+        onBack={() => setReview(null)}
+        onConfirm={confirm}
+      />
+    );
+  } else if (open) {
+    body = (
+      <form onSubmit={handleReview} noValidate>
+        <div className="space-y-3">
+          <MemberCombobox
+            members={members}
+            value={member}
+            onChange={setMember}
+            label={t.admin.treasury.memberLabel}
+          />
+          <div className="grid grid-cols-2 gap-3">
+            <Field label={t.admin.treasury.amountLabel}>
+              {(id) => (
+                <input
+                  id={id}
+                  type="text"
+                  inputMode="decimal"
+                  autoComplete="off"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  placeholder={t.admin.treasury.amountPlaceholder}
+                  className={inputCls}
+                />
+              )}
+            </Field>
+            <Field label={t.admin.treasury.dateLabel}>
+              {(id) => (
+                <input
+                  id={id}
+                  type="date"
+                  value={entryDate}
+                  onChange={(e) => setEntryDate(e.target.value)}
+                  className={inputCls}
+                />
+              )}
+            </Field>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label={t.admin.treasury.methodLabel}>
+              {(id) => <MethodSelect id={id} value={method} onChange={setMethod} />}
+            </Field>
+            <Field label={t.admin.treasury.externalRefLabel}>
+              {(id) => (
+                <input
+                  id={id}
+                  type="text"
+                  autoComplete="off"
+                  autoCapitalize="characters"
+                  spellCheck={false}
+                  value={externalRef}
+                  onChange={(e) => setExternalRef(e.target.value)}
+                  placeholder={t.admin.treasury.externalRefPlaceholder}
+                  className={inputCls}
+                />
+              )}
+            </Field>
+          </div>
+          <Field label={t.admin.treasury.noteLabel}>
+            {(id) => (
+              <input
+                id={id}
+                type="text"
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                placeholder={t.admin.treasury.notePlaceholder}
+                className={inputCls}
+              />
+            )}
+          </Field>
+        </div>
+        {formError && (
+          <p role="alert" className="mt-3 text-[12px] text-brand-red">
+            {formError}
+          </p>
+        )}
+        <button type="submit" className="mt-4 w-full rounded-xl bg-accent py-2 text-[13px] font-bold text-on-accent">
+          {t.admin.treasury.review}
+        </button>
+      </form>
     );
   }
 
   return (
-    <form onSubmit={handleReview} noValidate className={card}>
-      <p className="mb-3 text-[13px] font-bold text-brand-near-black">{t.admin.treasury.newTopup}</p>
-      <div className="space-y-3">
-        <MemberCombobox
-          members={members}
-          value={member}
-          onChange={setMember}
-          label={t.admin.treasury.memberLabel}
-        />
-        <div className="grid grid-cols-2 gap-3">
-          <Field label={t.admin.treasury.amountLabel}>
-            {(id) => (
-              <input
-                id={id}
-                type="text"
-                inputMode="decimal"
-                autoComplete="off"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder={t.admin.treasury.amountPlaceholder}
-                className={inputCls}
-              />
-            )}
-          </Field>
-          <Field label={t.admin.treasury.dateLabel}>
-            {(id) => (
-              <input
-                id={id}
-                type="date"
-                value={entryDate}
-                onChange={(e) => setEntryDate(e.target.value)}
-                className={inputCls}
-              />
-            )}
-          </Field>
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <Field label={t.admin.treasury.methodLabel}>
-            {(id) => <MethodSelect id={id} value={method} onChange={setMethod} />}
-          </Field>
-          <Field label={t.admin.treasury.externalRefLabel}>
-            {(id) => (
-              <input
-                id={id}
-                type="text"
-                autoComplete="off"
-                autoCapitalize="characters"
-                spellCheck={false}
-                value={externalRef}
-                onChange={(e) => setExternalRef(e.target.value)}
-                placeholder={t.admin.treasury.externalRefPlaceholder}
-                className={inputCls}
-              />
-            )}
-          </Field>
-        </div>
-        <Field label={t.admin.treasury.noteLabel}>
-          {(id) => (
-            <input
-              id={id}
-              type="text"
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              placeholder={t.admin.treasury.notePlaceholder}
-              className={inputCls}
-            />
-          )}
-        </Field>
-      </div>
-      {formError && (
-        <p role="alert" className="mt-3 text-[12px] text-brand-red">
-          {formError}
-        </p>
-      )}
-      <button type="submit" className="mt-4 w-full rounded-xl bg-accent py-2 text-[13px] font-bold text-on-accent">
-        {t.admin.treasury.review}
-      </button>
-    </form>
+    <FoldableCard
+      title={t.admin.treasury.newTopup}
+      hint={t.admin.treasury.topupHint}
+      open={open}
+      onToggle={() => setOpen((o) => !o)}
+    >
+      {body}
+    </FoldableCard>
   );
 }
 
 // ── Outgoing movements ────────────────────────────────────────────────────────
 
-// Payout, manual charge or membership fee: rarer than top-ups, so the form
-// stays folded until the admin opens it.
+// Payout, manual charge or membership fee, folded like the top-up form.
 export function OutgoingMovementForm({ members }: { members: PickerMember[] }) {
   const panelId = useId();
   const [open, setOpen] = useState(false);
@@ -531,25 +578,13 @@ export function OutgoingMovementForm({ members }: { members: PickerMember[] }) {
   }
 
   return (
-    <div className="rounded-xl border border-brand-border bg-white p-4 shadow-sm">
-      <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        aria-expanded={open}
-        aria-controls={panelId}
-        className="flex w-full items-center justify-between gap-3 text-left"
-      >
-        <span>
-          <span className="block text-[13px] font-bold text-brand-near-black">{t.admin.treasury.outgoingTitle}</span>
-          <span className="block text-label text-brand-gray">{t.admin.treasury.outgoingHint}</span>
-        </span>
-        <span aria-hidden className="text-label text-muted">
-          {open ? "▲" : "▼"}
-        </span>
-      </button>
-      <div id={panelId} hidden={!open} className="mt-4">
-        {body}
-      </div>
-    </div>
+    <FoldableCard
+      title={t.admin.treasury.outgoingTitle}
+      hint={t.admin.treasury.outgoingHint}
+      open={open}
+      onToggle={() => setOpen((o) => !o)}
+    >
+      {body}
+    </FoldableCard>
   );
 }
