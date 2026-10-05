@@ -3,6 +3,7 @@ import { getDb } from "./client";
 import { liveLedger } from "./ledger-live";
 import {
   ledgerEntries,
+  memberDuplicateDismissals,
   members,
   notificationPreferences,
   notifications,
@@ -573,6 +574,15 @@ export async function getAllSuppliers() {
 export async function getAllMembers() {
   const db = getDb();
   return db.select().from(members).orderBy(asc(members.fullName));
+}
+
+// Possible duplicate pairs an admin dismissed, as "member_a:member_b"
+// (lib/members/duplicates.ts pairKey).
+export async function getDismissedDuplicatePairs(): Promise<Set<string>> {
+  const rows = await getDb()
+    .select({ a: memberDuplicateDismissals.memberA, b: memberDuplicateDismissals.memberB })
+    .from(memberDuplicateDismissals);
+  return new Set(rows.map((r) => `${r.a}:${r.b}`));
 }
 
 export type MemberWithBalance = {

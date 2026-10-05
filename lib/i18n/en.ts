@@ -337,7 +337,8 @@ export const en: Strings = {
     attemptedEmail: (email: string) => `You tried to sign in with: ${email}`,
     notMember:
       "To sign in you need a membership card that is active for the current year. Use the same email you registered your card with.",
-    membershipInactive: "Your membership card is not active for the current year.",
+    membershipInactive:
+      "Your membership card is not active for the current year. If you registered your card with another email address, sign in with that one: an admin will then merge your accounts.",
     renewMembership: "Renew your membership",
     membershipCheckUnavailable:
       "We can't verify your membership card right now. Please try again in a few minutes.",
@@ -364,7 +365,7 @@ export const en: Strings = {
     accountInactive: (app: string, support: string) =>
       `Hi,\n\nyour account on ${app} is not active. To reactivate it write to ${support}.`,
     membershipInactive: (app: string, renew: string | null, support: string) =>
-      `Hi,\n\nyour membership card is not active for this year, so you can't sign in to ${app}.${renew ? ` You can renew it here: ${renew}` : ""}\n\nQuestions: ${support}.`,
+      `Hi,\n\nyour membership card is not active for this year, so you can't sign in to ${app}.${renew ? ` You can renew it here: ${renew}` : ""}\n\nIf you registered your card with another email address, sign in with that one: an admin will then merge your accounts.\n\nQuestions: ${support}.`,
     checkUnavailable: (app: string) =>
       `Hi,\n\nwe can't check your membership card right now, so we can't send you the link to sign in to ${app}. Try again in a few minutes.`,
   },
@@ -1008,6 +1009,18 @@ export const en: Strings = {
       deleted: (name: string) => `${name} deleted`,
       emailInUse: (email: string, name: string) =>
         `The address ${email} is already used by ${name}: an address can belong to one member only, as email or as secondary email.`,
+      duplicates: {
+        title: (n: number) => (n === 1 ? "1 possible duplicate" : `${n} possible duplicates`),
+        intro:
+          "Accounts that look like the same person, usually someone who signed in with their card's address instead of the one they had. Check and merge: the first one stays.",
+        reasons: {
+          same_name: "Same name",
+          name_in_address: "The name appears in the other's address",
+        },
+        merge: "Merge",
+        dismiss: "Not the same person",
+        dismissed: "Pair hidden",
+      },
       merge: {
         button: "Merge",
         title: (name: string) => `Merge ${name}`,
