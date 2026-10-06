@@ -418,7 +418,6 @@ export const en: Strings = {
     guideDetail: "How it works and FAQ",
     news: "What's new",
     newsDetail: "What changed in the app",
-    privacy: "Privacy",
     contact: "Contact the group",
     version: (v: string) => `Version ${v}`,
   },
