@@ -13,8 +13,8 @@ others' private information are not acceptable.
 ## Reporting
 
 If you experience or witness unacceptable behaviour, contact the maintainer,
-[Federico De Cillia](https://github.com/federicodecillia), privately through
-a [LinkedIn message](https://www.linkedin.com/in/federicodecillia). Reports
+[Federico De Cillia](https://github.com/federicodecillia), privately by email
+at [federico.decillia@gmail.com](mailto:federico.decillia@gmail.com). Reports
 are handled confidentially.
 
 The maintainer may remove comments, commits or other contributions that
