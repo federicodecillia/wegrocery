@@ -21,6 +21,9 @@ stanno nella PR.
 
 ## [Non rilasciato]
 
+### Aggiunte
+- 🏠 **Il nostro gruppo, in cima alla guida.** Gli admin scrivono in Impostazioni dove e quando si ritira, chi contattare e le regole del gruppo; i soci lo trovano per primo nella guida, e anche la ricerca lo trova.
+
 ## [1.24.0] — 6 ottobre 2026
 
 *Le tue impostazioni in un posto solo, e una guida in cui cercare.*

@@ -440,6 +440,7 @@ export const it = {
     newsTitle: "Novità",
     newsSubtitle: "Cosa è cambiato",
     seeAllNews: "Vedi tutte le novità →",
+    groupTitle: "Il nostro gruppo",
     contactEmoji: "📬",
     contactHeading: "Hai altre domande?",
     contactIntro: (appName: string) =>
@@ -1274,6 +1275,19 @@ export const it = {
       importAddedToCycle: (n: number) => `${n} nel ciclo`,
     },
     settings: {
+      groupInfo: {
+        title: "Il nostro gruppo",
+        hint: "Le informazioni del vostro gruppo, in cima alla guida dei soci: dove e quando si ritira, chi contattare, le regole interne.",
+        format: "Una riga vuota separa i paragrafi. **parola** diventa grassetto; indirizzi web ed email diventano link.",
+        placeholder: "Es. Il ritiro è il giovedì dalle 18 alle 20.\n\nPer dubbi scrivi a ...",
+        count: (n: number, max: number) => `${n} / ${max}`,
+        empty: "Vuoto: la guida non mostra il riquadro.",
+        save: "Salva il testo",
+        saved: "Testo salvato",
+        removed: "Riquadro tolto dalla guida",
+        preview: "Vedi nella guida →",
+        tooLong: (max: number) => `Il testo supera i ${max} caratteri.`,
+      },
       families: {
         title: "Famiglie",
         hint: "I soci possono invitarsi a vicenda e condividere un account: carrello, saldo e storico. Ognuno entra con le sue email.",

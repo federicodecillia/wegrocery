@@ -8,6 +8,7 @@ import { getDb } from "@/lib/db/client";
 import { appSettings, auditLog } from "@/lib/db/schema";
 import { t } from "@/lib/i18n";
 import { brand } from "@/lib/brand";
+import { GROUP_INFO_MAX, normalizeGroupInfo } from "@/lib/guide/group-info";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
 import {
   modeChangeBlockers,
@@ -170,5 +171,53 @@ export async function adminSetFamiliesEnabled(enabled: boolean): Promise<{ error
     return {};
   } catch (e) {
     return { error: actionErrorMessage(e, t.errors.genericError, "adminSetFamiliesEnabled") };
+  }
+}
+
+// Impostazioni -> Il nostro gruppo: the group's own text at the top of the
+// guide (lib/guide/group-info.ts). An empty text removes the card.
+export async function adminUpdateGroupInfo(raw: string): Promise<{ error?: string }> {
+  try {
+    const admin = await requireAdmin();
+    const text = normalizeGroupInfo(raw);
+    if (text !== null && text.length > GROUP_INFO_MAX) {
+      return { error: t.admin.settings.groupInfo.tooLong(GROUP_INFO_MAX) };
+    }
+    const before = await getPaymentSettings();
+    if (before.groupInfo === text) return {};
+    const db = getDb();
+    const now = new Date();
+    // No row yet: the defaults the group runs on are stored with the text.
+    const current = {
+      minBalance: before.minBalance === null ? null : before.minBalance.toFixed(2),
+      maxBalance: before.maxBalance === null ? null : before.maxBalance.toFixed(2),
+      bankTransferEnabled: before.bankTransferEnabled,
+      bankHolder: before.bankHolder,
+      bankIban: before.bankIban,
+      onlinePaymentsEnabled: before.onlinePaymentsEnabled,
+    };
+    await db.batch([
+      db
+        .insert(appSettings)
+        .values({ id: 1, ...current, groupInfo: text, updatedAt: now, updatedBy: admin.email })
+        .onConflictDoUpdate({
+          target: appSettings.id,
+          set: { groupInfo: text, updatedAt: now, updatedBy: admin.email },
+        }),
+      db.insert(auditLog).values({
+        auditId: crypto.randomUUID(),
+        userEmail: admin.email,
+        action: "update_group_info",
+        entityType: "app_settings",
+        entityId: "1",
+        payloadJson: JSON.stringify({ before: before.groupInfo, after: text }),
+        createdAt: now,
+      }),
+    ]);
+    revalidatePath("/guida");
+    revalidatePath("/admin");
+    return {};
+  } catch (e) {
+    return { error: actionErrorMessage(e, t.errors.genericError, "adminUpdateGroupInfo") };
   }
 }

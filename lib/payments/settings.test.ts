@@ -36,6 +36,7 @@ describe("resolvePaymentSettings", () => {
       bankIban: SPACED_IBAN,
       onlinePaymentsEnabled: true,
       familiesEnabled: false,
+      groupInfo: null,
       bankTransfer: { holder: "Porta Moneta APS", iban: SPACED_IBAN },
       onlineTopupAvailable: true,
       stripeKey: { usable: true, livemode: false },

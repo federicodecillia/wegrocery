@@ -19,7 +19,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 │   ├── storico/page.tsx        # Order history + ledger movements tabs
 │   ├── notifiche/page.tsx      # Notification list with mark-as-read
 │   ├── profilo/page.tsx        # Profile (header avatar): name, emails, card, family, notifications, money, app, sign-out (privacy stays in the footer)
-│   ├── guida/page.tsx          # Guide index: search, topics, news; cards in guida/[topic] (content in lib/guide)
+│   ├── guida/page.tsx          # Guide index: "Il nostro gruppo" (admin text), search, topics, news; cards in guida/[topic] (content in lib/guide)
 │   ├── admin/page.tsx          # Admin panel: ciclo/prodotti/ordini/cassa/soci/fornitori/statistiche + impostazioni (⚙)
 │   ├── login/page.tsx          # Login with Google
 │   └── api/auth/[...all]/      # Better Auth handler, limited to lib/auth/public-endpoints.ts
@@ -57,7 +57,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 │                               #   access.ts: pure checkAccess/sessionClaims (no imports, used by proxy.ts)
 ├── proxy.ts                     # Redirect unauthenticated to /login (Next.js 16's middleware)
 ├── auth.ts                     # Better Auth instance, auth() (session + member), signOut()
-├── drizzle/                    # SQL migrations (0000–0029)
+├── drizzle/                    # SQL migrations (0000–0030)
 └── public/logo.png
 ```
 
@@ -325,7 +325,7 @@ all in `lib/roles.ts`:
 | `notifications` | Per-member or per-role messages with `read_at` |
 | `payments` | Online top-ups (Stripe Checkout): `status` pending → succeeded / failed / expired → partially_refunded / refunded, amounts in integer cents; `refunded_cents` = sum of its `pending` / `succeeded` refunds |
 | `refunds` | Stripe refunds, one row each (`ref_*`): `status` requested → pending / succeeded → failed / canceled, `reason` (only `dashboard` until the app starts refunds), `stripe_refund_id`. Written only by `upsertStripeRefund` (`lib/payments/refund-store.ts`). Pre-1.15.0 refunds were imported by migration 0020 (`created_by = 'import'`, no Stripe id until an event names them) |
-| `app_settings` | Payment settings from admin → Impostazioni, one row (`id = 1`): `payment_mode` (`wallet` | `per_order`, changed only by `adminChangePaymentMode`), `min_balance` / `max_balance`, bank transfer on/off with holder and IBAN, online payments on/off. No row = brand defaults. Read only through `getPaymentSettings` (`lib/payments/get-settings.ts`) |
+| `app_settings` | Payment settings from admin → Impostazioni, one row (`id = 1`): `payment_mode` (`wallet` | `per_order`, changed only by `adminChangePaymentMode`), `min_balance` / `max_balance`, bank transfer on/off with holder and IBAN, online payments on/off, `families_enabled`, `group_info` ("Il nostro gruppo" at the top of `/guida`, migration 0030, `lib/guide/group-info.ts`). No row = brand defaults. Read only through `getPaymentSettings` (`lib/payments/get-settings.ts`) |
 | `order_drafts` | A member's unconfirmed edits on an open cycle (`member_id`, `cycle_id`, `lines` jsonb), autosaved by the order form; `saveOrder` and the cycle close delete them in their batch |
 | `order_cycles.payment_mode` / `handling_fee_*`, `payments.kind` / `cycle_id` / `order_snapshot` | Pay-per-order (`drizzle/0021_pay_per_order.sql`): see Online top-ups (Stripe). Ledger types `order_payment` (+) and `order_refund` (−) sit on the cycle. `order_cycles.settled_at` and `members.pays_offline` (`drizzle/0024_settlement.sql`): see Pay-per-order |
 | `audit_log` | Append-only admin action log |

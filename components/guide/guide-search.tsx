@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, type ReactNode } from "react";
+import { flushSync } from "react-dom";
 import { t } from "@/lib/i18n";
 import { searchGuide, type GuideSearchEntry } from "@/lib/guide/search";
 
@@ -82,7 +83,11 @@ export function GuideSearch({ index, synonyms, stopwords, topicTitles, children 
                   {/* A full navigation, not next/link: only a real load sets :target,
                       which highlights the card on the topic page. */}
                   <a
-                    href={`/guida/${entry.topic}#${entry.slug}`}
+                    href={entry.href}
+                    // A result on this very page (Il nostro gruppo) only changes
+                    // the hash: show the index first, so the card exists when
+                    // the browser scrolls to it.
+                    onClick={entry.href.startsWith("/guida#") ? () => flushSync(() => setQuery("")) : undefined}
                     className="block px-4 py-[12px] hover:bg-brand-warm-white"
                   >
                     <span className="block text-[14px] font-semibold text-brand-near-black">{entry.title}</span>

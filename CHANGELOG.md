@@ -20,6 +20,9 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ## [Unreleased]
 
+### Added
+- 🏠 **Our group, at the top of the guide.** Admins write where and when to collect, who to ask and the group's own rules in Impostazioni; members find it first in the guide, and the search finds it too.
+
 ## [1.24.0] — 2026-10-06
 
 *Your settings in one place, and a guide you can search.*
