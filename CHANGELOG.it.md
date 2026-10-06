@@ -21,6 +21,10 @@ stanno nella PR.
 
 ## [Non rilasciato]
 
+## [1.23.0] — 6 ottobre 2026
+
+*Le famiglie condividono un account, e gli account doppi si fanno notare.*
+
 ### Aggiunte
 - 👯 **Possibili doppioni in Soci.** Admin → Soci elenca gli account che sembrano della stessa persona (stesso nome, o il nome dentro l'indirizzo dell'altro), con Unisci già compilato e "Non sono la stessa persona" per nascondere una coppia. Migrazione `0028_member_duplicate_dismissals.sql`.
 - 👨‍👩‍👧 **Famiglie.** I soci possono invitarsi a vicenda in un unico account (Notifiche → ⚙ → Famiglia): carrello, saldo e storico degli ordini diventano comuni, e ognuno continua a entrare con i suoi indirizzi. Chi è invitato accetta o rifiuta (notifica nell'app ed email); ciascuno può uscire. Spente di default, si accendono in admin → Impostazioni; Soci mostra chi è in quale famiglia. Migrazione `0029_families.sql`.
@@ -526,6 +530,7 @@ stanno nella PR.
 
 ---
 
+[1.23.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.23.0
 [1.22.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.22.0
 [1.21.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.21.1
 [1.21.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.21.0
