@@ -676,19 +676,24 @@ export function OrderForm({
       {/* Sticky footer — rides above the (sticky) bottom nav; from lg the nav
           is in the header, so it sits at the bottom edge. In-flow sticky
           inherits the card width at every breakpoint; -mx-5 bleeds it across
-          main's padding to the card edges. Opaque background, no
-          backdrop-filter: on iOS WebKit a backdrop-filter on a sticky layer
-          skips repaints, so the total and the balance kept stale digits
-          drawn over the new ones. */}
+          main's padding to the card edges. iOS WebKit skips repainting a
+          text change inside this sticky layer and leaves the old digits
+          under the new ones: the layer is promoted to its own compositing
+          layer (translateZ), the background is opaque (no backdrop-filter),
+          and each amount is keyed on its value so a change mounts a fresh
+          node, whose old rectangle WebKit does invalidate. */}
       {isEditing && (hasOrder || hasSavedOrder) && (
-        <div className="sticky z-10 -mx-5 mt-4 -mb-[calc(var(--spacing-nav-h)+1rem)] bottom-[calc(var(--spacing-nav-h)+env(safe-area-inset-bottom))] lg:-mb-4 lg:bottom-0">
+        <div className="sticky z-10 -mx-5 mt-4 -mb-[calc(var(--spacing-nav-h)+1rem)] bottom-[calc(var(--spacing-nav-h)+env(safe-area-inset-bottom))] lg:-mb-4 lg:bottom-0 [transform:translateZ(0)]">
           <div className="border-t border-brand-border bg-brand-warm-white px-5 py-3.5">
             <div className="mb-3 flex items-end justify-between">
               <div>
                 <div className="font-mono text-label uppercase tracking-[0.09em] text-muted">
                   {t.order.totalOrder}
                 </div>
-                <div className="mt-[2px] text-[24px] font-black tracking-[-0.03em] text-brand-near-black">
+                <div
+                  key={payAmount ? payAmount.requiredCents : orderTotal}
+                  className="mt-[2px] text-[24px] font-black tracking-[-0.03em] text-brand-near-black"
+                >
                   {formatEur(payAmount ? payAmount.requiredCents / 100 : orderTotal)}
                 </div>
               </div>
@@ -697,7 +702,7 @@ export function OrderForm({
                   <div className="font-mono text-label uppercase tracking-[0.09em] text-muted">
                     {t.order.pay.toPay}
                   </div>
-                  <div className="mt-[2px] font-mono text-[14px] font-bold text-brand-near-black">
+                  <div key={payAmount.chargeCents} className="mt-[2px] font-mono text-[14px] font-bold text-brand-near-black">
                     {payAmount.chargeCents > 0 ? formatEur(payAmount.chargeCents / 100) : t.order.pay.nothingToPay}
                   </div>
                 </div>
@@ -707,6 +712,7 @@ export function OrderForm({
                     {t.order.balanceAfter}
                   </div>
                   <div
+                    key={afterBalance}
                     className={`mt-[2px] font-mono text-[14px] font-bold ${
                       afterBalance < 0 ? "text-brand-red" : "text-accent-text"
                     }`}
