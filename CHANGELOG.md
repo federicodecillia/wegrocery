@@ -20,6 +20,10 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ## [Unreleased]
 
+## [1.23.0] — 2026-10-06
+
+*Families share one account, and duplicate accounts point themselves out.*
+
 ### Added
 - 👯 **Possible duplicates in Members.** Admin → Members lists accounts that look like the same person (same name, or the name inside the other's address), with Merge already filled in and "Not the same person" to hide a pair. Migration `0028_member_duplicate_dismissals.sql`.
 - 👨‍👩‍👧 **Families.** Members can invite each other into one account (Notifications → ⚙ → Family): cart, balance and order history become shared, and each person keeps signing in with their own addresses. The invited person accepts or declines (in-app notice and email); either can leave. Off by default, admin → Settings switches it on; Members shows who is in which family, on every account of it. Migration `0029_families.sql`.
@@ -524,6 +528,7 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ---
 
+[1.23.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.23.0
 [1.22.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.22.0
 [1.21.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.21.1
 [1.21.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.21.0
