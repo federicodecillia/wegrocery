@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   DRAFT_MAX_LINES,
   draftSyncAction,
+  isStaleOrderWrite,
+  orderStateKey,
   normalizeDraftLines,
   orderLinesKey,
   resumeDraft,
@@ -109,5 +111,44 @@ describe("draftSyncAction", () => {
 
   it("drops the draft once the form is back to the confirmed order", () => {
     expect(draftSyncAction("prd_a:1", "prd_a:1", "prd_a:2")).toBe("discard");
+  });
+});
+
+describe("orderStateKey", () => {
+  const available = new Set(["a", "b"]);
+  const confirmed = [{ productId: "a", quantity: 2 }];
+
+  it("is the draft's key when there is a draft", () => {
+    expect(orderStateKey([{ productId: "b", quantity: 1 }], confirmed, available)).toBe("b:1");
+  });
+
+  it("is the confirmed order's key without a draft", () => {
+    expect(orderStateKey(null, confirmed, available)).toBe("a:2");
+  });
+
+  it("counts an emptied draft as an empty cart, not as no draft", () => {
+    expect(orderStateKey([], confirmed, available)).toBe("");
+  });
+
+  it("leaves out products no longer in the cycle", () => {
+    expect(orderStateKey([{ productId: "x", quantity: 1 }, { productId: "a", quantity: 1 }], [], available)).toBe("a:1");
+  });
+});
+
+describe("isStaleOrderWrite", () => {
+  it("passes a write based on what the server holds", () => {
+    expect(isStaleOrderWrite("a:1", "a:1", "a:2")).toBe(false);
+  });
+
+  it("refuses a write based on an older state", () => {
+    expect(isStaleOrderWrite("a:1", "a:3", "a:2")).toBe(true);
+  });
+
+  it("passes a write that changes nothing, whatever its base", () => {
+    expect(isStaleOrderWrite("a:1", "a:2", "a:2")).toBe(false);
+  });
+
+  it("passes callers that send no base", () => {
+    expect(isStaleOrderWrite(undefined, "a:3", "a:2")).toBe(false);
   });
 });

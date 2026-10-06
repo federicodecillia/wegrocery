@@ -337,7 +337,8 @@ export const en: Strings = {
     attemptedEmail: (email: string) => `You tried to sign in with: ${email}`,
     notMember:
       "To sign in you need a membership card that is active for the current year. Use the same email you registered your card with.",
-    membershipInactive: "Your membership card is not active for the current year.",
+    membershipInactive:
+      "Your membership card is not active for the current year. If you registered your card with another email address, sign in with that one: an admin will then merge your accounts.",
     renewMembership: "Renew your membership",
     membershipCheckUnavailable:
       "We can't verify your membership card right now. Please try again in a few minutes.",
@@ -364,7 +365,7 @@ export const en: Strings = {
     accountInactive: (app: string, support: string) =>
       `Hi,\n\nyour account on ${app} is not active. To reactivate it write to ${support}.`,
     membershipInactive: (app: string, renew: string | null, support: string) =>
-      `Hi,\n\nyour membership card is not active for this year, so you can't sign in to ${app}.${renew ? ` You can renew it here: ${renew}` : ""}\n\nQuestions: ${support}.`,
+      `Hi,\n\nyour membership card is not active for this year, so you can't sign in to ${app}.${renew ? ` You can renew it here: ${renew}` : ""}\n\nIf you registered your card with another email address, sign in with that one: an admin will then merge your accounts.\n\nQuestions: ${support}.`,
     checkUnavailable: (app: string) =>
       `Hi,\n\nwe can't check your membership card right now, so we can't send you the link to sign in to ${app}. Try again in a few minutes.`,
   },
@@ -860,9 +861,11 @@ export const en: Strings = {
       filterActive: "filter active · tap to remove",
       filterHint: "tap to filter",
       aboveMaxBalance: "Above max",
+      inFamily: (name: string) => `${name} is in a family: record the movement on the family's account.`,
       aboveMaxNotice: (balance: string, max: string) =>
         `The balance is now ${balance}, above the group's maximum (${max}). If needed, return the difference with Outgoing movement → Payout.`,
       newTopup: "New top-up",
+      topupHint: "Bank transfer, cash or other payment received from a member",
       memberLabel: "Member *",
       amountLabel: "Amount € *",
       amountPlaceholder: "0.00",
@@ -993,6 +996,11 @@ export const en: Strings = {
       submitEdit: "Update",
       inactiveBadge: "disabled",
       paysOfflineLabel: "Pays outside the app",
+      familyBadge: (name: string) => `in a family with ${name}`,
+      familyUnlink: "Unlink from family",
+      familyUnlinkTitle: (name: string) => `Unlink ${name} from the family?`,
+      familyUnlinkMessage: "They go back to their own account, with a zero balance. Balance, orders and history stay with the family.",
+      familyUnlinked: (name: string) => `${name} unlinked from the family`,
       paysOfflineHint: "Confirms orders without paying online; the treasurer records payments in Treasury. Left out of the settlement.",
       paysOfflineBadge: "pays outside the app",
       invite: "Invite",
@@ -1008,6 +1016,18 @@ export const en: Strings = {
       deleted: (name: string) => `${name} deleted`,
       emailInUse: (email: string, name: string) =>
         `The address ${email} is already used by ${name}: an address can belong to one member only, as email or as secondary email.`,
+      duplicates: {
+        title: (n: number) => (n === 1 ? "1 possible duplicate" : `${n} possible duplicates`),
+        intro:
+          "Accounts that look like the same person, usually someone who signed in with their card's address instead of the one they had. Check and merge: the first one stays.",
+        reasons: {
+          same_name: "Same name",
+          name_in_address: "The name appears in the other's address",
+        },
+        merge: "Merge",
+        dismiss: "Not the same person",
+        dismissed: "Pair hidden",
+      },
       merge: {
         button: "Merge",
         title: (name: string) => `Merge ${name}`,
@@ -1048,6 +1068,8 @@ export const en: Strings = {
           open_refund: "The account to merge has a refund still in progress: try again once it has arrived.",
           unsettled_per_order: "The account to merge has movements on a pay-per-order cycle not settled yet: settle it first.",
           alias_not_offered: "Pick one of the emails offered.",
+          in_family: (name: string) => `${name} is in a family: unlink them before merging.`,
+          has_family: (name: string) => `Other members joined ${name}'s account: unlink them before merging.`,
         },
       },
     },
@@ -1332,6 +1354,16 @@ export const en: Strings = {
       importAddedToCycle: (n: number) => `${n} in cycle`,
     },
     settings: {
+      families: {
+        title: "Families",
+        hint: "Members can invite each other and share one account: cart, balance and history. Everyone signs in with their own emails.",
+        on: "On",
+        off: "Off",
+        enable: "Turn families on",
+        disable: "Turn families off",
+        saved: "Setting saved",
+        offNote: "Turning them off keeps the existing families: no new ones can be formed.",
+      },
       mode: {
         title: "Payment mode",
         wallet: "Wallet: members top up a balance and orders are charged when the cycle closes.",
@@ -1477,6 +1509,70 @@ export const en: Strings = {
     cycleCancelledBody: (title: string, amount: string, reason: string) =>
       `The cycle "${title}" was cancelled: ${reason}. We refunded you ${amount}.`,
   },
+  family: {
+    title: "Family",
+    intro: "A family shares one cart, balance and order history. Everyone keeps signing in with their own emails.",
+    disabled: "Families are not enabled in this group.",
+    settingsLink: "Family",
+    settingsLinkHint: "Share cart and balance with whoever shops with you.",
+    people: "Who's in",
+    you: "you",
+    alone: "It's just you for now.",
+    leave: "Leave the family",
+    leaveTitle: "Leave the family?",
+    leaveMessage: "You go back to your own account, with a zero balance. Balance, orders and history stay with the family.",
+    left: "You left the family",
+    remove: "Remove",
+    removeTitle: (name: string) => `Remove ${name}?`,
+    removeMessage: "They go back to their own account, with a zero balance. Balance, orders and history stay with the family.",
+    removed: (name: string) => `${name} is no longer in the family`,
+    inviteTitle: "Invite someone",
+    inviteHint: "Type the email they sign in with: they get a notification and an email to accept.",
+    emailLabel: "Email",
+    send: "Send invitation",
+    sent: (email: string) => `Invitation sent to ${email}`,
+    pendingSent: "Pending invitations",
+    cancelInvite: "Withdraw",
+    inviteCancelled: "Invitation withdrawn",
+    received: "Invitations received",
+    invitedBy: (name: string) => `${name} invites you to their family`,
+    expires: (date: string) => `Expires on ${date}`,
+    accept: "Accept",
+    decline: "Decline",
+    acceptTitle: "Join the family?",
+    acceptMessage: (name: string, balance: string | null) =>
+      `From now on you use ${name}'s account: cart, balance and history are shared.` +
+      (balance ? ` Your balance (${balance}) moves to the family.` : "") +
+      " You can leave at any time.",
+    accepted: (name: string) => `You are now in a family with ${name}`,
+    declined: "Invitation declined",
+    changed: "Something changed in the meantime: try again.",
+    joinedBody: (name: string) => `${name} is now part of the family: cart, balance and history are shared.`,
+    notificationTitle: "Family invitation",
+    notificationBody: (name: string) =>
+      `${name} invites you to share cart, balance and history. Open Family to accept or decline.`,
+    refusals: {
+      disabled: "Families are not enabled in this group.",
+      not_member: "No member signs in with this email: they must sign in to the app first.",
+      self: "This email belongs to your account.",
+      inactive: "The account of this email is disabled.",
+      already_in_family: "This person is already in another family.",
+      has_family: "Other people joined this person's account: they can invite you.",
+      already_here: "This person is already in your family.",
+      already_invited: "You already invited this person.",
+      family_full: (n: number) => `A family can have at most ${n} people.`,
+      not_in_family: "You are not in a family.",
+      not_allowed: "Only the person themselves or the account holder can do this.",
+      invite_gone: "This invitation is no longer valid.",
+      both_ordered: (cycle: string) =>
+        `You and the family both have an order on "${cycle}": cancel one, then accept.`,
+      per_order_open: (cycle: string) => `You have a card-paid order on "${cycle}": accept after the cycle closes.`,
+      pending_payment: "You have an online payment in progress: try again in a few minutes.",
+      open_refund: "You have a refund still in progress: try again once it arrived.",
+      unsettled_per_order: "You have movements on a pay-per-order cycle whose accounts are still open: try again once they are settled.",
+      other: "You cannot join a family right now.",
+    },
+  },
   ledger: {
     writeOff: "Write-off below the minimum payment",
     correctedOn: (date: string) => `corrected on ${date}`,
@@ -1495,6 +1591,8 @@ export const en: Strings = {
     balancePayment: "Balance paid",
     memberMergeOut: (name: string) => `Account merge: balance moved to ${name}`,
     memberMergeIn: (name: string) => `Account merge: balance from ${name}`,
+    familyJoinOut: (name: string) => `Joined a family: balance moved to ${name}`,
+    familyJoinIn: (name: string) => `Joined a family: balance from ${name}`,
   },
   fields: {
     title: "Title",
@@ -1513,6 +1611,7 @@ export const en: Strings = {
     handlingFeeLocked: "The cycle is already closed: the order preparation fee can no longer change.",
     handlingFeeInvalid: "Invalid order preparation fee: a number with at most two decimals, up to 25% or €10",
     cycleNotOpen: "The cycle is no longer open",
+    orderChangedElsewhere: "The cart was changed in the meantime, from another device: here is the latest version.",
     accessDenied: "You don't have access to this cycle",
     membershipInactive: (renewUrl: string | null) =>
       renewUrl

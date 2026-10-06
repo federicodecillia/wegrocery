@@ -12,19 +12,34 @@ type Props = {
 };
 
 export async function TabCassa({ balanceFilter }: Props) {
-  const [membersWithBalances, ledgerByMember, { maxBalance }, requestedRefunds] = await Promise.all([
+  const [allBalances, ledgerByMember, { maxBalance }, requestedRefunds] = await Promise.all([
     getAllMembersWithBalances(),
     getAllMembersLedger(),
     getPaymentSettings(),
     getRequestedRefundCount(),
   ]);
 
+  // A person who joined a family has no money of their own (it lives on the
+  // family's account, named here with its people so a transfer from either
+  // is easy to place). Shown apart only if something was booked to them.
+  const familyNames = new Map<string, string[]>();
+  for (const m of allBalances) {
+    if (m.householdOf) familyNames.set(m.householdOf, [...(familyNames.get(m.householdOf) ?? []), m.fullName]);
+  }
+  const membersWithBalances = allBalances
+    .filter((m) => !m.householdOf || Math.abs(m.balance) >= 0.005)
+    .map((m) => {
+      const others = familyNames.get(m.memberId);
+      return others ? { ...m, fullName: `${m.fullName} + ${others.join(", ")}` } : m;
+    });
+
   // Disabled members stay pickable, flagged: a member who left may still pay
   // off a debt or get the balance back. Enabled ones come first; the query
   // already sorts by name.
+  const pickable = membersWithBalances.filter((m) => !m.householdOf);
   const pickerMembers = [
-    ...membersWithBalances.filter((m) => m.active),
-    ...membersWithBalances.filter((m) => !m.active),
+    ...pickable.filter((m) => m.active),
+    ...pickable.filter((m) => !m.active),
   ].map(({ memberId, fullName, email, active, balance }) => ({ memberId, fullName, email, active, balance }));
 
   // Aggregate only across active members so a dormant socio with €0 doesn't

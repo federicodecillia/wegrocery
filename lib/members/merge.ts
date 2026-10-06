@@ -20,6 +20,8 @@ export type MergeMember = {
   aliasEmail: string | null;
   active: boolean;
   mergedInto: string | null;
+  // Set on a person who joined another account (a family): that account.
+  householdOf: string | null;
 };
 
 export type MergeOrderCycle = {
@@ -48,7 +50,15 @@ export type MergeState = {
   // Pay-per-order cycles not settled yet where the absorbed account has
   // movements: their money belongs to that account's card payments.
   absorbedUnsettledPerOrderCycles: number;
+  // People who joined the absorbed account (members.household_of).
+  absorbedHouseholdMembers: number;
 };
+
+// "merge": an admin joins two accounts of one person; the absorbed one is
+// deleted or archived. "link": a member accepts an invitation into another
+// account (a family, lib/members/family.ts); the same money and orders move,
+// but the person stays active with their addresses and points at the account.
+export type MergeMode = "merge" | "link";
 
 export type MergeRefusal =
   | { code: "same_member" }
@@ -60,7 +70,10 @@ export type MergeRefusal =
   | { code: "pending_payment" }
   | { code: "open_refund" }
   | { code: "unsettled_per_order" }
-  | { code: "alias_not_offered" };
+  | { code: "alias_not_offered" }
+  // Either account is part of a family: unlink first.
+  | { code: "in_family"; fullName: string }
+  | { code: "has_family"; fullName: string };
 
 export type MergePlan = {
   // Open cycles whose order lines move to the survivor.
@@ -92,7 +105,7 @@ export function aliasOptions(survivor: MergeMember, absorbed: MergeMember): stri
 }
 
 // alias: the address chosen for the secondary slot; undefined = the default.
-export function planMemberMerge(state: MergeState, alias?: string | null): MergeDecision {
+export function planMemberMerge(state: MergeState, alias?: string | null, mode: MergeMode = "merge"): MergeDecision {
   const { survivor, absorbed } = state;
   const refuse = (refusal: MergeRefusal): MergeDecision => ({ ok: false, refusal });
 
@@ -100,7 +113,12 @@ export function planMemberMerge(state: MergeState, alias?: string | null): Merge
   if (survivor.mergedInto) return refuse({ code: "already_merged", fullName: survivor.fullName });
   if (absorbed.mergedInto) return refuse({ code: "already_merged", fullName: absorbed.fullName });
   if (!survivor.active) return refuse({ code: "survivor_inactive" });
-  if (state.actingMemberId === absorbed.memberId) return refuse({ code: "absorbing_self" });
+  if (mode === "merge" && state.actingMemberId === absorbed.memberId) return refuse({ code: "absorbing_self" });
+  // Families stay one level deep and an account in one is never absorbed:
+  // its people would point at an archived account.
+  if (survivor.householdOf) return refuse({ code: "in_family", fullName: survivor.fullName });
+  if (absorbed.householdOf) return refuse({ code: "in_family", fullName: absorbed.fullName });
+  if (state.absorbedHouseholdMembers > 0) return refuse({ code: "has_family", fullName: absorbed.fullName });
 
   const open = state.absorbedOrderCycles.filter((c) => c.status === "open");
   for (const c of open) {
@@ -112,6 +130,21 @@ export function planMemberMerge(state: MergeState, alias?: string | null): Merge
   if (state.absorbedPendingPayments > 0) return refuse({ code: "pending_payment" });
   if (state.absorbedOpenRefunds > 0) return refuse({ code: "open_refund" });
   if (state.absorbedUnsettledPerOrderCycles > 0) return refuse({ code: "unsettled_per_order" });
+
+  if (mode === "link") {
+    // The person keeps their own addresses and the account its own.
+    return {
+      ok: true,
+      plan: {
+        moveCycleIds: open.map((c) => c.cycleId),
+        transferCents: state.absorbedBalanceCents,
+        deleteAbsorbed: false,
+        survivorEmail: normalizeEmail(survivor.email)!,
+        survivorAlias: normalizeEmail(survivor.aliasEmail),
+        droppedAddresses: [],
+      },
+    };
+  }
 
   const options = aliasOptions(survivor, absorbed);
   const chosen = alias === undefined ? (options[0] ?? null) : normalizeEmail(alias);

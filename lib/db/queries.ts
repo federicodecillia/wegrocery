@@ -3,6 +3,8 @@ import { getDb } from "./client";
 import { liveLedger } from "./ledger-live";
 import {
   ledgerEntries,
+  familyInvites,
+  memberDuplicateDismissals,
   members,
   notificationPreferences,
   notifications,
@@ -58,6 +60,65 @@ export async function getMembersByEmails(addresses: string[]) {
         inArray(sql`lower(${members.aliasEmail})`, addresses),
       ),
     );
+}
+
+// The people of an account: its own person first, then those who joined it
+// (members.household_of, lib/members/family.ts).
+export async function getFamilyPeople(accountId: string) {
+  const db = getDb();
+  return db
+    .select({
+      memberId: members.memberId,
+      fullName: members.fullName,
+      email: members.email,
+      aliasEmail: members.aliasEmail,
+      role: members.role,
+      active: members.active,
+      householdOf: members.householdOf,
+    })
+    .from(members)
+    .where(or(eq(members.memberId, accountId), eq(members.householdOf, accountId)))
+    .orderBy(sql`${members.memberId} = ${accountId} DESC`, asc(members.fullName));
+}
+
+// The account plus the people who joined it: Storico shows the history each
+// of them had before joining (their own rows hold no money once joined).
+export async function getFamilyMemberIds(accountId: string): Promise<string[]> {
+  const people = await getFamilyPeople(accountId);
+  return people.length > 0 ? people.map((p) => p.memberId) : [accountId];
+}
+
+export type FamilyInviteItem = {
+  inviteId: string;
+  accountId: string;
+  accountName: string;
+  memberId: string;
+  memberName: string;
+  memberEmail: string;
+  expiresAt: Date;
+};
+
+// Pending, unexpired invitations sent to a person or from an account.
+export async function getPendingFamilyInvites(filter: { toMemberId?: string; fromAccountId?: string }) {
+  const db = getDb();
+  const account = sql`(SELECT a.full_name FROM members a WHERE a.member_id = ${familyInvites.accountId})`;
+  const conditions = [eq(familyInvites.status, "pending"), sql`${familyInvites.expiresAt} > now()`];
+  if (filter.toMemberId) conditions.push(eq(familyInvites.memberId, filter.toMemberId));
+  if (filter.fromAccountId) conditions.push(eq(familyInvites.accountId, filter.fromAccountId));
+  return db
+    .select({
+      inviteId: familyInvites.inviteId,
+      accountId: familyInvites.accountId,
+      accountName: sql<string>`${account}`,
+      memberId: familyInvites.memberId,
+      memberName: members.fullName,
+      memberEmail: members.email,
+      expiresAt: familyInvites.expiresAt,
+    })
+    .from(familyInvites)
+    .innerJoin(members, eq(members.memberId, familyInvites.memberId))
+    .where(and(...conditions))
+    .orderBy(desc(familyInvites.createdAt)) as Promise<FamilyInviteItem[]>;
 }
 
 export async function getMemberBalance(memberId: string): Promise<number> {
@@ -343,7 +404,8 @@ export async function getLastMemberOrderForPrefill(
 // recorded the row. created_by holds an admin's email: only the name leaves
 // this function, through a scalar subquery, so an old email/alias clash can
 // never duplicate a movement.
-export async function getMemberLedger(memberId: string, limit = 50) {
+export async function getMemberLedger(memberId: string | string[], limit = 50) {
+  const ids = Array.isArray(memberId) ? memberId : [memberId];
   const db = getDb();
   return db
     .select({
@@ -372,13 +434,15 @@ export async function getMemberLedger(memberId: string, limit = 50) {
     .leftJoin(payments, eq(payments.paymentId, ledgerEntries.paymentId))
     // A corrected movement shows once, as its replacement; a cancelled one
     // and the reversals not at all (their sum is zero).
-    .where(and(eq(ledgerEntries.memberId, memberId), liveLedger))
+    .where(and(inArray(ledgerEntries.memberId, ids), liveLedger))
     .orderBy(desc(ledgerEntries.entryDate))
     .limit(limit);
 }
 
-export async function getMemberStorico(memberId: string): Promise<CycleHistoryEntry[]> {
+// Several ids: a family's account and the people who joined it.
+export async function getMemberStorico(memberId: string | string[]): Promise<CycleHistoryEntry[]> {
   const db = getDb();
+  const ids = Array.isArray(memberId) ? memberId : [memberId];
   const cycle = {
     cycleId: orderCycles.cycleId,
     cycleTitle: orderCycles.title,
@@ -408,7 +472,7 @@ export async function getMemberStorico(memberId: string): Promise<CycleHistoryEn
       .innerJoin(orderCycles, eq(orders.cycleId, orderCycles.cycleId))
       .innerJoin(products, eq(orders.productId, products.productId))
       .leftJoin(suppliers, eq(products.supplierId, suppliers.supplierId))
-      .where(eq(orders.memberId, memberId))
+      .where(inArray(orders.memberId, ids))
       .orderBy(desc(orderCycles.createdAt), asc(products.sortOrder)),
     // What the ledger moved on each cycle, so the tab adds up to the balance.
     db
@@ -422,7 +486,7 @@ export async function getMemberStorico(memberId: string): Promise<CycleHistoryEn
       })
       .from(ledgerEntries)
       .innerJoin(orderCycles, eq(ledgerEntries.cycleId, orderCycles.cycleId))
-      .where(eq(ledgerEntries.memberId, memberId))
+      .where(inArray(ledgerEntries.memberId, ids))
       .groupBy(
         orderCycles.cycleId,
         orderCycles.title,
@@ -445,7 +509,13 @@ export type NotificationItem = {
   createdAt: Date;
 };
 
-export async function getMemberNotifications(memberId: string, limit = 6): Promise<NotificationItem[]> {
+// Whose notifications a session reads: the account's, plus the signed-in
+// person's own when they joined a family (admin notifications are personal).
+export function notificationOwners(memberId: string, personId?: string | null): string[] {
+  return personId && personId !== memberId ? [memberId, personId] : [memberId];
+}
+
+export async function getMemberNotifications(memberIds: string[], limit = 6): Promise<NotificationItem[]> {
   const db = getDb();
   try {
     return await db
@@ -459,7 +529,7 @@ export async function getMemberNotifications(memberId: string, limit = 6): Promi
         createdAt: notifications.createdAt,
       })
       .from(notifications)
-      .where(eq(notifications.memberId, memberId))
+      .where(inArray(notifications.memberId, memberIds))
       .orderBy(desc(notifications.createdAt))
       .limit(limit);
   } catch (error) {
@@ -490,13 +560,13 @@ export async function getNotificationPreferences(
   }
 }
 
-export async function getUnreadNotificationCount(memberId: string): Promise<number> {
+export async function getUnreadNotificationCount(memberIds: string[]): Promise<number> {
   const db = getDb();
   try {
     const [row] = await db
       .select({ count: sql<string>`count(*)` })
       .from(notifications)
-      .where(and(eq(notifications.memberId, memberId), isNull(notifications.readAt)));
+      .where(and(inArray(notifications.memberId, memberIds), isNull(notifications.readAt)));
     return parseInt(row?.count ?? "0", 10);
   } catch {
     return 0;
@@ -575,12 +645,23 @@ export async function getAllMembers() {
   return db.select().from(members).orderBy(asc(members.fullName));
 }
 
+// Possible duplicate pairs an admin dismissed, as "member_a:member_b"
+// (lib/members/duplicates.ts pairKey).
+export async function getDismissedDuplicatePairs(): Promise<Set<string>> {
+  const rows = await getDb()
+    .select({ a: memberDuplicateDismissals.memberA, b: memberDuplicateDismissals.memberB })
+    .from(memberDuplicateDismissals);
+  return new Set(rows.map((r) => `${r.a}:${r.b}`));
+}
+
 export type MemberWithBalance = {
   memberId: string;
   fullName: string;
   email: string;
   role: string;
   active: boolean;
+  // Joined another account as family: its member id.
+  householdOf: string | null;
   balance: number;
 };
 
@@ -603,6 +684,7 @@ export async function getAllMembersWithBalances(): Promise<MemberWithBalance[]> 
     email: m.email,
     role: m.role,
     active: m.active,
+    householdOf: m.householdOf,
     balance: balanceMap.get(m.memberId) ?? 0,
   }));
 }

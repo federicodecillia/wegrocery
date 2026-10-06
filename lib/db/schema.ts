@@ -41,6 +41,10 @@ export const members = pgTable(
     // deleted: the member it was merged into (drizzle/0027_member_merge.sql).
     // Such an account is inactive, with a placeholder address and no balance.
     mergedInto: text("merged_into").references((): AnyPgColumn => members.memberId),
+    // A person who joined another member's account (a family,
+    // drizzle/0029_families.sql): that account. auth() serves the account;
+    // this row keeps the person's addresses, name, role and card, and no money.
+    householdOf: text("household_of").references((): AnyPgColumn => members.memberId, { onDelete: "set null" }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
   },
@@ -322,6 +326,8 @@ export const appSettings = pgTable(
     bankHolder: text("bank_holder"),
     bankIban: text("bank_iban"),
     onlinePaymentsEnabled: boolean("online_payments_enabled").notNull(),
+    // Members may invite each other into one account (drizzle/0029_families.sql).
+    familiesEnabled: boolean("families_enabled").notNull().default(false),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
     updatedBy: text("updated_by").notNull(),
   },
@@ -478,6 +484,27 @@ export const notificationPreferences = pgTable(
   (table) => [primaryKey({ columns: [table.memberId, table.category] })],
 );
 
+// Possible duplicate accounts an admin marked "not the same person"
+// (lib/members/duplicates.ts, drizzle/0028_member_duplicate_dismissals.sql).
+export const memberDuplicateDismissals = pgTable(
+  "member_duplicate_dismissals",
+  {
+    memberA: text("member_a")
+      .notNull()
+      .references(() => members.memberId, { onDelete: "cascade" }),
+    memberB: text("member_b")
+      .notNull()
+      .references(() => members.memberId, { onDelete: "cascade" }),
+    dismissedBy: text("dismissed_by").notNull(),
+    dismissedAt: timestamp("dismissed_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.memberA, table.memberB] }),
+    index("member_duplicate_dismissals_b_idx").on(table.memberB),
+    check("member_duplicate_dismissals_order", sql`${table.memberA} < ${table.memberB}`),
+  ],
+);
+
 // ── Sign-in (Better Auth, drizzle/0022_auth_sessions.sql) ────────────────────
 // Written only by Better Auth (lib/auth/config.ts). An auth user is a sign-in
 // identity (an email); the member is found by email or alias on every request.
@@ -555,3 +582,21 @@ export const authRateLimits = pgTable("auth_rate_limits", {
   lastRequest: bigint("last_request", { mode: "number" }).notNull(),
 });
 
+
+// An invitation to join a member's account (drizzle/0029_families.sql),
+// answered by the invited member. Rules in lib/members/family.ts.
+export const familyInvites = pgTable("family_invites", {
+  inviteId: text("invite_id").primaryKey(),
+  accountId: text("account_id")
+    .notNull()
+    .references(() => members.memberId, { onDelete: "cascade" }),
+  memberId: text("member_id")
+    .notNull()
+    .references(() => members.memberId, { onDelete: "cascade" }),
+  invitedBy: text("invited_by").notNull(),
+  // 'pending' | 'accepted' | 'declined' | 'cancelled'
+  status: text("status").notNull().default("pending"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  respondedAt: timestamp("responded_at", { withTimezone: true }),
+});

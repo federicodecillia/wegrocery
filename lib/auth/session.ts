@@ -12,6 +12,8 @@ export type AppSession = {
     role?: string | null;
     active?: boolean;
     memberId?: string | null;
+    // Who signed in, when they work on a family's account (memberId).
+    personId?: string | null;
     fullName?: string | null;
   };
 };
@@ -35,6 +37,7 @@ export async function requireUserSession(): Promise<AppSession> {
     role?: string | null;
     active?: boolean;
     memberId?: string | null;
+    personId?: string | null;
     fullName?: string | null;
   };
   return {
@@ -43,12 +46,17 @@ export async function requireUserSession(): Promise<AppSession> {
       role: u?.role ?? null,
       active: Boolean(u?.active),
       memberId: u?.memberId ?? null,
+      personId: u?.personId ?? u?.memberId ?? null,
       fullName: u?.fullName ?? null,
     },
   };
 }
 
-export type GuardedMember = { email: string; memberId: string };
+// memberId: the account (a family's, for a person who joined one);
+// personId: who signed in; role: the session's (lib/members/family.ts
+// familyRole for a person in a family). requireAdmin returns the admin's own
+// row as memberId: the admin panel is personal.
+export type GuardedMember = { email: string; memberId: string; personId: string; role: Role | null };
 
 /** Server Actions: the signed-in, active member. Throws ActionError(t.errors.unauthorized) otherwise. */
 export async function requireActiveMember(): Promise<GuardedMember> {
@@ -66,9 +74,14 @@ export async function requireAdmin(): Promise<GuardedMember> {
 async function requireAccess(need: "member" | "admin"): Promise<GuardedMember> {
   const session = await auth();
   const email = session?.user?.email;
-  const memberId = (session?.user as { memberId?: string | null } | undefined)?.memberId;
+  const user = session?.user as
+    | { memberId?: string | null; personId?: string | null; role?: string | null }
+    | undefined;
+  const memberId = user?.memberId;
   if (!email || !memberId || !checkAccess(session?.user, need).ok) throw new ActionError(t.errors.unauthorized);
-  return { email, memberId };
+  const personId = user?.personId ?? memberId;
+  const role = normalizeRole(user?.role);
+  return { email, memberId: need === "admin" ? personId : memberId, personId, role };
 }
 
 // Legacy stored values ('socio', 'attivo', 'member') come back canonical.

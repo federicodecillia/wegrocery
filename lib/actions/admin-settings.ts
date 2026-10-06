@@ -128,3 +128,47 @@ export async function adminChangePaymentMode(target: PaymentMode): Promise<{ err
     return { error: actionErrorMessage(e, t.errors.genericError, "adminChangePaymentMode") };
   }
 }
+
+// Impostazioni -> Famiglie: members may invite each other into one account
+// (lib/actions/family.ts). Switching off stops new invitations and joins;
+// families already formed stay as they are.
+export async function adminSetFamiliesEnabled(enabled: boolean): Promise<{ error?: string }> {
+  try {
+    const admin = await requireAdmin();
+    const before = await getPaymentSettings();
+    if (before.familiesEnabled === enabled) return {};
+    const db = getDb();
+    const now = new Date();
+    // No row yet: the defaults the group runs on are stored with the switch.
+    const current = {
+      minBalance: before.minBalance === null ? null : before.minBalance.toFixed(2),
+      maxBalance: before.maxBalance === null ? null : before.maxBalance.toFixed(2),
+      bankTransferEnabled: before.bankTransferEnabled,
+      bankHolder: before.bankHolder,
+      bankIban: before.bankIban,
+      onlinePaymentsEnabled: before.onlinePaymentsEnabled,
+    };
+    await db.batch([
+      db
+        .insert(appSettings)
+        .values({ id: 1, ...current, familiesEnabled: enabled, updatedAt: now, updatedBy: admin.email })
+        .onConflictDoUpdate({
+          target: appSettings.id,
+          set: { familiesEnabled: enabled, updatedAt: now, updatedBy: admin.email },
+        }),
+      db.insert(auditLog).values({
+        auditId: crypto.randomUUID(),
+        userEmail: admin.email,
+        action: "set_families_enabled",
+        entityType: "app_settings",
+        entityId: "1",
+        payloadJson: JSON.stringify({ before: before.familiesEnabled, after: enabled }),
+        createdAt: now,
+      }),
+    ]);
+    revalidatePath("/", "layout");
+    return {};
+  } catch (e) {
+    return { error: actionErrorMessage(e, t.errors.genericError, "adminSetFamiliesEnabled") };
+  }
+}

@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "@/components/ui/toast";
 import { adminDeleteLedgerEntry, adminUpdateLedgerEntry } from "@/lib/actions/admin";
 import { formatDate, formatEur } from "@/lib/utils";
-import { getRoleLabel } from "@/lib/roles";
+import { DEFAULT_ROLE, normalizeRole, type Role } from "@/lib/roles";
 import { t } from "@/lib/i18n";
 import { formatMoney } from "@/lib/i18n/format";
 import {
@@ -333,6 +333,74 @@ export function CassaInlineList({
     );
   });
 
+  // Grouped by role like Admin → Soci. Legacy values fall under their
+  // canonical role, an unknown one under the least-privileged group.
+  const inGroup = (role: Role) => filtered.filter((m) => (normalizeRole(m.role) ?? DEFAULT_ROLE) === role);
+
+  function renderRow(m: MemberWithBalance) {
+    const entries = ledgerByMember[m.memberId] ?? [];
+    const isExpanded = expandedId === m.memberId;
+    return (
+      <div key={m.memberId}>
+        <button
+          onClick={() => setExpandedId(isExpanded ? null : m.memberId)}
+          className="flex w-full items-center justify-between px-4 py-2.5 text-left"
+        >
+          <div className="min-w-0 flex-1">
+            <div className="text-[13px] font-medium text-brand-near-black">{m.fullName}</div>
+            <div className="font-mono text-label text-muted">
+              {t.admin.treasury.movementsCount(entries.length)}
+              {m.active ? "" : ` ${t.admin.treasury.inactiveHint}`}
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span
+              className={`font-mono text-[13px] font-bold ${
+                m.balance >= 0 ? "text-accent-text" : "text-brand-red"
+              }`}
+            >
+              {m.balance >= 0 ? "+" : ""}
+              {formatMoney(Math.abs(m.balance))}
+            </span>
+            <span className="text-label text-muted">{isExpanded ? "▲" : "▼"}</span>
+          </div>
+        </button>
+
+        {isExpanded && (
+          <div className="border-t border-brand-border bg-black/[0.01]">
+            {entries.length === 0 ? (
+              <p className="px-4 py-3 text-center text-[12px] text-brand-gray">
+                {t.admin.treasury.noMovements}
+              </p>
+            ) : (
+              entries.map((entry) => (
+                <div key={entry.entryId}>
+                  <div className="px-4 pt-2 font-mono text-label text-muted">
+                    {entry.entryDate ? formatDate(entry.entryDate) : "—"}
+                    {entry.correctedAt && ` · ${t.ledger.correctedOn(formatDate(entry.correctedAt))}`}
+                  </div>
+                  <LedgerEntryRow entry={entry} />
+                </div>
+              ))
+            )}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  function renderGroup(label: string, list: MemberWithBalance[]) {
+    if (list.length === 0) return null;
+    return (
+      <div>
+        <p className="border-b border-brand-border bg-black/[0.02] px-4 py-1.5 font-mono text-label uppercase tracking-wider text-muted">
+          {label} ({list.length})
+        </p>
+        <div className="divide-y divide-brand-border">{list.map(renderRow)}</div>
+      </div>
+    );
+  }
+
   return (
     <div>
       <div className="border-b border-brand-border px-4 py-2">
@@ -345,57 +413,9 @@ export function CassaInlineList({
         />
       </div>
       <div className="divide-y divide-brand-border">
-        {filtered.map((m) => {
-          const entries = ledgerByMember[m.memberId] ?? [];
-          const isExpanded = expandedId === m.memberId;
-          return (
-            <div key={m.memberId}>
-              <button
-                onClick={() => setExpandedId(isExpanded ? null : m.memberId)}
-                className="flex w-full items-center justify-between px-4 py-2.5 text-left"
-              >
-                <div className="min-w-0 flex-1">
-                  <div className="text-[13px] font-medium text-brand-near-black">{m.fullName}</div>
-                  <div className="font-mono text-label text-muted">
-                    {getRoleLabel(m.role)}
-                    {m.active ? "" : ` ${t.admin.treasury.inactiveHint}`} · {t.admin.treasury.movementsCount(entries.length)}
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span
-                    className={`font-mono text-[13px] font-bold ${
-                      m.balance >= 0 ? "text-accent-text" : "text-brand-red"
-                    }`}
-                  >
-                    {m.balance >= 0 ? "+" : ""}
-                    {formatMoney(Math.abs(m.balance))}
-                  </span>
-                  <span className="text-label text-muted">{isExpanded ? "▲" : "▼"}</span>
-                </div>
-              </button>
-
-              {isExpanded && (
-                <div className="border-t border-brand-border bg-black/[0.01]">
-                  {entries.length === 0 ? (
-                    <p className="px-4 py-3 text-center text-[12px] text-brand-gray">
-                      {t.admin.treasury.noMovements}
-                    </p>
-                  ) : (
-                    entries.map((entry) => (
-                      <div key={entry.entryId}>
-                        <div className="px-4 pt-2 font-mono text-label text-muted">
-                          {entry.entryDate ? formatDate(entry.entryDate) : "—"}
-                          {entry.correctedAt && ` · ${t.ledger.correctedOn(formatDate(entry.correctedAt))}`}
-                        </div>
-                        <LedgerEntryRow entry={entry} />
-                      </div>
-                    ))
-                  )}
-                </div>
-              )}
-            </div>
-          );
-        })}
+        {renderGroup(t.roles.admin, inGroup("admin"))}
+        {renderGroup(t.roles.attivi, inGroup("attivi"))}
+        {renderGroup(t.roles.utenti, inGroup("utenti"))}
         {filtered.length === 0 && (
           <p className="px-4 py-6 text-center text-[12px] text-brand-gray">
             {t.admin.treasury.noMemberFound}

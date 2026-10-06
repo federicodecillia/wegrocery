@@ -55,7 +55,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 │                               #   access.ts: pure checkAccess/sessionClaims (no imports, used by proxy.ts)
 ├── proxy.ts                     # Redirect unauthenticated to /login (Next.js 16's middleware)
 ├── auth.ts                     # Better Auth instance, auth() (session + member), signOut()
-├── drizzle/                    # SQL migrations (0000–0027)
+├── drizzle/                    # SQL migrations (0000–0029)
 └── public/logo.png
 ```
 
@@ -309,7 +309,7 @@ all in `lib/roles.ts`:
 
 | Table | Purpose |
 |---|---|
-| `members` | User registry; `role`: admin / attivi / utenti; `merged_into` on an account absorbed by a merge (see Member merge) |
+| `members` | User registry; `role`: admin / attivi / utenti; `merged_into` on an account absorbed by a merge (see Member merge); `household_of` on a person who joined a family (see Families) |
 | `order_cycles` | Weekly order windows; one `open` at a time |
 | `products` | Per-cycle product list |
 | `orders` | Order lines per member per cycle |
@@ -372,7 +372,17 @@ One person, two accounts (typically an old address and the one they used at firs
 - The survivor keeps name, role, primary email, preferences; its secondary email becomes the absorbed account's primary by default (one slot: the admin picks, the addresses nobody keeps lose their sign-in identities). Sessions continue: `auth()` resolves the address to the survivor on the next request.
 - Orders on open cycles, drafts and notifications move. Closed-cycle orders stay with their charges (`closed_cycle_charge` pairs them). The balance moves as a `member_merge` pair (`ledger_entries.counterpart`, migration 0027): no ledger row changes member.
 - Refused: both ordered on the same open cycle, an open pay-per-order cycle, a pending payment or refund, an unsettled pay-per-order cycle with movements, absorbing your own account.
+- **Possible duplicates** (`lib/members/duplicates.ts`, pure): active, unmerged pairs with the same name (accents, case and word order ignored, 2+ words) or whose name words (3+ letters, at least two) appear in the other's address; the proposed survivor is the higher role, then the older account. Shown on top of Soci with Merge prefilled; "not the same person" stores the pair in `member_duplicate_dismissals` (migration 0028, cascades on member delete). Typical cause: an old address with no card is refused (`MembershipInactive`), the member signs in with the card's address and the card check provisions a second account; the login message tells them to do exactly that, and the admin merges.
 - An absorbed account with no history is deleted; otherwise it stays inactive with `merged_into`, a `<memberId>@merged.invalid` address and a zero balance. Nightly checks `member_merge_pairs` and `merged_member_empty`.
+
+### Families
+
+People who shop together share one account (cart, balance, history) while each keeps their own member row, addresses, name, role and card. Off by default: `app_settings.families_enabled` (admin → Impostazioni). Migration `0029_families.sql`: `members.household_of` (the account a person joined), `family_invites` (pending → accepted / declined / cancelled, 7 days, one pending per pair). Rules in `lib/members/family.ts` (pure: `checkInvite`, `checkUnlink`, `familyRole`, `sessionAccount`, at most 6 people), actions in `lib/actions/family.ts`, page `/famiglia` (linked from `/notifiche/impostazioni`).
+
+- **Session**: `auth()` resolves the address to the person, then serves the account: `memberId` = the account, `personId` = who signed in. Role: the admin panel is personal (`requireAdmin` returns the person as `memberId`), cycle access is the higher of person and account. A deactivated account signs its people out.
+- **Joining** reuses the merge in mode `link` (`mergeMembers`, guarded on the invitation still pending): balance as a `member_merge` pair, open-cycle orders and drafts move, the person stays active with their own notifications (`notificationOwners` shows both). Same refusals as a merge. **Leaving** (the person) or **removing** (the account's own person, or an admin in Soci) only clears `household_of`: the money stays with the family.
+- Storico shows the history of every person in the account (`getFamilyMemberIds`); the card check on an order passes with any card in the family; `cycle_opened` and Cassa skip linked people (Cassa names the account with its people and refuses a movement on a linked person). Invitations: in-app `family_invite` plus an email to the primary address whatever the preferences.
+- Nightly check `household_member_empty`: a linked person has a zero balance and no open-cycle order or draft. Known limit: a correction on a closed order from before joining posts to the person and trips it; unlink, correct, rejoin (or correct on the account).
 
 ### Post-closure adjustments
 

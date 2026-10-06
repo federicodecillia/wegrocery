@@ -30,4 +30,6 @@ export const MIGRATIONS = [
   "0025_schema_catch_up.sql",
   "0026_handling_charge.sql",
   "0027_member_merge.sql",
+  "0028_member_duplicate_dismissals.sql",
+  "0029_families.sql",
 ] as const;

@@ -4,8 +4,10 @@ import { revalidatePath } from "next/cache";
 import { actionErrorMessage } from "@/lib/action-error";
 import { requireAdmin } from "@/lib/auth/session";
 import { getDb } from "@/lib/db/client";
+import { auditLog, memberDuplicateDismissals } from "@/lib/db/schema";
 import { t } from "@/lib/i18n";
 import { formatMoney } from "@/lib/i18n/format";
+import { pairKey } from "@/lib/members/duplicates";
 import { aliasOptions, planMemberMerge, type MergeRefusal } from "@/lib/members/merge";
 import { mergeMembers, readMergeState } from "@/lib/members/merge-store";
 
@@ -21,6 +23,10 @@ function refusalMessage(r: MergeRefusal): string {
       return m.both_ordered(r.cycleTitle);
     case "per_order_open":
       return m.per_order_open(r.cycleTitle);
+    case "in_family":
+      return m.in_family(r.fullName);
+    case "has_family":
+      return m.has_family(r.fullName);
     default:
       return m[r.code];
   }
@@ -92,5 +98,35 @@ export async function adminMergeMembers(
     return {};
   } catch (e) {
     return { error: actionErrorMessage(e, t.errors.genericError, "adminMergeMembers") };
+  }
+}
+
+// Possible duplicates (lib/members/duplicates.ts): "not the same person", the
+// pair is not proposed again.
+export async function adminDismissDuplicate(memberA: string, memberB: string): Promise<{ error?: string }> {
+  try {
+    const admin = await requireAdmin();
+    if (!memberA || !memberB || memberA === memberB) return { error: t.errors.memberNotFound };
+    const [a, b] = pairKey(memberA, memberB);
+    const db = getDb();
+    await db.batch([
+      db
+        .insert(memberDuplicateDismissals)
+        .values({ memberA: a, memberB: b, dismissedBy: admin.email, dismissedAt: new Date() })
+        .onConflictDoNothing(),
+      db.insert(auditLog).values({
+        auditId: crypto.randomUUID(),
+        userEmail: admin.email,
+        action: "dismiss_duplicate_members",
+        entityType: "member",
+        entityId: a,
+        payloadJson: JSON.stringify({ memberA: a, memberB: b }),
+        createdAt: new Date(),
+      }),
+    ]);
+    revalidatePath("/admin");
+    return {};
+  } catch (e) {
+    return { error: actionErrorMessage(e, t.errors.genericError, "adminDismissDuplicate") };
   }
 }

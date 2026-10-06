@@ -21,6 +21,22 @@ stanno nella PR.
 
 ## [Non rilasciato]
 
+## [1.23.0] — 6 ottobre 2026
+
+*Ordini in famiglia, e un carrello che non perde le modifiche.*
+
+### Aggiunte
+- 👯 **Account doppi più facili da trovare.** Gli admin vedono in Soci le persone che sembrano avere due account e possono unirli con un tocco.
+- 👨‍👩‍👧 **Ordinare in famiglia.** Si può invitare un familiare a condividere carrello, saldo e storico degli ordini, ognuno entrando con la propria email. Si attiva dalle impostazioni del gruppo; poi si invita da Notifiche → ⚙ → Famiglia.
+
+### Modificato
+- 🔑 **Messaggio più chiaro quando la tessera non risulta.** Se la tessera è legata a un'altra email, l'app ti dice di entrare con quella.
+- 💶 **Cassa più ordinata per gli admin.** Il modulo delle ricariche si apre solo quando serve e i saldi sono divisi per ruolo.
+
+### Risolto
+- 🛒 **Il carrello non perde più le modifiche.** Se lo cambi dal telefono e poi salvi dal computer, l'app ti mostra il carrello aggiornato invece di sovrascriverlo.
+- 📱 **Totale dell'ordine leggibile su iPhone.** Aggiungendo un prodotto, il totale e il saldo dopo l'ordine ora si aggiornano correttamente.
+
 ## [1.22.0] — 4 ottobre 2026
 
 *Una persona, un account: i doppioni ora si possono unire.*
@@ -514,6 +530,7 @@ stanno nella PR.
 
 ---
 
+[1.23.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.23.0
 [1.22.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.22.0
 [1.21.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.21.1
 [1.21.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.21.0

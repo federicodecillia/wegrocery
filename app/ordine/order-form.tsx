@@ -7,7 +7,7 @@ import { confirm } from "@/components/ui/confirm-dialog";
 import { t } from "@/lib/i18n";
 import { formatDateTime, formatSignedMoney } from "@/lib/i18n/format";
 import { formatEur, getProductEmoji, normalizeCategory } from "@/lib/utils";
-import type { SaveOrderLine, SaveOrderResult } from "@/lib/actions/order";
+import type { OrderState, SaveOrderLine, SaveOrderResult } from "@/lib/actions/order";
 import { discardOrderDraft, loadLastOrderForPrefill, saveOrderDraft } from "@/lib/actions/order";
 import type { OrderPaymentResult } from "@/lib/actions/order-payment";
 import { draftSyncAction, orderLinesKey, type ResumedDraft } from "@/lib/order-draft";
@@ -45,8 +45,10 @@ type Props = {
   existingLines: OrderLine[];
   // Unconfirmed edits found on the server (order_drafts), or null.
   resumedDraft: ResumedDraft | null;
+  // orderStateKey of what the server held when the page was rendered.
+  serverStateKey: string;
   balance: number;
-  saveAction: (cycleId: string, lines: SaveOrderLine[]) => Promise<SaveOrderResult>;
+  saveAction: (cycleId: string, lines: SaveOrderLine[], baseKey?: string) => Promise<SaveOrderResult>;
   // Set on a pay-per-order cycle: the order is confirmed by paying it, and
   // there is no wallet balance to show. Amounts here are for display; the
   // server computes them again.
@@ -108,6 +110,7 @@ export function OrderForm({
   products,
   existingLines,
   resumedDraft,
+  serverStateKey,
   balance,
   saveAction,
   payPerOrder,
@@ -149,6 +152,36 @@ export function OrderForm({
   // The form as last rendered, for syncDraft: the debounce timer and the
   // leave handlers run after the render that scheduled them.
   const latest = useRef({ draft, draftKey, savedKey });
+  // What the server held when the form last heard from it (orderStateKey),
+  // sent with every write: one based on an older cart (another device
+  // changed it) is refused, and the form adopts the newer cart. Differs from
+  // serverKey only while a resumed draft that lost products is not resaved.
+  const baseKey = useRef(serverStateKey);
+  // Moves both keys to a state the server now holds (or will, once the
+  // write in flight lands).
+  const markServer = useCallback((key: string) => {
+    serverKey.current = key;
+    baseKey.current = key;
+  }, []);
+  // A write was refused as stale: show what the server holds now.
+  const adoptServer = useCallback(
+    (current: OrderState, message: string) => {
+      const shown = new Set(products.map((p) => p.productId));
+      const known = (lines: ReadonlyArray<OrderLine>) =>
+        Object.fromEntries(
+          lines.filter((l) => l.quantity > 0 && shown.has(l.productId)).map((l) => [l.productId, l.quantity]),
+        );
+      const confirmed = known(current.confirmed);
+      const quantities = current.draft ? known(current.draft) : confirmed;
+      markServer(orderLinesKey(toLines(quantities)));
+      setSavedQty(confirmed);
+      setDraft(quantities);
+      setShowDraftBanner(false);
+      setIsEditing(current.draft !== null || Object.keys(confirmed).length === 0);
+      toast.warning(message);
+    },
+    [products, markServer],
+  );
   useEffect(() => {
     latest.current = { draft, draftKey, savedKey };
   });
@@ -160,26 +193,33 @@ export function OrderForm({
     const { draft: quantities, draftKey: key, savedKey: saved } = latest.current;
     const action = draftSyncAction(key, saved, serverKey.current);
     if (action === "none") return;
-    const previous = serverKey.current;
-    serverKey.current = key;
+    const previous = { server: serverKey.current, base: baseKey.current };
+    markServer(key);
     // A failed write leaves the server where it was, so the next edit or the
     // flush on leave tries again (unless a newer sync already went out).
     const retryLater = (err: unknown) => {
       console.error(`[order draft] ${action} failed`, err);
-      if (serverKey.current === key) serverKey.current = previous;
+      if (serverKey.current === key) {
+        serverKey.current = previous.server;
+        baseKey.current = previous.base;
+      }
     };
     if (action === "discard") {
-      discardOrderDraft(cycleId)
+      discardOrderDraft(cycleId, previous.base)
         .then((result) => {
-          if (!result.ok) retryLater(result.error);
+          if (result.ok) return;
+          if (result.code === "changed_elsewhere" && result.current) adoptServer(result.current, result.error);
+          else retryLater(result.error);
         })
         .catch(retryLater);
       return;
     }
-    saveOrderDraft(cycleId, toLines(quantities))
+    saveOrderDraft(cycleId, toLines(quantities), previous.base)
       .then((result) => {
         if (result.ok) return;
-        if (result.code === "cycle_not_open") {
+        if (result.code === "changed_elsewhere") {
+          adoptServer(result.current, result.error);
+        } else if (result.code === "cycle_not_open") {
           toast.error(result.error);
           router.refresh();
         } else {
@@ -187,7 +227,7 @@ export function OrderForm({
         }
       })
       .catch(retryLater);
-  }, [cycleId, router]);
+  }, [cycleId, router, markServer, adoptServer]);
 
   // Autosave after a pause in editing. Waits while a confirm, a prefill or a
   // discard is in flight: they settle the server state themselves.
@@ -288,8 +328,12 @@ export function OrderForm({
   function persist(quantities: Record<string, number>, isRemoval: boolean) {
     startTransition(async () => {
       try {
-        const result = await saveAction(cycleId, toLines(quantities));
+        const result = await saveAction(cycleId, toLines(quantities), baseKey.current);
         if (!result.success) {
+          if (result.code === "changed_elsewhere" && result.current) {
+            adoptServer(result.current, result.error);
+            return;
+          }
           // Expected refusal (closed cycle, lapsed card, credit limit...):
           // nothing was saved.
           toast.error(result.error);
@@ -301,7 +345,7 @@ export function OrderForm({
         }
         // saveOrder deleted the draft in its batch: the server holds exactly
         // the confirmed order.
-        serverKey.current = orderLinesKey(toLines(quantities));
+        markServer(orderLinesKey(toLines(quantities)));
         setShowDraftBanner(false);
         setSavedQty(quantities);
         setDraft(quantities);
@@ -338,12 +382,12 @@ export function OrderForm({
         }
         if (result.status === "redirect") {
           // The draft is on the server: the member finds it on the way back.
-          serverKey.current = orderLinesKey(toLines(quantities));
+          markServer(orderLinesKey(toLines(quantities)));
           toast.message(t.order.pay.redirecting);
           window.location.assign(result.url);
           return;
         }
-        serverKey.current = orderLinesKey(toLines(quantities));
+        markServer(orderLinesKey(toLines(quantities)));
         setShowDraftBanner(false);
         setSavedQty(quantities);
         setDraft(quantities);
@@ -395,12 +439,13 @@ export function OrderForm({
     });
     if (!ok) return;
     startTransition(async () => {
-      const result = await discardOrderDraft(cycleId);
+      const result = await discardOrderDraft(cycleId, baseKey.current);
       if (!result.ok) {
-        toast.error(result.error);
+        if (result.code === "changed_elsewhere" && result.current) adoptServer(result.current, result.error);
+        else toast.error(result.error);
         return;
       }
-      serverKey.current = savedKey;
+      markServer(savedKey);
       setShowDraftBanner(false);
       setDraft(savedQty);
       setIsEditing(Object.keys(savedQty).length === 0);
@@ -627,10 +672,13 @@ export function OrderForm({
       {/* Sticky footer — rides above the (sticky) bottom nav; from lg the nav
           is in the header, so it sits at the bottom edge. In-flow sticky
           inherits the card width at every breakpoint; -mx-5 bleeds it across
-          main's padding to the card edges. */}
+          main's padding to the card edges. Opaque background, no
+          backdrop-filter: on iOS WebKit a backdrop-filter on a sticky layer
+          skips repaints, so the total and the balance kept stale digits
+          drawn over the new ones. */}
       {isEditing && (hasOrder || hasSavedOrder) && (
         <div className="sticky z-10 -mx-5 mt-4 -mb-[calc(var(--spacing-nav-h)+1rem)] bottom-[calc(var(--spacing-nav-h)+env(safe-area-inset-bottom))] lg:-mb-4 lg:bottom-0">
-          <div className="border-t border-brand-border bg-brand-warm-white/97 px-5 py-3.5 backdrop-blur-sm">
+          <div className="border-t border-brand-border bg-brand-warm-white px-5 py-3.5">
             <div className="mb-3 flex items-end justify-between">
               <div>
                 <div className="font-mono text-label uppercase tracking-[0.09em] text-muted">

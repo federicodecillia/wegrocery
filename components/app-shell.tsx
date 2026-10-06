@@ -11,19 +11,21 @@ import { LogoutButton } from "@/components/logout-button";
 import { NotificationBell } from "@/components/notification-bell";
 import { SHELL_WIDTH, type ShellWidth } from "@/components/shell-width";
 import { TopNav } from "@/components/top-nav";
-import { getUnreadNotificationCount } from "@/lib/db/queries";
+import { getUnreadNotificationCount, notificationOwners } from "@/lib/db/queries";
 
 type AppShellProps = {
   children: ReactNode;
   email: string;
   isAdmin: boolean;
   memberId: string;
+  /** Who signed in, when they work on a family's account: their own notifications count too. */
+  personId?: string | null;
   /** Admin pages widen on desktop; everything else stays a readable column. */
   width?: ShellWidth;
 };
 
-export async function AppShell({ children, email, isAdmin, memberId, width = "member" }: AppShellProps) {
-  const unreadCount = await getUnreadNotificationCount(memberId);
+export async function AppShell({ children, email, isAdmin, memberId, personId, width = "member" }: AppShellProps) {
+  const unreadCount = await getUnreadNotificationCount(notificationOwners(memberId, personId));
 
   return (
     <div className="min-h-screen bg-brand-frame sm:p-6">

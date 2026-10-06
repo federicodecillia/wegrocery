@@ -4,9 +4,12 @@ import { useState, useTransition } from "react";
 import { toast } from "@/components/ui/toast";
 import { confirm } from "@/components/ui/confirm-dialog";
 import { adminDeleteMember, adminInviteMember, adminUpsertMember, type UpsertMemberInput } from "@/lib/actions/admin";
+import { adminUnlinkFamilyMember } from "@/lib/actions/family";
 import { formatDate } from "@/lib/utils";
 import { DEFAULT_ROLE, ROLES, getRoleLabel, normalizeRole, type Role } from "@/lib/roles";
 import { t } from "@/lib/i18n";
+import type { DuplicatePair } from "@/lib/members/duplicates";
+import { DuplicateMembers } from "./duplicate-members";
 import { MergeMembersDialog } from "./merge-members-dialog";
 
 type Member = {
@@ -21,6 +24,10 @@ type Member = {
   balance?: number;
   // Absorbed by another account that stays (lib/members/merge.ts): its name.
   mergedIntoName?: string | null;
+  // Joined another account as family (members.household_of): its name.
+  householdOfName?: string | null;
+  // People who joined this account as family: their names.
+  familyNames?: string | null;
 };
 
 type MergeRequest = { absorbedId: string; survivorId?: string };
@@ -187,12 +194,22 @@ export function SociForm({
 
 // ── Member list ───────────────────────────────────────────────────────────────
 
-export function SociList({ members, offlineOption = false }: { members: Member[]; offlineOption?: boolean }) {
+export function SociList({
+  members,
+  offlineOption = false,
+  duplicates = [],
+}: {
+  members: Member[];
+  offlineOption?: boolean;
+  // Possible duplicate accounts (lib/members/duplicates.ts).
+  duplicates?: ReadonlyArray<DuplicatePair>;
+}) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [filter, setFilter] = useState("");
   const [deletingId, startDeleteTransition] = useTransition();
   const [inviting, startInviteTransition] = useTransition();
   const [mergeRequest, setMergeRequest] = useState<MergeRequest | null>(null);
+  const [unlinking, startUnlinkTransition] = useTransition();
   // Accounts already absorbed take no part in another merge.
   const mergeable = members
     .filter((m) => !m.mergedIntoName)
@@ -225,6 +242,21 @@ export function SociList({ members, offlineOption = false }: { members: Member[]
   // falls into the least-privileged group so the member stays visible.
   const inGroup = (role: Role) =>
     visible.filter((m) => (normalizeRole(m.role) ?? DEFAULT_ROLE) === role);
+
+  async function handleUnlink(m: Member) {
+    const ok = await confirm({
+      title: t.admin.members.familyUnlinkTitle(m.fullName),
+      message: t.admin.members.familyUnlinkMessage,
+      confirmLabel: t.admin.members.familyUnlink,
+      danger: true,
+    });
+    if (!ok) return;
+    startUnlinkTransition(async () => {
+      const result = await adminUnlinkFamilyMember(m.memberId);
+      if (result.error) toast.error(result.error);
+      else if (result.message) toast.success(result.message);
+    });
+  }
 
   function handleDelete(m: Member) {
     if (!window.confirm(t.admin.members.deleteConfirm(m.fullName)))
@@ -277,6 +309,11 @@ export function SociList({ members, offlineOption = false }: { members: Member[]
                         {t.admin.members.merge.mergedBadge(m.mergedIntoName)}
                       </span>
                     )}
+                    {(m.householdOfName || m.familyNames) && (
+                      <span className="rounded-full bg-accent-soft px-1.5 py-0.5 text-label font-bold text-accent-text">
+                        {t.admin.members.familyBadge((m.householdOfName ?? m.familyNames)!)}
+                      </span>
+                    )}
                     {offlineOption && m.paysOffline && (
                       <span className="rounded-full bg-primary-soft px-1.5 py-0.5 text-label font-bold text-primary-text">
                         {t.admin.members.paysOfflineBadge}
@@ -300,7 +337,16 @@ export function SociList({ members, offlineOption = false }: { members: Member[]
                       {t.admin.members.invite}
                     </button>
                   )}
-                  {!m.mergedIntoName && (
+                  {m.householdOfName && (
+                    <button
+                      onClick={() => handleUnlink(m)}
+                      disabled={unlinking}
+                      className="whitespace-nowrap rounded-full border border-brand-border px-2.5 py-1 text-label font-semibold text-brand-gray disabled:opacity-40"
+                    >
+                      {t.admin.members.familyUnlink}
+                    </button>
+                  )}
+                  {!m.mergedIntoName && !m.householdOfName && !m.familyNames && (
                     <button
                       onClick={() => requestMerge({ absorbedId: m.memberId })}
                       className="whitespace-nowrap rounded-full border border-brand-border px-2.5 py-1 text-label font-semibold text-brand-gray"
@@ -341,6 +387,11 @@ export function SociList({ members, offlineOption = false }: { members: Member[]
           className="w-full rounded-xl border border-brand-border bg-white px-4 py-2.5 text-[13px] text-brand-near-black placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary/30"
         />
       </div>
+      <DuplicateMembers
+        pairs={duplicates}
+        members={members}
+        onMerge={(p) => requestMerge({ absorbedId: p.absorbedId, survivorId: p.survivorId })}
+      />
       {renderGroup(t.roles.admin, inGroup("admin"), "bg-primary-soft text-primary-text")}
       {renderGroup(t.roles.attivi, inGroup("attivi"), "bg-accent-soft text-accent-text")}
       {renderGroup(t.roles.utenti, inGroup("utenti"), "bg-black/[0.05] text-brand-gray")}

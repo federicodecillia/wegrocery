@@ -5,6 +5,7 @@ import { getPaymentSettings } from "@/lib/payments/get-settings";
 import { modeChangeBlockers, readModeChangeState } from "@/lib/payments/mode-change";
 import { getConfigStatus } from "@/lib/config-status-server";
 import { ConfigStatusCard } from "./config-status-card";
+import { FamiliesCard } from "./families-card";
 import { PaymentSettingsForm } from "./impostazioni-form";
 import { PaymentModeCard } from "./payment-mode-card";
 
@@ -48,6 +49,7 @@ export async function TabImpostazioni() {
         savedAt={savedAt}
         showLimits={settings.mode === "wallet"}
       />
+      <FamiliesCard enabled={settings.familiesEnabled} />
       <ConfigStatusCard items={config} />
     </div>
   );

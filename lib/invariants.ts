@@ -179,6 +179,19 @@ export const INVARIANT_CHECKS: InvariantCheck[] = [
                         WHERE o.member_id = m.member_id AND c.status = 'open'))`,
   },
   {
+    name: "household_member_empty",
+    // A person who joined a family (members.household_of) works on the
+    // family's account: their balance moved there on joining.
+    description: "a person in a family has a zero balance and no order or draft on an open cycle",
+    query: sql`
+      SELECT m.member_id AS id FROM members m
+      WHERE m.household_of IS NOT NULL
+        AND (coalesce((SELECT sum(l.amount) FROM ledger_entries l WHERE l.member_id = m.member_id), 0) <> 0
+             OR EXISTS (SELECT 1 FROM orders o JOIN order_cycles c ON c.cycle_id = o.cycle_id
+                        WHERE o.member_id = m.member_id AND c.status = 'open')
+             OR EXISTS (SELECT 1 FROM order_drafts d WHERE d.member_id = m.member_id))`,
+  },
+  {
     name: "paid_balance_credit",
     description: "every paid balance payment is credited for its whole amount, split over its parts",
     query: sql`

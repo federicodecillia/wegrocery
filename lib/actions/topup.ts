@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { brand } from "@/lib/brand";
 import { getDb } from "@/lib/db/client";
-import { getMemberBalance, getMemberByEmail } from "@/lib/db/queries";
+import { getMemberBalance, getMemberById } from "@/lib/db/queries";
 import { payments } from "@/lib/db/schema";
 import { t } from "@/lib/i18n";
 import { formatMoney } from "@/lib/i18n/format";
@@ -35,8 +35,8 @@ function genId(prefix: string): string {
 
 export async function startOnlineTopup(amountInput: string): Promise<StartTopupResult> {
   const session = await auth();
-  const email = session?.user?.email;
-  if (!email) redirect("/login");
+  const memberId = session?.user?.memberId;
+  if (!memberId) redirect("/login");
 
   // Switched off in Impostazioni, or no usable key on this deploy.
   const settings = await getPaymentSettings();
@@ -44,7 +44,7 @@ export async function startOnlineTopup(amountInput: string): Promise<StartTopupR
   const stripe = settings.onlineTopupAvailable && settings.mode === "wallet" ? getStripe() : null;
   if (!stripe) return { error: t.topup.unavailable };
 
-  const member = await getMemberByEmail(email);
+  const member = await getMemberById(memberId);
   if (!member) return { error: t.errors.memberNotFound };
   if (!member.active) return { error: t.errors.accountInactive };
 

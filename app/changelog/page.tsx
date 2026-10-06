@@ -32,7 +32,7 @@ export default async function ChangelogPage({
     <AppShell
       email={session.user.email}
       isAdmin={role === "admin"}
-      memberId={session.user.memberId!}
+      memberId={session.user.memberId!} personId={session.user.personId}
     >
       <div className="mb-4 flex items-start justify-between gap-3">
         <div>
