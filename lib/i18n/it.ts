@@ -418,7 +418,6 @@ export const it = {
     guideDetail: "Come funziona e domande frequenti",
     news: "Novità",
     newsDetail: "Cosa è cambiato nell'app",
-    privacy: "Privacy",
     contact: "Contatta il gruppo",
     version: (v: string) => `Versione ${v}`,
   },
