@@ -21,6 +21,10 @@ stanno nella PR.
 
 ## [Non rilasciato]
 
+## [1.24.0] — 6 ottobre 2026
+
+*Le tue impostazioni in un posto solo, e una guida in cui cercare.*
+
 ### Aggiunte
 - 👤 **Il tuo Profilo.** Tocca il cerchio con le tue iniziali, in alto a destra: il tuo nome (ora puoi cambiarlo), le email con cui entri, famiglia, notifiche, saldo, l'app da installare, la guida e il pulsante Esci, tutto in un posto.
 
@@ -537,6 +541,7 @@ stanno nella PR.
 
 ---
 
+[1.24.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.24.0
 [1.23.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.23.0
 [1.22.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.22.0
 [1.21.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.21.1
