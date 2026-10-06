@@ -6,6 +6,7 @@ import { getFamilyPeople, getMemberBalance, getPendingFamilyInvites } from "@/li
 import { t } from "@/lib/i18n";
 import { formatDate, formatMoney } from "@/lib/i18n/format";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
+import { HelpLink } from "@/components/guide/help-link";
 
 // Families (lib/actions/family.ts): who shares this account, invitations
 // sent and received, leave or remove.
@@ -35,7 +36,11 @@ export default async function FamilyPage() {
           ← {t.profile.title}
         </Link>
       </div>
-      <h1 className="mb-1 text-[20px] font-black tracking-[-0.03em] text-brand-near-black">{t.family.title}</h1>
+      <div className="mb-1 flex items-center gap-2">
+        <h1 className="text-[20px] font-black tracking-[-0.03em] text-brand-near-black">{t.family.title}</h1>
+        {/* The guide's Family topic exists only while families are on. */}
+        {settings.familiesEnabled && <HelpLink href="/guida/famiglia" />}
+      </div>
       <p className="mb-5 text-[14px] leading-snug text-brand-gray">{t.family.intro}</p>
 
       <FamilyPanel

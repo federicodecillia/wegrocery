@@ -6,6 +6,7 @@ import { getUserRole, requireUserSession } from "@/lib/auth/session";
 import { getMemberNotifications, notificationOwners } from "@/lib/db/queries";
 import { markAllNotificationsRead, markNotificationRead } from "@/lib/actions/notifications";
 import { formatDateShort } from "@/lib/utils";
+import { HelpLink } from "@/components/guide/help-link";
 
 export default async function NotifichePage() {
   const session = await requireUserSession();
@@ -19,9 +20,12 @@ export default async function NotifichePage() {
   return (
     <AppShell email={session.user.email} name={session.user.fullName} isAdmin={role === "admin"} memberId={memberId} personId={session.user.personId}>
       <div className="mb-5 flex items-center justify-between gap-3">
-        <h1 className="text-[20px] font-black tracking-[-0.03em] text-brand-near-black">
-          {t.notifications.title}
-        </h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-[20px] font-black tracking-[-0.03em] text-brand-near-black">
+            {t.notifications.title}
+          </h1>
+          <HelpLink href="/guida/notifiche" />
+        </div>
         <div className="flex shrink-0 items-center gap-2">
           {unreadCount > 0 && (
             <form

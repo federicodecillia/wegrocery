@@ -19,7 +19,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 │   ├── storico/page.tsx        # Order history + ledger movements tabs
 │   ├── notifiche/page.tsx      # Notification list with mark-as-read
 │   ├── profilo/page.tsx        # Profile (header avatar): name, emails, card, family, notifications, money, app, sign-out (privacy stays in the footer)
-│   ├── guida/page.tsx          # How-to steps + FAQ accordion
+│   ├── guida/page.tsx          # Guide index: search, topics, news; cards in guida/[topic] (content in lib/guide)
 │   ├── admin/page.tsx          # Admin panel: ciclo/prodotti/ordini/cassa/soci/fornitori/statistiche + impostazioni (⚙)
 │   ├── login/page.tsx          # Login with Google
 │   └── api/auth/[...all]/      # Better Auth handler, limited to lib/auth/public-endpoints.ts
@@ -33,7 +33,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 │   ├── notification-bell.tsx   # Bell icon with red unread badge
 │   ├── home/cycle-countdown.tsx
 │   ├── admin/                  # Admin tab components (one per tab)
-│   └── ui/                     # Button, Card, ConfirmDialog, Toast, FaqAccordion
+│   └── ui/                     # Button, Card, ConfirmDialog, Toast
 ├── lib/
 │   ├── db/
 │   │   ├── schema.ts           # Drizzle tables: members, order_cycles, products, orders, order_drafts,

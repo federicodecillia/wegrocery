@@ -426,143 +426,20 @@ export const en: Strings = {
   },
   guide: {
     title: "How it works",
-    howToSteps: [
-      {
-        n: 1,
-        title: "Check your balance",
-        body: "On the Home screen, see your balance and the status of the open order.",
-      },
-      {
-        n: 2,
-        title: "Go to your order",
-        body: "Tap the Order tab at the bottom and select products using the + and − buttons.",
-      },
-      {
-        n: 3,
-        title: "Confirm your order",
-        body: 'Press "Confirm order" at the bottom. You\'ll get a confirmation, and the order stays editable until the cycle closes.',
-      },
-      {
-        n: 4,
-        title: "History",
-        body: "In the History tab, see your past orders and all balance movements.",
-      },
-      {
-        n: 5,
-        title: "Pickup and recharge",
-        body: "Come pick up on the date indicated. To top up your balance, open the Top up page from the balance card on Home: it has the bank transfer details and, if the group has enabled it, online payment.",
-      },
-      {
-        n: 6,
-        title: "Notifications",
-        body: "When a cycle closes or a transfer is registered, you'll see a red dot on the bell icon at the top. Tap it to read your notifications.",
-      },
-    ] as { n: number; title: string; body: string }[],
-    // Pay-per-order groups (app_settings.payment_mode = 'per_order').
-    howToStepsPerOrder: [
-      { n: 1, title: "Check the open order", body: "The Home page shows the open cycles and where your order stands." },
-      {
-        n: 2,
-        title: "Choose your products",
-        body: "Tap the Order tab and choose products with the + and − buttons. Below the total you see products, shipping and the order preparation fee.",
-      },
-      {
-        n: 3,
-        title: "Confirm and pay",
-        body: 'Tap "Confirm and pay" and pay by card. While the cycle is open you can edit: if the order goes up you only pay the difference.',
-      },
-      {
-        n: 4,
-        title: "Settlement",
-        body: "After pickup, once costs are final, any difference on products and shipping is evened out: what you paid in excess comes back to your card. If costs went above what you paid, the Home page shows an amount due with a \"Pay now\" button.",
-      },
-      { n: 5, title: "History", body: "The History tab shows, for each cycle, what you paid, the costs, the refunds and the net." },
-      {
-        n: 6,
-        title: "Notifications",
-        body: "We let you know when a payment is confirmed, when a refund is sent and when something is due. Tap the bell at the top to read them.",
-      },
-    ] as { n: number; title: string; body: string }[],
+    intro: "Search for a word or pick a topic: you find the steps to follow and the answers to the most common questions.",
+    helpLabel: "How it works: open the guide",
+    searchLabel: "Search the guide",
+    searchPlaceholder: "E.g. top up, cancel, family",
+    searchClear: "Clear the search",
+    searchResults: (n: number) => (n === 1 ? "1 result" : `${n} results`),
+    searchEmpty: "No results. Try another word, or write to us: the contacts are at the bottom of the page.",
+    topicsTitle: "Topics",
+    topicCount: (n: number) => (n === 1 ? "1 card" : `${n} cards`),
+    backToGuide: "Guide",
+    otherTopics: "Other topics",
     newsTitle: "News",
     newsSubtitle: "What's new",
     seeAllNews: "See all updates →",
-    faqTitle: "Frequently asked questions",
-    faq: [
-      {
-        q: "Can I install the app on my phone?",
-        a: "Yes. On Android open the app in Chrome and tap \"Install\" (or \"Add to Home screen\" from the ⋮ menu). On iPhone open it in Safari, tap Share, then \"Add to Home Screen\". The first time you sign in from the installed app, use the 6-digit code that comes by email with the link.",
-      },
-      {
-        q: "How is the app organized?",
-        a: "The app is divided into 4 tabs: Home, Order, History, and Guide. The Admin tab is only visible to administrators.",
-      },
-      {
-        q: "Who manages products and cycles?",
-        a: "Administrators create order cycles, upload products from supplier catalogs, and close cycles.",
-      },
-      {
-        q: "When can I order?",
-        a: "You can order when there's an open order. The Home screen shows the days and hours remaining until closure. After that deadline, you can no longer edit your order.",
-      },
-      {
-        wallet: true,
-        q: "How does the balance work?",
-        a: "Your balance is your credit with the buying group. When an order closes, the cost is automatically deducted. To top up, open the Top up page from the balance card on Home. With a bank transfer your balance updates when the treasurer records it; with online payment, if the group has enabled it, it updates as soon as the payment is confirmed.",
-      },
-      {
-        wallet: true,
-        q: "What is the order preparation fee?",
-        a: "If the cycle has one, a share for the group's bank fees and running costs: a percentage of the products or a fixed amount. You see it in the order summary and it is charged when the cycle closes, together with the order.",
-      },
-      {
-        q: "Can I edit or cancel my order after confirming it?",
-        a: 'Yes, as long as the order is open. The Order tab shows your confirmed order: press "Edit order" to change quantities and confirm again, or "Cancel order" to remove it entirely so nothing is charged at closing.',
-      },
-      {
-        wallet: true,
-        q: "What happens if my balance is negative?",
-        a: "You can order as long as you stay within the credit limit set by the group (if any): the app warns you when you go negative and blocks the save beyond the limit. Remember to top up as soon as possible to cover the debt.",
-      },
-      {
-        q: "How do I add the app to my home screen?",
-        a: 'On iPhone (Safari): tap the share icon → "Add to Home Screen". On Android (Chrome): tap the three dots → "Add to Home Screen".',
-      },
-      {
-        wallet: true,
-        q: "What if my balance is insufficient?",
-        a: "The app lets you order even if your balance is low or negative (up to the credit limit set by the group, if any, also counting orders already sent but not yet charged) so you can still shop. Beyond the limit the order is not saved until you top up. However, it's essential to recharge promptly to keep the buying group healthy and allow payment to suppliers.",
-      },
-      {
-        q: "Who are the suppliers?",
-        a: "We work with local and organic producers. Each order cycle can involve one or more different suppliers (e.g., fruits/vegetables, eggs, cheeses). You can see product details in the Order tab.",
-      },
-      {
-        q: "How do notifications work?",
-        a: "The app notifies you automatically when a cycle closes (with the amount deducted) and when a transfer is registered by whoever manages the treasury. The bell icon at the top shows the number of unread notifications. Tap it to see all of them and mark them as read.",
-      },
-    ] as { q: string; a: string; wallet?: boolean }[],
-    faqPerOrder: [
-      {
-        q: "How do I pay for my order?",
-        a: "By card, when you confirm the order. You pay products, shipping and the order preparation fee. If you edit the order and the total goes up you only pay the difference; if it goes down, the difference comes back at settlement.",
-      },
-      {
-        q: "What is the order preparation fee?",
-        a: "A share for the group's bank fees and running costs, set for each cycle: a percentage of the products or a fixed amount. You see it before confirming and the group keeps it.",
-      },
-      {
-        q: "When do refunds arrive?",
-        a: "After the cycle is settled, on the card you paid with. They usually take 5-10 days. If you cancel your order while the cycle is open the refund starts right away.",
-      },
-      {
-        q: "What is an amount due?",
-        a: 'If the final costs of a cycle are more than you paid, the difference shows on the Home page as an amount due. Pay it with "Pay now". Until it is paid you cannot pay new orders, but you can still edit or cancel the ones you placed.',
-      },
-      {
-        q: "I see a credit: what should I do?",
-        a: "Nothing: it is money the association owes you, and the treasurer gives it back.",
-      },
-    ] as { q: string; a: string }[],
     contactEmoji: "📬",
     contactHeading: "Do you have other questions?",
     contactIntro: (appName: string) =>

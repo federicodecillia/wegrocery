@@ -25,6 +25,7 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ### Changed
 - 🧭 **Tidier header.** The email and the Logout button made way for the Profile circle; notification preferences and Family moved inside the Profile (old links still work).
+- 📖 **A guide you can search.** The Guide now has a search box and topics, with step-by-step cards that open the right page of the app. A "?" next to the title of Order, Top up, Family and Notifications opens the right card. It only covers what your group has switched on, and the answers are up to date with the latest features.
 
 ## [1.23.0] — 2026-10-06
 
