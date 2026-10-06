@@ -74,7 +74,7 @@ export async function updateNotificationPreference(input: {
         set: { appEnabled: input.appEnabled, emailEnabled: input.emailEnabled, updatedAt: now },
       });
 
-    revalidatePath("/notifiche/impostazioni");
+    revalidatePath("/profilo", "layout");
     return { ok: true };
   } catch (e) {
     return { error: actionErrorMessage(e, t.errors.genericError, "updateNotificationPreference") };

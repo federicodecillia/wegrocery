@@ -30,7 +30,7 @@ export default async function ChangelogPage({
 
   return (
     <AppShell
-      email={session.user.email}
+      email={session.user.email} name={session.user.fullName}
       isAdmin={role === "admin"}
       memberId={session.user.memberId!} personId={session.user.personId}
     >

@@ -18,12 +18,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 │   ├── ordine/page.tsx         # Order: confirmed recap (edit/cancel) or the stepper form
 │   ├── storico/page.tsx        # Order history + ledger movements tabs
 │   ├── notifiche/page.tsx      # Notification list with mark-as-read
+│   ├── profilo/page.tsx        # Profile (header avatar): name, emails, card, family, notifications, money, app, sign-out
 │   ├── guida/page.tsx          # How-to steps + FAQ accordion
 │   ├── admin/page.tsx          # Admin panel: ciclo/prodotti/ordini/cassa/soci/fornitori/statistiche + impostazioni (⚙)
 │   ├── login/page.tsx          # Login with Google
 │   └── api/auth/[...all]/      # Better Auth handler, limited to lib/auth/public-endpoints.ts
 ├── components/
-│   ├── app-shell.tsx           # Async layout wrapper: header (logo + email + bell + logout, top nav from lg) + bottom nav
+│   ├── app-shell.tsx           # Async layout wrapper: header (logo + bell + Profile avatar, top nav from lg) + bottom nav
 │   ├── bottom-nav.tsx          # 5-item bottom nav, hidden from lg
 │   ├── top-nav.tsx             # Same items in the header, from lg
 │   ├── nav-items.ts            # Nav items + isItemActive (icons in nav-icon.tsx)
@@ -48,6 +49,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 │   │   ├── admin-settings.ts   # adminUpdatePaymentSettings (Impostazioni tab)
 │   │   ├── admin-members.ts    # previewMemberMerge, adminMergeMembers (Soci → Unisci)
 │   │   ├── notifications.ts    # markNotificationRead, markAllNotificationsRead
+│   │   ├── profile.ts          # updateMyName (Profile: the signed-in person renames themselves)
 │   │   └── order.ts            # saveOrder, saveOrderDraft, discardOrderDraft (member)
 │   ├── email/                  # Resend wrapper + supplier-email templates
 │   ├── csv/                    # Server-side CSV builders (e.g. supplier aggregated export)
@@ -284,7 +286,7 @@ User interaction → Server Action ("use server") → auth check → DB mutation
   - `cycle_opened` — a cycle is created (always created already-open, so this is the single emit point, in `adminCreateCycle`)
   - `cycle_closing_reminder` — **retired in v1.9.0.** No longer emitted. Rows sent while the feature existed remain in members' inboxes and fall through `categoryForType` to the unknown-type branch: rendered in-app, never emailed. Do not reintroduce the name for something else.
 - **All emission goes through `lib/notifications/dispatch.ts`** (`dispatchNotification` for single members, `dispatchWithBodies` for per-member bodies like cycle close, `dispatchToMembers` for broadcasts). Never insert into `notifications` directly — dispatch is where channel preferences are honoured.
-- **Preferences** (`notification_preferences`, sparse: absent row = code default). Categories + defaults live in `lib/notifications/categories.ts`: `cycle_opened`, `order_charge`, `order_updates`, `wallet_topup`: app on, email off by default (since 1.17.0 also `cycle_opened`, to save the email quota for sign-in links; saved preferences are kept). The keys are stable (saved preferences key on them) but the member-facing voices are named for what they cover: `cycle_opened` "Nuovo ciclo aperto", `order_charge` "Addebiti e pagamenti" (`order_closed`, `settlement_due`, `order_paid`, `balance_paid`, `manual_charge_recorded`, `membership_fee_charged`), `order_updates` "Modifiche all'ordine" (`order_adjusted`, `order_corrected`, `cycle_cancelled`), `wallet_topup` "Saldo e rimborsi" (`topup_received`, `payout_sent`, `order_refund_sent`, `refund_failed`). A new type goes under the voice whose hint it fits, and the hint in `lib/i18n/it.ts`/`en.ts` is updated with it. Members edit them at `/notifiche/impostazioni` (bell → ⚙) via `updateNotificationPreference`. Raw `type` values are unchanged in the DB; `categoryForType` maps them (unknown type → in-app only, never email). Stored rows for retired categories are ignored by `resolvePreferences`, so removing a category needs no data migration.
+- **Preferences** (`notification_preferences`, sparse: absent row = code default). Categories + defaults live in `lib/notifications/categories.ts`: `cycle_opened`, `order_charge`, `order_updates`, `wallet_topup`: app on, email off by default (since 1.17.0 also `cycle_opened`, to save the email quota for sign-in links; saved preferences are kept). The keys are stable (saved preferences key on them) but the member-facing voices are named for what they cover: `cycle_opened` "Nuovo ciclo aperto", `order_charge` "Addebiti e pagamenti" (`order_closed`, `settlement_due`, `order_paid`, `balance_paid`, `manual_charge_recorded`, `membership_fee_charged`), `order_updates` "Modifiche all'ordine" (`order_adjusted`, `order_corrected`, `cycle_cancelled`), `wallet_topup` "Saldo e rimborsi" (`topup_received`, `payout_sent`, `order_refund_sent`, `refund_failed`). A new type goes under the voice whose hint it fits, and the hint in `lib/i18n/it.ts`/`en.ts` is updated with it. Members edit them at `/profilo/notifiche` (Profile, or bell → ⚙; the old `/notifiche/impostazioni` redirects) via `updateNotificationPreference`. Raw `type` values are unchanged in the DB; `categoryForType` maps them (unknown type → in-app only, never email). Stored rows for retired categories are ignored by `resolvePreferences`, so removing a category needs no data migration.
 - **Cycle-open audience** is gated by `canAccessCycle(accessLevel, role)` (an admin-only cycle only notifies admins); balance-change notifications (charge/updates/top-up) are personal.
 - **No cron.** The app has no scheduled server work: the only `api/` route is `api/auth`. The closing-reminder cron was removed in v1.9.0 — GitHub executed 13% of its `*/15` schedule, so a reminder that had to fire inside a window was never reliable, and the feature was not worth the machinery. If a future feature needs scheduling, decide the mechanism first (Vercel Cron needs a paid plan for sub-daily; the account is Hobby).
 - `AppShell` fetches `getUnreadNotificationCount(memberId)` and passes it to `NotificationBell`
@@ -382,7 +384,7 @@ One person, two accounts (typically an old address and the one they used at firs
 
 ### Families
 
-People who shop together share one account (cart, balance, history) while each keeps their own member row, addresses, name, role and card. Off by default: `app_settings.families_enabled` (admin → Impostazioni). Migration `0029_families.sql`: `members.household_of` (the account a person joined), `family_invites` (pending → accepted / declined / cancelled, 7 days, one pending per pair). Rules in `lib/members/family.ts` (pure: `checkInvite`, `checkUnlink`, `familyRole`, `sessionAccount`, at most 6 people), actions in `lib/actions/family.ts`, page `/famiglia` (linked from `/notifiche/impostazioni`).
+People who shop together share one account (cart, balance, history) while each keeps their own member row, addresses, name, role and card. Off by default: `app_settings.families_enabled` (admin → Impostazioni). Migration `0029_families.sql`: `members.household_of` (the account a person joined), `family_invites` (pending → accepted / declined / cancelled, 7 days, one pending per pair). Rules in `lib/members/family.ts` (pure: `checkInvite`, `checkUnlink`, `familyRole`, `sessionAccount`, at most 6 people), actions in `lib/actions/family.ts`, page `/famiglia` (linked from the Profile, `/profilo`).
 
 - **Session**: `auth()` resolves the address to the person, then serves the account: `memberId` = the account, `personId` = who signed in. Role: the admin panel is personal (`requireAdmin` returns the person as `memberId`), cycle access is the higher of person and account. A deactivated account signs its people out.
 - **Joining** reuses the merge in mode `link` (`mergeMembers`, guarded on the invitation still pending): balance as a `member_merge` pair, open-cycle orders and drafts move, the person stays active with their own notifications (`notificationOwners` shows both). Same refusals as a merge. **Leaving** (the person) or **removing** (the account's own person, or an admin in Soci) only clears `household_of`: the money stays with the family.
@@ -626,7 +628,7 @@ Key patterns:
 - **Notification bell**: in header, red badge with count, links to `/notifiche`
 - Shell `max-w-[480px]`, `md:max-w-[640px]`, centered; `bg-brand-frame` frames the app. Only Admin (`<AppShell width="admin">`) adds `lg:max-w-[960px]`. Widths live in `shell-width.ts`; a route with a non-default width needs its own `loading.tsx` (see `app/admin/loading.tsx`)
 - Member pages: reading text is 14px; mono amounts and labels keep their own sizes
-- The email is in the header from `sm`; on phones it is on the Notifications page
+- The header holds the bell and the Profile avatar (initials, `lib/profile/summary.ts`); the email, sign-out and personal settings are on `/profilo`, whose rows hide what the deploy has not switched on
 
 ### Known Gotchas
 

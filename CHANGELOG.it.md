@@ -21,6 +21,12 @@ stanno nella PR.
 
 ## [Non rilasciato]
 
+### Aggiunte
+- 👤 **Il tuo Profilo.** Tocca il cerchio con le tue iniziali, in alto a destra: il tuo nome (ora puoi cambiarlo), le email con cui entri, famiglia, notifiche, saldo, l'app da installare, la guida e il pulsante Esci, tutto in un posto.
+
+### Modificato
+- 🧭 **Intestazione più pulita.** Email e pulsante Logout lasciano il posto al cerchio del Profilo; le preferenze delle notifiche e la Famiglia ora stanno dentro il Profilo (i vecchi link funzionano ancora).
+
 ## [1.23.0] — 6 ottobre 2026
 
 *Ordini in famiglia, e un carrello che non perde le modifiche.*
