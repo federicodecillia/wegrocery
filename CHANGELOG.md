@@ -20,6 +20,12 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ## [Unreleased]
 
+### Added
+- 👤 **Your Profile.** Tap the circle with your initials, top right: your name (now editable), the emails you sign in with, family, notifications, balance, installing the app, the guide and sign-out, all in one place.
+
+### Changed
+- 🧭 **Tidier header.** The email and the Logout button made way for the Profile circle; notification preferences and Family moved inside the Profile (old links still work).
+
 ## [1.23.0] — 2026-10-06
 
 *Families share one account, and duplicate accounts point themselves out.*

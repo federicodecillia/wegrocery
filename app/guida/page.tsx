@@ -23,7 +23,7 @@ export default async function GuidaPage() {
   const latest = versions.find((v) => v.date !== null) ?? null;
 
   return (
-    <AppShell email={session.user.email} isAdmin={role === "admin"} memberId={session.user.memberId!} personId={session.user.personId}>
+    <AppShell email={session.user.email} name={session.user.fullName} isAdmin={role === "admin"} memberId={session.user.memberId!} personId={session.user.personId}>
       <h1 className="mb-5 text-[20px] font-black tracking-[-0.03em] text-brand-near-black">
         {t.guide.title}
       </h1>

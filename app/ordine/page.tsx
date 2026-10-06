@@ -45,7 +45,7 @@ export default async function OrdinePage({
   const choice = resolveOrderCycle(activeCycles, searchCycleId);
   if (choice.kind === "choose") {
     return (
-      <AppShell email={session.user.email} isAdmin={role === "admin"} memberId={memberId} personId={session.user.personId}>
+      <AppShell email={session.user.email} name={session.user.fullName} isAdmin={role === "admin"} memberId={memberId} personId={session.user.personId}>
         <CycleChooser cycles={activeCycles} />
       </AppShell>
     );
@@ -54,7 +54,7 @@ export default async function OrdinePage({
 
   if (!openCycle) {
     return (
-      <AppShell email={session.user.email} isAdmin={role === "admin"} memberId={memberId} personId={session.user.personId}>
+      <AppShell email={session.user.email} name={session.user.fullName} isAdmin={role === "admin"} memberId={memberId} personId={session.user.personId}>
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <span className="mb-4 text-4xl">🛒</span>
           <h2 className="text-[18px] font-bold text-brand-near-black">{t.order.noOpenOrders}</h2>
@@ -104,7 +104,7 @@ export default async function OrdinePage({
               : null;
 
   return (
-    <AppShell email={session.user.email} isAdmin={role === "admin"} memberId={memberId} personId={session.user.personId}>
+    <AppShell email={session.user.email} name={session.user.fullName} isAdmin={role === "admin"} memberId={memberId} personId={session.user.personId}>
       {notice && (
         <div
           className={`mb-4 rounded-[14px] border p-[12px_14px] text-[14px] ${

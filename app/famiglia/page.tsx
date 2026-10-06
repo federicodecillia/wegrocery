@@ -26,13 +26,13 @@ export default async function FamilyPage() {
   const balance = received.length > 0 ? await getMemberBalance(personId) : 0;
 
   return (
-    <AppShell email={session.user.email} isAdmin={role === "admin"} memberId={memberId} personId={personId}>
+    <AppShell email={session.user.email} name={session.user.fullName} isAdmin={role === "admin"} memberId={memberId} personId={personId}>
       <div className="mb-4">
         <Link
-          href="/notifiche/impostazioni"
+          href="/profilo"
           className="font-mono text-label font-bold uppercase tracking-widest text-brand-gray"
         >
-          ← {t.notifications.settings.title}
+          ← {t.profile.title}
         </Link>
       </div>
       <h1 className="mb-1 text-[20px] font-black tracking-[-0.03em] text-brand-near-black">{t.family.title}</h1>

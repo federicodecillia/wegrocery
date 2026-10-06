@@ -18,7 +18,7 @@ export default async function StoricoPage() {
   ]);
 
   return (
-    <AppShell email={session.user.email} isAdmin={role === "admin"} memberId={memberId} personId={session.user.personId}>
+    <AppShell email={session.user.email} name={session.user.fullName} isAdmin={role === "admin"} memberId={memberId} personId={session.user.personId}>
       <StoricoTabs
         orderHistory={orderHistory}
         movements={movements.map((e) => ({
