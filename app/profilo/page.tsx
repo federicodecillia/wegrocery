@@ -155,7 +155,6 @@ export default async function ProfilePage() {
         <InstallRow />
         <SettingsRow href="/guida" title={t.nav.guide} detail={t.profile.guideDetail} />
         <SettingsRow href="/changelog" title={t.profile.news} detail={t.profile.newsDetail} />
-        {brand.privacyUrl && <SettingsRow href={brand.privacyUrl} title={t.profile.privacy} />}
         <SettingsRow href={`mailto:${brand.supportEmail}`} title={t.profile.contact} detail={brand.supportEmail} />
       </SettingsSection>
 

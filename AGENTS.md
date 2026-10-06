@@ -18,7 +18,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 │   ├── ordine/page.tsx         # Order: confirmed recap (edit/cancel) or the stepper form
 │   ├── storico/page.tsx        # Order history + ledger movements tabs
 │   ├── notifiche/page.tsx      # Notification list with mark-as-read
-│   ├── profilo/page.tsx        # Profile (header avatar): name, emails, card, family, notifications, money, app, sign-out
+│   ├── profilo/page.tsx        # Profile (header avatar): name, emails, card, family, notifications, money, app, sign-out (privacy stays in the footer)
 │   ├── guida/page.tsx          # How-to steps + FAQ accordion
 │   ├── admin/page.tsx          # Admin panel: ciclo/prodotti/ordini/cassa/soci/fornitori/statistiche + impostazioni (⚙)
 │   ├── login/page.tsx          # Login with Google
