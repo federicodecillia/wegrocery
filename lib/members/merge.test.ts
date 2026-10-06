@@ -10,6 +10,7 @@ function state(over: Partial<MergeState> = {}): MergeState {
       aliasEmail: null,
       active: true,
       mergedInto: null,
+      householdOf: null,
     },
     absorbed: {
       memberId: "mem_b",
@@ -18,6 +19,7 @@ function state(over: Partial<MergeState> = {}): MergeState {
       aliasEmail: null,
       active: true,
       mergedInto: null,
+      householdOf: null,
     },
     actingMemberId: "mem_admin",
     absorbedOrderCycles: [],
@@ -28,6 +30,7 @@ function state(over: Partial<MergeState> = {}): MergeState {
     absorbedPendingPayments: 0,
     absorbedOpenRefunds: 0,
     absorbedUnsettledPerOrderCycles: 0,
+    absorbedHouseholdMembers: 0,
     ...over,
   };
 }
@@ -120,5 +123,57 @@ describe("planMemberMerge", () => {
 describe("mergedPlaceholderEmail", () => {
   it("is unique per member and undeliverable", () => {
     expect(mergedPlaceholderEmail("mem_AB12")).toBe("mem_ab12@merged.invalid");
+  });
+});
+
+describe("planMemberMerge with families", () => {
+  const base = state();
+  it("refuses to merge an account other people joined", () => {
+    expect(planMemberMerge(state({ absorbedHouseholdMembers: 1 }))).toEqual({
+      ok: false,
+      refusal: { code: "has_family", fullName: "Anna Rossi" },
+    });
+  });
+
+  it("refuses to merge a person who joined a family", () => {
+    const d = planMemberMerge(state({ absorbed: { ...base.absorbed, householdOf: "mem_x" } }));
+    expect(d).toEqual({ ok: false, refusal: { code: "in_family", fullName: "Anna Rossi" } });
+  });
+
+  it("links without touching addresses, keeping the person and moving balance and open orders", () => {
+    const d = planMemberMerge(
+      state({
+        absorbedOrderCycles: [openWallet, { ...openWallet, cycleId: "cyc_0", status: "closed" }],
+        absorbedBalanceCents: 1250,
+        absorbedLedgerRows: 3,
+      }),
+      undefined,
+      "link",
+    );
+    expect(d).toEqual({
+      ok: true,
+      plan: {
+        moveCycleIds: ["cyc_1"],
+        transferCents: 1250,
+        deleteAbsorbed: false,
+        survivorEmail: "anna@group.example",
+        survivorAlias: null,
+        droppedAddresses: [],
+      },
+    });
+  });
+
+  it("lets the invited member link themselves (no absorbing_self in link mode)", () => {
+    const d = planMemberMerge(state({ actingMemberId: "mem_b" }), undefined, "link");
+    expect(d.ok).toBe(true);
+  });
+
+  it("keeps the merge refusals when linking", () => {
+    const d = planMemberMerge(
+      state({ absorbedOrderCycles: [openWallet], survivorOpenOrderCycleIds: ["cyc_1"] }),
+      undefined,
+      "link",
+    );
+    expect(d).toEqual({ ok: false, refusal: { code: "both_ordered", cycleTitle: "Week 40" } });
   });
 });

@@ -1,6 +1,6 @@
 "use server";
 
-import { eq, and, asc, sql } from "drizzle-orm";
+import { eq, and, asc, isNull, sql } from "drizzle-orm";
 import { liveLedger } from "@/lib/db/ledger-live";
 import { requireAdmin } from "@/lib/auth/session";
 import { t } from "@/lib/i18n";
@@ -164,7 +164,8 @@ export async function adminGetEditClosedOrderBootstrap(
       db
         .select({ memberId: members.memberId, fullName: members.fullName })
         .from(members)
-        .where(eq(members.active, true))
+        // A person in a family orders on the family's account.
+        .where(and(eq(members.active, true), isNull(members.householdOf)))
         .orderBy(asc(members.fullName)),
     ]);
 

@@ -25,7 +25,10 @@ export function checkAccess(user: SessionUser, need: "member" | "admin"): Access
   return { ok: true };
 }
 
-export type SessionClaims = { memberId: string; role: string; active: true; fullName: string };
+// memberId: the account the session works on (orders, balance, history).
+// personId: who signed in; the same member unless they joined a family
+// (lib/members/family.ts), then the account is the one they joined.
+export type SessionClaims = { memberId: string; personId: string; role: string; active: true; fullName: string };
 
 /**
  * What auth() (auth.ts) adds to the session for the member row found for the
@@ -36,5 +39,11 @@ export function sessionClaims(
   member: { memberId: string; role: string; active: boolean; fullName: string } | null | undefined,
 ): SessionClaims | null {
   if (!member?.active) return null;
-  return { memberId: member.memberId, role: member.role, active: true, fullName: member.fullName };
+  return {
+    memberId: member.memberId,
+    personId: member.memberId,
+    role: member.role,
+    active: true,
+    fullName: member.fullName,
+  };
 }

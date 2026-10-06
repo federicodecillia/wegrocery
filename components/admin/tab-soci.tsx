@@ -20,7 +20,11 @@ export async function TabSoci() {
       <SociForm offlineOption={offlineOption} />
       <SociList
         offlineOption={offlineOption}
-        duplicates={findDuplicatePairs(members, dismissed)}
+        // A person who joined a family is not a duplicate of anyone.
+        duplicates={findDuplicatePairs(
+          members.filter((m) => !m.householdOf),
+          dismissed,
+        )}
         members={members.map((m) => ({
           memberId: m.memberId,
           fullName: m.fullName,
@@ -32,6 +36,7 @@ export async function TabSoci() {
           lastLoginAt: m.lastLoginAt?.toISOString() ?? null,
           balance: balanceOf.get(m.memberId) ?? 0,
           mergedIntoName: m.mergedInto ? (nameOf.get(m.mergedInto) ?? m.mergedInto) : null,
+          householdOfName: m.householdOf ? (nameOf.get(m.householdOf) ?? m.householdOf) : null,
         }))}
       />
     </div>

@@ -205,7 +205,9 @@ export async function adminCreateCycle(data: CreateCycleInput): Promise<{error?:
           role: members.role,
           active: members.active,
         })
-        .from(members);
+        .from(members)
+        // A person in a family sees the account's notifications: one each.
+        .where(isNull(members.householdOf));
       const recipients = selectCycleAccessMembers(allMembers, accessLevel);
       await dispatchToMembers(
         db,
@@ -963,11 +965,18 @@ async function recordManualMovement(
 
   const db = getDb();
   const [member] = await db
-    .select({ memberId: members.memberId, email: members.email, fullName: members.fullName })
+    .select({
+      memberId: members.memberId,
+      email: members.email,
+      fullName: members.fullName,
+      householdOf: members.householdOf,
+    })
     .from(members)
     .where(eq(members.memberId, input.memberId))
     .limit(1);
   if (!member) return { error: t.errors.memberNotFound };
+  // Money of a person in a family lives on the family's account.
+  if (member.householdOf) return { error: t.admin.treasury.inFamily(member.fullName) };
 
   if (plan.type === "payout") {
     const excess = validatePayoutAmount(plan.amountCents / 100, await memberPayoutBase(db, member.memberId));

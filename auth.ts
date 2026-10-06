@@ -1,6 +1,6 @@
 import { headers } from "next/headers";
 import { after } from "next/server";
-import { findMemberByLoginEmail } from "@/lib/auth/admission";
+import { findMemberById, findMemberByLoginEmail } from "@/lib/auth/admission";
 import { sessionClaims } from "@/lib/auth/access";
 import { createAuth, MAGIC_LINK_MINUTES, type AuthEmail } from "@/lib/auth/config";
 import type { AppSession } from "@/lib/auth/session";
@@ -8,6 +8,7 @@ import { brand } from "@/lib/brand";
 import { getDb } from "@/lib/db/client";
 import { sendMail } from "@/lib/email/resend";
 import { t } from "@/lib/i18n";
+import { familyRole, sessionAccount } from "@/lib/members/family";
 import { reportError } from "@/lib/observability";
 
 function authEmailText({ kind, email, url, code }: AuthEmail): string {
@@ -61,8 +62,24 @@ export async function auth(): Promise<AppSession | null> {
   const requestHeaders = await headers();
   const session = await getAuthInstance().api.getSession({ headers: requestHeaders });
   if (!session) return null;
-  const member = await findMemberByLoginEmail(session.user.email);
-  const claims = sessionClaims(member);
+  const person = await findMemberByLoginEmail(session.user.email);
+  if (person?.householdOf) {
+    // A person in a family works on the account they joined.
+    const account = sessionAccount(person, await findMemberById(person.householdOf));
+    const role = account ? familyRole(person.role, account.role) : null;
+    if (!account || !role) return null;
+    return {
+      user: {
+        email: session.user.email,
+        memberId: account.memberId,
+        personId: person.memberId,
+        role,
+        active: true,
+        fullName: person.fullName,
+      },
+    };
+  }
+  const claims = sessionClaims(person);
   if (!claims) return null;
   return { user: { email: session.user.email, ...claims } };
 }

@@ -1,9 +1,10 @@
 "use server";
 
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, inArray, isNull } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { requireUserSession } from "@/lib/auth/session";
 import { getDb } from "@/lib/db/client";
+import { notificationOwners } from "@/lib/db/queries";
 import { notificationPreferences, notifications } from "@/lib/db/schema";
 import { isNotificationCategory } from "@/lib/notifications/categories";
 import { t } from "@/lib/i18n";
@@ -17,7 +18,12 @@ export async function markNotificationRead(notificationId: string) {
   await db
     .update(notifications)
     .set({ readAt: new Date() })
-    .where(and(eq(notifications.notificationId, notificationId), eq(notifications.memberId, memberId)));
+    .where(
+      and(
+        eq(notifications.notificationId, notificationId),
+        inArray(notifications.memberId, notificationOwners(memberId, session.user.personId)),
+      ),
+    );
   revalidatePath("/notifiche");
   revalidatePath("/");
 }
@@ -30,7 +36,9 @@ export async function markAllNotificationsRead() {
   await db
     .update(notifications)
     .set({ readAt: new Date() })
-    .where(and(eq(notifications.memberId, memberId), isNull(notifications.readAt)));
+    .where(
+      and(inArray(notifications.memberId, notificationOwners(memberId, session.user.personId)), isNull(notifications.readAt)),
+    );
   revalidatePath("/notifiche");
   revalidatePath("/");
 }

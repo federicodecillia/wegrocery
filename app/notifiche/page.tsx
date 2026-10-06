@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { t } from "@/lib/i18n";
 import { getUserRole, requireUserSession } from "@/lib/auth/session";
-import { getMemberNotifications } from "@/lib/db/queries";
+import { getMemberNotifications, notificationOwners } from "@/lib/db/queries";
 import { markAllNotificationsRead, markNotificationRead } from "@/lib/actions/notifications";
 import { formatDateShort } from "@/lib/utils";
 
@@ -12,12 +12,12 @@ export default async function NotifichePage() {
   const role = getUserRole(session);
   const memberId = session.user.memberId!;
 
-  const notifications = await getMemberNotifications(memberId, 50);
+  const notifications = await getMemberNotifications(notificationOwners(memberId, session.user.personId), 50);
 
   const unreadCount = notifications.filter((n) => !n.readAt).length;
 
   return (
-    <AppShell email={session.user.email} isAdmin={role === "admin"} memberId={memberId}>
+    <AppShell email={session.user.email} isAdmin={role === "admin"} memberId={memberId} personId={session.user.personId}>
       {/* From sm the email is in the header; on phones it gets its own line here. */}
       <p className="mb-1 break-all text-xs text-brand-gray sm:hidden">{session.user.email}</p>
       <div className="mb-5 flex items-center justify-between gap-3">

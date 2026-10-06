@@ -1,7 +1,7 @@
 import { AppShell } from "@/components/app-shell";
 import { StoricoTabs } from "./storico-tabs";
 import { getUserRole, requireUserSession } from "@/lib/auth/session";
-import { getMemberBalance, getMemberLedger, getMemberStorico } from "@/lib/db/queries";
+import { getFamilyMemberIds, getMemberBalance, getMemberLedger, getMemberStorico } from "@/lib/db/queries";
 import { movementRecorder } from "@/lib/movement-label";
 
 export default async function StoricoPage() {
@@ -9,14 +9,16 @@ export default async function StoricoPage() {
   const role = getUserRole(session);
   const memberId = session.user.memberId!;
 
+  // A family's account shows the history its people had before joining too.
+  const historyIds = await getFamilyMemberIds(memberId);
   const [balance, orderHistory, movements] = await Promise.all([
     getMemberBalance(memberId),
-    getMemberStorico(memberId),
-    getMemberLedger(memberId),
+    getMemberStorico(historyIds),
+    getMemberLedger(historyIds),
   ]);
 
   return (
-    <AppShell email={session.user.email} isAdmin={role === "admin"} memberId={memberId}>
+    <AppShell email={session.user.email} isAdmin={role === "admin"} memberId={memberId} personId={session.user.personId}>
       <StoricoTabs
         orderHistory={orderHistory}
         movements={movements.map((e) => ({
