@@ -627,10 +627,13 @@ export function OrderForm({
       {/* Sticky footer — rides above the (sticky) bottom nav; from lg the nav
           is in the header, so it sits at the bottom edge. In-flow sticky
           inherits the card width at every breakpoint; -mx-5 bleeds it across
-          main's padding to the card edges. */}
+          main's padding to the card edges. Opaque background, no
+          backdrop-filter: on iOS WebKit a backdrop-filter on a sticky layer
+          skips repaints, so the total and the balance kept stale digits
+          drawn over the new ones. */}
       {isEditing && (hasOrder || hasSavedOrder) && (
         <div className="sticky z-10 -mx-5 mt-4 -mb-[calc(var(--spacing-nav-h)+1rem)] bottom-[calc(var(--spacing-nav-h)+env(safe-area-inset-bottom))] lg:-mb-4 lg:bottom-0">
-          <div className="border-t border-brand-border bg-brand-warm-white/97 px-5 py-3.5 backdrop-blur-sm">
+          <div className="border-t border-brand-border bg-brand-warm-white px-5 py-3.5">
             <div className="mb-3 flex items-end justify-between">
               <div>
                 <div className="font-mono text-label uppercase tracking-[0.09em] text-muted">
