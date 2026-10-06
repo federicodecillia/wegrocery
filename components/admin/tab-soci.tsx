@@ -12,6 +12,11 @@ export async function TabSoci() {
   ]);
   const balanceOf = new Map(balances.map((b) => [b.memberId, b.balance]));
   const nameOf = new Map(members.map((m) => [m.memberId, m.fullName]));
+  // An account people joined: their names, for its own family badge.
+  const joinedBy = new Map<string, string[]>();
+  for (const m of members) {
+    if (m.householdOf) joinedBy.set(m.householdOf, [...(joinedBy.get(m.householdOf) ?? []), m.fullName]);
+  }
   // "Paga fuori app" only means something when orders are paid per order.
   const offlineOption = settings.mode === "per_order";
 
@@ -37,6 +42,7 @@ export async function TabSoci() {
           balance: balanceOf.get(m.memberId) ?? 0,
           mergedIntoName: m.mergedInto ? (nameOf.get(m.mergedInto) ?? m.mergedInto) : null,
           householdOfName: m.householdOf ? (nameOf.get(m.householdOf) ?? m.householdOf) : null,
+          familyNames: joinedBy.get(m.memberId)?.join(", ") ?? null,
         }))}
       />
     </div>

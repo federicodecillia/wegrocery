@@ -26,6 +26,8 @@ type Member = {
   mergedIntoName?: string | null;
   // Joined another account as family (members.household_of): its name.
   householdOfName?: string | null;
+  // People who joined this account as family: their names.
+  familyNames?: string | null;
 };
 
 type MergeRequest = { absorbedId: string; survivorId?: string };
@@ -307,9 +309,9 @@ export function SociList({
                         {t.admin.members.merge.mergedBadge(m.mergedIntoName)}
                       </span>
                     )}
-                    {m.householdOfName && (
+                    {(m.householdOfName || m.familyNames) && (
                       <span className="rounded-full bg-accent-soft px-1.5 py-0.5 text-label font-bold text-accent-text">
-                        {t.admin.members.familyBadge(m.householdOfName)}
+                        {t.admin.members.familyBadge((m.householdOfName ?? m.familyNames)!)}
                       </span>
                     )}
                     {offlineOption && m.paysOffline && (
@@ -344,7 +346,7 @@ export function SociList({
                       {t.admin.members.familyUnlink}
                     </button>
                   )}
-                  {!m.mergedIntoName && !m.householdOfName && (
+                  {!m.mergedIntoName && !m.householdOfName && !m.familyNames && (
                     <button
                       onClick={() => requestMerge({ absorbedId: m.memberId })}
                       className="whitespace-nowrap rounded-full border border-brand-border px-2.5 py-1 text-label font-semibold text-brand-gray"
