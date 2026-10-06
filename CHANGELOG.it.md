@@ -23,19 +23,19 @@ stanno nella PR.
 
 ## [1.23.0] — 6 ottobre 2026
 
-*Le famiglie condividono un account, e gli account doppi si fanno notare.*
+*Ordini in famiglia, e un carrello che non perde le modifiche.*
 
 ### Aggiunte
-- 👯 **Possibili doppioni in Soci.** Admin → Soci elenca gli account che sembrano della stessa persona (stesso nome, o il nome dentro l'indirizzo dell'altro), con Unisci già compilato e "Non sono la stessa persona" per nascondere una coppia. Migrazione `0028_member_duplicate_dismissals.sql`.
-- 👨‍👩‍👧 **Famiglie.** I soci possono invitarsi a vicenda in un unico account (Notifiche → ⚙ → Famiglia): carrello, saldo e storico degli ordini diventano comuni, e ognuno continua a entrare con i suoi indirizzi. Chi è invitato accetta o rifiuta (notifica nell'app ed email); ciascuno può uscire. Spente di default, si accendono in admin → Impostazioni; Soci mostra chi è in quale famiglia, su ogni suo account. Migrazione `0029_families.sql`.
+- 👯 **Account doppi più facili da trovare.** Gli admin vedono in Soci le persone che sembrano avere due account e possono unirli con un tocco.
+- 👨‍👩‍👧 **Ordinare in famiglia.** Si può invitare un familiare a condividere carrello, saldo e storico degli ordini, ognuno entrando con la propria email. Si attiva dalle impostazioni del gruppo; poi si invita da Notifiche → ⚙ → Famiglia.
 
 ### Modificato
-- 🔑 **Messaggio più chiaro quando la tessera non risulta.** Al socio la cui tessera non è sul suo indirizzo viene detto di entrare con l'indirizzo con cui ha fatto la tessera; un admin unisce poi i due account.
-- 💶 **Tab Cassa più ordinata.** "Nuova ricarica" è chiusa come "Movimento in uscita" e si apre con un tocco; l'elenco dei saldi è diviso in Admin, Attivi e Utenti, come nella tab Soci.
+- 🔑 **Messaggio più chiaro quando la tessera non risulta.** Se la tessera è legata a un'altra email, l'app ti dice di entrare con quella.
+- 💶 **Cassa più ordinata per gli admin.** Il modulo delle ricariche si apre solo quando serve e i saldi sono divisi per ruolo.
 
 ### Risolto
-- 🛒 **Nessuna modifica al carrello persa tra dispositivi.** Se il carrello è stato cambiato da un altro dispositivo (ad esempio dal telefono, con il computer ancora aperto), salvare dalla pagina vecchia non lo sovrascrive più: la pagina mostra il carrello aggiornato e lo dice.
-- 📱 **Totale dell'ordine leggibile su iPhone.** Aggiungendo un prodotto il vecchio totale poteva restare disegnato sopra il nuovo, e il saldo dopo l'ordine fermo al valore precedente.
+- 🛒 **Il carrello non perde più le modifiche.** Se lo cambi dal telefono e poi salvi dal computer, l'app ti mostra il carrello aggiornato invece di sovrascriverlo.
+- 📱 **Totale dell'ordine leggibile su iPhone.** Aggiungendo un prodotto, il totale e il saldo dopo l'ordine ora si aggiornano correttamente.
 
 ## [1.22.0] — 4 ottobre 2026
 
