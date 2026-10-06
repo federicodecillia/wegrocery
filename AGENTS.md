@@ -192,6 +192,11 @@ The repository is public and used as a portfolio piece. Keep contributor-
 and visitor-facing docs in English; only UI strings that the cooperative's
 members actually read should be in Italian.
 
+Outside contributors start from [`CONTRIBUTING.md`](./CONTRIBUTING.md) (with
+`SECURITY.md`, `CODE_OF_CONDUCT.md`, the issue forms in `.github/ISSUE_TEMPLATE/`
+and the default `.github/pull_request_template.md`); keep its ground rules in
+step with this file when a convention changes.
+
 - **Code, identifiers, comments, JSDoc, commit messages, PR descriptions**:
   English only.
 - **UI strings** (toasts, button labels, page copy, notification bodies):

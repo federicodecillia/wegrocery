@@ -284,11 +284,12 @@ admin → Impostazioni → *Configuration status* and in `npm run doctor`.
 ## Contributing
 
 Contributions are welcome — this is a real product used weekly by real
-groups, and improvements ship to every deployment. Open an
-[issue](https://github.com/federicodecillia/wegrocery/issues) for bugs or
-feature ideas, or send a PR (keep it focused; `npm test && npm run build`
-must stay green). If you run WeGrocery for your own group, a star and a note
-about your setup help a lot.
+groups, and improvements ship to every deployment. Start from
+**[CONTRIBUTING.md](CONTRIBUTING.md)**: how to report a bug, propose a
+feature, set up the project and open a pull request (against `staging`).
+Security issues go through [SECURITY.md](SECURITY.md), never a public issue;
+everyone follows the [Code of Conduct](CODE_OF_CONDUCT.md). If you run
+WeGrocery for your own group, a star and a note about your setup help a lot.
 
 ---
 

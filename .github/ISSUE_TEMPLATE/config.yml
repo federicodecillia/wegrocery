@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/federicodecillia/wegrocery/security/advisories/new
+    about: Report it privately, never in a public issue.
+  - name: Try the public demo
+    url: https://wegrocery-demo.vercel.app
+    about: Check whether the problem also happens on the demo, with fake data.
