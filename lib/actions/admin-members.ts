@@ -23,6 +23,10 @@ function refusalMessage(r: MergeRefusal): string {
       return m.both_ordered(r.cycleTitle);
     case "per_order_open":
       return m.per_order_open(r.cycleTitle);
+    case "in_family":
+      return m.in_family(r.fullName);
+    case "has_family":
+      return m.has_family(r.fullName);
     default:
       return m[r.code];
   }

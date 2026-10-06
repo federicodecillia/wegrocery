@@ -30,6 +30,8 @@ export type MemberRow = {
   aliasEmail: string | null;
   role: string;
   active: boolean;
+  // The account this person joined (a family), or null.
+  householdOf: string | null;
 };
 
 // The member an address belongs to, as main email or alias, ignoring case.
@@ -44,9 +46,28 @@ export async function findMemberByLoginEmail(email: string): Promise<MemberRow |
       aliasEmail: members.aliasEmail,
       role: members.role,
       active: members.active,
+      householdOf: members.householdOf,
     })
     .from(members)
     .where(or(eq(sql`lower(${members.email})`, address), eq(sql`lower(${members.aliasEmail})`, address)))
+    .limit(1);
+  return member ?? null;
+}
+
+// For a person in a family: the account they joined, read like the person.
+export async function findMemberById(memberId: string): Promise<MemberRow | null> {
+  const [member] = await getDb()
+    .select({
+      memberId: members.memberId,
+      fullName: members.fullName,
+      email: members.email,
+      aliasEmail: members.aliasEmail,
+      role: members.role,
+      active: members.active,
+      householdOf: members.householdOf,
+    })
+    .from(members)
+    .where(eq(members.memberId, memberId))
     .limit(1);
   return member ?? null;
 }

@@ -66,14 +66,14 @@ export async function startOrderPayment(
   lines: { productId: string; quantity: number }[],
 ): Promise<OrderPaymentResult> {
   try {
-    const { memberId, email } = await requireActiveMember();
+    const { memberId, email, role } = await requireActiveMember();
     const normalized = normalizeDraftLines(lines);
     if (!normalized) return refuse("invalid_quantity", t.errors.invalidQuantity);
     if (normalized.length === 0) return await cancelOrderOf(memberId, email, cycleId);
 
     const [member, cycles, settings] = await Promise.all([getMemberById(memberId), getOpenCycles(), getPaymentSettings()]);
     const cycle = cycles.find((c) => c.cycleId === cycleId);
-    if (!member || !cycle || !canAccessCycle(cycle.accessLevel, member.role)) {
+    if (!member || !cycle || !canAccessCycle(cycle.accessLevel, role ?? member.role)) {
       return refuse("cycle_not_open", t.errors.cycleNotOpen);
     }
     const fee = cycleHandlingFee(cycle);

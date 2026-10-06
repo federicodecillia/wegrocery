@@ -78,7 +78,7 @@ export default async function RicaricaPage({
   if (payPerOrder && !member?.paysOffline) {
     const cents = await getConsolidatedBalanceCents(getDb(), memberId);
     return (
-      <AppShell email={session.user.email} isAdmin={role === "admin"} memberId={memberId}>
+      <AppShell email={session.user.email} isAdmin={role === "admin"} memberId={memberId} personId={session.user.personId}>
         <h1 className="mb-4 text-[22px] font-black tracking-[-0.02em] text-brand-near-black">{t.balance.title}</h1>
         {result && (
           <div className={`mb-4 rounded-[14px] border p-[12px_14px] text-[14px] ${TONE_CLASSES[result.tone]}`}>
@@ -108,7 +108,7 @@ export default async function RicaricaPage({
   const roomCents = maxBalanceCents === null ? null : maxBalanceCents - balanceCents;
 
   return (
-    <AppShell email={session.user.email} isAdmin={role === "admin"} memberId={memberId}>
+    <AppShell email={session.user.email} isAdmin={role === "admin"} memberId={memberId} personId={session.user.personId}>
       <h1 className="mb-4 text-[22px] font-black tracking-[-0.02em] text-brand-near-black">{t.topup.title}</h1>
 
       {result && (
@@ -181,7 +181,7 @@ export default async function RicaricaPage({
               <CopyField label={t.topup.bankIban} value={compactIban(bank.iban)} display={formatIban(bank.iban)} mono />
               <CopyField
                 label={t.topup.bankReference}
-                value={t.topup.bankReferenceValue(session.user.fullName ?? session.user.email)}
+                value={t.topup.bankReferenceValue(member?.fullName ?? session.user.fullName ?? session.user.email)}
               />
             </>
           ) : (

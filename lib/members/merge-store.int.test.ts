@@ -123,4 +123,66 @@ describeDb("member merge", () => {
     expect(found).toContain(`member_merge_pairs:${scope.id("mm_out")}`);
     expect(found).toContain(`merged_member_empty:${b}`);
   });
+
+  it("links a person to a family on an accepted invitation: balance and open orders move, the person stays", async () => {
+    const account = await scope.createExtraMember("a5");
+    const person = await scope.createExtraMember("b5");
+    const { cycleId, productIds } = await scope.createCycle("open5", { products: [{ name: "Rice", unitPrice: 5 }] });
+    await sql`INSERT INTO orders (order_line_id, cycle_id, member_id, product_id, quantity, unit_price_snapshot, line_total, updated_at)
+      VALUES (${scope.id("line5")}, ${cycleId}, ${person}, ${productIds[0]}, 1, 5, 5, now())`;
+    await sql`INSERT INTO notifications (notification_id, member_id, type, title, body, created_at)
+      VALUES (${scope.id("not5")}, ${person}, 'cycle_opened', 'x', 'y', now())`;
+    await scope.addLedger("topup5", person, "topup", 7, null);
+    const inviteId = scope.id("inv5");
+    await sql`INSERT INTO family_invites (invite_id, account_id, member_id, invited_by, created_at, expires_at)
+      VALUES (${inviteId}, ${account}, ${person}, 'int-test@example.invalid', now(), now() + interval '7 days')`;
+
+    const { decision, result } = await mergeMembers(db(), {
+      survivorId: account,
+      absorbedId: person,
+      actingMemberId: person,
+      adminEmail: "int-test@example.invalid",
+      mode: "link",
+      inviteId,
+    });
+    expect(decision.ok).toBe(true);
+    expect(result).toMatchObject({ deletedAbsorbed: false, transferCents: 700, movedCycles: 1 });
+
+    const [p] = await sql`SELECT active, household_of, merged_into FROM members WHERE member_id = ${person}`;
+    expect(p).toMatchObject({ active: true, household_of: account, merged_into: null });
+    expect(await balance(person)).toBe(0);
+    expect(await balance(account)).toBe(7);
+    const [line] = await sql`SELECT member_id FROM orders WHERE order_line_id = ${scope.id("line5")}`;
+    expect(line.member_id).toBe(account);
+    // The person keeps their own notifications.
+    const [n] = await sql`SELECT member_id FROM notifications WHERE notification_id = ${scope.id("not5")}`;
+    expect(n.member_id).toBe(person);
+    const [inv] = await sql`SELECT status FROM family_invites WHERE invite_id = ${inviteId}`;
+    expect(inv.status).toBe("accepted");
+    expect(await invariantBreaks()).toEqual([]);
+
+    // The invitation is spent: accepting it again rolls back.
+    await sql`UPDATE members SET household_of = NULL WHERE member_id = ${person}`;
+    await expect(
+      mergeMembers(db(), {
+        survivorId: account,
+        absorbedId: person,
+        actingMemberId: person,
+        adminEmail: "int-test@example.invalid",
+        mode: "link",
+        inviteId,
+      }),
+    ).rejects.toThrow();
+    const [after] = await sql`SELECT household_of FROM members WHERE member_id = ${person}`;
+    expect(after.household_of).toBeNull();
+  });
+
+  it("finds a person in a family left with money", async () => {
+    const account = await scope.createExtraMember("a6");
+    const person = await scope.createExtraMember("b6");
+    await sql`UPDATE members SET household_of = ${account} WHERE member_id = ${person}`;
+    await scope.addLedger("topup6", person, "topup", 3, null);
+    expect(await invariantBreaks()).toContain(`household_member_empty:${person}`);
+    await sql`UPDATE members SET household_of = NULL WHERE member_id = ${person}`;
+  });
 });

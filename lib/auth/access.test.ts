@@ -40,7 +40,7 @@ describe("sessionClaims", () => {
   const row = { memberId: "mem_1", role: "attivi", active: true, fullName: "Marco" };
 
   it("refreshes role, active, memberId and name from an active member row", () => {
-    expect(sessionClaims(row)).toEqual({ memberId: "mem_1", role: "attivi", active: true, fullName: "Marco" });
+    expect(sessionClaims(row)).toEqual({ memberId: "mem_1", personId: "mem_1", role: "attivi", active: true, fullName: "Marco" });
   });
 
   it("ends the session of a deactivated member", () => {

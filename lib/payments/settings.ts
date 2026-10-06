@@ -17,6 +17,8 @@ export type PaymentSettingsRow = {
   bankHolder: string | null;
   bankIban: string | null;
   onlinePaymentsEnabled: boolean;
+  // Optional: rows read before migration 0029 have no such column.
+  familiesEnabled?: boolean;
   updatedAt: Date;
 };
 
@@ -38,6 +40,8 @@ export type PaymentSettings = {
   bankHolder: string | null;
   bankIban: string | null;
   onlinePaymentsEnabled: boolean;
+  // Members may invite each other into one account (lib/members/family.ts).
+  familiesEnabled: boolean;
   // What members get: the bank details when that channel is on, online
   // top-ups when switched on and the deploy has a usable key.
   bankTransfer: { holder: string; iban: string } | null;
@@ -65,6 +69,7 @@ export function resolvePaymentSettings(
         bankHolder: row.bankHolder,
         bankIban: row.bankIban,
         onlinePaymentsEnabled: row.onlinePaymentsEnabled,
+        familiesEnabled: row.familiesEnabled ?? false,
         savedAt: row.updatedAt,
       }
     : {
@@ -75,6 +80,7 @@ export function resolvePaymentSettings(
         bankHolder: brand.bankTransfer?.holder ?? null,
         bankIban: brand.bankTransfer?.iban ?? null,
         onlinePaymentsEnabled: true,
+        familiesEnabled: false,
         savedAt: null,
       };
   const stripeKey: StripeKeyState = keyStatus.enabled

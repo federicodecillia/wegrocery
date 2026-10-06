@@ -12,7 +12,6 @@ import {
   getCycleProducts,
   getLastMemberOrderForPrefill,
   getMemberBalance,
-  getMemberByEmail,
   getMemberById,
   getMemberOrderLines,
   getMemberPendingOrderTotals,
@@ -103,7 +102,9 @@ export async function saveOrder(
     if (!cycle) {
       return { success: false, error: t.errors.cycleNotOpen, code: "cycle_not_open" };
     }
-    if (!canAccessCycle(cycle.accessLevel, member.role)) {
+    // The session's role: a person in a family may see more than the account.
+    const sessionRole = (session.user as { role?: string | null }).role;
+    if (!canAccessCycle(cycle.accessLevel, sessionRole ?? member.role)) {
       return { success: false, error: t.errors.accessDenied, code: "access_denied" };
     }
 
@@ -266,10 +267,10 @@ export async function loadLastOrderForPrefill(
 ): Promise<{ cycleTitle: string; quantities: Record<string, number>; matched: number } | { error: string }> {
   try {
     const session = await auth();
-    const email = session?.user?.email;
-    if (!email) redirect("/login");
+    const memberId = session?.user?.memberId;
+    if (!memberId) redirect("/login");
 
-    const member = await getMemberByEmail(email);
+    const member = await getMemberById(memberId);
     if (!member) return { error: t.errors.memberNotFound };
     if (!member.active) return { error: t.errors.accountInactive };
 
@@ -296,13 +297,13 @@ export async function saveOrderDraft(
   baseKey?: string,
 ): Promise<DraftSaveResult> {
   try {
-    const { memberId } = await requireActiveMember();
+    const { memberId, role } = await requireActiveMember();
     const normalized = normalizeDraftLines(lines);
     if (!normalized) return { ok: false, error: t.errors.invalidQuantity, code: "invalid" };
 
     const [member, cycles] = await Promise.all([getMemberById(memberId), getOpenCycles()]);
     const cycle = cycles.find((c) => c.cycleId === cycleId);
-    if (!member || !cycle || !canAccessCycle(cycle.accessLevel, member.role)) {
+    if (!member || !cycle || !canAccessCycle(cycle.accessLevel, role ?? member.role)) {
       return { ok: false, error: t.errors.cycleNotOpen, code: "cycle_not_open" };
     }
 

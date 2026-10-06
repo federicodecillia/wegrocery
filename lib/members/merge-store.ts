@@ -3,7 +3,7 @@ import type { BatchItem } from "drizzle-orm/batch";
 import { ActionError } from "@/lib/action-error";
 import { t } from "@/lib/i18n";
 import { genId, type Db } from "@/lib/payments/effects";
-import { mergedPlaceholderEmail, planMemberMerge, type MergeDecision, type MergeState } from "./merge";
+import { mergedPlaceholderEmail, planMemberMerge, type MergeDecision, type MergeMode, type MergeState } from "./merge";
 
 // Reads and writes of a member merge (rules in ./merge.ts). The write is ONE
 // batch, so one transaction on the Neon HTTP driver:
@@ -25,8 +25,9 @@ type Snapshot = { state: MergeState; fingerprint: string };
 // is made and again inside the write batch.
 function fingerprintSql(survivorId: string, absorbedId: string): SQL {
   return sql`concat_ws('|',
-    (SELECT string_agg(concat_ws(',', member_id, lower(email), lower(alias_email), active, merged_into), ';' ORDER BY member_id)
+    (SELECT string_agg(concat_ws(',', member_id, lower(email), lower(alias_email), active, merged_into, household_of), ';' ORDER BY member_id)
        FROM members WHERE member_id IN (${survivorId}, ${absorbedId})),
+    (SELECT count(*) FROM members WHERE household_of = ${absorbedId}),
     (SELECT concat_ws(',', count(*), coalesce(round(sum(amount) * 100), 0)) FROM ledger_entries WHERE member_id = ${absorbedId}),
     (SELECT concat_ws(',', count(*), count(*) FILTER (WHERE status = 'pending')) FROM payments WHERE member_id = ${absorbedId}),
     (SELECT count(*) FROM refunds WHERE member_id = ${absorbedId} AND status IN ('requested', 'pending')),
@@ -51,7 +52,8 @@ export async function readMergeState(
     alias_email: string | null;
     active: boolean;
     merged_into: string | null;
-  }>(sql`SELECT member_id, full_name, email, alias_email, active, merged_into
+    household_of: string | null;
+  }>(sql`SELECT member_id, full_name, email, alias_email, active, merged_into, household_of
          FROM members WHERE member_id IN (${survivorId}, ${absorbedId})`);
   const toMember = (id: string) => {
     const r = memberRows.rows.find((m) => m.member_id === id);
@@ -63,6 +65,7 @@ export async function readMergeState(
           aliasEmail: r.alias_email,
           active: r.active,
           mergedInto: r.merged_into,
+          householdOf: r.household_of,
         }
       : null;
   };
@@ -87,6 +90,7 @@ export async function readMergeState(
       pending_payments: string;
       open_refunds: string;
       unsettled_per_order: string;
+      household_members: string;
       fingerprint: string;
     }>(sql`SELECT
         (SELECT coalesce(round(sum(amount) * 100), 0) FROM ledger_entries WHERE member_id = ${absorbedId}) AS balance_cents,
@@ -96,6 +100,7 @@ export async function readMergeState(
         (SELECT count(*) FROM refunds WHERE member_id = ${absorbedId} AND status IN ('requested', 'pending')) AS open_refunds,
         (SELECT count(DISTINCT l.cycle_id) FROM ledger_entries l JOIN order_cycles c ON c.cycle_id = l.cycle_id
           WHERE l.member_id = ${absorbedId} AND c.payment_mode = 'per_order' AND c.settled_at IS NULL) AS unsettled_per_order,
+        (SELECT count(*) FROM members WHERE household_of = ${absorbedId}) AS household_members,
         ${fingerprintSql(survivorId, absorbedId)} AS fingerprint`),
   ]);
   const c = counts.rows[0];
@@ -118,6 +123,7 @@ export async function readMergeState(
       absorbedPendingPayments: Number(c.pending_payments),
       absorbedOpenRefunds: Number(c.open_refunds),
       absorbedUnsettledPerOrderCycles: Number(c.unsettled_per_order),
+      absorbedHouseholdMembers: Number(c.household_members),
     },
   };
 }
@@ -131,6 +137,11 @@ export type MergeResult = {
 
 // Plans and writes the merge. A refusal comes back as the decision; a state
 // that changed between the read and the write throws an ActionError.
+// mode "link" (a member joining a family, lib/actions/family.ts) moves the
+// same orders, drafts, notifications and balance, then points the person at
+// the account instead of archiving them: addresses, preferences and earlier
+// merges stay as they are. `adminEmail` is whoever acts (the invited member
+// when linking).
 export async function mergeMembers(
   db: Db,
   input: {
@@ -139,12 +150,17 @@ export async function mergeMembers(
     alias?: string | null;
     actingMemberId: string | null;
     adminEmail: string;
+    mode?: MergeMode;
+    // Link only: the invitation being accepted, marked accepted in the batch.
+    inviteId?: string;
   },
 ): Promise<{ decision: MergeDecision; result?: MergeResult }> {
   const { survivorId, absorbedId } = input;
+  const mode = input.mode ?? "merge";
+  const link = mode === "link";
   const snapshot = await readMergeState(db, survivorId, absorbedId, input.actingMemberId);
   if (!snapshot) throw new ActionError(t.errors.memberNotFound);
-  const decision = planMemberMerge(snapshot.state, input.alias);
+  const decision = planMemberMerge(snapshot.state, input.alias, mode);
   if (!decision.ok) return { decision };
   const { plan } = decision;
   const { survivor, absorbed } = snapshot.state;
@@ -185,9 +201,11 @@ export async function mergeMembers(
                    AND (EXISTS (SELECT 1 FROM order_drafts s WHERE s.member_id = ${survivorId} AND s.cycle_id = d.cycle_id)
                         OR EXISTS (SELECT 1 FROM orders o WHERE o.member_id = ${survivorId} AND o.cycle_id = d.cycle_id))`),
     db.execute(sql`UPDATE order_drafts SET member_id = ${survivorId} WHERE member_id = ${absorbedId}`),
-    db.execute(sql`UPDATE notifications SET member_id = ${survivorId} WHERE member_id = ${absorbedId}`),
-    db.execute(sql`DELETE FROM notification_preferences WHERE member_id = ${absorbedId}`),
   );
+  // A linked person keeps their own notifications (shown next to the account's).
+  if (!link) statements.push(db.execute(sql`UPDATE notifications SET member_id = ${survivorId} WHERE member_id = ${absorbedId}`));
+  // A linked person gets their preferences back if they leave the family.
+  if (!link) statements.push(db.execute(sql`DELETE FROM notification_preferences WHERE member_id = ${absorbedId}`));
 
   if (plan.transferCents !== 0) {
     const outId = genId("led");
@@ -199,15 +217,36 @@ export async function mergeMembers(
           (entry_id, member_id, entry_date, type, amount, note, created_by, created_at, counterpart)
         VALUES
           (${outId}, ${absorbedId}, ${now}, 'member_merge', ${negated}::numeric,
-           ${t.ledger.memberMergeOut(survivor.fullName)}, ${input.adminEmail}, ${now}, ${inId}),
+           ${link ? t.ledger.familyJoinOut(survivor.fullName) : t.ledger.memberMergeOut(survivor.fullName)},
+           ${input.adminEmail}, ${now}, ${inId}),
           (${inId}, ${survivorId}, ${now}, 'member_merge', ${amount}::numeric,
-           ${t.ledger.memberMergeIn(absorbed.fullName)}, ${input.adminEmail}, ${now}, ${outId})`),
+           ${link ? t.ledger.familyJoinIn(absorbed.fullName) : t.ledger.memberMergeIn(absorbed.fullName)},
+           ${input.adminEmail}, ${now}, ${outId})`),
     );
   }
 
+  if (link) {
+    statements.push(
+      db.execute(sql`UPDATE members SET household_of = ${survivorId}, updated_at = ${now} WHERE member_id = ${absorbedId}`),
+      // Every other invitation the person had is void now.
+      db.execute(sql`UPDATE family_invites SET status = 'cancelled', responded_at = ${now}
+                     WHERE status = 'pending' AND member_id = ${absorbedId}
+                       AND invite_id IS DISTINCT FROM ${input.inviteId ?? null}`),
+    );
+    if (input.inviteId) {
+      // Accepted only while still pending and unexpired, else the batch rolls back.
+      statements.push(
+        db.execute(sql`SELECT 1 / (SELECT count(*) FROM family_invites
+                         WHERE invite_id = ${input.inviteId} AND status = 'pending' AND expires_at > now()
+                           AND account_id = ${survivorId} AND member_id = ${absorbedId}) AS invite_guard`),
+        db.execute(sql`UPDATE family_invites SET status = 'accepted', responded_at = ${now}
+                       WHERE invite_id = ${input.inviteId}`),
+      );
+    }
+  }
   // The survivor keeps its own card check unless the absorbed account was
   // checked more recently, and its last sign-in is the later of the two.
-  statements.push(
+  if (!link) statements.push(
     db.execute(sql`UPDATE members a SET
         alias_email = ${plan.survivorAlias},
         last_login_at = GREATEST(a.last_login_at, b.last_login_at),
@@ -219,8 +258,8 @@ export async function mergeMembers(
       WHERE a.member_id = ${survivorId} AND b.member_id = ${absorbedId}`),
   );
   // Accounts merged into the absorbed one earlier now point at the survivor.
-  statements.push(db.execute(sql`UPDATE members SET merged_into = ${survivorId} WHERE merged_into = ${absorbedId}`));
-  statements.push(
+  if (!link) statements.push(db.execute(sql`UPDATE members SET merged_into = ${survivorId} WHERE merged_into = ${absorbedId}`));
+  if (!link) statements.push(
     plan.deleteAbsorbed
       ? db.execute(sql`DELETE FROM members WHERE member_id = ${absorbedId}`)
       : db.execute(sql`UPDATE members SET email = ${mergedPlaceholderEmail(absorbedId)}, alias_email = NULL,
@@ -241,7 +280,7 @@ export async function mergeMembers(
   };
   statements.push(
     db.execute(sql`INSERT INTO audit_log (audit_id, user_email, action, entity_type, entity_id, payload_json, created_at)
-      VALUES (${crypto.randomUUID()}, ${input.adminEmail}, 'merge_member', 'member', ${survivorId},
+      VALUES (${crypto.randomUUID()}, ${input.adminEmail}, ${link ? "join_family" : "merge_member"}, 'member', ${survivorId},
               ${JSON.stringify(payload)}, ${now})`),
   );
 
@@ -250,7 +289,7 @@ export async function mergeMembers(
   } catch (e) {
     // 22012 = division_by_zero: a guard fired, something changed meanwhile.
     if (e instanceof Error && /22012|division by zero/i.test(e.message)) {
-      throw new ActionError(t.admin.members.merge.changed);
+      throw new ActionError(link ? t.family.changed : t.admin.members.merge.changed);
     }
     throw e;
   }

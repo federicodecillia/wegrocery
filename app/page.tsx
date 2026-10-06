@@ -102,7 +102,7 @@ export default async function HomePage() {
   const balanceText = formatSignedMoney(balance);
 
   return (
-    <AppShell email={session.user.email} isAdmin={role === "admin"} memberId={memberId}>
+    <AppShell email={session.user.email} isAdmin={role === "admin"} memberId={memberId} personId={session.user.personId}>
       {/* ── Saldo hero card (wallet groups only) ── */}
       {!payPerOrder && (
         <>
