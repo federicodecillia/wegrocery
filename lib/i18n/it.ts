@@ -427,143 +427,19 @@ export const it = {
   },
   guide: {
     title: "Come funziona",
-    howToSteps: [
-      {
-        n: 1,
-        title: "Controlla il saldo",
-        body: "Nella Home vedi il tuo saldo e lo stato dell'ordine aperto.",
-      },
-      {
-        n: 2,
-        title: "Vai all'ordine",
-        body: "Tocca il tab Ordine in basso e scegli i prodotti con i pulsanti + e −.",
-      },
-      {
-        n: 3,
-        title: "Conferma l'ordine",
-        body: 'Premi "Conferma ordine" in basso. Ricevi una conferma e l\'ordine resta modificabile fino alla chiusura del ciclo.',
-      },
-      {
-        n: 4,
-        title: "Storico",
-        body: "Nel tab Storico vedi i tuoi ordini passati e tutti i movimenti del saldo.",
-      },
-      {
-        n: 5,
-        title: "Ritira e ricarica",
-        body: "Vieni a ritirare nel giorno indicato. Per ricaricare il saldo apri la pagina Ricarica dalla card del saldo in Home: trovi i dati per il bonifico e, se l'associazione l'ha attivato, il pagamento online.",
-      },
-      {
-        n: 6,
-        title: "Notifiche",
-        body: "Quando un ciclo viene chiuso o un bonifico viene registrato, vedrai un pallino rosso sulla campanella in alto. Toccala per leggere le notifiche.",
-      },
-    ] as { n: number; title: string; body: string }[],
-    // Pay-per-order groups (app_settings.payment_mode = 'per_order').
-    howToStepsPerOrder: [
-      { n: 1, title: "Guarda l'ordine aperto", body: "Nella Home vedi i cicli aperti e a che punto è il tuo ordine." },
-      {
-        n: 2,
-        title: "Scegli i prodotti",
-        body: "Tocca il tab Ordine in basso e scegli i prodotti con i pulsanti + e −. Sotto il totale vedi prodotti, spedizione e spese di preparazione ordine.",
-      },
-      {
-        n: 3,
-        title: "Conferma e paga",
-        body: 'Premi "Conferma e paga" e paga con la carta. Finché il ciclo è aperto puoi modificare: se l\'ordine sale paghi solo la differenza.',
-      },
-      {
-        n: 4,
-        title: "Conti chiusi",
-        body: "Dopo il ritiro, con i costi definitivi, si regola la differenza su prodotti e spedizione: quello che hai pagato in più ti torna sulla carta. Se i costi hanno superato quanto hai pagato, in Home trovi \"Da saldare\" con il pulsante \"Paga ora\".",
-      },
-      { n: 5, title: "Storico", body: "Nel tab Storico vedi per ogni ciclo quanto hai pagato, i costi, i rimborsi e il netto." },
-      {
-        n: 6,
-        title: "Notifiche",
-        body: "Ti avvisiamo quando il pagamento è confermato, quando parte un rimborso e se c'è qualcosa da saldare. Tocca la campanella in alto per leggerle.",
-      },
-    ] as { n: number; title: string; body: string }[],
+    intro: "Cerca una parola o scegli un argomento: trovi i passi da seguire e le risposte alle domande più comuni.",
+    searchLabel: "Cerca nella guida",
+    searchPlaceholder: "Es. ricaricare, annullare l'ordine, famiglia",
+    searchClear: "Cancella la ricerca",
+    searchResults: (n: number) => (n === 1 ? "1 risultato" : `${n} risultati`),
+    searchEmpty: "Nessun risultato. Prova con un'altra parola, o scrivici: trovi i contatti in fondo alla pagina.",
+    topicsTitle: "Argomenti",
+    topicCount: (n: number) => (n === 1 ? "1 scheda" : `${n} schede`),
+    backToGuide: "Guida",
+    otherTopics: "Altri argomenti",
     newsTitle: "Novità",
     newsSubtitle: "Cosa è cambiato",
     seeAllNews: "Vedi tutte le novità →",
-    faqTitle: "Domande frequenti",
-    faq: [
-      {
-        q: "Posso installare l'app sul telefono?",
-        a: "Sì. Su Android apri l'app con Chrome e tocca \"Installa\" (o dal menu ⋮ \"Aggiungi a schermata Home\"). Su iPhone aprila con Safari, tocca Condividi e poi \"Aggiungi alla schermata Home\". Al primo accesso dall'app installata usa il codice di 6 cifre che arriva via email insieme al link.",
-      },
-      {
-        q: "Come è organizzata l'app?",
-        a: "L'app è divisa in 4 tab: Home, Ordine, Storico, Guida. Il tab Admin è visibile solo agli amministratori.",
-      },
-      {
-        q: "Chi gestisce prodotti e cicli?",
-        a: "Gli amministratori creano i cicli d'ordine, caricano i prodotti dal catalogo dei fornitori, e chiudono i cicli.",
-      },
-      {
-        q: "Quando posso ordinare?",
-        a: "Quando c'è un ordine aperto puoi ordinare. La Home mostra i giorni e le ore rimanenti alla chiusura. Oltre quel termine non puoi più modificare l'ordine.",
-      },
-      {
-        wallet: true,
-        q: "Come funziona il saldo?",
-        a: "Il saldo è il tuo credito presso l'associazione. Alla chiusura dell'ordine il costo viene addebitato automaticamente. Per ricaricare apri la pagina Ricarica dalla card del saldo in Home. Con il bonifico il saldo si aggiorna quando chi gestisce la cassa lo registra; con il pagamento online, se l'associazione l'ha attivato, si aggiorna appena il pagamento è confermato.",
-      },
-      {
-        wallet: true,
-        q: "Cosa sono le spese di preparazione ordine?",
-        a: "Se il ciclo le prevede, una quota per le commissioni bancarie e le spese di gestione dell'associazione: una percentuale dei prodotti o un importo fisso. Le vedi nel riepilogo dell'ordine e ti vengono addebitate alla chiusura, insieme all'ordine.",
-      },
-      {
-        q: "Posso modificare l'ordine dopo averlo confermato?",
-        a: 'Sì, finché l\'ordine è aperto. Il tab Ordine mostra il tuo ordine confermato: premi "Modifica ordine" per cambiare le quantità e riconfermare, oppure "Cancella ordine" per rimuoverlo del tutto, così alla chiusura non ti viene addebitato nulla.',
-      },
-      {
-        wallet: true,
-        q: "Cosa succede se il saldo è negativo?",
-        a: "Puoi ordinare finché resti entro il limite di credito fissato dall'associazione (se previsto): l'app ti avvisa quando vai in negativo e blocca il salvataggio oltre il limite. Ricordati di ricaricare al più presto per coprire il debito.",
-      },
-      {
-        q: "Come aggiungo l'app alla schermata Home?",
-        a: 'Su iPhone (Safari): tocca l\'icona di condivisione → "Aggiungi a schermata Home". Su Android (Chrome): tocca i tre puntini → "Aggiungi a schermata Home".',
-      },
-      {
-        wallet: true,
-        q: "Cosa succede se il mio saldo è insufficiente?",
-        a: "L'app ti permette di ordinare anche se il saldo è basso o negativo (fino al limite di credito fissato dall'associazione, se previsto, contando anche gli ordini già inviati e non ancora addebitati), per non impedirti di fare la spesa. Oltre il limite l'ordine non viene salvato finché non ricarichi. Tuttavia, è fondamentale ricaricare prontamente per mantenere l'associazione in salute e permettere il pagamento dei fornitori.",
-      },
-      {
-        q: "Chi sono i fornitori?",
-        a: "Collaboriamo con produttori locali e biologici. Ogni ciclo d'ordine può coinvolgere uno o più fornitori diversi (es. frutta/verdura, uova, formaggi). Puoi vedere i dettagli dei prodotti nel tab Ordine.",
-      },
-      {
-        q: "Come funzionano le notifiche?",
-        a: "L'app ti avvisa automaticamente quando un ciclo viene chiuso (con l'importo addebitato) e quando un bonifico viene registrato da chi gestisce la cassa. La campanella in alto nell'app mostra il numero di notifiche non lette. Toccala per vederle tutte e marcarle come lette.",
-      },
-    ] as { q: string; a: string; wallet?: boolean }[],
-    faqPerOrder: [
-      {
-        q: "Come si paga l'ordine?",
-        a: "Con la carta, quando confermi l'ordine. Paghi prodotti, spedizione e le spese di preparazione ordine. Se modifichi l'ordine e il totale sale paghi solo la differenza; se scende, la differenza ti torna a conti chiusi.",
-      },
-      {
-        q: "Cosa sono le spese di preparazione ordine?",
-        a: "Una quota per le commissioni bancarie e le spese di gestione dell'associazione, decisa per ogni ciclo: una percentuale dei prodotti o un importo fisso. La vedi prima di confermare e resta all'associazione.",
-      },
-      {
-        q: "Quando arrivano i rimborsi?",
-        a: "Dopo la chiusura dei conti del ciclo, sulla carta con cui hai pagato. Di solito arrivano in 5-10 giorni. Se annulli l'ordine mentre il ciclo è aperto il rimborso parte subito.",
-      },
-      {
-        q: "Cos'è \"Da saldare\"?",
-        a: 'Se i costi definitivi di un ciclo superano quanto hai pagato, la differenza compare in Home come "Da saldare". La paghi con "Paga ora". Finché resta da saldare non puoi pagare nuovi ordini, ma puoi modificare o annullare quelli già fatti.',
-      },
-      {
-        q: "Vedo un credito: cosa devo fare?",
-        a: "Niente: è denaro che l'associazione ti deve e che ti restituisce chi gestisce la cassa.",
-      },
-    ] as { q: string; a: string }[],
     contactEmoji: "📬",
     contactHeading: "Hai altre domande?",
     contactIntro: (appName: string) =>

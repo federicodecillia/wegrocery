@@ -1,4 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { guideEn } from "@/lib/guide/en";
+import { guideIt } from "@/lib/guide/it";
+import { visibleGuide } from "@/lib/guide/types";
 import { en } from "./en";
 import { it as italian } from "./it";
 
@@ -17,11 +20,11 @@ const REFUND = /rimbors|restitu|refund|give back|given back|paid back/i;
 // The order preparation fee stays with the group: member copy must never promise
 // to refund it, only to even out products and shipping at settlement.
 describe.each([
-  ["it", italian],
-  ["en", en],
-])("order preparation fee copy (%s)", (name, s) => {
+  ["it", italian, guideIt],
+  ["en", en, guideEn],
+])("order preparation fee copy (%s)", (name, s, guide) => {
   it("never promises to refund the fee or to give back what was not needed", () => {
-    const strings = allStrings(s);
+    const strings = [...allStrings(s), ...allStrings(guide)];
     const feeStrings = strings.filter((x) => FEE.test(x));
     expect(feeStrings.length).toBeGreaterThan(0);
     // A string that talks about the fee and about a refund in one breath.
@@ -34,10 +37,12 @@ describe.each([
   });
 
   it("explains the fee in the guide, for pay-per-order and for the wallet", () => {
-    const perOrder = s.guide.faqPerOrder.filter((f) => FEE.test(f.q));
-    expect(perOrder).toHaveLength(1);
-    const walletFee = s.guide.faq.filter((f) => f.wallet && FEE.test(f.q));
-    expect(walletFee).toHaveLength(1);
+    const feeCards = (mode: "wallet" | "per_order") =>
+      visibleGuide(guide, { mode, families: false, onlineTopup: true, bankTransfer: true }).articles.filter((a) =>
+        FEE.test(a.title),
+      );
+    expect(feeCards("per_order")).toHaveLength(1);
+    expect(feeCards("wallet")).toHaveLength(1);
   });
 
   it("names the fee, with its own amount, in the paid-order notification", () => {
