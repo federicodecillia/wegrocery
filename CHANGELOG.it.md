@@ -21,6 +21,9 @@ stanno nella PR.
 
 ## [Non rilasciato]
 
+### Risolto
+- 📱 **Totale dell'ordine su iPhone, stavolta davvero.** Nell'app installata il totale poteva ancora mostrare la cifra vecchia sotto quella nuova; ora totale e saldo si ridisegnano a ogni modifica.
+
 ## [1.24.0] — 6 ottobre 2026
 
 *Le tue impostazioni in un posto solo, e una guida in cui cercare.*

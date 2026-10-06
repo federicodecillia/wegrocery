@@ -20,6 +20,9 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ## [Unreleased]
 
+### Fixed
+- 📱 **Order total on iPhone, for good.** In the installed app the order total could still show the old amount under the new one after adding a product; the total and the balance now redraw on every change.
+
 ## [1.24.0] — 2026-10-06
 
 *Your settings in one place, and a guide you can search.*
