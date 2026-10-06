@@ -429,7 +429,7 @@ export const it = {
     title: "Come funziona",
     intro: "Cerca una parola o scegli un argomento: trovi i passi da seguire e le risposte alle domande più comuni.",
     searchLabel: "Cerca nella guida",
-    searchPlaceholder: "Es. ricaricare, annullare l'ordine, famiglia",
+    searchPlaceholder: "Es. ricarica, annullare, famiglia",
     searchClear: "Cancella la ricerca",
     searchResults: (n: number) => (n === 1 ? "1 risultato" : `${n} risultati`),
     searchEmpty: "Nessun risultato. Prova con un'altra parola, o scrivici: trovi i contatti in fondo alla pagina.",

@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo, useState, type ReactNode } from "react";
 import { t } from "@/lib/i18n";
 import { searchGuide, type GuideSearchEntry } from "@/lib/guide/search";
@@ -80,13 +79,15 @@ export function GuideSearch({ index, synonyms, stopwords, topicTitles, children 
             <ul className="overflow-hidden rounded-[18px] border border-brand-border bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
               {results.map(({ entry }) => (
                 <li key={entry.slug} className="border-b border-brand-border last:border-b-0">
-                  <Link
+                  {/* A full navigation, not next/link: only a real load sets :target,
+                      which highlights the card on the topic page. */}
+                  <a
                     href={`/guida/${entry.topic}#${entry.slug}`}
                     className="block px-4 py-[12px] hover:bg-brand-warm-white"
                   >
                     <span className="block text-[14px] font-semibold text-brand-near-black">{entry.title}</span>
                     <span className="mt-[2px] block text-[12px] text-brand-gray">{topicTitles[entry.topic]}</span>
-                  </Link>
+                  </a>
                 </li>
               ))}
             </ul>

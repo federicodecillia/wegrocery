@@ -429,7 +429,7 @@ export const en: Strings = {
     title: "How it works",
     intro: "Search for a word or pick a topic: you find the steps to follow and the answers to the most common questions.",
     searchLabel: "Search the guide",
-    searchPlaceholder: "E.g. top up, cancel the order, family",
+    searchPlaceholder: "E.g. top up, cancel, family",
     searchClear: "Clear the search",
     searchResults: (n: number) => (n === 1 ? "1 result" : `${n} results`),
     searchEmpty: "No results. Try another word, or write to us: the contacts are at the bottom of the page.",
