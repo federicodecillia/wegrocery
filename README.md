@@ -137,7 +137,7 @@ analytics dashboard is rendered with pure CSS and inline SVG.
 │   ├── app-shell.tsx          # Layout wrapper (header, bottom nav on phones, top nav on desktop)
 │   ├── home/                  # Home-only components
 │   ├── admin/                 # One component per admin tab + shared modals
-│   └── ui/                    # Button, Card, Toast, ConfirmDialog, FaqAccordion
+│   └── ui/                    # Button, Card, Toast, ConfirmDialog
 ├── lib/
 │   ├── db/
 │   │   ├── schema.ts          # Drizzle schema

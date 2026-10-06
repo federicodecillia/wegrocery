@@ -6,6 +6,7 @@ import { getUserRole, requireUserSession } from "@/lib/auth/session";
 import { getMemberNotifications, notificationOwners } from "@/lib/db/queries";
 import { markAllNotificationsRead, markNotificationRead } from "@/lib/actions/notifications";
 import { formatDateShort } from "@/lib/utils";
+import { HelpLink } from "@/components/guide/help-link";
 
 export default async function NotifichePage() {
   const session = await requireUserSession();
@@ -17,13 +18,14 @@ export default async function NotifichePage() {
   const unreadCount = notifications.filter((n) => !n.readAt).length;
 
   return (
-    <AppShell email={session.user.email} isAdmin={role === "admin"} memberId={memberId} personId={session.user.personId}>
-      {/* From sm the email is in the header; on phones it gets its own line here. */}
-      <p className="mb-1 break-all text-xs text-brand-gray sm:hidden">{session.user.email}</p>
+    <AppShell email={session.user.email} name={session.user.fullName} isAdmin={role === "admin"} memberId={memberId} personId={session.user.personId}>
       <div className="mb-5 flex items-center justify-between gap-3">
-        <h1 className="text-[20px] font-black tracking-[-0.03em] text-brand-near-black">
-          {t.notifications.title}
-        </h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-[20px] font-black tracking-[-0.03em] text-brand-near-black">
+            {t.notifications.title}
+          </h1>
+          <HelpLink href="/guida/notifiche" />
+        </div>
         <div className="flex shrink-0 items-center gap-2">
           {unreadCount > 0 && (
             <form
@@ -41,7 +43,7 @@ export default async function NotifichePage() {
             </form>
           )}
           <Link
-            href="/notifiche/impostazioni"
+            href="/profilo/notifiche"
             aria-label={t.notifications.settings.link}
             title={t.notifications.settings.link}
             className="flex h-8 w-8 items-center justify-center rounded-full border border-brand-border text-brand-gray"

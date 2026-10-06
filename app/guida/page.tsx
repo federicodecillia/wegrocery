@@ -2,11 +2,19 @@ import Link from "next/link";
 import { brand } from "@/lib/brand";
 import { t } from "@/lib/i18n";
 import { AppShell } from "@/components/app-shell";
-import { FaqAccordion } from "@/components/ui/faq-accordion";
+import { GuideContact } from "@/components/guide/guide-contact";
+import { GuideSearch } from "@/components/guide/guide-search";
+import { RichText } from "@/components/guide/rich-text";
 import { getUserRole, requireUserSession } from "@/lib/auth/session";
-import { loadChangelog, splitInlineBold } from "@/lib/changelog";
+import { loadChangelog } from "@/lib/changelog";
+import { guideContent } from "@/lib/guide";
+import { buildSearchIndex } from "@/lib/guide/search";
+import { guideContext, visibleGuide } from "@/lib/guide/types";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
 
+// The guide's index: search, topics, the latest release and the contacts.
+// Cards live on the topic pages (app/guida/[topic]); only the ones this
+// deploy's settings make relevant are shown or searched.
 export default async function GuidaPage() {
   const session = await requireUserSession();
   const role = getUserRole(session);
@@ -15,122 +23,93 @@ export default async function GuidaPage() {
   // the teaser, in the deploy's locale — same default as /changelog, where
   // users can still switch language explicitly.
   const [versions, settings] = await Promise.all([loadChangelog(brand.locale), getPaymentSettings()]);
-  // Pay-per-order groups read their own steps, and the wallet answers give
-  // way to the payment and settlement ones.
-  const perOrder = settings.mode === "per_order";
-  const steps = perOrder ? t.guide.howToStepsPerOrder : t.guide.howToSteps;
-  const faqs = perOrder ? [...t.guide.faq.filter((f) => !f.wallet), ...t.guide.faqPerOrder] : t.guide.faq;
+  const guide = visibleGuide(guideContent, guideContext(settings));
   const latest = versions.find((v) => v.date !== null) ?? null;
+  const topicTitles = Object.fromEntries(guide.topics.map((topic) => [topic.id, topic.title]));
 
   return (
-    <AppShell email={session.user.email} isAdmin={role === "admin"} memberId={session.user.memberId!} personId={session.user.personId}>
-      <h1 className="mb-5 text-[20px] font-black tracking-[-0.03em] text-brand-near-black">
+    <AppShell email={session.user.email} name={session.user.fullName} isAdmin={role === "admin"} memberId={session.user.memberId!} personId={session.user.personId}>
+      <h1 className="mb-1 text-[20px] font-black tracking-[-0.03em] text-brand-near-black">
         {t.guide.title}
       </h1>
+      <p className="mb-5 text-[14px] leading-snug text-brand-gray">{t.guide.intro}</p>
 
-      {/* How-to steps */}
-      <div className="mb-6 rounded-[18px] border border-accent/20 bg-accent-soft p-[18px]">
-        {steps.map((step, i) => (
-          <div
-            key={step.n}
-            className={`flex gap-3 ${i < steps.length - 1 ? "mb-3" : ""}`}
-          >
-            <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-accent font-mono text-label font-bold text-on-accent">
-              {step.n}
-            </div>
-            <p className="mt-[3px] text-[14px] leading-[1.5] text-brand-near-black">
-              <strong>{step.title}</strong>
-              <br />
-              {step.body}
-            </p>
-          </div>
-        ))}
-      </div>
+      <GuideSearch
+        index={buildSearchIndex(guide.articles)}
+        synonyms={guide.synonyms}
+        stopwords={guide.stopwords}
+        topicTitles={topicTitles}
+      >
+        <h2 className="mb-3 font-mono text-label uppercase tracking-[0.13em] text-brand-gray">{t.guide.topicsTitle}</h2>
+        <ul className="mb-6 grid gap-3 sm:grid-cols-2">
+          {guide.topics.map((topic) => {
+            const count = guide.articles.filter((a) => a.topic === topic.id).length;
+            return (
+              <li key={topic.id}>
+                <Link
+                  href={`/guida/${topic.id}`}
+                  className="flex h-full gap-3 rounded-[18px] border border-brand-border bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-colors hover:border-primary-mid"
+                >
+                  <span aria-hidden className="text-[24px] leading-none">
+                    {topic.emoji}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-[15px] font-bold text-brand-near-black">{topic.title}</span>
+                    <span className="mt-[2px] block text-[12px] leading-snug text-brand-gray">{topic.summary}</span>
+                    <span className="mt-1 block font-mono text-label text-muted">{t.guide.topicCount(count)}</span>
+                  </span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
 
-      {/* Novità — teaser della release più recente con link al changelog */}
-      {latest && (
-        <section className="mb-6 overflow-hidden rounded-[18px] border border-primary-mid bg-primary-soft">
-          <div className="flex items-baseline justify-between gap-2 border-b border-primary-mid/40 px-[18px] py-3">
-            <div>
-              <div className="font-mono text-label uppercase tracking-[0.13em] text-primary-text">
-                {t.guide.newsTitle} · v{latest.version}
-              </div>
-              <h2 className="mt-0.5 text-[15px] font-black tracking-[-0.01em] text-brand-near-black">
-                {t.guide.newsSubtitle}
-              </h2>
-            </div>
-            {latest.date && (
-              <span className="font-mono text-label text-brand-gray">{latest.date}</span>
-            )}
-          </div>
-          <div className="space-y-3 px-[18px] py-4">
-            {latest.tagline && (
-              <p className="text-[12px] italic leading-[1.45] text-brand-gray">
-                {latest.tagline}
-              </p>
-            )}
-            {latest.sections.slice(0, 2).map((s) => (
-              <div key={s.heading}>
-                <div className="mb-1 font-mono text-label font-bold uppercase tracking-wide text-primary-text">
-                  {s.heading}
+        {/* Novità: teaser of the latest release, linking the changelog */}
+        {latest && (
+          <section className="mb-6 overflow-hidden rounded-[18px] border border-primary-mid bg-primary-soft">
+            <div className="flex items-baseline justify-between gap-2 border-b border-primary-mid/40 px-[18px] py-3">
+              <div>
+                <div className="font-mono text-label uppercase tracking-[0.13em] text-primary-text">
+                  {t.guide.newsTitle} · v{latest.version}
                 </div>
-                <ul className="space-y-1.5">
-                  {s.items.slice(0, 4).map((item, idx) => (
-                    <li key={idx} className="text-[14px] leading-[1.45] text-brand-near-black">
-                      {splitInlineBold(item.text).map((p, i) =>
-                        p.bold ? (
-                          <strong key={i} className="font-bold">
-                            {p.value}
-                          </strong>
-                        ) : (
-                          <span key={i}>{p.value}</span>
-                        ),
-                      )}
-                    </li>
-                  ))}
-                </ul>
+                <h2 className="mt-0.5 text-[15px] font-black tracking-[-0.01em] text-brand-near-black">
+                  {t.guide.newsSubtitle}
+                </h2>
               </div>
-            ))}
-          </div>
-          <div className="border-t border-primary-mid/40 px-[18px] py-3 text-center">
-            <Link
-              href="/changelog"
-              className="inline-flex items-center gap-1 text-[12px] font-bold text-primary-text hover:underline"
-            >
-              {t.guide.seeAllNews}
-            </Link>
-          </div>
-        </section>
-      )}
+              {latest.date && <span className="font-mono text-label text-brand-gray">{latest.date}</span>}
+            </div>
+            <div className="space-y-3 px-[18px] py-4">
+              {latest.tagline && (
+                <p className="text-[12px] italic leading-[1.45] text-brand-gray">{latest.tagline}</p>
+              )}
+              {latest.sections.slice(0, 2).map((s) => (
+                <div key={s.heading}>
+                  <div className="mb-1 font-mono text-label font-bold uppercase tracking-wide text-primary-text">
+                    {s.heading}
+                  </div>
+                  <ul className="space-y-1.5">
+                    {s.items.slice(0, 4).map((item, idx) => (
+                      <li key={idx} className="text-[14px] leading-[1.45] text-brand-near-black">
+                        <RichText text={item.text} />
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+            <div className="border-t border-primary-mid/40 px-[18px] py-3 text-center">
+              <Link
+                href="/changelog"
+                className="inline-flex items-center gap-1 text-[12px] font-bold text-primary-text hover:underline"
+              >
+                {t.guide.seeAllNews}
+              </Link>
+            </div>
+          </section>
+        )}
+      </GuideSearch>
 
-      {/* FAQ */}
-      <h2 className="mb-[14px] text-[18px] font-extrabold tracking-[-0.02em] text-brand-near-black">
-        {t.guide.faqTitle}
-      </h2>
-      <FaqAccordion faqs={faqs} />
-
-      {/* Contact card */}
-      <div className="mt-6 rounded-[18px] border border-brand-border bg-white p-6 text-center shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-        <div className="mb-[10px] text-[32px]">{t.guide.contactEmoji}</div>
-        <div className="mb-[6px] text-[15px] font-bold text-brand-near-black">{t.guide.contactHeading}</div>
-        <p className="mb-4 text-[14px] text-brand-gray">
-          {t.guide.contactIntro(brand.appName)}
-        </p>
-        <div className="flex flex-col gap-3">
-          <a
-            href={`mailto:${brand.supportEmail}`}
-            className="inline-flex items-center justify-center rounded-full bg-primary px-[22px] py-[12px] text-sm font-bold text-on-primary no-underline transition-transform active:scale-95"
-          >
-            {brand.supportEmail}
-          </a>
-          <a
-            href={`mailto:${brand.techEmail}`}
-            className="inline-flex items-center justify-center rounded-full bg-brand-near-black px-[22px] py-[12px] text-sm font-bold text-white no-underline transition-transform active:scale-95"
-          >
-            {brand.techEmail}
-          </a>
-        </div>
-      </div>
+      <GuideContact />
     </AppShell>
   );
 }

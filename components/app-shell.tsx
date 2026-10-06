@@ -1,14 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { redirect } from "next/navigation";
-import { signOut } from "@/auth";
 import { brand } from "@/lib/brand";
 import { t } from "@/lib/i18n";
 import { BottomNav } from "@/components/bottom-nav";
 import { DemoBanner } from "@/components/demo-banner";
-import { LogoutButton } from "@/components/logout-button";
 import { NotificationBell } from "@/components/notification-bell";
+import { ProfileAvatar } from "@/components/profile/profile-avatar";
 import { SHELL_WIDTH, type ShellWidth } from "@/components/shell-width";
 import { TopNav } from "@/components/top-nav";
 import { getUnreadNotificationCount, notificationOwners } from "@/lib/db/queries";
@@ -16,6 +14,8 @@ import { getUnreadNotificationCount, notificationOwners } from "@/lib/db/queries
 type AppShellProps = {
   children: ReactNode;
   email: string;
+  /** The signed-in person's name, for the avatar's initials (session.user.fullName). */
+  name?: string | null;
   isAdmin: boolean;
   memberId: string;
   /** Who signed in, when they work on a family's account: their own notifications count too. */
@@ -24,7 +24,7 @@ type AppShellProps = {
   width?: ShellWidth;
 };
 
-export async function AppShell({ children, email, isAdmin, memberId, personId, width = "member" }: AppShellProps) {
+export async function AppShell({ children, email, name, isAdmin, memberId, personId, width = "member" }: AppShellProps) {
   const unreadCount = await getUnreadNotificationCount(notificationOwners(memberId, personId));
 
   return (
@@ -40,8 +40,8 @@ export async function AppShell({ children, email, isAdmin, memberId, personId, w
         <DemoBanner />
         <header className="border-b border-brand-border px-5 py-4">
           <div className="flex items-center justify-between gap-3">
-            {/* A long app name wraps instead of pushing Logout off the card. */}
-            <div className="min-w-0 sm:shrink-0">
+            {/* A long app name wraps instead of pushing the avatar off the card. */}
+            <div className="min-w-0">
               <Link href="/" aria-label="Home" className="inline-flex items-center gap-2">
                 <Image src={brand.logoUrl} alt={brand.appName} width={26} height={26} priority className="h-[26px] w-auto shrink-0" />
                 {brand.headerShowName && (
@@ -49,17 +49,10 @@ export async function AppShell({ children, email, isAdmin, memberId, personId, w
                 )}
               </Link>
             </div>
-            <div className="flex shrink-0 items-center gap-2 sm:min-w-0 sm:shrink">
-              {/* On phones the email is on the Notifications page instead. */}
-              <span className="hidden min-w-0 truncate text-xs text-brand-gray sm:block">{email}</span>
+            {/* The email, sign-out and personal settings are in the Profile (app/profilo). */}
+            <div className="flex shrink-0 items-center gap-2">
               <NotificationBell unreadCount={unreadCount} />
-              <LogoutButton
-                action={async () => {
-                  "use server";
-                  await signOut();
-                  redirect("/login");
-                }}
-              />
+              <ProfileAvatar name={name} email={email} />
             </div>
           </div>
           <TopNav isAdmin={isAdmin} />

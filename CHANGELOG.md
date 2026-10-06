@@ -20,6 +20,17 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ## [Unreleased]
 
+## [1.24.0] — 2026-10-06
+
+*Your settings in one place, and a guide you can search.*
+
+### Added
+- 👤 **Your Profile.** Tap the circle with your initials, top right: your name (now editable), the emails you sign in with, family, notifications, balance, installing the app, the guide and sign-out, all in one place.
+
+### Changed
+- 🧭 **Tidier header.** The email and the Logout button made way for the Profile circle; notification preferences and Family moved inside the Profile (old links still work).
+- 📖 **A guide you can search.** The Guide now has a search box and topics, with step-by-step cards that open the right page of the app. A "?" next to the title of Order, Top up, Family and Notifications opens the right card. It only covers what your group has switched on, and the answers are up to date with the latest features.
+
 ## [1.23.0] — 2026-10-06
 
 *Families share one account, and duplicate accounts point themselves out.*
@@ -528,6 +539,7 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ---
 
+[1.24.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.24.0
 [1.23.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.23.0
 [1.22.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.22.0
 [1.21.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.21.1

@@ -2,13 +2,14 @@
 
 import { brand } from "@/lib/brand";
 import { t } from "@/lib/i18n";
-import { Button } from "@/components/ui/button";
 import { confirm } from "@/components/ui/confirm-dialog";
 
 type Props = {
   action: () => Promise<void>;
 };
 
+// The last row of the Profile page (app/profilo), away from the header's
+// bell so it is not tapped by mistake; asks before signing out.
 export function LogoutButton({ action }: Props) {
   async function handleClick() {
     const ok = await confirm({
@@ -21,8 +22,12 @@ export function LogoutButton({ action }: Props) {
   }
 
   return (
-    <Button variant="ghost" size="sm" onClick={handleClick}>
-      Logout
-    </Button>
+    <button
+      type="button"
+      onClick={handleClick}
+      className="flex min-h-[52px] w-full items-center rounded-[18px] border border-brand-border bg-white px-4 py-[12px] text-left text-[14px] font-bold text-brand-red shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-colors hover:bg-brand-red-light focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red/30"
+    >
+      {t.logout.confirmButton}
+    </button>
   );
 }

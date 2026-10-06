@@ -75,7 +75,7 @@ export function notificationEmail(input: {
     lines.push(t.email.notificationCta(`${baseUrl}${input.href}`), "");
   }
   if (baseUrl) {
-    lines.push(t.email.notificationManagePrefs(`${baseUrl}/notifiche/impostazioni`), "");
+    lines.push(t.email.notificationManagePrefs(`${baseUrl}/profilo/notifiche`), "");
   }
   lines.push(t.email.notificationFooter(brand.orgName));
 
