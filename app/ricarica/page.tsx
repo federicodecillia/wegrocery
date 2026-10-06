@@ -15,6 +15,7 @@ import { TOPUP_MIN_CENTS, topupBlockReason, topupCeilingCents, topupPresets } fr
 import { getConsolidatedBalanceCents } from "@/lib/payments/balance-due";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
 import { SETTLEMENT_MIN_DUE_CENTS } from "@/lib/payments/settlement";
+import { HelpLink } from "@/components/guide/help-link";
 
 function compactIban(iban: string): string {
   return iban.replace(/\s+/g, "").toUpperCase();
@@ -79,7 +80,10 @@ export default async function RicaricaPage({
     const cents = await getConsolidatedBalanceCents(getDb(), memberId);
     return (
       <AppShell email={session.user.email} name={session.user.fullName} isAdmin={role === "admin"} memberId={memberId} personId={session.user.personId}>
-        <h1 className="mb-4 text-[22px] font-black tracking-[-0.02em] text-brand-near-black">{t.balance.title}</h1>
+        <div className="mb-4 flex items-center gap-2">
+          <h1 className="text-[22px] font-black tracking-[-0.02em] text-brand-near-black">{t.balance.title}</h1>
+          <HelpLink href="/guida/soldi#da-saldare" />
+        </div>
         {result && (
           <div className={`mb-4 rounded-[14px] border p-[12px_14px] text-[14px] ${TONE_CLASSES[result.tone]}`}>
             {result.text}
@@ -109,7 +113,10 @@ export default async function RicaricaPage({
 
   return (
     <AppShell email={session.user.email} name={session.user.fullName} isAdmin={role === "admin"} memberId={memberId} personId={session.user.personId}>
-      <h1 className="mb-4 text-[22px] font-black tracking-[-0.02em] text-brand-near-black">{t.topup.title}</h1>
+      <div className="mb-4 flex items-center gap-2">
+        <h1 className="text-[22px] font-black tracking-[-0.02em] text-brand-near-black">{t.topup.title}</h1>
+        <HelpLink href="/guida/soldi" />
+      </div>
 
       {result && (
         <div className={`mb-4 rounded-[14px] border p-[12px_14px] text-[14px] ${TONE_CLASSES[result.tone]}`}>

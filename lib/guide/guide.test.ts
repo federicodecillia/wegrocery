@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { guideEn } from "./en";
@@ -35,6 +35,23 @@ describe("guide content", () => {
       expect(JSON.stringify(g)).not.toContain("—");
     });
   }
+
+  it("every page's \"?\" link opens an existing topic and card", () => {
+    const files = (dir: string): string[] =>
+      readdirSync(dir, { withFileTypes: true }).flatMap((e) =>
+        e.isDirectory() ? files(join(dir, e.name)) : e.name.endsWith(".tsx") ? [join(dir, e.name)] : [],
+      );
+    const hrefs = ["app", "components"]
+      .flatMap((d) => files(join(process.cwd(), d)))
+      .flatMap((f) => [...readFileSync(f, "utf8").matchAll(/<HelpLink href="([^"]+)"/g)].map((m) => m[1]));
+    expect(hrefs.length).toBeGreaterThanOrEqual(5);
+    const broken = hrefs.filter((href) => {
+      const [, topic, slug] = /^\/guida\/([^#]+)(?:#(.+))?$/.exec(href) ?? [];
+      if (!guideIt.topics.some((x) => x.id === topic)) return true;
+      return slug !== undefined && !guideIt.articles.some((a) => a.slug === slug && a.topic === topic);
+    });
+    expect(broken).toEqual([]);
+  });
 
   it("Italian and English have the same cards, conditions, steps and links", () => {
     const shape = (g: GuideContent) => ({

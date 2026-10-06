@@ -5,6 +5,7 @@ import { t } from "@/lib/i18n";
 import { getUserRole, requireUserSession } from "@/lib/auth/session";
 import { getNotificationPreferences } from "@/lib/db/queries";
 import { resolvePreferences } from "@/lib/notifications/categories";
+import { HelpLink } from "@/components/guide/help-link";
 
 export default async function NotificationSettingsPage() {
   const session = await requireUserSession();
@@ -24,9 +25,12 @@ export default async function NotificationSettingsPage() {
           ← {t.profile.title}
         </Link>
       </div>
-      <h1 className="mb-1 text-[20px] font-black tracking-[-0.03em] text-brand-near-black">
-        {t.notifications.settings.title}
-      </h1>
+      <div className="mb-1 flex items-center gap-2">
+        <h1 className="text-[20px] font-black tracking-[-0.03em] text-brand-near-black">
+          {t.notifications.settings.title}
+        </h1>
+        <HelpLink href="/guida/notifiche#preferenze-notifiche" />
+      </div>
       <p className="mb-5 text-[14px] leading-snug text-brand-gray">
         {t.notifications.settings.intro}
       </p>

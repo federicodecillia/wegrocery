@@ -428,6 +428,7 @@ export const en: Strings = {
   guide: {
     title: "How it works",
     intro: "Search for a word or pick a topic: you find the steps to follow and the answers to the most common questions.",
+    helpLabel: "How it works: open the guide",
     searchLabel: "Search the guide",
     searchPlaceholder: "E.g. top up, cancel, family",
     searchClear: "Clear the search",

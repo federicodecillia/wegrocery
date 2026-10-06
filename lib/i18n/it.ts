@@ -428,6 +428,7 @@ export const it = {
   guide: {
     title: "Come funziona",
     intro: "Cerca una parola o scegli un argomento: trovi i passi da seguire e le risposte alle domande più comuni.",
+    helpLabel: "Come funziona: apri la guida",
     searchLabel: "Cerca nella guida",
     searchPlaceholder: "Es. ricarica, annullare, famiglia",
     searchClear: "Cancella la ricerca",

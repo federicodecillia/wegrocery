@@ -26,7 +26,7 @@ stanno nella PR.
 
 ### Modificato
 - 🧭 **Intestazione più pulita.** Email e pulsante Logout lasciano il posto al cerchio del Profilo; le preferenze delle notifiche e la Famiglia ora stanno dentro il Profilo (i vecchi link funzionano ancora).
-- 📖 **Una guida in cui cercare.** La Guida ora ha la ricerca e gli argomenti, con schede passo passo che aprono la pagina giusta dell'app. Parla solo di ciò che il tuo gruppo usa, e le risposte sono aggiornate alle ultime novità.
+- 📖 **Una guida in cui cercare.** La Guida ora ha la ricerca e gli argomenti, con schede passo passo che aprono la pagina giusta dell'app. Il "?" accanto al titolo di Ordine, Ricarica, Famiglia e Notifiche apre la scheda giusta. Parla solo di ciò che il tuo gruppo usa, e le risposte sono aggiornate alle ultime novità.
 
 ## [1.23.0] — 6 ottobre 2026
 

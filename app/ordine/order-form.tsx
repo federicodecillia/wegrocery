@@ -15,6 +15,7 @@ import { ORDER_PAYMENT_MIN_CENTS, handlingFeeCents, orderPaymentAmount, type Han
 import { OrderSentDialog } from "./order-sent-dialog";
 import { OrderSummary, type ConfirmedLine } from "./order-summary";
 import { CycleNotes } from "@/components/cycle-notes";
+import { HelpLink } from "@/components/guide/help-link";
 
 type Product = {
   productId: string;
@@ -474,9 +475,12 @@ export function OrderForm({
       {/* Cycle header */}
       <div className="mb-1">
         <div className="flex items-center justify-between">
-          <h1 className="text-[20px] font-black tracking-[-0.03em] text-brand-near-black">
-            {t.order.yourOrder}
-          </h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-[20px] font-black tracking-[-0.03em] text-brand-near-black">
+              {t.order.yourOrder}
+            </h1>
+            <HelpLink href="/guida/ordinare" />
+          </div>
           <span className="inline-flex items-center gap-1.5 rounded-full border border-accent/20 bg-accent-soft px-2.5 py-0.5 font-mono text-label font-semibold text-accent-text">
             <span className="h-1.5 w-1.5 rounded-full bg-accent opacity-75" />
             {t.cycle.open}
