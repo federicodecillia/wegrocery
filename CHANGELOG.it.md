@@ -29,6 +29,7 @@ stanno nella PR.
 - 💶 **Tab Cassa più ordinata.** "Nuova ricarica" è chiusa come "Movimento in uscita" e si apre con un tocco; l'elenco dei saldi è diviso in Admin, Attivi e Utenti, come nella tab Soci.
 
 ### Risolto
+- 🛒 **Nessuna modifica al carrello persa tra dispositivi.** Se il carrello è stato cambiato da un altro dispositivo (ad esempio dal telefono, con il computer ancora aperto), salvare dalla pagina vecchia non lo sovrascrive più: la pagina mostra il carrello aggiornato e lo dice.
 - 📱 **Totale dell'ordine leggibile su iPhone.** Aggiungendo un prodotto il vecchio totale poteva restare disegnato sopra il nuovo, e il saldo dopo l'ordine fermo al valore precedente.
 
 ## [1.22.0] — 4 ottobre 2026

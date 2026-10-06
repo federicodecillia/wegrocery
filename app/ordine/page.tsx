@@ -18,7 +18,7 @@ import { getDb } from "@/lib/db/client";
 import { getOrderPaymentStatus } from "@/lib/db/queries";
 import { getCycleCoverageCents } from "@/lib/payments/order-confirm";
 import { cycleHandlingFee, type HandlingFee } from "@/lib/payments/order-payment";
-import { orderLinesKey, resumeDraft } from "@/lib/order-draft";
+import { orderLinesKey, orderStateKey, resumeDraft } from "@/lib/order-draft";
 import { canAccessCycle } from "@/lib/roles";
 import { resolveOrderCycle } from "@/lib/order-cycle";
 import Link from "next/link";
@@ -72,11 +72,8 @@ export default async function OrdinePage({
     getOrderDraft(memberId, openCycle!.cycleId),
   ]);
   // Unconfirmed edits to pick up, limited to the products still in the cycle.
-  const resumedDraft = resumeDraft(
-    storedDraft,
-    existingLines,
-    new Set(cycleProducts.map((p) => p.productId)),
-  );
+  const availableProductIds = new Set(cycleProducts.map((p) => p.productId));
+  const resumedDraft = resumeDraft(storedDraft, existingLines, availableProductIds);
 
   // Pay-per-order cycle: the order is confirmed by paying it, unless the
   // member pays outside the app (then the wallet form, as in wallet mode).
@@ -168,6 +165,7 @@ export default async function OrdinePage({
           quantity: l.quantity,
         }))}
         resumedDraft={resumedDraft}
+        serverStateKey={orderStateKey(storedDraft, existingLines, availableProductIds)}
         balance={balance}
         saveAction={saveOrder}
         // Card payers already see the fee in the Checkout summary; wallet (and

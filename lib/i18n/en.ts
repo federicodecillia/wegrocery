@@ -1527,6 +1527,7 @@ export const en: Strings = {
     handlingFeeLocked: "The cycle is already closed: the order preparation fee can no longer change.",
     handlingFeeInvalid: "Invalid order preparation fee: a number with at most two decimals, up to 25% or €10",
     cycleNotOpen: "The cycle is no longer open",
+    orderChangedElsewhere: "The cart was changed in the meantime, from another device: here is the latest version.",
     accessDenied: "You don't have access to this cycle",
     membershipInactive: (renewUrl: string | null) =>
       renewUrl

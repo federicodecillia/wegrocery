@@ -28,6 +28,7 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 - 💶 **Tidier Cassa tab.** "New top-up" is folded like "Outgoing movement" and opens with a tap; the balances list is split into Admin, Attivi and Utenti, as in the Members tab.
 
 ### Fixed
+- 🛒 **No more lost cart edits across devices.** If the cart was changed from another device (say the phone, while the computer was open), saving from the stale page no longer overwrites it: the page shows the latest cart and says so.
 - 📱 **Readable order total on iPhone.** Adding a product could leave the old total drawn over the new one, and the balance after the order stuck on the previous value.
 
 ## [1.22.0] — 2026-10-04
