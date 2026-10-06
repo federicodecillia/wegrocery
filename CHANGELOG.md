@@ -26,7 +26,7 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ### Added
 - 👯 **Possible duplicates in Members.** Admin → Members lists accounts that look like the same person (same name, or the name inside the other's address), with Merge already filled in and "Not the same person" to hide a pair. Migration `0028_member_duplicate_dismissals.sql`.
-- 👨‍👩‍👧 **Families.** Members can invite each other into one account (Notifications → ⚙ → Family): cart, balance and order history become shared, and each person keeps signing in with their own addresses. The invited person accepts or declines (in-app notice and email); either can leave. Off by default, admin → Settings switches it on; Members shows who is in which family. Migration `0029_families.sql`.
+- 👨‍👩‍👧 **Families.** Members can invite each other into one account (Notifications → ⚙ → Family): cart, balance and order history become shared, and each person keeps signing in with their own addresses. The invited person accepts or declines (in-app notice and email); either can leave. Off by default, admin → Settings switches it on; Members shows who is in which family, on every account of it. Migration `0029_families.sql`.
 
 ### Changed
 - 🔑 **Clearer message when the card is not found.** A member whose card is not on their address is told to sign in with the address they registered the card with; an admin then merges the two accounts.
