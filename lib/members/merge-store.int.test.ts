@@ -134,6 +134,8 @@ describeDb("member merge", () => {
       VALUES (${scope.id("not5")}, ${person}, 'cycle_opened', 'x', 'y', now())`;
     await scope.addLedger("topup5", person, "topup", 7, null);
     const inviteId = scope.id("inv5");
+    // The previous test leaves breaks on purpose: only new ones count here.
+    const before = new Set(await invariantBreaks());
     await sql`INSERT INTO family_invites (invite_id, account_id, member_id, invited_by, created_at, expires_at)
       VALUES (${inviteId}, ${account}, ${person}, 'int-test@example.invalid', now(), now() + interval '7 days')`;
 
@@ -159,7 +161,7 @@ describeDb("member merge", () => {
     expect(n.member_id).toBe(person);
     const [inv] = await sql`SELECT status FROM family_invites WHERE invite_id = ${inviteId}`;
     expect(inv.status).toBe("accepted");
-    expect(await invariantBreaks()).toEqual([]);
+    expect((await invariantBreaks()).filter((b) => !before.has(b))).toEqual([]);
 
     // The invitation is spent: accepting it again rolls back.
     await sql`UPDATE members SET household_of = NULL WHERE member_id = ${person}`;
