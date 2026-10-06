@@ -20,6 +20,10 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ## [Unreleased]
 
+## [1.24.0] — 2026-10-06
+
+*Your settings in one place, and a guide you can search.*
+
 ### Added
 - 👤 **Your Profile.** Tap the circle with your initials, top right: your name (now editable), the emails you sign in with, family, notifications, balance, installing the app, the guide and sign-out, all in one place.
 
@@ -535,6 +539,7 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ---
 
+[1.24.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.24.0
 [1.23.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.23.0
 [1.22.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.22.0
 [1.21.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.21.1
