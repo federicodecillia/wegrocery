@@ -1534,6 +1534,7 @@ export const it = {
     handlingFeeLocked: "Il ciclo è già chiuso: le spese di preparazione non si possono più cambiare.",
     handlingFeeInvalid: "Spese di preparazione non valide: un numero con al massimo due decimali, fino al 25% o a 10 €",
     cycleNotOpen: "Il ciclo non è più aperto",
+    orderChangedElsewhere: "Il carrello è stato modificato nel frattempo, da un altro dispositivo: ecco la versione aggiornata.",
     accessDenied: "Non hai accesso a questo ciclo",
     membershipInactive: (renewUrl: string | null) =>
       renewUrl

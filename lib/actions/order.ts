@@ -17,9 +17,11 @@ import {
   getMemberOrderLines,
   getMemberPendingOrderTotals,
   getOpenCycles,
+  getOrderDraft,
 } from "@/lib/db/queries";
+import type { DraftLine } from "@/lib/db/schema";
 import { requireActiveMember } from "@/lib/auth/session";
-import { normalizeDraftLines, sameOrderLines } from "@/lib/order-draft";
+import { isStaleOrderWrite, normalizeDraftLines, orderLinesKey, orderStateKey, sameOrderLines } from "@/lib/order-draft";
 import { membershipAllowsOrder } from "@/lib/membership/order-check";
 import { evaluateCreditLimit, raisesOrderTotal } from "@/lib/membership/policy";
 import { isMembershipCheckEnabled } from "@/lib/membership/wallyfor";
@@ -42,15 +44,39 @@ export type SaveOrderErrorCode =
   | "product_not_found"
   | "membership_inactive"
   | "credit_limit_exceeded"
+  | "changed_elsewhere"
   | "unexpected";
 
 export type SaveOrderResult =
   | { success: true; balanceWarning: string | null }
-  | { success: false; error: string; code: SaveOrderErrorCode };
+  | { success: false; error: string; code: SaveOrderErrorCode; current?: OrderState };
 
+// What the server holds for the member's order on a cycle, limited to the
+// products still in it: sent back when a write is refused as stale, so the
+// form shows the newer cart instead of overwriting it.
+export type OrderState = { draft: DraftLine[] | null; confirmed: SaveOrderLine[] };
+
+async function readOrderState(
+  memberId: string,
+  cycleId: string,
+  available: ReadonlySet<string>,
+): Promise<{ state: OrderState; key: string }> {
+  const [draft, confirmed] = await Promise.all([getOrderDraft(memberId, cycleId), getMemberOrderLines(memberId, cycleId)]);
+  const state: OrderState = {
+    draft: draft ? draft.filter((l) => available.has(l.productId)) : null,
+    confirmed: confirmed
+      .filter((l) => available.has(l.productId))
+      .map((l) => ({ productId: l.productId, quantity: l.quantity })),
+  };
+  return { state, key: orderStateKey(draft, confirmed, available) };
+}
+
+// `baseKey` (orderStateKey) is what the form last saw on the server; when it
+// is sent, a save over a cart changed meanwhile is refused (changed_elsewhere).
 export async function saveOrder(
   cycleId: string,
   lines: SaveOrderLine[],
+  baseKey?: string,
 ): Promise<SaveOrderResult> {
   try {
     const session = await auth();
@@ -91,6 +117,12 @@ export async function saveOrder(
     const unknownLine = newLines.find((l) => !productMap.has(l.productId));
     if (unknownLine) {
       return { success: false, error: t.errors.productNotFound(unknownLine.productId), code: "product_not_found" };
+    }
+    if (baseKey !== undefined) {
+      const server = await readOrderState(member.memberId, cycleId, new Set(productMap.keys()));
+      if (isStaleOrderWrite(baseKey, server.key, orderLinesKey(newLines))) {
+        return { success: false, error: t.errors.orderChangedElsewhere, code: "changed_elsewhere", current: server.state };
+      }
     }
     const total = newLines.reduce(
       (sum, l) => sum + parseFloat(productMap.get(l.productId)!.unitPrice) * l.quantity,
@@ -250,13 +282,19 @@ export async function loadLastOrderForPrefill(
 
 export type DraftSaveResult =
   | { ok: true }
-  | { ok: false; error: string; code: "cycle_not_open" | "invalid" | "unexpected" };
+  | { ok: false; error: string; code: "cycle_not_open" | "invalid" | "unexpected" }
+  | { ok: false; error: string; code: "changed_elsewhere"; current: OrderState };
 
 // Autosave of the order form (debounced on the client): keeps the member's
 // unconfirmed edits to an open cycle before its deadline, limited to the
 // products still in the cycle. A draft equal to the confirmed order is
 // deleted instead, so "no draft" always means "nothing to confirm".
-export async function saveOrderDraft(cycleId: string, lines: SaveOrderLine[]): Promise<DraftSaveResult> {
+// `baseKey`: as in saveOrder.
+export async function saveOrderDraft(
+  cycleId: string,
+  lines: SaveOrderLine[],
+  baseKey?: string,
+): Promise<DraftSaveResult> {
   try {
     const { memberId } = await requireActiveMember();
     const normalized = normalizeDraftLines(lines);
@@ -268,16 +306,18 @@ export async function saveOrderDraft(cycleId: string, lines: SaveOrderLine[]): P
       return { ok: false, error: t.errors.cycleNotOpen, code: "cycle_not_open" };
     }
 
-    const [cycleProducts, confirmed] = await Promise.all([
-      getCycleProducts(cycleId),
-      getMemberOrderLines(memberId, cycleId),
-    ]);
+    const cycleProducts = await getCycleProducts(cycleId);
     const available = new Set(cycleProducts.map((p) => p.productId));
+    const server = await readOrderState(memberId, cycleId, available);
+    const confirmed = server.state.confirmed;
     const draft = normalized.filter((l) => available.has(l.productId));
+    if (isStaleOrderWrite(baseKey, server.key, orderLinesKey(draft))) {
+      return { ok: false, error: t.errors.orderChangedElsewhere, code: "changed_elsewhere", current: server.state };
+    }
 
     const db = getDb();
     const draftOfMember = and(eq(orderDrafts.memberId, memberId), eq(orderDrafts.cycleId, cycleId));
-    if (sameOrderLines(draft, confirmed.filter((l) => available.has(l.productId)))) {
+    if (sameOrderLines(draft, confirmed)) {
       await db.delete(orderDrafts).where(draftOfMember);
       return { ok: true };
     }
@@ -319,10 +359,21 @@ export async function saveOrderDraft(cycleId: string, lines: SaveOrderLine[]): P
 }
 
 // "Annulla modifiche" on /ordine, or the form went back to the confirmed
-// order: the draft goes. Deleting is always safe, whatever the cycle's state.
-export async function discardOrderDraft(cycleId: string): Promise<{ ok: true } | { ok: false; error: string }> {
+// order: the draft goes. Deleting is always safe, whatever the cycle's state,
+// except over a draft changed meanwhile (`baseKey`, as in saveOrder).
+export async function discardOrderDraft(
+  cycleId: string,
+  baseKey?: string,
+): Promise<{ ok: true } | { ok: false; error: string; code?: "changed_elsewhere"; current?: OrderState }> {
   try {
     const { memberId } = await requireActiveMember();
+    if (baseKey !== undefined) {
+      const available = new Set((await getCycleProducts(cycleId)).map((p) => p.productId));
+      const server = await readOrderState(memberId, cycleId, available);
+      if (isStaleOrderWrite(baseKey, server.key, orderLinesKey(server.state.confirmed))) {
+        return { ok: false, error: t.errors.orderChangedElsewhere, code: "changed_elsewhere", current: server.state };
+      }
+    }
     await getDb()
       .delete(orderDrafts)
       .where(and(eq(orderDrafts.memberId, memberId), eq(orderDrafts.cycleId, cycleId)));

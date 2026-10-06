@@ -74,3 +74,24 @@ export function draftSyncAction(draftKey: string, savedKey: string, serverKey: s
   if (draftKey === serverKey) return "none";
   return draftKey === savedKey ? "discard" : "save";
 }
+
+// What the server holds for a member's order on a cycle, as one key: the
+// draft when there is one, the confirmed order otherwise, both limited to the
+// products still in the cycle. The order form sends back the key it last saw,
+// so a save over a cart that changed in the meantime (another device, or
+// another person on the same account) is refused instead of overwriting it.
+export function orderStateKey(
+  draft: ReadonlyArray<DraftLine> | null,
+  confirmed: ReadonlyArray<{ productId: string; quantity: number }>,
+  availableProductIds: ReadonlySet<string>,
+): string {
+  const lines = draft ?? confirmed;
+  return orderLinesKey(lines.filter((l) => availableProductIds.has(l.productId)));
+}
+
+// Whether a write based on `baseKey` must be refused: the server moved on
+// since the form last saw it, and the write would change what it holds now.
+// A write that leaves the server as it is passes whatever its base.
+export function isStaleOrderWrite(baseKey: string | undefined, serverKey: string, writeKey: string): boolean {
+  return baseKey !== undefined && baseKey !== serverKey && writeKey !== serverKey;
+}
