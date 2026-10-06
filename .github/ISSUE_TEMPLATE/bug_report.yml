@@ -1,0 +1,52 @@
+name: Bug report
+description: Something does not work as it should.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. Please do not include real names, email addresses, balances or any secret: issues are public.
+        A security vulnerability goes through the private form in [SECURITY.md](https://github.com/federicodecillia/wegrocery/blob/main/SECURITY.md), not here.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: If you can, reproduce it on the public demo (wegrocery-demo.vercel.app).
+      placeholder: |
+        1. Sign in as a member
+        2. Open Order
+        3. ...
+    validations:
+      required: true
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where
+      options:
+        - Public demo
+        - My own installation
+        - Local development
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Shown at /changelog or returned by /api/health.
+  - type: input
+    id: device
+    attributes:
+      label: Device and browser
+      placeholder: e.g. iPhone, Safari, installed app
+  - type: textarea
+    id: extra
+    attributes:
+      label: Screenshots or logs
+      description: Remove any personal data first.

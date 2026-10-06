@@ -79,9 +79,10 @@ CI also applies every migration to an empty database and runs
 
 ## Conventions
 
-[AGENTS.md](AGENTS.md) has the architecture, the conventions and what to
-update with each kind of change (migrations, environment variables,
-CHANGELOG). Keep PRs focused; `npm test && npm run build` must stay green.
+[CONTRIBUTING.md](CONTRIBUTING.md) explains how to propose a change and open
+a pull request. [AGENTS.md](AGENTS.md) has the architecture, the conventions
+and what to update with each kind of change (migrations, environment
+variables, CHANGELOG).
 
 ## Demo mode
 
