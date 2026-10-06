@@ -27,6 +27,9 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 - 🔑 **Clearer message when the card is not found.** A member whose card is not on their address is told to sign in with the address they registered the card with; an admin then merges the two accounts.
 - 💶 **Tidier Cassa tab.** "New top-up" is folded like "Outgoing movement" and opens with a tap; the balances list is split into Admin, Attivi and Utenti, as in the Members tab.
 
+### Fixed
+- 📱 **Readable order total on iPhone.** Adding a product could leave the old total drawn over the new one, and the balance after the order stuck on the previous value.
+
 ## [1.22.0] — 2026-10-04
 
 *One person, one account: duplicates can now be merged.*
