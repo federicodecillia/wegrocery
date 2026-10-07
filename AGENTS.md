@@ -57,7 +57,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 │                               #   access.ts: pure checkAccess/sessionClaims (no imports, used by proxy.ts)
 ├── proxy.ts                     # Redirect unauthenticated to /login (Next.js 16's middleware)
 ├── auth.ts                     # Better Auth instance, auth() (session + member), signOut()
-├── drizzle/                    # SQL migrations (0000–0030)
+├── drizzle/                    # SQL migrations (0000–0032)
 └── public/logo.png
 ```
 
@@ -316,7 +316,7 @@ all in `lib/roles.ts`:
 
 | Table | Purpose |
 |---|---|
-| `members` | User registry; `role`: admin / attivi / utenti; `merged_into` on an account absorbed by a merge (see Member merge); `household_of` on a person who joined a family (see Families) |
+| `members` | User registry; `role`: admin / attivi / utenti; `merged_into` on an account absorbed by a merge (see Member merge); `household_of` on a person who joined a family (see Families); `welcome_dismissed_at` when the person closed the welcome card on Home (migration 0031, `lib/guide/welcome.ts`; `/?benvenuto=1` shows it again) |
 | `order_cycles` | Weekly order windows; one `open` at a time |
 | `products` | Per-cycle product list |
 | `orders` | Order lines per member per cycle |
@@ -329,6 +329,7 @@ all in `lib/roles.ts`:
 | `order_drafts` | A member's unconfirmed edits on an open cycle (`member_id`, `cycle_id`, `lines` jsonb), autosaved by the order form; `saveOrder` and the cycle close delete them in their batch |
 | `order_cycles.payment_mode` / `handling_fee_*`, `payments.kind` / `cycle_id` / `order_snapshot` | Pay-per-order (`drizzle/0021_pay_per_order.sql`): see Online top-ups (Stripe). Ledger types `order_payment` (+) and `order_refund` (−) sit on the cycle. `order_cycles.settled_at` and `members.pays_offline` (`drizzle/0024_settlement.sql`): see Pay-per-order |
 | `audit_log` | Append-only admin action log |
+| `guide_search_misses` | Guide searches with no results, counted with no member id (migration 0032): `query` normalized by `missQuery` (`lib/guide/search-misses.ts`, which drops addresses, long numbers and sentences), `count`, `last_at`; pruned after 90 days, listed in admin → Impostazioni |
 | `suppliers` | Supplier registry |
 | `supplier_products` | Supplier product catalog (source for cycle products) |
 

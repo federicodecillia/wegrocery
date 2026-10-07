@@ -45,6 +45,9 @@ export const members = pgTable(
     // drizzle/0029_families.sql): that account. auth() serves the account;
     // this row keeps the person's addresses, name, role and card, and no money.
     householdOf: text("household_of").references((): AnyPgColumn => members.memberId, { onDelete: "set null" }),
+    // When the person closed the welcome card on Home
+    // (drizzle/0031_welcome.sql); NULL = the card shows.
+    welcomeDismissedAt: timestamp("welcome_dismissed_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
   },
@@ -307,6 +310,18 @@ export const refunds = pgTable(
       sql`${table.reason} IN ('settlement', 'order_cancelled', 'late_payment', 'dashboard')`,
     ),
   ],
+);
+
+// Guide searches with no results, without who searched
+// (drizzle/0032_guide_search_misses.sql, lib/guide/search-misses.ts).
+export const guideSearchMisses = pgTable(
+  "guide_search_misses",
+  {
+    query: text("query").primaryKey(),
+    count: integer("count").notNull().default(1),
+    lastAt: timestamp("last_at", { withTimezone: true }).notNull(),
+  },
+  (table) => [check("guide_search_misses_query_length", sql`char_length(${table.query}) BETWEEN 3 AND 60`)],
 );
 
 // Payment settings chosen by the admins in Impostazioni

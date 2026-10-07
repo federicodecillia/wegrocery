@@ -48,6 +48,49 @@ export const en: Strings = {
     recentMovements: "Recent movements",
     seeAll: "See all →",
   },
+  welcome: {
+    title: (appName: string) => `Welcome to ${appName}`,
+    stepOf: (step: number, total: number) => `${step} of ${total}`,
+    back: "Back",
+    next: "Next",
+    done: "Got it",
+    skip: "Skip",
+    reopen: "See the welcome again",
+    steps: {
+      balance: {
+        emoji: "💶",
+        title: "Your balance",
+        body: "Just below you see your balance: your credit with the group. You top it up in advance and, when an order closes, its cost is taken from there.",
+        link: "How to top up",
+      },
+      pay: {
+        emoji: "💳",
+        title: "How you pay",
+        body: "You pay each order by card when you confirm it. If you change it later and the total goes up, you only pay the difference.",
+        link: "Read more",
+      },
+      order: {
+        emoji: "🧺",
+        title: "Placing an order",
+        body: "When an order is open you see it here on Home, with the time left. Tap **Order**, pick the products and confirm: while the order is open you can still change it.",
+        link: "Open Order",
+      },
+      install: {
+        emoji: "📱",
+        title: "The app on your phone",
+        body: "You can add the app to your phone's home screen: it opens like any other app. The first time, sign in with the 6-digit code in the email.",
+        link: "How to do it",
+      },
+      help: {
+        emoji: "🙋",
+        title: "Need help?",
+        body: "The **Guide** has answers to the most common questions and the steps to follow. The contacts are at the bottom.",
+        link: "Open the Guide",
+      },
+    },
+    helpBodyGroup:
+      "The **Guide** has information about our group, answers to the most common questions and the contacts.",
+  },
   cycle: {
     closes: (date: string) => `Closes: ${date}`,
     pickup1: (date: string) => `Pickup 1: ${date}`,
@@ -433,6 +476,7 @@ export const en: Strings = {
     searchClear: "Clear the search",
     searchResults: (n: number) => (n === 1 ? "1 result" : `${n} results`),
     searchEmpty: "No results. Try another word, or write to us: the contacts are at the bottom of the page.",
+    searchMissNote: "Searches with no results are counted, without your name, to improve the guide.",
     topicsTitle: "Topics",
     topicCount: (n: number) => (n === 1 ? "1 card" : `${n} cards`),
     backToGuide: "Guide",
@@ -1283,6 +1327,15 @@ export const en: Strings = {
         removed: "Box removed from the guide",
         preview: "See it in the guide →",
         tooLong: (max: number) => `The text is longer than ${max} characters.`,
+      },
+      searchMisses: {
+        title: "Searches with no results",
+        hint: (days: number) =>
+          `What members searched for in the guide without finding anything, in the last ${days} days. Only the words and how often, no names. If it is about your group, add it to "Our group".`,
+        empty: "No searches without results so far.",
+        times: (n: number) => `×${n}`,
+        clear: "Clear the list",
+        cleared: "List cleared",
       },
       families: {
         title: "Families",

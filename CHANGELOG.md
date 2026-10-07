@@ -22,6 +22,8 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ### Added
 - 🏠 **Our group, at the top of the guide.** Admins write where and when to collect, who to ask and the group's own rules in Impostazioni; members find it first in the guide, and the search finds it too.
+- 👋 **A welcome for newcomers.** The first time on Home, a short card in a few steps explains the balance (or how you pay), how to order, the app on your phone and where to find help. One tap closes it; the Guide can show it again.
+- 🔍 **What members could not find.** Impostazioni lists the guide searches that found nothing (only the words and how often, never who searched), so admins can add what is missing.
 
 ### Fixed
 - 📱 **Order total on iPhone, for good.** In the installed app the order total could still show the old amount under the new one after adding a product; the total and the balance now redraw on every change.
