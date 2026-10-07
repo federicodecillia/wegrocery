@@ -56,11 +56,20 @@ export const en: Strings = {
     done: "Got it",
     skip: "Skip",
     reopen: "See the welcome again",
+    resume: "Welcome",
+    resumeLink: (step: number, total: number) => `Resume (${step} of ${total}) →`,
+    close: "Close the welcome",
     steps: {
+      intro: {
+        emoji: "👋",
+        title: "How it works",
+        body: "The group buys together, straight from the producers. It works in cycles: an order opens, everyone picks their products before it closes, the group orders everything at once and then you collect your groceries on the set day. In a few steps we show you where everything is.",
+        link: "How the app is laid out",
+      },
       balance: {
         emoji: "💶",
         title: "Your balance",
-        body: "Just below you see your balance: your credit with the group. You top it up in advance and, when an order closes, its cost is taken from there.",
+        body: "Just below you see your balance: your credit with the group. You top it up in advance with the group's methods and, when an order closes, its cost is taken from there. Under the balance you also see what will be left after the open order.",
         link: "How to top up",
       },
       pay: {
@@ -72,8 +81,26 @@ export const en: Strings = {
       order: {
         emoji: "🧺",
         title: "Placing an order",
-        body: "When an order is open you see it here on Home, with the time left. Tap **Order**, pick the products and confirm: while the order is open you can still change it.",
+        body: "When an order is open you see it here on Home, with the time left. Tap **Order** and pick the products with + and −: the app keeps your choices, but the order only counts once you confirm it. While the order is open you can still change it.",
         link: "Open Order",
+      },
+      pickup: {
+        emoji: "📦",
+        title: "Closing and collection",
+        body: "When the order closes the group sends it to the producers, and the next collection shows here on Home with its day and time. If a product weighs differently from what you ordered, the amount is corrected and you get a notice. **History** keeps all your orders and movements.",
+        link: "Open History",
+      },
+      notify: {
+        emoji: "🔔",
+        title: "Notices",
+        body: "The bell at the top tells you when a new order opens and when something changes in your orders or your money. You can get them by email too: choose which in your **Profile**, the circle with your initials.",
+        link: "Choose your notices",
+      },
+      family: {
+        emoji: "🏠",
+        title: "Shopping as a family",
+        body: "If you shop with other people you can share one cart and one account, each with their own sign-in: open **Family** from your **Profile** and invite them.",
+        link: "Open Family",
       },
       install: {
         emoji: "📱",
