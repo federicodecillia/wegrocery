@@ -1,0 +1,68 @@
+name: GitHub Release
+
+# Creates the tag vX.Y.Z and its GitHub release when a merge to main brings a
+# version (package.json) that has no tag yet. The notes are that version's
+# entry in CHANGELOG.md, so cutting a release stays what AGENTS.md describes:
+# move [Unreleased] to a version heading, bump package.json, merge to main.
+#
+# Runs only in the upstream repository: an installation that pulls main
+# (`git pull upstream main`) gets this file too, and must not publish
+# releases of its own.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: github-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    if: github.repository == 'federicodecillia/wegrocery'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Read the version
+        id: version
+        run: |
+          version=$(node -p "require('./package.json').version")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if git ls-remote --exit-code --tags origin "refs/tags/v$version" >/dev/null; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "v$version is already tagged: nothing to release."
+          fi
+
+      - name: Extract the CHANGELOG entry
+        if: steps.version.outputs.exists != 'true'
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          awk -v v="$VERSION" '
+            index($0, "## [" v "]") == 1 { found = 1; next }
+            found && /^## \[/ { exit }
+            found && /^---$/ { exit }
+            found { print }
+          ' CHANGELOG.md > notes.md
+          if ! grep -q '[^[:space:]]' notes.md; then
+            echo "::error::No CHANGELOG.md entry for $VERSION."
+            exit 1
+          fi
+
+      - name: Create the tag and the release
+        if: steps.version.outputs.exists != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          gh release create "v$VERSION" \
+            --target "$GITHUB_SHA" \
+            --title "$VERSION" \
+            --notes-file notes.md \
+            --latest
