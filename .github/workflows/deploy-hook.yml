@@ -1,0 +1,34 @@
+name: Vercel Deploy Hook
+
+# Starts a production deploy through a Vercel Deploy Hook after each push to
+# main. For installations whose Git-triggered deploys Vercel blocks (on the
+# Hobby plan a push whose commit author is not a member of the Vercel team
+# comes up BLOCKED): a hook build is not tied to the commit author.
+#
+# Optional GitHub repository secret:
+#   - VERCEL_DEPLOY_HOOK  the hook URL (Vercel → Project → Settings → Git →
+#                         Deploy Hooks, branch main)
+# Without it (the usual case: Git deploys work) the job is skipped.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    env:
+      HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK }}
+    steps:
+      - name: Call the deploy hook
+        run: |
+          if [ -z "$HOOK" ]; then
+            echo "No VERCEL_DEPLOY_HOOK secret: nothing to do."
+            exit 0
+          fi
+          curl -fsS -X POST "$HOOK" -o /dev/null
+          echo "Deploy requested."
