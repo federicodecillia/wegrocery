@@ -21,6 +21,10 @@ stanno nella PR.
 
 ## [Non rilasciato]
 
+## [1.25.0] — 7 ottobre 2026
+
+*Un benvenuto per chi arriva, e la pagina del gruppo nella guida.*
+
 ### Aggiunte
 - 🏠 **Il nostro gruppo, in cima alla guida.** Gli admin scrivono in Impostazioni dove e quando si ritira, chi contattare e le regole del gruppo; i soci lo trovano per primo nella guida, e anche la ricerca lo trova.
 - 👋 **Un benvenuto per chi arriva.** La prima volta in Home una scheda in pochi passi spiega come funziona il gruppo, il saldo (o come si paga), l'ordine, il ritiro, gli avvisi, la famiglia, l'app sul telefono e dove trovare aiuto. I suoi link non fanno perdere il segno: una barra nella pagina aperta riporta al passo. Si chiude con un tocco e la Guida può mostrarla di nuovo.
@@ -549,6 +553,7 @@ stanno nella PR.
 
 ---
 
+[1.25.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.25.0
 [1.24.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.24.0
 [1.23.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.23.0
 [1.22.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.22.0
