@@ -20,6 +20,10 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ## [Unreleased]
 
+## [1.25.0] — 2026-10-07
+
+*A welcome for newcomers, and the group's own page in the guide.*
+
 ### Added
 - 🏠 **Our group, at the top of the guide.** Admins write where and when to collect, who to ask and the group's own rules in Impostazioni; members find it first in the guide, and the search finds it too.
 - 👋 **A welcome for newcomers.** The first time on Home, a short card in a few steps explains how the group works, the balance (or how you pay), ordering, collection, notices, family, the app on your phone and where to find help. Its links keep your place: a bar on the page you opened takes you back. One tap closes it; the Guide can show it again.
@@ -547,6 +551,7 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ---
 
+[1.25.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.25.0
 [1.24.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.24.0
 [1.23.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.23.0
 [1.22.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.22.0
