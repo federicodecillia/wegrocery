@@ -5,6 +5,9 @@ import { CycleCountdown } from "@/components/home/cycle-countdown";
 import { CycleNotes } from "@/components/cycle-notes";
 import { NextPickupCard } from "@/components/home/next-pickup-card";
 import { InstallPrompt } from "@/components/install-prompt";
+import { WelcomeCard } from "@/components/home/welcome-card";
+import { brand } from "@/lib/brand";
+import { WELCOME_QUERY, welcomeMoney } from "@/lib/guide/welcome";
 import { t } from "@/lib/i18n";
 import { formatSignedMoney } from "@/lib/i18n/format";
 import { getUserRole, requireUserSession } from "@/lib/auth/session";
@@ -33,10 +36,15 @@ import { formatDateShort, formatEur, getProductEmoji } from "@/lib/utils";
 import { canAccessCycle } from "@/lib/roles";
 import { movementText } from "@/lib/movement-label";
 
-export default async function HomePage() {
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const session = await requireUserSession();
   const role = getUserRole(session);
   const memberId = session.user.memberId!;
+  const personId = session.user.personId ?? memberId;
 
   const [balance, openCycles, recentMovements, nextPickup, settings, member] = await Promise.all([
     getMemberBalance(memberId),
@@ -46,6 +54,11 @@ export default async function HomePage() {
     getPaymentSettings(),
     getMemberById(memberId),
   ]);
+  // The welcome card is personal: the person who signed in, not the family
+  // account they shop on.
+  const person = personId === memberId ? member : await getMemberById(personId);
+  const reopenWelcome = (await searchParams)[WELCOME_QUERY] === "1";
+  const showWelcome = reopenWelcome || (person !== null && person.welcomeDismissedAt === null);
   // A pay-per-order group has no wallet: no balance card, each cycle says
   // where its order stands, and the amount due or the credit comes first. A
   // member who pays outside the app keeps the wallet view.
@@ -103,6 +116,15 @@ export default async function HomePage() {
 
   return (
     <AppShell email={session.user.email} name={session.user.fullName} isAdmin={role === "admin"} memberId={memberId} personId={session.user.personId}>
+      {showWelcome && (
+        <WelcomeCard
+          appName={brand.appName}
+          money={welcomeMoney(settings.mode, member?.paysOffline ?? false)}
+          hasGroupInfo={settings.groupInfo !== null}
+          reopened={reopenWelcome}
+        />
+      )}
+
       {/* ── Saldo hero card (wallet groups only) ── */}
       {!payPerOrder && (
         <>

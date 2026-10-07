@@ -1,9 +1,11 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { flushSync } from "react-dom";
 import { t } from "@/lib/i18n";
+import { recordGuideSearchMiss } from "@/lib/actions/guide";
 import { searchGuide, type GuideSearchEntry } from "@/lib/guide/search";
+import { missQuery } from "@/lib/guide/search-misses";
 
 type Props = {
   index: GuideSearchEntry[];
@@ -23,6 +25,19 @@ export function GuideSearch({ index, synonyms, stopwords, topicTitles, children 
     [index, query, synonyms, stopwords],
   );
   const searching = query.trim().length > 0;
+
+  // A search that still finds nothing once the member stops typing is
+  // counted, without who searched (admin → Impostazioni), once per page.
+  const sentMisses = useRef(new Set<string>());
+  const missed = searching && results.length === 0 ? missQuery(query) : null;
+  useEffect(() => {
+    if (!missed || sentMisses.current.has(missed)) return;
+    const timer = setTimeout(() => {
+      sentMisses.current.add(missed);
+      void recordGuideSearchMiss(missed);
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, [missed]);
 
   return (
     <>
@@ -75,6 +90,7 @@ export function GuideSearch({ index, synonyms, stopwords, topicTitles, children 
           {results.length === 0 ? (
             <p className="rounded-[18px] border border-brand-border bg-white p-[18px] text-[14px] leading-[1.5] text-brand-gray">
               {t.guide.searchEmpty}
+              <span className="mt-2 block text-[12px] text-muted">{t.guide.searchMissNote}</span>
             </p>
           ) : (
             <ul className="overflow-hidden rounded-[18px] border border-brand-border bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)]">

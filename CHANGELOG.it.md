@@ -23,6 +23,8 @@ stanno nella PR.
 
 ### Aggiunte
 - 🏠 **Il nostro gruppo, in cima alla guida.** Gli admin scrivono in Impostazioni dove e quando si ritira, chi contattare e le regole del gruppo; i soci lo trovano per primo nella guida, e anche la ricerca lo trova.
+- 👋 **Un benvenuto per chi arriva.** La prima volta in Home una scheda in pochi passi spiega il saldo (o come si paga), come ordinare, l'app sul telefono e dove trovare aiuto. Si chiude con un tocco e la Guida può mostrarla di nuovo.
+- 🔍 **Cosa i soci non trovano.** In Impostazioni l'elenco delle ricerche nella guida rimaste senza risultati (solo le parole e quante volte, mai chi ha cercato), per aggiungere quello che manca.
 
 ### Risolto
 - 📱 **Totale dell'ordine su iPhone, stavolta davvero.** Nell'app installata il totale poteva ancora mostrare la cifra vecchia sotto quella nuova; ora totale e saldo si ridisegnano a ogni modifica.

@@ -33,4 +33,6 @@ export const MIGRATIONS = [
   "0028_member_duplicate_dismissals.sql",
   "0029_families.sql",
   "0030_group_info.sql",
+  "0031_welcome.sql",
+  "0032_guide_search_misses.sql",
 ] as const;

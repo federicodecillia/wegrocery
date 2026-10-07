@@ -11,6 +11,7 @@ import { loadChangelog } from "@/lib/changelog";
 import { guideContent } from "@/lib/guide";
 import { GROUP_INFO_SLUG } from "@/lib/guide/group-info";
 import { buildSearchIndex, groupInfoSearchEntry } from "@/lib/guide/search";
+import { WELCOME_QUERY } from "@/lib/guide/welcome";
 import { guideContext, visibleGuide } from "@/lib/guide/types";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
 
@@ -75,6 +76,11 @@ export default async function GuidaPage() {
             );
           })}
         </ul>
+        <p className="-mt-3 mb-6 text-right">
+          <Link href={`/?${WELCOME_QUERY}=1`} className="text-[12px] font-bold text-primary-text hover:underline">
+            👋 {t.welcome.reopen}
+          </Link>
+        </p>
 
         {/* Novità: teaser of the latest release, linking the changelog */}
         {latest && (

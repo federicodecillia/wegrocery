@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { actionErrorMessage } from "@/lib/action-error";
 import { requireAdmin } from "@/lib/auth/session";
 import { getDb } from "@/lib/db/client";
-import { appSettings, auditLog } from "@/lib/db/schema";
+import { appSettings, auditLog, guideSearchMisses } from "@/lib/db/schema";
 import { t } from "@/lib/i18n";
 import { brand } from "@/lib/brand";
 import { GROUP_INFO_MAX, normalizeGroupInfo } from "@/lib/guide/group-info";
@@ -219,5 +219,30 @@ export async function adminUpdateGroupInfo(raw: string): Promise<{ error?: strin
     return {};
   } catch (e) {
     return { error: actionErrorMessage(e, t.errors.genericError, "adminUpdateGroupInfo") };
+  }
+}
+
+// Impostazioni → "Ricerche senza risultati": empty the list (once the group
+// has added what was missing).
+export async function adminClearGuideSearchMisses(): Promise<{ error?: string }> {
+  try {
+    const admin = await requireAdmin();
+    const db = getDb();
+    await db.batch([
+      db.delete(guideSearchMisses),
+      db.insert(auditLog).values({
+        auditId: crypto.randomUUID(),
+        userEmail: admin.email,
+        action: "clear_guide_search_misses",
+        entityType: "guide_search_misses",
+        entityId: "all",
+        payloadJson: null,
+        createdAt: new Date(),
+      }),
+    ]);
+    revalidatePath("/admin");
+    return {};
+  } catch (e) {
+    return { error: actionErrorMessage(e, t.errors.genericError, "adminClearGuideSearchMisses") };
   }
 }

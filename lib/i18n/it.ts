@@ -48,6 +48,49 @@ export const it = {
     recentMovements: "Ultimi movimenti",
     seeAll: "Vedi tutto →",
   },
+  welcome: {
+    title: (appName: string) => `Ti diamo il benvenuto in ${appName}`,
+    stepOf: (step: number, total: number) => `${step} di ${total}`,
+    back: "Indietro",
+    next: "Avanti",
+    done: "Ho capito",
+    skip: "Salta",
+    reopen: "Rivedi il benvenuto",
+    steps: {
+      balance: {
+        emoji: "💶",
+        title: "Il tuo saldo",
+        body: "Qui sotto vedi il tuo saldo: è il tuo credito presso il gruppo. Lo ricarichi in anticipo e, quando un ordine chiude, il costo viene scalato da lì.",
+        link: "Come ricaricare",
+      },
+      pay: {
+        emoji: "💳",
+        title: "Come si paga",
+        body: "Paghi ogni ordine con la carta quando lo confermi. Se poi lo modifichi e il totale sale, paghi solo la differenza.",
+        link: "Leggi di più",
+      },
+      order: {
+        emoji: "🧺",
+        title: "Fare un ordine",
+        body: "Quando c'è un ordine aperto lo vedi qui in Home, con il tempo che resta. Tocca **Ordine**, scegli i prodotti e conferma: finché l'ordine è aperto puoi ancora cambiarlo.",
+        link: "Apri Ordine",
+      },
+      install: {
+        emoji: "📱",
+        title: "L'app sul telefono",
+        body: "Puoi aggiungere l'app alla schermata Home del telefono: si apre come le altre app. La prima volta entra con il codice di 6 cifre che arriva via email.",
+        link: "Come si fa",
+      },
+      help: {
+        emoji: "🙋",
+        title: "Serve aiuto?",
+        body: "Nella **Guida** trovi le risposte alle domande più comuni e i passi da seguire. In fondo ci sono i contatti.",
+        link: "Apri la Guida",
+      },
+    },
+    helpBodyGroup:
+      "Nella **Guida** trovi le informazioni sul nostro gruppo, le risposte alle domande più comuni e i contatti.",
+  },
   cycle: {
     closes: (date: string) => `Chiude: ${date}`,
     pickup1: (date: string) => `Ritiro 1: ${date}`,
@@ -433,6 +476,7 @@ export const it = {
     searchClear: "Cancella la ricerca",
     searchResults: (n: number) => (n === 1 ? "1 risultato" : `${n} risultati`),
     searchEmpty: "Nessun risultato. Prova con un'altra parola, o scrivici: trovi i contatti in fondo alla pagina.",
+    searchMissNote: "Le ricerche senza risultati vengono contate, senza il tuo nome, per migliorare la guida.",
     topicsTitle: "Argomenti",
     topicCount: (n: number) => (n === 1 ? "1 scheda" : `${n} schede`),
     backToGuide: "Guida",
@@ -1287,6 +1331,15 @@ export const it = {
         removed: "Riquadro tolto dalla guida",
         preview: "Vedi nella guida →",
         tooLong: (max: number) => `Il testo supera i ${max} caratteri.`,
+      },
+      searchMisses: {
+        title: "Ricerche senza risultati",
+        hint: (days: number) =>
+          `Cosa hanno cercato i soci nella guida senza trovare nulla, negli ultimi ${days} giorni. Solo le parole e quante volte, senza nomi. Se è qualcosa del vostro gruppo, aggiungilo in "Il nostro gruppo".`,
+        empty: "Nessuna ricerca a vuoto finora.",
+        times: (n: number) => `×${n}`,
+        clear: "Svuota l'elenco",
+        cleared: "Elenco svuotato",
       },
       families: {
         title: "Famiglie",
