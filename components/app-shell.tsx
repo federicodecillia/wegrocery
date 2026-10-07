@@ -9,6 +9,7 @@ import { NotificationBell } from "@/components/notification-bell";
 import { ProfileAvatar } from "@/components/profile/profile-avatar";
 import { SHELL_WIDTH, type ShellWidth } from "@/components/shell-width";
 import { TopNav } from "@/components/top-nav";
+import { WelcomeResume } from "@/components/home/welcome-resume";
 import { getUnreadNotificationCount, notificationOwners } from "@/lib/db/queries";
 
 type AppShellProps = {
@@ -59,6 +60,7 @@ export async function AppShell({ children, email, name, isAdmin, memberId, perso
         </header>
 
         <main className="flex-1 px-5 py-4 pb-[calc(var(--spacing-nav-h)+1rem)] lg:pb-4">
+          <WelcomeResume />
           {children}
           {brand.privacyUrl ? (
             <p className="mt-8 text-center text-xs">

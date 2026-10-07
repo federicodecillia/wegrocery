@@ -120,6 +120,7 @@ export default async function HomePage({
         <WelcomeCard
           appName={brand.appName}
           money={welcomeMoney(settings.mode, member?.paysOffline ?? false)}
+          families={settings.familiesEnabled}
           hasGroupInfo={settings.groupInfo !== null}
           reopened={reopenWelcome}
         />

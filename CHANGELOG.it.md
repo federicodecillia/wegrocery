@@ -23,7 +23,7 @@ stanno nella PR.
 
 ### Aggiunte
 - 🏠 **Il nostro gruppo, in cima alla guida.** Gli admin scrivono in Impostazioni dove e quando si ritira, chi contattare e le regole del gruppo; i soci lo trovano per primo nella guida, e anche la ricerca lo trova.
-- 👋 **Un benvenuto per chi arriva.** La prima volta in Home una scheda in pochi passi spiega il saldo (o come si paga), come ordinare, l'app sul telefono e dove trovare aiuto. Si chiude con un tocco e la Guida può mostrarla di nuovo.
+- 👋 **Un benvenuto per chi arriva.** La prima volta in Home una scheda in pochi passi spiega come funziona il gruppo, il saldo (o come si paga), l'ordine, il ritiro, gli avvisi, la famiglia, l'app sul telefono e dove trovare aiuto. I suoi link non fanno perdere il segno: una barra nella pagina aperta riporta al passo. Si chiude con un tocco e la Guida può mostrarla di nuovo.
 - 🔍 **Cosa i soci non trovano.** In Impostazioni l'elenco delle ricerche nella guida rimaste senza risultati (solo le parole e quante volte, mai chi ha cercato), per aggiungere quello che manca.
 
 ### Risolto

@@ -56,11 +56,20 @@ export const it = {
     done: "Ho capito",
     skip: "Salta",
     reopen: "Rivedi il benvenuto",
+    resume: "Benvenuto",
+    resumeLink: (step: number, total: number) => `Riprendi (${step} di ${total}) →`,
+    close: "Chiudi il benvenuto",
     steps: {
+      intro: {
+        emoji: "👋",
+        title: "Come funziona",
+        body: "Il gruppo compra insieme, direttamente dai produttori. Si lavora a cicli: si apre un ordine, ognuno sceglie i suoi prodotti entro la chiusura, il gruppo ordina tutto insieme e poi si ritira la spesa nel giorno indicato. In pochi passi ti mostriamo dove trovare tutto.",
+        link: "Com'è fatta l'app",
+      },
       balance: {
         emoji: "💶",
         title: "Il tuo saldo",
-        body: "Qui sotto vedi il tuo saldo: è il tuo credito presso il gruppo. Lo ricarichi in anticipo e, quando un ordine chiude, il costo viene scalato da lì.",
+        body: "Qui sotto vedi il tuo saldo: è il tuo credito presso il gruppo. Lo ricarichi in anticipo con i metodi del gruppo e, quando un ordine chiude, il costo viene scalato da lì. Sotto al saldo vedi anche quanto resterà dopo l'ordine aperto.",
         link: "Come ricaricare",
       },
       pay: {
@@ -72,8 +81,26 @@ export const it = {
       order: {
         emoji: "🧺",
         title: "Fare un ordine",
-        body: "Quando c'è un ordine aperto lo vedi qui in Home, con il tempo che resta. Tocca **Ordine**, scegli i prodotti e conferma: finché l'ordine è aperto puoi ancora cambiarlo.",
+        body: "Quando c'è un ordine aperto lo vedi qui in Home, con il tempo che resta. Tocca **Ordine** e scegli i prodotti con + e −: l'app tiene da parte le tue scelte, ma l'ordine vale solo quando lo confermi. Finché l'ordine è aperto puoi ancora cambiarlo.",
         link: "Apri Ordine",
+      },
+      pickup: {
+        emoji: "📦",
+        title: "Chiusura e ritiro",
+        body: "Alla chiusura il gruppo passa l'ordine ai produttori e qui in Home compare il prossimo ritiro, con giorno e orario. Se un prodotto pesa diverso da quanto ordinato, l'importo viene corretto e ti arriva un avviso. In **Storico** ritrovi tutti i tuoi ordini e movimenti.",
+        link: "Apri Storico",
+      },
+      notify: {
+        emoji: "🔔",
+        title: "Gli avvisi",
+        body: "La campanella in alto ti avvisa quando si apre un nuovo ordine e quando cambia qualcosa nei tuoi ordini o nei tuoi soldi. Se vuoi, puoi riceverli anche via email: scegli quali nel tuo **Profilo**, il cerchio con le tue iniziali.",
+        link: "Scegli gli avvisi",
+      },
+      family: {
+        emoji: "🏠",
+        title: "Spesa in famiglia",
+        body: "Se fai la spesa con altre persone potete usare un solo carrello e un solo conto, ognuno con il suo accesso: dal **Profilo** apri **Famiglia** e invitale.",
+        link: "Apri Famiglia",
       },
       install: {
         emoji: "📱",
