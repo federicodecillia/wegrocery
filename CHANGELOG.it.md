@@ -21,6 +21,9 @@ stanno nella PR.
 
 ## [Non rilasciato]
 
+### Aggiunte
+- 🏠 **Il nostro gruppo, in cima alla guida.** Gli admin scrivono in Impostazioni dove e quando si ritira, chi contattare e le regole del gruppo; i soci lo trovano per primo nella guida, e anche la ricerca lo trova.
+
 ### Risolto
 - 📱 **Totale dell'ordine su iPhone, stavolta davvero.** Nell'app installata il totale poteva ancora mostrare la cifra vecchia sotto quella nuova; ora totale e saldo si ridisegnano a ogni modifica.
 

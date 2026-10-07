@@ -440,6 +440,7 @@ export const en: Strings = {
     newsTitle: "News",
     newsSubtitle: "What's new",
     seeAllNews: "See all updates →",
+    groupTitle: "Our group",
     contactEmoji: "📬",
     contactHeading: "Do you have other questions?",
     contactIntro: (appName: string) =>
@@ -1270,6 +1271,19 @@ export const en: Strings = {
       importAddedToCycle: (n: number) => `${n} in cycle`,
     },
     settings: {
+      groupInfo: {
+        title: "Our group",
+        hint: "Your group's own information, at the top of the members' guide: where and when to collect, who to ask, your house rules.",
+        format: "A blank line starts a new paragraph. **word** turns bold; web and email addresses become links.",
+        placeholder: "E.g. Collection is on Thursdays from 6 to 8 pm.\n\nQuestions? Write to ...",
+        count: (n: number, max: number) => `${n} / ${max}`,
+        empty: "Empty: the guide shows no box.",
+        save: "Save the text",
+        saved: "Text saved",
+        removed: "Box removed from the guide",
+        preview: "See it in the guide →",
+        tooLong: (max: number) => `The text is longer than ${max} characters.`,
+      },
       families: {
         title: "Families",
         hint: "Members can invite each other and share one account: cart, balance and history. Everyone signs in with their own emails.",

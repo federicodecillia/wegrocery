@@ -20,6 +20,9 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ## [Unreleased]
 
+### Added
+- 🏠 **Our group, at the top of the guide.** Admins write where and when to collect, who to ask and the group's own rules in Impostazioni; members find it first in the guide, and the search finds it too.
+
 ### Fixed
 - 📱 **Order total on iPhone, for good.** In the installed app the order total could still show the old amount under the new one after adding a product; the total and the balance now redraw on every change.
 
