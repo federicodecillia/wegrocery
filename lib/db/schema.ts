@@ -45,6 +45,9 @@ export const members = pgTable(
     // drizzle/0029_families.sql): that account. auth() serves the account;
     // this row keeps the person's addresses, name, role and card, and no money.
     householdOf: text("household_of").references((): AnyPgColumn => members.memberId, { onDelete: "set null" }),
+    // When the person closed the welcome card on Home
+    // (drizzle/0031_welcome.sql); NULL = the card shows.
+    welcomeDismissedAt: timestamp("welcome_dismissed_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
   },
@@ -309,6 +312,18 @@ export const refunds = pgTable(
   ],
 );
 
+// Guide searches with no results, without who searched
+// (drizzle/0032_guide_search_misses.sql, lib/guide/search-misses.ts).
+export const guideSearchMisses = pgTable(
+  "guide_search_misses",
+  {
+    query: text("query").primaryKey(),
+    count: integer("count").notNull().default(1),
+    lastAt: timestamp("last_at", { withTimezone: true }).notNull(),
+  },
+  (table) => [check("guide_search_misses_query_length", sql`char_length(${table.query}) BETWEEN 3 AND 60`)],
+);
+
 // Payment settings chosen by the admins in Impostazioni
 // (drizzle/0019_payment_settings_and_drafts.sql). At most one row, id = 1; no
 // row = the brand defaults. Read it through getPaymentSettings
@@ -328,6 +343,8 @@ export const appSettings = pgTable(
     onlinePaymentsEnabled: boolean("online_payments_enabled").notNull(),
     // Members may invite each other into one account (drizzle/0029_families.sql).
     familiesEnabled: boolean("families_enabled").notNull().default(false),
+    // "Il nostro gruppo", shown at the top of the guide (drizzle/0030_group_info.sql).
+    groupInfo: text("group_info"),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
     updatedBy: text("updated_by").notNull(),
   },
@@ -339,6 +356,7 @@ export const appSettings = pgTable(
       "app_settings_max_balance_check",
       sql`${table.maxBalance} >= 0 AND ${table.maxBalance} <> 'NaN'`,
     ),
+    check("app_settings_group_info_length", sql`char_length(${table.groupInfo}) <= 2000`),
     check("app_settings_balance_range_check", sql`${table.minBalance} <= ${table.maxBalance}`),
     check(
       "app_settings_bank_complete_check",

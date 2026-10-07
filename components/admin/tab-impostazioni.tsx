@@ -1,13 +1,16 @@
 import { brand } from "@/lib/brand";
 import { getDb } from "@/lib/db/client";
+import { getGuideSearchMisses } from "@/lib/db/queries";
 import { formatAmountInput } from "@/lib/i18n/format";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
 import { modeChangeBlockers, readModeChangeState } from "@/lib/payments/mode-change";
 import { getConfigStatus } from "@/lib/config-status-server";
 import { ConfigStatusCard } from "./config-status-card";
 import { FamiliesCard } from "./families-card";
+import { GroupInfoCard } from "./group-info-card";
 import { PaymentSettingsForm } from "./impostazioni-form";
 import { PaymentModeCard } from "./payment-mode-card";
+import { SearchMissesCard } from "./search-misses-card";
 
 // An amount in euros as the form's text input shows it; "" = no limit.
 function toInput(euros: number | null): string {
@@ -15,10 +18,11 @@ function toInput(euros: number | null): string {
 }
 
 export async function TabImpostazioni() {
-  const [settings, config, modeState] = await Promise.all([
+  const [settings, config, modeState, misses] = await Promise.all([
     getPaymentSettings(),
     getConfigStatus(),
     readModeChangeState(getDb()),
+    getGuideSearchMisses(),
   ]);
   const savedAt = settings.savedAt?.toISOString() ?? null;
   const blockers = modeChangeBlockers({
@@ -50,6 +54,8 @@ export async function TabImpostazioni() {
         showLimits={settings.mode === "wallet"}
       />
       <FamiliesCard enabled={settings.familiesEnabled} />
+      <GroupInfoCard key={settings.groupInfo ?? ""} initial={settings.groupInfo} />
+      <SearchMissesCard misses={misses} />
       <ConfigStatusCard items={config} />
     </div>
   );

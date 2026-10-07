@@ -1,6 +1,6 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { actionErrorMessage } from "@/lib/action-error";
 import { requireActiveMember } from "@/lib/auth/session";
@@ -45,5 +45,23 @@ export async function updateMyName(input: string): Promise<{ error?: string; mes
     return { message: t.profile.nameSaved };
   } catch (e) {
     return { error: actionErrorMessage(e, t.errors.genericError, "updateMyName") };
+  }
+}
+
+// The welcome card on Home: the person closed it ("Ho capito" or "Salta").
+// Personal, like the name. Kept the first time only, so reopening it from
+// the guide and closing it again changes nothing.
+export async function dismissWelcome(): Promise<{ error?: string }> {
+  try {
+    const session = await requireActiveMember();
+    const db = getDb();
+    await db
+      .update(members)
+      .set({ welcomeDismissedAt: new Date() })
+      .where(and(eq(members.memberId, session.personId), isNull(members.welcomeDismissedAt)));
+    revalidatePath("/");
+    return {};
+  } catch (e) {
+    return { error: actionErrorMessage(e, t.errors.genericError, "dismissWelcome") };
   }
 }

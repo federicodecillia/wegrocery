@@ -3,12 +3,15 @@
 // marks; a word also finds its synonyms and, when long, its other endings
 // ("ricarico" finds "ricaricare").
 
+import { GROUP_INFO_SLUG } from "./group-info";
 import type { GuideArticle, GuideContent } from "./types";
 
 export type GuideSearchEntry = {
   slug: string;
   topic: string;
   title: string;
+  // Where the result opens: the card on its topic page.
+  href: string;
   // Normalized texts, ready to match.
   titleText: string;
   keywordText: string;
@@ -30,10 +33,28 @@ export function buildSearchIndex(articles: GuideArticle[]): GuideSearchEntry[] {
     slug: a.slug,
     topic: a.topic,
     title: a.title,
+    href: `/guida/${a.topic}#${a.slug}`,
     titleText: ` ${normalizeText(a.title)} `,
     keywordText: ` ${normalizeText((a.keywords ?? []).join(" "))} `,
     bodyText: ` ${normalizeText([a.intro ?? "", ...(a.steps ?? []), ...(a.notes ?? [])].join(" "))} `,
   }));
+}
+
+// The group's own text (lib/guide/group-info.ts) as one more result, opening
+// its card at the top of /guida. Its words weigh like a card's title, keywords
+// and body at once: on "ritiro" the group's own answer (where, when) comes
+// before the generic cards, and first on a tie.
+export function groupInfoSearchEntry(title: string, text: string): GuideSearchEntry {
+  const words = ` ${normalizeText(text)} `;
+  return {
+    slug: GROUP_INFO_SLUG,
+    topic: GROUP_INFO_SLUG,
+    title,
+    href: `/guida#${GROUP_INFO_SLUG}`,
+    titleText: ` ${normalizeText(title)}${words}`,
+    keywordText: words,
+    bodyText: words,
+  };
 }
 
 // The forms of one query word that count as a hit: the word, its stem when

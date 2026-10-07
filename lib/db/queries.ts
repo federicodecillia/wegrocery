@@ -4,6 +4,7 @@ import { liveLedger } from "./ledger-live";
 import {
   ledgerEntries,
   familyInvites,
+  guideSearchMisses,
   memberDuplicateDismissals,
   members,
   notificationPreferences,
@@ -18,6 +19,7 @@ import {
   type DraftLine,
 } from "./schema";
 import { buildCycleHistory, type CycleHistoryEntry } from "@/lib/cycle-history";
+import { MISS_RETENTION_DAYS } from "@/lib/guide/search-misses";
 import { normalizeEmail } from "@/lib/member-email";
 import { normalizeDraftLines } from "@/lib/order-draft";
 import { cycleHandlingFee, type HandlingFee } from "@/lib/payments/order-payment";
@@ -1559,4 +1561,16 @@ export async function getSupplierStats(
     totalRevenue: parseFloat(r.totalRevenue as string) || 0,
     topProductName: topBySupplier.get(r.supplierId) ?? null,
   }));
+}
+
+// Impostazioni: the guide searches that found nothing, most frequent first,
+// from the last MISS_RETENTION_DAYS (older rows are pruned on the next miss).
+export async function getGuideSearchMisses(limit = 30) {
+  const db = getDb();
+  return db
+    .select({ query: guideSearchMisses.query, count: guideSearchMisses.count, lastAt: guideSearchMisses.lastAt })
+    .from(guideSearchMisses)
+    .where(sql`${guideSearchMisses.lastAt} >= now() - make_interval(days => ${MISS_RETENTION_DAYS})`)
+    .orderBy(desc(guideSearchMisses.count), desc(guideSearchMisses.lastAt))
+    .limit(limit);
 }

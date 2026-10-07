@@ -2,17 +2,21 @@ import Link from "next/link";
 import { brand } from "@/lib/brand";
 import { t } from "@/lib/i18n";
 import { AppShell } from "@/components/app-shell";
+import { GroupInfoCard } from "@/components/guide/group-info-card";
 import { GuideContact } from "@/components/guide/guide-contact";
 import { GuideSearch } from "@/components/guide/guide-search";
 import { RichText } from "@/components/guide/rich-text";
 import { getUserRole, requireUserSession } from "@/lib/auth/session";
 import { loadChangelog } from "@/lib/changelog";
 import { guideContent } from "@/lib/guide";
-import { buildSearchIndex } from "@/lib/guide/search";
+import { GROUP_INFO_SLUG } from "@/lib/guide/group-info";
+import { buildSearchIndex, groupInfoSearchEntry } from "@/lib/guide/search";
+import { WELCOME_QUERY } from "@/lib/guide/welcome";
 import { guideContext, visibleGuide } from "@/lib/guide/types";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
 
-// The guide's index: search, topics, the latest release and the contacts.
+// The guide's index: the group's own text ("Il nostro gruppo", written by the
+// admins), search, topics, the latest release and the contacts.
 // Cards live on the topic pages (app/guida/[topic]); only the ones this
 // deploy's settings make relevant are shown or searched.
 export default async function GuidaPage() {
@@ -25,7 +29,14 @@ export default async function GuidaPage() {
   const [versions, settings] = await Promise.all([loadChangelog(brand.locale), getPaymentSettings()]);
   const guide = visibleGuide(guideContent, guideContext(settings));
   const latest = versions.find((v) => v.date !== null) ?? null;
-  const topicTitles = Object.fromEntries(guide.topics.map((topic) => [topic.id, topic.title]));
+  const topicTitles: Record<string, string> = Object.fromEntries(
+    guide.topics.map((topic) => [topic.id, topic.title]),
+  );
+  const index = buildSearchIndex(guide.articles);
+  if (settings.groupInfo) {
+    index.unshift(groupInfoSearchEntry(t.guide.groupTitle, settings.groupInfo));
+    topicTitles[GROUP_INFO_SLUG] = brand.appName;
+  }
 
   return (
     <AppShell email={session.user.email} name={session.user.fullName} isAdmin={role === "admin"} memberId={session.user.memberId!} personId={session.user.personId}>
@@ -35,11 +46,13 @@ export default async function GuidaPage() {
       <p className="mb-5 text-[14px] leading-snug text-brand-gray">{t.guide.intro}</p>
 
       <GuideSearch
-        index={buildSearchIndex(guide.articles)}
+        index={index}
         synonyms={guide.synonyms}
         stopwords={guide.stopwords}
         topicTitles={topicTitles}
       >
+        {settings.groupInfo && <GroupInfoCard text={settings.groupInfo} />}
+
         <h2 className="mb-3 font-mono text-label uppercase tracking-[0.13em] text-brand-gray">{t.guide.topicsTitle}</h2>
         <ul className="mb-6 grid gap-3 sm:grid-cols-2">
           {guide.topics.map((topic) => {
@@ -63,6 +76,11 @@ export default async function GuidaPage() {
             );
           })}
         </ul>
+        <p className="-mt-3 mb-6 text-right">
+          <Link href={`/?${WELCOME_QUERY}=1`} className="text-[12px] font-bold text-primary-text hover:underline">
+            👋 {t.welcome.reopen}
+          </Link>
+        </p>
 
         {/* Novità: teaser of the latest release, linking the changelog */}
         {latest && (
