@@ -19,14 +19,14 @@ export default async function NotifichePage() {
 
   return (
     <AppShell email={session.user.email} name={session.user.fullName} isAdmin={role === "admin"} memberId={memberId} personId={session.user.personId}>
-      <div className="mb-5 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2">
           <h1 className="text-[20px] font-black tracking-[-0.03em] text-brand-near-black">
             {t.notifications.title}
           </h1>
           <HelpLink href="/guida/notifiche" />
         </div>
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="ml-auto flex items-center gap-2">
           {unreadCount > 0 && (
             <form
               action={async () => {
@@ -36,7 +36,7 @@ export default async function NotifichePage() {
             >
               <button
                 type="submit"
-                className="rounded-full border border-brand-border px-[13px] py-[5px] font-mono text-label font-bold uppercase tracking-widest text-brand-near-black"
+                className="min-h-8 whitespace-nowrap rounded-full border border-brand-border px-[13px] py-[5px] font-mono text-label font-bold uppercase tracking-widest text-brand-near-black"
               >
                 {t.notifications.markAllRead}
               </button>

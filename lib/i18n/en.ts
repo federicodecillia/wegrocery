@@ -192,9 +192,10 @@ export const en: Strings = {
     balanceAfter: "Balance after",
     confirmOrder: "Confirm order",
     saving: "Saving...",
-    add: "Add",
-    less: "Less",
-    more: "More",
+    addNamed: (name: string) => `Add ${name}`,
+    lessNamed: (name: string) => `Remove one: ${name}`,
+    moreNamed: (name: string) => `Add one: ${name}`,
+    qtyAnnounce: (name: string, qty: number) => `${name}: quantity ${qty}`,
     noProductsFromLast: (title?: string) =>
       title
         ? `None of your products from the last order ("${title}") are available in this cycle.`
@@ -202,8 +203,8 @@ export const en: Strings = {
     reproposeSuccess: (count: number, title: string) =>
       `Repeated ${count} products from "${title}". Edit and confirm.`,
     otherCategory: "Other",
-    genericError: "Error",
-    saveError: "Error while saving",
+    genericError: "Something went wrong. Please try again.",
+    saveError: "Order not saved: check your connection and try again.",
     balanceWarning: (amount: string) =>
       `Warning: after this order your balance will be ${amount} negative.`,
     sentTitle: "Order sent!",

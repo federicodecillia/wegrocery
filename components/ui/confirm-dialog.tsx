@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { Button } from "@/components/ui/button";
+import { t } from "@/lib/i18n";
 
 export interface ConfirmOptions {
   title: string;
@@ -75,16 +76,18 @@ export function ConfirmDialogProvider() {
               variant="outline"
               block
               onClick={() => close(false)}
+              // A destructive request starts on Cancel: Enter must not delete.
+              autoFocus={request?.danger === true}
             >
-              {request?.cancelLabel ?? "Annulla"}
+              {request?.cancelLabel ?? t.common.cancel}
             </Button>
             <Button
               variant={request?.danger ? "red" : "primary"}
               block
               onClick={() => close(true)}
-              autoFocus
+              autoFocus={request?.danger !== true}
             >
-              {request?.confirmLabel ?? "Conferma"}
+              {request?.confirmLabel ?? t.common.confirm}
             </Button>
           </div>
         </Dialog.Content>

@@ -192,9 +192,10 @@ export const it = {
     balanceAfter: "Saldo dopo",
     confirmOrder: "Conferma ordine",
     saving: "Salvataggio...",
-    add: "Aggiungi",
-    less: "Meno",
-    more: "Più",
+    addNamed: (name: string) => `Aggiungi ${name}`,
+    lessNamed: (name: string) => `Togli uno: ${name}`,
+    moreNamed: (name: string) => `Aggiungi uno: ${name}`,
+    qtyAnnounce: (name: string, qty: number) => `${name}: quantità ${qty}`,
     noProductsFromLast: (title?: string) =>
       title
         ? `Nessun prodotto del tuo ultimo ordine ("${title}") è disponibile in questo ciclo.`
@@ -202,8 +203,8 @@ export const it = {
     reproposeSuccess: (count: number, title: string) =>
       `Riproposti ${count} prodotti da "${title}". Modifica e conferma.`,
     otherCategory: "Altro",
-    genericError: "Errore",
-    saveError: "Errore durante il salvataggio",
+    genericError: "Qualcosa non ha funzionato. Riprova.",
+    saveError: "Ordine non salvato: controlla la connessione e riprova.",
     balanceWarning: (amount: string) =>
       `Attenzione: dopo l'ordine il tuo saldo sarà ${amount} negativo.`,
     sentTitle: "Ordine inviato!",

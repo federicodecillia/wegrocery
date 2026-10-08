@@ -25,6 +25,8 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ### Changed
 - 🔒 **One clear way to close a cycle.** "Close cycle…" opens a sheet that says how many members get charged and asks for confirmation there, instead of the browser's pop-up. Price adjustments sit behind "Adjust prices", and leaving with changed prices asks first. The order recap of an open cycle is read-only, since corrections only work after closing.
+- 🛒 **Smoother order buttons.** The "+" stays under your finger when a product goes from 0 to 1, and screen readers now say which product each button changes and the new quantity.
+- 💬 **Messages you have time to read.** Errors and warnings stay longer and can be closed, and a failed save says to check the connection. Deleting an order starts on "Cancel", so a stray Enter deletes nothing.
 
 ## [1.25.0] — 2026-10-07
 

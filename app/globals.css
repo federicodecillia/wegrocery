@@ -10,6 +10,7 @@
   --near-blk: #2d2b29;
   --red: #c53030;
   --red-l: #feecec;
+  --warning: #b45309; /* warning fills with white text (AA, checked in design-guard) */
   --border: rgba(88, 89, 91, 0.1);
   --nav-h: 82px;
 }
@@ -34,6 +35,7 @@
   --color-brand-warm-white: var(--warm-wh);
   --color-brand-red: var(--red);
   --color-brand-red-light: var(--red-l);
+  --color-warning: var(--warning);
   --color-brand-border: var(--border);
   --spacing-nav-h: var(--nav-h);
   /* Smallest text in the app: labels, badges, captions. Nothing goes under it. */
