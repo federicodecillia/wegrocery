@@ -18,6 +18,9 @@ import {
 import type { LedgerEntryItem, MemberWithBalance } from "@/lib/db/queries";
 import { ledgerBadge } from "@/lib/ledger-badge";
 import { isAboveMaxBalance } from "@/lib/payments/settings";
+import { useWide } from "@/lib/ui/use-wide";
+import { Button } from "@/components/ui/button";
+import { Sheet } from "@/components/ui/sheet";
 
 // ── Summary Cards ─────────────────────────────────────────────────────────────
 
@@ -331,7 +334,11 @@ export function CassaInlineList({
   openMemberId?: string;
 }) {
   const [filter, setFilter] = useState("");
+  // From lg the history opens under the row; on phones and tablets in a sheet,
+  // like a movement in Storico.
+  const wide = useWide();
   const [expandedId, setExpandedId] = useState<string | null>(openMemberId ?? null);
+  const sheetMember = wide ? null : (members.find((m) => m.memberId === expandedId) ?? null);
 
   useEffect(() => {
     if (openMemberId) document.getElementById(`cassa-${openMemberId}`)?.scrollIntoView({ block: "start" });
@@ -351,14 +358,39 @@ export function CassaInlineList({
   // canonical role, an unknown one under the least-privileged group.
   const inGroup = (role: Role) => filtered.filter((m) => (normalizeRole(m.role) ?? DEFAULT_ROLE) === role);
 
+  function renderEntries(entries: LedgerEntryItem[]) {
+    if (entries.length === 0) {
+      return <p className="px-4 py-3 text-center text-[12px] text-brand-gray">{t.admin.treasury.noMovements}</p>;
+    }
+    return entries.map((entry) => (
+      <div key={entry.entryId}>
+        <div className="px-4 pt-2 font-mono text-label text-muted">
+          {entry.entryDate ? formatDate(entry.entryDate) : "—"}
+          {entry.correctedAt && ` · ${t.ledger.correctedOn(formatDate(entry.correctedAt))}`}
+        </div>
+        <LedgerEntryRow entry={entry} />
+      </div>
+    ));
+  }
+
+  function renderBalance(balance: number) {
+    return (
+      <span className={`font-mono text-[13px] font-bold ${balance >= 0 ? "text-accent-text" : "text-brand-red"}`}>
+        {balance >= 0 ? "+" : ""}
+        {formatMoney(Math.abs(balance))}
+      </span>
+    );
+  }
+
   function renderRow(m: MemberWithBalance) {
     const entries = ledgerByMember[m.memberId] ?? [];
-    const isExpanded = expandedId === m.memberId;
+    const isExpanded = wide && expandedId === m.memberId;
     return (
       <div key={m.memberId} id={`cassa-${m.memberId}`} className="scroll-mt-20">
         <button
-          onClick={() => setExpandedId(isExpanded ? null : m.memberId)}
-          aria-expanded={isExpanded}
+          onClick={() => setExpandedId(expandedId === m.memberId && wide ? null : m.memberId)}
+          aria-expanded={wide ? isExpanded : undefined}
+          aria-haspopup={wide ? undefined : "dialog"}
           className="flex min-h-14 w-full items-center justify-between px-4 py-2.5 text-left"
         >
           <div className="min-w-0 flex-1">
@@ -369,37 +401,12 @@ export function CassaInlineList({
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <span
-              className={`font-mono text-[13px] font-bold ${
-                m.balance >= 0 ? "text-accent-text" : "text-brand-red"
-              }`}
-            >
-              {m.balance >= 0 ? "+" : ""}
-              {formatMoney(Math.abs(m.balance))}
-            </span>
-            <span aria-hidden className="text-label text-muted">{isExpanded ? "▲" : "▼"}</span>
+            {renderBalance(m.balance)}
+            <span aria-hidden className="text-label text-muted">{wide ? (isExpanded ? "▲" : "▼") : "›"}</span>
           </div>
         </button>
 
-        {isExpanded && (
-          <div className="border-t border-brand-border bg-black/[0.01]">
-            {entries.length === 0 ? (
-              <p className="px-4 py-3 text-center text-[12px] text-brand-gray">
-                {t.admin.treasury.noMovements}
-              </p>
-            ) : (
-              entries.map((entry) => (
-                <div key={entry.entryId}>
-                  <div className="px-4 pt-2 font-mono text-label text-muted">
-                    {entry.entryDate ? formatDate(entry.entryDate) : "—"}
-                    {entry.correctedAt && ` · ${t.ledger.correctedOn(formatDate(entry.correctedAt))}`}
-                  </div>
-                  <LedgerEntryRow entry={entry} />
-                </div>
-              ))
-            )}
-          </div>
-        )}
+        {isExpanded && <div className="border-t border-brand-border bg-black/[0.01]">{renderEntries(entries)}</div>}
       </div>
     );
   }
@@ -438,6 +445,25 @@ export function CassaInlineList({
           </p>
         )}
       </div>
+
+      <Sheet
+        open={sheetMember !== null}
+        onRequestClose={() => setExpandedId(null)}
+        title={sheetMember?.fullName}
+        subtitle={
+          sheetMember && (
+            <>
+              {t.admin.treasury.movementsCount((ledgerByMember[sheetMember.memberId] ?? []).length)} ·{" "}
+              {renderBalance(sheetMember.balance)}
+            </>
+          )
+        }
+        footer={<Button block onClick={() => setExpandedId(null)}>{t.common.close}</Button>}
+      >
+        {sheetMember && (
+          <div className="-mx-4 -my-4">{renderEntries(ledgerByMember[sheetMember.memberId] ?? [])}</div>
+        )}
+      </Sheet>
     </div>
   );
 }
