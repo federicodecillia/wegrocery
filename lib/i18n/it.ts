@@ -715,10 +715,6 @@ export const it = {
       closeProducts: "Chiudi Prodotti",
       importListing: "📥 Importa listino",
       recapOrders: "✎ Recap ordini",
-      closeCycle: "Chiudi ciclo",
-      closingCycle: "Chiusura…",
-      closeCycleConfirm: (title: string) =>
-        `Chiudere "${title}"?\n\nVerranno generati gli addebiti per tutti i soci con ordini.`,
       perOrderCloseWarning: (drafts: number, pending: number) =>
         `Bozze non pagate: ${drafts} (restano fuori dall'ordine). Pagamenti in corso: ${pending} (se arrivano dopo la chiusura vengono rimborsati).`,
       cycleClosed: (n: number) => `Ciclo chiuso. ${n} addebiti generati.`,
@@ -818,6 +814,7 @@ export const it = {
       helpNote: 'Note libere, mostrate al socio. Es: "Coltivata in serra", "Da consumare entro 3 giorni".',
     },
     orders: {
+      memberSummary: (cycles: number, total: string) => `${cycles === 1 ? "1 ciclo" : `${cycles} cicli`} · ${total} totale`,
       tabLabel: "Ordini",
       allMembers: "Tutti i soci",
       currentCycle: "Ciclo corrente",
@@ -1166,27 +1163,38 @@ export const it = {
       memberCyclesLabel: (n: number) => `${n} cicli`,
     },
     cycleReview: {
-      modalTitle: "Rettifica e chiudi",
-      modalSubtitle: "Ciclo:",
-      modalDescription:
-        "Modifica il prezzo unitario dei prodotti per cui il peso effettivo differisce da quello ordinato. Il totale degli ordini di ogni socio verrà ricalcolato e gli addebiti generati con i nuovi prezzi.",
-      openButton: "Chiudi con rettifiche",
+      openButton: "Chiudi ciclo…",
+      modalTitle: "Chiudi il ciclo",
+      summary: (members: number) =>
+        members === 0
+          ? "Nessun socio ha ordinato: il ciclo si chiude senza addebiti."
+          : `Chiudendo, gli ordini non si possono più modificare e partono gli addebiti per ${members === 1 ? "1 socio" : `${members} soci`}.`,
+      adjustToggle: "Rettifica prezzi",
+      adjustToggleHide: "Nascondi rettifiche",
+      adjustDescription:
+        "Cambia il prezzo unitario dei prodotti il cui peso o costo effettivo è diverso da quello ordinato: gli ordini dei soci vengono ricalcolati con il nuovo prezzo prima degli addebiti.",
+      perOrderAdjustNote:
+        "Ciclo pagato con carta: chi ha già pagato integra la differenza o riceve un rimborso quando chiudi i conti.",
       loadingProducts: "Caricamento prodotti…",
+      loadFailed: "Non riesco a caricare i prodotti. Puoi chiudere comunque, senza rettifiche.",
       noProducts: "Nessun prodotto in questo ciclo.",
       orderedLabel: "Ordinato:",
-      currentTotalLabel: "Tot. attuale:",
-      finalPriceLabel: "€ finale",
-      ordersTotalLabel: "Totale ordini",
+      currentTotalLabel: "Totale:",
+      finalPriceLabel: "Prezzo finale (€)",
+      finalPriceAria: (name: string) => `Prezzo finale di ${name}`,
+      ordersTotalLabel: "Totale prodotti",
       variationLabel: "Variazione",
-      confirmNoAdjustments: (title: string) =>
-        `Nessuna rettifica. Chiudere "${title}" con i prezzi attuali?`,
-      confirmWithAdjustments: (title: string, n: number, delta: string) =>
-        `Applicare ${n} rettifica/e e chiudere "${title}"?\n\nVariazione totale: ${delta} €`,
-      closeWithAdjustments: (n: number) => `Applica ${n} rettifica/e e chiudi`,
-      closeWithoutAdjustments: "Chiudi senza rettifiche",
+      confirmCharge: (members: number) =>
+        members === 0 ? "Chiudi il ciclo" : `Chiudi e addebita ${members === 1 ? "1 socio" : `${members} soci`}`,
+      confirmWithAdjustments: (n: number, delta: string) =>
+        `Chiudi con ${n === 1 ? "1 rettifica" : `${n} rettifiche`} (${delta})`,
       closing: "Chiusura…",
       closedSuccess: (charges: number, adjustments: number) =>
         `Ciclo chiuso. ${charges} addebiti, ${adjustments} rettifiche.`,
+      discardTitle: "Scartare le rettifiche?",
+      discardMessage: "I prezzi che hai cambiato non vengono salvati e il ciclo resta aperto.",
+      discardConfirm: "Scarta",
+      keepEditing: "Continua",
       errorLoading: "Errore caricamento",
     },
     cycleCancel: {
@@ -1211,6 +1219,7 @@ export const it = {
       addOrder: "+ Aggiungi ordine per un socio",
       rectifyTitle: "Clicca per rettificare la quantita ricevuta",
       rectifyHint: "Tocca un prodotto per correggere peso o prezzo effettivo",
+      openCycleHint: "Ciclo ancora aperto: i soci possono cambiare l'ordine. Pesi e correzioni si registrano dopo la chiusura.",
       rectifyPill: "prezzo/peso",
       editQtyButton: "✎ Prodotti",
       adjustedBadge: "rettificato",

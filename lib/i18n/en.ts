@@ -713,10 +713,6 @@ export const en: Strings = {
       closeProducts: "Close Products",
       importListing: "📥 Import listing",
       recapOrders: "✎ Order recap",
-      closeCycle: "Close cycle",
-      closingCycle: "Closing…",
-      closeCycleConfirm: (title: string) =>
-        `Close "${title}"?\n\nCharges will be generated for all members with orders.`,
       perOrderCloseWarning: (drafts: number, pending: number) =>
         `Unpaid drafts: ${drafts} (they stay out of the order). Payments in progress: ${pending} (refunded if they arrive after the close).`,
       cycleClosed: (n: number) => `Cycle closed. ${n} charges generated.`,
@@ -815,6 +811,7 @@ export const en: Strings = {
       helpNote: 'Free-text notes, shown to members. E.g. "Greenhouse-grown", "Consume within 3 days".',
     },
     orders: {
+      memberSummary: (cycles: number, total: string) => `${cycles === 1 ? "1 cycle" : `${cycles} cycles`} · ${total} total`,
       tabLabel: "Orders",
       allMembers: "All members",
       currentCycle: "Current cycle",
@@ -1162,27 +1159,38 @@ export const en: Strings = {
       memberCyclesLabel: (n: number) => `${n} cycle${n === 1 ? "" : "s"}`,
     },
     cycleReview: {
-      modalTitle: "Adjust and close",
-      modalSubtitle: "Cycle:",
-      modalDescription:
-        "Edit the unit price of products where the actual weight differs from the ordered weight. Each member's order total will be recalculated and charges generated with the new prices.",
-      openButton: "Close with adjustments",
+      openButton: "Close cycle…",
+      modalTitle: "Close the cycle",
+      summary: (members: number) =>
+        members === 0
+          ? "No member has ordered: the cycle closes with no charges."
+          : `Once closed, orders can no longer change and ${members === 1 ? "1 member is" : `${members} members are`} charged.`,
+      adjustToggle: "Adjust prices",
+      adjustToggleHide: "Hide adjustments",
+      adjustDescription:
+        "Change the unit price of products whose actual weight or cost differs from what was ordered: members' orders are recalculated at the new price before the charges.",
+      perOrderAdjustNote:
+        "Card-paid cycle: members who already paid top up the difference or get a refund when you settle the cycle.",
       loadingProducts: "Loading products…",
+      loadFailed: "The products could not be loaded. You can still close, without adjustments.",
       noProducts: "No products in this cycle.",
       orderedLabel: "Ordered:",
-      currentTotalLabel: "Current total:",
-      finalPriceLabel: "Final €",
-      ordersTotalLabel: "Orders total",
+      currentTotalLabel: "Total:",
+      finalPriceLabel: "Final price (€)",
+      finalPriceAria: (name: string) => `Final price of ${name}`,
+      ordersTotalLabel: "Products total",
       variationLabel: "Variation",
-      confirmNoAdjustments: (title: string) =>
-        `No adjustments. Close "${title}" at current prices?`,
-      confirmWithAdjustments: (title: string, n: number, delta: string) =>
-        `Apply ${n} adjustment(s) and close "${title}"?\n\nTotal variation: ${delta} €`,
-      closeWithAdjustments: (n: number) => `Apply ${n} adjustment(s) and close`,
-      closeWithoutAdjustments: "Close without adjustments",
+      confirmCharge: (members: number) =>
+        members === 0 ? "Close the cycle" : `Close and charge ${members === 1 ? "1 member" : `${members} members`}`,
+      confirmWithAdjustments: (n: number, delta: string) =>
+        `Close with ${n === 1 ? "1 adjustment" : `${n} adjustments`} (${delta})`,
       closing: "Closing…",
       closedSuccess: (charges: number, adjustments: number) =>
         `Cycle closed. ${charges} charges, ${adjustments} adjustments.`,
+      discardTitle: "Discard the adjustments?",
+      discardMessage: "The prices you changed are not saved and the cycle stays open.",
+      discardConfirm: "Discard",
+      keepEditing: "Keep editing",
       errorLoading: "Load error",
     },
     cycleCancel: {
@@ -1207,6 +1215,7 @@ export const en: Strings = {
       addOrder: "+ Add order for a member",
       rectifyTitle: "Click to adjust the quantity received",
       rectifyHint: "Tap a product to correct delivered weight or price",
+      openCycleHint: "The cycle is still open: members can change their order. Weights and corrections are recorded after closing.",
       rectifyPill: "price/weight",
       editQtyButton: "✎ Products",
       adjustedBadge: "adjusted",
