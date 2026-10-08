@@ -45,10 +45,13 @@ export function ClosedCycleDetails({
   cycleId,
   cycleTitle,
   buttonLabel,
+  editable = true,
 }: {
   cycleId: string;
   cycleTitle: string;
   buttonLabel?: string;
+  /** False on an open cycle: the server refuses every correction until the close. */
+  editable?: boolean;
 }) {
   const label = buttonLabel ?? t.admin.closedCycleDetails.defaultButtonLabel;
   const [isOpen, setIsOpen] = useState(false);
@@ -114,9 +117,10 @@ export function ClosedCycleDetails({
           </div>
           <button
             onClick={() => setIsOpen(false)}
+            aria-label={t.admin.common.close}
             className="rounded-full bg-brand-border p-2 text-brand-gray hover:bg-brand-gray-light"
           >
-            ✕
+            <span aria-hidden>✕</span>
           </button>
         </div>
 
@@ -127,10 +131,16 @@ export function ClosedCycleDetails({
             <div className="py-20 text-center text-brand-gray">{t.admin.closedCycleDetails.noOrders}</div>
           ) : (
             <div className="space-y-8">
-              <div className="flex items-center gap-2 rounded-lg bg-primary/5 px-3 py-2 text-label text-brand-gray">
-                <span className="text-[13px]">👆</span>
-                <span>{t.admin.closedCycleDetails.rectifyHint}</span>
-              </div>
+              {editable ? (
+                <div className="flex items-center gap-2 rounded-lg bg-primary/5 px-3 py-2 text-label text-brand-gray">
+                  <span aria-hidden className="text-[13px]">👆</span>
+                  <span>{t.admin.closedCycleDetails.rectifyHint}</span>
+                </div>
+              ) : (
+                <div className="rounded-lg bg-black/[0.04] px-3 py-2 text-label text-brand-gray">
+                  {t.admin.closedCycleDetails.openCycleHint}
+                </div>
+              )}
               {memberRows.map(({ memberId, memberName, lines, shipping: memberShipping, handling: memberHandling }) => {
                 const productsTotal = lines.reduce((s, l) => s + effectiveTotal(l), 0);
                 const total = closedCycleMemberTotal({
@@ -144,19 +154,21 @@ export function ClosedCycleDetails({
                       <span className="text-[14px] font-bold text-brand-near-black">{memberName}</span>
                       <div className="flex items-center gap-3">
                         <span className="text-[13px] font-black text-accent-text">{formatEur(total)}</span>
-                        <button
-                          onClick={() =>
-                            setEditTarget({ kind: "edit", memberId, memberName })
-                          }
-                          className="rounded-full bg-primary/10 px-2.5 py-0.5 text-label font-bold text-primary-text hover:bg-primary/20"
-                        >
-                          {t.admin.closedCycleDetails.editQtyButton}
-                        </button>
+                        {editable && (
+                          <button
+                            onClick={() =>
+                              setEditTarget({ kind: "edit", memberId, memberName })
+                            }
+                            className="rounded-full bg-primary/10 px-2.5 py-0.5 text-label font-bold text-primary-text hover:bg-primary/20"
+                          >
+                            {t.admin.closedCycleDetails.editQtyButton}
+                          </button>
+                        )}
                       </div>
                     </div>
                     <div className="space-y-1 pl-2">
                       {lines.map((l) => (
-                        <OrderLineRow key={l.orderLineId} line={l} onSaved={refetch} />
+                        <OrderLineRow key={l.orderLineId} line={l} editable={editable} onSaved={refetch} />
                       ))}
                       {memberShipping > 0 && (
                         <div className="flex items-start justify-between gap-3 rounded-lg px-1.5 py-1 text-[12px] text-brand-near-black">
@@ -196,12 +208,14 @@ export function ClosedCycleDetails({
         </div>
 
         <div className="space-y-2 border-t border-brand-border p-4">
-          <button
-            onClick={() => setEditTarget({ kind: "create" })}
-            className="w-full rounded-xl border border-dashed border-primary/40 bg-primary-soft py-2 text-[12px] font-bold text-primary-text hover:bg-primary/15"
-          >
-            {t.admin.closedCycleDetails.addOrder}
-          </button>
+          {editable && (
+            <button
+              onClick={() => setEditTarget({ kind: "create" })}
+              className="w-full rounded-xl border border-dashed border-primary/40 bg-primary-soft py-2 text-[12px] font-bold text-primary-text hover:bg-primary/15"
+            >
+              {t.admin.closedCycleDetails.addOrder}
+            </button>
+          )}
           <button
             onClick={() => setIsOpen(false)}
             className="w-full rounded-xl bg-brand-near-black py-3 text-[14px] font-bold text-white shadow-lg active:scale-95"
@@ -228,7 +242,15 @@ export function ClosedCycleDetails({
 // edit form that lets the admin record the *actually delivered* quantity
 // and cost (the bietola/800g use case). Saving posts a `correction` ledger
 // entry with the delta vs the previous effective total.
-function OrderLineRow({ line, onSaved }: { line: OrderDetail; onSaved: () => void | Promise<void> }) {
+function OrderLineRow({
+  line,
+  editable,
+  onSaved,
+}: {
+  line: OrderDetail;
+  editable: boolean;
+  onSaved: () => void | Promise<void>;
+}) {
   const [editing, setEditing] = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -240,13 +262,17 @@ function OrderLineRow({ line, onSaved }: { line: OrderDetail; onSaved: () => voi
   const unitSuffix = unit ? ` ${unit}` : "";
   const pricePerKg = line.pricePerKg != null ? parseFloat(line.pricePerKg) : null;
 
-  if (!editing) {
+  if (!editing || !editable) {
+    // Read-only on an open cycle: a plain row, no edit affordance.
+    const RowTag = editable ? "button" : "div";
     return (
-      <button
-        type="button"
-        onClick={() => setEditing(true)}
-        className="group flex w-full items-start justify-between gap-2 rounded-lg px-1.5 py-1 text-left text-[12px] text-brand-near-black hover:bg-primary/5"
-        title={t.admin.closedCycleDetails.rectifyTitle}
+      <RowTag
+        type={editable ? "button" : undefined}
+        onClick={editable ? () => setEditing(true) : undefined}
+        className={`group flex w-full items-start justify-between gap-2 rounded-lg px-1.5 py-1 text-left text-[12px] text-brand-near-black ${
+          editable ? "hover:bg-primary/5" : ""
+        }`}
+        title={editable ? t.admin.closedCycleDetails.rectifyTitle : undefined}
       >
         <div className="flex min-w-0 flex-1 gap-2">
           <span className="shrink-0 text-[16px]">{line.emoji || getProductEmoji(line.productName)}</span>
@@ -316,13 +342,15 @@ function OrderLineRow({ line, onSaved }: { line: OrderDetail; onSaved: () => voi
             </>
           )}
         </span>
-        <span
-          aria-hidden
-          className="shrink-0 self-center text-[12px] text-muted group-hover:text-primary-text"
-        >
-          ✎
-        </span>
-      </button>
+        {editable && (
+          <span
+            aria-hidden
+            className="shrink-0 self-center text-[12px] text-muted group-hover:text-primary-text"
+          >
+            ✎
+          </span>
+        )}
+      </RowTag>
     );
   }
 

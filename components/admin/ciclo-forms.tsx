@@ -7,7 +7,6 @@ import { formatMoney, formatDateTime, formatHandlingFee } from "@/lib/i18n/forma
 import { HANDLING_FEE_MAX, cycleHandlingFee } from "@/lib/payments/order-payment";
 import { utcToZonedLocalInput } from "@/lib/i18n/zoned-time";
 import {
-  adminCloseCycle,
   adminCreateCycle,
   adminUpdateCycle,
   type CreateCycleInput,
@@ -120,10 +119,11 @@ export function OpenCycleCard({
           >
             {editing ? t.admin.common.cancel : t.admin.common.edit}
           </button>
-          <CycleReviewCloseButton cycleId={cycle.cycleId} cycleTitle={cycle.title} warning={closeWarning} />
-          <CloseCycleButton
+          <CycleReviewCloseButton
             cycleId={cycle.cycleId}
             cycleTitle={cycle.title}
+            memberCount={stats.orderCount}
+            perOrder={cycle.paymentMode === "per_order"}
             warning={closeWarning}
           />
         </div>
@@ -224,6 +224,7 @@ export function OpenCycleCard({
               cycleId={cycle.cycleId}
               cycleTitle={cycle.title}
               buttonLabel={t.admin.cycle.recapOrders}
+              editable={false}
             />
           </div>
           {managingProducts && (
@@ -926,48 +927,6 @@ export function CreateCycleForm({
         </button>
       </div>
     </form>
-  );
-}
-
-// ── Close Cycle Button ────────────────────────────────────────────────────────
-
-export function CloseCycleButton({
-  cycleId,
-  cycleTitle,
-  warning,
-}: {
-  cycleId: string;
-  cycleTitle: string;
-  /** Pay-per-order: unpaid drafts and open payments, said before closing. */
-  warning?: string | null;
-}) {
-  const [isPending, startTransition] = useTransition();
-
-  function handleClose() {
-    const message = t.admin.cycle.closeCycleConfirm(cycleTitle);
-    if (!window.confirm(warning ? `${message}\n\n${warning}` : message)) return;
-    startTransition(async () => {
-      try {
-        const result = await adminCloseCycle(cycleId);
-        if ("error" in result) {
-          toast.error(result.error);
-          return;
-        }
-        toast.success(t.admin.cycle.cycleClosed(result.chargesGenerated));
-      } catch (err) {
-        toast.error(err instanceof Error ? err.message : t.admin.common.error);
-      }
-    });
-  }
-
-  return (
-    <button
-      onClick={handleClose}
-      disabled={isPending}
-      className="rounded-xl border border-brand-red/30 bg-brand-red-light px-4 py-2 text-[12px] font-bold text-brand-red disabled:opacity-60"
-    >
-      {isPending ? t.admin.cycle.closingCycle : t.admin.cycle.closeCycle}
-    </button>
   );
 }
 

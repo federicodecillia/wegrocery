@@ -35,8 +35,8 @@ export async function TabOrdini({ cycleId, memberId }: Props) {
           <div className="rounded-xl border border-brand-border bg-white px-4 py-3 shadow-sm">
             <div className="text-[13px] font-bold text-brand-near-black">{selectedMember.fullName}</div>
             <div className="mt-0.5 font-mono text-label text-muted">
-              {selectedMember.email} · {orders.length} cicl{orders.length === 1 ? "o" : "i"} ·{" "}
-              {formatEur(orders.reduce((s, o) => s + o.total, 0))} totale
+              {selectedMember.email} ·{" "}
+              {t.admin.orders.memberSummary(orders.length, formatEur(orders.reduce((s, o) => s + o.total, 0)))}
             </div>
           </div>
         )}
