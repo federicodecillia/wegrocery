@@ -602,6 +602,8 @@ export async function getAllCycles(limit = 30) {
       shippingCostPerMember: orderCycles.shippingCostPerMember,
       shippingTotal: orderCycles.shippingTotal,
       paymentMode: orderCycles.paymentMode,
+      handlingFeeType: orderCycles.handlingFeeType,
+      handlingFeeValue: orderCycles.handlingFeeValue,
       settledAt: orderCycles.settledAt,
     })
     .from(orderCycles)

@@ -1,4 +1,5 @@
 import { t } from "@/lib/i18n";
+import { CYCLE_VIEW_LABELS, isCycleView, type CycleView } from "@/lib/admin/cycle-views";
 
 // The admin's navigation: a few sections, some with views, all on one route
 // (/admin?tab=<section>&view=<view>) because ~25 actions revalidate
@@ -7,7 +8,10 @@ import { t } from "@/lib/i18n";
 
 export type AdminSection = "ciclo" | "cassa" | "soci" | "catalogo" | "statistiche" | "impostazioni";
 
-export type AdminView = "panoramica" | "ordini" | "prodotti" | "fornitori";
+/** Catalogue views; the cycle's views live in lib/admin/cycle-views.ts. */
+export type CatalogView = "prodotti" | "fornitori";
+
+export type AdminView = CatalogView | CycleView;
 
 /** Sections in the bar on a phone; the rest sit behind ⋯ there and in line from a PC. */
 export const ADMIN_PRIMARY: { id: AdminSection; label: string }[] = [
@@ -22,12 +26,8 @@ export const ADMIN_MORE: { id: AdminSection; label: string }[] = [
   { id: "impostazioni", label: t.admin.nav.settings },
 ];
 
-/** The views of a section, first one the default. */
-export const ADMIN_VIEWS: Partial<Record<AdminSection, { id: AdminView; label: string }[]>> = {
-  ciclo: [
-    { id: "panoramica", label: t.admin.nav.cycleOverview },
-    { id: "ordini", label: t.admin.nav.cycleOrders },
-  ],
+/** The views the bar shows under a section, first one the default (the cycle draws its own). */
+export const ADMIN_VIEWS: Partial<Record<AdminSection, { id: CatalogView; label: string }[]>> = {
   catalogo: [
     { id: "prodotti", label: t.admin.nav.catalogProducts },
     { id: "fornitori", label: t.admin.nav.catalogSuppliers },
@@ -48,15 +48,17 @@ export function resolveAdminRoute(tab: string | undefined, view: string | undefi
   const legacy = tab ? LEGACY[tab] : undefined;
   if (legacy) return legacy;
   const section: AdminSection = tab && SECTIONS.has(tab) ? (tab as AdminSection) : "ciclo";
+  // The workspace resolves the cycle's view against the cycle's status.
+  if (section === "ciclo") return { section, view: isCycleView(view) ? view : null };
   const views = ADMIN_VIEWS[section];
   if (!views) return { section, view: null };
   return { section, view: views.find((v) => v.id === view)?.id ?? views[0].id };
 }
 
 /** The URL of a section (and view), as the bar links to it. */
-export function adminHref(section: AdminSection, view?: AdminView, extra?: Record<string, string>): string {
+export function adminHref(section: AdminSection, view?: AdminView | null, extra?: Record<string, string>): string {
   const params = new URLSearchParams({ tab: section });
-  if (view && view !== ADMIN_VIEWS[section]?.[0].id) params.set("view", view);
+  if (view && view !== "panoramica" && view !== ADMIN_VIEWS[section]?.[0].id) params.set("view", view);
   for (const [k, v] of Object.entries(extra ?? {})) params.set(k, v);
   return `/admin?${params}`;
 }
@@ -65,6 +67,9 @@ export function adminHref(section: AdminSection, view?: AdminView, extra?: Recor
 export function adminTitle(tab: string | undefined, view: string | undefined): string {
   const route = resolveAdminRoute(tab, view);
   const section = [...ADMIN_PRIMARY, ...ADMIN_MORE].find((s) => s.id === route.section)!.label;
+  if (route.section === "ciclo") {
+    return route.view && route.view !== "panoramica" ? `${section}: ${CYCLE_VIEW_LABELS[route.view as CycleView]}` : section;
+  }
   const views = ADMIN_VIEWS[route.section];
   if (!views || route.view === views[0].id) return section;
   return `${section}: ${views.find((v) => v.id === route.view)!.label}`;

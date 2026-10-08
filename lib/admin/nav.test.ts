@@ -2,9 +2,10 @@ import { describe, expect, it } from "vitest";
 import { adminHref, adminTitle, resolveAdminRoute } from "./nav";
 
 describe("resolveAdminRoute", () => {
-  it("defaults to the cycle's overview", () => {
-    expect(resolveAdminRoute(undefined, undefined)).toEqual({ section: "ciclo", view: "panoramica" });
-    expect(resolveAdminRoute("nonsense", "x")).toEqual({ section: "ciclo", view: "panoramica" });
+  it("defaults to the cycle, its view left to the workspace", () => {
+    expect(resolveAdminRoute(undefined, undefined)).toEqual({ section: "ciclo", view: null });
+    expect(resolveAdminRoute("nonsense", "x")).toEqual({ section: "ciclo", view: null });
+    expect(resolveAdminRoute("ciclo", "conti")).toEqual({ section: "ciclo", view: "conti" });
   });
 
   it("keeps the old tabs working", () => {

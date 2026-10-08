@@ -4,9 +4,8 @@ import { AppShell } from "@/components/app-shell";
 import { checkAccess } from "@/lib/auth/access";
 import { requireUserSession } from "@/lib/auth/session";
 import { AdminNav } from "@/components/admin/admin-nav";
-import { TabCiclo } from "@/components/admin/tab-ciclo";
+import { CycleWorkspace } from "@/components/admin/cycle-workspace";
 import { TabProdotti } from "@/components/admin/tab-prodotti";
-import { TabOrdini } from "@/components/admin/tab-ordini";
 import { TabCassa } from "@/components/admin/tab-cassa";
 import { TabSoci } from "@/components/admin/tab-soci";
 import { TabFornitori } from "@/components/admin/tab-fornitori";
@@ -14,6 +13,7 @@ import { TabStatistiche } from "@/components/admin/tab-statistiche";
 import { TabImpostazioni } from "@/components/admin/tab-impostazioni";
 import type { Metadata } from "next";
 import { adminTitle, resolveAdminRoute } from "@/lib/admin/nav";
+import type { CycleView } from "@/lib/admin/cycle-views";
 
 export async function generateMetadata({ searchParams }: { searchParams: SearchParams }): Promise<Metadata> {
   const { tab, view } = await searchParams;
@@ -27,6 +27,7 @@ type SearchParams = Promise<{
   member?: string;
   supplier?: string;
   balance?: string;
+  new?: string;
 }>;
 
 function parseCsvParam(raw: string | undefined): string[] {
@@ -63,6 +64,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Search
     member: filterMemberId,
     supplier: filterSupplierId,
     balance: balanceParam,
+    new: newParam,
   } = await searchParams;
   const { section, view } = resolveAdminRoute(tabParam, viewParam);
   const balanceFilter =
@@ -76,11 +78,17 @@ export default async function AdminPage({ searchParams }: { searchParams: Search
       </Suspense>
 
       <Suspense
-        key={`${section}-${view ?? ""}-${cycleId ?? ""}-${filterMemberId ?? ""}-${filterSupplierId ?? ""}-${balanceFilter ?? ""}`}
+        key={`${section}-${view ?? ""}-${newParam ?? ""}-${cycleId ?? ""}-${filterMemberId ?? ""}-${filterSupplierId ?? ""}-${balanceFilter ?? ""}`}
         fallback={<TabSkeleton />}
       >
-        {view === "panoramica" && <TabCiclo />}
-        {view === "ordini" && <TabOrdini cycleId={cycleId} memberId={filterMemberId} />}
+        {section === "ciclo" && (
+          <CycleWorkspace
+            cycleId={cycleId}
+            view={view as CycleView | null}
+            memberId={filterMemberId}
+            creating={newParam === "1"}
+          />
+        )}
         {view === "prodotti" && <TabProdotti />}
         {view === "fornitori" && <TabFornitori />}
         {section === "cassa" && <TabCassa balanceFilter={balanceFilter} />}
