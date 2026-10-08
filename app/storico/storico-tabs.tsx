@@ -96,10 +96,12 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
                   className="mb-3 overflow-hidden rounded-[18px] border border-brand-border bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
                 >
                   <button
+                    type="button"
                     onClick={() => toggleExpand(o.cycleId)}
-                    className="flex w-full items-center justify-between border-b border-brand-border px-4 py-[14px] text-left"
+                    aria-expanded={isOpen}
+                    className="flex w-full items-center justify-between gap-3 border-b border-brand-border px-4 py-[14px] text-left"
                   >
-                    <div>
+                    <div className="min-w-0 flex-1">
                       <div className="text-[14px] font-bold tracking-[-0.01em] text-brand-near-black">
                         {o.title}
                       </div>
@@ -107,12 +109,12 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
                         {formatDate(o.pickupDate)}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-[15px] font-bold text-brand-near-black">
+                    <div className="flex shrink-0 items-center gap-2">
+                      <span className="whitespace-nowrap font-mono text-[15px] font-bold tabular-nums text-brand-near-black">
                         {o.charged ? formatSignedMoney(o.net) : formatEur(o.productsTotal)}
                       </span>
                       <span
-                        className={`rounded-full px-2.5 py-0.5 font-mono text-label ${
+                        className={`whitespace-nowrap rounded-full px-2.5 py-0.5 font-mono text-label ${
                           o.status === "cancelled"
                             ? "bg-brand-red-light text-brand-red"
                             : "bg-accent-soft text-accent-text"

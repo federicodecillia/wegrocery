@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 import { startOnlineTopup } from "@/lib/actions/topup";
 import { t } from "@/lib/i18n";
 import { formatDecimalInput, formatMoney } from "@/lib/i18n/format";

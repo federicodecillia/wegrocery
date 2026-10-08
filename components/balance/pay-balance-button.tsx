@@ -1,7 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 import { startBalancePayment } from "@/lib/actions/balance-payment";
 import { t } from "@/lib/i18n";
 

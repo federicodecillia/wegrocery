@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, it, expect } from "vitest";
+import { contrastRatio } from "./contrast";
 
 function sources(dir: string): string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((e) =>
@@ -52,5 +53,18 @@ describe("design guard", () => {
 
   it("has no hard-coded brand hex", () => {
     expect(hits(/#(a07020|f5a623|f9c8c8)/i)).toEqual([]);
+  });
+
+  it("keeps the fixed colours AA with white text", () => {
+    const css = readFileSync("app/globals.css", "utf8");
+    for (const name of ["red", "warning", "near-blk"]) {
+      const hex = css.match(new RegExp(`--${name}: (#[0-9a-f]{6})`, "i"))?.[1];
+      expect(hex, name).toBeDefined();
+      expect(contrastRatio(hex!, "#ffffff"), name).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
+  it("uses the warning token, not its hex", () => {
+    expect(hits(/#b45309/i)).toEqual([]);
   });
 });

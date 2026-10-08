@@ -320,8 +320,10 @@ export function OrderForm({
         // re-proposed. They can still tweak before confirming.
         setDraft(result.quantities);
         toast.success(t.order.reproposeSuccess(result.matched, result.cycleTitle || ""));
-      } catch (err) {
-        toast.error(err instanceof Error ? err.message : t.order.genericError);
+      } catch {
+        // A thrown message is a network or framework one ("Failed to fetch",
+        // masked in production): the member gets ours instead.
+        toast.error(t.order.genericError);
       }
     });
   }
@@ -364,8 +366,10 @@ export function OrderForm({
         // Invalidate the client Router Cache so navigating back here (or to
         // the home card) can't paint the pre-save order from a stale payload.
         router.refresh();
-      } catch (err) {
-        toast.error(err instanceof Error ? err.message : t.order.saveError);
+      } catch {
+        // A thrown message is a network or framework one ("Failed to fetch",
+        // masked in production): the member gets ours instead.
+        toast.error(t.order.saveError);
       }
     });
   }
@@ -400,8 +404,10 @@ export function OrderForm({
           toast.success(t.order.pay.confirmed);
         }
         router.refresh();
-      } catch (err) {
-        toast.error(err instanceof Error ? err.message : t.order.saveError);
+      } catch {
+        // A thrown message is a network or framework one ("Failed to fetch",
+        // masked in production): the member gets ours instead.
+        toast.error(t.order.saveError);
       }
     });
   }
@@ -636,37 +642,55 @@ export function OrderForm({
                     )}
                   </div>
                 </div>
-                {qty === 0 ? (
-                  <div className="flex flex-shrink-0 items-center rounded-full bg-black/[0.06] p-0.5">
+                {/* One container whose "+" is always the last child with a
+                    stable key: going 0 → 1 does not remount it, so keyboard
+                    and screen-reader focus stays on the button just pressed. */}
+                <div
+                  className={`flex flex-shrink-0 items-center rounded-full p-0.5 ${
+                    qty === 0 ? "bg-black/[0.06]" : "bg-primary-soft"
+                  }`}
+                >
+                  {qty > 0 && (
                     <button
-                      onClick={() => changeQty(p.productId, 1)}
-                      aria-label={t.order.add}
-                      className="flex h-8 w-8 items-center justify-center rounded-full text-[18px] font-light text-brand-gray"
-                    >
-                      +
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex flex-shrink-0 items-center rounded-full bg-primary-soft p-0.5">
-                    <button
-                      onClick={() => changeQty(p.productId, -1)}
-                      aria-label={t.order.less}
+                      key="minus"
+                      type="button"
+                      onClick={(e) => {
+                        const plus = e.currentTarget.parentElement?.querySelector<HTMLButtonElement>("[data-plus]");
+                        changeQty(p.productId, -1);
+                        // The "−" disappears at 0: hand focus to the "+".
+                        if (qty === 1) plus?.focus();
+                      }}
+                      aria-label={t.order.lessNamed(p.name)}
                       className="flex h-8 w-8 items-center justify-center rounded-full text-[18px] font-light text-brand-gray"
                     >
                       −
                     </button>
-                    <span className="min-w-[22px] text-center font-mono text-[13px] font-bold text-brand-near-black">
+                  )}
+                  {qty > 0 && (
+                    <span
+                      key="qty"
+                      aria-hidden="true"
+                      className="min-w-[22px] text-center font-mono text-[13px] font-bold text-brand-near-black"
+                    >
                       {qty}
                     </span>
-                    <button
-                      onClick={() => changeQty(p.productId, 1)}
-                      aria-label={t.order.more}
-                      className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-[18px] font-light text-on-primary"
-                    >
-                      +
-                    </button>
-                  </div>
-                )}
+                  )}
+                  <button
+                    key="plus"
+                    type="button"
+                    data-plus
+                    onClick={() => changeQty(p.productId, 1)}
+                    aria-label={qty === 0 ? t.order.addNamed(p.name) : t.order.moreNamed(p.name)}
+                    className={`flex h-8 w-8 items-center justify-center rounded-full text-[18px] font-light ${
+                      qty === 0 ? "text-brand-gray" : "bg-primary text-on-primary"
+                    }`}
+                  >
+                    +
+                  </button>
+                  <span className="sr-only" aria-live="polite">
+                    {qty > 0 ? t.order.qtyAnnounce(p.name, qty) : ""}
+                  </span>
+                </div>
               </div>
             );
           })}
