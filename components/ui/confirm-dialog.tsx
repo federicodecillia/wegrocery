@@ -31,6 +31,17 @@ export function confirm(options: ConfirmOptions): Promise<boolean> {
   });
 }
 
+/** Asked before a sheet holding unsaved work closes: true means close anyway. */
+export function confirmDiscard(): Promise<boolean> {
+  return confirm({
+    title: t.common.discardTitle,
+    message: t.common.discardMessage,
+    confirmLabel: t.common.discardConfirm,
+    cancelLabel: t.common.keepEditing,
+    danger: true,
+  });
+}
+
 export function ConfirmDialogProvider() {
   const [request, setRequest] = useState<Request | null>(null);
 

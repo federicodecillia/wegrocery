@@ -290,7 +290,7 @@ function ReviewRow({
   return (
     <li
       className={`rounded-lg border bg-white px-3 py-2.5 ${changed ? "border-primary-mid" : "border-brand-border"} ${
-        r.totalQty === 0 ? "opacity-60" : ""
+        r.totalQty === 0 ? "border-dashed" : ""
       }`}
     >
       <div className="flex items-start gap-2">

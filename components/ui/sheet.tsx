@@ -18,8 +18,8 @@ export interface SheetProps {
   children: ReactNode;
   /** Sticky at the bottom, above the safe area: totals and the actions. */
   footer?: ReactNode;
-  /** `md` (640 px) for forms and lists, `sm` (420 px) for a short message. */
-  size?: "sm" | "md";
+  /** `md` (640 px) for forms and lists, `sm` (420 px) for a short message, `lg` (820 px) for wide tables. */
+  size?: "sm" | "md" | "lg";
   className?: string;
 }
 
@@ -46,11 +46,12 @@ export function Sheet({ open, onRequestClose, title, subtitle, children, footer,
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-black/40" />
         <Dialog.Content
-          aria-describedby={undefined}
+          // The subtitle is the description; without one there is none.
+          {...(subtitle ? {} : { "aria-describedby": undefined })}
           className={cn(
             "fixed inset-x-0 bottom-0 z-50 mx-auto flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-2xl bg-brand-warm-white shadow-2xl",
             "sm:inset-y-0 sm:my-auto sm:h-fit sm:max-h-[88dvh] sm:rounded-2xl",
-            size === "md" ? "max-w-[640px]" : "max-w-[420px]",
+            { sm: "max-w-[420px]", md: "max-w-[640px]", lg: "max-w-[820px]" }[size],
             className,
           )}
           // Radix would close on its own; the caller decides instead.
@@ -67,7 +68,9 @@ export function Sheet({ open, onRequestClose, title, subtitle, children, footer,
           <header className="flex items-start justify-between gap-3 border-b border-brand-border px-5 pt-2 pb-4 sm:pt-4">
             <div className="min-w-0">
               <Dialog.Title className="text-[16px] font-bold text-brand-near-black">{title}</Dialog.Title>
-              {subtitle && <p className="mt-0.5 text-[13px] text-brand-gray">{subtitle}</p>}
+              {subtitle && (
+                <Dialog.Description className="mt-0.5 text-[13px] text-brand-gray">{subtitle}</Dialog.Description>
+              )}
             </div>
             <button
               type="button"

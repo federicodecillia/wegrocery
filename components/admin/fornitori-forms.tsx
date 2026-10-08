@@ -106,60 +106,81 @@ export function FornitoriForm({
       <div className="space-y-3">
         <div className="grid grid-cols-2 gap-3">
           <div className="col-span-2">
-            <label className={labelCls}>{t.admin.suppliers.nameLabel}</label>
-            <input name="name" required defaultValue={supplier?.name} className={inputCls} />
+            <label className="block">
+              <span className={labelCls}>{t.admin.suppliers.nameLabel}
+              </span>
+              <input name="name" required defaultValue={supplier?.name} className={inputCls} />
+            </label>
           </div>
           <div>
-            <label className={labelCls}>{t.admin.suppliers.categoryLabel}</label>
-            <input
-              name="macroCategory"
-              placeholder={t.admin.suppliers.categoryPlaceholder}
-              defaultValue={supplier?.macroCategory ?? ""}
-              className={inputCls}
-            />
+            <label className="block">
+              <span className={labelCls}>{t.admin.suppliers.categoryLabel}
+              </span>
+              <input
+                name="macroCategory"
+                placeholder={t.admin.suppliers.categoryPlaceholder}
+                defaultValue={supplier?.macroCategory ?? ""}
+                className={inputCls}
+              />
+            </label>
           </div>
           <div>
-            <label className={labelCls}>{t.admin.suppliers.contactLabel}</label>
-            <input
-              name="contactName"
-              defaultValue={supplier?.contactName ?? ""}
-              className={inputCls}
-            />
+            <label className="block">
+              <span className={labelCls}>{t.admin.suppliers.contactLabel}
+              </span>
+              <input
+                name="contactName"
+                defaultValue={supplier?.contactName ?? ""}
+                className={inputCls}
+              />
+            </label>
           </div>
           <div>
-            <label className={labelCls}>{t.admin.suppliers.phoneLabel}</label>
-            <input
-              name="phone"
-              type="tel"
-              defaultValue={supplier?.phone ?? ""}
-              className={inputCls}
-            />
+            <label className="block">
+              <span className={labelCls}>{t.admin.suppliers.phoneLabel}
+              </span>
+              <input
+                name="phone"
+                type="tel"
+                defaultValue={supplier?.phone ?? ""}
+                className={inputCls}
+              />
+            </label>
           </div>
           <div>
-            <label className={labelCls}>{t.admin.suppliers.emailLabel}</label>
-            <input
-              name="email"
-              type="email"
-              defaultValue={supplier?.email ?? ""}
-              className={inputCls}
-            />
+            <label className="block">
+              <span className={labelCls}>{t.admin.suppliers.emailLabel}
+              </span>
+              <input
+                name="email"
+                type="email"
+                defaultValue={supplier?.email ?? ""}
+                className={inputCls}
+              />
+            </label>
           </div>
           <div className="col-span-2">
-            <label className={labelCls}>{t.admin.suppliers.addressLabel}</label>
-            <input
-              name="address"
-              defaultValue={supplier?.address ?? ""}
-              className={inputCls}
-            />
+            <label className="block">
+              <span className={labelCls}>{t.admin.suppliers.addressLabel}
+              </span>
+              <input
+                name="address"
+                defaultValue={supplier?.address ?? ""}
+                className={inputCls}
+              />
+            </label>
           </div>
           <div className="col-span-2">
-            <label className={labelCls}>{t.admin.suppliers.notesLabel}</label>
-            <textarea
-              name="notes"
-              rows={2}
-              defaultValue={supplier?.notes ?? ""}
-              className={inputCls}
-            />
+            <label className="block">
+              <span className={labelCls}>{t.admin.suppliers.notesLabel}
+              </span>
+              <textarea
+                name="notes"
+                rows={2}
+                defaultValue={supplier?.notes ?? ""}
+                className={inputCls}
+              />
+            </label>
           </div>
         </div>
       </div>
@@ -244,22 +265,28 @@ export function CatalogProductForm({
 
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <div className="col-span-2 sm:col-span-4">
-          <label className={labelCls}>
-            {t.admin.products.nameLabel}<FieldHelp text={HELP_FIELDS.nome} />
+          <label className="block">
+            <span className={labelCls}>
+              {t.admin.products.nameLabel}<FieldHelp text={HELP_FIELDS.nome} />
+            </span>
+            <input name="name" required defaultValue={product?.name} placeholder={t.admin.products.namePlaceholder} className={inputCls} />
           </label>
-          <input name="name" required defaultValue={product?.name} placeholder={t.admin.products.namePlaceholder} className={inputCls} />
         </div>
         <div className="col-span-2 sm:col-span-2">
-          <label className={labelCls}>
-            {t.admin.products.variantLabel}<FieldHelp text={HELP_FIELDS.varieta} />
+          <label className="block">
+            <span className={labelCls}>
+              {t.admin.products.variantLabel}<FieldHelp text={HELP_FIELDS.varieta} />
+            </span>
+            <input name="variant" defaultValue={product?.variant ?? ""} placeholder={t.admin.products.variantPlaceholder} className={inputCls} />
           </label>
-          <input name="variant" defaultValue={product?.variant ?? ""} placeholder={t.admin.products.variantPlaceholder} className={inputCls} />
         </div>
         <div className="col-span-2 sm:col-span-2">
-          <label className={labelCls}>
-            {t.admin.products.formatLabel}<FieldHelp text={HELP_FIELDS.formato} />
+          <label className="block">
+            <span className={labelCls}>
+              {t.admin.products.formatLabel}<FieldHelp text={HELP_FIELDS.formato} />
+            </span>
+            <input name="format" placeholder={t.admin.products.formatPlaceholder} defaultValue={product?.format ?? ""} className={inputCls} />
           </label>
-          <input name="format" placeholder={t.admin.products.formatPlaceholder} defaultValue={product?.format ?? ""} className={inputCls} />
         </div>
         <div className="col-span-2 sm:col-span-4">
           <label className={labelCls}>
@@ -272,29 +299,35 @@ export function CatalogProductForm({
           />
         </div>
         <div className="col-span-1 sm:col-span-2">
-          <label className={labelCls}>
-            {t.admin.products.priceLabel}<FieldHelp text={HELP_FIELDS.prezzo} />
+          <label className="block">
+            <span className={labelCls}>
+              {t.admin.products.priceLabel}<FieldHelp text={HELP_FIELDS.prezzo} />
+            </span>
+            <input name="unitPrice" type="number" step="0.01" required defaultValue={product?.unitPrice} placeholder={t.admin.products.pricePlaceholder} className={inputCls} />
           </label>
-          <input name="unitPrice" type="number" step="0.01" required defaultValue={product?.unitPrice} placeholder={t.admin.products.pricePlaceholder} className={inputCls} />
         </div>
         <div className="col-span-1 sm:col-span-2">
-          <label className={labelCls}>
-            {t.admin.products.priceKgLabel}<FieldHelp text={HELP_FIELDS.prezzoKg} />
+          <label className="block">
+            <span className={labelCls}>
+              {t.admin.products.priceKgLabel}<FieldHelp text={HELP_FIELDS.prezzoKg} />
+            </span>
+            <input
+              name="pricePerKg"
+              type="number"
+              step="0.01"
+              defaultValue={product?.pricePerKg ?? ""}
+              placeholder={t.admin.products.priceKgOptional}
+              className={inputCls}
+            />
           </label>
-          <input
-            name="pricePerKg"
-            type="number"
-            step="0.01"
-            defaultValue={product?.pricePerKg ?? ""}
-            placeholder={t.admin.products.priceKgOptional}
-            className={inputCls}
-          />
         </div>
         <div className="col-span-2 sm:col-span-4">
-          <label className={labelCls}>
-            {t.admin.products.notesLabel}<FieldHelp text={HELP_FIELDS.note} />
+          <label className="block">
+            <span className={labelCls}>
+              {t.admin.products.notesLabel}<FieldHelp text={HELP_FIELDS.note} />
+            </span>
+            <input name="notes" defaultValue={product?.notes ?? ""} className={inputCls} />
           </label>
-          <input name="notes" defaultValue={product?.notes ?? ""} className={inputCls} />
         </div>
       </div>
 
@@ -403,64 +436,59 @@ export function FornitoriList({
                 </div>
               ) : (
                 <>
-                  {/* Supplier row — div+role rather than <button> so the
-                      per-action buttons inside (Modifica/Archivia/✕) don't
-                      end up as nested <button> descendants, which is invalid
-                      HTML and trips a React hydration warning. */}
-                  <div
-                    role="button"
-                    tabIndex={0}
-                    onClick={() =>
-                      setExpandedId(expandedId === s.supplierId ? null : s.supplierId)
-                    }
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        setExpandedId(expandedId === s.supplierId ? null : s.supplierId);
-                      }
-                    }}
-                    aria-expanded={expandedId === s.supplierId}
-                    className="flex w-full cursor-pointer items-center justify-between border-b border-brand-border px-4 py-3 text-left"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[13px] font-semibold text-brand-near-black">{s.name}</span>
-                        {!s.active && (
-                          <span className="rounded-full bg-black/[0.05] px-1.5 py-0.5 text-label font-bold text-brand-gray">
-                            {t.admin.suppliers.archivedBadge}
-                          </span>
-                        )}
-                      </div>
-                      <div className="mt-0.5 font-mono text-label text-muted">
-                        {s.macroCategory && `${s.macroCategory} · `}
-                        {s.contactName && `${s.contactName} · `}
-                        {t.admin.suppliers.cyclesCount(s.cycleCount)}
-                      </div>
-                    </div>
-                    <div className="ml-3 flex shrink-0 items-center gap-1.5">
+                  {/* Supplier row: the name toggles the details, the actions
+                      sit beside it (never inside it: no nested controls). */}
+                  <div className="flex items-center gap-2 border-b border-brand-border pr-4">
+                    <button
+                      type="button"
+                      onClick={() => setExpandedId(expandedId === s.supplierId ? null : s.supplierId)}
+                      aria-expanded={expandedId === s.supplierId}
+                      className="flex min-h-14 min-w-0 flex-1 items-center gap-2 py-3 pl-4 text-left"
+                    >
+                      <span aria-hidden className="text-label text-muted">
+                        {expandedId === s.supplierId ? "▲" : "▼"}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="flex items-center gap-2">
+                          <span className="text-[13px] font-semibold text-brand-near-black">{s.name}</span>
+                          {!s.active && (
+                            <span className="rounded-full bg-black/[0.05] px-1.5 py-0.5 text-label font-bold text-brand-gray">
+                              {t.admin.suppliers.archivedBadge}
+                            </span>
+                          )}
+                        </span>
+                        <span className="mt-0.5 block font-mono text-label text-muted">
+                          {s.macroCategory && `${s.macroCategory} · `}
+                          {s.contactName && `${s.contactName} · `}
+                          {t.admin.suppliers.cyclesCount(s.cycleCount)}
+                        </span>
+                      </span>
+                    </button>
+                    <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
                       <button
-                        onClick={(e) => { e.stopPropagation(); setEditingId(s.supplierId); }}
-                        className="rounded-full border border-brand-border px-2.5 py-1 text-label font-semibold text-brand-gray"
+                        type="button"
+                        onClick={() => setEditingId(s.supplierId)}
+                        className="min-h-9 rounded-full border border-brand-border px-3 py-1 text-label font-semibold text-brand-gray"
                       >
                         {t.admin.common.edit}
                       </button>
                       <button
-                        onClick={(e) => { e.stopPropagation(); handleArchive(s); }}
-                        className="rounded-full border border-brand-border px-2.5 py-1 text-label font-semibold text-brand-gray"
+                        type="button"
+                        onClick={() => handleArchive(s)}
+                        className="min-h-9 rounded-full border border-brand-border px-3 py-1 text-label font-semibold text-brand-gray"
                       >
                         {s.active ? t.admin.common.archive : t.admin.common.restore}
                       </button>
                       {s.cycleCount === 0 && (
                         <button
-                          onClick={(e) => { e.stopPropagation(); handleDelete(s); }}
-                          className="rounded-full border border-brand-red/30 px-2.5 py-1 text-label font-semibold text-brand-red"
+                          type="button"
+                          onClick={() => handleDelete(s)}
+                          aria-label={t.admin.suppliers.deleteAria(s.name)}
+                          className="flex h-9 w-9 items-center justify-center rounded-full border border-brand-red/30 text-label font-semibold text-brand-red"
                         >
-                          ✕
+                          <span aria-hidden>✕</span>
                         </button>
                       )}
-                      <span className="text-label text-muted">
-                        {expandedId === s.supplierId ? "▲" : "▼"}
-                      </span>
                     </div>
                   </div>
 

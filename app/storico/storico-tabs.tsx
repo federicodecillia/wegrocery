@@ -64,6 +64,7 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
           <button
             key={tabKey}
             onClick={() => setTab(tabKey)}
+            aria-pressed={tab === tabKey}
             className={`flex-1 rounded-[10px] py-[9px] text-[14px] font-semibold transition-all ${
               tab === tabKey
                 ? "bg-white text-brand-near-black shadow-[0_1px_4px_rgba(45,43,41,0.10)]"

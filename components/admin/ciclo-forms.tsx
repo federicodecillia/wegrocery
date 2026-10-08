@@ -3,6 +3,7 @@
 import { confirm } from "@/components/ui/confirm-dialog";
 import { useState, useTransition, useEffect, useCallback } from "react";
 import { toast } from "@/components/ui/toast";
+import { Sheet } from "@/components/ui/sheet";
 import { t } from "@/lib/i18n";
 import { formatMoney, formatDateTime, formatHandlingFee } from "@/lib/i18n/format";
 import { HANDLING_FEE_MAX, cycleHandlingFee } from "@/lib/payments/order-payment";
@@ -272,10 +273,10 @@ const TIME_SLOTS: string[] = (() => {
 
 // A single time-slot dropdown. Keeps a legacy off-grid value (e.g. an old
 // "19:10") selectable by prepending it, so editing never silently resets it.
-function TimeSlotSelect({ name, defValue }: { name: string; defValue?: string }) {
+function TimeSlotSelect({ name, defValue, ariaLabel }: { name: string; defValue?: string; ariaLabel: string }) {
   const options = defValue && !TIME_SLOTS.includes(defValue) ? [defValue, ...TIME_SLOTS] : TIME_SLOTS;
   return (
-    <select name={name} defaultValue={defValue ?? ""} className={`min-w-0 flex-1 ${inputCls}`}>
+    <select name={name} defaultValue={defValue ?? ""} aria-label={ariaLabel} className={`min-w-0 flex-1 ${inputCls}`}>
       <option value="">—</option>
       {options.map((t) => (
         <option key={t} value={t}>
@@ -308,14 +309,15 @@ function PickupRow({
       <input
         name={`${prefix}DateOnly`}
         type="date"
+        aria-label={label}
         defaultValue={defDate}
         className={`w-[140px] shrink-0 ${inputCls}`}
       />
       <div className="flex min-w-[190px] flex-1 items-center gap-1.5">
         <span className={miniLabelCls}>{t.admin.cycle.timeFrom}</span>
-        <TimeSlotSelect name={`${prefix}StartTime`} defValue={defStart} />
+        <TimeSlotSelect name={`${prefix}StartTime`} defValue={defStart} ariaLabel={`${label}, ${t.admin.cycle.timeFrom}`} />
         <span className={miniLabelCls}>{t.admin.cycle.timeTo}</span>
-        <TimeSlotSelect name={`${prefix}EndTime`} defValue={defEnd} />
+        <TimeSlotSelect name={`${prefix}EndTime`} defValue={defEnd} ariaLabel={`${label}, ${t.admin.cycle.timeTo}`} />
       </div>
     </div>
   );
@@ -344,7 +346,7 @@ function PickupSection({
   const [showPickup2, setShowPickup2] = useState(Boolean(defPickup2Date));
   return (
     <div>
-      <label className={labelCls}>{t.admin.cycle.pickupSection}</label>
+      <p className={labelCls}>{t.admin.cycle.pickupSection}</p>
       <div className="space-y-2">
         <PickupRow
           label={t.admin.cycle.pickup1Label}
@@ -399,7 +401,7 @@ function ShippingModeFields({
 }) {
   return (
     <div>
-      <label className={labelCls}>{t.admin.cycle.shippingLabel}</label>
+      <p className={labelCls}>{t.admin.cycle.shippingLabel}</p>
       <div className="mb-2 flex rounded-lg bg-black/[0.05] p-0.5">
         {(
           [
@@ -484,7 +486,7 @@ function HandlingFeeFields({
   ];
   return (
     <div>
-      <label className={labelCls}>{t.admin.cycle.handlingFeeLabel}</label>
+      <p className={labelCls}>{t.admin.cycle.handlingFeeLabel}</p>
       <div className="mb-2 flex rounded-lg bg-black/[0.05] p-0.5">
         {options.map((opt) => (
           <button
@@ -612,31 +614,37 @@ export function EditCycleForm({
         </div>
       )}
       <div>
-        <label className={labelCls}>{t.admin.cycle.titleLabel}</label>
-        <input
-          name="title"
-          required
-          defaultValue={cycle.title}
-          className={`w-full ${inputCls}`}
-        />
+        <label className="block">
+          <span className={labelCls}>{t.admin.cycle.titleLabel}
+          </span>
+          <input
+            name="title"
+            required
+            defaultValue={cycle.title}
+            className={`w-full ${inputCls}`}
+          />
+        </label>
       </div>
 
       {!isClosed && (
         <div>
-          <label className={labelCls}>{t.admin.cycle.orderCloseAtLabel}</label>
-          <input
-            name="orderCloseAt"
-            type="datetime-local"
-            required
-            defaultValue={closeAtLocal}
-            className={`w-full ${inputCls}`}
-          />
+          <label className="block">
+            <span className={labelCls}>{t.admin.cycle.orderCloseAtLabel}
+            </span>
+            <input
+              name="orderCloseAt"
+              type="datetime-local"
+              required
+              defaultValue={closeAtLocal}
+              className={`w-full ${inputCls}`}
+            />
+          </label>
         </div>
       )}
 
       {shippingMode === "manual" ? (
         <div>
-          <label className={labelCls}>{t.admin.cycle.shippingLabel}</label>
+          <p className={labelCls}>{t.admin.cycle.shippingLabel}</p>
           <div className="rounded-xl border border-primary/30 bg-primary-soft p-3 text-[12px] text-brand-near-black">
             <div className="font-bold text-primary-text">{t.admin.cycle.shippingManualTitle}</div>
             <p className="mt-1 text-brand-gray">
@@ -675,42 +683,51 @@ export function EditCycleForm({
 
       <div className={isClosed ? "" : "grid grid-cols-2 gap-3"}>
         <div>
-          <label className={labelCls}>{t.admin.cycle.supplierLabel}</label>
-          <select
-            name="supplierId"
-            defaultValue={cycle.supplierId ?? ""}
-            className={`w-full ${inputCls}`}
-          >
-            <option value="">{t.admin.common.noSupplier}</option>
-            {suppliers.map((s) => (
-              <option key={s.supplierId} value={s.supplierId}>
-                {s.name}
-              </option>
-            ))}
-          </select>
+          <label className="block">
+            <span className={labelCls}>{t.admin.cycle.supplierLabel}
+            </span>
+            <select
+              name="supplierId"
+              defaultValue={cycle.supplierId ?? ""}
+              className={`w-full ${inputCls}`}
+            >
+              <option value="">{t.admin.common.noSupplier}</option>
+              {suppliers.map((s) => (
+                <option key={s.supplierId} value={s.supplierId}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+          </label>
         </div>
         {!isClosed && (
           <div>
-            <label className={labelCls}>{t.admin.cycle.accessLabel}</label>
-            <select
-              name="accessLevel"
-              defaultValue={normalizeAccessLevel(cycle.accessLevel) ?? DEFAULT_ACCESS_LEVEL}
-              className={`w-full ${inputCls}`}
-            >
-              <AccessLevelOptions />
-            </select>
+            <label className="block">
+              <span className={labelCls}>{t.admin.cycle.accessLabel}
+              </span>
+              <select
+                name="accessLevel"
+                defaultValue={normalizeAccessLevel(cycle.accessLevel) ?? DEFAULT_ACCESS_LEVEL}
+                className={`w-full ${inputCls}`}
+              >
+                <AccessLevelOptions />
+              </select>
+            </label>
             <p className="mt-1 text-label text-muted">{t.admin.cycle.accessHint}</p>
           </div>
         )}
       </div>
       <div>
-        <label className={labelCls}>{t.admin.common.notes}</label>
-        <textarea
-          name="notes"
-          rows={2}
-          defaultValue={cycle.notes ?? ""}
-          className={`w-full ${inputCls}`}
-        />
+        <label className="block">
+          <span className={labelCls}>{t.admin.common.notes}
+          </span>
+          <textarea
+            name="notes"
+            rows={2}
+            defaultValue={cycle.notes ?? ""}
+            className={`w-full ${inputCls}`}
+          />
+        </label>
         <p className="mt-1 text-label text-muted">{t.admin.cycle.notesHint}</p>
       </div>
       <button
@@ -739,7 +756,7 @@ function PaymentModeFields({
   ];
   return (
     <div>
-      <label className={labelCls}>{t.admin.cycle.paymentModeLabel}</label>
+      <p className={labelCls}>{t.admin.cycle.paymentModeLabel}</p>
       <div className="mb-2 flex rounded-lg bg-black/[0.05] p-0.5">
         {options.map((opt) => (
           <button
@@ -835,23 +852,29 @@ export function CreateCycleForm({
       <p className="mb-3 text-[13px] font-bold text-brand-near-black">{t.admin.cycle.createTitle}</p>
       <div className="space-y-3">
         <div>
-          <label className={labelCls}>{t.admin.cycle.titleLabel}</label>
-          <input
-            name="title"
-            required
-            placeholder={t.admin.cycle.titlePlaceholder}
-            className={`w-full ${inputCls}`}
-          />
+          <label className="block">
+            <span className={labelCls}>{t.admin.cycle.titleLabel}
+            </span>
+            <input
+              name="title"
+              required
+              placeholder={t.admin.cycle.titlePlaceholder}
+              className={`w-full ${inputCls}`}
+            />
+          </label>
         </div>
 
         <div>
-          <label className={labelCls}>{t.admin.cycle.orderCloseAtLabel}</label>
-          <input
-            name="orderCloseAt"
-            type="datetime-local"
-            required
-            className={`w-full ${inputCls}`}
-          />
+          <label className="block">
+            <span className={labelCls}>{t.admin.cycle.orderCloseAtLabel}
+            </span>
+            <input
+              name="orderCloseAt"
+              type="datetime-local"
+              required
+              className={`w-full ${inputCls}`}
+            />
+          </label>
         </div>
 
         <ShippingModeFields
@@ -880,31 +903,40 @@ export function CreateCycleForm({
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className={labelCls}>{t.admin.cycle.supplierLabel}</label>
-            <select name="supplierId" required defaultValue="" className={`w-full ${inputCls}`}>
-              <option value="" disabled>{t.admin.common.selectPlaceholder}</option>
-              {suppliers.map((s) => (
-                <option key={s.supplierId} value={s.supplierId}>
-                  {s.name}
-                </option>
-              ))}
-            </select>
+            <label className="block">
+              <span className={labelCls}>{t.admin.cycle.supplierLabel}
+              </span>
+              <select name="supplierId" required defaultValue="" className={`w-full ${inputCls}`}>
+                <option value="" disabled>{t.admin.common.selectPlaceholder}</option>
+                {suppliers.map((s) => (
+                  <option key={s.supplierId} value={s.supplierId}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
           <div>
-            <label className={labelCls}>{t.admin.cycle.accessLabel}</label>
-            <select name="accessLevel" defaultValue={DEFAULT_ACCESS_LEVEL} className={`w-full ${inputCls}`}>
-              <AccessLevelOptions />
-            </select>
+            <label className="block">
+              <span className={labelCls}>{t.admin.cycle.accessLabel}
+              </span>
+              <select name="accessLevel" defaultValue={DEFAULT_ACCESS_LEVEL} className={`w-full ${inputCls}`}>
+                <AccessLevelOptions />
+              </select>
+            </label>
             <p className="mt-1 text-label text-muted">{t.admin.cycle.accessHint}</p>
           </div>
         </div>
         <div>
-          <label className={labelCls}>{t.admin.common.notes}</label>
-          <textarea
-            name="notes"
-            rows={2}
-            className={`w-full ${inputCls}`}
-          />
+          <label className="block">
+            <span className={labelCls}>{t.admin.common.notes}
+            </span>
+            <textarea
+              name="notes"
+              rows={2}
+              className={`w-full ${inputCls}`}
+            />
+          </label>
           <p className="mt-1 text-label text-muted">{t.admin.cycle.notesHint}</p>
         </div>
       </div>
@@ -1176,32 +1208,18 @@ export function ClosedCycleEditButton({
     );
   }
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-      <div className="flex max-h-[92vh] w-full max-w-[600px] flex-col rounded-2xl bg-brand-warm-white shadow-2xl">
-        <div className="flex items-center justify-between border-b border-brand-border p-5">
-          <div>
-            <div className="font-mono text-label uppercase tracking-[0.13em] text-primary-text">
-              {t.admin.cycle.editClosedLabel}
-            </div>
-            <h3 className="mt-1 text-[16px] font-black text-brand-near-black">{cycle.title}</h3>
-          </div>
-          <button
-            onClick={() => setOpen(false)}
-            className="rounded-full bg-brand-border p-2 text-brand-gray hover:bg-brand-gray-light"
-            aria-label={t.admin.common.close}
-          >
-            ✕
-          </button>
-        </div>
-        <div className="flex-1 overflow-y-auto p-5">
-          <EditCycleForm
-            cycle={cycle}
-            suppliers={suppliers}
-            onClose={() => setOpen(false)}
-            isClosed
-          />
-        </div>
-      </div>
-    </div>
+    <Sheet
+      open
+      onRequestClose={() => setOpen(false)}
+      title={cycle.title}
+      subtitle={t.admin.cycle.editClosedLabel}
+    >
+      <EditCycleForm
+        cycle={cycle}
+        suppliers={suppliers}
+        onClose={() => setOpen(false)}
+        isClosed
+      />
+    </Sheet>
   );
 }

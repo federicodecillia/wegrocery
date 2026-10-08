@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState, useTransition } from "react";
-import * as Dialog from "@radix-ui/react-dialog";
+import { Sheet } from "@/components/ui/sheet";
 import {
   adminApplyDistintaImport,
   adminBuildSupplierDistinta,
@@ -192,209 +192,196 @@ export function SupplierActionsDialog({
 
   const labelCls = "block text-label font-semibold uppercase tracking-wide text-brand-gray";
   const inputCls =
-    "w-full rounded-lg border border-brand-border bg-white px-2.5 py-1.5 text-[12px] font-mono text-brand-near-black disabled:bg-brand-warm-white";
+    "w-full rounded-lg border border-brand-border bg-white min-h-11 px-3 py-2 text-[14px] font-mono text-brand-near-black disabled:bg-brand-warm-white";
   const sectionTitleCls = "flex items-center gap-2 text-[13px] font-bold text-brand-near-black";
   const sectionDescCls = "mb-2 text-label text-brand-gray";
 
   return (
-    <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-[150] bg-black/30 backdrop-blur-[4px] data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0" />
-        <Dialog.Content
-          aria-describedby={undefined}
-          className="fixed left-1/2 top-1/2 z-[151] flex max-h-[92vh] w-[94%] max-w-[560px] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-2xl border border-brand-border bg-white shadow-[0_8px_32px_rgba(45,43,41,0.15)] data-[state=open]:animate-in data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:zoom-out-95"
-        >
-          <div className="flex items-center justify-between border-b border-brand-border p-5">
-            <div>
-              <Dialog.Title className="text-[15px] font-bold text-brand-near-black">
-                {t.admin.supplierActions.dialogTitle(supplierName)}
-              </Dialog.Title>
-              <p className="mt-0.5 text-label text-brand-gray">{t.admin.supplierActions.cycleLabel(cycleTitle)}</p>
-            </div>
-            <button
-              onClick={() => onOpenChange(false)}
-              className="rounded-full bg-brand-border p-2 text-brand-gray hover:bg-brand-gray-light"
-            >
-              ✕
-            </button>
-          </div>
+    <Sheet
+      open={open}
+      onRequestClose={() => onOpenChange(false)}
+      title={t.admin.supplierActions.dialogTitle(supplierName)}
+      subtitle={t.admin.supplierActions.cycleLabel(cycleTitle)}
+    >
+      <div className="space-y-5">
+        {/* ── Scarica ────────────────────────────────────── */}
+        <section>
+          <div className={sectionTitleCls}>{t.admin.supplierActions.downloadSection}</div>
+          <p className={sectionDescCls}>
+            {t.admin.supplierActions.downloadDescription}
+          </p>
+          <button
+            onClick={handleDownload}
+            disabled={downloading}
+            className="w-full rounded-xl border border-accent/30 bg-accent-soft py-2.5 text-[13px] font-bold text-accent-text active:scale-95 disabled:opacity-50"
+          >
+            {downloading ? t.admin.supplierActions.downloading : t.admin.supplierActions.downloadButton}
+          </button>
+        </section>
 
-          <div className="flex-1 space-y-5 overflow-y-auto p-5">
-            {/* ── Scarica ────────────────────────────────────── */}
-            <section>
-              <div className={sectionTitleCls}>{t.admin.supplierActions.downloadSection}</div>
-              <p className={sectionDescCls}>
-                {t.admin.supplierActions.downloadDescription}
-              </p>
-              <button
-                onClick={handleDownload}
-                disabled={downloading}
-                className="w-full rounded-xl border border-accent/30 bg-accent-soft py-2.5 text-[13px] font-bold text-accent-text active:scale-95 disabled:opacity-50"
-              >
-                {downloading ? t.admin.supplierActions.downloading : t.admin.supplierActions.downloadButton}
-              </button>
-            </section>
+        <div className="border-t border-brand-border" />
 
-            <div className="border-t border-brand-border" />
-
-            {/* ── Invia mail ────────────────────────────────── */}
-            <section>
-              <div className={sectionTitleCls}>{t.admin.supplierActions.emailSection}</div>
-              <p className={sectionDescCls}>
-                {t.admin.supplierActions.emailDescription}
-              </p>
-              {defaultsLoading ? (
-                <div className="py-4 text-center text-[12px] text-brand-gray">{t.admin.supplierActions.loadingDefaults}</div>
-              ) : (
-                <div className="space-y-2.5">
-                  <div>
-                    <label className={labelCls}>{t.admin.supplierActions.recipientLabel}</label>
-                    <input
-                      type="email"
-                      value={to}
-                      onChange={(e) => setTo(e.target.value)}
-                      disabled={sending}
-                      className={inputCls}
-                    />
-                  </div>
-                  <div>
-                    <label className={labelCls}>{t.admin.supplierActions.senderLabel}</label>
-                    <input
-                      type="email"
-                      value={from}
-                      onChange={(e) => setFrom(e.target.value)}
-                      disabled={sending}
-                      placeholder={t.admin.supplierActions.senderPlaceholder}
-                      className={inputCls}
-                    />
-                    <p className="mt-0.5 text-label text-muted">
-                      {t.admin.supplierActions.senderHint}
-                    </p>
-                  </div>
-                  <div>
-                    <label className={labelCls}>{t.admin.supplierActions.ccLabel}</label>
-                    <textarea
-                      value={cc}
-                      onChange={(e) => setCc(e.target.value)}
-                      disabled={sending}
-                      rows={2}
-                      className={`${inputCls} resize-none`}
-                    />
-                  </div>
-                  <div>
-                    <label className={labelCls}>{t.admin.supplierActions.subjectLabel}</label>
-                    <input
-                      type="text"
-                      value={subject}
-                      onChange={(e) => setSubject(e.target.value)}
-                      disabled={sending}
-                      className={inputCls}
-                    />
-                  </div>
-                  <button
-                    onClick={handleSendMail}
-                    disabled={defaultsLoading || sending}
-                    className="w-full rounded-xl bg-brand-near-black py-2.5 text-[13px] font-bold text-white shadow-lg active:scale-95 disabled:opacity-50"
-                  >
-                    {sending ? t.admin.common.sending : t.admin.supplierActions.sendButton}
-                  </button>
-                </div>
-              )}
-            </section>
-
-            <div className="border-t border-brand-border" />
-
-            {/* ── Carica distinta ───────────────────────────── */}
-            <section>
-              <div className={sectionTitleCls}>{t.admin.supplierActions.uploadSection}</div>
-              <p className={sectionDescCls}>
-                {t.admin.supplierActions.uploadDescription}
-              </p>
-              <input
-                type="file"
-                accept=".xlsx,.ods,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.oasis.opendocument.spreadsheet,text/csv"
-                onChange={onFileChange}
-                className="block w-full cursor-pointer rounded-xl border border-dashed border-primary/40 bg-white px-3 py-2 text-[12px] file:mr-3 file:rounded-lg file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-label file:font-bold file:text-on-primary"
-              />
-              {fileName && (
-                <p className="mt-1 text-label text-brand-gray">
-                  {t.admin.importWizard.fileInfo(fileName)}
+        {/* ── Invia mail ────────────────────────────────── */}
+        <section>
+          <div className={sectionTitleCls}>{t.admin.supplierActions.emailSection}</div>
+          <p className={sectionDescCls}>
+            {t.admin.supplierActions.emailDescription}
+          </p>
+          {defaultsLoading ? (
+            <div className="py-4 text-center text-[12px] text-brand-gray">{t.admin.supplierActions.loadingDefaults}</div>
+          ) : (
+            <div className="space-y-2.5">
+              <div>
+                <label htmlFor="sup-mail-to" className={labelCls}>{t.admin.supplierActions.recipientLabel}</label>
+                <input
+                  id="sup-mail-to"
+                  type="email"
+                  value={to}
+                  onChange={(e) => setTo(e.target.value)}
+                  disabled={sending}
+                  className={inputCls}
+                />
+              </div>
+              <div>
+                <label htmlFor="sup-mail-from" className={labelCls}>{t.admin.supplierActions.senderLabel}</label>
+                <input
+                  id="sup-mail-from"
+                  type="email"
+                  value={from}
+                  onChange={(e) => setFrom(e.target.value)}
+                  disabled={sending}
+                  placeholder={t.admin.supplierActions.senderPlaceholder}
+                  className={inputCls}
+                />
+                <p className="mt-0.5 text-label text-muted">
+                  {t.admin.supplierActions.senderHint}
                 </p>
-              )}
+              </div>
+              <div>
+                <label htmlFor="sup-mail-cc" className={labelCls}>{t.admin.supplierActions.ccLabel}</label>
+                <textarea
+                  id="sup-mail-cc"
+                  value={cc}
+                  onChange={(e) => setCc(e.target.value)}
+                  disabled={sending}
+                  rows={2}
+                  className={`${inputCls} resize-none`}
+                />
+              </div>
+              <div>
+                <label htmlFor="sup-mail-subject" className={labelCls}>{t.admin.supplierActions.subjectLabel}</label>
+                <input
+                  id="sup-mail-subject"
+                  type="text"
+                  value={subject}
+                  onChange={(e) => setSubject(e.target.value)}
+                  disabled={sending}
+                  className={inputCls}
+                />
+              </div>
               <button
-                onClick={handlePreview}
-                disabled={!fileBase64 || previewing}
-                className="mt-2 w-full rounded-xl bg-primary py-2.5 text-[13px] font-bold text-on-primary disabled:opacity-50"
+                onClick={handleSendMail}
+                disabled={defaultsLoading || sending}
+                className="w-full rounded-xl bg-brand-near-black py-2.5 text-[13px] font-bold text-white shadow-lg active:scale-95 disabled:opacity-50"
               >
-                {previewing ? t.admin.supplierActions.previewing : t.admin.supplierActions.previewButton}
+                {sending ? t.admin.common.sending : t.admin.supplierActions.sendButton}
               </button>
+            </div>
+          )}
+        </section>
 
-              {preview && (
-                <div className="mt-3 space-y-3">
-                  {preview.errors.length > 0 && (
-                    <div className="rounded-lg border border-brand-red/30 bg-brand-red-light p-3 text-[12px] text-brand-red">
-                      <div className="mb-1 font-bold">{t.admin.supplierActions.errorsTitle}</div>
-                      <ul className="list-disc pl-4">
-                        {preview.errors.map((e, i) => (
-                          <li key={i}>{e}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
+        <div className="border-t border-brand-border" />
 
-                  <PreviewSection
-                    title={t.admin.supplierActions.previewCorrections}
-                    empty={t.admin.supplierActions.noCorrections}
-                    rows={preview.corrections.map((c) => ({
-                      key: c.orderLineId,
-                      left: `${c.memberName} · ${c.productName}`,
-                      oldVal: c.oldTotal,
-                      newVal: c.newTotal,
-                      delta: c.delta,
-                    }))}
-                  />
+        {/* ── Carica distinta ───────────────────────────── */}
+        <section>
+          <div className={sectionTitleCls}>{t.admin.supplierActions.uploadSection}</div>
+          <p className={sectionDescCls}>
+            {t.admin.supplierActions.uploadDescription}
+          </p>
+          <input
+            type="file"
+            aria-label={t.admin.supplierActions.uploadSection}
+            accept=".xlsx,.ods,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.oasis.opendocument.spreadsheet,text/csv"
+            onChange={onFileChange}
+            className="block w-full cursor-pointer rounded-xl border border-dashed border-primary/40 bg-white px-3 py-2 text-[12px] file:mr-3 file:rounded-lg file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-label file:font-bold file:text-on-primary"
+          />
+          {fileName && (
+            <p className="mt-1 text-label text-brand-gray">
+              {t.admin.importWizard.fileInfo(fileName)}
+            </p>
+          )}
+          <button
+            onClick={handlePreview}
+            disabled={!fileBase64 || previewing}
+            className="mt-2 w-full rounded-xl bg-primary py-2.5 text-[13px] font-bold text-on-primary disabled:opacity-50"
+          >
+            {previewing ? t.admin.supplierActions.previewing : t.admin.supplierActions.previewButton}
+          </button>
 
-                  <PreviewSection
-                    title={t.admin.supplierActions.previewShipping}
-                    empty={t.admin.supplierActions.noShippingChanges}
-                    rows={preview.shippingChanges.map((s) => ({
-                      key: s.memberId,
-                      left: s.memberName,
-                      oldVal: s.oldShipping,
-                      newVal: s.newShipping,
-                      delta: s.newShipping - s.oldShipping,
-                    }))}
-                  />
-
-                  {preview.warnings.length > 0 && (
-                    <div className="rounded-lg border border-primary/30 bg-primary-soft p-3 text-[12px] text-brand-near-black">
-                      <div className="mb-1 font-bold text-primary-text">{t.admin.supplierActions.warningsTitle}</div>
-                      <ul className="list-disc pl-4">
-                        {preview.warnings.map((w, i) => (
-                          <li key={i}>{w}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  <button
-                    onClick={handleApply}
-                    disabled={
-                      preview.errors.length > 0 ||
-                      (preview.corrections.length === 0 && preview.shippingChanges.length === 0) ||
-                      applying
-                    }
-                    className="w-full rounded-xl bg-brand-near-black py-2.5 text-[13px] font-bold text-white shadow-lg active:scale-95 disabled:opacity-50"
-                  >
-                    {applying ? t.admin.supplierActions.applying : t.admin.supplierActions.applyButton}
-                  </button>
+          {preview && (
+            <div className="mt-3 space-y-3">
+              {preview.errors.length > 0 && (
+                <div className="rounded-lg border border-brand-red/30 bg-brand-red-light p-3 text-[12px] text-brand-red">
+                  <div className="mb-1 font-bold">{t.admin.supplierActions.errorsTitle}</div>
+                  <ul className="list-disc pl-4">
+                    {preview.errors.map((e, i) => (
+                      <li key={i}>{e}</li>
+                    ))}
+                  </ul>
                 </div>
               )}
-            </section>
-          </div>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+
+              <PreviewSection
+                title={t.admin.supplierActions.previewCorrections}
+                empty={t.admin.supplierActions.noCorrections}
+                rows={preview.corrections.map((c) => ({
+                  key: c.orderLineId,
+                  left: `${c.memberName} · ${c.productName}`,
+                  oldVal: c.oldTotal,
+                  newVal: c.newTotal,
+                  delta: c.delta,
+                }))}
+              />
+
+              <PreviewSection
+                title={t.admin.supplierActions.previewShipping}
+                empty={t.admin.supplierActions.noShippingChanges}
+                rows={preview.shippingChanges.map((s) => ({
+                  key: s.memberId,
+                  left: s.memberName,
+                  oldVal: s.oldShipping,
+                  newVal: s.newShipping,
+                  delta: s.newShipping - s.oldShipping,
+                }))}
+              />
+
+              {preview.warnings.length > 0 && (
+                <div className="rounded-lg border border-primary/30 bg-primary-soft p-3 text-[12px] text-brand-near-black">
+                  <div className="mb-1 font-bold text-primary-text">{t.admin.supplierActions.warningsTitle}</div>
+                  <ul className="list-disc pl-4">
+                    {preview.warnings.map((w, i) => (
+                      <li key={i}>{w}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              <button
+                onClick={handleApply}
+                disabled={
+                  preview.errors.length > 0 ||
+                  (preview.corrections.length === 0 && preview.shippingChanges.length === 0) ||
+                  applying
+                }
+                className="w-full rounded-xl bg-brand-near-black py-2.5 text-[13px] font-bold text-white shadow-lg active:scale-95 disabled:opacity-50"
+              >
+                {applying ? t.admin.supplierActions.applying : t.admin.supplierActions.applyButton}
+              </button>
+            </div>
+          )}
+        </section>
+      </div>
+    </Sheet>
   );
 }
 

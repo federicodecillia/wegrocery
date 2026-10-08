@@ -1,9 +1,9 @@
 "use client";
 
 import type { ReactNode } from "react";
-import * as Dialog from "@radix-ui/react-dialog";
 import { MovementIcon } from "@/components/movement-icon";
 import { Button } from "@/components/ui/button";
+import { Sheet } from "@/components/ui/sheet";
 import { t, type Strings } from "@/lib/i18n";
 import { formatDateTime, formatSignedMoney } from "@/lib/i18n/format";
 import { MANUAL_PAYMENT_METHODS } from "@/lib/ledger";
@@ -98,43 +98,45 @@ export function MovementDetailDialog({
 }) {
   const incoming = entry ? parseFloat(entry.amount) >= 0 : true;
   return (
-    <Dialog.Root open={entry !== null} onOpenChange={(next) => !next && onClose()}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-[150] bg-black/30 backdrop-blur-[4px] data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 z-[151] w-[90%] max-w-[360px] -translate-x-1/2 -translate-y-1/2 rounded-3xl border border-brand-border bg-white p-6 shadow-[0_8px_32px_rgba(45,43,41,0.15)] data-[state=open]:animate-in data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:zoom-out-95">
-          {entry && (
-            <>
-              <div className="flex items-center gap-3">
-                <MovementIcon kind={movementKind(entry)} incoming={incoming} />
-                <Dialog.Title className="text-[17px] font-black tracking-[-0.02em] text-brand-near-black">
-                  {movementLabel(entry, t.history)}
-                </Dialog.Title>
+    <Sheet
+      open={entry !== null}
+      onRequestClose={onClose}
+      size="sm"
+      title={
+        entry && (
+          <span className="flex items-center gap-3">
+            <MovementIcon kind={movementKind(entry)} incoming={incoming} />
+            {movementLabel(entry, t.history)}
+          </span>
+        )
+      }
+      footer={
+        <Button block onClick={onClose}>
+          {t.common.close}
+        </Button>
+      }
+    >
+      {entry && (
+        <>
+          <p
+            className={`font-mono text-[26px] font-black tracking-[-0.03em] ${
+              incoming ? "text-accent-text" : "text-brand-red"
+            }`}
+          >
+            {formatSignedMoney(entry.amount)}
+          </p>
+          <dl className="mt-4 divide-y divide-brand-border rounded-xl border border-brand-border bg-white">
+            {detailRows(entry, onShowCycle).map((row) => (
+              <div key={row.label} className="flex items-baseline justify-between gap-3 px-3 py-2">
+                <dt className="shrink-0 text-label font-semibold uppercase tracking-wide text-brand-gray">
+                  {row.label}
+                </dt>
+                <dd className="min-w-0 break-words text-right text-[14px] text-brand-near-black">{row.value}</dd>
               </div>
-              <p
-                className={`mt-3 font-mono text-[26px] font-black tracking-[-0.03em] ${
-                  incoming ? "text-accent-text" : "text-brand-red"
-                }`}
-              >
-                {formatSignedMoney(entry.amount)}
-              </p>
-              <Dialog.Description className="sr-only">{t.history.detailDescription}</Dialog.Description>
-              <dl className="mt-4 divide-y divide-brand-border rounded-xl border border-brand-border">
-                {detailRows(entry, onShowCycle).map((row) => (
-                  <div key={row.label} className="flex items-baseline justify-between gap-3 px-3 py-2">
-                    <dt className="shrink-0 text-label font-semibold uppercase tracking-wide text-brand-gray">
-                      {row.label}
-                    </dt>
-                    <dd className="min-w-0 break-words text-right text-[14px] text-brand-near-black">{row.value}</dd>
-                  </div>
-                ))}
-              </dl>
-              <Button block className="mt-5" onClick={onClose}>
-                {t.common.close}
-              </Button>
-            </>
-          )}
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+            ))}
+          </dl>
+        </>
+      )}
+    </Sheet>
   );
 }
