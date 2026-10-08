@@ -16,6 +16,15 @@ describe("resolveAdminRoute", () => {
     expect(resolveAdminRoute("impostazioni", undefined)).toEqual({ section: "impostazioni", view: null });
   });
 
+  it("sends a member's order history to their page in Soci", () => {
+    expect(resolveAdminRoute("ordini", undefined, "mem_1")).toEqual({ section: "soci", view: null });
+    expect(resolveAdminRoute("ciclo", "ordini", "mem_1")).toEqual({ section: "soci", view: null });
+    // With a cycle, or anywhere else, the member parameter changes nothing.
+    expect(resolveAdminRoute("ciclo", "ordini", "mem_1", "cyc_1")).toEqual({ section: "ciclo", view: "ordini" });
+    expect(resolveAdminRoute("cassa", undefined, "mem_1")).toEqual({ section: "cassa", view: null });
+    expect(adminTitle("ordini", undefined, "mem_1")).toBe("Members");
+  });
+
   it("reads the view of a section, falling back to its first", () => {
     expect(resolveAdminRoute("catalogo", "fornitori")).toEqual({ section: "catalogo", view: "fornitori" });
     expect(resolveAdminRoute("catalogo", "ordini")).toEqual({ section: "catalogo", view: "prodotti" });

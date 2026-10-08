@@ -21,19 +21,18 @@ import {
   CycleProductsView,
   EditCycleButton,
   OpenCycleOverview,
+  OrdersLink,
   SupplierActionsButton,
   type SerializedCycle,
 } from "./ciclo-forms";
 import { CancelCycleButton } from "./cancel-cycle-dialog";
 import { SettleCycleButton } from "./settle-cycle-dialog";
-import { ClosedCycleDetails } from "./closed-cycle-details";
 import { CycleList, CyclePicker, type CycleListItem } from "./cycle-list";
-import { TabOrdini } from "./tab-ordini";
+import { CycleOrdersView } from "./cycle-orders-view";
 
 type Props = {
   cycleId?: string;
   view: CycleView | null;
-  memberId?: string;
   /** "+ Nuovo ciclo": the creation form, open. */
   creating: boolean;
 };
@@ -41,9 +40,8 @@ type Props = {
 // Admin → Ciclo: one cycle at a time. On the left (a sheet on a phone) every
 // cycle, then the chosen one's header with its main action, and its views:
 // Panoramica · Prodotti · Ordini while open, Panoramica · Ordini · Fornitore ·
-// Conti once closed. The views show the components that were spread over
-// the old Ciclo and Ordini tabs, unchanged.
-export async function CycleWorkspace({ cycleId: asked, view: askedView, memberId, creating }: Props) {
+// Conti once closed.
+export async function CycleWorkspace({ cycleId: asked, view: askedView, creating }: Props) {
   const [cycles, suppliers, settings] = await Promise.all([getAllCycles(1000), getAllSuppliers(), getPaymentSettings()]);
   const selectedId = creating ? null : defaultCycleId(cycles, asked);
   const cycle = cycles.find((c) => c.cycleId === selectedId) ?? null;
@@ -67,7 +65,7 @@ export async function CycleWorkspace({ cycleId: asked, view: askedView, memberId
         <div className="min-w-0">
           <CyclePicker cycles={listItems} selectedId={selectedId} view={view} />
           {cycle && view ? (
-            <SelectedCycle cycle={cycle} view={view} memberId={memberId} suppliers={suppliers} />
+            <SelectedCycle cycle={cycle} view={view} suppliers={suppliers} />
           ) : (
             <NewCycle suppliers={suppliers} settings={settings} empty={cycles.length === 0} />
           )}
@@ -143,12 +141,10 @@ function serialize(c: FullCycle): SerializedCycle {
 async function SelectedCycle({
   cycle: c,
   view,
-  memberId,
   suppliers,
 }: {
   cycle: FullCycle;
   view: CycleView;
-  memberId?: string;
   suppliers: { supplierId: string; name: string }[];
 }) {
   const cycle = serialize(c);
@@ -216,7 +212,7 @@ async function SelectedCycle({
             <CardBody>
               <CycleFacts cycle={cycle} />
               <div className="mt-3">
-                <ClosedCycleDetails cycleId={c.cycleId} cycleTitle={c.title} editable={c.status === "closed"} />
+                <OrdersLink cycleId={c.cycleId} />
               </div>
             </CardBody>
           </Card>
@@ -224,7 +220,7 @@ async function SelectedCycle({
 
       {view === "prodotti" && <CycleProductsView cycle={cycle} suppliers={suppliers} />}
 
-      {view === "ordini" && <TabOrdini cycleId={c.cycleId} memberId={memberId} />}
+      {view === "ordini" && <CycleOrdersView cycleId={c.cycleId} cycleTitle={c.title} editable={c.status === "closed"} />}
 
       {view === "fornitore" && (
         <Card>

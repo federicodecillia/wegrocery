@@ -1,7 +1,7 @@
 "use client";
 
 import { confirm } from "@/components/ui/confirm-dialog";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "@/components/ui/toast";
 import { adminDeleteLedgerEntry, adminUpdateLedgerEntry } from "@/lib/actions/admin";
@@ -321,14 +321,21 @@ export function CassaInlineList({
   ledgerByMember,
   balanceFilter = null,
   maxBalance,
+  openMemberId,
 }: {
   members: MemberWithBalance[];
   ledgerByMember: Record<string, LedgerEntryItem[]>;
   balanceFilter?: BalanceFilter | null;
   maxBalance: number | null;
+  /** From a member's page in Soci: their movements, open and in view. */
+  openMemberId?: string;
 }) {
   const [filter, setFilter] = useState("");
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(openMemberId ?? null);
+
+  useEffect(() => {
+    if (openMemberId) document.getElementById(`cassa-${openMemberId}`)?.scrollIntoView({ block: "start" });
+  }, [openMemberId]);
 
   const filtered = members.filter((m) => {
     if (balanceFilter === "negative" && m.balance >= 0) return false;
@@ -348,7 +355,7 @@ export function CassaInlineList({
     const entries = ledgerByMember[m.memberId] ?? [];
     const isExpanded = expandedId === m.memberId;
     return (
-      <div key={m.memberId}>
+      <div key={m.memberId} id={`cassa-${m.memberId}`} className="scroll-mt-20">
         <button
           onClick={() => setExpandedId(isExpanded ? null : m.memberId)}
           aria-expanded={isExpanded}

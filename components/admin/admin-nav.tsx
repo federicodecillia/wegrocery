@@ -18,7 +18,12 @@ function tabClass(active: boolean): string {
 export function AdminNav() {
   const searchParams = useSearchParams();
   const pathname = usePathname();
-  const { section, view } = resolveAdminRoute(searchParams.get("tab") ?? undefined, searchParams.get("view") ?? undefined);
+  const { section, view } = resolveAdminRoute(
+    searchParams.get("tab") ?? undefined,
+    searchParams.get("view") ?? undefined,
+    searchParams.get("member") ?? undefined,
+    searchParams.get("cycle") ?? undefined,
+  );
   const inMore = ADMIN_MORE.some((s) => s.id === section);
   const views = ADMIN_VIEWS[section];
   const more = useRef<HTMLDetailsElement>(null);

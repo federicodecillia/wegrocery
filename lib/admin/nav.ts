@@ -43,8 +43,18 @@ const LEGACY: Record<string, { section: AdminSection; view: AdminView }> = {
   fornitori: { section: "catalogo", view: "fornitori" },
 };
 
-/** The section and view a URL asks for; anything unknown is the cycle's overview. */
-export function resolveAdminRoute(tab: string | undefined, view: string | undefined): { section: AdminSection; view: AdminView | null } {
+/**
+ * The section and view a URL asks for; anything unknown is the cycle's overview.
+ * A member's order history moved from Ordini to their page in Soci, so the
+ * old `?tab=ordini&member=` (and the cycle's Ordini with only a member) go there.
+ */
+export function resolveAdminRoute(
+  tab: string | undefined,
+  view: string | undefined,
+  member?: string,
+  cycle?: string,
+): { section: AdminSection; view: AdminView | null } {
+  if (member && !cycle && (tab === "ordini" || (tab === "ciclo" && view === "ordini"))) return { section: "soci", view: null };
   const legacy = tab ? LEGACY[tab] : undefined;
   if (legacy) return legacy;
   const section: AdminSection = tab && SECTIONS.has(tab) ? (tab as AdminSection) : "ciclo";
@@ -64,8 +74,8 @@ export function adminHref(section: AdminSection, view?: AdminView | null, extra?
 }
 
 /** The page title and its h1: the section, plus the view when it is not the default. */
-export function adminTitle(tab: string | undefined, view: string | undefined): string {
-  const route = resolveAdminRoute(tab, view);
+export function adminTitle(tab: string | undefined, view: string | undefined, member?: string, cycle?: string): string {
+  const route = resolveAdminRoute(tab, view, member, cycle);
   const section = [...ADMIN_PRIMARY, ...ADMIN_MORE].find((s) => s.id === route.section)!.label;
   if (route.section === "ciclo") {
     return route.view && route.view !== "panoramica" ? `${section}: ${CYCLE_VIEW_LABELS[route.view as CycleView]}` : section;

@@ -18,7 +18,8 @@ import { formatEur } from "@/lib/utils";
 import { ACCESS_LEVELS, DEFAULT_ACCESS_LEVEL, getAccessLabel, normalizeAccessLevel } from "@/lib/roles";
 import { Card, CardBody } from "@/components/ui/card";
 import type { CatalogProductItem } from "@/lib/db/queries";
-import { ClosedCycleDetails } from "./closed-cycle-details";
+import Link from "next/link";
+import { adminHref } from "@/lib/admin/nav";
 import { CycleReviewCloseButton } from "./cycle-review-modal";
 import { SupplierActionsDialog } from "./supplier-actions-dialog";
 import { ImportListingWizard } from "./import-listing-wizard";
@@ -171,12 +172,7 @@ export function OpenCycleOverview({ cycle, stats }: { cycle: SerializedCycle; st
           <CycleFacts cycle={cycle} />
         </div>
         <div className="mt-3">
-          <ClosedCycleDetails
-            cycleId={cycle.cycleId}
-            cycleTitle={cycle.title}
-            buttonLabel={t.admin.cycle.recapOrders}
-            editable={false}
-          />
+          <OrdersLink cycleId={cycle.cycleId} />
         </div>
       </CardBody>
     </Card>
@@ -1191,5 +1187,17 @@ export function EditCycleButton({
         </Sheet>
       )}
     </>
+  );
+}
+
+/** From the overview to the cycle's orders, where they are read and corrected. */
+export function OrdersLink({ cycleId }: { cycleId: string }) {
+  return (
+    <Link
+      href={adminHref("ciclo", "ordini", { cycle: cycleId })}
+      className="inline-flex min-h-10 items-center rounded-xl bg-accent/10 px-3 text-[13px] font-bold text-accent-text hover:bg-accent/20"
+    >
+      {t.admin.cycle.recapOrders}
+    </Link>
   );
 }
