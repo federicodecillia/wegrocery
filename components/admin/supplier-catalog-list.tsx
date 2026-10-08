@@ -6,7 +6,7 @@ import { adminArchiveCatalogProduct } from "@/lib/actions/admin";
 import type { CatalogProductItem } from "@/lib/db/queries";
 import { formatEur, getProductEmoji } from "@/lib/utils";
 import { toast } from "@/components/ui/toast";
-import { CatalogCsvActions, CatalogProductForm } from "./prodotti-forms";
+import { CatalogCsvActions, CatalogProductForm, GuidedImportButton } from "./prodotti-forms";
 import { t } from "@/lib/i18n";
 
 type SupplierWithCatalog = {
@@ -39,8 +39,11 @@ function groupProducts(products: ProductWithSupplier[], groupBy: GroupBy) {
 
 export function SupplierCatalogList({
   initialData,
+  initialSupplierId,
 }: {
   initialData: SupplierWithCatalog[];
+  /** From Fornitori's "N prodotti nel catalogo →" (?supplier=). */
+  initialSupplierId?: string;
 }) {
   const suppliers = initialData.map((item) => item.supplier);
   const allProducts = useMemo(
@@ -59,7 +62,9 @@ export function SupplierCatalogList({
     [allProducts],
   );
 
-  const [supplierFilter, setSupplierFilter] = useState(ALL);
+  const [supplierFilter, setSupplierFilter] = useState(
+    initialSupplierId && suppliers.some((s) => s.supplierId === initialSupplierId) ? initialSupplierId : ALL,
+  );
   const [categoryFilter, setCategoryFilter] = useState(ALL);
   const [groupBy, setGroupBy] = useState<GroupBy>("category");
   const [uploadSupplierId, setUploadSupplierId] = useState(suppliers[0]?.supplierId ?? "");
@@ -91,37 +96,39 @@ export function SupplierCatalogList({
   return (
     <div className="space-y-5">
       <section className="rounded-xl border border-brand-border bg-white p-4 shadow-sm">
-        <div className="mb-3 flex items-start justify-between gap-3">
-          <div>
-            <h3 className="text-[14px] font-bold text-brand-near-black">{t.admin.products.uploadTitle}</h3>
-            <p className="text-label text-brand-gray">
-              {t.admin.products.uploadSubtitle}
-            </p>
+        <h3 className="text-[14px] font-bold text-brand-near-black">{t.admin.products.uploadTitle}</h3>
+        <p className="mb-3 text-label text-brand-gray">{t.admin.products.uploadSubtitle}</p>
+        <GuidedImportButton />
+        <details className="group mt-3">
+          <summary className="flex min-h-10 cursor-pointer list-none items-center gap-1 text-[13px] font-semibold text-brand-gray">
+            <span aria-hidden className="text-label transition-transform group-open:rotate-90">▶</span>
+            {t.admin.products.otherFormats}
+          </summary>
+          <div className="mt-2 space-y-3">
+            <p className="text-label text-brand-gray">{t.admin.products.otherFormatsHint}</p>
+            <label className="block">
+              <span className="mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray">
+                {t.admin.products.uploadSupplierLabel}
+              </span>
+              <select
+                value={uploadSupplierId}
+                onChange={(e) => setUploadSupplierId(e.target.value)}
+                className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black"
+              >
+                {suppliers.length === 0 ? (
+                  <option value="">{t.admin.products.noSupplierAvailable}</option>
+                ) : (
+                  suppliers.map((supplier) => (
+                    <option key={supplier.supplierId} value={supplier.supplierId}>
+                      {supplier.name}
+                    </option>
+                  ))
+                )}
+              </select>
+            </label>
+            <CatalogCsvActions supplierId={uploadSupplierId} />
           </div>
-        </div>
-        <div className="space-y-3">
-          <label className="block">
-            <span className="mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray">
-              {t.admin.products.uploadSupplierLabel}
-            </span>
-            <select
-              value={uploadSupplierId}
-              onChange={(e) => setUploadSupplierId(e.target.value)}
-              className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black"
-            >
-              {suppliers.length === 0 ? (
-                <option value="">{t.admin.products.noSupplierAvailable}</option>
-              ) : (
-                suppliers.map((supplier) => (
-                  <option key={supplier.supplierId} value={supplier.supplierId}>
-                    {supplier.name}
-                  </option>
-                ))
-              )}
-            </select>
-          </label>
-          <CatalogCsvActions supplierId={uploadSupplierId} />
-        </div>
+        </details>
       </section>
 
       <section className="rounded-xl border border-brand-border bg-white p-4 shadow-sm">
@@ -200,6 +207,7 @@ export function SupplierCatalogList({
         <CatalogProductForm
           supplierId={editingProduct?.supplierId ?? addingSupplierId ?? selectedSupplierForAdd}
           product={editingProduct}
+          knownCategories={categories}
           onClose={() => {
             setAddingSupplierId(null);
             setEditingId(null);

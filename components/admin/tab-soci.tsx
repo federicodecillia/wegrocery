@@ -3,6 +3,8 @@ import { findDuplicatePairs } from "@/lib/members/duplicates";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
 import { SociForm, SociList } from "./soci-form";
 import { MemberOrders } from "./member-orders";
+import { CreateToggle } from "./create-toggle";
+import { t } from "@/lib/i18n";
 
 export async function TabSoci({ memberId }: { memberId?: string }) {
   if (memberId) return <MemberOrders memberId={memberId} />;
@@ -24,7 +26,9 @@ export async function TabSoci({ memberId }: { memberId?: string }) {
 
   return (
     <div className="space-y-4">
-      <SociForm offlineOption={offlineOption} />
+      <CreateToggle label={t.admin.members.addMember}>
+        <SociForm offlineOption={offlineOption} />
+      </CreateToggle>
       <SociList
         offlineOption={offlineOption}
         // A person who joined a family is not a duplicate of anyone.

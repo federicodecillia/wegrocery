@@ -45,6 +45,7 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 - 💳 **Accounts to settle come first.** In Admin → Cycle the list opens with the card cycles whose accounts still need "Settle accounts" (never settled, to update after a correction, or a refund that failed), then the open ones; on a phone both sit above "All cycles".
 - 🤝 **Supplier in three steps, Accounts in one place.** Supplier shows, numbered on the page, download the order sheet, send it, upload the completed one. Accounts shows what the cycle moved on balances, shipping and the corrections made (read only), how to correct a cycle, "Settle accounts" for card cycles and, at the bottom, cancelling it.
 - ✅ **"To do now" on top of Admin.** The three count tiles give way to the next step of each cycle, with one button: review and close a cycle whose deadline has passed (in red, with how long ago), send the order to the supplier, record the weights, settle accounts; then refunds to retry and possible duplicate members. "Already sent" and "Delivered as ordered" hide a step on that device only.
+- 🧺 **One catalogue, one product form.** Products are edited only in Catalogue → Products; each supplier in Suppliers links to its own products ("5 products in the catalogue →"), and editing a product no longer drops its icon. The guided import is the main way to load a price list, with the template and direct upload under "Other formats". The forms to add a member or a supplier stay closed until you need them.
 
 ## [1.25.0] — 2026-10-07
 

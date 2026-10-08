@@ -46,6 +46,7 @@ stanno nella PR.
 - 💳 **Prima i conti da chiudere.** In Admin → Ciclo l'elenco parte dai cicli con carta che chiedono ancora "Chiudi i conti" (mai chiusi, da aggiornare dopo una correzione, o con un rimborso non riuscito), poi gli aperti; da telefono stanno entrambi sopra "Tutti i cicli".
 - 🤝 **Fornitore in tre passi, Conti in un posto solo.** Fornitore mostra, numerati nella pagina, scarica la distinta, inviala, carica quella compilata. Conti mostra cosa il ciclo ha mosso sui saldi, la spedizione e le rettifiche fatte (in sola lettura), come si corregge un ciclo, "Chiudi i conti" per i cicli con carta e, in fondo, l'annullamento.
 - ✅ **"Da fare ora" in cima ad Admin.** Le tre caselle con i conteggi lasciano il posto al prossimo passo di ogni ciclo, con un solo pulsante: rivedere e chiudere un ciclo scaduto (in rosso, con da quanto), inviare l'ordine al fornitore, registrare i pesi, chiudere i conti; poi i rimborsi da ritentare e i possibili doppioni tra i soci. "Già inviato" e "Consegnato come ordinato" nascondono un passo solo su quel dispositivo.
+- 🧺 **Un solo catalogo, un solo modulo prodotto.** I prodotti si modificano solo in Catalogo → Prodotti; ogni fornitore in Fornitori porta ai suoi prodotti ("5 prodotti nel catalogo →"), e modificare un prodotto non gli toglie più l'icona. L'import guidato è la via principale per caricare un listino, con il modello e il caricamento diretto sotto "Altri formati". I moduli per aggiungere un socio o un fornitore restano chiusi finché non servono.
 
 ## [1.25.0] — 7 ottobre 2026
 

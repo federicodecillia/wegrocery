@@ -1,32 +1,18 @@
 "use client";
 
 import { confirm } from "@/components/ui/confirm-dialog";
-import { useMemo, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { toast } from "@/components/ui/toast";
-import { FieldHelp } from "@/components/ui/field-help";
-import { CategorySelect } from "@/components/ui/category-select";
+import Link from "next/link";
 import {
   adminArchiveSupplier,
   adminDeleteSupplier,
   adminUpsertSupplier,
-  adminUpsertCatalogProduct,
-  adminArchiveCatalogProduct,
   type UpsertSupplierInput,
-  type UpsertCatalogProductInput,
 } from "@/lib/actions/admin";
-import type { CatalogProductItem } from "@/lib/db/queries";
-import { formatEur } from "@/lib/utils";
+import { adminHref } from "@/lib/admin/nav";
 import { t } from "@/lib/i18n";
-
-const HELP_FIELDS = {
-  nome: t.admin.suppliers.helpNome,
-  varieta: t.admin.suppliers.helpVarieta,
-  formato: t.admin.suppliers.helpFormato,
-  prezzo: t.admin.suppliers.helpPrezzo,
-  prezzoKg: t.admin.suppliers.helpPrezzoKg,
-  categoria: t.admin.suppliers.helpCategoria,
-  note: t.admin.suppliers.helpNote,
-} as const;
+import { useCloseCreate } from "./create-toggle";
 
 type Supplier = {
   supplierId: string;
@@ -50,6 +36,8 @@ export function FornitoriForm({
   supplier?: Supplier;
   onClose?: () => void;
 }) {
+  const closeCreate = useCloseCreate();
+  const close = onClose ?? closeCreate;
   const [isPending, startTransition] = useTransition();
   const isEdit = !!supplier;
 
@@ -75,7 +63,7 @@ export function FornitoriForm({
           return;
         }
         toast.success(isEdit ? t.admin.suppliers.supplierUpdated : t.admin.suppliers.supplierAdded);
-        onClose?.();
+        close?.();
         if (!isEdit) (e.target as HTMLFormElement).reset();
       } catch (err) {
         toast.error(err instanceof Error ? err.message : t.admin.common.error);
@@ -96,8 +84,8 @@ export function FornitoriForm({
         <p className="text-[13px] font-bold text-brand-near-black">
           {isEdit ? t.admin.suppliers.editSupplier(supplier.name) : t.admin.suppliers.addSupplier}
         </p>
-        {isEdit && onClose && (
-          <button type="button" onClick={onClose} className="text-label text-brand-gray">
+        {close && (
+          <button type="button" onClick={close} className="text-label text-brand-gray">
             ✕ {t.admin.common.cancel}
           </button>
         )}
@@ -196,183 +184,20 @@ export function FornitoriForm({
   );
 }
 
-// ── Catalog Product Form ──────────────────────────────────────────────────────
-
-export function CatalogProductForm({
-  supplierId,
-  product,
-  knownCategories = [],
-  onClose,
-}: {
-  supplierId: string;
-  product?: CatalogProductItem;
-  knownCategories?: ReadonlyArray<string>;
-  onClose: () => void;
-}) {
-  const [isPending, startTransition] = useTransition();
-
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const fd = new FormData(e.currentTarget);
-    const ppkRaw = (fd.get("pricePerKg") as string | null)?.replace(",", ".").trim();
-    const pricePerKg = ppkRaw ? parseFloat(ppkRaw) : null;
-    const data: UpsertCatalogProductInput = {
-      catalogProductId: product?.catalogProductId,
-      supplierId,
-      name: fd.get("name") as string,
-      variant: (fd.get("variant") as string) || undefined,
-      format: (fd.get("format") as string) || undefined,
-      // unit no longer surfaced in UI — preserve existing value on edits.
-      unit: product?.unit ?? undefined,
-      unitPrice: parseFloat((fd.get("unitPrice") as string).replace(",", ".")),
-      pricePerKg: pricePerKg != null && !Number.isNaN(pricePerKg) ? pricePerKg : null,
-      notes: (fd.get("notes") as string) || undefined,
-      category: (fd.get("category") as string) || undefined,
-    };
-    startTransition(async () => {
-      try {
-        const result = await adminUpsertCatalogProduct(data);
-        if (result.error) {
-          toast.error(result.error);
-          return;
-        }
-        if (result.archived) {
-          toast.success(t.admin.products.priceUpdatedArchived);
-        } else {
-          toast.success(product ? t.admin.products.productUpdated : t.admin.products.productAddedToCatalog);
-        }
-        onClose();
-      } catch (err) {
-        toast.error(err instanceof Error ? err.message : t.admin.common.error);
-      }
-    });
-  }
-
-  const inputCls =
-    "w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black";
-  const labelCls = "mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray";
-
-  return (
-    <form onSubmit={handleSubmit} className="mb-3 rounded-lg border border-brand-border bg-white p-3 shadow-sm">
-      <div className="mb-2 flex items-center justify-between">
-        <p className="text-[12px] font-bold text-brand-near-black">
-          {product ? t.admin.products.editCatalogProduct : t.admin.products.newCatalogProduct}
-        </p>
-        <button type="button" onClick={onClose} className="text-label text-brand-gray">
-          ✕ {t.admin.common.cancel}
-        </button>
-      </div>
-
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        <div className="col-span-2 sm:col-span-4">
-          <label className="block">
-            <span className={labelCls}>
-              {t.admin.products.nameLabel}<FieldHelp text={HELP_FIELDS.nome} />
-            </span>
-            <input name="name" required defaultValue={product?.name} placeholder={t.admin.products.namePlaceholder} className={inputCls} />
-          </label>
-        </div>
-        <div className="col-span-2 sm:col-span-2">
-          <label className="block">
-            <span className={labelCls}>
-              {t.admin.products.variantLabel}<FieldHelp text={HELP_FIELDS.varieta} />
-            </span>
-            <input name="variant" defaultValue={product?.variant ?? ""} placeholder={t.admin.products.variantPlaceholder} className={inputCls} />
-          </label>
-        </div>
-        <div className="col-span-2 sm:col-span-2">
-          <label className="block">
-            <span className={labelCls}>
-              {t.admin.products.formatLabel}<FieldHelp text={HELP_FIELDS.formato} />
-            </span>
-            <input name="format" placeholder={t.admin.products.formatPlaceholder} defaultValue={product?.format ?? ""} className={inputCls} />
-          </label>
-        </div>
-        <div className="col-span-2 sm:col-span-4">
-          <label className={labelCls}>
-            {t.admin.products.categoryFilter}<FieldHelp text={HELP_FIELDS.categoria} />
-          </label>
-          <CategorySelect
-            name="category"
-            value={product?.category ?? ""}
-            extra={knownCategories}
-          />
-        </div>
-        <div className="col-span-1 sm:col-span-2">
-          <label className="block">
-            <span className={labelCls}>
-              {t.admin.products.priceLabel}<FieldHelp text={HELP_FIELDS.prezzo} />
-            </span>
-            <input name="unitPrice" type="number" step="0.01" required defaultValue={product?.unitPrice} placeholder={t.admin.products.pricePlaceholder} className={inputCls} />
-          </label>
-        </div>
-        <div className="col-span-1 sm:col-span-2">
-          <label className="block">
-            <span className={labelCls}>
-              {t.admin.products.priceKgLabel}<FieldHelp text={HELP_FIELDS.prezzoKg} />
-            </span>
-            <input
-              name="pricePerKg"
-              type="number"
-              step="0.01"
-              defaultValue={product?.pricePerKg ?? ""}
-              placeholder={t.admin.products.priceKgOptional}
-              className={inputCls}
-            />
-          </label>
-        </div>
-        <div className="col-span-2 sm:col-span-4">
-          <label className="block">
-            <span className={labelCls}>
-              {t.admin.products.notesLabel}<FieldHelp text={HELP_FIELDS.note} />
-            </span>
-            <input name="notes" defaultValue={product?.notes ?? ""} className={inputCls} />
-          </label>
-        </div>
-      </div>
-
-      <button
-        type="submit"
-        disabled={isPending}
-        className="mt-3 w-full rounded-lg bg-accent py-1.5 text-[12px] font-bold text-on-accent disabled:opacity-60"
-      >
-        {isPending ? t.admin.common.saving : t.admin.common.save}
-      </button>
-    </form>
-  );
-}
-
 // ── Supplier List ─────────────────────────────────────────────────────────────
 
 export function FornitoriList({
   suppliers,
-  catalogBySupplier,
+  productCounts,
 }: {
   suppliers: Supplier[];
-  catalogBySupplier: Record<string, CatalogProductItem[]>;
+  /** Active catalogue products per supplier; edited in Catalogo → Prodotti. */
+  productCounts: Record<string, number>;
 }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [filter, setFilter] = useState("");
-  const [addingCatalogFor, setAddingCatalogFor] = useState<string | null>(null);
-  const [editingCatalogId, setEditingCatalogId] = useState<string | null>(null);
   const [, startTransition] = useTransition();
-
-  // Per-supplier list of categories already in use — passed to the dropdown
-  // so admins see their own labels alongside the generic defaults.
-  const knownCategoriesBySupplier = useMemo<Record<string, string[]>>(() => {
-    const result: Record<string, string[]> = {};
-    for (const [supplierId, list] of Object.entries(catalogBySupplier)) {
-      result[supplierId] = Array.from(
-        new Set(
-          list
-            .map((p) => p.category?.trim())
-            .filter((c): c is string => Boolean(c)),
-        ),
-      );
-    }
-    return result;
-  }, [catalogBySupplier]);
 
   function handleArchive(s: Supplier) {
     startTransition(async () => {
@@ -410,15 +235,6 @@ export function FornitoriList({
 
   const active = filtered.filter((s) => s.active);
   const archived = filtered.filter((s) => !s.active);
-
-  async function handleArchiveCatalogProduct(catalogProductId: string) {
-    if (!(await confirm({ title: t.admin.suppliers.archiveCatalogConfirm, danger: true }))) return;
-    startTransition(async () => {
-      const result = await adminArchiveCatalogProduct(catalogProductId, false);
-      if (result.error) toast.error(result.error);
-      else toast.success(t.admin.suppliers.productArchivedSuccess);
-    });
-  }
 
   function renderGroup(label: string, list: Supplier[]) {
     if (list.length === 0) return null;
@@ -504,82 +320,13 @@ export function FornitoriList({
                         </div>
                       )}
 
-                      {/* Catalog Section */}
-                      <div className="mb-4">
-                        <div className="mb-2 flex items-center justify-between">
-                          <p className="font-mono text-label uppercase tracking-wider text-muted">
-                            {t.admin.suppliers.catalogLabel}
-                          </p>
-                          <button
-                            onClick={() => {
-                              setAddingCatalogFor(addingCatalogFor === s.supplierId ? null : s.supplierId);
-                              setEditingCatalogId(null);
-                            }}
-                            className="text-label font-semibold text-accent-text"
-                          >
-                            {t.admin.suppliers.addCatalogProduct}
-                          </button>
-                        </div>
-                        {addingCatalogFor === s.supplierId && (
-                          <CatalogProductForm
-                            supplierId={s.supplierId}
-                            knownCategories={knownCategoriesBySupplier[s.supplierId] ?? []}
-                            onClose={() => setAddingCatalogFor(null)}
-                          />
-                        )}
-                        <div className="space-y-1">
-                          {(catalogBySupplier[s.supplierId] ?? []).filter((p) => p.active).map((cp) => (
-                            <div key={cp.catalogProductId} className="rounded border border-brand-border/50 bg-white px-3 py-2">
-                              {editingCatalogId === cp.catalogProductId ? (
-                                <CatalogProductForm
-                                  supplierId={s.supplierId}
-                                  product={cp}
-                                  knownCategories={knownCategoriesBySupplier[s.supplierId] ?? []}
-                                  onClose={() => setEditingCatalogId(null)}
-                                />
-                              ) : (
-                                <div className="flex items-center justify-between">
-                                  <div className="text-[12px]">
-                                    <span className="font-semibold text-brand-near-black">{cp.name}</span>
-                                    {cp.variant && <span className="ml-1 text-brand-gray">· {cp.variant}</span>}
-                                    {cp.format && <span className="ml-1 font-mono text-label text-muted">({cp.format})</span>}
-                                  </div>
-                                  <div className="flex items-center gap-3">
-                                    <span className="font-mono text-[12px] font-semibold text-brand-near-black">
-                                      {formatEur(parseFloat(cp.unitPrice))}
-                                      {cp.pricePerKg && (
-                                        <span className="ml-1 text-label text-muted">
-                                          ({formatEur(parseFloat(cp.pricePerKg))}/kg)
-                                        </span>
-                                      )}
-                                    </span>
-                                    <div className="flex items-center gap-1.5">
-                                      <button
-                                        onClick={() => {
-                                          setEditingCatalogId(cp.catalogProductId);
-                                          setAddingCatalogFor(null);
-                                        }}
-                                        className="text-label font-semibold text-brand-gray"
-                                      >
-                                        {t.admin.common.edit}
-                                      </button>
-                                      <button
-                                        onClick={() => handleArchiveCatalogProduct(cp.catalogProductId)}
-                                        className="text-label font-semibold text-brand-gray"
-                                      >
-                                        {t.admin.common.archive}
-                                      </button>
-                                    </div>
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          ))}
-                          {(catalogBySupplier[s.supplierId] ?? []).filter((p) => p.active).length === 0 && !addingCatalogFor && (
-                            <p className="text-[12px] text-brand-gray">{t.admin.suppliers.noProductsInCatalog}</p>
-                          )}
-                        </div>
-                      </div>
+                      {/* The catalogue is edited in one place: Catalogo → Prodotti. */}
+                      <Link
+                        href={adminHref("catalogo", "prodotti", { supplier: s.supplierId })}
+                        className="inline-flex min-h-10 items-center text-[13px] font-semibold text-primary-text"
+                      >
+                        {t.admin.suppliers.productsLink(productCounts[s.supplierId] ?? 0)}
+                      </Link>
                     </div>
                   )}
                 </>
