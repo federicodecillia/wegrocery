@@ -1110,58 +1110,6 @@ export async function getAllMembersLedger(): Promise<Record<string, LedgerEntryI
   return result;
 }
 
-// ── Admin home insights ──────────────────────────────────────────────────────
-// Quick at-a-glance metrics surfaced at the top of the admin "Ciclo" tab.
-// Each one is fast (single small aggregate) so the row stays cheap even on
-// every admin page load.
-
-export type AdminInsights = {
-  // Open cycles right now. Surface = "what's live for members".
-  openCyclesCount: number;
-  // Open cycles closing within the next 7 days. Surface = "imminent deadlines".
-  closingSoonCount: number;
-  // Cycles closed in the last 7 days. Surface = "recently wrapped up".
-  recentlyClosedCount: number;
-};
-
-export async function getAdminInsights(): Promise<AdminInsights> {
-  const db = getDb();
-
-  const [openRows, closingSoonRows, recentlyClosedRows] = await Promise.all([
-    db
-      .select({ cycleId: orderCycles.cycleId })
-      .from(orderCycles)
-      .where(eq(orderCycles.status, "open")),
-    db
-      .select({ cycleId: orderCycles.cycleId })
-      .from(orderCycles)
-      .where(
-        and(
-          eq(orderCycles.status, "open"),
-          isNotNull(orderCycles.orderCloseAt),
-          sql`${orderCycles.orderCloseAt} <= now() + interval '7 days'`,
-          sql`${orderCycles.orderCloseAt} > now()`,
-        ),
-      ),
-    db
-      .select({ cycleId: orderCycles.cycleId })
-      .from(orderCycles)
-      .where(
-        and(
-          eq(orderCycles.status, "closed"),
-          isNotNull(orderCycles.closedAt),
-          sql`${orderCycles.closedAt} >= now() - interval '7 days'`,
-        ),
-      ),
-  ]);
-
-  return {
-    openCyclesCount: openRows.length,
-    closingSoonCount: closingSoonRows.length,
-    recentlyClosedCount: recentlyClosedRows.length,
-  };
-}
-
 // ── Analytics ────────────────────────────────────────────────────────────────
 // Aggregations used by the admin "Statistiche" tab. They all operate over
 // closed cycles only (status = 'closed') because that's when the data is
@@ -1601,4 +1549,43 @@ export async function getCycleLedgerRows(cycleId: string): Promise<CycleLedgerRo
     .innerJoin(members, eq(members.memberId, ledgerEntries.memberId))
     .where(and(eq(ledgerEntries.cycleId, cycleId), liveLedger))
     .orderBy(asc(ledgerEntries.entryDate), asc(ledgerEntries.entryId));
+}
+
+/**
+ * What "Da fare ora" (lib/admin/cycle-phase.ts) needs per cycle: members with
+ * an order, whether the order sheet was emailed from the app, and whether any
+ * correction was recorded after the close (a live correction row, an imported
+ * supplier sheet, or per-member shipping). Read only.
+ */
+export async function getCycleTaskFacts(cycleIds: string[]): Promise<
+  Map<string, { orderMembers: number; supplierSent: boolean; adjusted: boolean }>
+> {
+  const out = new Map<string, { orderMembers: number; supplierSent: boolean; adjusted: boolean }>();
+  if (cycleIds.length === 0) return out;
+  const ids = sql.join(
+    cycleIds.map((id) => sql`${id}`),
+    sql`, `,
+  );
+  const { rows } = await getDb().execute<{
+    cycle_id: string;
+    order_members: number;
+    supplier_sent: boolean;
+    adjusted: boolean;
+  }>(sql`
+    SELECT c.cycle_id,
+      (SELECT count(DISTINCT o.member_id)::int FROM orders o WHERE o.cycle_id = c.cycle_id) AS order_members,
+      EXISTS (SELECT 1 FROM audit_log a WHERE a.entity_type = 'cycle' AND a.entity_id = c.cycle_id
+              AND a.action = 'supplier_email_sent') AS supplier_sent,
+      (c.shipping_mode = 'manual'
+        OR EXISTS (SELECT 1 FROM audit_log a WHERE a.entity_type = 'cycle' AND a.entity_id = c.cycle_id
+                   AND a.action = 'supplier_distinta_imported')
+        OR EXISTS (SELECT 1 FROM ledger_entries l WHERE l.cycle_id = c.cycle_id AND l.type = 'correction'
+                   AND l.reversed_by IS NULL)) AS adjusted
+    FROM order_cycles c
+    WHERE c.cycle_id IN (${ids})
+  `);
+  for (const r of rows) {
+    out.set(r.cycle_id, { orderMembers: r.order_members, supplierSent: r.supplier_sent, adjusted: r.adjusted });
+  }
+  return out;
 }

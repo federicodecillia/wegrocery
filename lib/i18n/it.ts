@@ -580,6 +580,30 @@ export const it = {
       productsIntro: "I prodotti che i soci vedono in questo ciclo. Aggiungili dal catalogo dei fornitori o importa un listino.",
       supplierIntro: "Tre passi: scarica la distinta, inviala al fornitore, poi carica quella compilata con pesi e prezzi veri.",
       noSupplier: "Questo ciclo non ha un fornitore: aggiungilo da ✎ Modifica per inviare la distinta.",
+      todo: {
+        title: "Da fare ora",
+        nothing: "Nessuna azione da fare sui cicli.",
+        overdueCta: "Rivedi e chiudi il ciclo",
+        overdueDetail: (h: number) =>
+          h < 1 ? "Ordini chiusi da meno di un'ora" : h < 48 ? `Ordini chiusi da ${h} h` : `Ordini chiusi da ${Math.floor(h / 24)} giorni`,
+        openCta: "Vedi gli ordini",
+        openDetail: (members: number, h: number | null) =>
+          [members === 1 ? "1 socio" : `${members} soci`, h == null ? null : h < 48 ? `chiude tra ${h} h` : `chiude tra ${Math.floor(h / 24)} giorni`]
+            .filter(Boolean)
+            .join(" · "),
+        sendCta: "Invia l'ordine al fornitore",
+        sendDetail: "Ciclo chiuso, ordine non ancora inviato dall'app",
+        adjustCta: "Registra i pesi o carica la distinta",
+        adjustDetail: "Nessuna rettifica registrata dopo la consegna",
+        settleCta: "Chiudi i conti",
+        settleDetail: "Pagato con carta: si rimborsa o si chiede la differenza",
+        markSent: "Già inviato",
+        markDelivered: "Consegnato come ordinato",
+        markHint: "Vale solo su questo dispositivo.",
+        more: (n: number) => (n === 1 ? "e un altro ciclo, nell'elenco" : `e altri ${n} cicli, nell'elenco`),
+        refunds: (n: number) => (n === 1 ? "1 rimborso da ritentare" : `${n} rimborsi da ritentare`),
+        duplicates: (n: number) => (n === 1 ? "1 possibile doppione tra i soci" : `${n} possibili doppioni tra i soci`),
+      },
       accounts: {
         movementsTitle: "Movimenti del ciclo",
         movementsHint: "Quello che il ciclo ha mosso sui saldi dei soci, rettifiche comprese. Solo lettura.",
@@ -1219,12 +1243,6 @@ export const it = {
       deselectAll: "Deseleziona tutti",
       noFilterResults: "Nessun risultato",
       selectedCount: (n: number, label: string) => `${n} ${label} selezionati`,
-      insightOpen: "Aperti",
-      insightOpenHint: "cicli attivi",
-      insightExpiring: "In scadenza",
-      insightExpiringHint: "≤7gg",
-      insightClosed: "Chiusi",
-      insightClosedHint: "ultimi 7gg",
       overviewClosedCycles: "Cicli chiusi",
       overviewActiveMembers: "Soci attivi",
       overviewActiveMembersHint: "ordine negli ultimi 3 cicli",
