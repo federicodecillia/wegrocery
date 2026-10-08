@@ -39,6 +39,7 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 - 👆 **Drag down to close.** On a phone, windows that rise from the bottom (confirmations included) close by dragging them down; on a confirmation that always means "Cancel". The window that closes a cycle closes only with its buttons.
 - 🔄 **Always up to date.** Coming back to the app after a few minutes reloads balance, cycle and notifications, tapping the current item of the bottom bar scrolls up and refreshes, and a line says when you are offline. The Order page is never refreshed while you edit.
 - 🔔 **Clearer notifications.** Grouped by day (Today, Yesterday...), unread ones say "New" in words, and tapping one opens its page at once.
+- 🧭 **A shorter Admin bar.** Cycle, Treasury, Members and Catalogue fit on a phone without scrolling, with Statistics and Settings behind ⋯ (in line on a computer). Orders now sit under Cycle, Products and Suppliers under Catalogue, and old links still open the right page.
 
 ## [1.25.0] — 2026-10-07
 

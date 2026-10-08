@@ -40,6 +40,7 @@ stanno nella PR.
 - 👆 **Trascina giù per chiudere.** Su telefono le finestre che salgono dal basso (comprese le conferme) si chiudono trascinandole verso il basso; su una conferma vale sempre come "Annulla". La finestra che chiude un ciclo si chiude solo con i suoi pulsanti.
 - 🔄 **Sempre aggiornata.** Tornando nell'app dopo qualche minuto saldo, ciclo e notifiche si ricaricano, toccare la voce attiva della barra in basso torna in cima e aggiorna, e una riga avvisa quando sei offline. La pagina Ordine non si aggiorna mai mentre la modifichi.
 - 🔔 **Notifiche più chiare.** Raggruppate per giorno (Oggi, Ieri...), quelle non lette dicono "Nuova" a parole, e toccarne una apre subito la sua pagina.
+- 🧭 **Una barra Admin più corta.** Ciclo, Cassa, Soci e Catalogo stanno sul telefono senza scorrere, con Statistiche e Impostazioni dietro ⋯ (in fila da computer). Ordini ora è dentro Ciclo, Prodotti e Fornitori dentro Catalogo, e i vecchi link aprono ancora la pagina giusta.
 
 ## [1.25.0] — 7 ottobre 2026
 

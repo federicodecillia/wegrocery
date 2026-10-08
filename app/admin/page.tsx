@@ -13,15 +13,16 @@ import { TabFornitori } from "@/components/admin/tab-fornitori";
 import { TabStatistiche } from "@/components/admin/tab-statistiche";
 import { TabImpostazioni } from "@/components/admin/tab-impostazioni";
 import type { Metadata } from "next";
-import { adminTabLabel } from "@/lib/admin/nav";
+import { adminTitle, resolveAdminRoute } from "@/lib/admin/nav";
 
 export async function generateMetadata({ searchParams }: { searchParams: SearchParams }): Promise<Metadata> {
-  const { tab } = await searchParams;
-  return { title: `${adminTabLabel(tab)} · Admin` };
+  const { tab, view } = await searchParams;
+  return { title: `${adminTitle(tab, view)} · Admin` };
 }
 
 type SearchParams = Promise<{
   tab?: string;
+  view?: string;
   cycle?: string;
   member?: string;
   supplier?: string;
@@ -57,40 +58,41 @@ export default async function AdminPage({ searchParams }: { searchParams: Search
 
   const {
     tab: tabParam,
+    view: viewParam,
     cycle: cycleId,
     member: filterMemberId,
     supplier: filterSupplierId,
     balance: balanceParam,
   } = await searchParams;
-  const tab = tabParam ?? "ciclo";
+  const { section, view } = resolveAdminRoute(tabParam, viewParam);
   const balanceFilter =
     balanceParam === "negative" || balanceParam === "above_max" ? balanceParam : undefined;
 
   return (
     <AppShell email={session.user.email} name={session.user.fullName} isAdmin memberId={session.user.memberId!} personId={session.user.personId} width="admin">
-      <h1 className="sr-only">{`Admin: ${adminTabLabel(tab)}`}</h1>
+      <h1 className="sr-only">{`Admin: ${adminTitle(tabParam, viewParam)}`}</h1>
       <Suspense fallback={null}>
         <AdminNav />
       </Suspense>
 
       <Suspense
-        key={`${tab}-${cycleId ?? ""}-${filterMemberId ?? ""}-${filterSupplierId ?? ""}-${balanceFilter ?? ""}`}
+        key={`${section}-${view ?? ""}-${cycleId ?? ""}-${filterMemberId ?? ""}-${filterSupplierId ?? ""}-${balanceFilter ?? ""}`}
         fallback={<TabSkeleton />}
       >
-        {tab === "ciclo" && <TabCiclo />}
-        {tab === "prodotti" && <TabProdotti />}
-        {tab === "ordini" && <TabOrdini cycleId={cycleId} memberId={filterMemberId} />}
-        {tab === "cassa" && <TabCassa balanceFilter={balanceFilter} />}
-        {tab === "fornitori" && <TabFornitori />}
-        {tab === "soci" && <TabSoci />}
-        {tab === "statistiche" && (
+        {view === "panoramica" && <TabCiclo />}
+        {view === "ordini" && <TabOrdini cycleId={cycleId} memberId={filterMemberId} />}
+        {view === "prodotti" && <TabProdotti />}
+        {view === "fornitori" && <TabFornitori />}
+        {section === "cassa" && <TabCassa balanceFilter={balanceFilter} />}
+        {section === "soci" && <TabSoci />}
+        {section === "statistiche" && (
           <TabStatistiche
             cycleIds={parseCsvParam(cycleId)}
             supplierIds={parseCsvParam(filterSupplierId)}
             memberIds={parseCsvParam(filterMemberId)}
           />
         )}
-        {tab === "impostazioni" && <TabImpostazioni />}
+        {section === "impostazioni" && <TabImpostazioni />}
       </Suspense>
     </AppShell>
   );

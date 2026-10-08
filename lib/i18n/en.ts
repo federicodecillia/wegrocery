@@ -554,6 +554,22 @@ export const en: Strings = {
     admin: "Admin only",
   },
   admin: {
+    nav: {
+      cycle: "Cycle",
+      treasury: "Treasury",
+      members: "Members",
+      catalog: "Catalogue",
+      stats: "Statistics",
+      settings: "Settings",
+      more: "More",
+      moreAria: "More sections",
+      cycleOverview: "Overview",
+      cycleOrders: "Orders",
+      catalogProducts: "Products",
+      catalogSuppliers: "Suppliers",
+      sections: "Admin sections",
+      views: "Views",
+    },
     settlement: {
       openButton: "Settle accounts",
       settledButton: (date: string) => `Settled on ${date}`,
@@ -677,7 +693,6 @@ export const en: Strings = {
       noSupplier: "— none —",
     },
     cycle: {
-      tabLabel: "Cycle",
       recentCycles: "Recent cycles",
       noCycleOpen: "No open cycle",
       openBadge: "Open",
@@ -750,7 +765,6 @@ export const en: Strings = {
       supplierButton: "🤝 Supplier",
     },
     products: {
-      tabLabel: "Products",
       catalogTitle: "Product Catalog",
       catalogSubtitle: "Single filterable list by supplier, category, and grouping.",
       uploadTitle: "Upload products",
@@ -838,7 +852,6 @@ export const en: Strings = {
     },
     orders: {
       memberSummary: (cycles: number, total: string) => `${cycles === 1 ? "1 cycle" : `${cycles} cycles`} · ${total} total`,
-      tabLabel: "Orders",
       allMembers: "All members",
       memberFilterAria: "Member",
       cycleFilterAria: "Cycle",
@@ -867,7 +880,6 @@ export const en: Strings = {
       editEntryAria: "Edit movement",
       deleteEntryAria: "Delete movement",
       cancelEditAria: "Cancel the edit",
-      tabLabel: "Treasury",
       balancesTitle: (n: number) => `Member balances (${n})`,
       pendingRefundsTitle: (n: number) => (n === 1 ? "1 refund waiting for Stripe" : `${n} refunds waiting for Stripe`),
       pendingRefundsHint: "Stripe has not received these refunds yet, usually because of a network error. Retrying is safe: nobody is refunded twice.",
@@ -1001,7 +1013,6 @@ export const en: Strings = {
     },
     members: {
       deleteAria: (name: string) => `Delete ${name}`,
-      tabLabel: "Members",
       addMember: "Add member",
       editMember: (name: string) => `Edit: ${name}`,
       memberAdded: "Member added",
@@ -1098,7 +1109,6 @@ export const en: Strings = {
     },
     suppliers: {
       deleteAria: (name: string) => `Delete ${name}`,
-      tabLabel: "Suppliers",
       addSupplier: "Add supplier",
       editSupplier: (name: string) => `Edit: ${name}`,
       supplierAdded: "Supplier added",
@@ -1139,7 +1149,6 @@ export const en: Strings = {
       helpNote: "Free-text notes, shown to members.",
     },
     stats: {
-      tabLabel: "Stats",
       noDataTitle: "No data available",
       noDataFiltered: "No data for this filter",
       noDataHint: "Stats will appear here after the first cycle closes.",
@@ -1445,7 +1454,6 @@ export const en: Strings = {
         confirm: (label: string) => `Switch to ${label}? Cycles already created keep their mode.`,
         changed: "Payment mode changed.",
       },
-      tabLabel: "Settings",
       defaultsNotice: "These are the group's default values: check them and save. Until you save, the app uses these.",
       limitsTitle: "Balance limits",
       limitsHint: "They apply to every member. Changing them does not touch today's balances.",

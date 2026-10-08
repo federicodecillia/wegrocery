@@ -37,14 +37,14 @@ export function OrdiniFilters({
 
   function onMemberChange(e: React.ChangeEvent<HTMLSelectElement>) {
     const val = e.target.value;
-    const params = new URLSearchParams({ tab: "ordini" });
+    const params = new URLSearchParams({ tab: "ciclo", view: "ordini" });
     if (val) params.set("member", val);
     router.push(`/admin?${params}`);
   }
 
   function onCycleChange(e: React.ChangeEvent<HTMLSelectElement>) {
     const val = e.target.value;
-    const params = new URLSearchParams({ tab: "ordini" });
+    const params = new URLSearchParams({ tab: "ciclo", view: "ordini" });
     if (val) params.set("cycle", val);
     router.push(`/admin?${params}`);
   }
