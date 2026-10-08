@@ -9,6 +9,7 @@ import { adminUnlinkFamilyMember } from "@/lib/actions/family";
 import { formatDate } from "@/lib/utils";
 import { DEFAULT_ROLE, ROLES, getRoleLabel, normalizeRole, type Role } from "@/lib/roles";
 import { t } from "@/lib/i18n";
+import { useCloseCreate } from "./create-toggle";
 import { adminHref } from "@/lib/admin/nav";
 import type { DuplicatePair } from "@/lib/members/duplicates";
 import { DuplicateMembers } from "./duplicate-members";
@@ -46,6 +47,8 @@ export function SociForm({
   // Editing a member and typing another member's address: offer the merge.
   onMergeRequest?: (request: MergeRequest) => void;
 }) {
+  const closeCreate = useCloseCreate();
+  const close = onClose ?? closeCreate;
   const [isPending, startTransition] = useTransition();
   const isEdit = !!member;
 
@@ -80,7 +83,7 @@ export function SociForm({
           return;
         }
         toast.success(isEdit ? t.admin.members.memberUpdated : t.admin.members.memberAdded);
-        onClose?.();
+        close?.();
         if (!isEdit) (e.target as HTMLFormElement).reset();
       } catch (err) {
         toast.error(err instanceof Error ? err.message : t.admin.common.error);
@@ -94,8 +97,8 @@ export function SociForm({
         <p className="text-[13px] font-bold text-brand-near-black">
           {isEdit ? t.admin.members.editMember(member.fullName) : t.admin.members.addMember}
         </p>
-        {isEdit && onClose && (
-          <button type="button" onClick={onClose} className="text-label text-brand-gray">
+        {close && (
+          <button type="button" onClick={close} className="text-label text-brand-gray">
             ✕ {t.admin.common.cancel}
           </button>
         )}

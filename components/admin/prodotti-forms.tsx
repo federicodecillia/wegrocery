@@ -31,6 +31,9 @@ const HELP = {
 
 // ── Catalog Product Form ──────────────────────────────────────────────────────
 
+// The one form for a catalogue product (Catalogo → Prodotti). Fornitori used
+// to carry a second copy without the icon field, so saving there wiped it.
+
 export function CatalogProductForm({
   supplierId,
   product,
@@ -78,7 +81,9 @@ export function CatalogProductForm({
           toast.error(result.error);
           return;
         }
-        toast.success(product ? t.admin.products.productUpdated : t.admin.products.productCreated);
+        // A price change on an edit archives the old version (past cycles keep it).
+        if (result.archived) toast.success(t.admin.products.priceUpdatedArchived);
+        else toast.success(product ? t.admin.products.productUpdated : t.admin.products.productCreated);
         onClose();
       } catch {
         toast.error(t.admin.products.errorSaving);
@@ -234,11 +239,10 @@ function decodeBase64ToBlob(base64: string, mimeType: string): Blob {
   return new Blob([bytes], { type: mimeType });
 }
 
+/** "Altri formati": the WeGrocery template and a direct upload for one supplier. */
 export function CatalogCsvActions({ supplierId }: { supplierId: string }) {
-  void supplierId; // wizard re-asks the supplier; this prop is kept for API parity
   const [isPending, startTransition] = useTransition();
   const [downloading, startDownload] = useTransition();
-  const [wizardOpen, setWizardOpen] = useState(false);
 
   function downloadTemplate() {
     startDownload(async () => {
@@ -308,7 +312,7 @@ export function CatalogCsvActions({ supplierId }: { supplierId: string }) {
   }
 
   const btnBase =
-    "flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border px-3 py-2 text-[12px] font-bold shadow-sm transition disabled:opacity-60";
+    "flex min-h-10 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border px-3 py-2 text-[12px] font-bold shadow-sm transition disabled:opacity-60";
   return (
     <div className="flex flex-wrap gap-2">
       <button
@@ -334,19 +338,24 @@ export function CatalogCsvActions({ supplierId }: { supplierId: string }) {
           disabled={isPending || !supplierId}
         />
       </label>
+    </div>
+  );
+}
+
+/** The main way to load a price list: the guided import, which asks for the supplier itself. */
+export function GuidedImportButton() {
+  const [wizardOpen, setWizardOpen] = useState(false);
+  return (
+    <>
       <button
         onClick={() => setWizardOpen(true)}
         title={t.admin.products.importGuidedTitle}
-        className={`${btnBase} border-primary/30 bg-primary-soft text-primary-text hover:opacity-90`}
+        className="flex min-h-11 w-full items-center justify-center rounded-xl bg-primary px-4 text-[13px] font-bold text-on-primary sm:w-auto"
       >
         {t.admin.products.importGuided}
       </button>
-      <ImportListingWizard
-        open={wizardOpen}
-        onClose={() => setWizardOpen(false)}
-        cycleId={null}
-      />
-    </div>
+      <ImportListingWizard open={wizardOpen} onClose={() => setWizardOpen(false)} cycleId={null} />
+    </>
   );
 }
 

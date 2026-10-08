@@ -88,7 +88,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Search
             creating={newParam === "1"}
           />
         )}
-        {view === "prodotti" && <TabProdotti />}
+        {view === "prodotti" && <TabProdotti supplierId={filterSupplierId} />}
         {view === "fornitori" && <TabFornitori />}
         {section === "cassa" && <TabCassa balanceFilter={balanceFilter} memberId={filterMemberId} />}
         {section === "soci" && <TabSoci memberId={filterMemberId} />}
