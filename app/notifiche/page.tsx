@@ -24,7 +24,7 @@ export default async function NotifichePage() {
     <AppShell email={session.user.email} name={session.user.fullName} isAdmin={role === "admin"} memberId={memberId} personId={session.user.personId}>
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2">
-          <h1 className="text-[20px] font-black tracking-[-0.03em] text-brand-near-black">
+          <h1 className="text-title font-black text-brand-near-black">
             {t.notifications.title}
           </h1>
           <HelpLink href="/guida/notifiche" />
@@ -78,7 +78,7 @@ export default async function NotifichePage() {
           </p>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-[18px] border border-brand-border bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+        <div className="overflow-hidden rounded-card border border-brand-border bg-white shadow-card">
           {notifications.map((n, i) => (
             <form
               key={n.notificationId}

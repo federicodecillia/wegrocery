@@ -268,7 +268,7 @@ export default async function HomePage({
               )}
 
               {myLines.length > 0 ? (
-                <div className="overflow-hidden rounded-[18px] border border-brand-border bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+                <div className="overflow-hidden rounded-card border border-brand-border bg-white shadow-card">
                   <div className="flex items-center justify-between border-b border-brand-border px-4 py-[14px]">
                     <span className="font-mono text-label uppercase tracking-[0.1em] text-brand-gray">
                       {t.home.yourOrder}
@@ -315,7 +315,7 @@ export default async function HomePage({
                   </div>
                 </div>
               ) : (
-                <div className="flex items-center justify-between rounded-[18px] border border-brand-border bg-white p-[18px] shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+                <div className="flex items-center justify-between rounded-card border border-brand-border bg-white p-[18px] shadow-card">
                   <span className="text-[14px] text-brand-gray">{t.home.noOrdersYet}</span>
                   <Link
                     href={`/ordine?cycleId=${cycle.cycleId}`}
@@ -329,7 +329,7 @@ export default async function HomePage({
           );
         })
       ) : (
-        <div className="mb-[14px] flex items-center justify-between rounded-[18px] border border-brand-border bg-white p-[18px] shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+        <div className="mb-[14px] flex items-center justify-between rounded-card border border-brand-border bg-white p-[18px] shadow-card">
           <div>
             <div className="text-[15px] font-bold">{t.home.noOpenOrders}</div>
             <div className="font-mono text-label text-muted">

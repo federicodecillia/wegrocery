@@ -1,5 +1,6 @@
 "use client";
 
+import { confirm } from "@/components/ui/confirm-dialog";
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "@/components/ui/toast";
@@ -29,8 +30,8 @@ export function PaymentModeCard({
   const target: PaymentMode = mode === "wallet" ? "per_order" : "wallet";
   const name = (m: PaymentMode) => (m === "wallet" ? s.walletName : s.perOrderName);
 
-  function handleChange() {
-    if (!window.confirm(s.confirm(name(target)))) return;
+  async function handleChange() {
+    if (!(await confirm({ title: s.confirm(name(target)), danger: false }))) return;
     startTransition(async () => {
       const result = await adminChangePaymentMode(target);
       if (result.error) {

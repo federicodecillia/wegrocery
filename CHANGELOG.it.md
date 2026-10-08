@@ -29,6 +29,7 @@ stanno nella PR.
 - 🛒 **Pulsanti dell'ordine più comodi.** Il "+" resta sotto il dito quando un prodotto passa da 0 a 1, e i lettori di schermo dicono quale prodotto cambia ogni pulsante e la nuova quantità.
 - 💬 **Messaggi che fai in tempo a leggere.** Errori e avvisi restano più a lungo e si possono chiudere, e un salvataggio non riuscito dice di controllare la connessione. Cancellare un ordine parte da "Annulla", così un Invio per sbaglio non cancella nulla.
 - ⌨️ **Più comoda con la tastiera.** Ogni pulsante e campo mostra un contorno ben visibile quando ci arrivi con Tab, il link "Vai al contenuto" salta il menu e ogni pagina ha il suo titolo nella scheda del browser.
+- 🧩 **Stesso aspetto per le stesse cose.** Le conferme in Admin (eliminare un socio, archiviare un prodotto, toglierlo da un ciclo...) usano la finestra dell'app al posto di quella del browser, e stati, link per tornare indietro e pulsanti hanno uno stile unico.
 
 ## [1.25.0] — 7 ottobre 2026
 

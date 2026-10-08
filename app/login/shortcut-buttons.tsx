@@ -25,10 +25,10 @@ export function ShortcutButtons({ demo, dev }: { demo: boolean; dev: boolean }) 
     <div className="space-y-3">
       {demo && (
         <>
-          <Button type="button" variant="teal" block disabled={busy} onClick={() => go("/demo/sign-in", { profile: "user" })}>
+          <Button type="button" variant="accent" block disabled={busy} onClick={() => go("/demo/sign-in", { profile: "user" })}>
             {t.login.memberLogin}
           </Button>
-          <Button type="button" variant="orange" block disabled={busy} onClick={() => go("/demo/sign-in", { profile: "admin" })}>
+          <Button type="button" variant="brand" block disabled={busy} onClick={() => go("/demo/sign-in", { profile: "admin" })}>
             {t.login.adminLogin}
           </Button>
         </>

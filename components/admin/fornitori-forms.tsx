@@ -1,5 +1,6 @@
 "use client";
 
+import { confirm } from "@/components/ui/confirm-dialog";
 import { useMemo, useState, useTransition } from "react";
 import { toast } from "@/components/ui/toast";
 import { FieldHelp } from "@/components/ui/field-help";
@@ -355,8 +356,8 @@ export function FornitoriList({
     });
   }
 
-  function handleDelete(s: Supplier) {
-    if (!window.confirm(t.admin.suppliers.deleteConfirm(s.name))) return;
+  async function handleDelete(s: Supplier) {
+    if (!(await confirm({ title: t.admin.suppliers.deleteConfirm(s.name), danger: true }))) return;
     startTransition(async () => {
       const result = await adminDeleteSupplier(s.supplierId);
       if (result?.error) toast.error(result.error);
@@ -377,8 +378,8 @@ export function FornitoriList({
   const active = filtered.filter((s) => s.active);
   const archived = filtered.filter((s) => !s.active);
 
-  function handleArchiveCatalogProduct(catalogProductId: string) {
-    if (!window.confirm(t.admin.suppliers.archiveCatalogConfirm)) return;
+  async function handleArchiveCatalogProduct(catalogProductId: string) {
+    if (!(await confirm({ title: t.admin.suppliers.archiveCatalogConfirm, danger: true }))) return;
     startTransition(async () => {
       const result = await adminArchiveCatalogProduct(catalogProductId, false);
       if (result.error) toast.error(result.error);

@@ -1,5 +1,6 @@
 "use client";
 
+import { confirm } from "@/components/ui/confirm-dialog";
 import { useMemo, useState, useTransition } from "react";
 import { adminArchiveCatalogProduct } from "@/lib/actions/admin";
 import type { CatalogProductItem } from "@/lib/db/queries";
@@ -75,8 +76,8 @@ export function SupplierCatalogList({
   const grouped = groupProducts(filtered, groupBy);
   const editingProduct = allProducts.find((p) => p.catalogProductId === editingId);
 
-  function handleArchive(id: string, active: boolean) {
-    if (!window.confirm(active ? t.admin.products.reactivateConfirm : t.admin.products.archiveConfirm)) return;
+  async function handleArchive(id: string, active: boolean) {
+    if (!(await confirm({ title: active ? t.admin.products.reactivateConfirm : t.admin.products.archiveConfirm, danger: !active }))) return;
     startTransition(async () => {
       const result = await adminArchiveCatalogProduct(id, active);
       if (result.error) toast.error(result.error);

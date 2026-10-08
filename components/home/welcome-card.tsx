@@ -91,7 +91,7 @@ export function WelcomeCard({
   return (
     <section
       aria-label={t.welcome.title(appName)}
-      className="mb-[14px] rounded-[20px] border-[1.5px] border-primary-mid bg-white p-[18px_20px] shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
+      className="mb-[14px] rounded-[20px] border-[1.5px] border-primary-mid bg-white p-[18px_20px] shadow-card"
     >
       <div className="mb-3 flex items-start justify-between gap-3">
         <span className="font-mono text-label font-semibold uppercase tracking-[0.13em] text-primary-text">
@@ -143,11 +143,11 @@ export function WelcomeCard({
             </Button>
           )}
           {last ? (
-            <Button variant="orange" size="sm" onClick={close}>
+            <Button variant="brand" size="sm" onClick={close}>
               {t.welcome.done}
             </Button>
           ) : (
-            <Button variant="orange" size="sm" onClick={() => go(current + 1)}>
+            <Button variant="brand" size="sm" onClick={() => go(current + 1)}>
               {t.welcome.next}
             </Button>
           )}

@@ -1,68 +1,48 @@
 import { forwardRef, type ButtonHTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
 
-export type ButtonVariant =
-  | "primary"
-  | "orange"
-  | "teal"
-  | "red"
-  | "ghost"
-  | "outline";
+/**
+ * Named for their role, not their colour, so a brand palette never makes a
+ * name lie: `brand` and `accent` take the brand's fills, `neutral` is the dark
+ * button, `danger` the destructive one.
+ */
+export type ButtonVariant = "neutral" | "brand" | "accent" | "danger" | "outline" | "ghost";
 
 export type ButtonSize = "sm" | "md";
 
-export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+export interface ButtonStyle {
   variant?: ButtonVariant;
   size?: ButtonSize;
   block?: boolean;
 }
 
+export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>, ButtonStyle {}
+
 const base =
-  "inline-flex items-center justify-center rounded-full font-sans font-bold tracking-tight cursor-pointer select-none transition-[opacity,transform] duration-150 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100";
+  "pressable inline-flex items-center justify-center rounded-full font-sans font-bold tracking-tight select-none transition-[opacity,transform] duration-150 disabled:opacity-40 disabled:cursor-not-allowed";
 
 const variants: Record<ButtonVariant, string> = {
-  primary: "bg-brand-near-black text-white",
-  orange: "bg-primary text-on-primary",
-  teal: "bg-accent text-on-accent",
-  red: "bg-brand-red text-white",
-  ghost:
-    "bg-transparent border border-brand-border text-brand-near-black font-mono text-label tracking-widest uppercase",
+  neutral: "bg-brand-near-black text-white",
+  brand: "bg-primary text-on-primary",
+  accent: "bg-accent text-on-accent",
+  danger: "bg-brand-red text-white",
   outline: "bg-transparent border border-brand-border text-brand-near-black",
+  ghost: "bg-transparent text-brand-near-black hover:bg-black/[0.04]",
 };
 
 const sizes: Record<ButtonSize, string> = {
-  md: "px-[22px] py-[14px] text-sm",
-  sm: "px-3 py-1.5 text-xs",
+  md: "min-h-12 px-[22px] py-[14px] text-sm",
+  sm: "min-h-9 px-3 py-1.5 text-xs",
 };
 
-export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  function Button(
-    {
-      className,
-      variant = "primary",
-      size = "md",
-      block,
-      type = "button",
-      ...props
-    },
-    ref
-  ) {
-    const isGhost = variant === "ghost";
-    return (
-      <button
-        ref={ref}
-        type={type}
-        className={cn(
-          base,
-          variants[variant],
-          // ghost has its own padding/font-size baked in
-          !isGhost && sizes[size],
-          isGhost && "px-[13px] py-[5px]",
-          block && "w-full",
-          className
-        )}
-        {...props}
-      />
-    );
-  }
-);
+/** The button look, for a Link or an <a> that should read as a button. */
+export function buttonClass({ variant = "neutral", size = "md", block }: ButtonStyle = {}, className?: string): string {
+  return cn(base, variants[variant], sizes[size], block && "w-full", className);
+}
+
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
+  { className, variant, size, block, type = "button", ...props },
+  ref,
+) {
+  return <button ref={ref} type={type} className={buttonClass({ variant, size, block }, className)} {...props} />;
+});

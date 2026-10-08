@@ -1,5 +1,6 @@
 "use client";
 
+import { Badge } from "@/components/ui/badge";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "@/components/ui/toast";
@@ -482,15 +483,14 @@ export function OrderForm({
       <div className="mb-1">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <h1 className="text-[20px] font-black tracking-[-0.03em] text-brand-near-black">
+            <h1 className="text-title font-black text-brand-near-black">
               {t.order.yourOrder}
             </h1>
             <HelpLink href="/guida/ordinare" />
           </div>
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-accent/20 bg-accent-soft px-2.5 py-0.5 font-mono text-label font-semibold text-accent-text">
-            <span className="h-1.5 w-1.5 rounded-full bg-accent opacity-75" />
+          <Badge tone="accent" dot>
             {t.cycle.open}
-          </span>
+          </Badge>
         </div>
         <p className="font-mono text-label text-brand-gray mt-[3px]">
           {cycleTitle}

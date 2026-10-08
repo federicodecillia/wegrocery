@@ -58,7 +58,7 @@ export function InstallRow() {
       <div className="flex min-h-[28px] items-center gap-3">
         <div className="min-w-0 flex-1 text-[14px] font-bold text-brand-near-black">{t.install.title}</div>
         {hint === "prompt" ? (
-          <Button type="button" variant="teal" size="sm" onClick={install}>
+          <Button type="button" variant="accent" size="sm" onClick={install}>
             {t.install.installButton}
           </Button>
         ) : (

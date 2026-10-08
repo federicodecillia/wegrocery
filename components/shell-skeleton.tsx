@@ -17,9 +17,9 @@ export function ShellSkeleton({ width = "member" }: { width?: ShellWidth }) {
         </div>
         <div className="flex-1 px-5 py-4 pb-[calc(var(--spacing-nav-h)+1rem)] lg:pb-4">
           <div className="space-y-[14px]">
-            <div className="h-[140px] animate-pulse rounded-[18px] bg-black/[0.05]" />
-            <div className="h-[100px] animate-pulse rounded-[18px] bg-black/[0.04]" />
-            <div className="h-[80px] animate-pulse rounded-[18px] bg-black/[0.03]" />
+            <div className="h-[140px] animate-pulse rounded-card bg-black/[0.05]" />
+            <div className="h-[100px] animate-pulse rounded-card bg-black/[0.04]" />
+            <div className="h-[80px] animate-pulse rounded-card bg-black/[0.03]" />
           </div>
         </div>
       </div>

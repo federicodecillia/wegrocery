@@ -40,6 +40,13 @@
   --spacing-nav-h: var(--nav-h);
   /* Smallest text in the app: labels, badges, captions. Nothing goes under it. */
   --text-label: 0.75rem;
+  /* Page titles (h1). */
+  --text-title: 1.25rem;
+  --text-title--letter-spacing: -0.03em;
+  --text-title--line-height: 1.2;
+  /* Cards and sheets share one radius and one resting shadow. */
+  --radius-card: 18px;
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -73,6 +80,14 @@ body {
   select {
     cursor: pointer;
   }
+}
+
+/* Small uppercase mono labels (section names, field captions, back links). */
+@utility label-caps {
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
 }
 
 /* Shared press feedback for buttons and tappable rows. */

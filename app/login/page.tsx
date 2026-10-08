@@ -49,7 +49,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           {isDemo ? t.login.demoMessage : t.login.continueMessage}
         </p>
         {deniedMessage ? (
-          <div className="mt-3 space-y-1 rounded-md border border-red-300 bg-red-50 p-2 text-sm text-red-700">
+          <div className="mt-3 space-y-1 rounded-md border border-brand-red/30 bg-brand-red-light p-2 text-sm text-brand-red">
             <p>{deniedMessage}</p>
             {error === "MembershipInactive" && brand.membershipUrl ? (
               <p>

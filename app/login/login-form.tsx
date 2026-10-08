@@ -119,7 +119,7 @@ export function LoginForm({ googleEnabled, next }: { googleEnabled: boolean; nex
             placeholder="123456"
             className="w-full rounded-lg border border-brand-border px-3 py-2 text-center font-mono text-lg tracking-[0.3em] text-brand-near-black"
           />
-          <Button type="submit" variant="orange" block disabled={busy}>
+          <Button type="submit" variant="brand" block disabled={busy}>
             {status === "verifying" ? t.login.codeVerifying : t.login.codeButton}
           </Button>
           <p className="text-center text-sm text-muted">
@@ -143,7 +143,7 @@ export function LoginForm({ googleEnabled, next }: { googleEnabled: boolean; nex
             placeholder={t.login.emailPlaceholder}
             className="w-full rounded-lg border border-brand-border px-3 py-2 text-sm text-brand-near-black"
           />
-          <Button type="submit" variant="orange" block disabled={busy}>
+          <Button type="submit" variant="brand" block disabled={busy}>
             {status === "sending" ? t.login.sending : t.login.sendLink}
           </Button>
         </form>

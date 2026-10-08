@@ -80,7 +80,7 @@ export default async function ProfilePage() {
           {initials(name, session.user.email)}
         </div>
         <div className="min-w-0">
-          <h1 className="break-words text-[20px] font-black tracking-[-0.03em] text-brand-near-black">{name || t.profile.title}</h1>
+          <h1 className="break-words text-title font-black text-brand-near-black">{name || t.profile.title}</h1>
           <p className="break-all text-[14px] text-brand-gray">{session.user.email}</p>
           <p className="mt-[2px] text-[12px] text-brand-gray">
             {role ? getRoleLabel(role) : null}
