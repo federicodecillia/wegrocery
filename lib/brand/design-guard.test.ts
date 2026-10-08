@@ -67,4 +67,8 @@ describe("design guard", () => {
   it("uses the warning token, not its hex", () => {
     expect(hits(/#b45309/i)).toEqual([]);
   });
+
+  it("leaves focus to the global outline: no faint rings, no hidden outline", () => {
+    expect(hits(/focus(-visible)?:(outline-none|ring-)/)).toEqual([]);
+  });
 });

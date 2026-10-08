@@ -6,6 +6,9 @@ import { getUserRole, requireUserSession } from "@/lib/auth/session";
 import { getNotificationPreferences } from "@/lib/db/queries";
 import { resolvePreferences } from "@/lib/notifications/categories";
 import { HelpLink } from "@/components/guide/help-link";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: t.notifications.settings.title };
 
 export default async function NotificationSettingsPage() {
   const session = await requireUserSession();

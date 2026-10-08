@@ -8,6 +8,12 @@ import { getUserRole, requireUserSession } from "@/lib/auth/session";
 import { guideContent } from "@/lib/guide";
 import { guideContext, visibleGuide } from "@/lib/guide/types";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
+import type { Metadata } from "next";
+
+export async function generateMetadata({ params }: { params: Promise<{ topic: string }> }): Promise<Metadata> {
+  const { topic: topicId } = await params;
+  return { title: guideContent.topics.find((x) => x.id === topicId)?.title ?? t.guide.title };
+}
 
 // One topic of the guide: its cards, then the other topics. A topic this
 // deploy does not show (families off) is a 404, like an unknown one.

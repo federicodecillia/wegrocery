@@ -51,6 +51,38 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* One focus outline for every brand: primary-text is computed for 4.5:1 on
+   the light surfaces, well past the 3:1 a focus indicator needs. Unlayered on
+   purpose, so no utility (a stray focus:outline-none) can hide it. Browsers
+   show it for keyboard focus, and on fields for any focus. */
+:focus-visible {
+  outline: 2px solid var(--primary-text);
+  outline-offset: 2px;
+}
+/* Programmatic focus targets (a heading or <main> after a jump) stay plain. */
+[tabindex="-1"]:focus-visible {
+  outline: none;
+}
+
+@layer base {
+  /* Tailwind 4 leaves buttons on the default arrow. */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  summary,
+  label[for],
+  select {
+    cursor: pointer;
+  }
+}
+
+/* Shared press feedback for buttons and tappable rows. */
+@utility pressable {
+  transition: transform 120ms ease-out;
+  &:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+}
+
 /* iOS zooms the page when a focused field is under 16px. Unlayered on
    purpose: it has to win over the text-* utilities on the fields. */
 @media (max-width: 639px) {

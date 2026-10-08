@@ -106,7 +106,7 @@ export function SupplierCatalogList({
             <select
               value={uploadSupplierId}
               onChange={(e) => setUploadSupplierId(e.target.value)}
-              className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-accent/30"
+              className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black"
             >
               {suppliers.length === 0 ? (
                 <option value="">{t.admin.products.noSupplierAvailable}</option>
@@ -148,7 +148,7 @@ export function SupplierCatalogList({
             <select
               value={supplierFilter}
               onChange={(e) => setSupplierFilter(e.target.value)}
-              className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-accent/30"
+              className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black"
             >
               <option value={ALL}>{t.admin.products.allSuppliers}</option>
               {suppliers.map((supplier) => (
@@ -167,7 +167,7 @@ export function SupplierCatalogList({
               <select
                 value={categoryFilter}
                 onChange={(e) => setCategoryFilter(e.target.value)}
-                className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-accent/30"
+                className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black"
               >
                 <option value={ALL}>{t.admin.products.allCategories}</option>
                 {categories.map((category) => (
@@ -185,7 +185,7 @@ export function SupplierCatalogList({
               <select
                 value={groupBy}
                 onChange={(e) => setGroupBy(e.target.value as GroupBy)}
-                className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-accent/30"
+                className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black"
               >
                 <option value="category">{t.admin.products.groupByCategory}</option>
                 <option value="supplier">{t.admin.products.groupBySupplier}</option>

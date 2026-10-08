@@ -7,6 +7,9 @@ import { t } from "@/lib/i18n";
 import { formatDate, formatMoney } from "@/lib/i18n/format";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
 import { HelpLink } from "@/components/guide/help-link";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: t.family.title };
 
 // Families (lib/actions/family.ts): who shares this account, invitations
 // sent and received, leave or remove.

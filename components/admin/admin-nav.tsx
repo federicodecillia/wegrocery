@@ -3,16 +3,8 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { t } from "@/lib/i18n";
+import { ADMIN_TABS } from "@/lib/admin/nav";
 
-const TABS = [
-  { id: "ciclo", label: t.admin.cycle.tabLabel },
-  { id: "prodotti", label: t.admin.products.tabLabel },
-  { id: "ordini", label: t.admin.orders.tabLabel },
-  { id: "cassa", label: t.admin.treasury.tabLabel },
-  { id: "soci", label: t.admin.members.tabLabel },
-  { id: "fornitori", label: t.admin.suppliers.tabLabel },
-  { id: "statistiche", label: t.admin.stats.tabLabel },
-] as const;
 
 function tabClass(active: boolean): string {
   return `rounded-full py-[7px] text-center text-[12px] font-semibold transition-colors ${
@@ -29,8 +21,13 @@ export function AdminNav() {
       {/* The labels scroll sideways when they do not fit (English on a
           phone); the settings gear stays pinned outside, always visible. */}
       <div className="flex min-w-0 flex-1 gap-1 overflow-x-auto [scrollbar-width:none]">
-        {TABS.map((tab) => (
-          <Link key={tab.id} href={`/admin?tab=${tab.id}`} className={`flex-1 ${tabClass(active === tab.id)}`}>
+        {ADMIN_TABS.map((tab) => (
+          <Link
+            key={tab.id}
+            href={`/admin?tab=${tab.id}`}
+            aria-current={active === tab.id ? "page" : undefined}
+            className={`flex-1 ${tabClass(active === tab.id)}`}
+          >
             {tab.label}
           </Link>
         ))}
@@ -38,6 +35,7 @@ export function AdminNav() {
       {/* Settings as an icon: the row has no room for an eighth label. */}
       <Link
         href="/admin?tab=impostazioni"
+        aria-current={active === "impostazioni" ? "page" : undefined}
         aria-label={t.admin.settings.tabLabel}
         title={t.admin.settings.tabLabel}
         className={`flex flex-none items-center justify-center px-[10px] ${tabClass(active === "impostazioni")}`}

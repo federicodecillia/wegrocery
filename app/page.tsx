@@ -122,6 +122,7 @@ export default async function HomePage({
 
   return (
     <AppShell email={session.user.email} name={session.user.fullName} isAdmin={role === "admin"} memberId={memberId} personId={session.user.personId}>
+      <h1 className="sr-only">{t.nav.home}</h1>
       {showWelcome && (
         <WelcomeCard
           appName={brand.appName}

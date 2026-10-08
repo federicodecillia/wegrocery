@@ -86,7 +86,7 @@ export function CatalogProductForm({
   }
 
   const inputCls =
-    "w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-accent/30";
+    "w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black";
   const labelCls = "mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray";
 
   return (
@@ -407,7 +407,7 @@ export function CatalogLoadForm({
               type="checkbox"
               checked={selected.has(p.catalogProductId)}
               onChange={() => toggle(p.catalogProductId)}
-              className="rounded border-brand-border text-accent-text focus:ring-accent"
+              className="rounded border-brand-border text-accent-text"
             />
             <div className="flex-1 text-[13px] text-brand-near-black">
               {p.name}
@@ -490,7 +490,7 @@ export function EditCycleProductForm({
   }
 
   const inputCls =
-    "w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-accent/30";
+    "w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black";
   const labelCls = "mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray";
 
   return (

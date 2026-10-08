@@ -6,6 +6,9 @@ import { googleCredentials } from "@/lib/auth/config";
 import { LoginForm } from "./login-form";
 import { ShortcutButtons } from "./shortcut-buttons";
 import { DemoBanner } from "@/components/demo-banner";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: t.login.pageTitle };
 
 type LoginPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;

@@ -20,6 +20,7 @@ export const en: Strings = {
     emojiCountOf: (shown: number, total: number) => `${shown} of ${total}`,
     pageNotFound: "Page not found",
     backToHome: "Back to Home",
+    skipToContent: "Skip to content",
   },
   nav: {
     home: "Home",
@@ -382,6 +383,7 @@ export const en: Strings = {
     },
   },
   login: {
+    pageTitle: "Sign in",
     demoMessage: "Public demo: enter with one click, no registration required.",
     continueMessage: "Enter your email: we'll send you a link and a code to sign in.",
     emailLabel: "Your email",

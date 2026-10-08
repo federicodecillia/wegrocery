@@ -7,6 +7,9 @@ import { getMemberNotifications, notificationOwners } from "@/lib/db/queries";
 import { markAllNotificationsRead, markNotificationRead } from "@/lib/actions/notifications";
 import { formatDateShort } from "@/lib/utils";
 import { HelpLink } from "@/components/guide/help-link";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: t.notifications.title };
 
 export default async function NotifichePage() {
   const session = await requireUserSession();

@@ -16,6 +16,9 @@ import { getConsolidatedBalanceCents, getWalletBalance } from "@/lib/payments/ba
 import { getPaymentSettings } from "@/lib/payments/get-settings";
 import { SETTLEMENT_MIN_DUE_CENTS } from "@/lib/payments/settlement";
 import { HelpLink } from "@/components/guide/help-link";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: t.topup.title };
 
 function compactIban(iban: string): string {
   return iban.replace(/\s+/g, "").toUpperCase();

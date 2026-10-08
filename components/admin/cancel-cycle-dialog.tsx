@@ -102,7 +102,7 @@ function CancelCycleDialog({
                 onChange={(e) => setReason(e.target.value)}
                 placeholder={t.admin.cycleCancel.reasonPlaceholder}
                 rows={3}
-                className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-brand-red/30"
+                className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black"
               />
             </div>
 

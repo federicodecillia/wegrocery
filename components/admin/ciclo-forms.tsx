@@ -252,7 +252,7 @@ function buildDateTime(date: string, time: string): string {
   return `${date}T${time || "00:00"}`;
 }
 
-const inputCls = "rounded-lg border border-brand-border px-2 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-primary/30";
+const inputCls = "rounded-lg border border-brand-border px-2 py-2 text-[13px] text-brand-near-black";
 const labelCls = "mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray";
 const miniLabelCls = "shrink-0 text-label font-medium text-brand-gray";
 
@@ -1058,7 +1058,7 @@ export function CycleProductPicker({
         <select
           value={selectedSupplierId}
           onChange={(e) => setSelectedSupplierId(e.target.value)}
-          className="mb-4 w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-accent/30"
+          className="mb-4 w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black"
         >
           <option value="">{t.admin.products.selectSupplierOption}</option>
           {suppliers.map((s) => (

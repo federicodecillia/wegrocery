@@ -9,7 +9,7 @@ export function ProfileAvatar({ name, email }: { name?: string | null; email: st
       href="/profilo"
       aria-label={t.profile.title}
       title={t.profile.title}
-      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-[12px] font-black tracking-tight text-on-primary transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-[12px] font-black tracking-tight text-on-primary transition-opacity hover:opacity-90"
     >
       {initials(name, email)}
     </Link>

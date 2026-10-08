@@ -10,7 +10,7 @@ import type { PaymentSettingsInput, StripeKeyState } from "@/lib/payments/settin
 
 const card = "rounded-xl border border-brand-border bg-white p-4 shadow-sm";
 const inputCls =
-  "w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-accent/30";
+  "w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black";
 const labelCls = "mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray";
 const helpCls = "mt-1 text-label leading-snug text-brand-gray";
 

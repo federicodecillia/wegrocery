@@ -143,7 +143,7 @@ export function EmojiPicker({ name, value, onChange }: Props) {
                 placeholder={t.common.emojiSearchPlaceholder}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                className="w-full rounded-md border border-brand-border px-2.5 py-1.5 text-[12px] text-brand-near-black placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/30"
+                className="w-full rounded-md border border-brand-border px-2.5 py-1.5 text-[12px] text-brand-near-black placeholder:text-muted"
               />
             </div>
 
@@ -202,7 +202,7 @@ export function EmojiPicker({ name, value, onChange }: Props) {
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="dialog"
         aria-expanded={open}
-        className="flex h-[38px] w-full items-center justify-center rounded-lg border border-brand-border bg-white text-2xl leading-none transition hover:border-accent/60 focus:outline-none focus:ring-2 focus:ring-accent/30"
+        className="flex h-[38px] w-full items-center justify-center rounded-lg border border-brand-border bg-white text-2xl leading-none transition hover:border-accent/60"
       >
         {current}
       </button>
