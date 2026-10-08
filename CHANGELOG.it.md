@@ -30,6 +30,8 @@ stanno nella PR.
 - 💬 **Messaggi che fai in tempo a leggere.** Errori e avvisi restano più a lungo e si possono chiudere, e un salvataggio non riuscito dice di controllare la connessione. Cancellare un ordine parte da "Annulla", così un Invio per sbaglio non cancella nulla.
 - ⌨️ **Più comoda con la tastiera.** Ogni pulsante e campo mostra un contorno ben visibile quando ci arrivi con Tab, il link "Vai al contenuto" salta il menu e ogni pagina ha il suo titolo nella scheda del browser.
 - 🧩 **Stesso aspetto per le stesse cose.** Le conferme in Admin (eliminare un socio, archiviare un prodotto, toglierlo da un ciclo...) usano la finestra dell'app al posto di quella del browser, e stati, link per tornare indietro e pulsanti hanno uno stile unico.
+- 📲 **Finestre a misura di telefono.** Tutte le finestre (ordine inviato, dettaglio di un movimento, chiusura dei conti, annullamento di un ciclo, fornitore, unione di soci, importazione del listino) salgono dal basso sul telefono con i pulsanti vicino al pollice, si chiudono con Esc o con la ✕ e chiedono prima di buttare quello che hai scritto.
+- 💰 **Cassa a portata di dito.** Pulsanti più grandi per modificare ed eliminare i movimenti, campi che stanno nello schermo, e ogni campo e pulsante a icona in Admin ha un nome che i lettori di schermo sanno leggere.
 
 ## [1.25.0] — 7 ottobre 2026
 

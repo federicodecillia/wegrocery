@@ -100,70 +100,80 @@ export function SociForm({
       </div>
       <div className="space-y-3">
         <div>
-          <label className="mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray">
-            {t.admin.members.nameLabel}
+          <label className="block">
+            <span className="block mb-1 text-label font-semibold uppercase tracking-wide text-brand-gray">
+              {t.admin.members.nameLabel}
+            </span>
+            <input
+              name="fullName"
+              required
+              defaultValue={member?.fullName}
+              className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black"
+            />
           </label>
-          <input
-            name="fullName"
-            required
-            defaultValue={member?.fullName}
-            className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black"
-          />
         </div>
         <div>
-          <label className="mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray">
-            {t.admin.members.emailLabel}
+          <label className="block">
+            <span className="block mb-1 text-label font-semibold uppercase tracking-wide text-brand-gray">
+              {t.admin.members.emailLabel}
+            </span>
+            <input
+              name="email"
+              type="email"
+              required
+              defaultValue={member?.email}
+              className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black"
+            />
           </label>
-          <input
-            name="email"
-            type="email"
-            required
-            defaultValue={member?.email}
-            className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black"
-          />
         </div>
         <div>
-          <label className="mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray">
-            {t.admin.members.aliasEmailLabel}
-            <span className="ml-1 font-normal normal-case text-muted">{t.admin.members.aliasEmailHint}</span>
+          <label className="block">
+            <span className="block mb-1 text-label font-semibold uppercase tracking-wide text-brand-gray">
+              {t.admin.members.aliasEmailLabel}
+              <span className="ml-1 font-normal normal-case text-muted">{t.admin.members.aliasEmailHint}</span>
+            </span>
+            <input
+              name="aliasEmail"
+              type="email"
+              defaultValue={member?.aliasEmail ?? ""}
+              placeholder={t.admin.members.aliasEmailPlaceholder}
+              className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black"
+            />
           </label>
-          <input
-            name="aliasEmail"
-            type="email"
-            defaultValue={member?.aliasEmail ?? ""}
-            placeholder={t.admin.members.aliasEmailPlaceholder}
-            className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black"
-          />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray">
-              {t.admin.members.roleLabel}
+            <label className="block">
+              <span className="block mb-1 text-label font-semibold uppercase tracking-wide text-brand-gray">
+                {t.admin.members.roleLabel}
+              </span>
+              <select
+                name="role"
+                defaultValue={normalizeRole(member?.role) ?? DEFAULT_ROLE}
+                className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black"
+              >
+                {ROLES.map((r) => (
+                  <option key={r} value={r}>
+                    {t.roles[r]}
+                  </option>
+                ))}
+              </select>
             </label>
-            <select
-              name="role"
-              defaultValue={normalizeRole(member?.role) ?? DEFAULT_ROLE}
-              className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black"
-            >
-              {ROLES.map((r) => (
-                <option key={r} value={r}>
-                  {t.roles[r]}
-                </option>
-              ))}
-            </select>
           </div>
           <div>
-            <label className="mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray">
-              {t.admin.members.statusLabel}
+            <label className="block">
+              <span className="block mb-1 text-label font-semibold uppercase tracking-wide text-brand-gray">
+                {t.admin.members.statusLabel}
+              </span>
+              <select
+                name="active"
+                defaultValue={String(member?.active ?? true)}
+                className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black"
+              >
+                <option value="true">{t.admin.members.statusActive}</option>
+                <option value="false">{t.admin.members.statusInactive}</option>
+              </select>
             </label>
-            <select
-              name="active"
-              defaultValue={String(member?.active ?? true)}
-              className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black"
-            >
-              <option value="true">{t.admin.members.statusActive}</option>
-              <option value="false">{t.admin.members.statusInactive}</option>
-            </select>
           </div>
         </div>
         {offlineOption && (
@@ -363,9 +373,10 @@ export function SociList({
                   <button
                     onClick={() => handleDelete(m)}
                     disabled={deletingId}
-                    className="rounded-full border border-brand-red/30 px-2.5 py-1 text-label font-semibold text-brand-red disabled:opacity-40"
+                    aria-label={t.admin.members.deleteAria(m.fullName)}
+                    className="flex h-9 w-9 items-center justify-center rounded-full border border-brand-red/30 text-label font-semibold text-brand-red disabled:opacity-40"
                   >
-                    ✕
+                    <span aria-hidden>✕</span>
                   </button>
                 </div>
               </div>

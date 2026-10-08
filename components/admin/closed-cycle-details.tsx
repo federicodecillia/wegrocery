@@ -6,6 +6,8 @@ import { adminUpdateOrderLineActuals } from "@/lib/actions/admin";
 import { formatEur, getProductEmoji } from "@/lib/utils";
 import { formatDecimalInput, formatNumber } from "@/lib/i18n/format";
 import { toast } from "@/components/ui/toast";
+import { Sheet, SheetActions } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
 import { EditClosedOrderModal } from "./edit-closed-order-modal";
 import { t } from "@/lib/i18n";
 import { closedCycleGrandTotal, closedCycleMemberRows, closedCycleMemberTotal } from "@/lib/closed-cycle-totals";
@@ -106,124 +108,104 @@ export function ClosedCycleDetails({
   const grandTotal = closedCycleGrandTotal({ products: linesTotal, shipping, handling });
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-      <div className="flex max-h-[90vh] w-full max-w-[600px] flex-col rounded-2xl bg-brand-warm-white shadow-2xl">
-        <div className="flex items-center justify-between border-b border-brand-border p-5">
-          <div>
-            <h3 className="text-[16px] font-black text-brand-near-black">{cycleTitle}</h3>
-            <p className="text-[12px] text-brand-gray">
-              {t.admin.closedCycleDetails.membersAndTotal(memberRows.length, formatEur(grandTotal))}
-            </p>
-          </div>
-          <button
-            onClick={() => setIsOpen(false)}
-            aria-label={t.admin.common.close}
-            className="rounded-full bg-brand-border p-2 text-brand-gray hover:bg-brand-gray-light"
-          >
-            <span aria-hidden>✕</span>
-          </button>
-        </div>
-
-        <div className="flex-1 overflow-y-auto p-5">
-          {loading ? (
-            <div className="py-20 text-center text-brand-gray">{t.admin.closedCycleDetails.loading}</div>
-          ) : memberRows.length === 0 ? (
-            <div className="py-20 text-center text-brand-gray">{t.admin.closedCycleDetails.noOrders}</div>
+    <Sheet
+      open
+      onRequestClose={() => setIsOpen(false)}
+      title={cycleTitle}
+      subtitle={t.admin.closedCycleDetails.membersAndTotal(memberRows.length, formatEur(grandTotal))}
+      footer={
+        <SheetActions>
+          <Button variant="outline" className="flex-1" onClick={() => setIsOpen(false)}>
+            {t.admin.common.close}
+          </Button>
+          {editable && (
+            <Button variant="brand" className="flex-1" onClick={() => setEditTarget({ kind: "create" })}>
+              {t.admin.closedCycleDetails.addOrder}
+            </Button>
+          )}
+        </SheetActions>
+      }
+    >
+      {loading ? (
+        <div className="py-20 text-center text-brand-gray">{t.admin.closedCycleDetails.loading}</div>
+      ) : memberRows.length === 0 ? (
+        <div className="py-20 text-center text-brand-gray">{t.admin.closedCycleDetails.noOrders}</div>
+      ) : (
+        <div className="space-y-8">
+          {editable ? (
+            <div className="flex items-center gap-2 rounded-lg bg-primary/5 px-3 py-2 text-label text-brand-gray">
+              <span aria-hidden className="text-[13px]">👆</span>
+              <span>{t.admin.closedCycleDetails.rectifyHint}</span>
+            </div>
           ) : (
-            <div className="space-y-8">
-              {editable ? (
-                <div className="flex items-center gap-2 rounded-lg bg-primary/5 px-3 py-2 text-label text-brand-gray">
-                  <span aria-hidden className="text-[13px]">👆</span>
-                  <span>{t.admin.closedCycleDetails.rectifyHint}</span>
-                </div>
-              ) : (
-                <div className="rounded-lg bg-black/[0.04] px-3 py-2 text-label text-brand-gray">
-                  {t.admin.closedCycleDetails.openCycleHint}
-                </div>
-              )}
-              {memberRows.map(({ memberId, memberName, lines, shipping: memberShipping, handling: memberHandling }) => {
-                const productsTotal = lines.reduce((s, l) => s + effectiveTotal(l), 0);
-                const total = closedCycleMemberTotal({
-                  products: productsTotal,
-                  shipping: memberShipping,
-                  handling: memberHandling,
-                });
-                return (
-                  <div key={memberId} className="space-y-2">
-                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-accent/20 pb-1">
-                      <span className="text-[14px] font-bold text-brand-near-black">{memberName}</span>
-                      <div className="flex items-center gap-3">
-                        <span className="text-[13px] font-black text-accent-text">{formatEur(total)}</span>
-                        {editable && (
-                          <button
-                            onClick={() =>
-                              setEditTarget({ kind: "edit", memberId, memberName })
-                            }
-                            className="rounded-full bg-primary/10 px-2.5 py-0.5 text-label font-bold text-primary-text hover:bg-primary/20"
-                          >
-                            {t.admin.closedCycleDetails.editQtyButton}
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                    <div className="space-y-1 pl-2">
-                      {lines.map((l) => (
-                        <OrderLineRow key={l.orderLineId} line={l} editable={editable} onSaved={refetch} />
-                      ))}
-                      {memberShipping > 0 && (
-                        <div className="flex items-start justify-between gap-3 rounded-lg px-1.5 py-1 text-[12px] text-brand-near-black">
-                          <div className="flex min-w-0 flex-1 gap-2">
-                            <span className="shrink-0 text-[16px]">🚚</span>
-                            <div className="min-w-0">
-                              <div className="font-medium">{t.admin.closedCycleDetails.shippingLine}</div>
-                              <div className="text-label text-brand-gray">
-                                {t.admin.closedCycleDetails.shippingQuota}
-                              </div>
-                            </div>
-                          </div>
-                          <span className="shrink-0 font-mono text-label font-bold text-brand-near-black">
-                            {formatEur(memberShipping)}
-                          </span>
-                        </div>
-                      )}
-                      {memberHandling > 0 && (
-                        <div className="flex items-start justify-between gap-3 rounded-lg px-1.5 py-1 text-[12px] text-brand-near-black">
-                          <div className="flex min-w-0 flex-1 gap-2">
-                            <span className="shrink-0 text-[16px]">🧺</span>
-                            <div className="min-w-0">
-                              <div className="font-medium">{t.history.handlingFee}</div>
-                            </div>
-                          </div>
-                          <span className="shrink-0 font-mono text-label font-bold text-brand-near-black">
-                            {formatEur(memberHandling)}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
+            <div className="rounded-lg bg-black/[0.04] px-3 py-2 text-label text-brand-gray">
+              {t.admin.closedCycleDetails.openCycleHint}
             </div>
           )}
+          {memberRows.map(({ memberId, memberName, lines, shipping: memberShipping, handling: memberHandling }) => {
+            const productsTotal = lines.reduce((s, l) => s + effectiveTotal(l), 0);
+            const total = closedCycleMemberTotal({
+              products: productsTotal,
+              shipping: memberShipping,
+              handling: memberHandling,
+            });
+            return (
+              <div key={memberId} className="space-y-2">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-accent/20 pb-1">
+                  <span className="text-[14px] font-bold text-brand-near-black">{memberName}</span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-[13px] font-black text-accent-text">{formatEur(total)}</span>
+                    {editable && (
+                      <button
+                        onClick={() =>
+                          setEditTarget({ kind: "edit", memberId, memberName })
+                        }
+                        className="min-h-9 rounded-full bg-primary/10 px-3 py-1 text-label font-bold text-primary-text hover:bg-primary/20"
+                      >
+                        {t.admin.closedCycleDetails.editQtyButton}
+                      </button>
+                    )}
+                  </div>
+                </div>
+                <div className="space-y-1 pl-2">
+                  {lines.map((l) => (
+                    <OrderLineRow key={l.orderLineId} line={l} editable={editable} onSaved={refetch} />
+                  ))}
+                  {memberShipping > 0 && (
+                    <div className="flex items-start justify-between gap-3 rounded-lg px-1.5 py-1 text-[12px] text-brand-near-black">
+                      <div className="flex min-w-0 flex-1 gap-2">
+                        <span className="shrink-0 text-[16px]">🚚</span>
+                        <div className="min-w-0">
+                          <div className="font-medium">{t.admin.closedCycleDetails.shippingLine}</div>
+                          <div className="text-label text-brand-gray">
+                            {t.admin.closedCycleDetails.shippingQuota}
+                          </div>
+                        </div>
+                      </div>
+                      <span className="shrink-0 font-mono text-label font-bold text-brand-near-black">
+                        {formatEur(memberShipping)}
+                      </span>
+                    </div>
+                  )}
+                  {memberHandling > 0 && (
+                    <div className="flex items-start justify-between gap-3 rounded-lg px-1.5 py-1 text-[12px] text-brand-near-black">
+                      <div className="flex min-w-0 flex-1 gap-2">
+                        <span className="shrink-0 text-[16px]">🧺</span>
+                        <div className="min-w-0">
+                          <div className="font-medium">{t.history.handlingFee}</div>
+                        </div>
+                      </div>
+                      <span className="shrink-0 font-mono text-label font-bold text-brand-near-black">
+                        {formatEur(memberHandling)}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
-
-        <div className="space-y-2 border-t border-brand-border p-4">
-          {editable && (
-            <button
-              onClick={() => setEditTarget({ kind: "create" })}
-              className="w-full rounded-xl border border-dashed border-primary/40 bg-primary-soft py-2 text-[12px] font-bold text-primary-text hover:bg-primary/15"
-            >
-              {t.admin.closedCycleDetails.addOrder}
-            </button>
-          )}
-          <button
-            onClick={() => setIsOpen(false)}
-            className="w-full rounded-xl bg-brand-near-black py-3 text-[14px] font-bold text-white shadow-lg active:scale-95"
-          >
-            {t.admin.common.close}
-          </button>
-        </div>
-      </div>
+      )}
 
       {editTarget && (
         <EditClosedOrderModal
@@ -234,7 +216,7 @@ export function ClosedCycleDetails({
           onSaved={() => refetch()}
         />
       )}
-    </div>
+    </Sheet>
   );
 }
 
@@ -452,7 +434,7 @@ function OrderLineEditForm({
             value={qty}
             onChange={(e) => onQtyChange(e.target.value)}
             disabled={isPending}
-            className="rounded-md border border-brand-border bg-white px-2 py-1.5 text-[13px] font-mono text-brand-near-black"
+            className="min-h-11 rounded-md border border-brand-border bg-white px-2 py-1.5 text-[14px] font-mono text-brand-near-black"
           />
         </label>
         <label className="flex flex-col gap-0.5 text-label font-semibold uppercase tracking-wide text-brand-gray">
@@ -466,7 +448,7 @@ function OrderLineEditForm({
               setTotalTouched(true);
             }}
             disabled={isPending}
-            className="rounded-md border border-brand-border bg-white px-2 py-1.5 text-[13px] font-mono text-brand-near-black"
+            className="min-h-11 rounded-md border border-brand-border bg-white px-2 py-1.5 text-[14px] font-mono text-brand-near-black"
           />
         </label>
       </div>
@@ -475,7 +457,7 @@ function OrderLineEditForm({
           type="button"
           onClick={handleSave}
           disabled={isPending}
-          className="flex-1 rounded-md bg-primary px-2 py-1.5 text-label font-bold text-on-primary disabled:opacity-60"
+          className="min-h-10 flex-1 rounded-md bg-primary px-3 py-1.5 text-[13px] font-bold text-on-primary disabled:opacity-60"
         >
           {isPending ? t.admin.common.saving : t.admin.common.save}
         </button>
@@ -483,7 +465,7 @@ function OrderLineEditForm({
           type="button"
           onClick={onCancel}
           disabled={isPending}
-          className="rounded-md border border-brand-border bg-white px-2 py-1.5 text-label font-bold text-brand-gray"
+          className="min-h-10 rounded-md border border-brand-border bg-white px-3 py-1.5 text-[13px] font-bold text-brand-gray"
         >
           {t.admin.common.cancel}
         </button>

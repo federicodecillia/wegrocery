@@ -148,7 +148,7 @@ export function CassaSummaryCards({
   );
 
   return (
-    <div className={`grid gap-2 ${aboveMaxCount === null ? "grid-cols-3" : "grid-cols-2"}`}>
+    <div className={`grid grid-cols-2 gap-2 ${aboveMaxCount === null ? "sm:grid-cols-3" : "lg:grid-cols-4"}`}>
       {total}
       {avg}
       {negative}
@@ -226,35 +226,39 @@ export function LedgerEntryRow({ entry }: { entry: LedgerEntry }) {
   if (editing && isEditable) {
     return (
       <div className="bg-primary-soft px-4 py-3">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <input
             type="number"
             min="0.01"
             step="0.01"
+            inputMode="decimal"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            className="w-24 rounded-lg border border-brand-border px-2 py-1 font-mono text-[12px]"
+            aria-label={t.admin.treasury.amountLabel}
+            className="min-h-10 w-28 rounded-lg border border-brand-border bg-white px-2 py-1 font-mono text-[14px]"
           />
           <input
             type="text"
+            aria-label={isOutgoingLedgerType(entry.type) ? t.admin.treasury.reasonLabel : t.admin.treasury.noteLabel}
             value={note}
             onChange={(e) => setNote(e.target.value)}
             // An outgoing movement's causale is required (the member sees it).
             placeholder={isOutgoingLedgerType(entry.type) ? t.admin.treasury.reasonLabel : t.admin.treasury.noteLabel}
-            className="w-0 min-w-0 flex-1 rounded-lg border border-brand-border px-2 py-1 text-[12px]"
+            className="min-h-10 min-w-[10rem] flex-1 rounded-lg border border-brand-border bg-white px-2 py-1 text-[14px]"
           />
           <button
             onClick={handleSave}
             disabled={isPending}
-            className="rounded-lg bg-accent px-3 py-1 text-label font-bold text-on-accent disabled:opacity-60"
+            className="min-h-10 rounded-lg bg-accent px-4 py-1 text-[13px] font-bold text-on-accent disabled:opacity-60"
           >
             {t.admin.common.save}
           </button>
           <button
             onClick={() => setEditing(false)}
-            className="rounded-lg border border-brand-border px-3 py-1 text-label text-brand-gray"
+            aria-label={t.admin.treasury.cancelEditAria}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-brand-border text-label text-brand-gray"
           >
-            ✕
+            <span aria-hidden>✕</span>
           </button>
         </div>
       </div>
@@ -290,16 +294,18 @@ export function LedgerEntryRow({ entry }: { entry: LedgerEntry }) {
           <>
             <button
               onClick={() => setEditing(true)}
-              className="rounded px-1.5 py-0.5 text-label text-brand-gray hover:text-brand-near-black"
+              aria-label={t.admin.treasury.editEntryAria}
+              className="flex h-10 w-10 items-center justify-center rounded-lg text-[14px] text-brand-gray hover:bg-black/[0.04] hover:text-brand-near-black"
             >
-              ✏
+              <span aria-hidden>✏</span>
             </button>
             <button
               onClick={handleDelete}
               disabled={isPending}
-              className="rounded px-1.5 py-0.5 text-label text-brand-red disabled:opacity-40"
+              aria-label={t.admin.treasury.deleteEntryAria}
+              className="flex h-10 w-10 items-center justify-center rounded-lg text-[14px] text-brand-red hover:bg-brand-red-light disabled:opacity-40"
             >
-              ✕
+              <span aria-hidden>✕</span>
             </button>
           </>
         )}
@@ -345,7 +351,8 @@ export function CassaInlineList({
       <div key={m.memberId}>
         <button
           onClick={() => setExpandedId(isExpanded ? null : m.memberId)}
-          className="flex w-full items-center justify-between px-4 py-2.5 text-left"
+          aria-expanded={isExpanded}
+          className="flex min-h-14 w-full items-center justify-between px-4 py-2.5 text-left"
         >
           <div className="min-w-0 flex-1">
             <div className="text-[13px] font-medium text-brand-near-black">{m.fullName}</div>
@@ -363,7 +370,7 @@ export function CassaInlineList({
               {m.balance >= 0 ? "+" : ""}
               {formatMoney(Math.abs(m.balance))}
             </span>
-            <span className="text-label text-muted">{isExpanded ? "▲" : "▼"}</span>
+            <span aria-hidden className="text-label text-muted">{isExpanded ? "▲" : "▼"}</span>
           </div>
         </button>
 
@@ -410,7 +417,8 @@ export function CassaInlineList({
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
           placeholder={t.admin.treasury.searchMember}
-          className="w-full rounded-lg border border-brand-border px-3 py-1.5 text-[12px] text-brand-near-black placeholder:text-muted"
+          aria-label={t.admin.treasury.searchMember}
+          className="min-h-11 w-full rounded-lg border border-brand-border px-3 py-1.5 text-[14px] text-brand-near-black placeholder:text-muted"
         />
       </div>
       <div className="divide-y divide-brand-border">

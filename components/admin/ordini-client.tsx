@@ -51,7 +51,7 @@ export function OrdiniFilters({
 
   return (
     <div className="flex gap-2">
-      <select className={selectCls} value={currentMember} onChange={onMemberChange}>
+      <select className={selectCls} value={currentMember} onChange={onMemberChange} aria-label={t.admin.orders.memberFilterAria}>
         <option value="">{t.admin.orders.allMembers}</option>
         {allMembers.map((m) => (
           <option key={m.memberId} value={m.memberId}>
@@ -60,7 +60,7 @@ export function OrdiniFilters({
         ))}
       </select>
       {!currentMember && (
-        <select className={selectCls} value={currentCycle} onChange={onCycleChange}>
+        <select className={selectCls} value={currentCycle} onChange={onCycleChange} aria-label={t.admin.orders.cycleFilterAria}>
           <option value="">{t.admin.orders.currentCycle}</option>
           {allCycles.map((c) => (
             <option key={c.cycleId} value={c.cycleId}>

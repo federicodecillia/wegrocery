@@ -176,9 +176,10 @@ export function CategorySelect({ name, value, extra = [], placeholder = t.common
                     setAdding(false);
                     setNewCat("");
                   }}
-                  className="rounded-md px-2 py-1 text-label text-brand-gray"
+                  aria-label={t.common.cancel}
+                  className="flex h-9 w-9 items-center justify-center rounded-md text-label text-brand-gray"
                 >
-                  ✕
+                  <span aria-hidden>✕</span>
                 </button>
               </div>
             ) : (

@@ -80,27 +80,43 @@ describe("design guard", () => {
     expect(hits(/\b(bg|text|border|ring)-(red|green|blue|amber|yellow|orange|teal|gray|slate|zinc|emerald|rose|sky|indigo|purple)-\d{2,3}\b/)).toEqual([]);
   });
 
-  it("opens new dialogs through Sheet (the listed ones move in the admin lot)", () => {
-    const pending = new Set(LEGACY_DIALOGS);
+  it("opens every dialog through Sheet", () => {
     const offenders = files.filter(
-      (f) => !pending.has(f) && !f.endsWith("components/ui/sheet.tsx") && !f.endsWith("components/ui/confirm-dialog.tsx") &&
+      (f) => !f.endsWith("components/ui/sheet.tsx") && !f.endsWith("components/ui/confirm-dialog.tsx") &&
         /fixed inset-0/.test(readFileSync(f, "utf8")),
     );
     expect(offenders).toEqual([]);
   });
+
+  it("names every button that shows only a glyph (✕, ✎, +...)", () => {
+    expect(files.flatMap((f) => glyphOnlyButtons(f, readFileSync(f, "utf8")))).toEqual([]);
+  });
 });
 
-// Hand-rolled dialogs that predate Sheet. Remove a line when its file moves
-// to Sheet; the list only shrinks.
-const LEGACY_DIALOGS = [
-  "app/ordine/order-sent-dialog.tsx",
-  "app/storico/movement-detail.tsx",
-  "components/admin/cancel-cycle-dialog.tsx",
-  "components/admin/ciclo-forms.tsx",
-  "components/admin/closed-cycle-details.tsx",
-  "components/admin/edit-closed-order-modal.tsx",
-  "components/admin/import-listing-wizard.tsx",
-  "components/admin/merge-members-dialog.tsx",
-  "components/admin/settle-cycle-dialog.tsx",
-  "components/admin/supplier-actions-dialog.tsx",
-];
+const GLYPHS = /^[✕✎✏×+−\-⋯…⇅↑↓←→🗑️\s]+$/u;
+
+// A screen reader reads "✕" as "multiplication x": a button whose whole text
+// is a glyph needs an aria-label (or an sr-only text, which counts as text).
+function glyphOnlyButtons(file: string, src: string): string[] {
+  const out: string[] = [];
+  let i = 0;
+  while ((i = src.indexOf("<button", i)) !== -1) {
+    const close = src.indexOf("</button>", i);
+    if (close === -1) break;
+    // The opening tag ends at the first ">" that is not an arrow's.
+    let end = i;
+    do end = src.indexOf(">", end + 1);
+    while (end !== -1 && src[end - 1] === "=");
+    const tag = src.slice(i, end);
+    const inner = src
+      .slice(end + 1, close)
+      .replace(/<span[^>]*sr-only[^>]*>[^<]*<\/span>/g, "sr-only")
+      .replace(/<[^>]*>/g, "")
+      .replace(/\{["'`]([^"'`]*)["'`]\}/g, "$1");
+    if (inner.trim() && GLYPHS.test(inner) && !/aria-label/.test(tag)) {
+      out.push(`${file}:${src.slice(0, i).split("\n").length}`);
+    }
+    i = close;
+  }
+  return out;
+}
