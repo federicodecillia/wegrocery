@@ -1,10 +1,11 @@
 "use client";
 
 import { t } from "@/lib/i18n";
-import { formatDateTime, formatSignedMoney } from "@/lib/i18n/format";
+import { formatSignedMoney } from "@/lib/i18n/format";
 import { formatEur, getProductEmoji } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { paidDifference, type OrderAmount } from "@/lib/payments/order-payment";
+import { formatDeadline } from "@/lib/i18n/deadline";
 
 export type ConfirmedLine = {
   productId: string;
@@ -129,7 +130,7 @@ export function OrderSummary({
 
       <p className="mt-3 text-center text-[12px] leading-[1.5] text-brand-gray">
         {orderCloseAt
-          ? t.order.editableUntil(formatDateTime(orderCloseAt))
+          ? t.order.editableUntil(formatDeadline(orderCloseAt))
           : t.order.editableUntilClose}
       </p>
 

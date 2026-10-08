@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "@/components/ui/toast";
 import { confirm } from "@/components/ui/confirm-dialog";
 import { t } from "@/lib/i18n";
-import { formatDateTime, formatSignedMoney } from "@/lib/i18n/format";
+import { formatSignedMoney } from "@/lib/i18n/format";
 import { formatEur, getProductEmoji, normalizeCategory } from "@/lib/utils";
 import type { OrderState, SaveOrderLine, SaveOrderResult } from "@/lib/actions/order";
 import { discardOrderDraft, loadLastOrderForPrefill, saveOrderDraft } from "@/lib/actions/order";
@@ -17,6 +17,7 @@ import { OrderSentDialog } from "./order-sent-dialog";
 import { OrderSummary, type ConfirmedLine } from "./order-summary";
 import { CycleNotes } from "@/components/cycle-notes";
 import { HelpLink } from "@/components/guide/help-link";
+import { formatDeadline } from "@/lib/i18n/deadline";
 
 type Product = {
   productId: string;
@@ -495,7 +496,7 @@ export function OrderForm({
         <p className="font-mono text-label text-brand-gray mt-[3px]">
           {cycleTitle}
           {supplierName ? ` · ${supplierName}` : ""}
-          {orderCloseAt ? ` · ${t.cycle.closes(formatDateTime(orderCloseAt))}` : ""}
+          {orderCloseAt ? ` · ${t.cycle.closes(formatDeadline(orderCloseAt))}` : ""}
         </p>
       </div>
 

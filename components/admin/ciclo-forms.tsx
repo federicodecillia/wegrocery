@@ -4,8 +4,9 @@ import { confirm } from "@/components/ui/confirm-dialog";
 import { useState, useTransition, useEffect, useCallback } from "react";
 import { toast } from "@/components/ui/toast";
 import { Sheet } from "@/components/ui/sheet";
+import { formatDeadline, formatPickupSlot } from "@/lib/i18n/deadline";
 import { t } from "@/lib/i18n";
-import { formatMoney, formatDateTime, formatHandlingFee } from "@/lib/i18n/format";
+import { formatMoney, formatHandlingFee } from "@/lib/i18n/format";
 import { HANDLING_FEE_MAX, cycleHandlingFee } from "@/lib/payments/order-payment";
 import { utcToZonedLocalInput } from "@/lib/i18n/zoned-time";
 import {
@@ -163,12 +164,7 @@ export function OpenCycleCard({
               <div>
                 {t.admin.cycle.orderCloseAt}:{" "}
                 <span className="font-semibold text-brand-near-black">
-                  {formatDateTime(new Date(cycle.orderCloseAt), {
-                    day: "numeric",
-                    month: "short",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
+                  {formatDeadline(cycle.orderCloseAt)}
                 </span>
               </div>
             )}
@@ -176,13 +172,7 @@ export function OpenCycleCard({
               <div>
                 {cycle.pickup2Date ? t.admin.cycle.pickupFirst : t.admin.cycle.pickupSingle}{" "}
                 <span className="font-semibold text-brand-near-black">
-                  {formatDateTime(new Date(cycle.pickupDate), {
-                    day: "numeric",
-                    month: "short",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                  {cycle.pickupEndTime && `–${cycle.pickupEndTime}`}
+                  {formatPickupSlot(cycle.pickupDate, cycle.pickupEndTime ?? null)}
                 </span>
               </div>
             )}
@@ -190,13 +180,7 @@ export function OpenCycleCard({
               <div>
                 {t.admin.cycle.pickupSecond}{" "}
                 <span className="font-semibold text-brand-near-black">
-                  {formatDateTime(new Date(cycle.pickup2Date), {
-                    day: "numeric",
-                    month: "short",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                  {cycle.pickup2EndTime && `–${cycle.pickup2EndTime}`}
+                  {formatPickupSlot(cycle.pickup2Date, cycle.pickup2EndTime ?? null)}
                 </span>
               </div>
             )}

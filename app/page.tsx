@@ -133,6 +133,112 @@ export default async function HomePage({
         />
       )}
 
+      {/* An amount due comes first: until it is paid no card order can be confirmed. */}
+      {payPerOrder && <BalanceDueCard cents={consolidatedCents} canPay={settings.onlineTopupAvailable} />}
+
+      {/* With an open cycle, its card (and the way to the order) comes first;
+          without one, the balance and the next pickup lead. */}
+      {cycleDataList.length > 0 && (
+        <>
+        {/* ── Cycles loop ── */}
+        {cycleDataList.length > 0 ? (
+          cycleDataList.map(({ cycle, cycleProducts, myLines, orderTotal, payStatus }) => {
+            const productMap = new Map(cycleProducts.map((p) => [p.productId, p]));
+            return (
+              <div key={cycle.cycleId} className="mb-[24px]">
+                <div className="mb-[14px]">
+                  <CycleCountdown
+                    cycleId={cycle.cycleId}
+                    title={cycle.title}
+                    orderCloseAt={new Date(cycle.orderCloseAt ?? new Date()).toISOString()}
+                    orderOpenAt={new Date(cycle.orderOpenAt ?? cycle.createdAt).toISOString()}
+                    pickupDate={cycle.pickupDate ? new Date(cycle.pickupDate).toISOString() : null}
+                    pickupEndTime={cycle.pickupEndTime ?? null}
+                    pickup2Date={cycle.pickup2Date ? new Date(cycle.pickup2Date).toISOString() : null}
+                    pickup2EndTime={cycle.pickup2EndTime ?? null}
+                    hasOrder={myLines.length > 0}
+                  />
+                </div>
+
+                <CycleNotes notes={cycle.notes} className="mb-[10px]" />
+
+                {payStatus && (
+                  <Link
+                    href={`/ordine?cycleId=${cycle.cycleId}`}
+                    className={`mb-[10px] flex items-center justify-between rounded-[14px] border px-4 py-[10px] text-[14px] font-semibold ${
+                      payStatus.kind === "paid"
+                        ? "border-accent/25 bg-accent-soft text-accent-text"
+                        : "border-primary-mid bg-primary-soft text-primary-text"
+                    }`}
+                  >
+                    <span>
+                      {payStatus.kind === "draft"
+                        ? t.order.pay.statusDraft(formatEur(payStatus.amountCents / 100))
+                        : payStatus.kind === "paid"
+                          ? t.order.pay.statusPaid(formatEur(payStatus.amountCents / 100))
+                          : payStatus.kind === "changes"
+                            ? t.order.pay.statusChanges(formatEur(payStatus.amountCents / 100))
+                            : t.order.pay.statusChangesNoPay}
+                    </span>
+                    <span aria-hidden="true">→</span>
+                  </Link>
+                )}
+
+                {myLines.length > 0 ? (
+                  <div className="overflow-hidden rounded-card border border-brand-border bg-white shadow-card">
+                    <div className="flex items-center justify-between border-b border-brand-border px-4 py-[14px]">
+                      <span className="font-mono text-label uppercase tracking-[0.1em] text-brand-gray">
+                        {t.home.yourOrder}
+                      </span>
+                      <Link
+                        href={`/ordine?cycleId=${cycle.cycleId}`}
+                        className="rounded-full border border-brand-border px-[13px] py-[5px] font-mono text-label font-bold uppercase tracking-widest text-brand-near-black"
+                      >
+                        {t.home.editButton}
+                      </Link>
+                    </div>
+                    {myLines.map((line) => {
+                      const p = productMap.get(line.productId);
+                      const meta = [p?.variant, p?.format].filter(Boolean).join(" · ");
+                      return (
+                        <div
+                          key={line.orderLineId}
+                          className="flex items-center justify-between border-b border-brand-border px-4 py-[11px] last:border-none"
+                        >
+                          <div className="flex items-start gap-2">
+                            <span className="mt-[1px] shrink-0 text-[18px] leading-none">
+                              {getProductEmoji(p?.name ?? "")}
+                            </span>
+                            <div>
+                              <div className="text-[14px] font-medium text-brand-near-black">
+                                {p?.name ?? "?"}
+                              </div>
+                              {meta && (
+                                <div className="mt-[1px] font-mono text-label text-brand-gray">{meta}</div>
+                              )}
+                            </div>
+                          </div>
+                          <div className="font-mono text-[13px] font-semibold text-brand-near-black">
+                            ×{line.quantity} · {formatEur(parseFloat(line.lineTotal))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                    <div className="flex items-center justify-between rounded-b-[18px] border-t border-brand-border bg-[#f5f1ec] px-4 py-[12px]">
+                      <span className="text-[14px] font-extrabold text-brand-near-black">{t.home.totalLabel}</span>
+                      <span className="font-mono text-[13px] font-bold text-brand-near-black">
+                        {formatEur(orderTotal)}
+                      </span>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            );
+          })
+        ) : null}
+        </>
+      )}
+
       {/* ── Saldo hero card (wallet groups only) ── */}
       {!payPerOrder && (
         <>
@@ -156,11 +262,12 @@ export default async function HomePage({
             ("+€888.88" is 0.60; Italian "+888,88 €" is 0.55), and nowrap keeps
             the sign from ever dropping onto its own line. */}
         <div className="@container mb-[16px] flex items-baseline gap-[6px]">
+          {/* Smaller on phones, where the cycle card above needs the room. */}
           <span
-            className={`whitespace-nowrap font-black leading-none tracking-[-0.045em] ${
+            className={`whitespace-nowrap text-[length:min(52px,var(--fit))] font-black leading-none tracking-[-0.045em] sm:text-[length:min(70px,var(--fit))] ${
               isNegative ? "text-brand-red" : "text-brand-near-black"
             }`}
-            style={{ fontSize: `min(70px, calc(100cqi / ${(0.61 * balanceText.length).toFixed(2)}))` }}
+            style={{ "--fit": `calc(100cqi / ${(0.61 * balanceText.length).toFixed(2)})` } as React.CSSProperties}
           >
             {balanceText}
           </span>
@@ -219,116 +326,13 @@ export default async function HomePage({
         </>
       )}
 
-      {payPerOrder && <BalanceDueCard cents={consolidatedCents} canPay={settings.onlineTopupAvailable} />}
 
-      {/* ── Prossimo ritiro card ── */}
-      {nextPickup && <NextPickupCard pickup={nextPickup} />}
+      {/* ── Prossimo ritiro card: only for a cycle not already on screen ── */}
+      {nextPickup && !cycleDataList.some((d) => d.cycle.cycleId === nextPickup.cycleId) && (
+        <NextPickupCard pickup={nextPickup} />
+      )}
 
-      {/* ── Cycles loop ── */}
-      {cycleDataList.length > 0 ? (
-        cycleDataList.map(({ cycle, cycleProducts, myLines, orderTotal, payStatus }) => {
-          const productMap = new Map(cycleProducts.map((p) => [p.productId, p]));
-          return (
-            <div key={cycle.cycleId} className="mb-[24px]">
-              <div className="mb-[14px]">
-                <CycleCountdown
-                  cycleId={cycle.cycleId}
-                  title={cycle.title}
-                  orderCloseAt={new Date(cycle.orderCloseAt ?? new Date()).toISOString()}
-                  orderOpenAt={new Date(cycle.orderOpenAt ?? cycle.createdAt).toISOString()}
-                  pickupDate={cycle.pickupDate ? new Date(cycle.pickupDate).toISOString() : null}
-                  pickupEndTime={cycle.pickupEndTime ?? null}
-                  pickup2Date={cycle.pickup2Date ? new Date(cycle.pickup2Date).toISOString() : null}
-                  pickup2EndTime={cycle.pickup2EndTime ?? null}
-                />
-              </div>
-
-              <CycleNotes notes={cycle.notes} className="mb-[10px]" />
-
-              {payStatus && (
-                <Link
-                  href={`/ordine?cycleId=${cycle.cycleId}`}
-                  className={`mb-[10px] flex items-center justify-between rounded-[14px] border px-4 py-[10px] text-[14px] font-semibold ${
-                    payStatus.kind === "paid"
-                      ? "border-accent/25 bg-accent-soft text-accent-text"
-                      : "border-primary-mid bg-primary-soft text-primary-text"
-                  }`}
-                >
-                  <span>
-                    {payStatus.kind === "draft"
-                      ? t.order.pay.statusDraft(formatEur(payStatus.amountCents / 100))
-                      : payStatus.kind === "paid"
-                        ? t.order.pay.statusPaid(formatEur(payStatus.amountCents / 100))
-                        : payStatus.kind === "changes"
-                          ? t.order.pay.statusChanges(formatEur(payStatus.amountCents / 100))
-                          : t.order.pay.statusChangesNoPay}
-                  </span>
-                  <span aria-hidden="true">→</span>
-                </Link>
-              )}
-
-              {myLines.length > 0 ? (
-                <div className="overflow-hidden rounded-card border border-brand-border bg-white shadow-card">
-                  <div className="flex items-center justify-between border-b border-brand-border px-4 py-[14px]">
-                    <span className="font-mono text-label uppercase tracking-[0.1em] text-brand-gray">
-                      {t.home.yourOrder}
-                    </span>
-                    <Link
-                      href={`/ordine?cycleId=${cycle.cycleId}`}
-                      className="rounded-full border border-brand-border px-[13px] py-[5px] font-mono text-label font-bold uppercase tracking-widest text-brand-near-black"
-                    >
-                      {t.home.editButton}
-                    </Link>
-                  </div>
-                  {myLines.map((line) => {
-                    const p = productMap.get(line.productId);
-                    const meta = [p?.variant, p?.format].filter(Boolean).join(" · ");
-                    return (
-                      <div
-                        key={line.orderLineId}
-                        className="flex items-center justify-between border-b border-brand-border px-4 py-[11px] last:border-none"
-                      >
-                        <div className="flex items-start gap-2">
-                          <span className="mt-[1px] shrink-0 text-[18px] leading-none">
-                            {getProductEmoji(p?.name ?? "")}
-                          </span>
-                          <div>
-                            <div className="text-[14px] font-medium text-brand-near-black">
-                              {p?.name ?? "?"}
-                            </div>
-                            {meta && (
-                              <div className="mt-[1px] font-mono text-label text-brand-gray">{meta}</div>
-                            )}
-                          </div>
-                        </div>
-                        <div className="font-mono text-[13px] font-semibold text-brand-near-black">
-                          ×{line.quantity} · {formatEur(parseFloat(line.lineTotal))}
-                        </div>
-                      </div>
-                    );
-                  })}
-                  <div className="flex items-center justify-between rounded-b-[18px] border-t border-brand-border bg-[#f5f1ec] px-4 py-[12px]">
-                    <span className="text-[14px] font-extrabold text-brand-near-black">{t.home.totalLabel}</span>
-                    <span className="font-mono text-[13px] font-bold text-brand-near-black">
-                      {formatEur(orderTotal)}
-                    </span>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex items-center justify-between rounded-card border border-brand-border bg-white p-[18px] shadow-card">
-                  <span className="text-[14px] text-brand-gray">{t.home.noOrdersYet}</span>
-                  <Link
-                    href={`/ordine?cycleId=${cycle.cycleId}`}
-                    className="rounded-full bg-primary px-4 py-[10px] text-[14px] font-bold text-on-primary"
-                  >
-                    {t.home.orderButton}
-                  </Link>
-                </div>
-              )}
-            </div>
-          );
-        })
-      ) : (
+      {cycleDataList.length === 0 && (
         <div className="mb-[14px] flex items-center justify-between rounded-card border border-brand-border bg-white p-[18px] shadow-card">
           <div>
             <div className="text-[15px] font-bold">{t.home.noOpenOrders}</div>

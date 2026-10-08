@@ -7,7 +7,7 @@ import { admitEmail } from "@/lib/auth/admission";
 import { eq, and, isNull, notInArray, sql, inArray } from "drizzle-orm";
 import { requireAdmin } from "@/lib/auth/session";
 import { t } from "@/lib/i18n";
-import { formatMoney, formatDate, formatDateTime } from "@/lib/i18n/format";
+import { formatMoney, formatDate } from "@/lib/i18n/format";
 import { parseCycleDates } from "@/lib/cycle-dates";
 import { brand } from "@/lib/brand";
 import { getDb } from "@/lib/db/client";
@@ -63,6 +63,7 @@ import { previewSettlement, settleCycle, type SettleResult } from "@/lib/payment
 import { getStripe } from "@/lib/payments/stripe";
 import { isAboveMaxBalance } from "@/lib/payments/settings";
 import { DEFAULT_ACCESS_LEVEL, normalizeAccessLevel, normalizeRole, type AccessLevel } from "@/lib/roles";
+import { formatDeadline } from "@/lib/i18n/deadline";
 
 function ledgerAmountErrorMessage(code: LedgerAmountError): string {
   switch (code) {
@@ -227,7 +228,7 @@ export async function adminCreateCycle(data: CreateCycleInput): Promise<{error?:
           title: t.notificationsServer.cycleOpenedTitle,
           body: t.notificationsServer.cycleOpenedBody(
             data.title.trim(),
-            formatDateTime(orderCloseAt),
+            formatDeadline(orderCloseAt),
           ),
           href: "/ordine",
         },
