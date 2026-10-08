@@ -12,7 +12,7 @@ import { t } from "@/lib/i18n";
 import { formatDate } from "@/lib/i18n/format";
 import { formatDeadline } from "@/lib/i18n/deadline";
 import { adminHref } from "@/lib/admin/nav";
-import { CYCLE_VIEW_LABELS, cycleViews, defaultCycleId, needsSettlement, resolveCycleView, type CycleView } from "@/lib/admin/cycle-views";
+import { CYCLE_VIEW_LABELS, cycleViews, defaultCycleId, resolveCycleView, settlementCandidate, settlementPending, type CycleView } from "@/lib/admin/cycle-views";
 import { AdminInsights } from "./admin-insights";
 import {
   CloseCycleAction,
@@ -27,7 +27,7 @@ import {
 } from "./ciclo-forms";
 import { CancelCycleButton } from "./cancel-cycle-dialog";
 import { SettleCycleButton } from "./settle-cycle-dialog";
-import { CycleList, CyclePicker, type CycleListItem } from "./cycle-list";
+import { CycleList, CyclePicker, CycleShortlist, type CycleListItem, type SettleState } from "./cycle-list";
 import { CycleOrdersView } from "./cycle-orders-view";
 
 type Props = {
@@ -47,14 +47,31 @@ export async function CycleWorkspace({ cycleId: asked, view: askedView, creating
   const cycle = cycles.find((c) => c.cycleId === selectedId) ?? null;
   const view = cycle ? resolveCycleView(cycle.status, askedView) : null;
 
-  const listItems: CycleListItem[] = cycles.map((c) => ({
-    cycleId: c.cycleId,
-    title: c.title,
-    status: c.status,
-    perOrder: c.paymentMode === "per_order",
-    toSettle: needsSettlement(c),
-    date: (c.status === "open" ? c.orderCloseAt : (c.pickupDate ?? c.createdAt))?.toISOString() ?? null,
-  }));
+  // Card cycles closed or cancelled, unsettled or settled lately: whether
+  // their accounts still ask for "Chiudi i conti" (a correction or a failed
+  // refund can reopen a settled one).
+  const now = new Date();
+  const settleStates = new Map(
+    await Promise.all(
+      cycles
+        .filter((c) => settlementCandidate(c, now))
+        .map(async (c) => [c.cycleId, await getSettlementStatus(getDb(), c.cycleId)] as const),
+    ),
+  );
+
+  const listItems: CycleListItem[] = cycles.map((c) => {
+    const status = settleStates.get(c.cycleId) ?? null;
+    const settle = settlementPending(status) ? (status as SettleState) : null;
+    return {
+      cycleId: c.cycleId,
+      title: c.title,
+      status: c.status,
+      perOrder: c.paymentMode === "per_order",
+      toSettle: settle != null,
+      settle,
+      date: (c.status === "open" ? c.orderCloseAt : (c.pickupDate ?? c.createdAt))?.toISOString() ?? null,
+    };
+  });
 
   return (
     <div>
@@ -64,6 +81,7 @@ export async function CycleWorkspace({ cycleId: asked, view: askedView, creating
           <CycleList cycles={listItems} selectedId={selectedId} view={view} />
         </aside>
         <div className="min-w-0">
+          <CycleShortlist cycles={listItems} selectedId={selectedId} view={view} />
           <CyclePicker cycles={listItems} selectedId={selectedId} view={view} />
           {cycle && view ? (
             <SelectedCycle cycle={cycle} view={view} suppliers={suppliers} />

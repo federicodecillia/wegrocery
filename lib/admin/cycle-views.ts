@@ -61,13 +61,30 @@ export function filterCycles<T extends { title: string; status: string }>(cycles
   );
 }
 
+/** How long after its settlement a card cycle is still checked for money left to settle. */
+export const SETTLEMENT_RECHECK_DAYS = 90;
+
 /**
- * A card-paid cycle closed and not settled yet: its "Chiudi i conti" is still
- * to do (refunds on the card, amounts due). The list puts these first so the
- * settlement is not forgotten.
+ * Whether a cycle's settlement is worth checking: a card-paid cycle that is
+ * closed or cancelled (both get "Chiudi i conti"), not settled yet or settled
+ * recently enough that a later correction may have reopened it.
  */
-export function needsSettlement(c: { status: string; paymentMode: string; settledAt: Date | null }): boolean {
-  return c.status === "closed" && c.paymentMode === "per_order" && c.settledAt == null;
+export function settlementCandidate(
+  c: { status: string; paymentMode: string; settledAt: Date | null },
+  now: Date,
+): boolean {
+  if (c.paymentMode !== "per_order" || c.status === "open") return false;
+  if (c.settledAt == null) return true;
+  return now.getTime() - c.settledAt.getTime() <= SETTLEMENT_RECHECK_DAYS * 86_400_000;
+}
+
+/**
+ * A settlement status that asks the admin to act: never run, money left to
+ * refund or write off after a correction, or a refund that failed. The list
+ * puts these first so "Chiudi i conti" is not forgotten.
+ */
+export function settlementPending(status: string | null): boolean {
+  return status === "to_settle" || status === "needs_update" || status === "refund_failed";
 }
 
 export type CycleGroup = "toSettle" | "open" | "others";

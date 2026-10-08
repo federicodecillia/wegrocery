@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cycleViews, defaultCycleId, filterCycles, groupCycles, needsSettlement, resolveCycleView } from "./cycle-views";
+import { cycleViews, defaultCycleId, filterCycles, groupCycles, resolveCycleView, settlementCandidate, settlementPending } from "./cycle-views";
 
 const d = (iso: string) => new Date(iso);
 
@@ -51,14 +51,24 @@ describe("filterCycles", () => {
   });
 });
 
-describe("needsSettlement", () => {
-  const base = { status: "closed", paymentMode: "per_order", settledAt: null };
-  it("is a closed card cycle not settled yet", () => {
-    expect(needsSettlement(base)).toBe(true);
-    expect(needsSettlement({ ...base, settledAt: new Date() })).toBe(false);
-    expect(needsSettlement({ ...base, status: "open" })).toBe(false);
-    expect(needsSettlement({ ...base, status: "cancelled" })).toBe(false);
-    expect(needsSettlement({ ...base, paymentMode: "wallet" })).toBe(false);
+describe("settlementCandidate and settlementPending", () => {
+  const now = new Date("2026-10-08T12:00:00Z");
+  const base = { status: "closed", paymentMode: "per_order", settledAt: null as Date | null };
+  it("checks closed or cancelled card cycles, not settled or settled in the last 90 days", () => {
+    expect(settlementCandidate(base, now)).toBe(true);
+    expect(settlementCandidate({ ...base, status: "cancelled" }, now)).toBe(true);
+    expect(settlementCandidate({ ...base, status: "open" }, now)).toBe(false);
+    expect(settlementCandidate({ ...base, paymentMode: "wallet" }, now)).toBe(false);
+    expect(settlementCandidate({ ...base, settledAt: new Date("2026-08-01T00:00:00Z") }, now)).toBe(true);
+    expect(settlementCandidate({ ...base, settledAt: new Date("2026-06-01T00:00:00Z") }, now)).toBe(false);
+  });
+  it("asks to act when never settled, reopened by a correction or a refund failed", () => {
+    expect(settlementPending("to_settle")).toBe(true);
+    expect(settlementPending("needs_update")).toBe(true);
+    expect(settlementPending("refund_failed")).toBe(true);
+    expect(settlementPending("refunds_pending")).toBe(false);
+    expect(settlementPending("settled")).toBe(false);
+    expect(settlementPending(null)).toBe(false);
   });
 });
 

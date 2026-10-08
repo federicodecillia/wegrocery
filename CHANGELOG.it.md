@@ -43,7 +43,7 @@ stanno nella PR.
 - 🧭 **Una barra Admin più corta.** Ciclo, Cassa, Soci e Catalogo stanno sul telefono senza scorrere, con Statistiche e Impostazioni dietro ⋯ (in fila da computer). Ordini ora è dentro Ciclo, Prodotti e Fornitori dentro Catalogo, e i vecchi link aprono ancora la pagina giusta.
 - 🗂️ **Un posto per ogni ciclo in Admin.** Scegli un ciclo dall'elenco (a sinistra da computer, "Scegli il ciclo" da telefono), poi passa tra Panoramica, Prodotti e Ordini, o Fornitore e Conti quando è chiuso. Ci sono tutti i cicli passati con ricerca e filtri, non solo gli ultimi 15, così anche i più vecchi si possono ancora correggere.
 - 📋 **Gli ordini del ciclo in una pagina.** Ordini mostra "Per socio" e "Per prodotto" (affiancati da computer) con un solo "Scarica distinta"; a ciclo chiuso pesi e ordini si correggono lì. Lo storico ordini di un socio ora è in Soci, alla voce "Ordini", con il link ai suoi movimenti in Cassa.
-- 💳 **Prima i conti da chiudere.** In Admin → Ciclo l'elenco parte dai cicli con carta chiusi ma con i conti ancora da chiudere, poi gli aperti, così "Chiudi i conti" non si dimentica; da telefono "Scegli il ciclo" mostra quanti ne aspettano.
+- 💳 **Prima i conti da chiudere.** In Admin → Ciclo l'elenco parte dai cicli con carta che chiedono ancora "Chiudi i conti" (mai chiusi, da aggiornare dopo una correzione, o con un rimborso non riuscito), poi gli aperti; da telefono stanno entrambi sopra "Tutti i cicli".
 
 ## [1.25.0] — 7 ottobre 2026
 

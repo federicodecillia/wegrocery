@@ -556,8 +556,8 @@ export const en: Strings = {
   admin: {
     workspace: {
       groups: { toSettle: "Accounts to settle", open: "Open", others: "The others" },
-      toSettleHint: "Closed, accounts to settle",
-      toSettleCount: (n: number) => (n === 1 ? "1 with accounts to settle" : `${n} with accounts to settle`),
+      settleHints: { to_settle: "accounts to settle", needs_update: "accounts to update", refund_failed: "refund failed" },
+      allCycles: "All cycles",
       views: {
         panoramica: "Overview",
         prodotti: "Products",
@@ -566,7 +566,6 @@ export const en: Strings = {
         conti: "Accounts",
       },
       listTitle: "Cycles",
-      chooseCycle: "Choose the cycle",
       newCycle: "+ New cycle",
       search: "Search a cycle",
       showMore: "Show more",

@@ -558,8 +558,8 @@ export const it = {
   admin: {
     workspace: {
       groups: { toSettle: "Conti da chiudere", open: "Aperti", others: "Gli altri" },
-      toSettleHint: "Chiuso, conti da chiudere",
-      toSettleCount: (n: number) => (n === 1 ? "1 con i conti da chiudere" : `${n} con i conti da chiudere`),
+      settleHints: { to_settle: "conti da chiudere", needs_update: "conti da aggiornare", refund_failed: "rimborso non riuscito" },
+      allCycles: "Tutti i cicli",
       views: {
         panoramica: "Panoramica",
         prodotti: "Prodotti",
@@ -568,7 +568,6 @@ export const it = {
         conti: "Conti",
       },
       listTitle: "Cicli",
-      chooseCycle: "Scegli il ciclo",
       newCycle: "+ Nuovo ciclo",
       search: "Cerca un ciclo",
       showMore: "Mostra altri",
