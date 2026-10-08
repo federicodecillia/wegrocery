@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useTransition } from "react";
 import { toast } from "@/components/ui/toast";
 import { confirm } from "@/components/ui/confirm-dialog";
@@ -8,6 +9,7 @@ import { adminUnlinkFamilyMember } from "@/lib/actions/family";
 import { formatDate } from "@/lib/utils";
 import { DEFAULT_ROLE, ROLES, getRoleLabel, normalizeRole, type Role } from "@/lib/roles";
 import { t } from "@/lib/i18n";
+import { adminHref } from "@/lib/admin/nav";
 import type { DuplicatePair } from "@/lib/members/duplicates";
 import { DuplicateMembers } from "./duplicate-members";
 import { MergeMembersDialog } from "./merge-members-dialog";
@@ -338,6 +340,13 @@ export function SociList({
                   <span className={`whitespace-nowrap rounded-full px-2 py-0.5 text-label font-semibold ${roleColor}`}>
                     {getRoleLabel(m.role)}
                   </span>
+                  <Link
+                    href={adminHref("soci", null, { member: m.memberId })}
+                    aria-label={t.admin.members.ordersAria(m.fullName)}
+                    className="whitespace-nowrap rounded-full border border-brand-border px-2.5 py-1 text-label font-semibold text-brand-near-black"
+                  >
+                    {t.admin.members.ordersLink}
+                  </Link>
                   {m.active && (
                     <button
                       onClick={() => handleInvite(m)}

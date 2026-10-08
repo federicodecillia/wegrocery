@@ -2,8 +2,10 @@ import { getAllMembers, getAllMembersWithBalances, getDismissedDuplicatePairs } 
 import { findDuplicatePairs } from "@/lib/members/duplicates";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
 import { SociForm, SociList } from "./soci-form";
+import { MemberOrders } from "./member-orders";
 
-export async function TabSoci() {
+export async function TabSoci({ memberId }: { memberId?: string }) {
+  if (memberId) return <MemberOrders memberId={memberId} />;
   const [members, balances, settings, dismissed] = await Promise.all([
     getAllMembers(),
     getAllMembersWithBalances(),

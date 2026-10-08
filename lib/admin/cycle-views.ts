@@ -60,3 +60,41 @@ export function filterCycles<T extends { title: string; status: string }>(cycles
     (c) => (filter === "all" || c.status === filter) && words.every((w) => norm(c.title).includes(w)),
   );
 }
+
+/** How long after its settlement a card cycle is still checked for money left to settle. */
+export const SETTLEMENT_RECHECK_DAYS = 90;
+
+/**
+ * Whether a cycle's settlement is worth checking: a card-paid cycle that is
+ * closed or cancelled (both get "Chiudi i conti"), not settled yet or settled
+ * recently enough that a later correction may have reopened it.
+ */
+export function settlementCandidate(
+  c: { status: string; paymentMode: string; settledAt: Date | null },
+  now: Date,
+): boolean {
+  if (c.paymentMode !== "per_order" || c.status === "open") return false;
+  if (c.settledAt == null) return true;
+  return now.getTime() - c.settledAt.getTime() <= SETTLEMENT_RECHECK_DAYS * 86_400_000;
+}
+
+/**
+ * A settlement status that asks the admin to act: never run, money left to
+ * refund or write off after a correction, or a refund that failed. The list
+ * puts these first so "Chiudi i conti" is not forgotten.
+ */
+export function settlementPending(status: string | null): boolean {
+  return status === "to_settle" || status === "needs_update" || status === "refund_failed";
+}
+
+export type CycleGroup = "toSettle" | "open" | "others";
+
+/** The list in three groups, each keeping its order: accounts to settle, open, the rest. */
+export function groupCycles<T extends { status: string; toSettle: boolean }>(cycles: T[]): { group: CycleGroup; cycles: T[] }[] {
+  const groups: { group: CycleGroup; cycles: T[] }[] = [
+    { group: "toSettle", cycles: cycles.filter((c) => c.toSettle) },
+    { group: "open", cycles: cycles.filter((c) => !c.toSettle && c.status === "open") },
+    { group: "others", cycles: cycles.filter((c) => !c.toSettle && c.status !== "open") },
+  ];
+  return groups.filter((g) => g.cycles.length > 0);
+}

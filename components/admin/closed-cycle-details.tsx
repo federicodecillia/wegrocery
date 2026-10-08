@@ -1,16 +1,16 @@
 "use client";
 
-import { useCallback, useState, useTransition } from "react";
+import { deliveredActuals, deliveredTotalFromQuantity } from "@/lib/closed-order-preview";
+import { useCallback, useEffect, useState, useTransition } from "react";
 import { adminGetCycleOrderDetails } from "@/lib/actions/admin-cycles";
 import { adminUpdateOrderLineActuals } from "@/lib/actions/admin";
 import { formatEur, getProductEmoji } from "@/lib/utils";
 import { formatDecimalInput, formatNumber } from "@/lib/i18n/format";
 import { toast } from "@/components/ui/toast";
-import { Sheet, SheetActions } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { EditClosedOrderModal } from "./edit-closed-order-modal";
 import { t } from "@/lib/i18n";
-import { closedCycleGrandTotal, closedCycleMemberRows, closedCycleMemberTotal } from "@/lib/closed-cycle-totals";
+import { closedCycleMemberRows, closedCycleMemberTotal } from "@/lib/closed-cycle-totals";
 
 type OrderDetail = {
   orderLineId: string;
@@ -43,30 +43,34 @@ function realUnit(unit: string | null | undefined): string {
 
 type MemberShipping = { memberId: string; memberName: string; amount: number };
 
-export function ClosedCycleDetails({
+/**
+ * Admin → Ciclo → Ordini, per socio: every member of the cycle with their
+ * lines, shipping and fee. On a closed cycle a tap on a line records the
+ * delivered weight or price, "✎ Prodotti" edits the whole order and
+ * "+ Aggiungi ordine" adds one; an open cycle is read-only (the server
+ * refuses corrections until the close).
+ */
+export function CycleOrdersByMember({
   cycleId,
   cycleTitle,
-  buttonLabel,
-  editable = true,
+  editable,
 }: {
   cycleId: string;
   cycleTitle: string;
-  buttonLabel?: string;
-  /** False on an open cycle: the server refuses every correction until the close. */
-  editable?: boolean;
+  editable: boolean;
 }) {
-  const label = buttonLabel ?? t.admin.closedCycleDetails.defaultButtonLabel;
-  const [isOpen, setIsOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [orderDetails, setOrderDetails] = useState<OrderDetail[]>([]);
   const [shipping, setShipping] = useState<MemberShipping[]>([]);
   const [handling, setHandling] = useState<MemberShipping[]>([]);
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [query, setQuery] = useState("");
   const [editTarget, setEditTarget] = useState<
     { kind: "edit"; memberId: string; memberName: string } | { kind: "create" } | null
   >(null);
+  const c = t.admin.closedCycleDetails;
 
   const refetch = useCallback(async () => {
-    setLoading(true);
     try {
       const result = await adminGetCycleOrderDetails(cycleId);
       if (result.error) {
@@ -77,134 +81,126 @@ export function ClosedCycleDetails({
         setHandling(result.handling || []);
       }
     } catch {
-      toast.error(t.admin.closedCycleDetails.errorLoading);
+      toast.error(c.errorLoading);
     } finally {
       setLoading(false);
     }
-  }, [cycleId]);
+  }, [cycleId, c.errorLoading]);
 
-  async function handleOpen() {
-    setIsOpen(true);
-    await refetch();
-  }
+  useEffect(() => {
+    void refetch();
+  }, [refetch]);
 
-  if (!isOpen) {
-    return (
-      <button
-        onClick={handleOpen}
-        className="rounded-lg bg-accent/10 px-3 py-1 text-label font-bold text-accent-text hover:bg-accent/20"
-      >
-        {label}
-      </button>
-    );
+  function toggle(memberId: string) {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(memberId)) next.delete(memberId);
+      else next.add(memberId);
+      return next;
+    });
   }
 
   // One row per member: those with order lines, then those charged shipping
   // or the fee with no line left.
   const memberRows = closedCycleMemberRows(orderDetails, shipping, handling);
-  const effectiveTotal = (l: OrderDetail) =>
-    parseFloat(l.actualLineTotal ?? l.lineTotal);
-  const linesTotal = orderDetails.reduce((s, l) => s + effectiveTotal(l), 0);
-  const grandTotal = closedCycleGrandTotal({ products: linesTotal, shipping, handling });
+  const effectiveTotal = (l: OrderDetail) => parseFloat(l.actualLineTotal ?? l.lineTotal);
+  const q = query.trim().toLowerCase();
+  const shown = q ? memberRows.filter((r) => r.memberName.toLowerCase().includes(q)) : memberRows;
 
   return (
-    <Sheet
-      open
-      onRequestClose={() => setIsOpen(false)}
-      title={cycleTitle}
-      subtitle={t.admin.closedCycleDetails.membersAndTotal(memberRows.length, formatEur(grandTotal))}
-      footer={
-        <SheetActions>
-          <Button variant="outline" className="flex-1" onClick={() => setIsOpen(false)}>
-            {t.admin.common.close}
+    <div>
+      {editable && (
+        <div className="border-b border-brand-border px-4 py-3">
+          <Button variant="brand" className="w-full sm:w-auto" onClick={() => setEditTarget({ kind: "create" })}>
+            {c.addOrder}
           </Button>
-          {editable && (
-            <Button variant="brand" className="flex-1" onClick={() => setEditTarget({ kind: "create" })}>
-              {t.admin.closedCycleDetails.addOrder}
-            </Button>
-          )}
-        </SheetActions>
-      }
-    >
+        </div>
+      )}
       {loading ? (
-        <div className="py-20 text-center text-brand-gray">{t.admin.closedCycleDetails.loading}</div>
+        <div className="py-10 text-center text-[13px] text-brand-gray">{c.loading}</div>
       ) : memberRows.length === 0 ? (
-        <div className="py-20 text-center text-brand-gray">{t.admin.closedCycleDetails.noOrders}</div>
+        <div className="py-10 text-center text-[13px] text-brand-gray">{c.noOrders}</div>
       ) : (
-        <div className="space-y-8">
-          {editable ? (
-            <div className="flex items-center gap-2 rounded-lg bg-primary/5 px-3 py-2 text-label text-brand-gray">
-              <span aria-hidden className="text-[13px]">👆</span>
-              <span>{t.admin.closedCycleDetails.rectifyHint}</span>
-            </div>
-          ) : (
-            <div className="rounded-lg bg-black/[0.04] px-3 py-2 text-label text-brand-gray">
-              {t.admin.closedCycleDetails.openCycleHint}
-            </div>
-          )}
-          {memberRows.map(({ memberId, memberName, lines, shipping: memberShipping, handling: memberHandling }) => {
-            const productsTotal = lines.reduce((s, l) => s + effectiveTotal(l), 0);
-            const total = closedCycleMemberTotal({
-              products: productsTotal,
-              shipping: memberShipping,
-              handling: memberHandling,
-            });
-            return (
-              <div key={memberId} className="space-y-2">
-                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-accent/20 pb-1">
-                  <span className="text-[14px] font-bold text-brand-near-black">{memberName}</span>
-                  <div className="flex items-center gap-3">
-                    <span className="text-[13px] font-black text-accent-text">{formatEur(total)}</span>
+        <>
+          <div className="space-y-2 px-4 pt-3">
+            <p className="text-label text-brand-gray">{editable ? c.rectifyHint : c.openCycleHint}</p>
+            {memberRows.length >= MEMBER_SEARCH_MIN && (
+              <>
+                <label className="sr-only" htmlFor={`orders-search-${cycleId}`}>
+                  {c.searchMember}
+                </label>
+                <input
+                  id={`orders-search-${cycleId}`}
+                  type="search"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder={c.searchMember}
+                  className="min-h-10 w-full rounded-xl border border-brand-border bg-white px-3 text-[13px] placeholder:text-muted"
+                />
+              </>
+            )}
+          </div>
+          <ul className="mt-2 divide-y divide-brand-border">
+            {shown.map(({ memberId, memberName, lines, shipping: memberShipping, handling: memberHandling }) => {
+              const productsTotal = lines.reduce((s, l) => s + effectiveTotal(l), 0);
+              const total = closedCycleMemberTotal({
+                products: productsTotal,
+                shipping: memberShipping,
+                handling: memberHandling,
+              });
+              const open = expanded.has(memberId) || q !== "";
+              const adjusted = lines.some((l) => l.actualQuantity != null || l.actualLineTotal != null);
+              return (
+                <li key={memberId}>
+                  <div className="flex items-center gap-2 px-4">
+                    <button
+                      type="button"
+                      onClick={() => toggle(memberId)}
+                      aria-expanded={open}
+                      className="flex min-h-12 min-w-0 flex-1 items-center justify-between gap-2 py-2 text-left"
+                    >
+                      <span className="min-w-0">
+                        <span className="block truncate text-[13px] font-semibold text-brand-near-black">{memberName}</span>
+                        <span className="block text-label text-muted">
+                          {c.linesCount(lines.length)}
+                          {adjusted ? ` · ${c.adjustedBadge}` : ""}
+                        </span>
+                      </span>
+                      <span className="flex shrink-0 items-center gap-2">
+                        <span className="font-mono text-[13px] font-bold tabular-nums text-brand-near-black">{formatEur(total)}</span>
+                        <span aria-hidden className="text-muted">
+                          {open ? "▴" : "▾"}
+                        </span>
+                      </span>
+                    </button>
                     {editable && (
                       <button
-                        onClick={() =>
-                          setEditTarget({ kind: "edit", memberId, memberName })
-                        }
-                        className="min-h-9 rounded-full bg-primary/10 px-3 py-1 text-label font-bold text-primary-text hover:bg-primary/20"
+                        type="button"
+                        onClick={() => setEditTarget({ kind: "edit", memberId, memberName })}
+                        aria-label={c.editOrderAria(memberName)}
+                        className="hit-44 shrink-0 rounded-full bg-primary/10 px-3 py-1.5 text-label font-bold text-primary-text hover:bg-primary/20"
                       >
-                        {t.admin.closedCycleDetails.editQtyButton}
+                        {c.editQtyButton}
                       </button>
                     )}
                   </div>
-                </div>
-                <div className="space-y-1 pl-2">
-                  {lines.map((l) => (
-                    <OrderLineRow key={l.orderLineId} line={l} editable={editable} onSaved={refetch} />
-                  ))}
-                  {memberShipping > 0 && (
-                    <div className="flex items-start justify-between gap-3 rounded-lg px-1.5 py-1 text-[12px] text-brand-near-black">
-                      <div className="flex min-w-0 flex-1 gap-2">
-                        <span className="shrink-0 text-[16px]">🚚</span>
-                        <div className="min-w-0">
-                          <div className="font-medium">{t.admin.closedCycleDetails.shippingLine}</div>
-                          <div className="text-label text-brand-gray">
-                            {t.admin.closedCycleDetails.shippingQuota}
-                          </div>
-                        </div>
-                      </div>
-                      <span className="shrink-0 font-mono text-label font-bold text-brand-near-black">
-                        {formatEur(memberShipping)}
-                      </span>
+                  {open && (
+                    <div className="space-y-1 bg-black/[0.02] px-4 pt-1 pb-3">
+                      {lines.map((l) => (
+                        <OrderLineRow key={l.orderLineId} line={l} editable={editable} onSaved={refetch} />
+                      ))}
+                      {memberShipping > 0 && (
+                        <ExtraRow emoji="🚚" label={c.shippingLine} hint={c.shippingQuota} amount={memberShipping} />
+                      )}
+                      {memberHandling > 0 && <ExtraRow emoji="🧺" label={t.history.handlingFee} amount={memberHandling} />}
                     </div>
                   )}
-                  {memberHandling > 0 && (
-                    <div className="flex items-start justify-between gap-3 rounded-lg px-1.5 py-1 text-[12px] text-brand-near-black">
-                      <div className="flex min-w-0 flex-1 gap-2">
-                        <span className="shrink-0 text-[16px]">🧺</span>
-                        <div className="min-w-0">
-                          <div className="font-medium">{t.history.handlingFee}</div>
-                        </div>
-                      </div>
-                      <span className="shrink-0 font-mono text-label font-bold text-brand-near-black">
-                        {formatEur(memberHandling)}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
+                </li>
+              );
+            })}
+          </ul>
+          {shown.length === 0 && <p className="py-6 text-center text-[13px] text-brand-gray">{c.noMemberMatch}</p>}
+        </>
       )}
 
       {editTarget && (
@@ -216,7 +212,27 @@ export function ClosedCycleDetails({
           onSaved={() => refetch()}
         />
       )}
-    </Sheet>
+    </div>
+  );
+}
+
+/** A long cycle gets a search over its members. */
+const MEMBER_SEARCH_MIN = 12;
+
+function ExtraRow({ emoji, label, hint, amount }: { emoji: string; label: string; hint?: string; amount: number }) {
+  return (
+    <div className="flex items-start justify-between gap-3 rounded-lg px-1.5 py-1 text-[12px] text-brand-near-black">
+      <div className="flex min-w-0 flex-1 gap-2">
+        <span aria-hidden className="shrink-0 text-[16px]">
+          {emoji}
+        </span>
+        <div className="min-w-0">
+          <div className="font-medium">{label}</div>
+          {hint && <div className="text-label text-brand-gray">{hint}</div>}
+        </div>
+      </div>
+      <span className="shrink-0 font-mono text-label font-bold text-brand-near-black">{formatEur(amount)}</span>
+    </div>
   );
 }
 
@@ -377,7 +393,6 @@ function OrderLineEditForm({
   onCancel: () => void;
   onSave: (actualQuantity: string | null, actualLineTotal: string | null) => void;
 }) {
-  const unitPrice = parseFloat(line.unitPrice);
   const initialQty = formatDecimalInput(line.actualQuantity ?? String(line.quantity));
   const initialTotal = formatDecimalInput(line.actualLineTotal ?? line.lineTotal);
   const [qty, setQty] = useState(initialQty);
@@ -388,29 +403,15 @@ function OrderLineEditForm({
   function onQtyChange(v: string) {
     setQty(v);
     if (totalTouched) return;
-    const n = parseFloat(v.replace(",", "."));
-    if (Number.isFinite(n) && n >= 0) {
-      setTotal(formatDecimalInput((Math.round(n * unitPrice * 100) / 100).toFixed(2)));
-    }
+    const derived = deliveredTotalFromQuantity(v, line.unitPrice);
+    if (derived !== null) setTotal(formatDecimalInput(derived));
   }
 
   function handleSave() {
-    const qtyNum = parseFloat(qty.replace(",", "."));
-    const totalNum = parseFloat(total.replace(",", "."));
-    const sameAsOrdered =
-      Number.isFinite(qtyNum) &&
-      qtyNum === line.quantity &&
-      Math.abs(totalNum - parseFloat(line.lineTotal)) < 0.005;
-    if (sameAsOrdered) {
-      // Reset to "delivered as ordered" — clears any previous correction
-      // by passing nulls (the server posts a reverse delta).
-      onSave(null, null);
-      return;
-    }
-    onSave(
-      Number.isFinite(qtyNum) ? qtyNum.toFixed(3) : null,
-      Number.isFinite(totalNum) ? totalNum.toFixed(2) : null,
-    );
+    // Back to "delivered as ordered" sends nulls, which clears any previous
+    // correction (the server posts a reverse delta).
+    const { actualQuantity, actualLineTotal } = deliveredActuals(qty, total, line);
+    onSave(actualQuantity, actualLineTotal);
   }
 
   const unit = realUnit(line.unit);

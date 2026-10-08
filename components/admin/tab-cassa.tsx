@@ -9,9 +9,10 @@ import { PendingRefundsNotice } from "./pending-refunds-notice";
 
 type Props = {
   balanceFilter?: BalanceFilter;
+  memberId?: string;
 };
 
-export async function TabCassa({ balanceFilter }: Props) {
+export async function TabCassa({ balanceFilter, memberId }: Props) {
   const [allBalances, ledgerByMember, { maxBalance }, requestedRefunds] = await Promise.all([
     getAllMembersWithBalances(),
     getAllMembersLedger(),
@@ -86,6 +87,7 @@ export async function TabCassa({ balanceFilter }: Props) {
             ledgerByMember={ledgerByMember}
             balanceFilter={filter}
             maxBalance={maxBalance}
+            openMemberId={memberId}
           />
         </Card>
       </div>

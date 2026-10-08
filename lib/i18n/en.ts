@@ -555,6 +555,9 @@ export const en: Strings = {
   },
   admin: {
     workspace: {
+      groups: { toSettle: "Accounts to settle", open: "Open", others: "The others" },
+      settleHints: { to_settle: "accounts to settle", needs_update: "accounts to update", refund_failed: "refund failed" },
+      allCycles: "All cycles",
       views: {
         panoramica: "Overview",
         prodotti: "Products",
@@ -563,7 +566,6 @@ export const en: Strings = {
         conti: "Accounts",
       },
       listTitle: "Cycles",
-      chooseCycle: "Choose the cycle",
       newCycle: "+ New cycle",
       search: "Search a cycle",
       showMore: "Show more",
@@ -778,7 +780,7 @@ export const en: Strings = {
       manageProducts: "Manage Products",
       closeProducts: "Close Products",
       importListing: "📥 Import listing",
-      recapOrders: "✎ Order recap",
+      recapOrders: "See the orders →",
       perOrderCloseWarning: (drafts: number, pending: number) =>
         `Unpaid drafts: ${drafts} (they stay out of the order). Payments in progress: ${pending} (refunded if they arrive after the close).`,
       cycleClosed: (n: number) => `Cycle closed. ${n} charges generated.`,
@@ -876,6 +878,8 @@ export const en: Strings = {
       helpNote: 'Free-text notes, shown to members. E.g. "Greenhouse-grown", "Consume within 3 days".',
     },
     orders: {
+      distintaHint: "The order sheet in Excel: by member, by product and the totals.",
+      splitAria: "Show the orders",
       memberSummary: (cycles: number, total: string) => `${cycles === 1 ? "1 cycle" : `${cycles} cycles`} · ${total} total`,
       allMembers: "All members",
       memberFilterAria: "Member",
@@ -898,7 +902,7 @@ export const en: Strings = {
       closedBadge: "Closed",
       shippingLine: "Shipping",
       adjustedBadge: "adjusted",
-      downloadExcel: "📥 Download Excel",
+      downloadExcel: "📥 Download order sheet",
       generatingExcel: "Generating…",
     },
     treasury: {
@@ -1037,6 +1041,10 @@ export const en: Strings = {
       errorUpdating: "Error",
     },
     members: {
+      backToMembers: "← Members",
+      seeMovements: "Movements in Treasury →",
+      ordersLink: "Orders",
+      ordersAria: (name: string) => `Orders of ${name}`,
       deleteAria: (name: string) => `Delete ${name}`,
       addMember: "Add member",
       editMember: (name: string) => `Edit: ${name}`,
@@ -1273,8 +1281,10 @@ export const en: Strings = {
       cancelledSuccess: (n: number, total: string) => `Cycle cancelled. Refunded ${n} members for ${total}.`,
     },
     closedCycleDetails: {
-      defaultButtonLabel: "✎ Orders",
-      membersAndTotal: (n: number, total: string) => `${n} members · ${total} to charge`,
+      searchMember: "Search a member",
+      linesCount: (n: number) => (n === 1 ? "1 product" : `${n} products`),
+      editOrderAria: (name: string) => `Edit ${name}'s order`,
+      noMemberMatch: "No member found.",
       loading: "Loading...",
       noOrders: "No orders found for this cycle.",
       shippingLine: "Shipping",
@@ -1284,7 +1294,7 @@ export const en: Strings = {
       rectifyHint: "Tap a product to correct delivered weight or price",
       openCycleHint: "The cycle is still open: members can change their order. Weights and corrections are recorded after closing.",
       rectifyPill: "price/weight",
-      editQtyButton: "✎ Products",
+      editQtyButton: "✎ Edit",
       adjustedBadge: "adjusted",
       qtyReceived: (unit: string) => `Qty received${unit ? ` (${unit})` : ""}`,
       totalEur: "Total (EUR)",

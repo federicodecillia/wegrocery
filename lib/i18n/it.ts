@@ -557,6 +557,9 @@ export const it = {
   },
   admin: {
     workspace: {
+      groups: { toSettle: "Conti da chiudere", open: "Aperti", others: "Gli altri" },
+      settleHints: { to_settle: "conti da chiudere", needs_update: "conti da aggiornare", refund_failed: "rimborso non riuscito" },
+      allCycles: "Tutti i cicli",
       views: {
         panoramica: "Panoramica",
         prodotti: "Prodotti",
@@ -565,7 +568,6 @@ export const it = {
         conti: "Conti",
       },
       listTitle: "Cicli",
-      chooseCycle: "Scegli il ciclo",
       newCycle: "+ Nuovo ciclo",
       search: "Cerca un ciclo",
       showMore: "Mostra altri",
@@ -780,7 +782,7 @@ export const it = {
       manageProducts: "Gestisci Prodotti",
       closeProducts: "Chiudi Prodotti",
       importListing: "📥 Importa listino",
-      recapOrders: "✎ Recap ordini",
+      recapOrders: "Vedi gli ordini →",
       perOrderCloseWarning: (drafts: number, pending: number) =>
         `Bozze non pagate: ${drafts} (restano fuori dall'ordine). Pagamenti in corso: ${pending} (se arrivano dopo la chiusura vengono rimborsati).`,
       cycleClosed: (n: number) => `Ciclo chiuso. ${n} addebiti generati.`,
@@ -879,6 +881,8 @@ export const it = {
       helpNote: 'Note libere, mostrate al socio. Es: "Coltivata in serra", "Da consumare entro 3 giorni".',
     },
     orders: {
+      distintaHint: "La distinta in Excel: per socio, per prodotto e i totali.",
+      splitAria: "Mostra gli ordini",
       memberSummary: (cycles: number, total: string) => `${cycles === 1 ? "1 ciclo" : `${cycles} cicli`} · ${total} totale`,
       allMembers: "Tutti i soci",
       memberFilterAria: "Socio",
@@ -901,7 +905,7 @@ export const it = {
       closedBadge: "Chiuso",
       shippingLine: "Spedizione",
       adjustedBadge: "rettificato",
-      downloadExcel: "📥 Scarica Excel",
+      downloadExcel: "📥 Scarica distinta",
       generatingExcel: "Generazione…",
     },
     treasury: {
@@ -1040,6 +1044,10 @@ export const it = {
       errorUpdating: "Errore",
     },
     members: {
+      backToMembers: "← Soci",
+      seeMovements: "Movimenti in Cassa →",
+      ordersLink: "Ordini",
+      ordersAria: (name: string) => `Ordini di ${name}`,
       deleteAria: (name: string) => `Elimina ${name}`,
       addMember: "Aggiungi socio",
       editMember: (name: string) => `Modifica: ${name}`,
@@ -1277,8 +1285,10 @@ export const it = {
       cancelledSuccess: (n: number, total: string) => `Ciclo annullato. Rimborsati ${n} soci per ${total}.`,
     },
     closedCycleDetails: {
-      defaultButtonLabel: "✎ Ordini",
-      membersAndTotal: (n: number, total: string) => `${n} soci · ${total} da addebitare`,
+      searchMember: "Cerca un socio",
+      linesCount: (n: number) => (n === 1 ? "1 prodotto" : `${n} prodotti`),
+      editOrderAria: (name: string) => `Modifica l'ordine di ${name}`,
+      noMemberMatch: "Nessun socio trovato.",
       loading: "Caricamento in corso...",
       noOrders: "Nessun ordine trovato per questo ciclo.",
       shippingLine: "Spedizione",
@@ -1288,7 +1298,7 @@ export const it = {
       rectifyHint: "Tocca un prodotto per correggere peso o prezzo effettivo",
       openCycleHint: "Ciclo ancora aperto: i soci possono cambiare l'ordine. Pesi e correzioni si registrano dopo la chiusura.",
       rectifyPill: "prezzo/peso",
-      editQtyButton: "✎ Prodotti",
+      editQtyButton: "✎ Modifica",
       adjustedBadge: "rettificato",
       qtyReceived: (unit: string) => `Qta ricevuta${unit ? ` (${unit})` : ""}`,
       totalEur: "Totale (EUR)",

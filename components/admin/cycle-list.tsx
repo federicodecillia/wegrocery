@@ -6,13 +6,19 @@ import { Sheet } from "@/components/ui/sheet";
 import { t } from "@/lib/i18n";
 import { formatDate } from "@/lib/i18n/format";
 import { adminHref } from "@/lib/admin/nav";
-import { filterCycles, type CycleFilter, type CycleView } from "@/lib/admin/cycle-views";
+import { filterCycles, groupCycles, type CycleFilter, type CycleGroup, type CycleView } from "@/lib/admin/cycle-views";
+
+export type SettleState = "to_settle" | "needs_update" | "refund_failed";
 
 export type CycleListItem = {
   cycleId: string;
   title: string;
   status: string;
   perOrder: boolean;
+  /** Card cycle whose accounts ask the admin to act: shown first, under "Conti da chiudere". */
+  toSettle: boolean;
+  /** Why, when toSettle: never settled, to update after a correction, a refund failed. */
+  settle: SettleState | null;
   /** ISO: the close for an open cycle, the pickup (or creation) otherwise. */
   date: string | null;
 };
@@ -95,35 +101,9 @@ export function CycleList({
       {list.length === 0 ? (
         <p className="py-6 text-center text-[13px] text-brand-gray">{w.noMatch}</p>
       ) : (
-        <ul className="mt-2 divide-y divide-brand-border">
-          {list.slice(0, shown).map((c) => {
-            const current = c.cycleId === selectedId;
-            return (
-              <li key={c.cycleId}>
-                <Link
-                  href={adminHref("ciclo", view, { cycle: c.cycleId })}
-                  onClick={onNavigate}
-                  aria-current={current ? "page" : undefined}
-                  className={`flex min-h-11 items-center gap-2 rounded-lg px-2 py-2 ${
-                    current ? "bg-primary-soft" : "hover:bg-black/[0.03]"
-                  }`}
-                >
-                  <span aria-hidden className={`h-2 w-2 shrink-0 rounded-full ${DOT[c.status] ?? DOT.closed}`} />
-                  <span className="min-w-0 flex-1">
-                    <span className={`block truncate text-[13px] ${current ? "font-bold" : "font-medium"} text-brand-near-black`}>
-                      {c.perOrder && <span aria-hidden>💳 </span>}
-                      {c.title}
-                    </span>
-                    <span className="block text-label text-muted">
-                      {STATUS[c.status] ?? c.status}
-                      {c.date ? ` · ${formatDate(c.date, { day: "numeric", month: "short", year: "numeric" })}` : ""}
-                    </span>
-                  </span>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+        groupCycles(list.slice(0, shown)).map(({ group, cycles: items }) => (
+          <CycleGroupSection key={group} group={group} cycles={items} selectedId={selectedId} view={view} onNavigate={onNavigate} />
+        ))
       )}
       {list.length > shown && (
         <button
@@ -138,7 +118,90 @@ export function CycleList({
   );
 }
 
-/** On a phone: the current cycle as a button that opens the list in a sheet. */
+/** One group of the list: its heading and its rows. */
+function CycleGroupSection({
+  group,
+  cycles,
+  selectedId,
+  view,
+  onNavigate,
+  idPrefix = "cycles",
+}: {
+  group: CycleGroup;
+  cycles: CycleListItem[];
+  selectedId: string | null;
+  view: CycleView | null;
+  onNavigate?: () => void;
+  idPrefix?: string;
+}) {
+  const w = t.admin.workspace;
+  return (
+    <section aria-labelledby={`${idPrefix}-${group}`} className="mt-3 first:mt-0">
+      <h3
+        id={`${idPrefix}-${group}`}
+        className={`px-2 text-label font-bold uppercase tracking-wide ${group === "toSettle" ? "text-primary-text" : "text-muted"}`}
+      >
+        {w.groups[group]} ({cycles.length})
+      </h3>
+      <ul className="mt-1 divide-y divide-brand-border">
+        {cycles.map((c) => {
+          const current = c.cycleId === selectedId;
+          const state = STATUS[c.status] ?? c.status;
+          return (
+            <li key={c.cycleId}>
+              <Link
+                href={adminHref("ciclo", c.toSettle ? "conti" : view, { cycle: c.cycleId })}
+                onClick={onNavigate}
+                aria-current={current ? "page" : undefined}
+                className={`flex min-h-11 items-center gap-2 rounded-lg px-2 py-2 ${
+                  current ? "bg-primary-soft" : "hover:bg-black/[0.03]"
+                }`}
+              >
+                <span aria-hidden className={`h-2 w-2 shrink-0 rounded-full ${c.toSettle ? "bg-primary" : (DOT[c.status] ?? DOT.closed)}`} />
+                <span className="min-w-0 flex-1">
+                  <span className={`block truncate text-[13px] ${current ? "font-bold" : "font-medium"} text-brand-near-black`}>
+                    {c.perOrder && <span aria-hidden>💳 </span>}
+                    {c.title}
+                  </span>
+                  <span className="block text-label text-muted">
+                    {c.settle ? `${state} · ${w.settleHints[c.settle]}` : state}
+                    {c.date ? ` · ${formatDate(c.date, { day: "numeric", month: "short", year: "numeric" })}` : ""}
+                  </span>
+                </span>
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
+
+/**
+ * On a phone, above the "Tutti i cicli" button: the cycles whose accounts are
+ * still to settle, then the open ones, so neither hides behind the list.
+ */
+export function CycleShortlist({
+  cycles,
+  selectedId,
+  view,
+}: {
+  cycles: CycleListItem[];
+  selectedId: string | null;
+  view: CycleView | null;
+}) {
+  const groups = groupCycles(cycles).filter((g) => g.group !== "others");
+  if (groups.length === 0) return null;
+  return (
+    <div className="mb-3 rounded-xl border border-brand-border bg-white p-2 lg:hidden">
+      {groups.map(({ group, cycles: items }) => (
+        <CycleGroupSection key={group} group={group} cycles={items} selectedId={selectedId} view={view} idPrefix="shortlist" />
+      ))}
+    </div>
+  );
+}
+
+/** On a phone: a button that opens the whole list in a sheet. */
 export function CyclePicker({
   cycles,
   selectedId,
@@ -156,7 +219,9 @@ export function CyclePicker({
         onClick={() => setOpen(true)}
         className="mb-3 flex min-h-11 w-full items-center justify-between gap-2 rounded-xl border border-brand-border bg-white px-3 text-left text-[13px] font-semibold text-brand-near-black lg:hidden"
       >
-        <span>{t.admin.workspace.chooseCycle}</span>
+        <span>
+          {t.admin.workspace.allCycles} ({cycles.length})
+        </span>
         <span aria-hidden className="text-brand-gray">
           ▾
         </span>

@@ -16,8 +16,8 @@ import { adminTitle, resolveAdminRoute } from "@/lib/admin/nav";
 import type { CycleView } from "@/lib/admin/cycle-views";
 
 export async function generateMetadata({ searchParams }: { searchParams: SearchParams }): Promise<Metadata> {
-  const { tab, view } = await searchParams;
-  return { title: `${adminTitle(tab, view)} · Admin` };
+  const { tab, view, member, cycle } = await searchParams;
+  return { title: `${adminTitle(tab, view, member, cycle)} · Admin` };
 }
 
 type SearchParams = Promise<{
@@ -66,13 +66,13 @@ export default async function AdminPage({ searchParams }: { searchParams: Search
     balance: balanceParam,
     new: newParam,
   } = await searchParams;
-  const { section, view } = resolveAdminRoute(tabParam, viewParam);
+  const { section, view } = resolveAdminRoute(tabParam, viewParam, filterMemberId, cycleId);
   const balanceFilter =
     balanceParam === "negative" || balanceParam === "above_max" ? balanceParam : undefined;
 
   return (
     <AppShell email={session.user.email} name={session.user.fullName} isAdmin memberId={session.user.memberId!} personId={session.user.personId} width="admin">
-      <h1 className="sr-only">{`Admin: ${adminTitle(tabParam, viewParam)}`}</h1>
+      <h1 className="sr-only">{`Admin: ${adminTitle(tabParam, viewParam, filterMemberId, cycleId)}`}</h1>
       <Suspense fallback={null}>
         <AdminNav />
       </Suspense>
@@ -85,14 +85,13 @@ export default async function AdminPage({ searchParams }: { searchParams: Search
           <CycleWorkspace
             cycleId={cycleId}
             view={view as CycleView | null}
-            memberId={filterMemberId}
             creating={newParam === "1"}
           />
         )}
         {view === "prodotti" && <TabProdotti />}
         {view === "fornitori" && <TabFornitori />}
-        {section === "cassa" && <TabCassa balanceFilter={balanceFilter} />}
-        {section === "soci" && <TabSoci />}
+        {section === "cassa" && <TabCassa balanceFilter={balanceFilter} memberId={filterMemberId} />}
+        {section === "soci" && <TabSoci memberId={filterMemberId} />}
         {section === "statistiche" && (
           <TabStatistiche
             cycleIds={parseCsvParam(cycleId)}
