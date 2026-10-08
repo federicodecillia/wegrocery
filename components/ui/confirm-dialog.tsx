@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { Button } from "@/components/ui/button";
 import { t } from "@/lib/i18n";
+import { useSwipeDown } from "@/lib/ui/use-swipe";
 
 export interface ConfirmOptions {
   title: string;
@@ -44,6 +45,8 @@ export function confirmDiscard(): Promise<boolean> {
 
 export function ConfirmDialogProvider() {
   const [request, setRequest] = useState<Request | null>(null);
+  // Dragging the sheet down is always "Annulla", destructive or not.
+  const { target: swipeTarget, handlers: swipeHandlers } = useSwipeDown<HTMLDivElement>(() => close(false));
 
   useEffect(() => {
     listener = (req) => setRequest(req);
@@ -70,10 +73,15 @@ export function ConfirmDialogProvider() {
     >
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-[150] bg-black/30 backdrop-blur-[4px] data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0" />
+        {/* A sheet from the bottom on phones (buttons stacked near the thumb,
+            drag down = Annulla), a small centred window from sm. */}
         <Dialog.Content
+          ref={swipeTarget}
           aria-describedby={undefined}
-          className="fixed left-1/2 top-1/2 z-[151] w-[90%] max-w-[340px] -translate-x-1/2 -translate-y-1/2 rounded-3xl border border-brand-border bg-white p-8 text-center shadow-[0_8px_32px_rgba(45,43,41,0.15)] data-[state=open]:animate-in data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:zoom-out-95"
+          {...swipeHandlers}
+          className="fixed inset-x-0 bottom-0 z-[151] touch-none rounded-t-3xl border border-brand-border bg-white px-6 pt-2 pb-[calc(1.5rem+env(safe-area-inset-bottom))] text-center shadow-[0_8px_32px_rgba(45,43,41,0.15)] sm:inset-x-auto sm:bottom-auto sm:left-1/2 sm:top-1/2 sm:w-[90%] sm:max-w-[340px] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:touch-auto sm:rounded-3xl sm:p-8 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0"
         >
+          <div aria-hidden className="mx-auto mb-4 h-1 w-10 rounded-full bg-black/15 sm:hidden" />
           <Dialog.Title className="mb-3 text-lg font-bold text-brand-near-black">
             {request?.title}
           </Dialog.Title>
@@ -82,7 +90,7 @@ export function ConfirmDialogProvider() {
               {request.message}
             </Dialog.Description>
           )}
-          <div className="flex gap-3">
+          <div className="flex flex-col-reverse gap-3 sm:flex-row">
             <Button
               variant="outline"
               block

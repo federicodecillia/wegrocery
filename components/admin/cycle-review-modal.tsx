@@ -177,6 +177,8 @@ function CycleReviewModal({
 
   return (
     <Sheet
+      // Closing the cycle is left to its buttons: a stray drag must not drop the price adjustments.
+      swipeToClose={false}
       open
       onRequestClose={() => void requestClose()}
       title={t.admin.cycleReview.modalTitle}

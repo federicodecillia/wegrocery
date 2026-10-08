@@ -25,6 +25,7 @@ export const it = {
     pageNotFound: "Pagina non trovata",
     backToHome: "Torna alla Home",
     skipToContent: "Vai al contenuto",
+    offline: "Sei offline: quello che cambi ora potrebbe non essere salvato finché non torna la connessione.",
   },
   nav: {
     home: "Home",
@@ -371,6 +372,9 @@ export const it = {
     markAllRead: "Segna tutte ✓",
     noNotifications: "Nessuna notifica",
     noNotificationsHint: "Ti avviseremo quando ci sono novità sull'ordine o sul saldo.",
+    today: "Oggi",
+    yesterday: "Ieri",
+    newBadge: "Nuova",
     unreadLabel: "Non letta",
     unreadCountLabel: (n: number) => `${n} notifiche non lette`,
     settings: {
@@ -552,6 +556,22 @@ export const it = {
     admin: "Solo admin",
   },
   admin: {
+    nav: {
+      cycle: "Ciclo",
+      treasury: "Cassa",
+      members: "Soci",
+      catalog: "Catalogo",
+      stats: "Statistiche",
+      settings: "Impostazioni",
+      more: "Altro",
+      moreAria: "Altre sezioni",
+      cycleOverview: "Panoramica",
+      cycleOrders: "Ordini",
+      catalogProducts: "Prodotti",
+      catalogSuppliers: "Fornitori",
+      sections: "Sezioni dell'admin",
+      views: "Viste",
+    },
     settlement: {
       openButton: "Chiudi i conti",
       settledButton: (date: string) => `Conti chiusi il ${date}`,
@@ -675,7 +695,6 @@ export const it = {
       noSupplier: "— nessuno —",
     },
     cycle: {
-      tabLabel: "Ciclo",
       recentCycles: "Ultimi cicli",
       noCycleOpen: "Nessun ciclo aperto",
       openBadge: "Aperto",
@@ -748,7 +767,6 @@ export const it = {
       supplierButton: "🤝 Fornitore",
     },
     products: {
-      tabLabel: "Prodotti",
       catalogTitle: "Catalogo Prodotti",
       catalogSubtitle: "Lista unica filtrabile per fornitore, categoria e raggruppamento.",
       uploadTitle: "Carica prodotti",
@@ -837,7 +855,6 @@ export const it = {
     },
     orders: {
       memberSummary: (cycles: number, total: string) => `${cycles === 1 ? "1 ciclo" : `${cycles} cicli`} · ${total} totale`,
-      tabLabel: "Ordini",
       allMembers: "Tutti i soci",
       memberFilterAria: "Socio",
       cycleFilterAria: "Ciclo",
@@ -866,7 +883,6 @@ export const it = {
       editEntryAria: "Modifica movimento",
       deleteEntryAria: "Elimina movimento",
       cancelEditAria: "Annulla la modifica",
-      tabLabel: "Cassa",
       balancesTitle: (n: number) => `Saldi soci (${n})`,
       pendingRefundsTitle: (n: number) => (n === 1 ? "1 rimborso in attesa di Stripe" : `${n} rimborsi in attesa di Stripe`),
       pendingRefundsHint: "Stripe non ha ancora ricevuto questi rimborsi, di solito per un errore di rete. Riprovare è sicuro: nessuno viene rimborsato due volte.",
@@ -1000,7 +1016,6 @@ export const it = {
     },
     members: {
       deleteAria: (name: string) => `Elimina ${name}`,
-      tabLabel: "Soci",
       addMember: "Aggiungi socio",
       editMember: (name: string) => `Modifica: ${name}`,
       memberAdded: "Socio aggiunto",
@@ -1098,7 +1113,6 @@ export const it = {
     },
     suppliers: {
       deleteAria: (name: string) => `Elimina ${name}`,
-      tabLabel: "Fornit.",
       addSupplier: "Aggiungi fornitore",
       editSupplier: (name: string) => `Modifica: ${name}`,
       supplierAdded: "Fornitore aggiunto",
@@ -1139,7 +1153,6 @@ export const it = {
       helpNote: "Note libere, mostrate al socio.",
     },
     stats: {
-      tabLabel: "Stats",
       noDataTitle: "Nessun dato disponibile",
       noDataFiltered: "Nessun dato per questo filtro",
       noDataHint: "Le statistiche compariranno qui dopo la chiusura del primo ciclo.",
@@ -1445,7 +1458,6 @@ export const it = {
         confirm: (label: string) => `Passare a ${label}? I cicli già creati restano nella loro modalità.`,
         changed: "Modalità cambiata.",
       },
-      tabLabel: "Impostazioni",
       defaultsNotice:
         "Questi sono i valori predefiniti del gruppo: controllali e salva. Finché non salvi, l'app usa questi.",
       limitsTitle: "Soglie del saldo",

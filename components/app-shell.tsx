@@ -10,6 +10,7 @@ import { ProfileAvatar } from "@/components/profile/profile-avatar";
 import { SHELL_WIDTH, type ShellWidth } from "@/components/shell-width";
 import { TopNav } from "@/components/top-nav";
 import { WelcomeResume } from "@/components/home/welcome-resume";
+import { AppRefresh } from "@/components/app-refresh";
 import { getUnreadNotificationCount, notificationOwners } from "@/lib/db/queries";
 
 type AppShellProps = {
@@ -67,6 +68,7 @@ export async function AppShell({ children, email, name, isAdmin, memberId, perso
         </header>
 
         <main id="main" tabIndex={-1} className="flex-1 px-5 py-4 pb-[calc(var(--spacing-nav-h)+1rem)] lg:pb-4">
+          <AppRefresh />
           <WelcomeResume />
           {children}
           {brand.privacyUrl ? (
