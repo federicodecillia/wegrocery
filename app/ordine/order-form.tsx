@@ -1,20 +1,23 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
+import { buttonClass } from "@/components/ui/button";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "@/components/ui/toast";
 import { confirm } from "@/components/ui/confirm-dialog";
 import { t } from "@/lib/i18n";
-import { formatSignedMoney } from "@/lib/i18n/format";
-import { formatEur, getProductEmoji, normalizeCategory } from "@/lib/utils";
+import { formatEur, memberProductEmoji, normalizeCategory } from "@/lib/utils";
 import type { OrderState, SaveOrderLine, SaveOrderResult } from "@/lib/actions/order";
 import { discardOrderDraft, loadLastOrderForPrefill, saveOrderDraft } from "@/lib/actions/order";
 import type { OrderPaymentResult } from "@/lib/actions/order-payment";
 import { draftSyncAction, orderLinesKey, type ResumedDraft } from "@/lib/order-draft";
-import { ORDER_PAYMENT_MIN_CENTS, handlingFeeCents, orderPaymentAmount, type HandlingFee } from "@/lib/payments/order-payment";
+import { handlingFeeCents, orderPaymentAmount, type HandlingFee } from "@/lib/payments/order-payment";
 import { OrderSentDialog } from "./order-sent-dialog";
 import { OrderSummary, type ConfirmedLine } from "./order-summary";
+import { OrderTotals } from "./order-totals";
+import { CategoryBar, categoryAnchor } from "./category-bar";
+import { ORDER_SEARCH_MIN_PRODUCTS, filterOrderProducts } from "@/lib/order-filter";
 import { CycleNotes } from "@/components/cycle-notes";
 import { HelpLink } from "@/components/guide/help-link";
 import { formatDeadline } from "@/lib/i18n/deadline";
@@ -29,6 +32,7 @@ type Product = {
   pricePerKg: string | null;
   notes: string | null;
   category: string | null;
+  emoji: string | null;
   sortOrder: number;
 };
 
@@ -144,6 +148,12 @@ export function OrderForm({
     balanceWarning: string | null;
   } | null>(null);
   const [isPending, startTransition] = useTransition();
+  // The last refusal, shown above "Conferma" too (a toast goes away) while
+  // the cart is the one that was refused.
+  // "Cerca prodotto" and the "Nel carrello" chip (lib/order-filter.ts).
+  const [query, setQuery] = useState("");
+  const [onlyCart, setOnlyCart] = useState(false);
+  const [saveError, setSaveError] = useState<{ key: string; message: string } | null>(null);
   const router = useRouter();
 
   const draftKey = orderLinesKey(toLines(draft));
@@ -287,6 +297,7 @@ export function OrderForm({
       name: p.name,
       meta: [p.variant, p.format].filter(Boolean).join(" · "),
       notes: p.notes,
+      emoji: memberProductEmoji(p.emoji, p.name),
       quantity: savedQty[p.productId],
       unitPrice: parseFloat(p.unitPrice),
     }));
@@ -342,6 +353,7 @@ export function OrderForm({
           // Expected refusal (closed cycle, lapsed card, credit limit...):
           // nothing was saved.
           toast.error(result.error);
+          setSaveError({ key: orderLinesKey(toLines(quantities)), message: result.error });
           // The cycle was closed while the member was editing: refresh so the
           // page reflects the new state (the ordine page will redirect or show
           // "Nessun ordine aperto" instead of the stale form).
@@ -384,6 +396,7 @@ export function OrderForm({
         const result = await action();
         if (result.status === "error") {
           toast.error(result.error);
+          setSaveError({ key: orderLinesKey(toLines(quantities)), message: result.error });
           if (["cycle_not_open", "changed", "in_progress"].includes(result.code)) router.refresh();
           return;
         }
@@ -476,7 +489,15 @@ export function OrderForm({
     persist(draft, false);
   }
 
-  const groups = groupByCategory(products);
+  const cartIds = new Set(Object.keys(draft));
+  const searchable = products.length > ORDER_SEARCH_MIN_PRODUCTS;
+  const filtering = query.trim() !== "" || onlyCart;
+  const groups = groupByCategory(filterOrderProducts(products, query, onlyCart ? cartIds : null));
+  // The category chips list every category, not only the ones the filter left.
+  const allGroups = groupByCategory(products);
+  const showBar = isEditing && (allGroups.filter((g) => g.category).length > 1 || cartIds.size > 0);
+  // A column for the emoji only when some product has one.
+  const anyEmoji = products.some((p) => memberProductEmoji(p.emoji, p.name) !== null);
 
   return (
     <>
@@ -512,6 +533,8 @@ export function OrderForm({
               {t.order.draftDropped(resumedDraft.dropped)}
             </p>
           )}
+          {/* With an order on file, "Annulla modifiche" below does the same. */}
+          {!hasSavedOrder && (
           <button
             type="button"
             onClick={handleDiscardDraft}
@@ -520,6 +543,7 @@ export function OrderForm({
           >
             {t.order.discardDraft}
           </button>
+          )}
         </div>
       )}
 
@@ -562,9 +586,8 @@ export function OrderForm({
       )}
 
       {/* Way out of edit mode without saving: the confirmed order is still
-          on file, so this discards the pending tweaks and shows it again.
-          Tweaks are kept as a draft, so dropping them asks first, like
-          "Annulla modifiche". */}
+          on file. With no change it is a plain way back; with changes it is
+          "Annulla modifiche", which asks first (the tweaks are a draft). */}
       {isEditing && hasSavedOrder && (
         <button
           type="button"
@@ -582,9 +605,13 @@ export function OrderForm({
             setIsEditing(false);
             setShowDraftBanner(false);
           }}
-          className="mt-3 inline-flex items-center gap-1 text-[12px] font-semibold text-accent-text"
+          className={
+            draftKey !== savedKey
+              ? buttonClass({ variant: "outline", size: "sm" }, "mt-3")
+              : "mt-3 inline-flex min-h-11 items-center gap-1 text-[14px] font-semibold text-accent-text"
+          }
         >
-          ← {t.order.backToOrder}
+          {draftKey !== savedKey ? t.order.discardDraft : `← ${t.order.backToOrder}`}
         </button>
       )}
 
@@ -605,13 +632,46 @@ export function OrderForm({
         </button>
       )}
 
+      {/* Search, from ORDER_SEARCH_MIN_PRODUCTS products. */}
+      {isEditing && searchable && (
+        <div className="mt-4">
+          <label htmlFor="order-search" className="sr-only">
+            {t.order.searchLabel}
+          </label>
+          <input
+            id="order-search"
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={t.order.searchPlaceholder}
+            autoComplete="off"
+            className="min-h-11 w-full rounded-full border border-brand-border bg-white px-4 text-[14px] text-brand-near-black placeholder:text-muted"
+          />
+        </div>
+      )}
+
+      {/* Sticky chips: the cart, then a jump to each category. */}
+      {showBar && (
+        <CategoryBar
+          categories={allGroups.map((g) => g.category)}
+          cartCount={cartIds.size}
+          onlyCart={onlyCart}
+          onToggleCart={() => setOnlyCart((v) => !v)}
+          labelOf={(c) => (c === "Altro" ? t.order.otherCategory : c)}
+        />
+      )}
+
+      {isEditing && filtering && groups.length === 0 && (
+        <p className="py-8 text-center text-[14px] text-brand-gray">{onlyCart && query.trim() === "" ? t.order.cartEmpty : t.order.noResults}</p>
+      )}
+
       {/* Product list */}
       {isEditing && groups.map(({ category, products: prods }) => (
-        <div key={category}>
+        <section key={category} id={categoryAnchor(category)} data-category={category} className="scroll-mt-16">
           {category && (
-            <div className="pt-4 pb-2 font-mono text-label uppercase tracking-[0.10em] text-muted">
+            <h2 className="pt-4 pb-2 font-mono text-label font-normal uppercase tracking-[0.10em] text-muted">
               {category === "Altro" ? t.order.otherCategory : category}
-            </div>
+            </h2>
           )}
           {prods.map((p) => {
             const qty = draft[p.productId] ?? 0;
@@ -622,9 +682,11 @@ export function OrderForm({
                 className="flex items-center justify-between border-b border-brand-border py-3 last:border-none"
               >
                 <div className="mr-3 flex min-w-0 flex-1 items-start gap-2">
-                  <span className="mt-[1px] shrink-0 text-[22px] leading-none">
-                    {getProductEmoji(p.name)}
-                  </span>
+                  {anyEmoji && (
+                    <span aria-hidden="true" className="mt-[1px] w-[22px] shrink-0 text-[22px] leading-none">
+                      {memberProductEmoji(p.emoji, p.name)}
+                    </span>
+                  )}
                   <div className="min-w-0 flex-1">
                     <div className="text-[14px] font-medium text-brand-near-black">{p.name}</div>
                     <div className="mt-[2px] flex flex-wrap items-center gap-x-2 gap-y-0.5">
@@ -662,7 +724,7 @@ export function OrderForm({
                         if (qty === 1) plus?.focus();
                       }}
                       aria-label={t.order.lessNamed(p.name)}
-                      className="pressable flex h-8 w-8 items-center justify-center rounded-full text-[18px] font-light text-brand-gray"
+                      className="pressable hit-44 flex h-10 w-10 items-center justify-center rounded-full text-[18px] font-light text-brand-gray"
                     >
                       −
                     </button>
@@ -682,7 +744,7 @@ export function OrderForm({
                     data-plus
                     onClick={() => changeQty(p.productId, 1)}
                     aria-label={qty === 0 ? t.order.addNamed(p.name) : t.order.moreNamed(p.name)}
-                    className={`pressable flex h-8 w-8 items-center justify-center rounded-full text-[18px] font-light ${
+                    className={`pressable hit-44 flex h-10 w-10 items-center justify-center rounded-full text-[18px] font-light ${
                       qty === 0 ? "text-brand-gray" : "bg-primary text-on-primary"
                     }`}
                   >
@@ -695,108 +757,20 @@ export function OrderForm({
               </div>
             );
           })}
-        </div>
+        </section>
       ))}
 
-      {/* Sticky footer — rides above the (sticky) bottom nav; from lg the nav
-          is in the header, so it sits at the bottom edge. In-flow sticky
-          inherits the card width at every breakpoint; -mx-5 bleeds it across
-          main's padding to the card edges. iOS WebKit skips repainting a
-          text change inside this sticky layer and leaves the old digits
-          under the new ones: the layer is promoted to its own compositing
-          layer (translateZ), the background is opaque (no backdrop-filter),
-          and each amount is keyed on its value so a change mounts a fresh
-          node, whose old rectangle WebKit does invalidate. */}
       {isEditing && (hasOrder || hasSavedOrder) && (
-        <div className="sticky z-10 -mx-5 mt-4 -mb-[calc(var(--spacing-nav-h)+1rem)] bottom-[calc(var(--spacing-nav-h)+env(safe-area-inset-bottom))] lg:-mb-4 lg:bottom-0 [transform:translateZ(0)]">
-          <div className="border-t border-brand-border bg-brand-warm-white px-5 py-3.5">
-            <div className="mb-3 flex items-end justify-between">
-              <div>
-                <div className="font-mono text-label uppercase tracking-[0.09em] text-muted">
-                  {t.order.totalOrder}
-                </div>
-                <div
-                  key={payAmount ? payAmount.requiredCents : orderTotal}
-                  className="mt-[2px] text-[24px] font-black tracking-[-0.03em] text-brand-near-black"
-                >
-                  {formatEur(payAmount ? payAmount.requiredCents / 100 : orderTotal)}
-                </div>
-              </div>
-              {payAmount ? (
-                <div className="text-right">
-                  <div className="font-mono text-label uppercase tracking-[0.09em] text-muted">
-                    {t.order.pay.toPay}
-                  </div>
-                  <div key={payAmount.chargeCents} className="mt-[2px] font-mono text-[14px] font-bold text-brand-near-black">
-                    {payAmount.chargeCents > 0 ? formatEur(payAmount.chargeCents / 100) : t.order.pay.nothingToPay}
-                  </div>
-                </div>
-              ) : (
-                <div className="text-right">
-                  <div className="font-mono text-label uppercase tracking-[0.09em] text-muted">
-                    {t.order.balanceAfter}
-                  </div>
-                  <div
-                    key={afterBalance}
-                    className={`mt-[2px] font-mono text-[14px] font-bold ${
-                      afterBalance < 0 ? "text-brand-red" : "text-accent-text"
-                    }`}
-                  >
-                    {formatSignedMoney(afterBalance)}
-                  </div>
-                  {walletFeeCents > 0 && (
-                    <div className="mt-[2px] text-label text-muted">{t.order.feeEstimate(formatEur(walletFeeCents / 100))}</div>
-                  )}
-                </div>
-              )}
-            </div>
-            {payAmount && hasOrder && (
-              <dl className="mb-3 space-y-[2px] text-[12px] text-brand-gray">
-                {[
-                  [t.order.pay.products, payAmount.productsCents],
-                  [t.order.pay.shipping, payAmount.shippingCents],
-                  [t.order.pay.fee, payAmount.feeCents],
-                  [t.order.pay.alreadyPaid, -payAmount.coveredCents],
-                ]
-                  .filter(([, c]) => c !== 0)
-                  .map(([label, c]) => (
-                    <div key={label as string} className="flex justify-between gap-3">
-                      <dt>{label}</dt>
-                      <dd className="font-mono text-brand-near-black">
-                        {(c as number) < 0 ? `−${formatEur(-(c as number) / 100)}` : formatEur((c as number) / 100)}
-                      </dd>
-                    </div>
-                  ))}
-                <p className="pt-[2px] text-muted">
-                  {payAmount.outcome === "pay" && payAmount.chargeCents > payAmount.requiredCents - payAmount.coveredCents
-                    ? t.order.pay.minimumNote(formatEur(ORDER_PAYMENT_MIN_CENTS / 100))
-                    : t.order.pay.feeHint}
-                </p>
-              </dl>
-            )}
-            <button
-              onClick={handleSave}
-              disabled={isPending}
-              className={`w-full rounded-full px-[22px] py-[14px] text-sm font-bold transition-[opacity,transform] duration-150 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed ${
-                hasOrder
-                  ? "bg-primary text-on-primary"
-                  : "bg-brand-red text-white"
-              }`}
-            >
-              {isPending
-                ? t.order.saving
-                : !hasOrder
-                  ? payPerOrder
-                    ? t.order.pay.cancelOrder
-                    : t.order.removeOrder
-                  : !payAmount
-                    ? t.order.confirmOrder
-                    : payAmount.chargeCents > 0
-                      ? t.order.pay.confirmAndPay(formatEur(payAmount.chargeCents / 100))
-                      : t.order.pay.confirm}
-            </button>
-          </div>
-        </div>
+        <OrderTotals
+          orderTotal={orderTotal}
+          payAmount={payAmount}
+          afterBalance={afterBalance}
+          walletFeeCents={walletFeeCents}
+          hasOrder={hasOrder}
+          isPending={isPending}
+          error={saveError?.key === draftKey ? saveError.message : null}
+          onConfirm={handleSave}
+        />
       )}
 
       <OrderSentDialog

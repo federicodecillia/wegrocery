@@ -121,6 +121,15 @@ export function getProductEmoji(name: string): string {
   return getProductEmojiOrNull(name) ?? "🛒";
 }
 
+// What members see next to a product: the admin's emoji, else one matched
+// on the name, else none. The 🛒 fallback is left out (stored too by older
+// imports): it read as the Order icon of the bottom bar.
+export function memberProductEmoji(stored: string | null | undefined, name: string): string | null {
+  const own = stored?.trim();
+  if (own && own !== "🛒") return own;
+  return getProductEmojiOrNull(name);
+}
+
 // Same matching as getProductEmoji but returns null when no category pattern
 // matched. The bulk-import wizard uses this to flag rows that need manual
 // emoji confirmation, instead of silently shipping the 🛒 fallback.

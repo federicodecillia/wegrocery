@@ -32,7 +32,7 @@ export async function AppShell({ children, email, name, isAdmin, memberId, perso
     <div className="min-h-screen bg-brand-frame sm:p-6">
       {/* The card width comes from SHELL_WIDTH: it changes only when entering
           or leaving Admin on desktop. Keep the loading.tsx skeletons and the
-          OrderForm sticky footer in sync with this layout. */}
+          OrderTotals sticky footer (app/ordine) in sync with this layout. */}
       {/* overflow-clip (not hidden): hidden would create a scroll container
           and break position:sticky for BottomNav and the order footer. */}
       <div

@@ -159,6 +159,7 @@ export default async function OrdinePage({
           notes: p.notes,
           unit: p.unit,
           category: p.category,
+          emoji: p.emoji,
           sortOrder: p.sortOrder,
         }))}
         existingLines={existingLines.map((l) => ({

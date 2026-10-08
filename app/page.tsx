@@ -31,7 +31,7 @@ import {
   orderPaymentAmount,
   type HomeOrderStatus,
 } from "@/lib/payments/order-payment";
-import { formatDateShort, formatEur, getProductEmoji } from "@/lib/utils";
+import { formatDateShort, formatEur, memberProductEmoji } from "@/lib/utils";
 import { canAccessCycle } from "@/lib/roles";
 import { movementText } from "@/lib/movement-label";
 
@@ -206,8 +206,8 @@ export default async function HomePage({
                           className="flex items-center justify-between border-b border-brand-border px-4 py-[11px] last:border-none"
                         >
                           <div className="flex items-start gap-2">
-                            <span className="mt-[1px] shrink-0 text-[18px] leading-none">
-                              {getProductEmoji(p?.name ?? "")}
+                            <span aria-hidden="true" className="mt-[1px] w-[18px] shrink-0 text-[18px] leading-none">
+                              {memberProductEmoji(p?.emoji, p?.name ?? "")}
                             </span>
                             <div>
                               <div className="text-[14px] font-medium text-brand-near-black">

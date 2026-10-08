@@ -2,7 +2,7 @@
 
 import { t } from "@/lib/i18n";
 import { formatSignedMoney } from "@/lib/i18n/format";
-import { formatEur, getProductEmoji } from "@/lib/utils";
+import { formatEur } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { paidDifference, type OrderAmount } from "@/lib/payments/order-payment";
 import { formatDeadline } from "@/lib/i18n/deadline";
@@ -12,6 +12,7 @@ export type ConfirmedLine = {
   name: string;
   meta: string;
   notes: string | null;
+  emoji: string | null;
   quantity: number;
   unitPrice: number;
 };
@@ -68,7 +69,7 @@ export function OrderSummary({
               className="flex items-center justify-between gap-3 border-b border-brand-border py-2.5 last:border-none"
             >
               <div className="flex min-w-0 items-start gap-2">
-                <span className="text-[18px] leading-none">{getProductEmoji(l.name)}</span>
+                <span aria-hidden="true" className="w-[18px] shrink-0 text-[18px] leading-none">{l.emoji}</span>
                 <div className="min-w-0">
                   <div className="text-[14px] font-medium text-brand-near-black">{l.name}</div>
                   <div className="mt-[1px] font-mono text-label text-brand-gray">
