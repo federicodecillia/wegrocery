@@ -7,7 +7,7 @@ import { BottomNav } from "@/components/bottom-nav";
 import { DemoBanner } from "@/components/demo-banner";
 import { NotificationBell } from "@/components/notification-bell";
 import { ProfileAvatar } from "@/components/profile/profile-avatar";
-import { SHELL_WIDTH, type ShellWidth } from "@/components/shell-width";
+import { CONTENT_WIDTH, SHELL_WIDTH, type ShellLayout } from "@/components/shell-width";
 import { TopNav } from "@/components/top-nav";
 import { WelcomeResume } from "@/components/home/welcome-resume";
 import { AppRefresh } from "@/components/app-refresh";
@@ -22,22 +22,22 @@ type AppShellProps = {
   memberId: string;
   /** Who signed in, when they work on a family's account: their own notifications count too. */
   personId?: string | null;
-  /** Admin pages widen on desktop; everything else stays a readable column. */
-  width?: ShellWidth;
+  /** From lg: a reading column (the default) or the whole card (Home, Admin). */
+  layout?: ShellLayout;
 };
 
-export async function AppShell({ children, email, name, isAdmin, memberId, personId, width = "member" }: AppShellProps) {
+export async function AppShell({ children, email, name, isAdmin, memberId, personId, layout = "reading" }: AppShellProps) {
   const unreadCount = await getUnreadNotificationCount(notificationOwners(memberId, personId));
 
   return (
     <div className="min-h-screen bg-brand-frame sm:p-6">
-      {/* The card width comes from SHELL_WIDTH: it changes only when entering
-          or leaving Admin on desktop. Keep the loading.tsx skeletons and the
-          OrderTotals sticky footer (app/ordine) in sync with this layout. */}
+      {/* The card width comes from SHELL_WIDTH, the same on every page. Keep
+          the loading.tsx skeletons and the OrderTotals sticky footer
+          (app/ordine) in sync with this layout. */}
       {/* overflow-clip (not hidden): hidden would create a scroll container
           and break position:sticky for BottomNav and the order footer. */}
       <div
-        className={`mx-auto flex min-h-screen w-full flex-col bg-brand-warm-white sm:min-h-[calc(100vh-3rem)] sm:overflow-clip sm:rounded-xl sm:border sm:border-brand-border sm:shadow-sm ${SHELL_WIDTH[width]}`}
+        className={`mx-auto flex min-h-screen w-full flex-col bg-brand-warm-white sm:min-h-[calc(100vh-3rem)] sm:overflow-clip sm:rounded-xl sm:border sm:border-brand-border sm:shadow-sm ${SHELL_WIDTH}`}
       >
         {/* First stop for keyboard users: past the header and the nav. */}
         <a
@@ -47,10 +47,11 @@ export async function AppShell({ children, email, name, isAdmin, memberId, perso
           {t.common.skipToContent}
         </a>
         <DemoBanner />
-        <header className="border-b border-brand-border px-5 py-4">
-          <div className="flex items-center justify-between gap-3">
+        <header className="border-b border-brand-border px-5 py-4 lg:py-3">
+          {/* One row: logo, then (from lg) the menu, then the bell and the avatar. */}
+          <div className="flex items-center justify-between gap-3 lg:gap-6">
             {/* A long app name wraps instead of pushing the avatar off the card. */}
-            <div className="min-w-0">
+            <div className="min-w-0 lg:shrink-0">
               <Link href="/" aria-label={t.nav.home} className="inline-flex min-h-11 items-center gap-2">
                 <Image src={brand.logoUrl} alt={brand.appName} width={26} height={26} priority className="h-[26px] w-auto shrink-0" />
                 {brand.headerShowName && (
@@ -58,18 +59,19 @@ export async function AppShell({ children, email, name, isAdmin, memberId, perso
                 )}
               </Link>
             </div>
+            <TopNav isAdmin={isAdmin} />
             {/* The email, sign-out and personal settings are in the Profile (app/profilo). */}
             <div className="flex shrink-0 items-center gap-3">
               <NotificationBell unreadCount={unreadCount} />
               <ProfileAvatar name={name} email={email} />
             </div>
           </div>
-          <TopNav isAdmin={isAdmin} />
         </header>
 
         <main id="main" tabIndex={-1} className="flex-1 px-5 py-4 pb-[calc(var(--spacing-nav-h)+1rem)] lg:pb-4">
           <AppRefresh />
           <WelcomeResume />
+          <div className={CONTENT_WIDTH[layout]}>
           {children}
           {brand.privacyUrl ? (
             <p className="mt-8 text-center text-xs">
@@ -78,6 +80,7 @@ export async function AppShell({ children, email, name, isAdmin, memberId, perso
               </a>
             </p>
           ) : null}
+          </div>
         </main>
         <BottomNav isAdmin={isAdmin} />
       </div>

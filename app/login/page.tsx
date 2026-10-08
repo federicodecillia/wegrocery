@@ -6,6 +6,7 @@ import { googleCredentials } from "@/lib/auth/config";
 import { LoginForm } from "./login-form";
 import { ShortcutButtons } from "./shortcut-buttons";
 import { DemoBanner } from "@/components/demo-banner";
+import { BrandLogo } from "@/components/brand-logo";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: t.login.pageTitle };
@@ -42,14 +43,19 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-[480px] flex-col items-center justify-center p-6">
-      <DemoBanner />
-      <div className="w-full rounded-lg border border-brand-border bg-white p-6 shadow-sm">
-        <h1 className="text-xl font-semibold">{brand.appName}</h1>
-        <p className="text-brand-gray mt-2 text-sm">
+      <div className="w-full overflow-hidden rounded-card border border-brand-border bg-white shadow-card">
+        {/* The demo notice is the card's top edge, as wide as the card. */}
+        <DemoBanner />
+        <div className="p-6">
+        <div className="mb-4 flex justify-center">
+          <BrandLogo src={brand.logoUrl} alt="" shortName={brand.shortName} />
+        </div>
+        <h1 className="text-center text-title font-black text-brand-near-black">{brand.appName}</h1>
+        <p className="mt-2 text-center text-sm text-brand-gray">
           {isDemo ? t.login.demoMessage : t.login.continueMessage}
         </p>
         {deniedMessage ? (
-          <div className="mt-3 space-y-1 rounded-md border border-brand-red/30 bg-brand-red-light p-2 text-sm text-brand-red">
+          <div role="alert" className="mt-3 space-y-1 rounded-xl border border-brand-red/30 bg-brand-red-light p-3 text-sm text-brand-red">
             <p>{deniedMessage}</p>
             {error === "MembershipInactive" && brand.membershipUrl ? (
               <p>
@@ -69,6 +75,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         <div className="mt-6 space-y-3">
           {isDemo ? null : <LoginForm googleEnabled={hasGoogleAuth} next="/" />}
           {isDemo || hasDevLogin ? <ShortcutButtons demo={isDemo} dev={hasDevLogin} /> : null}
+        </div>
         </div>
       </div>
       {brand.privacyUrl ? (

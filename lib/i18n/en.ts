@@ -539,6 +539,8 @@ export const en: Strings = {
     seeAllNews: "See all updates →",
     groupTitle: "Our group",
     contactEmoji: "📬",
+    contactGroup: "Write to the group",
+    contactTech: "Technical problems",
     contactHeading: "Do you have other questions?",
     contactIntro: (appName: string) =>
       `Write to us or talk to whoever manages the treasury at pickup. For technical issues, contact ${appName}'s IT team.`,

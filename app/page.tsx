@@ -120,29 +120,10 @@ export default async function HomePage({
   const isNegative = balance < 0;
   const balanceText = formatSignedMoney(balance);
 
-  return (
-    <AppShell email={session.user.email} name={session.user.fullName} isAdmin={role === "admin"} memberId={memberId} personId={session.user.personId}>
-      <h1 className="sr-only">{t.nav.home}</h1>
-      {showWelcome && (
-        <WelcomeCard
-          appName={brand.appName}
-          money={welcomeMoney(settings.mode, member?.paysOffline ?? false)}
-          families={settings.familiesEnabled}
-          hasGroupInfo={settings.groupInfo !== null}
-          reopened={reopenWelcome}
-        />
-      )}
-
-      {/* An amount due comes first: until it is paid no card order can be confirmed. */}
-      {payPerOrder && <BalanceDueCard cents={consolidatedCents} canPay={settings.onlineTopupAvailable} />}
-
-      {/* With an open cycle, its card (and the way to the order) comes first;
-          without one, the balance and the next pickup lead. */}
-      {cycleDataList.length > 0 && (
-        <>
-        {/* ── Cycles loop ── */}
-        {cycleDataList.length > 0 ? (
-          cycleDataList.map(({ cycle, cycleProducts, myLines, orderTotal, payStatus }) => {
+  // Each open cycle: its countdown, notes, payment status and the order.
+  const cyclesBlock = (
+    <>
+        {cycleDataList.map(({ cycle, cycleProducts, myLines, orderTotal, payStatus }) => {
             const productMap = new Map(cycleProducts.map((p) => [p.productId, p]));
             return (
               <div key={cycle.cycleId} className="mb-[24px]">
@@ -234,11 +215,11 @@ export default async function HomePage({
                 ) : null}
               </div>
             );
-          })
-        ) : null}
-        </>
-      )}
-
+          })}
+    </>
+  );
+  const balanceBlock = (
+    <>
       {/* ── Saldo hero card (wallet groups only) ── */}
       {!payPerOrder && (
         <>
@@ -327,11 +308,19 @@ export default async function HomePage({
       )}
 
 
+    </>
+  );
+  const pickupBlock = (
+    <>
       {/* ── Prossimo ritiro card: only for a cycle not already on screen ── */}
       {nextPickup && !cycleDataList.some((d) => d.cycle.cycleId === nextPickup.cycleId) && (
         <NextPickupCard pickup={nextPickup} />
       )}
 
+    </>
+  );
+  const noOpenBlock = (
+    <>
       {cycleDataList.length === 0 && (
         <div className="mb-[14px] flex items-center justify-between rounded-card border border-brand-border bg-white p-[18px] shadow-card">
           <div>
@@ -346,6 +335,10 @@ export default async function HomePage({
         </div>
       )}
 
+    </>
+  );
+  const movementsBlock = (
+    <>
       {/* ── Recent movements ── */}
       {recentMovements.length > 0 && (
         <div className="mt-[4px]">
@@ -384,6 +377,50 @@ export default async function HomePage({
           })}
         </div>
       )}
+
+    </>
+  );
+
+  return (
+    <AppShell email={session.user.email} name={session.user.fullName} isAdmin={role === "admin"} memberId={memberId} personId={session.user.personId} layout="wide">
+      <h1 className="sr-only">{t.nav.home}</h1>
+      {showWelcome && (
+        <WelcomeCard
+          appName={brand.appName}
+          money={welcomeMoney(settings.mode, member?.paysOffline ?? false)}
+          families={settings.familiesEnabled}
+          hasGroupInfo={settings.groupInfo !== null}
+          reopened={reopenWelcome}
+        />
+      )}
+
+      {/* An amount due comes first: until it is paid no card order can be confirmed. */}
+      {payPerOrder && <BalanceDueCard cents={consolidatedCents} canPay={settings.onlineTopupAvailable} />}
+
+      {/* From lg two columns: the cycle and the order on the left; the
+          balance, the pickup and the movements on the right. Without an open
+          cycle the balance and the pickup lead on the left. Phones read them
+          in the same order, one under the other. */}
+      <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start lg:gap-6">
+        <div className="min-w-0">
+          {cycleDataList.length > 0 ? cyclesBlock : (
+            <>
+              {balanceBlock}
+              {pickupBlock}
+              {noOpenBlock}
+            </>
+          )}
+        </div>
+        <div className="min-w-0 lg:sticky lg:top-4">
+          {cycleDataList.length > 0 && (
+            <>
+              {balanceBlock}
+              {pickupBlock}
+            </>
+          )}
+          {movementsBlock}
+        </div>
+      </div>
 
       {/* Last, so appearing after hydration moves nothing above it. */}
       <InstallPrompt />
