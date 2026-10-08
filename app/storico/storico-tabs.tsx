@@ -11,6 +11,8 @@ import type { CycleHistoryEntry } from "@/lib/cycle-history";
 import { BalanceSummary } from "@/components/balance/balance-summary";
 import { MovementRow } from "@/components/movement-row";
 import { useWide } from "@/lib/ui/use-wide";
+import { Button } from "@/components/ui/button";
+import { Sheet } from "@/components/ui/sheet";
 import { MovementDetailDialog, MovementDetailPanel, type MovementDetail } from "./movement-detail";
 
 type LedgerEntry = MovementDetail & { entryId: string; correctedAt?: string | null };
@@ -28,16 +30,16 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
   const searchParams = useSearchParams();
   const deepLinkCycleId = searchParams.get("cycleId");
 
-  // From lg the list and its detail sit side by side; below, a cycle opens
-  // in place and a movement in a sheet.
+  // From lg the list and its detail sit side by side; below, a cycle and a
+  // movement each open in a sheet.
   const wide = useWide();
   const [tab, setTabState] = useState<Tab>(searchParams.get("tab") === "movimenti" ? "movimenti" : "ordini");
   // The cycle shown beside the list from lg: the deep link, else the newest.
   const [picked, setPicked] = useState<string | null>(deepLinkCycleId);
   const shownCycle = orderHistory.find((o) => o.cycleId === picked) ?? orderHistory[0] ?? null;
-  const [expanded, setExpanded] = useState<Set<string>>(
-    () => (deepLinkCycleId ? new Set([deepLinkCycleId]) : new Set()),
-  );
+  // The cycle open in the sheet below lg (a notification deep link opens it).
+  const [sheetCycleId, setSheetCycleId] = useState<string | null>(deepLinkCycleId);
+  const sheetCycle = wide ? null : (orderHistory.find((o) => o.cycleId === sheetCycleId) ?? null);
   const [selected, setSelected] = useState<LedgerEntry | null>(null);
   // The cycle card to bring into view: the notification deep link on arrival,
   // or the cycle picked from a movement's detail.
@@ -76,17 +78,13 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
     setSelected(null);
     setTab("ordini");
     setPicked(cycleId);
-    setExpanded((prev) => new Set(prev).add(cycleId));
+    setSheetCycleId(cycleId);
     setScrollTarget(cycleId);
   }
 
-  function toggleExpand(cycleId: string) {
-    setExpanded((prev) => {
-      const next = new Set(prev);
-      if (next.has(cycleId)) next.delete(cycleId);
-      else next.add(cycleId);
-      return next;
-    });
+  function openCycle(cycleId: string) {
+    setPicked(cycleId);
+    setSheetCycleId(cycleId);
   }
 
   return (
@@ -128,7 +126,6 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
             </div>
           ) : (
             orderHistory.map((o) => {
-              const isOpen = expanded.has(o.cycleId);
               const isShown = shownCycle?.cycleId === o.cycleId;
               return (
                 <div
@@ -143,10 +140,10 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
                 >
                   <button
                     type="button"
-                    onClick={() => (wide ? setPicked(o.cycleId) : toggleExpand(o.cycleId))}
-                    aria-expanded={wide ? undefined : isOpen}
+                    onClick={() => openCycle(o.cycleId)}
+                    aria-haspopup={wide ? undefined : "dialog"}
                     aria-current={wide && isShown ? "true" : undefined}
-                    className="flex w-full items-center justify-between gap-3 border-b border-brand-border px-4 py-[14px] text-left hover:bg-black/[0.02] lg:border-none"
+                    className="flex w-full items-center justify-between gap-3 px-4 py-[14px] text-left hover:bg-black/[0.02]"
                   >
                     <div className="min-w-0 flex-1">
                       <div className="text-[14px] font-bold tracking-[-0.01em] text-brand-near-black">
@@ -175,11 +172,6 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
                       </Badge>
                     </div>
                   </button>
-                  {isOpen && (
-                    <div className="px-4 py-[10px] lg:hidden">
-                      <CycleDetail entry={o} />
-                    </div>
-                  )}
                 </div>
               );
             })
@@ -234,11 +226,25 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
       )}
 
       <MovementDetailDialog entry={wide ? null : selected} onClose={() => setSelected(null)} onShowCycle={showCycle} />
+      <Sheet
+        open={sheetCycle !== null}
+        onRequestClose={() => setSheetCycleId(null)}
+        size="sm"
+        title={sheetCycle?.title}
+        subtitle={(sheetCycle && formatDate(sheetCycle.pickupDate)) || undefined}
+        footer={
+          <Button block onClick={() => setSheetCycleId(null)}>
+            {t.common.close}
+          </Button>
+        }
+      >
+        {sheetCycle && <CycleDetail entry={sheetCycle} />}
+      </Sheet>
     </>
   );
 }
 
-// A cycle's products and totals: in place below lg, beside the list from lg.
+// A cycle's products and totals: in a sheet below lg, beside the list from lg.
 function CycleDetail({ entry }: { entry: CycleHistoryEntry }) {
   return (
     <>
