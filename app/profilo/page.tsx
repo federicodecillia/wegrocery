@@ -23,6 +23,9 @@ import { getPaymentSettings } from "@/lib/payments/get-settings";
 import { countChannels, familyState, initials } from "@/lib/profile/summary";
 import { getRoleLabel } from "@/lib/roles";
 import packageJson from "@/package.json";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: t.profile.title };
 
 // The member's own settings in one place, behind the header avatar: account,
 // family, notifications, money, the app, sign-out. Each row says its current

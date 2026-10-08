@@ -170,7 +170,7 @@ export function MemberCombobox({ members, value, onChange, label }: Props) {
         onClick={() => setOpen(true)}
         onBlur={() => setOpen(false)}
         onKeyDown={handleKeyDown}
-        className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/30"
+        className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black placeholder:text-muted"
       />
       <p className="sr-only" aria-live="polite">
         {open ? t.admin.treasury.memberResults(matches.length) : ""}

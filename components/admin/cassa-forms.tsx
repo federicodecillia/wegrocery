@@ -409,7 +409,7 @@ export function CassaInlineList({
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
           placeholder={t.admin.treasury.searchMember}
-          className="w-full rounded-lg border border-brand-border px-3 py-1.5 text-[12px] text-brand-near-black placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary/30"
+          className="w-full rounded-lg border border-brand-border px-3 py-1.5 text-[12px] text-brand-near-black placeholder:text-muted"
         />
       </div>
       <div className="divide-y divide-brand-border">

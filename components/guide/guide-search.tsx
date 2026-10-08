@@ -68,7 +68,7 @@ export function GuideSearch({ index, synonyms, stopwords, topicTitles, children 
           placeholder={t.guide.searchPlaceholder}
           autoComplete="off"
           enterKeyHint="search"
-          className="w-full rounded-full border border-brand-border bg-white py-3 pl-11 pr-11 text-[14px] text-brand-near-black shadow-[0_1px_2px_rgba(0,0,0,0.04)] placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 [&::-webkit-search-cancel-button]:hidden"
+          className="w-full rounded-full border border-brand-border bg-white py-3 pl-11 pr-11 text-[14px] text-brand-near-black shadow-[0_1px_2px_rgba(0,0,0,0.04)] placeholder:text-muted focus:border-primary [&::-webkit-search-cancel-button]:hidden"
         />
         {searching && (
           <button

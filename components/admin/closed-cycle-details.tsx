@@ -452,7 +452,7 @@ function OrderLineEditForm({
             value={qty}
             onChange={(e) => onQtyChange(e.target.value)}
             disabled={isPending}
-            className="rounded-md border border-brand-border bg-white px-2 py-1.5 text-[13px] font-mono text-brand-near-black focus:outline-none focus:ring-2 focus:ring-primary/40"
+            className="rounded-md border border-brand-border bg-white px-2 py-1.5 text-[13px] font-mono text-brand-near-black"
           />
         </label>
         <label className="flex flex-col gap-0.5 text-label font-semibold uppercase tracking-wide text-brand-gray">
@@ -466,7 +466,7 @@ function OrderLineEditForm({
               setTotalTouched(true);
             }}
             disabled={isPending}
-            className="rounded-md border border-brand-border bg-white px-2 py-1.5 text-[13px] font-mono text-brand-near-black focus:outline-none focus:ring-2 focus:ring-primary/40"
+            className="rounded-md border border-brand-border bg-white px-2 py-1.5 text-[13px] font-mono text-brand-near-black"
           />
         </label>
       </div>

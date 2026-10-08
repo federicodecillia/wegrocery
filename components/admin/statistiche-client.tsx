@@ -149,7 +149,7 @@ function MultiSelect({
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="listbox"
         aria-expanded={open}
-        className={`flex w-full items-center justify-between gap-2 rounded-xl border px-3 py-2 text-left text-[12px] font-semibold focus:outline-none focus:ring-2 focus:ring-primary/30 ${
+        className={`flex w-full items-center justify-between gap-2 rounded-xl border px-3 py-2 text-left text-[12px] font-semibold ${
           selected.length > 0
             ? "border-primary/40 bg-primary-soft text-brand-near-black"
             : "border-brand-border bg-white text-brand-near-black"
@@ -167,7 +167,7 @@ function MultiSelect({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t.admin.stats.searchFilter(label.toLowerCase())}
-              className="w-full rounded-lg border border-brand-border px-2 py-1 text-[12px] focus:outline-none focus:ring-2 focus:ring-primary/30"
+              className="w-full rounded-lg border border-brand-border px-2 py-1 text-[12px]"
             />
             {selected.length > 0 && (
               <button

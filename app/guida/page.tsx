@@ -14,6 +14,9 @@ import { buildSearchIndex, groupInfoSearchEntry } from "@/lib/guide/search";
 import { WELCOME_QUERY } from "@/lib/guide/welcome";
 import { guideContext, visibleGuide } from "@/lib/guide/types";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: t.guide.title };
 
 // The guide's index: the group's own text ("Il nostro gruppo", written by the
 // admins), search, topics, the latest release and the contacts.

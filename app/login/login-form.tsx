@@ -117,7 +117,7 @@ export function LoginForm({ googleEnabled, next }: { googleEnabled: boolean; nex
             maxLength={7}
             required
             placeholder="123456"
-            className="w-full rounded-lg border border-brand-border px-3 py-2 text-center font-mono text-lg tracking-[0.3em] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-primary/30"
+            className="w-full rounded-lg border border-brand-border px-3 py-2 text-center font-mono text-lg tracking-[0.3em] text-brand-near-black"
           />
           <Button type="submit" variant="orange" block disabled={busy}>
             {status === "verifying" ? t.login.codeVerifying : t.login.codeButton}
@@ -141,7 +141,7 @@ export function LoginForm({ googleEnabled, next }: { googleEnabled: boolean; nex
             autoComplete="email"
             required
             placeholder={t.login.emailPlaceholder}
-            className="w-full rounded-lg border border-brand-border px-3 py-2 text-sm text-brand-near-black focus:outline-none focus:ring-2 focus:ring-primary/30"
+            className="w-full rounded-lg border border-brand-border px-3 py-2 text-sm text-brand-near-black"
           />
           <Button type="submit" variant="orange" block disabled={busy}>
             {status === "sending" ? t.login.sending : t.login.sendLink}

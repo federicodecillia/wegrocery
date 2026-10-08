@@ -45,7 +45,7 @@ export function SettingsRow({ title, detail, href, badge }: RowProps) {
       </div>
     );
   }
-  const hover = "transition-colors hover:bg-black/[0.02] focus-visible:bg-black/[0.03] focus-visible:outline-none";
+  const hover = "transition-colors hover:bg-black/[0.02] focus-visible:bg-black/[0.03]";
   if (href.startsWith("/")) {
     return (
       <Link href={href} className={`${rowClass} ${hover}`}>

@@ -661,7 +661,7 @@ export function OrderForm({
                         if (qty === 1) plus?.focus();
                       }}
                       aria-label={t.order.lessNamed(p.name)}
-                      className="flex h-8 w-8 items-center justify-center rounded-full text-[18px] font-light text-brand-gray"
+                      className="pressable flex h-8 w-8 items-center justify-center rounded-full text-[18px] font-light text-brand-gray"
                     >
                       −
                     </button>
@@ -681,7 +681,7 @@ export function OrderForm({
                     data-plus
                     onClick={() => changeQty(p.productId, 1)}
                     aria-label={qty === 0 ? t.order.addNamed(p.name) : t.order.moreNamed(p.name)}
-                    className={`flex h-8 w-8 items-center justify-center rounded-full text-[18px] font-light ${
+                    className={`pressable flex h-8 w-8 items-center justify-center rounded-full text-[18px] font-light ${
                       qty === 0 ? "text-brand-gray" : "bg-primary text-on-primary"
                     }`}
                   >

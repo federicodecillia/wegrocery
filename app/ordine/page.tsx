@@ -22,6 +22,9 @@ import { orderLinesKey, orderStateKey, resumeDraft } from "@/lib/order-draft";
 import { canAccessCycle } from "@/lib/roles";
 import { resolveOrderCycle } from "@/lib/order-cycle";
 import Link from "next/link";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: t.nav.order };
 
 export default async function OrdinePage({
   searchParams,

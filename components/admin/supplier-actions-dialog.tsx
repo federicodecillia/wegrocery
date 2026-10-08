@@ -192,7 +192,7 @@ export function SupplierActionsDialog({
 
   const labelCls = "block text-label font-semibold uppercase tracking-wide text-brand-gray";
   const inputCls =
-    "w-full rounded-lg border border-brand-border bg-white px-2.5 py-1.5 text-[12px] font-mono text-brand-near-black focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:bg-brand-warm-white";
+    "w-full rounded-lg border border-brand-border bg-white px-2.5 py-1.5 text-[12px] font-mono text-brand-near-black disabled:bg-brand-warm-white";
   const sectionTitleCls = "flex items-center gap-2 text-[13px] font-bold text-brand-near-black";
   const sectionDescCls = "mb-2 text-label text-brand-gray";
 

@@ -12,6 +12,13 @@ import { TabSoci } from "@/components/admin/tab-soci";
 import { TabFornitori } from "@/components/admin/tab-fornitori";
 import { TabStatistiche } from "@/components/admin/tab-statistiche";
 import { TabImpostazioni } from "@/components/admin/tab-impostazioni";
+import type { Metadata } from "next";
+import { adminTabLabel } from "@/lib/admin/nav";
+
+export async function generateMetadata({ searchParams }: { searchParams: SearchParams }): Promise<Metadata> {
+  const { tab } = await searchParams;
+  return { title: `${adminTabLabel(tab)} · Admin` };
+}
 
 type SearchParams = Promise<{
   tab?: string;
@@ -61,6 +68,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Search
 
   return (
     <AppShell email={session.user.email} name={session.user.fullName} isAdmin memberId={session.user.memberId!} personId={session.user.personId} width="admin">
+      <h1 className="sr-only">{`Admin: ${adminTabLabel(tab)}`}</h1>
       <Suspense fallback={null}>
         <AdminNav />
       </Suspense>

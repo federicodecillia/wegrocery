@@ -178,7 +178,7 @@ export function EditClosedOrderModal({ cycleId, cycleTitle, mode, onClose, onSav
                   <select
                     value={memberId}
                     onChange={(e) => setMemberId(e.target.value)}
-                    className="w-full rounded-lg border border-brand-border bg-white px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-accent/30"
+                    className="w-full rounded-lg border border-brand-border bg-white px-3 py-2 text-[13px] text-brand-near-black"
                   >
                     <option value="">{t.admin.editClosedOrder.selectMember}</option>
                     {bootstrap.members.map((m) => (
@@ -281,7 +281,7 @@ export function EditClosedOrderModal({ cycleId, cycleTitle, mode, onClose, onSav
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
                   placeholder={t.admin.editClosedOrder.notePlaceholder}
-                  className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-accent/30"
+                  className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black"
                 />
               </div>
             </>

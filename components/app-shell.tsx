@@ -38,6 +38,13 @@ export async function AppShell({ children, email, name, isAdmin, memberId, perso
       <div
         className={`mx-auto flex min-h-screen w-full flex-col bg-brand-warm-white sm:min-h-[calc(100vh-3rem)] sm:overflow-clip sm:rounded-xl sm:border sm:border-brand-border sm:shadow-sm ${SHELL_WIDTH[width]}`}
       >
+        {/* First stop for keyboard users: past the header and the nav. */}
+        <a
+          href="#main"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[200] focus:rounded-full focus:bg-brand-near-black focus:px-4 focus:py-2 focus:text-sm focus:font-bold focus:text-white"
+        >
+          {t.common.skipToContent}
+        </a>
         <DemoBanner />
         <header className="border-b border-brand-border px-5 py-4">
           <div className="flex items-center justify-between gap-3">
@@ -59,7 +66,7 @@ export async function AppShell({ children, email, name, isAdmin, memberId, perso
           <TopNav isAdmin={isAdmin} />
         </header>
 
-        <main className="flex-1 px-5 py-4 pb-[calc(var(--spacing-nav-h)+1rem)] lg:pb-4">
+        <main id="main" tabIndex={-1} className="flex-1 px-5 py-4 pb-[calc(var(--spacing-nav-h)+1rem)] lg:pb-4">
           <WelcomeResume />
           {children}
           {brand.privacyUrl ? (

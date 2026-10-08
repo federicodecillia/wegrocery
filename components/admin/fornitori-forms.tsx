@@ -83,7 +83,7 @@ export function FornitoriForm({
   }
 
   const inputCls =
-    "w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-primary/30";
+    "w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black";
   const labelCls = "mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray";
 
   return (
@@ -227,7 +227,7 @@ export function CatalogProductForm({
   }
 
   const inputCls =
-    "w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-accent/30";
+    "w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black";
   const labelCls = "mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray";
 
   return (
@@ -419,7 +419,7 @@ export function FornitoriList({
                       }
                     }}
                     aria-expanded={expandedId === s.supplierId}
-                    className="flex w-full cursor-pointer items-center justify-between border-b border-brand-border px-4 py-3 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                    className="flex w-full cursor-pointer items-center justify-between border-b border-brand-border px-4 py-3 text-left"
                   >
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
@@ -570,7 +570,7 @@ export function FornitoriList({
           placeholder={t.admin.suppliers.searchPlaceholder}
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
-          className="w-full rounded-xl border border-brand-border px-4 py-2.5 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-primary/30"
+          className="w-full rounded-xl border border-brand-border px-4 py-2.5 text-[13px] text-brand-near-black"
         />
       </div>
       {renderGroup(t.admin.suppliers.groupActive, active)}

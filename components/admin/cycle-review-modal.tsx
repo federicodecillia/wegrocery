@@ -357,7 +357,7 @@ function ReviewRow({
               value={value}
               onChange={(e) => onChange(e.target.value)}
               aria-label={t.admin.cycleReview.finalPriceAria(r.name)}
-              className="mt-0.5 h-11 w-[96px] rounded-lg border border-brand-border px-2 text-right text-[14px] text-brand-near-black focus:border-primary-text focus:outline-none"
+              className="mt-0.5 h-11 w-[96px] rounded-lg border border-brand-border px-2 text-right text-[14px] text-brand-near-black focus:border-primary-text"
             />
             {changed && (
               <div className={`mt-1 text-label font-semibold ${delta >= 0 ? "text-primary-text" : "text-accent-text"}`}>

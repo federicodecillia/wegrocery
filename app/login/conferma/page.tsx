@@ -1,6 +1,9 @@
 import { brand } from "@/lib/brand";
 import { safeCallbackPath } from "@/lib/auth/hosts";
 import { t } from "@/lib/i18n";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: t.login.pageTitle };
 
 // Where the email link lands. Mail scanners open links, and Better Auth's link
 // works once: the link itself only shows this page, and the member's tap on

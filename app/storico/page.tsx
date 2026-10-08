@@ -5,6 +5,10 @@ import { getFamilyMemberIds, getMemberById, getMemberLedger, getMemberStorico } 
 import { getDb } from "@/lib/db/client";
 import { getWalletBalance } from "@/lib/payments/balance-due";
 import { movementRecorder } from "@/lib/movement-label";
+import type { Metadata } from "next";
+import { t } from "@/lib/i18n";
+
+export const metadata: Metadata = { title: t.nav.history };
 
 export default async function StoricoPage() {
   const session = await requireUserSession();
@@ -23,6 +27,7 @@ export default async function StoricoPage() {
 
   return (
     <AppShell email={session.user.email} name={session.user.fullName} isAdmin={role === "admin"} memberId={memberId} personId={session.user.personId}>
+      <h1 className="sr-only">{t.nav.history}</h1>
       <StoricoTabs
         orderHistory={orderHistory}
         movements={movements.map((e) => ({

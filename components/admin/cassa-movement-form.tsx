@@ -18,7 +18,7 @@ import { formatDate } from "@/lib/utils";
 import { MemberCombobox, type PickerMember } from "./member-combobox";
 
 const inputCls =
-  "w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-accent/30";
+  "w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black";
 const labelCls = "mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray";
 
 function todayInput(): string {
@@ -94,7 +94,7 @@ function Recap({
 
   return (
     <div>
-      <p ref={headingRef} tabIndex={-1} className="mb-3 text-[13px] font-bold text-brand-near-black focus:outline-none">
+      <p ref={headingRef} tabIndex={-1} className="mb-3 text-[13px] font-bold text-brand-near-black">
         {title}
       </p>
       <dl className="divide-y divide-brand-border rounded-lg border border-brand-border">
@@ -467,7 +467,7 @@ export function OutgoingMovementForm({ members }: { members: PickerMember[] }) {
             {OUTGOING_LEDGER_TYPES.map((k) => (
               <label
                 key={k}
-                className={`flex min-h-[40px] cursor-pointer items-center justify-center rounded-lg border px-1 text-center text-[12px] font-semibold has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent/30 ${
+                className={`flex min-h-[40px] cursor-pointer items-center justify-center rounded-lg border px-1 text-center text-[12px] font-semibold ${
                   kind === k
                     ? "border-accent bg-accent-soft text-accent-text"
                     : "border-brand-border text-brand-near-black"

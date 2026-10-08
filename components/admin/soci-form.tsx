@@ -107,7 +107,7 @@ export function SociForm({
             name="fullName"
             required
             defaultValue={member?.fullName}
-            className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-primary/30"
+            className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black"
           />
         </div>
         <div>
@@ -119,7 +119,7 @@ export function SociForm({
             type="email"
             required
             defaultValue={member?.email}
-            className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-primary/30"
+            className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black"
           />
         </div>
         <div>
@@ -132,7 +132,7 @@ export function SociForm({
             type="email"
             defaultValue={member?.aliasEmail ?? ""}
             placeholder={t.admin.members.aliasEmailPlaceholder}
-            className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-primary/30"
+            className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black"
           />
         </div>
         <div className="grid grid-cols-2 gap-3">
@@ -143,7 +143,7 @@ export function SociForm({
             <select
               name="role"
               defaultValue={normalizeRole(member?.role) ?? DEFAULT_ROLE}
-              className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-primary/30"
+              className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black"
             >
               {ROLES.map((r) => (
                 <option key={r} value={r}>
@@ -159,7 +159,7 @@ export function SociForm({
             <select
               name="active"
               defaultValue={String(member?.active ?? true)}
-              className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-primary/30"
+              className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black"
             >
               <option value="true">{t.admin.members.statusActive}</option>
               <option value="false">{t.admin.members.statusInactive}</option>
@@ -384,7 +384,7 @@ export function SociList({
           placeholder={t.admin.members.searchPlaceholder}
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
-          className="w-full rounded-xl border border-brand-border bg-white px-4 py-2.5 text-[13px] text-brand-near-black placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary/30"
+          className="w-full rounded-xl border border-brand-border bg-white px-4 py-2.5 text-[13px] text-brand-near-black placeholder:text-muted"
         />
       </div>
       <DuplicateMembers

@@ -33,7 +33,7 @@ export function OrdiniFilters({
   const currentMember = sp.get("member") ?? "";
 
   const selectCls =
-    "rounded-xl border border-brand-border bg-white px-3 py-2 text-[12px] font-semibold text-brand-near-black focus:outline-none focus:ring-2 focus:ring-primary/30 min-w-0 max-w-full flex-1";
+    "rounded-xl border border-brand-border bg-white px-3 py-2 text-[12px] font-semibold text-brand-near-black min-w-0 max-w-full flex-1";
 
   function onMemberChange(e: React.ChangeEvent<HTMLSelectElement>) {
     const val = e.target.value;
