@@ -34,6 +34,7 @@ stanno nella PR.
 - 💰 **Cassa a portata di dito.** Pulsanti più grandi per modificare ed eliminare i movimenti, campi che stanno nello schermo, e ogni campo e pulsante a icona in Admin ha un nome che i lettori di schermo sanno leggere.
 - 📱 **Barra in basso più leggera.** I soci vedono quattro voci (Home, Ordine, Storico, Guida) invece di un "Admin" grigio, campanella, cerchio delle iniziali e "?" si toccano più facilmente, e cambiare pagina non sembra più un ricaricamento.
 - 🔤 **Più facile da leggere.** I prezzi nell'ordine e il testo delle notifiche sono più grandi e nel carattere normale, e il Profilo non mostra più "Utenti" sotto il nome dei soci normali.
+- 🏠 **In Home prima l'ordine aperto.** Il ciclo in cui puoi ordinare viene prima del saldo, con una sola riga chiara sulla chiusura ("Chiude tra 5 giorni · lun 13 ott, 23:59") e i giorni di ritiro scritti una volta. Il conto alla rovescia compare solo l'ultimo giorno, e dopo la prima visita il benvenuto si riduce a una riga.
 
 ## [1.25.0] — 7 ottobre 2026
 

@@ -52,6 +52,8 @@ export const WELCOME_QUERY = "benvenuto";
 // sessionStorage key holding the step a member left the card on to follow
 // one of its links: the bar on the other pages offers to resume it there.
 export const WELCOME_STORAGE_KEY = "wegrocery.welcome-step";
+/** localStorage: the page load that first showed the card (welcome-storage.ts). */
+export const WELCOME_SEEN_KEY = "wegrocery.welcome-seen";
 
 export function isWelcomeStep(value: string | null): value is WelcomeStep {
   return value !== null && Object.prototype.hasOwnProperty.call(WELCOME_LINKS, value);

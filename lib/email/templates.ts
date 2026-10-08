@@ -1,6 +1,7 @@
 import { brand } from "@/lib/brand";
 import { t } from "@/lib/i18n";
-import { formatMoney, formatDateTime } from "@/lib/i18n/format";
+import { formatMoney } from "@/lib/i18n/format";
+import { formatPickupSlot } from "@/lib/i18n/deadline";
 import { getAppBaseUrl } from "./base-url";
 
 type SupplierEmailInput = {
@@ -11,14 +12,8 @@ type SupplierEmailInput = {
   memberCount: number;
 };
 
-const formatPickup = (d: Date): string =>
-  formatDateTime(d, {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+// A pickup with no time (stored at 00:00) shows the day alone, not "00:00".
+const formatPickup = (d: Date): string => formatPickupSlot(d, null, true);
 
 export function supplierOrderEmail(input: SupplierEmailInput): {
   subject: string;
