@@ -36,6 +36,9 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 - 🏠 **The open order first on Home.** The cycle you can order in comes before the balance, with one plain line on when it closes ("Closes in 5 days · Mon 13 Oct, 23:59") and pickup days written once. The ticking countdown appears only on the last day, and after the first visit the welcome folds to one line.
 - 🛒 **More room to shop on the Order page.** The bar at the bottom is one row (total, balance after and "Confirm"), with the breakdown behind "Details"; a refused order also says why right above the button. "Discard changes" appears only when you changed something, the + and − buttons are bigger, and products without their own emoji no longer show a cart.
 - 🏷️ **Find products faster.** On the Order page the categories stay at the top as chips that jump to each section, "In the cart (3)" shows only what you picked, and with more than 15 products a search box finds them by name.
+- 👆 **Drag down to close.** On a phone, windows that rise from the bottom (confirmations included) close by dragging them down; on a confirmation that always means "Cancel". The window that closes a cycle closes only with its buttons.
+- 🔄 **Always up to date.** Coming back to the app after a few minutes reloads balance, cycle and notifications, tapping the current item of the bottom bar scrolls up and refreshes, and a line says when you are offline. The Order page is never refreshed while you edit.
+- 🔔 **Clearer notifications.** Grouped by day (Today, Yesterday...), unread ones say "New" in words, and tapping one opens its page at once.
 
 ## [1.25.0] — 2026-10-07
 

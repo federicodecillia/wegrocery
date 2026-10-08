@@ -25,6 +25,7 @@ export const it = {
     pageNotFound: "Pagina non trovata",
     backToHome: "Torna alla Home",
     skipToContent: "Vai al contenuto",
+    offline: "Sei offline: quello che cambi ora potrebbe non essere salvato finché non torna la connessione.",
   },
   nav: {
     home: "Home",
@@ -371,6 +372,9 @@ export const it = {
     markAllRead: "Segna tutte ✓",
     noNotifications: "Nessuna notifica",
     noNotificationsHint: "Ti avviseremo quando ci sono novità sull'ordine o sul saldo.",
+    today: "Oggi",
+    yesterday: "Ieri",
+    newBadge: "Nuova",
     unreadLabel: "Non letta",
     unreadCountLabel: (n: number) => `${n} notifiche non lette`,
     settings: {

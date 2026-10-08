@@ -37,6 +37,9 @@ stanno nella PR.
 - 🏠 **In Home prima l'ordine aperto.** Il ciclo in cui puoi ordinare viene prima del saldo, con una sola riga chiara sulla chiusura ("Chiude tra 5 giorni · lun 13 ott, 23:59") e i giorni di ritiro scritti una volta. Il conto alla rovescia compare solo l'ultimo giorno, e dopo la prima visita il benvenuto si riduce a una riga.
 - 🛒 **Più spazio per fare la spesa nella pagina Ordine.** La barra in basso è una riga sola (totale, saldo dopo e "Conferma"), con il dettaglio dietro "Dettagli"; un ordine rifiutato dice il perché anche sopra il pulsante. "Annulla modifiche" compare solo se hai cambiato qualcosa, i pulsanti + e − sono più grandi, e i prodotti senza un'emoji propria non mostrano più un carrello.
 - 🏷️ **Trovi i prodotti prima.** Nella pagina Ordine le categorie restano in alto come pulsanti che portano a ogni sezione, "Nel carrello (3)" mostra solo quello che hai scelto, e con più di 15 prodotti una casella di ricerca li trova per nome.
+- 👆 **Trascina giù per chiudere.** Su telefono le finestre che salgono dal basso (comprese le conferme) si chiudono trascinandole verso il basso; su una conferma vale sempre come "Annulla". La finestra che chiude un ciclo si chiude solo con i suoi pulsanti.
+- 🔄 **Sempre aggiornata.** Tornando nell'app dopo qualche minuto saldo, ciclo e notifiche si ricaricano, toccare la voce attiva della barra in basso torna in cima e aggiorna, e una riga avvisa quando sei offline. La pagina Ordine non si aggiorna mai mentre la modifichi.
+- 🔔 **Notifiche più chiare.** Raggruppate per giorno (Oggi, Ieri...), quelle non lette dicono "Nuova" a parole, e toccarne una apre subito la sua pagina.
 
 ## [1.25.0] — 7 ottobre 2026
 

@@ -25,6 +25,7 @@ export const en: Strings = {
     pageNotFound: "Page not found",
     backToHome: "Back to Home",
     skipToContent: "Skip to content",
+    offline: "You are offline: what you change now may not be saved until the connection is back.",
   },
   nav: {
     home: "Home",
@@ -371,6 +372,9 @@ export const en: Strings = {
     markAllRead: "Mark all read ✓",
     noNotifications: "No notifications",
     noNotificationsHint: "We'll notify you when there are updates on your order or balance.",
+    today: "Today",
+    yesterday: "Yesterday",
+    newBadge: "New",
     unreadLabel: "Unread",
     unreadCountLabel: (n: number) => `${n} unread notifications`,
     settings: {
