@@ -1,5 +1,6 @@
 "use client";
 
+import { deliveredActuals, deliveredTotalFromQuantity } from "@/lib/closed-order-preview";
 import { useCallback, useState, useTransition } from "react";
 import { adminGetCycleOrderDetails } from "@/lib/actions/admin-cycles";
 import { adminUpdateOrderLineActuals } from "@/lib/actions/admin";
@@ -377,7 +378,6 @@ function OrderLineEditForm({
   onCancel: () => void;
   onSave: (actualQuantity: string | null, actualLineTotal: string | null) => void;
 }) {
-  const unitPrice = parseFloat(line.unitPrice);
   const initialQty = formatDecimalInput(line.actualQuantity ?? String(line.quantity));
   const initialTotal = formatDecimalInput(line.actualLineTotal ?? line.lineTotal);
   const [qty, setQty] = useState(initialQty);
@@ -388,29 +388,15 @@ function OrderLineEditForm({
   function onQtyChange(v: string) {
     setQty(v);
     if (totalTouched) return;
-    const n = parseFloat(v.replace(",", "."));
-    if (Number.isFinite(n) && n >= 0) {
-      setTotal(formatDecimalInput((Math.round(n * unitPrice * 100) / 100).toFixed(2)));
-    }
+    const derived = deliveredTotalFromQuantity(v, line.unitPrice);
+    if (derived !== null) setTotal(formatDecimalInput(derived));
   }
 
   function handleSave() {
-    const qtyNum = parseFloat(qty.replace(",", "."));
-    const totalNum = parseFloat(total.replace(",", "."));
-    const sameAsOrdered =
-      Number.isFinite(qtyNum) &&
-      qtyNum === line.quantity &&
-      Math.abs(totalNum - parseFloat(line.lineTotal)) < 0.005;
-    if (sameAsOrdered) {
-      // Reset to "delivered as ordered" — clears any previous correction
-      // by passing nulls (the server posts a reverse delta).
-      onSave(null, null);
-      return;
-    }
-    onSave(
-      Number.isFinite(qtyNum) ? qtyNum.toFixed(3) : null,
-      Number.isFinite(totalNum) ? totalNum.toFixed(2) : null,
-    );
+    // Back to "delivered as ordered" sends nulls, which clears any previous
+    // correction (the server posts a reverse delta).
+    const { actualQuantity, actualLineTotal } = deliveredActuals(qty, total, line);
+    onSave(actualQuantity, actualLineTotal);
   }
 
   const unit = realUnit(line.unit);

@@ -1,5 +1,6 @@
 "use client";
 
+import { editedOrderPreview } from "@/lib/closed-order-preview";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import {
   adminGetEditClosedOrderBootstrap,
@@ -85,21 +86,13 @@ export function EditClosedOrderModal({ cycleId, cycleTitle, mode, onClose, onSav
     return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0], "it"));
   }, [bootstrap]);
 
-  const newTotal = useMemo(() => {
-    if (!bootstrap) return 0;
-    return bootstrap.products.reduce((sum, p) => {
-      const qty = quantities[p.productId] ?? 0;
-      return qty > 0 ? sum + parseFloat(p.unitPrice) * qty : sum;
-    }, 0);
-  }, [bootstrap, quantities]);
-
-  const oldTotal = useMemo(
+  const { newTotal, oldTotal, delta } = useMemo(
     () =>
-      bootstrap?.memberLines.reduce((s, l) => s + parseFloat(l.lineTotal), 0) ?? 0,
-    [bootstrap],
+      bootstrap
+        ? editedOrderPreview(bootstrap.products, quantities, bootstrap.memberLines)
+        : { newTotal: 0, oldTotal: 0, delta: 0 },
+    [bootstrap, quantities],
   );
-
-  const delta = newTotal - oldTotal;
 
   function handleSave() {
     if (mode.kind === "create" && !memberId) {
