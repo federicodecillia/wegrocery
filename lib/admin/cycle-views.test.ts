@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cycleViews, defaultCycleId, filterCycles, resolveCycleView } from "./cycle-views";
+import { cycleViews, defaultCycleId, filterCycles, groupCycles, needsSettlement, resolveCycleView } from "./cycle-views";
 
 const d = (iso: string) => new Date(iso);
 
@@ -48,5 +48,34 @@ describe("filterCycles", () => {
     expect(filterCycles(list, "closed", "")).toHaveLength(1);
     expect(filterCycles(list, "all", "OTTO")).toEqual([list[0]]);
     expect(filterCycles(list, "all", "prova settembre")).toEqual([]);
+  });
+});
+
+describe("needsSettlement", () => {
+  const base = { status: "closed", paymentMode: "per_order", settledAt: null };
+  it("is a closed card cycle not settled yet", () => {
+    expect(needsSettlement(base)).toBe(true);
+    expect(needsSettlement({ ...base, settledAt: new Date() })).toBe(false);
+    expect(needsSettlement({ ...base, status: "open" })).toBe(false);
+    expect(needsSettlement({ ...base, status: "cancelled" })).toBe(false);
+    expect(needsSettlement({ ...base, paymentMode: "wallet" })).toBe(false);
+  });
+});
+
+describe("groupCycles", () => {
+  it("puts the accounts to settle first, then the open cycles, then the rest, keeping the order", () => {
+    const list = [
+      { id: "a", status: "closed", toSettle: false },
+      { id: "b", status: "open", toSettle: false },
+      { id: "c", status: "closed", toSettle: true },
+      { id: "d", status: "cancelled", toSettle: false },
+      { id: "e", status: "closed", toSettle: true },
+    ];
+    expect(groupCycles(list).map((g) => [g.group, g.cycles.map((c) => c.id)])).toEqual([
+      ["toSettle", ["c", "e"]],
+      ["open", ["b"]],
+      ["others", ["a", "d"]],
+    ]);
+    expect(groupCycles(list.filter((c) => !c.toSettle)).map((g) => g.group)).toEqual(["open", "others"]);
   });
 });

@@ -60,3 +60,24 @@ export function filterCycles<T extends { title: string; status: string }>(cycles
     (c) => (filter === "all" || c.status === filter) && words.every((w) => norm(c.title).includes(w)),
   );
 }
+
+/**
+ * A card-paid cycle closed and not settled yet: its "Chiudi i conti" is still
+ * to do (refunds on the card, amounts due). The list puts these first so the
+ * settlement is not forgotten.
+ */
+export function needsSettlement(c: { status: string; paymentMode: string; settledAt: Date | null }): boolean {
+  return c.status === "closed" && c.paymentMode === "per_order" && c.settledAt == null;
+}
+
+export type CycleGroup = "toSettle" | "open" | "others";
+
+/** The list in three groups, each keeping its order: accounts to settle, open, the rest. */
+export function groupCycles<T extends { status: string; toSettle: boolean }>(cycles: T[]): { group: CycleGroup; cycles: T[] }[] {
+  const groups: { group: CycleGroup; cycles: T[] }[] = [
+    { group: "toSettle", cycles: cycles.filter((c) => c.toSettle) },
+    { group: "open", cycles: cycles.filter((c) => !c.toSettle && c.status === "open") },
+    { group: "others", cycles: cycles.filter((c) => !c.toSettle && c.status !== "open") },
+  ];
+  return groups.filter((g) => g.cycles.length > 0);
+}

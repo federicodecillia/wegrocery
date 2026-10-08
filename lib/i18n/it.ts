@@ -557,6 +557,9 @@ export const it = {
   },
   admin: {
     workspace: {
+      groups: { toSettle: "Conti da chiudere", open: "Aperti", others: "Gli altri" },
+      toSettleHint: "Chiuso, conti da chiudere",
+      toSettleCount: (n: number) => (n === 1 ? "1 con i conti da chiudere" : `${n} con i conti da chiudere`),
       views: {
         panoramica: "Panoramica",
         prodotti: "Prodotti",

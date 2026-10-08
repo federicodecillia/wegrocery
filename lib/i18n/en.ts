@@ -555,6 +555,9 @@ export const en: Strings = {
   },
   admin: {
     workspace: {
+      groups: { toSettle: "Accounts to settle", open: "Open", others: "The others" },
+      toSettleHint: "Closed, accounts to settle",
+      toSettleCount: (n: number) => (n === 1 ? "1 with accounts to settle" : `${n} with accounts to settle`),
       views: {
         panoramica: "Overview",
         prodotti: "Products",

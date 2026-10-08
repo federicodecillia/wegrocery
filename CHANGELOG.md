@@ -42,6 +42,7 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 - 🧭 **A shorter Admin bar.** Cycle, Treasury, Members and Catalogue fit on a phone without scrolling, with Statistics and Settings behind ⋯ (in line on a computer). Orders now sit under Cycle, Products and Suppliers under Catalogue, and old links still open the right page.
 - 🗂️ **One place per cycle in Admin.** Pick a cycle from the list (on the left on a computer, "Choose the cycle" on a phone), then move between Overview, Products and Orders, or Supplier and Accounts once it is closed. Every past cycle is there with search and filters, not only the last 15, so older ones can still be corrected.
 - 📋 **A cycle's orders on one page.** Orders shows "By member" and "By product" (side by side on a computer) with a single "Download order sheet"; on a closed cycle weights and orders are corrected right there. A member's order history is now in Members, under "Orders", with a link to their movements in Treasury.
+- 💳 **Accounts to settle come first.** In Admin → Cycle the list opens with the card cycles closed but not settled yet, then the open ones, so "Settle accounts" is not forgotten; on a phone "Choose the cycle" shows how many are waiting.
 
 ## [1.25.0] — 2026-10-07
 

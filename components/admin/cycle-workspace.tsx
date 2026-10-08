@@ -12,7 +12,7 @@ import { t } from "@/lib/i18n";
 import { formatDate } from "@/lib/i18n/format";
 import { formatDeadline } from "@/lib/i18n/deadline";
 import { adminHref } from "@/lib/admin/nav";
-import { CYCLE_VIEW_LABELS, cycleViews, defaultCycleId, resolveCycleView, type CycleView } from "@/lib/admin/cycle-views";
+import { CYCLE_VIEW_LABELS, cycleViews, defaultCycleId, needsSettlement, resolveCycleView, type CycleView } from "@/lib/admin/cycle-views";
 import { AdminInsights } from "./admin-insights";
 import {
   CloseCycleAction,
@@ -52,6 +52,7 @@ export async function CycleWorkspace({ cycleId: asked, view: askedView, creating
     title: c.title,
     status: c.status,
     perOrder: c.paymentMode === "per_order",
+    toSettle: needsSettlement(c),
     date: (c.status === "open" ? c.orderCloseAt : (c.pickupDate ?? c.createdAt))?.toISOString() ?? null,
   }));
 
