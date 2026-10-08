@@ -55,6 +55,7 @@ import {
 import { selectCycleAccessMembers } from "@/lib/notifications/reminder";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
 import { resolveCycleFee, type HandlingFee } from "@/lib/payments/order-payment";
+import { resolveNewCycleMode } from "@/lib/payments/cycle-mode";
 import { reverseEntry, reverseEntrySql } from "@/lib/ledger-reversal";
 import { liveLedger } from "@/lib/db/ledger-live";
 import { retryRequestedRefunds } from "@/lib/payments/refund-request";
@@ -128,6 +129,8 @@ export type CreateCycleInput = {
   /** "none" (wallet cycles only), "percent" or "fixed". Omitted: the last cycle's fee of the same payment mode. */
   handlingFeeType?: string;
   handlingFeeValue?: string;
+  /** "wallet" or "per_order" (lib/payments/cycle-mode.ts). Omitted: the group's mode. */
+  paymentMode?: string;
 };
 
 export async function adminCreateCycle(data: CreateCycleInput): Promise<{error?: string}> {
@@ -147,9 +150,16 @@ export async function adminCreateCycle(data: CreateCycleInput): Promise<{error?:
 
     const db = getDb();
 
-    // The cycle keeps the group's payment mode of this moment for its whole
-    // life, with its handling fee.
-    const { mode: paymentMode } = await getPaymentSettings();
+    // The cycle keeps its payment mode for its whole life, with its handling
+    // fee: the group's mode, or a card cycle in a wallet group.
+    const settings = await getPaymentSettings();
+    const chosen = resolveNewCycleMode(data.paymentMode, {
+      groupMode: settings.mode,
+      stripeUsable: settings.stripeKey.usable,
+      currency: brand.currency,
+    });
+    if ("error" in chosen) return { error: t.errors.cyclePaymentModeUnavailable };
+    const paymentMode = chosen.mode;
     const fee = resolveCycleFee(
       paymentMode,
       data.handlingFeeType !== undefined && data.handlingFeeValue !== undefined

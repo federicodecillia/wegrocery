@@ -7,12 +7,12 @@ import { PendingRefresh } from "@/components/ricarica/pending-refresh";
 import { TopupForm } from "@/components/ricarica/topup-form";
 import { getUserRole, requireUserSession } from "@/lib/auth/session";
 import { getDb } from "@/lib/db/client";
-import { getMemberBalance, getMemberById } from "@/lib/db/queries";
+import { getMemberById } from "@/lib/db/queries";
 import { payments } from "@/lib/db/schema";
 import { t } from "@/lib/i18n";
 import { formatMoney } from "@/lib/i18n/format";
 import { TOPUP_MIN_CENTS, topupBlockReason, topupCeilingCents, topupPresets } from "@/lib/payments/config";
-import { getConsolidatedBalanceCents } from "@/lib/payments/balance-due";
+import { getConsolidatedBalanceCents, getWalletBalance } from "@/lib/payments/balance-due";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
 import { SETTLEMENT_MIN_DUE_CENTS } from "@/lib/payments/settlement";
 import { HelpLink } from "@/components/guide/help-link";
@@ -66,8 +66,7 @@ export default async function RicaricaPage({
   const memberId = session.user.memberId!;
   const { esito, session_id } = await searchParams;
 
-  const [balance, result, settings, member] = await Promise.all([
-    getMemberBalance(memberId),
+  const [result, settings, member] = await Promise.all([
     resultFor(memberId, esito, session_id),
     getPaymentSettings(),
     getMemberById(memberId),
@@ -102,6 +101,8 @@ export default async function RicaricaPage({
       </AppShell>
     );
   }
+  // Without the card cycles not settled yet (lib/payments/balance-due.ts).
+  const balance = await getWalletBalance(getDb(), memberId, member?.paysOffline ?? false);
   const online = settings.onlineTopupAvailable && !payPerOrder;
   const bank = settings.bankTransfer;
   // The group's maximum balance, in cents: online top-ups stop there, the

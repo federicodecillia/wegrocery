@@ -20,6 +20,9 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ## [Unreleased]
 
+### Added
+- 💳 **Card payment for a single cycle.** A group that runs on the wallet can now pick, when creating a cycle, whether members pay it from their balance or by card when they confirm the order. Card cycles are marked in Admin, and the money paid by card does not change anyone's balance until "Settle accounts".
+
 ## [1.25.0] — 2026-10-07
 
 *A welcome for newcomers, and the group's own page in the guide.*

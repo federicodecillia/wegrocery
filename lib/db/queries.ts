@@ -135,8 +135,9 @@ export async function getMemberBalance(memberId: string): Promise<number> {
 }
 
 // Order totals that are saved but not yet charged to the ledger: the member's
-// lines on OTHER cycles still `open` (closing is what posts order_charge), and
-// the member's current total on `cycleId`, which a save replaces.
+// lines on OTHER wallet cycles still `open` (closing is what posts
+// order_charge; a card cycle's order is paid already and stays off the
+// wallet), and the member's current total on `cycleId`, which a save replaces.
 export async function getMemberPendingOrderTotals(
   memberId: string,
   cycleId: string,
@@ -144,7 +145,7 @@ export async function getMemberPendingOrderTotals(
   const db = getDb();
   const [row] = await db
     .select({
-      other: sql<string>`coalesce(sum(${orders.lineTotal}) filter (where ${orders.cycleId} <> ${cycleId}), '0')`,
+      other: sql<string>`coalesce(sum(${orders.lineTotal}) filter (where ${orders.cycleId} <> ${cycleId} and ${orderCycles.paymentMode} <> 'per_order'), '0')`,
       current: sql<string>`coalesce(sum(${orders.lineTotal}) filter (where ${orders.cycleId} = ${cycleId}), '0')`,
     })
     .from(orders)
