@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { t } from "@/lib/i18n";
 import { formatNumber, formatSignedMoney } from "@/lib/i18n/format";
-import { formatDate, formatEur, getProductEmoji } from "@/lib/utils";
+import { formatDate, formatEur, memberProductEmoji } from "@/lib/utils";
 import type { CycleHistoryEntry } from "@/lib/cycle-history";
 import { MovementIcon } from "@/components/movement-icon";
 import { movementKind, movementText } from "@/lib/movement-label";
@@ -132,8 +132,8 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
                           <div className="divide-y divide-brand-border rounded-[12px] border border-brand-border bg-[#fdfdfd]">
                             {o.lines.map((l, index) => (
                               <div key={`${l.productName}-${index}`} className="flex items-start gap-3 px-3 py-2.5">
-                                <span className="shrink-0 text-[18px] leading-none">
-                                  {l.emoji || getProductEmoji(l.productName)}
+                                <span aria-hidden="true" className="w-[18px] shrink-0 text-[18px] leading-none">
+                                  {memberProductEmoji(l.emoji, l.productName)}
                                 </span>
                                 <div className="min-w-0 flex-1">
                                   <div className="text-[14px] font-semibold text-brand-near-black">

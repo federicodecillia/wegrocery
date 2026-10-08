@@ -34,6 +34,8 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 - 📱 **A lighter bar at the bottom.** Members see four items (Home, Order, History, Guide) instead of a greyed-out "Admin", the bell, the avatar and the "?" are easier to tap, and switching page no longer looks like a reload.
 - 🔤 **Easier to read.** Prices in the order and the text of notifications are bigger and in the normal font, and the Profile no longer shows "Utenti" under the name of ordinary members.
 - 🏠 **The open order first on Home.** The cycle you can order in comes before the balance, with one plain line on when it closes ("Closes in 5 days · Mon 13 Oct, 23:59") and pickup days written once. The ticking countdown appears only on the last day, and after the first visit the welcome folds to one line.
+- 🛒 **More room to shop on the Order page.** The bar at the bottom is one row (total, balance after and "Confirm"), with the breakdown behind "Details"; a refused order also says why right above the button. "Discard changes" appears only when you changed something, the + and − buttons are bigger, and products without their own emoji no longer show a cart.
+- 🏷️ **Find products faster.** On the Order page the categories stay at the top as chips that jump to each section, "In the cart (3)" shows only what you picked, and with more than 15 products a search box finds them by name.
 
 ## [1.25.0] — 2026-10-07
 

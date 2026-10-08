@@ -35,6 +35,8 @@ stanno nella PR.
 - 📱 **Barra in basso più leggera.** I soci vedono quattro voci (Home, Ordine, Storico, Guida) invece di un "Admin" grigio, campanella, cerchio delle iniziali e "?" si toccano più facilmente, e cambiare pagina non sembra più un ricaricamento.
 - 🔤 **Più facile da leggere.** I prezzi nell'ordine e il testo delle notifiche sono più grandi e nel carattere normale, e il Profilo non mostra più "Utenti" sotto il nome dei soci normali.
 - 🏠 **In Home prima l'ordine aperto.** Il ciclo in cui puoi ordinare viene prima del saldo, con una sola riga chiara sulla chiusura ("Chiude tra 5 giorni · lun 13 ott, 23:59") e i giorni di ritiro scritti una volta. Il conto alla rovescia compare solo l'ultimo giorno, e dopo la prima visita il benvenuto si riduce a una riga.
+- 🛒 **Più spazio per fare la spesa nella pagina Ordine.** La barra in basso è una riga sola (totale, saldo dopo e "Conferma"), con il dettaglio dietro "Dettagli"; un ordine rifiutato dice il perché anche sopra il pulsante. "Annulla modifiche" compare solo se hai cambiato qualcosa, i pulsanti + e − sono più grandi, e i prodotti senza un'emoji propria non mostrano più un carrello.
+- 🏷️ **Trovi i prodotti prima.** Nella pagina Ordine le categorie restano in alto come pulsanti che portano a ogni sezione, "Nel carrello (3)" mostra solo quello che hai scelto, e con più di 15 prodotti una casella di ricerca li trova per nome.
 
 ## [1.25.0] — 7 ottobre 2026
 
