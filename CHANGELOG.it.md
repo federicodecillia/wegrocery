@@ -41,6 +41,7 @@ stanno nella PR.
 - 🔄 **Sempre aggiornata.** Tornando nell'app dopo qualche minuto saldo, ciclo e notifiche si ricaricano, toccare la voce attiva della barra in basso torna in cima e aggiorna, e una riga avvisa quando sei offline. La pagina Ordine non si aggiorna mai mentre la modifichi.
 - 🔔 **Notifiche più chiare.** Raggruppate per giorno (Oggi, Ieri...), quelle non lette dicono "Nuova" a parole, e toccarne una apre subito la sua pagina.
 - 🧭 **Una barra Admin più corta.** Ciclo, Cassa, Soci e Catalogo stanno sul telefono senza scorrere, con Statistiche e Impostazioni dietro ⋯ (in fila da computer). Ordini ora è dentro Ciclo, Prodotti e Fornitori dentro Catalogo, e i vecchi link aprono ancora la pagina giusta.
+- 🗂️ **Un posto per ogni ciclo in Admin.** Scegli un ciclo dall'elenco (a sinistra da computer, "Scegli il ciclo" da telefono), poi passa tra Panoramica, Prodotti e Ordini, o Fornitore e Conti quando è chiuso. Ci sono tutti i cicli passati con ricerca e filtri, non solo gli ultimi 15, così anche i più vecchi si possono ancora correggere.
 
 ## [1.25.0] — 7 ottobre 2026
 

@@ -16,7 +16,7 @@ import {
 } from "@/lib/actions/admin";
 import { formatEur } from "@/lib/utils";
 import { ACCESS_LEVELS, DEFAULT_ACCESS_LEVEL, getAccessLabel, normalizeAccessLevel } from "@/lib/roles";
-import { Card, CardBody, CardHeader } from "@/components/ui/card";
+import { Card, CardBody } from "@/components/ui/card";
 import type { CatalogProductItem } from "@/lib/db/queries";
 import { ClosedCycleDetails } from "./closed-cycle-details";
 import { CycleReviewCloseButton } from "./cycle-review-modal";
@@ -25,7 +25,7 @@ import { ImportListingWizard } from "./import-listing-wizard";
 
 type Supplier = { supplierId: string; name: string };
 
-type SerializedCycle = {
+export type SerializedCycle = {
   cycleId: string;
   title: string;
   orderCloseAt: string | null;
@@ -55,25 +55,17 @@ function AccessLevelOptions() {
   ));
 }
 
-// ── Open Cycle Card ───────────────────────────────────────────────────────────
+// ── Cycle workspace pieces (Admin → Ciclo, cycle-workspace.tsx) ──────────────
 
-export function OpenCycleCard({
-  cycle,
-  stats,
-  suppliers,
-}: {
-  cycle: SerializedCycle;
-  stats: { orderCount: number; grandTotal: number; unpaidDrafts?: number; pendingPayments?: number };
-  suppliers: Supplier[];
-}) {
-  const [editing, setEditing] = useState(false);
-  const [managingProducts, setManagingProducts] = useState(false);
-  const [importingListing, setImportingListing] = useState(false);
+export type CycleStats = { orderCount: number; grandTotal: number; unpaidDrafts?: number; pendingPayments?: number };
+
+// What to say before closing: unpaid card drafts, and the fee (a typo shows
+// here, not on the charges).
+function closeWarnings(cycle: SerializedCycle, stats: CycleStats) {
   const perOrderWarning =
     cycle.paymentMode === "per_order" && ((stats.unpaidDrafts ?? 0) > 0 || (stats.pendingPayments ?? 0) > 0)
       ? t.admin.cycle.perOrderCloseWarning(stats.unpaidDrafts ?? 0, stats.pendingPayments ?? 0)
       : null;
-  // Said before closing: a typo in the fee shows here, not on the charges.
   const fee = cycleHandlingFee({
     handlingFeeType: cycle.handlingFeeType ?? null,
     handlingFeeValue: cycle.handlingFeeValue ?? null,
@@ -81,148 +73,138 @@ export function OpenCycleCard({
   const closeWarning =
     [perOrderWarning, fee ? t.admin.cycle.closeFeeNote(formatHandlingFee(fee)) : null].filter(Boolean).join("\n\n") ||
     null;
+  return { perOrderWarning, closeWarning };
+}
 
+/** The open cycle's main action, in the workspace header. */
+export function CloseCycleAction({ cycle, stats }: { cycle: SerializedCycle; stats: CycleStats }) {
   return (
-    <Card className="mb-4 border-l-4 border-l-accent">
-      {/* The title stacks above a wrapping button row so the five actions
-          always wrap within the card instead of overflowing — the app caps at
-          640px, too narrow to ever fit them on one line beside the title. */}
-      <CardHeader className="flex flex-col items-start gap-3">
+    <CycleReviewCloseButton
+      cycleId={cycle.cycleId}
+      cycleTitle={cycle.title}
+      memberCount={stats.orderCount}
+      perOrder={cycle.paymentMode === "per_order"}
+      warning={closeWarnings(cycle, stats).closeWarning}
+    />
+  );
+}
+
+/** Deadline, pickups, shipping and access: the facts of a cycle, read-only. */
+export function CycleFacts({ cycle }: { cycle: SerializedCycle }) {
+  return (
+    <div className="space-y-1 text-[13px] text-brand-gray">
+      {cycle.orderCloseAt && (
         <div>
-          <span className="mb-1 inline-flex items-center gap-1.5 rounded-full bg-accent-soft px-2 py-0.5 text-label font-bold uppercase tracking-wider text-accent-text">
-            <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-            {t.admin.cycle.openBadge}
-          </span>
-          <span className="mb-1 ml-1.5 inline-flex rounded-full bg-black/[0.05] px-2 py-0.5 text-label font-semibold text-brand-gray">
-            {t.admin.cycle.accessLabel}: {getAccessLabel(cycle.accessLevel)}
-          </span>
-          {cycle.paymentMode === "per_order" && (
-            <span className="mb-1 ml-1.5 inline-flex rounded-full bg-primary-soft px-2 py-0.5 text-label font-semibold text-primary-text">
-              💳 {t.admin.cycle.cardBadge}
-            </span>
-          )}
-          <h3 className="mt-1 text-[15px] font-bold text-brand-near-black">{cycle.title}</h3>
+          {t.admin.cycle.orderCloseAt}:{" "}
+          <span className="font-semibold text-brand-near-black">{formatDeadline(cycle.orderCloseAt)}</span>
         </div>
-        <div className="flex w-full flex-wrap gap-2">
+      )}
+      {cycle.pickupDate && (
+        <div>
+          {cycle.pickup2Date ? t.admin.cycle.pickupFirst : t.admin.cycle.pickupSingle}{" "}
+          <span className="font-semibold text-brand-near-black">
+            {formatPickupSlot(cycle.pickupDate, cycle.pickupEndTime ?? null)}
+          </span>
+        </div>
+      )}
+      {cycle.pickup2Date && (
+        <div>
+          {t.admin.cycle.pickupSecond}{" "}
+          <span className="font-semibold text-brand-near-black">
+            {formatPickupSlot(cycle.pickup2Date, cycle.pickup2EndTime ?? null)}
+          </span>
+        </div>
+      )}
+      {cycle.shippingMode === "proportional" && cycle.shippingTotal && parseFloat(cycle.shippingTotal) > 0 && (
+        <div>
+          {t.admin.cycle.shippingLabel}:{" "}
+          <span className="font-semibold text-brand-near-black">
+            {t.admin.cycle.shippingProportionalDisplay(formatMoney(cycle.shippingTotal))}
+          </span>
+        </div>
+      )}
+      {cycle.shippingMode !== "proportional" &&
+        cycle.shippingCostPerMember &&
+        parseFloat(cycle.shippingCostPerMember) > 0 && (
+          <div>
+            {t.admin.cycle.shippingLabel}:{" "}
+            <span className="font-semibold text-brand-near-black">
+              {t.admin.cycle.shippingPerMemberDisplay(formatMoney(cycle.shippingCostPerMember))}
+            </span>
+          </div>
+        )}
+      <div>
+        {t.admin.cycle.accessLabel}:{" "}
+        <span className="font-semibold text-brand-near-black">{getAccessLabel(cycle.accessLevel)}</span>
+      </div>
+    </div>
+  );
+}
+
+/** Panoramica of an open cycle: how many ordered, the total, what to know before closing. */
+export function OpenCycleOverview({ cycle, stats }: { cycle: SerializedCycle; stats: CycleStats }) {
+  const { perOrderWarning } = closeWarnings(cycle, stats);
+  return (
+    <Card>
+      <CardBody>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="rounded-lg bg-primary-soft px-3 py-2">
+            <div className="text-label text-brand-gray">{t.admin.cycle.ordersCount}</div>
+            <div className="text-[20px] font-bold text-brand-near-black">{stats.orderCount}</div>
+          </div>
+          <div className="rounded-lg bg-accent-soft px-3 py-2">
+            <div className="text-label text-brand-gray">{t.admin.cycle.totalAmount}</div>
+            <div className="text-[20px] font-bold tabular-nums text-brand-near-black">{formatEur(stats.grandTotal)}</div>
+          </div>
+        </div>
+        {perOrderWarning && (
+          <div className="mt-3 rounded-lg border border-primary-mid bg-primary-soft p-3 text-[13px] text-brand-near-black">
+            {perOrderWarning}
+          </div>
+        )}
+        {cycle.isOverdue && (
+          <div className="mt-3 rounded-lg border border-brand-red/30 bg-brand-red-light p-3 text-[13px] text-brand-red">
+            {t.admin.cycle.overdueWarning}
+          </div>
+        )}
+        <div className="mt-3">
+          <CycleFacts cycle={cycle} />
+        </div>
+        <div className="mt-3">
+          <ClosedCycleDetails
+            cycleId={cycle.cycleId}
+            cycleTitle={cycle.title}
+            buttonLabel={t.admin.cycle.recapOrders}
+            editable={false}
+          />
+        </div>
+      </CardBody>
+    </Card>
+  );
+}
+
+/** Prodotti of an open cycle: import a price list, add from the catalogue, edit what is there. */
+export function CycleProductsView({ cycle, suppliers }: { cycle: SerializedCycle; suppliers: Supplier[] }) {
+  const [importing, setImporting] = useState(false);
+  return (
+    <Card>
+      <CardBody>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <p className="max-w-prose text-[13px] text-brand-gray">{t.admin.workspace.productsIntro}</p>
           <button
-            onClick={() => setManagingProducts((v) => !v)}
-            className="rounded-xl border border-accent/30 bg-accent-soft px-3 py-1.5 text-label font-bold text-accent-text"
-          >
-            {managingProducts ? t.admin.cycle.closeProducts : t.admin.cycle.manageProducts}
-          </button>
-          <button
-            onClick={() => setImportingListing(true)}
-            className="rounded-xl border border-primary/30 bg-primary-soft px-3 py-1.5 text-label font-bold text-primary-text"
+            onClick={() => setImporting(true)}
+            className="min-h-10 rounded-xl border border-primary/30 bg-primary-soft px-3 text-[13px] font-bold text-primary-text"
           >
             {t.admin.cycle.importListing}
           </button>
-          <button
-            onClick={() => setEditing((v) => !v)}
-            className="rounded-xl border border-brand-border px-3 py-1.5 text-label font-semibold text-brand-gray"
-          >
-            {editing ? t.admin.common.cancel : t.admin.common.edit}
-          </button>
-          <CycleReviewCloseButton
-            cycleId={cycle.cycleId}
-            cycleTitle={cycle.title}
-            memberCount={stats.orderCount}
-            perOrder={cycle.paymentMode === "per_order"}
-            warning={closeWarning}
-          />
         </div>
-      </CardHeader>
-      {editing ? (
-        <CardBody>
-          <EditCycleForm cycle={cycle} suppliers={suppliers} onClose={() => setEditing(false)} />
-        </CardBody>
-      ) : (
-        <CardBody>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-lg bg-primary-soft px-3 py-2">
-              <div className="font-mono text-label text-brand-gray">{t.admin.cycle.ordersCount}</div>
-              <div className="text-[20px] font-bold text-brand-near-black">{stats.orderCount}</div>
-            </div>
-            <div className="rounded-lg bg-accent-soft px-3 py-2">
-              <div className="font-mono text-label text-brand-gray">{t.admin.cycle.totalAmount}</div>
-              <div className="text-[20px] font-bold text-brand-near-black">
-                {formatEur(stats.grandTotal)}
-              </div>
-            </div>
-          </div>
-          <div className="mt-3 space-y-1 text-[12px] text-brand-gray">
-            {perOrderWarning && (
-              <div className="rounded-lg border border-primary-mid bg-primary-soft p-3 text-brand-near-black">
-                {perOrderWarning}
-              </div>
-            )}
-            {cycle.isOverdue && (
-              <div className="rounded-lg border border-brand-red/30 bg-brand-red-light p-3 text-brand-red">
-                {t.admin.cycle.overdueWarning}
-              </div>
-            )}
-            {cycle.orderCloseAt && (
-              <div>
-                {t.admin.cycle.orderCloseAt}:{" "}
-                <span className="font-semibold text-brand-near-black">
-                  {formatDeadline(cycle.orderCloseAt)}
-                </span>
-              </div>
-            )}
-            {cycle.pickupDate && (
-              <div>
-                {cycle.pickup2Date ? t.admin.cycle.pickupFirst : t.admin.cycle.pickupSingle}{" "}
-                <span className="font-semibold text-brand-near-black">
-                  {formatPickupSlot(cycle.pickupDate, cycle.pickupEndTime ?? null)}
-                </span>
-              </div>
-            )}
-            {cycle.pickup2Date && (
-              <div>
-                {t.admin.cycle.pickupSecond}{" "}
-                <span className="font-semibold text-brand-near-black">
-                  {formatPickupSlot(cycle.pickup2Date, cycle.pickup2EndTime ?? null)}
-                </span>
-              </div>
-            )}
-            {cycle.shippingMode === "proportional" &&
-              cycle.shippingTotal &&
-              parseFloat(cycle.shippingTotal) > 0 && (
-                <div>
-                  {t.admin.cycle.shippingLabel}:{" "}
-                  <span className="font-semibold text-brand-near-black">
-                    {t.admin.cycle.shippingProportionalDisplay(formatMoney(cycle.shippingTotal))}
-                  </span>
-                </div>
-              )}
-            {cycle.shippingMode !== "proportional" &&
-              cycle.shippingCostPerMember &&
-              parseFloat(cycle.shippingCostPerMember) > 0 && (
-                <div>
-                  {t.admin.cycle.shippingLabel}:{" "}
-                  <span className="font-semibold text-brand-near-black">
-                    {t.admin.cycle.shippingPerMemberDisplay(formatMoney(cycle.shippingCostPerMember))}
-                  </span>
-                </div>
-              )}
-          </div>
-          <div className="mt-3">
-            <ClosedCycleDetails
-              cycleId={cycle.cycleId}
-              cycleTitle={cycle.title}
-              buttonLabel={t.admin.cycle.recapOrders}
-              editable={false}
-            />
-          </div>
-          {managingProducts && (
-            <div className="mt-6 border-t border-brand-border pt-4">
-              <CycleProductPicker cycleId={cycle.cycleId} suppliers={suppliers} />
-            </div>
-          )}
-        </CardBody>
-      )}
+        <div className="mt-4 border-t border-brand-border pt-4">
+          <CycleProductPicker cycleId={cycle.cycleId} suppliers={suppliers} />
+        </div>
+      </CardBody>
       <ImportListingWizard
-        open={importingListing}
-        onClose={() => setImportingListing(false)}
+        open={importing}
+        onClose={() => setImporting(false)}
         cycleId={cycle.cycleId}
         cycleTitle={cycle.title}
       />
@@ -771,6 +753,7 @@ export function CreateCycleForm({
   cardSelectable,
   walletFee,
   cardFee,
+  defaultOpen = false,
 }: {
   suppliers: Supplier[];
   /** The group's mode: the default of a new cycle. */
@@ -780,8 +763,10 @@ export function CreateCycleForm({
   /** The fee a new cycle of each mode starts from; null = none. */
   walletFee: { type: "percent" | "fixed"; value: string } | null;
   cardFee: { type: "percent" | "fixed"; value: string } | null;
+  /** Open from the start (the workspace's "+ Nuovo ciclo", or no cycle yet). */
+  defaultOpen?: boolean;
 }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
   const [paymentMode, setPaymentMode] = useState<"wallet" | "per_order">(groupMode);
   const handlingFee = paymentMode === "per_order" ? cardFee : walletFee;
   const [isPending, startTransition] = useTransition();
@@ -1170,40 +1155,41 @@ export function SupplierActionsButton({
 
 // ── Closed Cycle Edit Button ─────────────────────────────────────────────────
 
-// Lightweight wrapper that opens EditCycleForm in a modal for a closed cycle.
-// Reuses the same form to avoid drift; the form itself adapts via the
+// Opens EditCycleForm in a sheet, for an open or a closed cycle. Reuses the
+// same form to avoid drift; on a closed cycle the form adapts via the
 // `isClosed` flag (warning banner + locked fields + ledger recompute).
-export function ClosedCycleEditButton({
+export function EditCycleButton({
   cycle,
   suppliers,
+  className,
 }: {
   cycle: SerializedCycle;
   suppliers: Supplier[];
+  className?: string;
 }) {
   const [open, setOpen] = useState(false);
-  if (!open) {
-    return (
+  const isClosed = cycle.status !== "open";
+  return (
+    <>
       <button
         onClick={() => setOpen(true)}
-        className="rounded-lg bg-primary/10 px-3 py-1 text-label font-bold text-primary-text hover:bg-primary/20"
+        className={
+          className ??
+          "min-h-10 rounded-xl border border-brand-border bg-white px-3 text-[13px] font-semibold text-brand-near-black hover:bg-black/[0.03]"
+        }
       >
-        {t.admin.cycle.editClosedButton}
+        {isClosed ? t.admin.cycle.editClosedButton : t.admin.common.edit}
       </button>
-    );
-  }
-  return (
-    <Sheet
-      open
-      onRequestClose={() => setOpen(false)}
-      title={cycle.title}
-      subtitle={t.admin.cycle.editClosedLabel}
-    >
-      <EditCycleForm
-        cycle={cycle}
-        suppliers={suppliers}
-        onClose={() => setOpen(false)}
-        isClosed
-      />
-    </Sheet>
+      {open && (
+        <Sheet
+          open
+          onRequestClose={() => setOpen(false)}
+          title={cycle.title}
+          subtitle={isClosed ? t.admin.cycle.editClosedLabel : undefined}
+        >
+          <EditCycleForm cycle={cycle} suppliers={suppliers} onClose={() => setOpen(false)} isClosed={isClosed} />
+        </Sheet>
+      )}
+    </>
   );
 }
