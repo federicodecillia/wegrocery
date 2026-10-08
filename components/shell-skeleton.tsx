@@ -6,12 +6,16 @@ export function ShellSkeleton({ width = "member" }: { width?: ShellWidth }) {
   return (
     <div className="min-h-screen bg-brand-frame sm:p-6">
       <div
-        className={`mx-auto flex min-h-screen w-full flex-col bg-brand-warm-white sm:min-h-[calc(100vh-3rem)] sm:overflow-hidden sm:rounded-xl sm:border sm:border-brand-border sm:shadow-sm ${SHELL_WIDTH[width]}`}
+        className={`mx-auto flex min-h-screen w-full flex-col bg-brand-warm-white sm:min-h-[calc(100vh-3rem)] sm:overflow-clip sm:rounded-xl sm:border sm:border-brand-border sm:shadow-sm ${SHELL_WIDTH[width]}`}
       >
         <div className="border-b border-brand-border px-5 py-4">
           <div className="flex items-center justify-between gap-3">
             <div className="h-[26px] w-28 animate-pulse rounded-md bg-black/[0.05]" />
-            <div className="h-8 w-20 animate-pulse rounded-full bg-black/[0.04]" />
+            {/* The bell and the avatar. */}
+            <div className="flex gap-3">
+              <div className="h-8 w-8 animate-pulse rounded-full bg-black/[0.04]" />
+              <div className="h-8 w-8 animate-pulse rounded-full bg-black/[0.05]" />
+            </div>
           </div>
           <div className="mt-3 hidden h-9 w-80 animate-pulse rounded-full bg-black/[0.04] lg:block" />
         </div>
@@ -22,6 +26,9 @@ export function ShellSkeleton({ width = "member" }: { width?: ShellWidth }) {
             <div className="h-[80px] animate-pulse rounded-card bg-black/[0.03]" />
           </div>
         </div>
+        {/* The bottom bar's strip, without items: with no session yet the
+            skeleton cannot know whether there are four or five. */}
+        <div className="sticky bottom-0 h-[calc(var(--spacing-nav-h)+env(safe-area-inset-bottom))] border-t border-brand-border bg-brand-warm-white lg:hidden" />
       </div>
     </div>
   );

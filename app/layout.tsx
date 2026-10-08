@@ -35,6 +35,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  // The safe-area insets (env(safe-area-inset-*)) are only non-zero with "cover".
+  viewportFit: "cover",
   themeColor: resolvePalette(brand.theme).primary,
 };
 

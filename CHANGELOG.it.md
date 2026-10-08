@@ -32,6 +32,8 @@ stanno nella PR.
 - 🧩 **Stesso aspetto per le stesse cose.** Le conferme in Admin (eliminare un socio, archiviare un prodotto, toglierlo da un ciclo...) usano la finestra dell'app al posto di quella del browser, e stati, link per tornare indietro e pulsanti hanno uno stile unico.
 - 📲 **Finestre a misura di telefono.** Tutte le finestre (ordine inviato, dettaglio di un movimento, chiusura dei conti, annullamento di un ciclo, fornitore, unione di soci, importazione del listino) salgono dal basso sul telefono con i pulsanti vicino al pollice, si chiudono con Esc o con la ✕ e chiedono prima di buttare quello che hai scritto.
 - 💰 **Cassa a portata di dito.** Pulsanti più grandi per modificare ed eliminare i movimenti, campi che stanno nello schermo, e ogni campo e pulsante a icona in Admin ha un nome che i lettori di schermo sanno leggere.
+- 📱 **Barra in basso più leggera.** I soci vedono quattro voci (Home, Ordine, Storico, Guida) invece di un "Admin" grigio, campanella, cerchio delle iniziali e "?" si toccano più facilmente, e cambiare pagina non sembra più un ricaricamento.
+- 🔤 **Più facile da leggere.** I prezzi nell'ordine e il testo delle notifiche sono più grandi e nel carattere normale, e il Profilo non mostra più "Utenti" sotto il nome dei soci normali.
 
 ## [1.25.0] — 7 ottobre 2026
 
