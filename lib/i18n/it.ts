@@ -539,6 +539,8 @@ export const it = {
     seeAllNews: "Vedi tutte le novità →",
     groupTitle: "Il nostro gruppo",
     contactEmoji: "📬",
+    contactGroup: "Scrivi al gruppo",
+    contactTech: "Problemi tecnici",
     contactHeading: "Hai altre domande?",
     contactIntro: (appName: string) =>
       `Scrivici o parla con chi gestisce la cassa al ritiro. Per problemi tecnici contatta il team IT di ${appName}.`,

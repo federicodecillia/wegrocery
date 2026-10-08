@@ -10,13 +10,14 @@ type TopNavProps = {
   isAdmin: boolean;
 };
 
-// Desktop navigation (from lg): replaces BottomNav, which is hidden there.
+// Desktop navigation (from lg), in the header row between the logo and the
+// bell: replaces BottomNav, which is hidden there.
 export function TopNav({ isAdmin }: TopNavProps) {
   const pathname = usePathname();
   const router = useRouter();
 
   return (
-    <nav className="mt-3 hidden lg:block">
+    <nav className="hidden min-w-0 flex-1 lg:block">
       <ul className="flex gap-1">
         {visibleNavItems(isAdmin).map((item) => {
           const active = isItemActive(pathname, item);

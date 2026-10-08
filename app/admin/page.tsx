@@ -71,7 +71,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Search
     balanceParam === "negative" || balanceParam === "above_max" ? balanceParam : undefined;
 
   return (
-    <AppShell email={session.user.email} name={session.user.fullName} isAdmin memberId={session.user.memberId!} personId={session.user.personId} width="admin">
+    <AppShell email={session.user.email} name={session.user.fullName} isAdmin memberId={session.user.memberId!} personId={session.user.personId} layout="wide">
       <h1 className="sr-only">{`Admin: ${adminTitle(tabParam, viewParam, filterMemberId, cycleId)}`}</h1>
       <Suspense fallback={null}>
         <AdminNav />

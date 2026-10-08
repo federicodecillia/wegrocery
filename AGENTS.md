@@ -24,11 +24,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 │   ├── login/page.tsx          # Login with Google
 │   └── api/auth/[...all]/      # Better Auth handler, limited to lib/auth/public-endpoints.ts
 ├── components/
-│   ├── app-shell.tsx           # Async layout wrapper: header (logo + bell + Profile avatar, top nav from lg) + bottom nav
+│   ├── app-shell.tsx           # Async layout wrapper: header (logo, top nav from lg, bell, Profile avatar on one row) + bottom nav
 │   ├── bottom-nav.tsx          # Bottom nav (4 items, 5 for admins), hidden from lg
 │   ├── top-nav.tsx             # Same items in the header, from lg
 │   ├── nav-items.ts            # Nav items + isItemActive (icons in nav-icon.tsx)
-│   ├── shell-width.ts          # SHELL_WIDTH: member vs admin card widths
+│   ├── shell-width.ts          # SHELL_WIDTH (one card width) + CONTENT_WIDTH (reading column vs wide)
 │   ├── shell-skeleton.tsx      # Skeleton mirroring AppShell, used by loading.tsx files
 │   ├── notification-bell.tsx   # Bell icon with red unread badge
 │   ├── home/cycle-countdown.tsx
@@ -626,10 +626,10 @@ Key patterns:
 - **Saldo hero card**: primary-soft (positive) or red-light (negative), 70px balance amount
 - **Pill steppers** in order form: zero-state (single + btn) vs has-qty state (−/qty/+)
 - **Installable app (PWA)**: `app/manifest.ts` (public: `proxy.ts` lets `manifest.webmanifest` and `.png` through) lists icons drawn at build time from `brand.logoUrl` by `app/icons/[file]/route.tsx` (sizes in `lib/pwa/icons.ts`; a logo that cannot be loaded becomes a letter, never a failed build). `components/install-prompt.tsx` sits last on Home, phones only (`lib/pwa/install-hint.ts`); no service worker.
-- **Navigation**: items from `nav-items.ts`, filtered by `visibleNavItems` (members 4, admins 5 with Admin). `BottomNav` up to `lg`, `TopNav` (in the header) from `lg`; never both
+- **Navigation**: items from `nav-items.ts`, filtered by `visibleNavItems` (members 4, admins 5 with Admin). `BottomNav` up to `lg`, `TopNav` (in the header row) from `lg`; never both. An item's `also` paths keep it current on pages without an item (Ricarica → Home); the bell and the avatar carry `aria-current` on Notifiche and on Profilo/Famiglia
 - **Notification bell**: in header, red badge with count, links to `/notifiche`
 - **Gestures** (`lib/ui/use-swipe.ts`, Pointer Events, no library): drag down on a `Sheet`'s handle or header closes it on phones (`swipeToClose={false}` on the cycle-close review), a confirm's drag is "Annulla"; off with reduced motion, never from the left edge. `components/app-refresh.tsx` refreshes the page after 5 minutes in the background and shows the offline line; tapping the current bottom-bar item scrolls up and refreshes. Neither ever runs on `/ordine` (`lib/ui/refresh.ts`)
-- Shell `max-w-[480px]`, `md:max-w-[640px]`, centered; `bg-brand-frame` frames the app. Only Admin (`<AppShell width="admin">`) adds `lg:max-w-[960px]`. Widths live in `shell-width.ts`; a route with a non-default width needs its own `loading.tsx` (see `app/admin/loading.tsx`)
+- Shell `max-w-[480px]`, `md:max-w-[640px]`, `lg:max-w-[960px]` on every page, centered; `bg-brand-frame` frames the app, and the card never resizes between pages. Inside it, `<AppShell layout="reading">` (the default) keeps a 600 px column from lg (Guida, Profilo, Notifiche, Changelog, Ricarica); `layout="wide"` uses the whole card (Home's two columns, Admin). Widths live in `shell-width.ts`, mirrored by `ShellSkeleton`
 - Member pages: reading text is 14px, prices and notification bodies included (sans, `tabular-nums`); mono stays for small labels and totals
 - Small header controls (bell, avatar, "?") keep their look and get a 44 px touch area with the `hit-44` utility
 - The header holds the bell and the Profile avatar (initials, `lib/profile/summary.ts`); the email, sign-out and personal settings are on `/profilo`, whose rows hide what the deploy has not switched on

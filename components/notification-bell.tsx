@@ -1,4 +1,8 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { isNotificationsPath } from "@/components/nav-items";
 import { t } from "@/lib/i18n";
 
 type NotificationBellProps = {
@@ -6,10 +10,14 @@ type NotificationBellProps = {
 };
 
 export function NotificationBell({ unreadCount }: NotificationBellProps) {
+  const current = isNotificationsPath(usePathname());
   return (
     <Link
       href="/notifiche"
-      className="hit-44 flex h-8 w-8 items-center justify-center rounded-full text-brand-gray transition-colors hover:text-brand-near-black"
+      aria-current={current ? "page" : undefined}
+      className={`hit-44 flex h-8 w-8 items-center justify-center rounded-full transition-colors ${
+        current ? "bg-primary-soft text-primary-text" : "text-brand-gray hover:text-brand-near-black"
+      }`}
       aria-label={unreadCount > 0 ? t.notifications.unreadCountLabel(unreadCount) : t.notifications.title}
     >
       <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">

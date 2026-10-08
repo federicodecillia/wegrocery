@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { isItemActive, navItems, visibleNavItems } from "./nav-items";
+import { isItemActive, isNotificationsPath, isProfilePath, navItems, visibleNavItems } from "./nav-items";
 
 const item = (href: string) => navItems.find((i) => i.href === href)!;
 
@@ -27,5 +27,18 @@ describe("nav items", () => {
   it("members see four items, admins five", () => {
     expect(visibleNavItems(false).map((i) => i.href)).toEqual(["/", "/ordine", "/storico", "/guida"]);
     expect(visibleNavItems(true)).toHaveLength(5);
+  });
+
+  it("Ricarica keeps Home current", () => {
+    expect(isItemActive("/ricarica", item("/"))).toBe(true);
+    expect(isItemActive("/ricarica", item("/ordine"))).toBe(false);
+  });
+
+  it("the bell and the avatar mark their pages", () => {
+    expect(isNotificationsPath("/notifiche")).toBe(true);
+    expect(isNotificationsPath("/profilo/notifiche")).toBe(false);
+    expect(isProfilePath("/profilo/notifiche")).toBe(true);
+    expect(isProfilePath("/famiglia")).toBe(true);
+    expect(isProfilePath("/profilone")).toBe(false);
   });
 });
