@@ -105,7 +105,8 @@ export default async function OrdinePage({
               : null;
 
   return (
-    <AppShell email={session.user.email} name={session.user.fullName} isAdmin={role === "admin"} memberId={memberId} personId={session.user.personId}>
+    // Wide: from lg the form puts the cart beside the catalogue.
+    <AppShell email={session.user.email} name={session.user.fullName} isAdmin={role === "admin"} memberId={memberId} personId={session.user.personId} layout="wide">
       {notice && (
         <div
           className={`mb-4 rounded-[14px] border p-[12px_14px] text-[14px] ${

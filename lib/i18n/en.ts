@@ -205,6 +205,8 @@ export const en: Strings = {
     searchLabel: "Search a product by name",
     noResults: "No product found.",
     cartEmpty: "The cart is empty.",
+    cartTitle: "Your cart",
+    cartPanelEmpty: "Pick products from the catalogue: they show up here, with the total.",
     inCart: (n: number) => `In the cart (${n})`,
     total: "Total",
     details: "Details",

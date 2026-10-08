@@ -26,8 +26,7 @@ export default async function StoricoPage() {
   const balance = await getWalletBalance(getDb(), memberId, member?.paysOffline ?? false);
 
   return (
-    <AppShell email={session.user.email} name={session.user.fullName} isAdmin={role === "admin"} memberId={memberId} personId={session.user.personId}>
-      <h1 className="sr-only">{t.nav.history}</h1>
+    <AppShell email={session.user.email} name={session.user.fullName} isAdmin={role === "admin"} memberId={memberId} personId={session.user.personId} layout="wide">
       <StoricoTabs
         orderHistory={orderHistory}
         movements={movements.map((e) => ({

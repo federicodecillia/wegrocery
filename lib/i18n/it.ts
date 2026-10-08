@@ -205,6 +205,8 @@ export const it = {
     searchLabel: "Cerca un prodotto per nome",
     noResults: "Nessun prodotto trovato.",
     cartEmpty: "Il carrello è vuoto.",
+    cartTitle: "Il tuo carrello",
+    cartPanelEmpty: "Scegli i prodotti dal catalogo: li trovi qui, con il totale.",
     inCart: (n: number) => `Nel carrello (${n})`,
     total: "Totale",
     details: "Dettagli",

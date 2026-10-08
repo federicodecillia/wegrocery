@@ -499,8 +499,25 @@ export function OrderForm({
   // A column for the emoji only when some product has one.
   const anyEmoji = products.some((p) => memberProductEmoji(p.emoji, p.name) !== null);
 
+  // From lg, editing puts the catalogue on the left and the cart (chosen
+  // lines, totals, Confirm) on the right; the recap of a confirmed order
+  // stays a reading column.
+  const sideCart = isEditing && products.length > 0;
+  const totalsProps = {
+    orderTotal,
+    payAmount,
+    afterBalance,
+    walletFeeCents,
+    hasOrder,
+    isPending,
+    error: saveError?.key === draftKey ? saveError.message : null,
+    onConfirm: handleSave,
+  };
+
   return (
     <>
+      <div className={sideCart ? "lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start lg:gap-6" : "lg:mx-auto lg:max-w-[600px]"}>
+      <div className="min-w-0">
       {/* Cycle header */}
       <div className="mb-1">
         <div className="flex items-center justify-between">
@@ -759,19 +776,54 @@ export function OrderForm({
           })}
         </section>
       ))}
+      </div>
 
-      {isEditing && (hasOrder || hasSavedOrder) && (
-        <OrderTotals
-          orderTotal={orderTotal}
-          payAmount={payAmount}
-          afterBalance={afterBalance}
-          walletFeeCents={walletFeeCents}
-          hasOrder={hasOrder}
-          isPending={isPending}
-          error={saveError?.key === draftKey ? saveError.message : null}
-          onConfirm={handleSave}
-        />
+      {sideCart && (
+        <aside aria-labelledby="cart-title" className="hidden lg:sticky lg:top-4 lg:block">
+          <div className="rounded-card border border-brand-border bg-white p-4 shadow-card">
+            <h2 id="cart-title" className="text-[15px] font-bold text-brand-near-black">
+              {t.order.cartTitle}
+              {cartIds.size > 0 && <span className="ml-1.5 font-normal text-brand-gray">({cartIds.size})</span>}
+            </h2>
+            {cartIds.size === 0 ? (
+              <p className="mt-2 text-[13px] leading-[1.45] text-brand-gray">{t.order.cartPanelEmpty}</p>
+            ) : (
+              <ul className="mt-2 max-h-[45vh] divide-y divide-brand-border overflow-y-auto">
+                {products
+                  .filter((p) => (draft[p.productId] ?? 0) > 0)
+                  .map((p) => {
+                    const qty = draft[p.productId];
+                    return (
+                      <li key={p.productId} className="flex items-center gap-2 py-2">
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-[13px] font-medium text-brand-near-black">{p.name}</span>
+                          <span className="block text-label tabular-nums text-brand-gray">
+                            {qty} × {formatEur(parseFloat(p.unitPrice))}
+                          </span>
+                        </span>
+                        <span className="shrink-0 text-[13px] font-semibold tabular-nums text-brand-near-black">
+                          {formatEur(parseFloat(p.unitPrice) * qty)}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => changeQty(p.productId, -1)}
+                          aria-label={t.order.lessNamed(p.name)}
+                          className="pressable flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-black/[0.06] text-[16px] text-brand-gray hover:bg-black/[0.1]"
+                        >
+                          −
+                        </button>
+                      </li>
+                    );
+                  })}
+              </ul>
+            )}
+            {(hasOrder || hasSavedOrder) && <OrderTotals {...totalsProps} variant="panel" />}
+          </div>
+        </aside>
       )}
+      </div>
+
+      {isEditing && (hasOrder || hasSavedOrder) && <OrderTotals {...totalsProps} />}
 
       <OrderSentDialog
         open={sent !== null}
