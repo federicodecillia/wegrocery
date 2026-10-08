@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { UiIcon, topicIcon } from "@/components/ui-icon";
 import { brand } from "@/lib/brand";
 import { t } from "@/lib/i18n";
 import { AppShell } from "@/components/app-shell";
@@ -66,8 +67,8 @@ export default async function GuidaPage() {
                   href={`/guida/${topic.id}`}
                   className="flex h-full gap-3 rounded-card border border-brand-border bg-white p-4 shadow-card transition-colors hover:border-primary-mid"
                 >
-                  <span aria-hidden className="text-[24px] leading-none">
-                    {topic.emoji}
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary-text">
+                    <UiIcon name={topicIcon(topic.id)} />
                   </span>
                   <span className="min-w-0">
                     <span className="block text-[15px] font-bold text-brand-near-black">{topic.title}</span>

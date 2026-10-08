@@ -1,5 +1,6 @@
 "use client";
 
+import { EmptyIcon } from "@/components/ui-icon";
 import { Badge } from "@/components/ui/badge";
 import { buttonClass } from "@/components/ui/button";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
@@ -542,7 +543,7 @@ export function OrderForm({
 
       {/* Unconfirmed edits found on arrival (order_drafts). */}
       {isEditing && showDraftBanner && (
-        <div className="mt-3 rounded-[14px] border border-primary-mid bg-primary-soft p-[12px_14px]">
+        <div className="mt-3 rounded-card border border-primary-mid bg-primary-soft p-[12px_14px]">
           <p className="text-[14px] font-bold text-brand-near-black">{t.order.draftBannerTitle}</p>
           <p className="mt-1 text-[12px] leading-[1.45] text-brand-near-black">{t.order.draftBannerBody}</p>
           {resumedDraft !== null && resumedDraft.dropped > 0 && (
@@ -568,7 +569,7 @@ export function OrderForm({
           products yet. Same visual as page.tsx's no-open-cycle empty state. */}
       {products.length === 0 && (
         <div className="flex flex-col items-center justify-center py-16 text-center">
-          <span className="mb-4 text-4xl">📦</span>
+          <EmptyIcon name="box" />
           <h2 className="text-[18px] font-bold text-brand-near-black">{t.order.emptyCatalog}</h2>
           <p className="mt-2 text-[14px] text-brand-gray">{t.order.emptyCatalogHint}</p>
         </div>

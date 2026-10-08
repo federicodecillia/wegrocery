@@ -55,6 +55,13 @@ describe("design guard", () => {
     expect(hits(/#(a07020|f5a623|f9c8c8)/i)).toEqual([]);
   });
 
+  it("keeps member pages on the radius scale and off hard-coded colours", () => {
+    // Admin keeps its own until it is migrated; member pages use rounded-card,
+    // rounded-xl, rounded-lg or rounded-full, and colours from tokens.
+    const member = hits(/rounded-\[\d+px\]|(bg|text|border)-\[#[0-9a-f]{3,8}\]/i).filter((h) => !h.includes("admin"));
+    expect(member).toEqual([]);
+  });
+
   it("keeps the fixed colours AA with white text", () => {
     const css = readFileSync("app/globals.css", "utf8");
     for (const name of ["red", "warning", "near-blk"]) {

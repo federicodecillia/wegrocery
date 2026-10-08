@@ -371,7 +371,7 @@ export const it = {
   },
   notifications: {
     title: "Notifiche",
-    markAllRead: "Segna tutte ✓",
+    markAllRead: "Segna tutte come lette",
     noNotifications: "Nessuna notifica",
     noNotificationsHint: "Ti avviseremo quando ci sono novità sull'ordine o sul saldo.",
     today: "Oggi",
@@ -540,7 +540,6 @@ export const it = {
     newsSubtitle: "Cosa è cambiato",
     seeAllNews: "Vedi tutte le novità →",
     groupTitle: "Il nostro gruppo",
-    contactEmoji: "📬",
     contactGroup: "Scrivi al gruppo",
     contactTech: "Problemi tecnici",
     contactHeading: "Hai altre domande?",
@@ -1626,12 +1625,12 @@ export const it = {
     orderLineAdjustedNoteReceived: (product: string, ordered: string, received: string) =>
       `${product}: ${ordered} ordinati, ${received} ricevuti`,
     orderLineAdjustedNoteCost: (product: string, cost: string) =>
-      `${product}: costo aggiornato a ${cost} EUR`,
+      `${product}: costo aggiornato a ${cost}`,
     orderLineAdjustedNoteReverted: (product: string) => `${product}: rettifica annullata`,
     orderLineAdjustedBodyRefund: (notes: string, amount: string) =>
-      `${notes} · rimborso di ${amount} EUR sul tuo saldo.`,
+      `${notes} · rimborso di ${amount} sul tuo saldo.`,
     orderLineAdjustedBodyCharge: (notes: string, amount: string) =>
-      `${notes} · addebito aggiuntivo di ${amount} EUR sul tuo saldo.`,
+      `${notes} · addebito aggiuntivo di ${amount} sul tuo saldo.`,
     payoutSentTitle: "Saldo restituito",
     payoutSentBody: (amount: string, reason: string, balance: string) =>
       `Ti abbiamo restituito ${amount} del tuo saldo: ${reason}. Nuovo saldo: ${balance}.`,

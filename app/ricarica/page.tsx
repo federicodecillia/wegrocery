@@ -2,6 +2,7 @@ import { and, eq } from "drizzle-orm";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { BalanceDueCard } from "@/components/balance/balance-due-card";
+import { BalanceSummary } from "@/components/balance/balance-summary";
 import { CopyField } from "@/components/ricarica/copy-field";
 import { PendingRefresh } from "@/components/ricarica/pending-refresh";
 import { TopupForm } from "@/components/ricarica/topup-form";
@@ -87,7 +88,7 @@ export default async function RicaricaPage({
           <HelpLink href="/guida/soldi#da-saldare" />
         </div>
         {result && (
-          <div className={`mb-4 rounded-[14px] border p-[12px_14px] text-[14px] ${TONE_CLASSES[result.tone]}`}>
+          <div className={`mb-4 rounded-card border p-[12px_14px] text-[14px] ${TONE_CLASSES[result.tone]}`}>
             {result.text}
             {result.pending && <PendingRefresh />}
           </div>
@@ -123,32 +124,13 @@ export default async function RicaricaPage({
       </div>
 
       {result && (
-        <div className={`mb-4 rounded-[14px] border p-[12px_14px] text-[14px] ${TONE_CLASSES[result.tone]}`}>
+        <div className={`mb-4 rounded-card border p-[12px_14px] text-[14px] ${TONE_CLASSES[result.tone]}`}>
           {result.text}
           {result.pending && <PendingRefresh />}
         </div>
       )}
 
-      <div
-        className={`mb-4 rounded-[16px] border p-4 ${
-          balance < 0 ? "border-brand-red/30 bg-brand-red-light" : "border-primary-mid bg-primary-soft"
-        }`}
-      >
-        <div
-          className={`mb-[6px] font-mono text-label uppercase tracking-[0.10em] ${
-            balance < 0 ? "text-brand-red" : "text-primary-text"
-          }`}
-        >
-          {t.topup.currentBalance}
-        </div>
-        <span
-          className={`text-[36px] font-black tracking-[-0.04em] ${
-            balance < 0 ? "text-brand-red" : "text-brand-near-black"
-          }`}
-        >
-          {formatMoney(Math.abs(balance))}
-        </span>
-      </div>
+      <BalanceSummary label={t.topup.currentBalance} balance={balance} />
 
       {online && (
         <section className="mb-4 rounded-card border border-brand-border bg-white p-[18px] shadow-card">

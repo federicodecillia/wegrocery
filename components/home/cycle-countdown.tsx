@@ -76,7 +76,7 @@ export function CycleCountdown({ cycleId, title, orderCloseAt, orderOpenAt, pick
               { num: hrs, unit: t.cycle.hours },
               { num: mins, unit: t.cycle.minutes },
             ].map(({ num, unit }) => (
-              <div key={unit} className="min-w-[62px] rounded-[10px] bg-black/[0.06] px-[14px] py-[9px] text-center">
+              <div key={unit} className="min-w-[62px] rounded-lg bg-black/[0.06] px-[14px] py-[9px] text-center">
                 <div className="font-mono text-[22px] font-semibold leading-none text-brand-near-black">{num}</div>
                 <div className="mt-[3px] font-mono text-label uppercase tracking-[0.08em] text-muted">{unit}</div>
               </div>

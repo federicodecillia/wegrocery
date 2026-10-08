@@ -28,7 +28,7 @@ export function WelcomeResume() {
   }
 
   return (
-    <div className="mb-4 flex items-center justify-between gap-3 rounded-[14px] border border-primary-mid bg-primary-soft px-4 py-[10px]">
+    <div className="mb-4 flex items-center justify-between gap-3 rounded-card border border-primary-mid bg-primary-soft px-4 py-[10px]">
       <span className="text-[13px] font-semibold text-brand-near-black">
         <span aria-hidden>👋 </span>
         {t.welcome.resume}

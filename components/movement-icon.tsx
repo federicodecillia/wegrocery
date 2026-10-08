@@ -143,7 +143,7 @@ const PATHS: Record<MovementKind, ReactNode> = {
 export function MovementIcon({ kind, incoming }: { kind: MovementKind; incoming: boolean }) {
   return (
     <div
-      className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[10px] ${
+      className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg ${
         incoming ? "bg-accent-soft text-accent-text" : "bg-primary-soft text-primary-text"
       }`}
     >
