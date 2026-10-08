@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
-import * as Dialog from "@radix-ui/react-dialog";
+import { Sheet, SheetActions } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/toast";
 import { confirm } from "@/components/ui/confirm-dialog";
 import { formatEur, getProductEmoji } from "@/lib/utils";
@@ -175,129 +176,96 @@ function CycleReviewModal({
       : t.admin.cycleReview.confirmCharge(memberCount);
 
   return (
-    <Dialog.Root open onOpenChange={(next) => !next && requestClose()}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/40" />
-        <Dialog.Content
-          aria-describedby={undefined}
-          className="fixed inset-x-0 bottom-0 z-50 mx-auto flex max-h-[92dvh] w-full max-w-[640px] flex-col overflow-hidden rounded-t-2xl bg-brand-warm-white shadow-2xl sm:inset-y-0 sm:my-auto sm:h-fit sm:max-h-[88dvh] sm:rounded-2xl"
-          // Esc and a tap outside go through the same "discard?" check.
-          onEscapeKeyDown={(e) => {
-            e.preventDefault();
-            void requestClose();
-          }}
-          onPointerDownOutside={(e) => {
-            e.preventDefault();
-            void requestClose();
-          }}
-        >
-          <header className="flex items-start justify-between gap-3 border-b border-brand-border px-5 py-4">
-            <div className="min-w-0">
-              <Dialog.Title className="text-[16px] font-bold text-brand-near-black">
-                {t.admin.cycleReview.modalTitle}
-              </Dialog.Title>
-              <p className="mt-0.5 text-[13px] text-brand-gray">{cycleTitle}</p>
-            </div>
-            <button
-              onClick={() => void requestClose()}
-              aria-label={t.admin.common.close}
-              className="-mr-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-brand-gray hover:bg-black/5"
-            >
-              <span aria-hidden>✕</span>
-            </button>
-          </header>
-
-          <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
-            <p className="text-[14px] text-brand-near-black">{t.admin.cycleReview.summary(memberCount)}</p>
-            {warning && (
-              <div className="whitespace-pre-line rounded-lg border border-primary-mid bg-primary-soft p-3 text-[13px] text-brand-near-black">
-                {warning}
-              </div>
-            )}
-
-            {loading ? (
-              <div className="py-10 text-center text-[13px] text-brand-gray">{t.admin.cycleReview.loadingProducts}</div>
-            ) : loadFailed || !rows ? (
-              <div role="alert" className="rounded-lg border border-brand-red/30 bg-brand-red-light p-3 text-[13px] text-brand-red">
-                {t.admin.cycleReview.loadFailed}
-              </div>
-            ) : rows.length === 0 ? (
-              <div className="py-10 text-center text-[13px] text-brand-gray">{t.admin.cycleReview.noProducts}</div>
-            ) : (
-              <>
-                <div className="flex items-center justify-between gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setAdjusting((v) => !v)}
-                    aria-expanded={adjusting}
-                    className="min-h-11 rounded-xl border border-brand-border bg-white px-4 text-[13px] font-semibold text-brand-near-black"
-                  >
-                    {adjusting ? t.admin.cycleReview.adjustToggleHide : t.admin.cycleReview.adjustToggle}
-                  </button>
+    <Sheet
+      open
+      onRequestClose={() => void requestClose()}
+      title={t.admin.cycleReview.modalTitle}
+      subtitle={cycleTitle}
+      footer={
+        <>
+          {rows && rows.length > 0 && (
+            <div className="mb-3 flex items-end justify-between">
+              <div>
+                <div className="font-mono text-label uppercase tracking-wide text-muted">
+                  {t.admin.cycleReview.ordersTotalLabel}
                 </div>
-                {adjusting && (
-                  <p className="text-[13px] text-brand-gray">
-                    {t.admin.cycleReview.adjustDescription}
-                    {perOrder && <> {t.admin.cycleReview.perOrderAdjustNote}</>}
-                  </p>
-                )}
-                <ul className="space-y-1">
-                  {rows.map((r) => (
-                    <ReviewRow
-                      key={r.productId}
-                      row={r}
-                      adjusting={adjusting}
-                      value={edits[r.productId] ?? ""}
-                      onChange={(v) => setEdits((prev) => ({ ...prev, [r.productId]: v }))}
-                    />
-                  ))}
-                </ul>
-              </>
-            )}
-          </div>
-
-          <footer className="border-t border-brand-border bg-white px-5 pt-3.5 pb-[calc(0.875rem+env(safe-area-inset-bottom))]">
-            {rows && rows.length > 0 && (
-              <div className="mb-3 flex items-end justify-between">
-                <div>
+                <div className="font-mono text-[15px] font-bold text-brand-near-black">{formatEur(newGrandTotal)}</div>
+              </div>
+              {Math.abs(totalDelta) > 0.005 && (
+                <div className="text-right">
                   <div className="font-mono text-label uppercase tracking-wide text-muted">
-                    {t.admin.cycleReview.ordersTotalLabel}
+                    {t.admin.cycleReview.variationLabel}
                   </div>
-                  <div className="font-mono text-[15px] font-bold text-brand-near-black">{formatEur(newGrandTotal)}</div>
+                  <div
+                    className={`font-mono text-[14px] font-bold ${totalDelta >= 0 ? "text-primary-text" : "text-accent-text"}`}
+                  >
+                    {signedMoney(totalDelta)}
+                  </div>
                 </div>
-                {Math.abs(totalDelta) > 0.005 && (
-                  <div className="text-right">
-                    <div className="font-mono text-label uppercase tracking-wide text-muted">
-                      {t.admin.cycleReview.variationLabel}
-                    </div>
-                    <div
-                      className={`font-mono text-[14px] font-bold ${totalDelta >= 0 ? "text-primary-text" : "text-accent-text"}`}
-                    >
-                      {signedMoney(totalDelta)}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-            <div className="flex flex-col-reverse gap-2 sm:flex-row">
+              )}
+            </div>
+          )}
+          <SheetActions>
+            <Button variant="outline" className="flex-1" onClick={() => void requestClose()}>
+              {t.admin.common.cancel}
+            </Button>
+            <Button variant="brand" className="flex-[2]" onClick={handleConfirm} disabled={isPending || loading}>
+              {confirmLabel}
+            </Button>
+          </SheetActions>
+        </>
+      }
+    >
+      <div className="space-y-3">
+        <p className="text-[14px] text-brand-near-black">{t.admin.cycleReview.summary(memberCount)}</p>
+        {warning && (
+          <div className="whitespace-pre-line rounded-lg border border-primary-mid bg-primary-soft p-3 text-[13px] text-brand-near-black">
+            {warning}
+          </div>
+        )}
+
+        {loading ? (
+          <div className="py-10 text-center text-[13px] text-brand-gray">{t.admin.cycleReview.loadingProducts}</div>
+        ) : loadFailed || !rows ? (
+          <div role="alert" className="rounded-lg border border-brand-red/30 bg-brand-red-light p-3 text-[13px] text-brand-red">
+            {t.admin.cycleReview.loadFailed}
+          </div>
+        ) : rows.length === 0 ? (
+          <div className="py-10 text-center text-[13px] text-brand-gray">{t.admin.cycleReview.noProducts}</div>
+        ) : (
+          <>
+            <div className="flex items-center justify-between gap-3">
               <button
-                onClick={() => void requestClose()}
-                className="min-h-12 flex-1 rounded-xl border border-brand-border bg-white px-4 text-[14px] font-semibold text-brand-gray"
+                type="button"
+                onClick={() => setAdjusting((v) => !v)}
+                aria-expanded={adjusting}
+                className="min-h-11 rounded-xl border border-brand-border bg-white px-4 text-[13px] font-semibold text-brand-near-black"
               >
-                {t.admin.common.cancel}
-              </button>
-              <button
-                onClick={handleConfirm}
-                disabled={isPending || loading}
-                className="min-h-12 flex-[2] rounded-xl bg-primary px-4 text-[14px] font-bold text-on-primary disabled:opacity-60"
-              >
-                {confirmLabel}
+                {adjusting ? t.admin.cycleReview.adjustToggleHide : t.admin.cycleReview.adjustToggle}
               </button>
             </div>
-          </footer>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+            {adjusting && (
+              <p className="text-[13px] text-brand-gray">
+                {t.admin.cycleReview.adjustDescription}
+                {perOrder && <> {t.admin.cycleReview.perOrderAdjustNote}</>}
+              </p>
+            )}
+            <ul className="space-y-1">
+              {rows.map((r) => (
+                <ReviewRow
+                  key={r.productId}
+                  row={r}
+                  adjusting={adjusting}
+                  value={edits[r.productId] ?? ""}
+                  onChange={(v) => setEdits((prev) => ({ ...prev, [r.productId]: v }))}
+                />
+              ))}
+            </ul>
+          </>
+        )}
+      </div>
+
+    </Sheet>
   );
 }
 

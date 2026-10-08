@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { BackLink } from "@/components/ui/back-link";
 import { AppShell } from "@/components/app-shell";
 import { FamilyPanel } from "@/components/family-panel";
 import { getUserRole, requireUserSession } from "@/lib/auth/session";
@@ -32,15 +32,10 @@ export default async function FamilyPage() {
   return (
     <AppShell email={session.user.email} name={session.user.fullName} isAdmin={role === "admin"} memberId={memberId} personId={personId}>
       <div className="mb-4">
-        <Link
-          href="/profilo"
-          className="font-mono text-label font-bold uppercase tracking-widest text-brand-gray"
-        >
-          ← {t.profile.title}
-        </Link>
+        <BackLink href="/profilo">{t.profile.title}</BackLink>
       </div>
       <div className="mb-1 flex items-center gap-2">
-        <h1 className="text-[20px] font-black tracking-[-0.03em] text-brand-near-black">{t.family.title}</h1>
+        <h1 className="text-title font-black text-brand-near-black">{t.family.title}</h1>
         {/* The guide's Family topic exists only while families are on. */}
         {settings.familiesEnabled && <HelpLink href="/guida/famiglia" />}
       </div>

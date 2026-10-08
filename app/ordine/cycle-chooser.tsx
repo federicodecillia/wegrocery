@@ -17,7 +17,7 @@ type Props = {
 export function CycleChooser({ cycles }: Props) {
   return (
     <>
-      <h1 className="text-[20px] font-black tracking-[-0.03em] text-brand-near-black">
+      <h1 className="text-title font-black text-brand-near-black">
         {t.order.chooseCycle}
       </h1>
       <p className="mt-[3px] text-[14px] text-brand-gray">{t.order.chooseCycleHint}</p>
@@ -26,7 +26,7 @@ export function CycleChooser({ cycles }: Props) {
           <Link
             key={c.cycleId}
             href={`/ordine?cycleId=${c.cycleId}`}
-            className="flex items-center justify-between gap-3 rounded-[18px] border border-brand-border bg-white p-[18px] shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
+            className="flex items-center justify-between gap-3 rounded-card border border-brand-border bg-white p-[18px] shadow-card"
           >
             <div className="min-w-0">
               <div className="text-[15px] font-bold tracking-[-0.01em] text-brand-near-black">

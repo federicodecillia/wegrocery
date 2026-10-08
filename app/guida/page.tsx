@@ -43,7 +43,7 @@ export default async function GuidaPage() {
 
   return (
     <AppShell email={session.user.email} name={session.user.fullName} isAdmin={role === "admin"} memberId={session.user.memberId!} personId={session.user.personId}>
-      <h1 className="mb-1 text-[20px] font-black tracking-[-0.03em] text-brand-near-black">
+      <h1 className="mb-1 text-title font-black text-brand-near-black">
         {t.guide.title}
       </h1>
       <p className="mb-5 text-[14px] leading-snug text-brand-gray">{t.guide.intro}</p>
@@ -64,7 +64,7 @@ export default async function GuidaPage() {
               <li key={topic.id}>
                 <Link
                   href={`/guida/${topic.id}`}
-                  className="flex h-full gap-3 rounded-[18px] border border-brand-border bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-colors hover:border-primary-mid"
+                  className="flex h-full gap-3 rounded-card border border-brand-border bg-white p-4 shadow-card transition-colors hover:border-primary-mid"
                 >
                   <span aria-hidden className="text-[24px] leading-none">
                     {topic.emoji}
@@ -87,7 +87,7 @@ export default async function GuidaPage() {
 
         {/* Novità: teaser of the latest release, linking the changelog */}
         {latest && (
-          <section className="mb-6 overflow-hidden rounded-[18px] border border-primary-mid bg-primary-soft">
+          <section className="mb-6 overflow-hidden rounded-card border border-primary-mid bg-primary-soft">
             <div className="flex items-baseline justify-between gap-2 border-b border-primary-mid/40 px-[18px] py-3">
               <div>
                 <div className="font-mono text-label uppercase tracking-[0.13em] text-primary-text">

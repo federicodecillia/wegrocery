@@ -45,7 +45,7 @@ export function OrderSummary({
 }: Props) {
   return (
     <>
-      <div className="mt-4 overflow-hidden rounded-[18px] border border-accent/25 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+      <div className="mt-4 overflow-hidden rounded-card border border-accent/25 bg-white shadow-card">
         <header className="flex items-center gap-3 border-b border-brand-border bg-accent-soft px-4 py-3.5">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent text-on-accent">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -92,7 +92,7 @@ export function OrderSummary({
               <div className="font-mono text-label uppercase tracking-[0.09em] text-muted">
                 {t.order.totalOrder}
               </div>
-              <div className="mt-[2px] text-[20px] font-black tracking-[-0.03em] text-brand-near-black">
+              <div className="mt-[2px] text-title font-black text-brand-near-black">
                 {formatEur(payment ? payment.amount.requiredCents / 100 : total)}
               </div>
             </div>

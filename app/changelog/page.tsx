@@ -36,7 +36,7 @@ export default async function ChangelogPage({
     >
       <div className="mb-4 flex items-start justify-between gap-3">
         <div>
-          <h1 className="text-[20px] font-black tracking-[-0.03em] text-brand-near-black">
+          <h1 className="text-title font-black text-brand-near-black">
             {t.title}
           </h1>
           <p className="mt-1 text-[14px] text-brand-gray">{t.subtitle}</p>
@@ -73,7 +73,7 @@ function VersionBlock({
   const t = strings[lang];
 
   return (
-    <article className="overflow-hidden rounded-[18px] border border-brand-border bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+    <article className="overflow-hidden rounded-card border border-brand-border bg-white shadow-card">
       <header className="border-b border-brand-border bg-brand-warm-white px-4 py-3">
         <div className="flex items-baseline justify-between gap-2">
           <h2 className="text-[15px] font-black tracking-[-0.01em] text-brand-near-black">

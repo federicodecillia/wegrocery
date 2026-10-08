@@ -242,7 +242,7 @@ export function ImportListingWizard({ open, onClose, cycleId, cycleTitle }: Prop
             )}
             {step < 3 && (
               <Button
-                variant="primary"
+                variant="neutral"
                 disabled={
                   pending ||
                   (step === 1 && (!inspection || !supplierResolved)) ||
@@ -255,7 +255,7 @@ export function ImportListingWizard({ open, onClose, cycleId, cycleTitle }: Prop
             )}
             {step === 3 && (
               <Button
-                variant="primary"
+                variant="neutral"
                 disabled={pending || selectedIndexes.size === 0 || !supplierResolved}
                 onClick={handleApply}
               >

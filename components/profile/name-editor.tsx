@@ -68,7 +68,7 @@ export function NameEditor({ name }: { name: string }) {
         className="mt-2 w-full rounded-[12px] border border-brand-border bg-white px-3 py-2 text-[14px] text-brand-near-black focus:border-primary"
       />
       <div className="mt-3 flex gap-2">
-        <Button type="submit" variant="orange" size="sm" disabled={isPending || value.trim().length === 0}>
+        <Button type="submit" variant="brand" size="sm" disabled={isPending || value.trim().length === 0}>
           {t.common.save}
         </Button>
         <Button type="button" variant="outline" size="sm" disabled={isPending} onClick={() => setEditing(false)}>

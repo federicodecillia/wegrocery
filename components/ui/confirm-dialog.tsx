@@ -82,7 +82,7 @@ export function ConfirmDialogProvider() {
               {request?.cancelLabel ?? t.common.cancel}
             </Button>
             <Button
-              variant={request?.danger ? "red" : "primary"}
+              variant={request?.danger ? "danger" : "neutral"}
               block
               onClick={() => close(true)}
               autoFocus={request?.danger !== true}

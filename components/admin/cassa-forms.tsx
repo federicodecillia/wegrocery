@@ -1,5 +1,6 @@
 "use client";
 
+import { confirm } from "@/components/ui/confirm-dialog";
 import { useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "@/components/ui/toast";
@@ -206,8 +207,8 @@ export function LedgerEntryRow({ entry }: { entry: LedgerEntry }) {
     });
   }
 
-  function handleDelete() {
-    if (!window.confirm(t.admin.treasury.deleteConfirm)) return;
+  async function handleDelete() {
+    if (!(await confirm({ title: t.admin.treasury.deleteConfirm, danger: true }))) return;
     startTransition(async () => {
       const result = await adminDeleteLedgerEntry(entry.entryId);
       if (result.error) {

@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { BackLink } from "@/components/ui/back-link";
 import { AppShell } from "@/components/app-shell";
 import { NotificationPreferencesForm } from "@/components/notification-preferences-form";
 import { t } from "@/lib/i18n";
@@ -21,15 +21,10 @@ export default async function NotificationSettingsPage() {
   return (
     <AppShell email={session.user.email} name={session.user.fullName} isAdmin={role === "admin"} memberId={memberId} personId={session.user.personId}>
       <div className="mb-4">
-        <Link
-          href="/profilo"
-          className="font-mono text-label font-bold uppercase tracking-widest text-brand-gray"
-        >
-          ← {t.profile.title}
-        </Link>
+        <BackLink href="/profilo">{t.profile.title}</BackLink>
       </div>
       <div className="mb-1 flex items-center gap-2">
-        <h1 className="text-[20px] font-black tracking-[-0.03em] text-brand-near-black">
+        <h1 className="text-title font-black text-brand-near-black">
           {t.notifications.settings.title}
         </h1>
         <HelpLink href="/guida/notifiche#preferenze-notifiche" />

@@ -28,6 +28,7 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 - 🛒 **Smoother order buttons.** The "+" stays under your finger when a product goes from 0 to 1, and screen readers now say which product each button changes and the new quantity.
 - 💬 **Messages you have time to read.** Errors and warnings stay longer and can be closed, and a failed save says to check the connection. Deleting an order starts on "Cancel", so a stray Enter deletes nothing.
 - ⌨️ **Easier to use with a keyboard.** Every button and field shows a clear outline when reached with Tab, a "Skip to content" link jumps past the menu, and each page has its own title in the browser tab.
+- 🧩 **Same look for the same things.** Confirmations in Admin (deleting a member, archiving a product, removing it from a cycle...) use the app's own window instead of the browser pop-up, and statuses, back links and buttons share one style.
 
 ## [1.25.0] — 2026-10-07
 

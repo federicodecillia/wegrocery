@@ -1,5 +1,6 @@
 "use client";
 
+import { Badge } from "@/components/ui/badge";
 import { useEffect, useState } from "react";
 import { formatDateTime } from "@/lib/utils";
 import { t } from "@/lib/i18n";
@@ -60,7 +61,7 @@ export function CycleCountdown({ cycleId, title, orderCloseAt, orderOpenAt, pick
   const danger = hoursLeft <= 12;
 
   return (
-    <div className="mb-[14px] rounded-[18px] border border-brand-border bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)] p-[18px]">
+    <div className="mb-[14px] rounded-card border border-brand-border bg-white shadow-card p-[18px]">
       <div className="mb-[14px] flex items-start justify-between">
         <div>
           <div className="text-[16px] font-extrabold tracking-[-0.02em] text-brand-near-black leading-snug">
@@ -82,10 +83,9 @@ export function CycleCountdown({ cycleId, title, orderCloseAt, orderOpenAt, pick
             )}
           </div>
         </div>
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-accent/20 bg-accent-soft px-2.5 py-0.5 font-mono text-label font-semibold text-accent-text">
-          <span className="h-1.5 w-1.5 rounded-full bg-accent opacity-75" />
+        <Badge tone="accent" dot>
           {t.cycle.open}
-        </span>
+        </Badge>
       </div>
 
       <div className="mb-[14px] flex gap-2">

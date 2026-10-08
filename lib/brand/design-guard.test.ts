@@ -71,4 +71,36 @@ describe("design guard", () => {
   it("leaves focus to the global outline: no faint rings, no hidden outline", () => {
     expect(hits(/focus(-visible)?:(outline-none|ring-)/)).toEqual([]);
   });
+
+  it("asks through ConfirmDialog, never the browser's window.confirm", () => {
+    expect(hits(/window\.confirm\(/)).toEqual([]);
+  });
+
+  it("uses no Tailwind palette colours: brand tokens only", () => {
+    expect(hits(/\b(bg|text|border|ring)-(red|green|blue|amber|yellow|orange|teal|gray|slate|zinc|emerald|rose|sky|indigo|purple)-\d{2,3}\b/)).toEqual([]);
+  });
+
+  it("opens new dialogs through Sheet (the listed ones move in the admin lot)", () => {
+    const pending = new Set(LEGACY_DIALOGS);
+    const offenders = files.filter(
+      (f) => !pending.has(f) && !f.endsWith("components/ui/sheet.tsx") && !f.endsWith("components/ui/confirm-dialog.tsx") &&
+        /fixed inset-0/.test(readFileSync(f, "utf8")),
+    );
+    expect(offenders).toEqual([]);
+  });
 });
+
+// Hand-rolled dialogs that predate Sheet. Remove a line when its file moves
+// to Sheet; the list only shrinks.
+const LEGACY_DIALOGS = [
+  "app/ordine/order-sent-dialog.tsx",
+  "app/storico/movement-detail.tsx",
+  "components/admin/cancel-cycle-dialog.tsx",
+  "components/admin/ciclo-forms.tsx",
+  "components/admin/closed-cycle-details.tsx",
+  "components/admin/edit-closed-order-modal.tsx",
+  "components/admin/import-listing-wizard.tsx",
+  "components/admin/merge-members-dialog.tsx",
+  "components/admin/settle-cycle-dialog.tsx",
+  "components/admin/supplier-actions-dialog.tsx",
+];

@@ -1,5 +1,6 @@
 "use client";
 
+import { Badge } from "@/components/ui/badge";
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { t } from "@/lib/i18n";
@@ -93,7 +94,7 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
                     if (el) cycleRefs.current.set(o.cycleId, el);
                     else cycleRefs.current.delete(o.cycleId);
                   }}
-                  className="mb-3 overflow-hidden rounded-[18px] border border-brand-border bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
+                  className="mb-3 overflow-hidden rounded-card border border-brand-border bg-white shadow-card"
                 >
                   <button
                     type="button"
@@ -113,19 +114,13 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
                       <span className="whitespace-nowrap font-mono text-[15px] font-bold tabular-nums text-brand-near-black">
                         {o.charged ? formatSignedMoney(o.net) : formatEur(o.productsTotal)}
                       </span>
-                      <span
-                        className={`whitespace-nowrap rounded-full px-2.5 py-0.5 font-mono text-label ${
-                          o.status === "cancelled"
-                            ? "bg-brand-red-light text-brand-red"
-                            : "bg-accent-soft text-accent-text"
-                        }`}
-                      >
+                      <Badge tone={o.status === "cancelled" ? "danger" : "accent"}>
                         {o.status === "open"
                           ? t.history.open
                           : o.status === "cancelled"
                             ? t.history.cancelled
                             : t.history.pickedUp}
-                      </span>
+                      </Badge>
                     </div>
                   </button>
                   {isOpen && (
@@ -215,7 +210,7 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
               <p className="mt-1 text-[14px] text-brand-gray">{t.history.noMovementsHint}</p>
             </div>
           ) : (
-            <div className="overflow-hidden rounded-[18px] border border-brand-border bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+            <div className="overflow-hidden rounded-card border border-brand-border bg-white shadow-card">
               {movements.map((e) => {
                 const isPos = parseFloat(e.amount) >= 0;
                 const fullLabel = movementText(e, t.history);

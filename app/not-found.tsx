@@ -7,7 +7,7 @@ export default function NotFound() {
       className="flex min-h-dvh flex-col items-center justify-center p-6 text-center"
       style={{ background: "var(--frame)" }}
     >
-      <div className="w-full max-w-[320px] rounded-[18px] border border-brand-border bg-white p-6 shadow-sm">
+      <div className="w-full max-w-[320px] rounded-card border border-brand-border bg-white p-6 shadow-sm">
         <p className="font-mono text-[40px] font-bold text-muted">404</p>
         <p className="mt-1 text-[15px] font-semibold text-brand-near-black">{t.common.pageNotFound}</p>
         <Link

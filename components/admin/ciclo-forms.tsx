@@ -1,5 +1,6 @@
 "use client";
 
+import { confirm } from "@/components/ui/confirm-dialog";
 import { useState, useTransition, useEffect, useCallback } from "react";
 import { toast } from "@/components/ui/toast";
 import { t } from "@/lib/i18n";
@@ -997,8 +998,8 @@ export function CycleProductPicker({
     });
   }
 
-  function handleRemove(productId: string) {
-    if (!window.confirm(t.admin.products.removeFromCycleConfirm)) return;
+  async function handleRemove(productId: string) {
+    if (!(await confirm({ title: t.admin.products.removeFromCycleConfirm, danger: true }))) return;
     startTransition(async () => {
       const result = await adminRemoveProductFromCycle(productId);
       if (result.error) toast.error(result.error);
@@ -1037,7 +1038,7 @@ export function CycleProductPicker({
                     </div>
                     <button
                       onClick={() => handleRemove(p.productId)}
-                      className="ml-2 rounded-lg bg-red-50 px-2 py-1 text-label font-bold text-red-600 hover:bg-red-100"
+                      className="ml-2 min-h-9 rounded-lg bg-brand-red-light px-2 py-1 text-label font-bold text-brand-red hover:bg-brand-red/15"
                     >
                       {t.admin.products.removeFromCycle}
                     </button>

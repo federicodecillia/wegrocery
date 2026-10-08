@@ -27,7 +27,7 @@ type Props = {
   balance: string | null;
 };
 
-const card = "mb-[14px] overflow-hidden rounded-[18px] border border-brand-border bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)]";
+const card = "mb-[14px] overflow-hidden rounded-card border border-brand-border bg-white shadow-card";
 const heading = "px-4 pt-[14px] font-mono text-label font-bold uppercase tracking-widest text-brand-gray";
 
 export function FamilyPanel({ enabled, personId, isOwner, people, sent, received, balance }: Props) {
@@ -92,7 +92,7 @@ export function FamilyPanel({ enabled, personId, isOwner, people, sent, received
               <div className="text-[14px] font-bold text-brand-near-black">{t.family.invitedBy(i.accountName)}</div>
               <div className="mt-[3px] text-[12px] text-brand-gray">{t.family.expires(i.expires)}</div>
               <div className="mt-3 flex gap-2">
-                <Button size="sm" variant="teal" disabled={isPending} onClick={() => accept(i.inviteId, i.accountName)}>
+                <Button size="sm" variant="accent" disabled={isPending} onClick={() => accept(i.inviteId, i.accountName)}>
                   {t.family.accept}
                 </Button>
                 <Button
@@ -181,7 +181,7 @@ export function FamilyPanel({ enabled, personId, isOwner, people, sent, received
               onChange={(e) => setEmail(e.target.value)}
               className="min-w-0 flex-1 rounded-full border border-brand-border px-4 py-2 text-[14px]"
             />
-            <Button type="submit" size="sm" variant="orange" disabled={isPending || !email.trim()}>
+            <Button type="submit" size="sm" variant="brand" disabled={isPending || !email.trim()}>
               {t.family.send}
             </Button>
           </div>

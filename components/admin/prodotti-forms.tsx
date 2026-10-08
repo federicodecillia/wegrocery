@@ -1,5 +1,6 @@
 "use client";
 
+import { confirm } from "@/components/ui/confirm-dialog";
 import { useMemo, useState, useTransition } from "react";
 import { toast } from "@/components/ui/toast";
 import { EmojiPicker } from "@/components/ui/emoji-picker";
@@ -679,8 +680,8 @@ export function CatalogManager({
     return Array.from(seen.values());
   }, [products]);
 
-  function handleArchive(id: string, active: boolean) {
-    if (!window.confirm(active ? t.admin.products.reactivateConfirm : t.admin.products.archiveConfirm)) return;
+  async function handleArchive(id: string, active: boolean) {
+    if (!(await confirm({ title: active ? t.admin.products.reactivateConfirm : t.admin.products.archiveConfirm, danger: !active }))) return;
     startTransition(async () => {
       const result = await adminArchiveCatalogProduct(id, active);
       if (result.error) toast.error(result.error);

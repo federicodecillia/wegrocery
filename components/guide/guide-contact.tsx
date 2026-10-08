@@ -5,7 +5,7 @@ import { t } from "@/lib/i18n";
 // every guide page.
 export function GuideContact() {
   return (
-    <div className="mt-6 rounded-[18px] border border-brand-border bg-white p-6 text-center shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+    <div className="mt-6 rounded-card border border-brand-border bg-white p-6 text-center shadow-card">
       <div className="mb-[10px] text-[32px]">{t.guide.contactEmoji}</div>
       <div className="mb-[6px] text-[15px] font-bold text-brand-near-black">{t.guide.contactHeading}</div>
       <p className="mb-4 text-[14px] text-brand-gray">{t.guide.contactIntro(brand.appName)}</p>

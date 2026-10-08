@@ -258,8 +258,8 @@ export function SociList({
     });
   }
 
-  function handleDelete(m: Member) {
-    if (!window.confirm(t.admin.members.deleteConfirm(m.fullName)))
+  async function handleDelete(m: Member) {
+    if (!(await confirm({ title: t.admin.members.deleteConfirm(m.fullName), danger: true })))
       return;
     startDeleteTransition(async () => {
       const result = await adminDeleteMember(m.memberId);

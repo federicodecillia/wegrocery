@@ -9,7 +9,7 @@ export function GuideArticleCard({ article }: { article: GuideArticle }) {
   return (
     <article
       id={article.slug}
-      className="mb-[14px] scroll-mt-24 rounded-[18px] border border-brand-border bg-white p-[18px] shadow-[0_1px_2px_rgba(0,0,0,0.04)] target:border-primary target:ring-2 target:ring-primary/20"
+      className="mb-[14px] scroll-mt-24 rounded-card border border-brand-border bg-white p-[18px] shadow-card target:border-primary target:ring-2 target:ring-primary/20"
     >
       <h2 className="mb-2 text-[16px] font-extrabold tracking-[-0.01em] text-brand-near-black">{article.title}</h2>
       {article.intro && (
