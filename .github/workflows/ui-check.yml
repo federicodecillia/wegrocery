@@ -1,0 +1,88 @@
+name: Nightly UI Check
+
+# After the nightly demo reset, opens the demo at a phone and a desktop width
+# and checks the main pages: serious accessibility problems (axe), horizontal
+# scrolling and four keyboard paths (scripts/ui-check.mjs). A failure opens
+# (or comments on) one GitHub issue. Also runnable on demand.
+#
+# Target: the repository variable UI_CHECK_URL, else the public demo on the
+# upstream repository only. It must be a DEMO_MODE deployment (the script
+# signs in through the demo buttons); without a target the job is skipped.
+
+on:
+  workflow_run:
+    workflows: ['Nightly Demo Reset']
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      UI_CHECK_URL: ${{ vars.UI_CHECK_URL || (github.repository == 'federicodecillia/wegrocery' && 'https://wegrocery-demo.vercel.app' || '') }}
+    steps:
+      - name: Skip without a target
+        id: target
+        run: |
+          if [ -z "$UI_CHECK_URL" ]; then
+            echo "::warning::No UI_CHECK_URL variable: UI check skipped."
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v7
+        if: steps.target.outputs.enabled == 'true'
+
+      - uses: actions/setup-node@v7
+        if: steps.target.outputs.enabled == 'true'
+        with:
+          node-version: 24
+
+      # Only the two checker packages, in a directory of their own: the app's
+      # dependencies are not needed to drive a browser.
+      - name: Install Playwright and axe
+        if: steps.target.outputs.enabled == 'true'
+        run: |
+          mkdir -p "$RUNNER_TEMP/ui-check"
+          cp scripts/ui-check.mjs "$RUNNER_TEMP/ui-check/"
+          cd "$RUNNER_TEMP/ui-check"
+          npm init -y > /dev/null
+          npm install --no-audit --no-fund playwright@1.64.0 @axe-core/playwright@4.13.0
+          npx playwright install --with-deps chromium
+
+      - name: Run the UI check
+        if: steps.target.outputs.enabled == 'true'
+        working-directory: ${{ runner.temp }}/ui-check
+        run: node ui-check.mjs
+
+  notify:
+    needs: [check]
+    if: ${{ always() && (needs.check.result == 'failure' || needs.check.result == 'cancelled') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: Open or update the alert issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          RESULT: ${{ needs.check.result }}
+        run: |
+          set -euo pipefail
+          TITLE="Nightly UI check needs attention"
+          BODY="$(date -u +%F): UI check ${RESULT}. The run summary lists each problem: ${RUN_URL}"
+          # One open issue at a time: later failures comment on it.
+          OPEN=$(gh issue list --state open --search "in:title \"${TITLE}\"" --json number --jq '.[0].number // empty')
+          if [ -n "$OPEN" ]; then
+            gh issue comment "$OPEN" --body "$BODY"
+          else
+            gh issue create --title "$TITLE" --body "$BODY"
+          fi
