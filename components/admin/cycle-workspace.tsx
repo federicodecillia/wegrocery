@@ -1,5 +1,14 @@
 import Link from "next/link";
-import { getAllCycles, getAllSuppliers, getLastHandlingFee, getOpenCycleStats } from "@/lib/db/queries";
+import {
+  getAllCycles,
+  getAllMembers,
+  getAllSuppliers,
+  getCycleTaskFacts,
+  getDismissedDuplicatePairs,
+  getLastHandlingFee,
+  getOpenCycleStats,
+  getRequestedRefundCount,
+} from "@/lib/db/queries";
 import { getDb } from "@/lib/db/client";
 import { brand } from "@/lib/brand";
 import { cardCyclesSelectable } from "@/lib/payments/cycle-mode";
@@ -13,7 +22,9 @@ import { formatDate } from "@/lib/i18n/format";
 import { formatDeadline } from "@/lib/i18n/deadline";
 import { adminHref } from "@/lib/admin/nav";
 import { CYCLE_VIEW_LABELS, cycleViews, defaultCycleId, resolveCycleView, settlementCandidate, settlementPending, type CycleView } from "@/lib/admin/cycle-views";
-import { AdminInsights } from "./admin-insights";
+import { CycleTodo } from "./cycle-todo";
+import { TASK_WINDOW_DAYS, cycleTasks } from "@/lib/admin/cycle-phase";
+import { findDuplicatePairs } from "@/lib/members/duplicates";
 import {
   CloseCycleAction,
   CreateCycleForm,
@@ -72,9 +83,46 @@ export async function CycleWorkspace({ cycleId: asked, view: askedView, creating
     };
   });
 
+  // "Da fare ora": open cycles, cycles closed lately, card cycles to settle.
+  const windowStart = now.getTime() - TASK_WINDOW_DAYS * 86_400_000;
+  const inScope = cycles.filter(
+    (c) =>
+      c.status === "open" ||
+      (c.closedAt != null && c.closedAt.getTime() >= windowStart) ||
+      settlementPending(settleStates.get(c.cycleId) ?? null),
+  );
+  const [taskFacts, refunds, allMembers, dismissed] = await Promise.all([
+    getCycleTaskFacts(inScope.map((c) => c.cycleId)),
+    getRequestedRefundCount(),
+    getAllMembers(),
+    getDismissedDuplicatePairs(),
+  ]);
+  const tasks = cycleTasks(
+    inScope.map((c) => {
+      const f = taskFacts.get(c.cycleId);
+      return {
+        cycleId: c.cycleId,
+        title: c.title,
+        status: c.status,
+        orderCloseAt: c.orderCloseAt,
+        closedAt: c.closedAt,
+        orderMembers: f?.orderMembers ?? 0,
+        supplierSent: f?.supplierSent ?? false,
+        adjusted: f?.adjusted ?? false,
+        settlementPending: settlementPending(settleStates.get(c.cycleId) ?? null),
+      };
+    }),
+    now,
+  );
+  // As in Soci: a person who joined a family is not a duplicate of anyone.
+  const duplicates = findDuplicatePairs(
+    allMembers.filter((m) => !m.householdOf),
+    dismissed,
+  ).length;
+
   return (
     <div>
-      <AdminInsights />
+      <CycleTodo tasks={tasks} refunds={refunds} duplicates={duplicates} />
       <div className="lg:grid lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-5">
         <aside aria-label={t.admin.workspace.listTitle} className="hidden lg:block">
           <CycleList cycles={listItems} selectedId={selectedId} view={view} />

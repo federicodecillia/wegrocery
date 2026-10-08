@@ -20,7 +20,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 │   ├── notifiche/page.tsx      # Notification list with mark-as-read
 │   ├── profilo/page.tsx        # Profile (header avatar): name, emails, card, family, notifications, money, app, sign-out (privacy stays in the footer)
 │   ├── guida/page.tsx          # Guide index: "Il nostro gruppo" (admin text), search, topics, news; cards in guida/[topic] (content in lib/guide)
-│   ├── admin/page.tsx          # Admin: Ciclo (workspace: cycle list + Panoramica/Prodotti/Ordini/Fornitore/Conti, components/admin/cycle-workspace.tsx, lib/admin/cycle-views.ts) · Cassa · Soci · Catalogo (Prodotti, Fornitori) · ⋯ Statistiche, Impostazioni (lib/admin/nav.ts; old ?tab= links resolve)
+│   ├── admin/page.tsx          # Admin: Ciclo ("Da fare ora" on top, lib/admin/cycle-phase.ts; workspace: cycle list + Panoramica/Prodotti/Ordini/Fornitore/Conti, components/admin/cycle-workspace.tsx, lib/admin/cycle-views.ts) · Cassa · Soci · Catalogo (Prodotti, Fornitori) · ⋯ Statistiche, Impostazioni (lib/admin/nav.ts; old ?tab= links resolve)
 │   ├── login/page.tsx          # Login with Google
 │   └── api/auth/[...all]/      # Better Auth handler, limited to lib/auth/public-endpoints.ts
 ├── components/

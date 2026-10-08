@@ -578,6 +578,30 @@ export const en: Strings = {
       productsIntro: "The products members see in this cycle. Add them from the suppliers' catalogue or import a price list.",
       supplierIntro: "Three steps: download the sheet, send it to the supplier, then upload the one they filled in with real weights and prices.",
       noSupplier: "This cycle has no supplier: add one from ✎ Edit to send the order sheet.",
+      todo: {
+        title: "To do now",
+        nothing: "Nothing to do on the cycles.",
+        overdueCta: "Review and close the cycle",
+        overdueDetail: (h: number) =>
+          h < 1 ? "Orders closed less than an hour ago" : h < 48 ? `Orders closed ${h} h ago` : `Orders closed ${Math.floor(h / 24)} days ago`,
+        openCta: "See the orders",
+        openDetail: (members: number, h: number | null) =>
+          [members === 1 ? "1 member" : `${members} members`, h == null ? null : h < 48 ? `closes in ${h} h` : `closes in ${Math.floor(h / 24)} days`]
+            .filter(Boolean)
+            .join(" · "),
+        sendCta: "Send the order to the supplier",
+        sendDetail: "Cycle closed, order not sent from the app yet",
+        adjustCta: "Record weights or upload the sheet",
+        adjustDetail: "No correction recorded after delivery",
+        settleCta: "Settle accounts",
+        settleDetail: "Paid by card: refund or ask for the difference",
+        markSent: "Already sent",
+        markDelivered: "Delivered as ordered",
+        markHint: "Only on this device.",
+        more: (n: number) => (n === 1 ? "and one more cycle, in the list" : `and ${n} more cycles, in the list`),
+        refunds: (n: number) => (n === 1 ? "1 refund to retry" : `${n} refunds to retry`),
+        duplicates: (n: number) => (n === 1 ? "1 possible duplicate member" : `${n} possible duplicate members`),
+      },
       accounts: {
         movementsTitle: "Cycle movements",
         movementsHint: "What the cycle moved on members' balances, corrections included. Read only.",
@@ -1215,12 +1239,6 @@ export const en: Strings = {
       deselectAll: "Deselect all",
       noFilterResults: "No results",
       selectedCount: (n: number, label: string) => `${n} ${label} selected`,
-      insightOpen: "Open",
-      insightOpenHint: "active cycles",
-      insightExpiring: "Expiring",
-      insightExpiringHint: "≤7d",
-      insightClosed: "Closed",
-      insightClosedHint: "last 7d",
       overviewClosedCycles: "Closed cycles",
       overviewActiveMembers: "Active members",
       overviewActiveMembersHint: "ordered in last 3 cycles",
