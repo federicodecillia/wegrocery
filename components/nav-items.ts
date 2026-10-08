@@ -24,3 +24,8 @@ export function isItemActive(pathname: string, item: Pick<NavItem, "href" | "exa
   if (item.exact) return pathname === item.href;
   return pathname === item.href || pathname.startsWith(`${item.href}/`);
 }
+
+/** The items a person sees: Admin only for admins (members get four). */
+export function visibleNavItems(isAdmin: boolean): NavItem[] {
+  return navItems.filter((item) => isAdmin || !item.adminOnly);
+}

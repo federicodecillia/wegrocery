@@ -107,7 +107,7 @@ export default async function NotifichePage() {
                   >
                     {n.title}
                   </div>
-                  <div className="mt-[3px] text-[12px] leading-snug text-brand-gray">{n.body}</div>
+                  <div className="mt-[3px] text-[14px] leading-snug text-brand-gray">{n.body}</div>
                   <div className="mt-[5px] font-mono text-label text-muted">
                     {formatDateShort(n.createdAt)}
                   </div>

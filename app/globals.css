@@ -91,6 +91,21 @@ body {
 }
 
 /* Shared press feedback for buttons and tappable rows. */
+/* A small control (a 32 px avatar, a 28 px "?") with a 44 px touch area:
+   the area grows around it without moving anything. */
+@utility hit-44 {
+  position: relative;
+  &::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: max(100%, 44px);
+    height: max(100%, 44px);
+    transform: translate(-50%, -50%);
+  }
+}
+
 @utility pressable {
   transition: transform 120ms ease-out;
   &:active:not(:disabled) {

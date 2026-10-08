@@ -50,7 +50,7 @@ export async function AppShell({ children, email, name, isAdmin, memberId, perso
           <div className="flex items-center justify-between gap-3">
             {/* A long app name wraps instead of pushing the avatar off the card. */}
             <div className="min-w-0">
-              <Link href="/" aria-label="Home" className="inline-flex items-center gap-2">
+              <Link href="/" aria-label={t.nav.home} className="inline-flex min-h-11 items-center gap-2">
                 <Image src={brand.logoUrl} alt={brand.appName} width={26} height={26} priority className="h-[26px] w-auto shrink-0" />
                 {brand.headerShowName && (
                   <span className="text-[15px] font-semibold text-brand-near-black">{brand.appName}</span>
@@ -58,7 +58,7 @@ export async function AppShell({ children, email, name, isAdmin, memberId, perso
               </Link>
             </div>
             {/* The email, sign-out and personal settings are in the Profile (app/profilo). */}
-            <div className="flex shrink-0 items-center gap-2">
+            <div className="flex shrink-0 items-center gap-3">
               <NotificationBell unreadCount={unreadCount} />
               <ProfileAvatar name={name} email={email} />
             </div>

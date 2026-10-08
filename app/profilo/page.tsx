@@ -21,7 +21,7 @@ import { getDb } from "@/lib/db/client";
 import { getWalletBalance } from "@/lib/payments/balance-due";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
 import { countChannels, familyState, initials } from "@/lib/profile/summary";
-import { getRoleLabel } from "@/lib/roles";
+import { DEFAULT_ROLE, getRoleLabel } from "@/lib/roles";
 import packageJson from "@/package.json";
 import type { Metadata } from "next";
 
@@ -82,10 +82,16 @@ export default async function ProfilePage() {
         <div className="min-w-0">
           <h1 className="break-words text-title font-black text-brand-near-black">{name || t.profile.title}</h1>
           <p className="break-all text-[14px] text-brand-gray">{session.user.email}</p>
-          <p className="mt-[2px] text-[12px] text-brand-gray">
-            {role ? getRoleLabel(role) : null}
-            {inFamily && account ? ` · ${t.profile.sharedAccount(account.fullName)}` : null}
-          </p>
+          {/* The role says something only when it is not the default one. */}
+          {(() => {
+            const parts = [
+              role && role !== DEFAULT_ROLE ? getRoleLabel(role) : null,
+              inFamily && account ? t.profile.sharedAccount(account.fullName) : null,
+            ].filter(Boolean);
+            return parts.length > 0 ? (
+              <p className="mt-[2px] text-[13px] text-brand-gray">{parts.join(" · ")}</p>
+            ) : null;
+          })()}
         </div>
       </div>
 

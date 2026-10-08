@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { isItemActive, navItems } from "./nav-items";
+import { isItemActive, navItems, visibleNavItems } from "./nav-items";
 
 const item = (href: string) => navItems.find((i) => i.href === href)!;
 
@@ -22,5 +22,10 @@ describe("nav items", () => {
 
   it("only Admin is reserved to admins", () => {
     expect(navItems.filter((i) => i.adminOnly).map((i) => i.href)).toEqual(["/admin"]);
+  });
+
+  it("members see four items, admins five", () => {
+    expect(visibleNavItems(false).map((i) => i.href)).toEqual(["/", "/ordine", "/storico", "/guida"]);
+    expect(visibleNavItems(true)).toHaveLength(5);
   });
 });

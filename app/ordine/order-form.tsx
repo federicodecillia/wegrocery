@@ -627,18 +627,18 @@ export function OrderForm({
                   <div className="min-w-0 flex-1">
                     <div className="text-[14px] font-medium text-brand-near-black">{p.name}</div>
                     <div className="mt-[2px] flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                      {meta && <span className="font-mono text-label text-brand-gray">{meta}</span>}
-                      <span className="font-mono text-label font-semibold text-primary-text">
+                      {meta && <span className="text-[13px] text-brand-gray">{meta}</span>}
+                      <span className="text-[14px] font-semibold tabular-nums text-primary-text">
                         {formatEur(parseFloat(p.unitPrice))}
                       </span>
                       {p.pricePerKg && (
-                        <span className="font-mono text-label text-muted">
+                        <span className="text-[13px] tabular-nums text-muted">
                           ({formatEur(parseFloat(p.pricePerKg))}/kg)
                         </span>
                       )}
                     </div>
                     {p.notes && (
-                      <p className="mt-[2px] text-label leading-[1.4] text-muted">{p.notes}</p>
+                      <p className="mt-[2px] text-[13px] leading-[1.4] text-muted">{p.notes}</p>
                     )}
                   </div>
                 </div>

@@ -31,6 +31,8 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 - 🧩 **Same look for the same things.** Confirmations in Admin (deleting a member, archiving a product, removing it from a cycle...) use the app's own window instead of the browser pop-up, and statuses, back links and buttons share one style.
 - 📲 **Windows that fit the phone.** Every window (order sent, a movement's details, closing accounts, cancelling a cycle, the supplier, merging members, importing a price list) rises from the bottom on phones with its buttons near the thumb, closes with Esc or the ✕, and asks before throwing away what you typed.
 - 💰 **Cassa at your fingertips.** Bigger edit and delete buttons on movements, fields that fit the screen, and every field and icon button in Admin has a name screen readers can say.
+- 📱 **A lighter bar at the bottom.** Members see four items (Home, Order, History, Guide) instead of a greyed-out "Admin", the bell, the avatar and the "?" are easier to tap, and switching page no longer looks like a reload.
+- 🔤 **Easier to read.** Prices in the order and the text of notifications are bigger and in the normal font, and the Profile no longer shows "Utenti" under the name of ordinary members.
 
 ## [1.25.0] — 2026-10-07
 
