@@ -116,27 +116,59 @@ export function MovementDetailDialog({
         </Button>
       }
     >
-      {entry && (
-        <>
-          <p
-            className={`font-mono text-[26px] font-black tracking-[-0.03em] ${
-              incoming ? "text-accent-text" : "text-brand-red"
-            }`}
-          >
-            {formatSignedMoney(entry.amount)}
-          </p>
-          <dl className="mt-4 divide-y divide-brand-border rounded-xl border border-brand-border bg-white">
-            {detailRows(entry, onShowCycle).map((row) => (
-              <div key={row.label} className="flex items-baseline justify-between gap-3 px-3 py-2">
-                <dt className="shrink-0 text-label font-semibold uppercase tracking-wide text-brand-gray">
-                  {row.label}
-                </dt>
-                <dd className="min-w-0 break-words text-right text-[14px] text-brand-near-black">{row.value}</dd>
-              </div>
-            ))}
-          </dl>
-        </>
-      )}
+      {entry && <MovementDetailBody entry={entry} onShowCycle={onShowCycle} />}
     </Sheet>
+  );
+}
+
+// The amount and the rows, shared by the sheet (phones, tablets) and the
+// panel beside the list (from lg).
+function MovementDetailBody({ entry, onShowCycle }: { entry: MovementDetail; onShowCycle: (cycleId: string) => void }) {
+  const incoming = parseFloat(entry.amount) >= 0;
+  return (
+    <>
+      <p
+        className={`font-mono text-[26px] font-black tracking-[-0.03em] ${
+          incoming ? "text-accent-text" : "text-brand-red"
+        }`}
+      >
+        {formatSignedMoney(entry.amount)}
+      </p>
+      <dl className="mt-4 divide-y divide-brand-border rounded-xl border border-brand-border bg-white">
+        {detailRows(entry, onShowCycle).map((row) => (
+          <div key={row.label} className="flex items-baseline justify-between gap-3 px-3 py-2">
+            <dt className="shrink-0 text-label font-semibold uppercase tracking-wide text-brand-gray">
+              {row.label}
+            </dt>
+            <dd className="min-w-0 break-words text-right text-[14px] text-brand-near-black">{row.value}</dd>
+          </div>
+        ))}
+      </dl>
+    </>
+  );
+}
+
+/** From lg: the selected movement in the column beside the list. */
+export function MovementDetailPanel({
+  entry,
+  onClose,
+  onShowCycle,
+}: {
+  entry: MovementDetail;
+  onClose: () => void;
+  onShowCycle: (cycleId: string) => void;
+}) {
+  const incoming = parseFloat(entry.amount) >= 0;
+  return (
+    <section aria-labelledby="movement-detail-title" className="rounded-card border border-brand-border bg-brand-warm-white p-4 shadow-card">
+      <h2 id="movement-detail-title" className="mb-3 flex items-center gap-3 text-[15px] font-bold text-brand-near-black">
+        <MovementIcon kind={movementKind(entry)} incoming={incoming} />
+        {movementLabel(entry, t.history)}
+      </h2>
+      <MovementDetailBody entry={entry} onShowCycle={onShowCycle} />
+      <Button variant="outline" block className="mt-4" onClick={onClose}>
+        {t.common.close}
+      </Button>
+    </section>
   );
 }

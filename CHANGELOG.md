@@ -48,6 +48,7 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 - 🧺 **One catalogue, one product form.** Products are edited only in Catalogue → Products; each supplier in Suppliers links to its own products ("5 products in the catalogue →"), and editing a product no longer drops its icon. The guided import is the main way to load a price list, with the template and direct upload under "Other formats". The forms to add a member or a supplier stay closed until you need them.
 - 🖥️ **A real computer layout.** On a computer the app uses the same wider frame on every page, with logo, menu, bell and avatar on one line. Home has two columns (the cycle and your order on the left, balance, pickup and movements on the right); reading pages stay in a comfortable column. The bell, the avatar and Home (for Top up) show where you are.
 - 📰 **Shorter What's new, clearer contacts, branded sign-in.** What's new opens the last three versions and folds the older ones. The guide's contact buttons say what they are for ("Write to the group", "Technical problems") and appear once when the address is the same. The sign-in page shows the group's logo, and an error is read out by screen readers.
+- 🛒 **Order and History on a computer.** On a computer the Order page keeps your cart on the right (products picked, total, balance after and "Confirm"), next to the catalogue. History shows the list on the left and the selected order or movement on the right; the Orders and Movements tabs are in the address, so a link opens the right one.
 
 ## [1.25.0] — 2026-10-07
 
