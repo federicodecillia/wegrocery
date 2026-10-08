@@ -1,4 +1,5 @@
 import { brand } from "@/lib/brand";
+import { EmptyIcon } from "@/components/ui-icon";
 import { t } from "@/lib/i18n";
 
 // "Other questions?": the group's support and technical addresses, last on
@@ -7,7 +8,9 @@ export function GuideContact() {
   const sameAddress = brand.techEmail.trim().toLowerCase() === brand.supportEmail.trim().toLowerCase();
   return (
     <div className="mt-6 rounded-card border border-brand-border bg-white p-6 text-center shadow-card">
-      <div className="mb-[10px] text-[32px]">{t.guide.contactEmoji}</div>
+      <div className="mb-[10px] flex justify-center">
+        <EmptyIcon name="mail" />
+      </div>
       <div className="mb-[6px] text-[15px] font-bold text-brand-near-black">{t.guide.contactHeading}</div>
       <p className="mb-4 text-[14px] text-brand-gray">{t.guide.contactIntro(brand.appName)}</p>
       {/* Each button says what it is for, the address under it; one button

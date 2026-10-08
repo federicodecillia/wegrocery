@@ -1,4 +1,5 @@
 import { AppShell } from "@/components/app-shell";
+import { EmptyIcon } from "@/components/ui-icon";
 import { OrderForm } from "./order-form";
 import { CycleChooser } from "./cycle-chooser";
 import { t } from "@/lib/i18n";
@@ -57,7 +58,7 @@ export default async function OrdinePage({
     return (
       <AppShell email={session.user.email} name={session.user.fullName} isAdmin={role === "admin"} memberId={memberId} personId={session.user.personId}>
         <div className="flex flex-col items-center justify-center py-16 text-center">
-          <span className="mb-4 text-4xl">🛒</span>
+          <EmptyIcon name="cart" />
           <h2 className="text-[18px] font-bold text-brand-near-black">{t.order.noOpenOrders}</h2>
           <p className="mt-2 text-[14px] text-brand-gray">
             {t.order.noOpenOrdersHint}
@@ -109,7 +110,7 @@ export default async function OrdinePage({
     <AppShell email={session.user.email} name={session.user.fullName} isAdmin={role === "admin"} memberId={memberId} personId={session.user.personId} layout="wide">
       {notice && (
         <div
-          className={`mb-4 rounded-[14px] border p-[12px_14px] text-[14px] ${
+          className={`mb-4 rounded-card border p-[12px_14px] text-[14px] ${
             notice.tone === "ok"
               ? "border-accent bg-accent-soft text-brand-near-black"
               : notice.tone === "error"

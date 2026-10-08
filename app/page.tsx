@@ -5,6 +5,7 @@ import { CycleCountdown } from "@/components/home/cycle-countdown";
 import { CycleNotes } from "@/components/cycle-notes";
 import { NextPickupCard } from "@/components/home/next-pickup-card";
 import { InstallPrompt } from "@/components/install-prompt";
+import { MovementRow } from "@/components/movement-row";
 import { WelcomeCard } from "@/components/home/welcome-card";
 import { brand } from "@/lib/brand";
 import { WELCOME_QUERY, welcomeMoney } from "@/lib/guide/welcome";
@@ -31,9 +32,8 @@ import {
   orderPaymentAmount,
   type HomeOrderStatus,
 } from "@/lib/payments/order-payment";
-import { formatDateShort, formatEur, memberProductEmoji } from "@/lib/utils";
+import { formatEur, memberProductEmoji } from "@/lib/utils";
 import { canAccessCycle } from "@/lib/roles";
-import { movementText } from "@/lib/movement-label";
 
 export default async function HomePage({
   searchParams,
@@ -146,7 +146,7 @@ export default async function HomePage({
                 {payStatus && (
                   <Link
                     href={`/ordine?cycleId=${cycle.cycleId}`}
-                    className={`mb-[10px] flex items-center justify-between rounded-[14px] border px-4 py-[10px] text-[14px] font-semibold ${
+                    className={`mb-[10px] flex items-center justify-between rounded-card border px-4 py-[10px] text-[14px] font-semibold ${
                       payStatus.kind === "paid"
                         ? "border-accent/25 bg-accent-soft text-accent-text"
                         : "border-primary-mid bg-primary-soft text-primary-text"
@@ -205,7 +205,7 @@ export default async function HomePage({
                         </div>
                       );
                     })}
-                    <div className="flex items-center justify-between rounded-b-[18px] border-t border-brand-border bg-[#f5f1ec] px-4 py-[12px]">
+                    <div className="flex items-center justify-between border-t border-brand-border bg-black/[0.03] px-4 py-[12px]">
                       <span className="text-[14px] font-extrabold text-brand-near-black">{t.home.totalLabel}</span>
                       <span className="font-mono text-[13px] font-bold text-brand-near-black">
                         {formatEur(orderTotal)}
@@ -224,7 +224,7 @@ export default async function HomePage({
       {!payPerOrder && (
         <>
       <div
-        className={`mb-[14px] rounded-[20px] p-[20px_22px_22px] ${
+        className={`mb-[14px] rounded-card p-[20px_22px_22px] ${
           isNegative
             ? "border-[1.5px] border-brand-red/30 bg-brand-red-light"
             : "border-[1.5px] border-primary-mid bg-primary-soft"
@@ -254,7 +254,7 @@ export default async function HomePage({
           </span>
         </div>
         <div
-          className={`flex overflow-hidden rounded-[12px] ${
+          className={`flex overflow-hidden rounded-xl ${
             isNegative ? "border border-brand-red/30" : "border border-primary-mid"
           }`}
         >
@@ -353,28 +353,9 @@ export default async function HomePage({
               {t.home.seeAll}
             </Link>
           </div>
-          {recentMovements.map((e) => {
-            const isPos = parseFloat(e.amount) >= 0;
-            const label = movementText(e, t.history);
-            return (
-              <div
-                key={e.entryId}
-                className="flex items-center justify-between border-b border-brand-border py-[11px] last:border-none"
-              >
-                <div>
-                  <div className="text-[14px] font-medium text-brand-near-black">{label}</div>
-                  <div className="mt-[2px] font-mono text-label text-muted">
-                    {formatDateShort(e.entryDate)}
-                  </div>
-                </div>
-                <div
-                  className={`font-mono text-[13px] font-semibold ${isPos ? "text-accent-text" : "text-brand-red"}`}
-                >
-                  {formatSignedMoney(e.amount)}
-                </div>
-              </div>
-            );
-          })}
+          {recentMovements.map((e) => (
+            <MovementRow key={e.entryId} entry={e} href="/storico?tab=movimenti" />
+          ))}
         </div>
       )}
 

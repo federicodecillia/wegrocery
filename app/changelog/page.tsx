@@ -196,7 +196,7 @@ function toneFor(heading: string): string {
   if (h === "fixed" || h === "risolto") return "bg-brand-red-light text-brand-red";
   if (h === "changed" || h === "modificato")
     return "bg-primary-soft text-primary-text";
-  if (h === "performance") return "bg-[#e7ddff] text-[#5e2dc8]";
+  if (h === "performance") return "bg-black/[0.06] text-brand-near-black";
   if (h === "removed" || h === "rimosso") return "bg-black/[0.08] text-brand-gray";
   if (h === "security" || h === "sicurezza")
     return "bg-brand-red-light text-brand-red";

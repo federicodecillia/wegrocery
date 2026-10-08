@@ -1,5 +1,6 @@
 "use client";
 
+import { EmptyIcon } from "@/components/ui-icon";
 import { Badge } from "@/components/ui/badge";
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
@@ -7,8 +8,8 @@ import { t } from "@/lib/i18n";
 import { formatNumber, formatSignedMoney } from "@/lib/i18n/format";
 import { formatDate, formatEur, memberProductEmoji } from "@/lib/utils";
 import type { CycleHistoryEntry } from "@/lib/cycle-history";
-import { MovementIcon } from "@/components/movement-icon";
-import { movementKind, movementText } from "@/lib/movement-label";
+import { BalanceSummary } from "@/components/balance/balance-summary";
+import { MovementRow } from "@/components/movement-row";
 import { useWide } from "@/lib/ui/use-wide";
 import { MovementDetailDialog, MovementDetailPanel, type MovementDetail } from "./movement-detail";
 
@@ -92,7 +93,7 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
     <>
       <h1 className="mb-3 text-title font-black text-brand-near-black">{t.nav.history}</h1>
       {/* Segmented tabs */}
-      <div role="tablist" aria-label={t.nav.history} className="mb-5 flex rounded-[12px] bg-black/[0.07] p-1 lg:max-w-[420px]">
+      <div role="tablist" aria-label={t.nav.history} className="mb-5 flex rounded-xl bg-black/[0.07] p-1 lg:max-w-[420px]">
         {TABS.map((tabKey) => (
           <button
             key={tabKey}
@@ -104,7 +105,7 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
             tabIndex={tab === tabKey ? 0 : -1}
             onClick={() => setTab(tabKey)}
             onKeyDown={onTabKey}
-            className={`flex-1 rounded-[10px] py-[9px] text-[14px] font-semibold transition-all ${
+            className={`flex-1 rounded-lg py-[9px] text-[14px] font-semibold transition-all ${
               tab === tabKey
                 ? "bg-white text-brand-near-black shadow-[0_1px_4px_rgba(45,43,41,0.10)]"
                 : "bg-transparent text-brand-gray"
@@ -121,7 +122,7 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
           <div className="min-w-0">
           {orderHistory.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
-              <span className="mb-4 text-4xl">🛒</span>
+              <EmptyIcon name="cart" />
               <h2 className="text-[16px] font-bold text-brand-near-black">{t.history.noOrders}</h2>
               <p className="mt-1 text-[14px] text-brand-gray">{t.history.noOrdersHint}</p>
             </div>
@@ -156,7 +157,13 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
                       </div>
                     </div>
                     <div className="flex shrink-0 items-center gap-2">
-                      <span className="whitespace-nowrap font-mono text-[15px] font-bold tabular-nums text-brand-near-black">
+                      {/* Not charged yet: what the order costs, muted and unsigned
+                          until the close moves the balance. */}
+                      <span
+                        className={`whitespace-nowrap font-mono text-[15px] font-bold tabular-nums ${
+                          o.charged ? "text-brand-near-black" : "text-muted"
+                        }`}
+                      >
                         {o.charged ? formatSignedMoney(o.net) : formatEur(o.productsTotal)}
                       </span>
                       <Badge tone={o.status === "cancelled" ? "danger" : "accent"}>
@@ -193,51 +200,25 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
         <div id="panel-movimenti" role="tabpanel" aria-labelledby="tab-movimenti" className="lg:grid lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start lg:gap-6">
           <div className="min-w-0">
           <div className="lg:hidden">
-            <BalanceSummary balance={balance} />
+            <BalanceSummary label={t.history.currentBalance} balance={balance} />
           </div>
           {movements.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
-              <span className="mb-4 text-4xl">💰</span>
+              <EmptyIcon name="wallet" />
               <h2 className="text-[16px] font-bold text-brand-near-black">{t.history.noMovements}</h2>
               <p className="mt-1 text-[14px] text-brand-gray">{t.history.noMovementsHint}</p>
             </div>
           ) : (
             <div className="overflow-hidden rounded-card border border-brand-border bg-white shadow-card">
-              {movements.map((e) => {
-                const isPos = parseFloat(e.amount) >= 0;
-                const fullLabel = movementText(e, t.history);
-                return (
-                  <button
-                    key={e.entryId}
-                    type="button"
-                    onClick={() => setSelected(e)}
-                    aria-current={wide && selected?.entryId === e.entryId ? "true" : undefined}
-                    className={`flex w-full items-center justify-between border-b border-brand-border px-4 py-[13px] text-left last:border-none ${
-                      wide && selected?.entryId === e.entryId ? "bg-primary-soft" : "hover:bg-black/[0.02]"
-                    }`}
-                  >
-                    <div className="flex min-w-0 flex-1 items-center gap-3">
-                      <MovementIcon kind={movementKind(e)} incoming={isPos} />
-                      <div className="min-w-0">
-                        <div className="truncate text-[14px] font-medium text-brand-near-black">
-                          {fullLabel}
-                        </div>
-                        <div className="mt-[2px] font-mono text-label text-muted">
-                          {formatDate(e.entryDate)}
-                          {e.correctedAt && ` · ${t.ledger.correctedOn(formatDate(e.correctedAt))}`}
-                        </div>
-                      </div>
-                    </div>
-                    <div
-                      className={`ml-3 font-mono text-[14px] font-bold ${
-                        isPos ? "text-accent-text" : "text-brand-red"
-                      }`}
-                    >
-                      {formatSignedMoney(e.amount)}
-                    </div>
-                  </button>
-                );
-              })}
+              {movements.map((e) => (
+                <MovementRow
+                  key={e.entryId}
+                  entry={e}
+                  inset
+                  onSelect={() => setSelected(e)}
+                  selected={wide && selected?.entryId === e.entryId}
+                />
+              ))}
             </div>
           )}
           </div>
@@ -246,7 +227,7 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
             {wide && selected ? (
               <MovementDetailPanel entry={selected} onClose={() => setSelected(null)} onShowCycle={showCycle} />
             ) : (
-              <BalanceSummary balance={balance} />
+              <BalanceSummary label={t.history.currentBalance} balance={balance} />
             )}
           </div>
         </div>
@@ -264,7 +245,7 @@ function CycleDetail({ entry }: { entry: CycleHistoryEntry }) {
       {entry.lines.length > 0 && (
         <>
           <div className="mb-[5px] font-mono text-label text-muted">{t.history.products}</div>
-          <div className="divide-y divide-brand-border rounded-[12px] border border-brand-border bg-[#fdfdfd]">
+          <div className="divide-y divide-brand-border rounded-xl border border-brand-border bg-white">
             {entry.lines.map((l, index) => (
               <div key={`${l.productName}-${index}`} className="flex items-start gap-3 px-3 py-2.5">
                 <span aria-hidden="true" className="w-[18px] shrink-0 text-[18px] leading-none">
@@ -304,33 +285,6 @@ function CycleDetail({ entry }: { entry: CycleHistoryEntry }) {
       )}
       <CycleTotals entry={entry} />
     </>
-  );
-}
-
-function BalanceSummary({ balance }: { balance: number }) {
-  return (
-    <div
-      className={`mb-4 rounded-[16px] border p-4 ${
-        balance < 0
-          ? "border-brand-red/30 bg-brand-red-light"
-          : "border-primary-mid bg-primary-soft"
-      }`}
-    >
-      <div
-        className={`mb-[6px] font-mono text-label uppercase tracking-[0.10em] ${
-          balance < 0 ? "text-brand-red" : "text-primary-text"
-        }`}
-      >
-        {t.history.currentBalance}
-      </div>
-      <span
-        className={`text-[36px] font-black tracking-[-0.04em] ${
-          balance < 0 ? "text-brand-red" : "text-brand-near-black"
-        }`}
-      >
-        {formatSignedMoney(balance)}
-      </span>
-    </div>
   );
 }
 

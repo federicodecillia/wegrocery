@@ -22,7 +22,7 @@ function toCents(amount: string): number {
 }
 
 function presetClass(selected: boolean): string {
-  return `rounded-[12px] border py-[10px] font-mono text-[15px] font-bold ${
+  return `rounded-xl border py-[10px] font-mono text-[15px] font-bold ${
     selected
       ? "border-primary bg-primary-soft text-brand-near-black"
       : "border-brand-border bg-white text-brand-near-black"
@@ -88,7 +88,7 @@ export function TopupForm({ presets, minCents, maxCents }: Props) {
         inputMode="decimal"
         value={amount}
         onChange={(e) => setAmount(e.target.value)}
-        className="mb-1 w-full rounded-[12px] border border-brand-border px-3 py-[10px] font-mono text-[15px]"
+        className="mb-1 w-full rounded-xl border border-brand-border px-3 py-[10px] font-mono text-[15px]"
       />
       <p className="mb-4 text-[12px] text-brand-gray">
         {t.topup.amountRange(formatMoney(minCents / 100), formatMoney(maxCents / 100))}

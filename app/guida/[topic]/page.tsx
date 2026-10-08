@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { UiIcon, topicIcon } from "@/components/ui-icon";
 import { BackLink } from "@/components/ui/back-link";
 import { notFound } from "next/navigation";
 import { t } from "@/lib/i18n";
@@ -33,7 +34,9 @@ export default async function GuideTopicPage({ params }: { params: Promise<{ top
         <BackLink href="/guida">{t.guide.backToGuide}</BackLink>
       </div>
       <h1 className="mb-1 flex items-center gap-2 text-title font-black text-brand-near-black">
-        <span aria-hidden>{topic.emoji}</span>
+        <span className="text-primary-text">
+          <UiIcon name={topicIcon(topic.id)} className="h-6 w-6" />
+        </span>
         {topic.title}
       </h1>
       <p className="mb-5 text-[14px] leading-snug text-brand-gray">{topic.summary}</p>
@@ -52,7 +55,7 @@ export default async function GuideTopicPage({ params }: { params: Promise<{ top
               href={`/guida/${x.id}`}
               className="inline-flex items-center gap-1 rounded-full border border-brand-border bg-white px-3 py-[6px] text-[12px] font-bold text-brand-near-black hover:border-primary-mid"
             >
-              <span aria-hidden>{x.emoji}</span>
+              <UiIcon name={topicIcon(x.id)} className="h-4 w-4 text-primary-text" />
               {x.title}
             </Link>
           ))}

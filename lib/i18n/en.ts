@@ -371,7 +371,7 @@ export const en: Strings = {
   },
   notifications: {
     title: "Notifications",
-    markAllRead: "Mark all read ✓",
+    markAllRead: "Mark all as read",
     noNotifications: "No notifications",
     noNotificationsHint: "We'll notify you when there are updates on your order or balance.",
     today: "Today",
@@ -540,7 +540,6 @@ export const en: Strings = {
     newsSubtitle: "What's new",
     seeAllNews: "See all updates →",
     groupTitle: "Our group",
-    contactEmoji: "📬",
     contactGroup: "Write to the group",
     contactTech: "Technical problems",
     contactHeading: "Do you have other questions?",
@@ -1619,12 +1618,12 @@ export const en: Strings = {
     orderLineAdjustedNoteReceived: (product: string, ordered: string, received: string) =>
       `${product}: ${ordered} ordered, ${received} received`,
     orderLineAdjustedNoteCost: (product: string, cost: string) =>
-      `${product}: cost updated to ${cost} EUR`,
+      `${product}: cost updated to ${cost}`,
     orderLineAdjustedNoteReverted: (product: string) => `${product}: adjustment reverted`,
     orderLineAdjustedBodyRefund: (notes: string, amount: string) =>
-      `${notes} · refund of ${amount} EUR to your balance.`,
+      `${notes} · refund of ${amount} to your balance.`,
     orderLineAdjustedBodyCharge: (notes: string, amount: string) =>
-      `${notes} · additional charge of ${amount} EUR on your balance.`,
+      `${notes} · additional charge of ${amount} on your balance.`,
     payoutSentTitle: "Balance returned",
     payoutSentBody: (amount: string, reason: string, balance: string) =>
       `We returned ${amount} of your balance to you: ${reason}. New balance: ${balance}.`,
