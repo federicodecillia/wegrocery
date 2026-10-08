@@ -1,7 +1,9 @@
 import { AppShell } from "@/components/app-shell";
 import { StoricoTabs } from "./storico-tabs";
 import { getUserRole, requireUserSession } from "@/lib/auth/session";
-import { getFamilyMemberIds, getMemberBalance, getMemberLedger, getMemberStorico } from "@/lib/db/queries";
+import { getFamilyMemberIds, getMemberById, getMemberLedger, getMemberStorico } from "@/lib/db/queries";
+import { getDb } from "@/lib/db/client";
+import { getWalletBalance } from "@/lib/payments/balance-due";
 import { movementRecorder } from "@/lib/movement-label";
 
 export default async function StoricoPage() {
@@ -11,11 +13,13 @@ export default async function StoricoPage() {
 
   // A family's account shows the history its people had before joining too.
   const historyIds = await getFamilyMemberIds(memberId);
-  const [balance, orderHistory, movements] = await Promise.all([
-    getMemberBalance(memberId),
+  const [member, orderHistory, movements] = await Promise.all([
+    getMemberById(memberId),
     getMemberStorico(historyIds),
     getMemberLedger(historyIds),
   ]);
+  // Without the card cycles not settled yet, like Home.
+  const balance = await getWalletBalance(getDb(), memberId, member?.paysOffline ?? false);
 
   return (
     <AppShell email={session.user.email} name={session.user.fullName} isAdmin={role === "admin"} memberId={memberId} personId={session.user.personId}>

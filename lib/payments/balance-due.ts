@@ -26,6 +26,22 @@ export async function getConsolidatedBalanceCents(db: Db, memberId: string): Pro
   return rows[0]?.cents ?? 0;
 }
 
+// The wallet balance a member sees and spends (Home, Ordine, Ricarica,
+// Storico, Profilo, the credit limit, the top-up ceiling). A wallet group can
+// run single cycles paid by card (lib/payments/cycle-mode.ts): their money
+// stays out of the wallet until the cycle is settled, so a card payment is
+// never spendable on a wallet cycle nor shown as credit. Without card cycles
+// this is the plain sum of the ledger. A member who pays outside the app has
+// no card money: every movement is on the wallet.
+export async function getWalletBalance(db: Db, memberId: string, paysOffline: boolean): Promise<number> {
+  if (paysOffline) {
+    const { rows } = await db.execute<{ cents: number }>(sql`
+      SELECT coalesce(round(sum(amount) * 100), 0)::integer AS cents FROM ledger_entries WHERE member_id = ${memberId}`);
+    return (rows[0]?.cents ?? 0) / 100;
+  }
+  return (await getConsolidatedBalanceCents(db, memberId)) / 100;
+}
+
 export type BalancePart = { cycleId: string | null; cents: number };
 
 // How a payment of the amount due is booked: on the settled per_order cycles

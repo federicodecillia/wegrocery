@@ -9,7 +9,6 @@ import { getUserRole, requireUserSession } from "@/lib/auth/session";
 import { brand } from "@/lib/brand";
 import {
   getFamilyPeople,
-  getMemberBalance,
   getMemberById,
   getNotificationPreferences,
   getPendingFamilyInvites,
@@ -18,6 +17,8 @@ import { t } from "@/lib/i18n";
 import { formatDate, formatSignedMoney } from "@/lib/i18n/format";
 import { isMembershipCheckEnabled } from "@/lib/membership/wallyfor";
 import { resolvePreferences } from "@/lib/notifications/categories";
+import { getDb } from "@/lib/db/client";
+import { getWalletBalance } from "@/lib/payments/balance-due";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
 import { countChannels, familyState, initials } from "@/lib/profile/summary";
 import { getRoleLabel } from "@/lib/roles";
@@ -46,7 +47,9 @@ export default async function ProfilePage() {
   // this member pays in the app; the same rule as Home and /ricarica.
   const wallet = settings.mode !== "per_order" || Boolean(account?.paysOffline ?? person?.paysOffline);
   const paysOffline = settings.mode === "per_order" && Boolean(account?.paysOffline ?? person?.paysOffline);
-  const balance = wallet ? await getMemberBalance(memberId) : 0;
+  const balance = wallet
+    ? await getWalletBalance(getDb(), memberId, Boolean(account?.paysOffline ?? person?.paysOffline))
+    : 0;
 
   const name = person?.fullName ?? session.user.fullName ?? "";
   const channels = countChannels(resolvePreferences(prefRows));

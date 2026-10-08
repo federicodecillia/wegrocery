@@ -94,6 +94,11 @@ export function OpenCycleCard({
           <span className="mb-1 ml-1.5 inline-flex rounded-full bg-black/[0.05] px-2 py-0.5 text-label font-semibold text-brand-gray">
             {t.admin.cycle.accessLabel}: {getAccessLabel(cycle.accessLevel)}
           </span>
+          {cycle.paymentMode === "per_order" && (
+            <span className="mb-1 ml-1.5 inline-flex rounded-full bg-primary-soft px-2 py-0.5 text-label font-semibold text-primary-text">
+              💳 {t.admin.cycle.cardBadge}
+            </span>
+          )}
           <h3 className="mt-1 text-[15px] font-bold text-brand-near-black">{cycle.title}</h3>
         </div>
         <div className="flex w-full flex-wrap gap-2">
@@ -717,19 +722,65 @@ export function EditCycleForm({
   );
 }
 
+// Wallet or card, for a new cycle of a wallet group. Same look as the
+// shipping and fee toggles.
+function PaymentModeFields({
+  mode,
+  onModeChange,
+}: {
+  mode: "wallet" | "per_order";
+  onModeChange: (mode: "wallet" | "per_order") => void;
+}) {
+  const options = [
+    { v: "wallet" as const, label: t.admin.cycle.paymentModeWallet },
+    { v: "per_order" as const, label: t.admin.cycle.paymentModeCard },
+  ];
+  return (
+    <div>
+      <label className={labelCls}>{t.admin.cycle.paymentModeLabel}</label>
+      <div className="mb-2 flex rounded-lg bg-black/[0.05] p-0.5">
+        {options.map((opt) => (
+          <button
+            key={opt.v}
+            type="button"
+            aria-pressed={mode === opt.v}
+            onClick={() => onModeChange(opt.v)}
+            className={`flex-1 rounded-md py-1.5 text-label font-semibold transition-colors ${
+              mode === opt.v ? "bg-white text-brand-near-black shadow-sm" : "bg-transparent text-brand-gray"
+            }`}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+      <p className="text-label text-muted">
+        {mode === "per_order" ? t.admin.cycle.paymentModeCardHint : t.admin.cycle.paymentModeWalletHint}
+      </p>
+    </div>
+  );
+}
+
 // ── Create Cycle Form ─────────────────────────────────────────────────────────
 
 export function CreateCycleForm({
   suppliers,
-  paymentMode,
-  handlingFee,
+  paymentMode: groupMode,
+  cardSelectable,
+  walletFee,
+  cardFee,
 }: {
   suppliers: Supplier[];
+  /** The group's mode: the default of a new cycle. */
   paymentMode: "wallet" | "per_order";
-  /** The fee the new cycle starts from; null = none. */
-  handlingFee: { type: "percent" | "fixed"; value: string } | null;
+  /** A wallet group may pay this cycle by card (lib/payments/cycle-mode.ts). */
+  cardSelectable: boolean;
+  /** The fee a new cycle of each mode starts from; null = none. */
+  walletFee: { type: "percent" | "fixed"; value: string } | null;
+  cardFee: { type: "percent" | "fixed"; value: string } | null;
 }) {
   const [open, setOpen] = useState(false);
+  const [paymentMode, setPaymentMode] = useState<"wallet" | "per_order">(groupMode);
+  const handlingFee = paymentMode === "per_order" ? cardFee : walletFee;
   const [isPending, startTransition] = useTransition();
   const [shippingMode, setShippingMode] = useState<"fixed_per_member" | "proportional">(
     "fixed_per_member",
@@ -753,6 +804,7 @@ export function CreateCycleForm({
       shippingTotal: fd.get("shippingTotal") as string,
       handlingFeeType: fd.get("handlingFeeType") as string,
       handlingFeeValue: fd.get("handlingFeeValue") as string,
+      paymentMode,
     };
     startTransition(async () => {
       const result = await adminCreateCycle(data);
@@ -807,7 +859,11 @@ export function CreateCycleForm({
           defaultTotal=""
         />
 
+        {cardSelectable && <PaymentModeFields mode={paymentMode} onModeChange={setPaymentMode} />}
+
         <HandlingFeeFields
+          // A new mode starts from its own last fee.
+          key={paymentMode}
           defaultType={handlingFee?.type ?? "none"}
           defaultValue={handlingFee?.value ?? ""}
           allowNone={paymentMode === "wallet"}

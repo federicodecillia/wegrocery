@@ -1,5 +1,7 @@
 import { getAllCycles, getAllSuppliers, getLastHandlingFee, getOpenCycles, getOpenCycleStats } from "@/lib/db/queries";
 import { getDb } from "@/lib/db/client";
+import { brand } from "@/lib/brand";
+import { cardCyclesSelectable } from "@/lib/payments/cycle-mode";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
 import { getSettlementStatus, type SettlementStatus } from "@/lib/payments/settlement-store";
 import { DEFAULT_HANDLING_FEE } from "@/lib/payments/order-payment";
@@ -25,9 +27,19 @@ export async function TabCiclo() {
     getPaymentSettings(),
   ]);
   // Each new cycle starts from the last fee of the same payment mode: none in
-  // wallet mode, 10% per order, until one is set.
-  const lastFee = await getLastHandlingFee(settings.mode);
-  const newCycleFee = lastFee ?? (settings.mode === "per_order" ? DEFAULT_HANDLING_FEE : null);
+  // wallet mode, 10% per order, until one is set. A wallet group may also pay
+  // a single cycle by card (lib/payments/cycle-mode.ts).
+  const cardSelectable = cardCyclesSelectable({
+    groupMode: settings.mode,
+    stripeUsable: settings.stripeKey.usable,
+    currency: brand.currency,
+  });
+  const [lastWalletFee, lastCardFee] = await Promise.all([
+    settings.mode === "wallet" ? getLastHandlingFee("wallet") : null,
+    settings.mode === "per_order" || cardSelectable ? getLastHandlingFee("per_order") : null,
+  ]);
+  const feeInput = (fee: { type: "percent" | "fixed"; value: number } | null) =>
+    fee && { type: fee.type, value: String(fee.value) };
 
   // Where each closed or cancelled pay-per-order cycle stands.
   const settlementStatus = new Map<string, SettlementStatus>(
@@ -96,7 +108,9 @@ export async function TabCiclo() {
       <CreateCycleForm
         suppliers={suppliers}
         paymentMode={settings.mode}
-        handlingFee={newCycleFee && { type: newCycleFee.type, value: String(newCycleFee.value) }}
+        cardSelectable={cardSelectable}
+        walletFee={feeInput(lastWalletFee)}
+        cardFee={feeInput(lastCardFee ?? DEFAULT_HANDLING_FEE)}
       />
 
       {cycles.length > 0 && (
@@ -125,6 +139,11 @@ export async function TabCiclo() {
                         ? t.admin.cycle.cancelledBadge
                         : t.admin.cycle.closedBadge}
                   </span>
+                  {c.paymentMode === "per_order" && (
+                    <span className="shrink-0 rounded-full bg-primary-soft px-2 py-0.5 text-label font-semibold text-primary-text">
+                      💳 {t.admin.cycle.cardBadge}
+                    </span>
+                  )}
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-[13px] font-medium text-brand-near-black">{c.title}</div>
                     <div className="mt-0.5 font-mono text-label leading-tight text-muted">

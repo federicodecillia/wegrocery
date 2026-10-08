@@ -5,7 +5,6 @@ import { t } from "@/lib/i18n";
 import { getUserRole, requireUserSession } from "@/lib/auth/session";
 import {
   getCycleProducts,
-  getMemberBalance,
   getMemberById,
   getMemberOrderLines,
   getOpenCycles,
@@ -16,6 +15,7 @@ import { cancelOrder, startOrderPayment } from "@/lib/actions/order-payment";
 import { PendingRefresh } from "@/components/ricarica/pending-refresh";
 import { getDb } from "@/lib/db/client";
 import { getOrderPaymentStatus } from "@/lib/db/queries";
+import { getWalletBalance } from "@/lib/payments/balance-due";
 import { getCycleCoverageCents } from "@/lib/payments/order-confirm";
 import { cycleHandlingFee, type HandlingFee } from "@/lib/payments/order-payment";
 import { orderLinesKey, orderStateKey, resumeDraft } from "@/lib/order-draft";
@@ -34,11 +34,9 @@ export default async function OrdinePage({
   const role = getUserRole(session);
   const memberId = session.user.memberId!;
 
-  const [balance, openCycles, member] = await Promise.all([
-    getMemberBalance(memberId),
-    getOpenCycles(),
-    getMemberById(memberId),
-  ]);
+  const [openCycles, member] = await Promise.all([getOpenCycles(), getMemberById(memberId)]);
+  // Without the card cycles not settled yet (lib/payments/balance-due.ts).
+  const balance = await getWalletBalance(getDb(), memberId, member?.paysOffline ?? false);
 
   const activeCycles = openCycles.filter((c) => canAccessCycle(c.accessLevel, role));
 

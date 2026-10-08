@@ -13,7 +13,6 @@ import { formatSignedMoney } from "@/lib/i18n/format";
 import { getUserRole, requireUserSession } from "@/lib/auth/session";
 import {
   getCycleProducts,
-  getMemberBalance,
   getMemberById,
   getMemberLedger,
   getMemberOrderLines,
@@ -22,7 +21,7 @@ import {
   getOrderDraft,
 } from "@/lib/db/queries";
 import { getDb } from "@/lib/db/client";
-import { getConsolidatedBalanceCents } from "@/lib/payments/balance-due";
+import { getConsolidatedBalanceCents, getWalletBalance } from "@/lib/payments/balance-due";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
 import { getCycleCoverageCents } from "@/lib/payments/order-confirm";
 import {
@@ -46,8 +45,7 @@ export default async function HomePage({
   const memberId = session.user.memberId!;
   const personId = session.user.personId ?? memberId;
 
-  const [balance, openCycles, recentMovements, nextPickup, settings, member] = await Promise.all([
-    getMemberBalance(memberId),
+  const [openCycles, recentMovements, nextPickup, settings, member] = await Promise.all([
     getOpenCycles(),
     getMemberLedger(memberId, 4),
     getNextMemberPickup(memberId),
@@ -64,6 +62,11 @@ export default async function HomePage({
   // member who pays outside the app keeps the wallet view.
   const payPerOrder = settings.mode === "per_order" && !member?.paysOffline;
   const consolidatedCents = payPerOrder ? await getConsolidatedBalanceCents(getDb(), memberId) : 0;
+  // A wallet group's balance leaves out the card cycles not settled yet.
+  const balance = payPerOrder ? 0 : await getWalletBalance(getDb(), memberId, member?.paysOffline ?? false);
+  // A cycle paid by card (the group's mode, or one card cycle in a wallet
+  // group) is confirmed by paying it, unless the member pays outside the app.
+  const paidByCard = (cycle: { paymentMode: string }) => cycle.paymentMode === "per_order" && !member?.paysOffline;
 
   const activeCycles = openCycles.filter((c) => canAccessCycle(c.accessLevel, role));
 
@@ -75,7 +78,7 @@ export default async function HomePage({
       ]);
       const orderTotal = myLines.reduce((s, l) => s + parseFloat(l.lineTotal), 0);
       // The order preparation fee a wallet member will be charged at the close (estimate).
-      const feeCents = payPerOrder ? 0 : handlingFeeCents(Math.round(orderTotal * 100), cycleHandlingFee(cycle));
+      const feeCents = paidByCard(cycle) ? 0 : handlingFeeCents(Math.round(orderTotal * 100), cycleHandlingFee(cycle));
       return { cycle, cycleProducts, myLines, orderTotal, feeCents, payStatus: await payStatusOf(cycle, cycleProducts, myLines.length > 0) };
     })
   );
@@ -86,7 +89,7 @@ export default async function HomePage({
     hasConfirmedOrder: boolean,
   ): Promise<HomeOrderStatus> {
     const feeType = cycle.handlingFeeType;
-    if (!payPerOrder || cycle.paymentMode !== "per_order" || (feeType !== "percent" && feeType !== "fixed") || cycle.handlingFeeValue === null) {
+    if (!paidByCard(cycle) || (feeType !== "percent" && feeType !== "fixed") || cycle.handlingFeeValue === null) {
       return null;
     }
     const [coveredCents, draftLines] = await Promise.all([
@@ -108,7 +111,10 @@ export default async function HomePage({
     return homeOrderStatus({ hasConfirmedOrder, draft, coveredCents });
   }
 
-  const globalOrderTotal = cycleDataList.reduce((sum, d) => sum + (isNaN(d.orderTotal) ? 0 : d.orderTotal + d.feeCents / 100), 0);
+  // Only what the wallet will pay: a card cycle's order is paid already.
+  const globalOrderTotal = cycleDataList
+    .filter((d) => !paidByCard(d.cycle))
+    .reduce((sum, d) => sum + (isNaN(d.orderTotal) ? 0 : d.orderTotal + d.feeCents / 100), 0);
   const afterBalance = (balance || 0) - globalOrderTotal;
 
   const isNegative = balance < 0;
