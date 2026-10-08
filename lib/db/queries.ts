@@ -18,6 +18,7 @@ import {
   supplierProducts,
   type DraftLine,
 } from "./schema";
+import type { CycleLedgerRow } from "@/lib/admin/cycle-money";
 import { buildCycleHistory, type CycleHistoryEntry } from "@/lib/cycle-history";
 import { MISS_RETENTION_DAYS } from "@/lib/guide/search-misses";
 import { normalizeEmail } from "@/lib/member-email";
@@ -1576,4 +1577,28 @@ export async function getGuideSearchMisses(limit = 30) {
     .where(sql`${guideSearchMisses.lastAt} >= now() - make_interval(days => ${MISS_RETENTION_DAYS})`)
     .orderBy(desc(guideSearchMisses.count), desc(guideSearchMisses.lastAt))
     .limit(limit);
+}
+
+/**
+ * A cycle's live ledger rows (not reversed, not a reversal), with the member's
+ * name, for Admin → Ciclo → Conti. Read only; summarized by
+ * summarizeCycleMoney (lib/admin/cycle-money.ts).
+ */
+export async function getCycleLedgerRows(cycleId: string): Promise<CycleLedgerRow[]> {
+  const db = getDb();
+  return db
+    .select({
+      entryId: ledgerEntries.entryId,
+      memberName: members.fullName,
+      entryDate: ledgerEntries.entryDate,
+      type: ledgerEntries.type,
+      amount: ledgerEntries.amount,
+      paymentId: ledgerEntries.paymentId,
+      note: ledgerEntries.note,
+      replaces: ledgerEntries.replaces,
+    })
+    .from(ledgerEntries)
+    .innerJoin(members, eq(members.memberId, ledgerEntries.memberId))
+    .where(and(eq(ledgerEntries.cycleId, cycleId), liveLedger))
+    .orderBy(asc(ledgerEntries.entryDate), asc(ledgerEntries.entryId));
 }

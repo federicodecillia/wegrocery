@@ -22,11 +22,10 @@ import {
   EditCycleButton,
   OpenCycleOverview,
   OrdersLink,
-  SupplierActionsButton,
   type SerializedCycle,
 } from "./ciclo-forms";
-import { CancelCycleButton } from "./cancel-cycle-dialog";
-import { SettleCycleButton } from "./settle-cycle-dialog";
+import { CycleAccountsView } from "./cycle-accounts-view";
+import { SupplierSteps } from "./supplier-steps";
 import { CycleList, CyclePicker, CycleShortlist, type CycleListItem, type SettleState } from "./cycle-list";
 import { CycleOrdersView } from "./cycle-orders-view";
 
@@ -241,45 +240,22 @@ async function SelectedCycle({
 
       {view === "ordini" && <CycleOrdersView cycleId={c.cycleId} cycleTitle={c.title} editable={c.status === "closed"} />}
 
-      {view === "fornitore" && (
-        <Card>
-          <CardBody>
+      {view === "fornitore" &&
+        (c.supplierName ? (
+          <div>
             <p className="mb-3 max-w-prose text-[13px] text-brand-gray">{w.supplierIntro}</p>
-            <SupplierActionsButton
-              cycleId={c.cycleId}
-              cycleTitle={c.title}
-              supplierName={c.supplierName ?? null}
-              supplierEmail={c.supplierEmail ?? null}
-            />
-          </CardBody>
-        </Card>
-      )}
-
-      {view === "conti" && (
-        <div className="space-y-4">
+            <SupplierSteps cycleId={c.cycleId} />
+          </div>
+        ) : (
           <Card>
             <CardBody>
-              <p className="mb-3 max-w-prose text-[13px] text-brand-gray">{settlement ? w.accountsIntro : w.nothingToSettle}</p>
-              {settlement && (
-                <SettleCycleButton
-                  cycleId={c.cycleId}
-                  cycleTitle={c.title}
-                  settledAt={c.settledAt?.toISOString() ?? null}
-                  status={settlement}
-                />
-              )}
+              <p className="max-w-prose text-[13px] text-brand-gray">{w.noSupplier}</p>
             </CardBody>
           </Card>
-          {c.status === "closed" && (
-            <Card className="border-brand-red/30">
-              <CardBody>
-                <h3 className="text-[14px] font-bold text-brand-red">{w.dangerZone}</h3>
-                <p className="mt-1 mb-3 max-w-prose text-[13px] text-brand-gray">{w.cancelIntro}</p>
-                <CancelCycleButton cycleId={c.cycleId} cycleTitle={c.title} />
-              </CardBody>
-            </Card>
-          )}
-        </div>
+        ))}
+
+      {view === "conti" && (
+        <CycleAccountsView cycle={cycle} settledAt={c.settledAt?.toISOString() ?? null} settlement={settlement} />
       )}
     </section>
   );

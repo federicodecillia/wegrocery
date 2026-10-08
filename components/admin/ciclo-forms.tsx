@@ -21,7 +21,6 @@ import type { CatalogProductItem } from "@/lib/db/queries";
 import Link from "next/link";
 import { adminHref } from "@/lib/admin/nav";
 import { CycleReviewCloseButton } from "./cycle-review-modal";
-import { SupplierActionsDialog } from "./supplier-actions-dialog";
 import { ImportListingWizard } from "./import-listing-wizard";
 
 type Supplier = { supplierId: string; name: string };
@@ -1099,53 +1098,6 @@ export function CycleProductPicker({
         )}
       </div>
     </div>
-  );
-}
-
-// ── Supplier Actions Button ──────────────────────────────────────────────────
-
-// Opens the SupplierActionsDialog hub with three sections: scarica xlsx,
-// invia mail, carica distinta compilata. The button is enabled even when
-// the supplier email is missing — the admin can type it directly into the
-// dialog for that single send, and the download + carica distinta sections
-// are useful regardless of email configuration. Disabled only when there
-// is no supplier at all on the cycle, since most of the dialog's defaults
-// derive from the supplier record.
-export function SupplierActionsButton({
-  cycleId,
-  cycleTitle,
-  supplierName,
-}: {
-  cycleId: string;
-  cycleTitle: string;
-  supplierName: string | null;
-  // Kept on the call-site for parity with the previous API but no longer
-  // gating the button — the dialog itself surfaces a missing-email case
-  // by leaving the field empty for the admin to fill in.
-  supplierEmail?: string | null;
-}) {
-  const [open, setOpen] = useState(false);
-  const disabledReason = !supplierName ? t.admin.cycle.noSupplierDisabled : null;
-
-  return (
-    <>
-      <button
-        onClick={() => setOpen(true)}
-        disabled={!!disabledReason}
-        title={disabledReason ?? undefined}
-        className="rounded-lg bg-accent/10 px-3 py-1 text-label font-bold text-accent-text hover:bg-accent/20 disabled:cursor-not-allowed disabled:opacity-50"
-      >
-        {t.admin.cycle.supplierButton}
-      </button>
-      {open && (
-        <SupplierActionsDialog
-          open={open}
-          onOpenChange={setOpen}
-          cycleId={cycleId}
-          cycleTitle={cycleTitle}
-        />
-      )}
-    </>
   );
 }
 
