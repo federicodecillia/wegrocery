@@ -1089,6 +1089,8 @@ export const en: Strings = {
       ordersLink: "Orders",
       ordersAria: (name: string) => `Orders of ${name}`,
       deleteAria: (name: string) => `Delete ${name}`,
+      moreAria: (name: string) => `More actions for ${name}`,
+      deleteAction: "Delete member",
       addMember: "Add member",
       editMember: (name: string) => `Edit: ${name}`,
       memberAdded: "Member added",

@@ -1092,6 +1092,8 @@ export const it = {
       ordersLink: "Ordini",
       ordersAria: (name: string) => `Ordini di ${name}`,
       deleteAria: (name: string) => `Elimina ${name}`,
+      moreAria: (name: string) => `Altre azioni per ${name}`,
+      deleteAction: "Elimina socio",
       addMember: "Aggiungi socio",
       editMember: (name: string) => `Modifica: ${name}`,
       memberAdded: "Socio aggiunto",

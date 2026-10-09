@@ -14,6 +14,7 @@ import { adminHref } from "@/lib/admin/nav";
 import type { DuplicatePair } from "@/lib/members/duplicates";
 import { DuplicateMembers } from "./duplicate-members";
 import { MergeMembersDialog } from "./merge-members-dialog";
+import { Sheet } from "@/components/ui/sheet";
 
 type Member = {
   memberId: string;
@@ -230,6 +231,10 @@ export function SociList({
     .filter((m) => !m.mergedIntoName)
     .map((m) => ({ memberId: m.memberId, fullName: m.fullName, email: m.email, active: m.active, balance: m.balance ?? 0 }));
 
+  // Below lg the secondary actions of a member, in a sheet.
+  const [actionsFor, setActionsFor] = useState<Member | null>(null);
+  const canMerge = (m: Member) => !m.mergedIntoName && !m.householdOfName && !m.familyNames;
+
   function requestMerge(request: MergeRequest) {
     setEditingId(null);
     setMergeRequest(request);
@@ -241,6 +246,12 @@ export function SociList({
       if (result.error) toast.error(result.error);
       else toast.success(t.admin.members.inviteSent(m.fullName));
     });
+  }
+
+  // The sheet closes first, so a confirm or the merge dialog opens on its own.
+  function runAction(action: () => void) {
+    setActionsFor(null);
+    setTimeout(action);
   }
 
   const query = filter.toLowerCase().trim();
@@ -307,26 +318,22 @@ export function SociList({
             ) : (
               // Stacked on phones, one row from sm. Emails show only in the
               // edit form: a long address cannot wrap and ran under the buttons.
+              // Ordini and Modifica are always in view; the other actions sit
+              // beside them from lg and behind ⋯ (a sheet) below it, so the
+              // actions never wrap to a second line.
               <div
                 key={m.memberId}
                 className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3"
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                    <span className="break-words text-[13px] font-medium text-brand-near-black">{m.fullName}</span>
+                    <span className="break-words text-[14px] font-medium text-brand-near-black">{m.fullName}</span>
+                    <span className={`whitespace-nowrap rounded-full px-2 py-0.5 text-label font-semibold ${roleColor}`}>
+                      {getRoleLabel(m.role)}
+                    </span>
                     {!m.active && (
                       <span className="rounded-full bg-brand-red-light px-1.5 py-0.5 text-label font-bold text-brand-red">
                         {t.admin.members.inactiveBadge}
-                      </span>
-                    )}
-                    {m.mergedIntoName && (
-                      <span className="rounded-full bg-black/[0.05] px-1.5 py-0.5 text-label font-bold text-brand-gray">
-                        {t.admin.members.merge.mergedBadge(m.mergedIntoName)}
-                      </span>
-                    )}
-                    {(m.householdOfName || m.familyNames) && (
-                      <span className="rounded-full bg-accent-soft px-1.5 py-0.5 text-label font-bold text-accent-text">
-                        {t.admin.members.familyBadge((m.householdOfName ?? m.familyNames)!)}
                       </span>
                     )}
                     {offlineOption && m.paysOffline && (
@@ -335,60 +342,69 @@ export function SociList({
                       </span>
                     )}
                   </div>
-                  <div className="text-label text-muted">
+                  <div className="mt-0.5 text-label text-muted">
                     {m.lastLoginAt ? t.admin.members.lastLogin(formatDate(m.lastLoginAt)) : t.admin.members.neverLoggedIn}
                   </div>
+                  {m.mergedIntoName && (
+                    <div className="mt-0.5 text-label text-brand-gray">{t.admin.members.merge.mergedBadge(m.mergedIntoName)}</div>
+                  )}
+                  {(m.householdOfName || m.familyNames) && (
+                    <div className="mt-0.5 text-label font-medium text-accent-text">
+                      {t.admin.members.familyBadge((m.householdOfName ?? m.familyNames)!)}
+                    </div>
+                  )}
                 </div>
-                <div className="flex shrink-0 flex-wrap items-center gap-2">
-                  <span className={`whitespace-nowrap rounded-full px-2 py-0.5 text-label font-semibold ${roleColor}`}>
-                    {getRoleLabel(m.role)}
-                  </span>
+                <div className="flex shrink-0 items-center gap-2">
                   <Link
                     href={adminHref("soci", null, { member: m.memberId })}
                     aria-label={t.admin.members.ordersAria(m.fullName)}
-                    className="whitespace-nowrap rounded-full border border-brand-border px-2.5 py-1 text-label font-semibold text-brand-near-black"
+                    className="hit-44 inline-flex min-h-9 whitespace-nowrap rounded-full border border-brand-border px-3 py-1.5 text-label font-semibold items-center text-brand-near-black"
                   >
                     {t.admin.members.ordersLink}
                   </Link>
-                  {m.active && (
-                    <button
-                      onClick={() => handleInvite(m)}
-                      disabled={inviting}
-                      className="whitespace-nowrap rounded-full border border-brand-border px-2.5 py-1 text-label font-semibold text-accent-text disabled:opacity-40"
-                    >
-                      {t.admin.members.invite}
-                    </button>
-                  )}
-                  {m.householdOfName && (
-                    <button
-                      onClick={() => handleUnlink(m)}
-                      disabled={unlinking}
-                      className="whitespace-nowrap rounded-full border border-brand-border px-2.5 py-1 text-label font-semibold text-brand-gray disabled:opacity-40"
-                    >
-                      {t.admin.members.familyUnlink}
-                    </button>
-                  )}
-                  {!m.mergedIntoName && !m.householdOfName && !m.familyNames && (
-                    <button
-                      onClick={() => requestMerge({ absorbedId: m.memberId })}
-                      className="whitespace-nowrap rounded-full border border-brand-border px-2.5 py-1 text-label font-semibold text-brand-gray"
-                    >
-                      {t.admin.members.merge.button}
-                    </button>
-                  )}
-                  <button
-                    onClick={() => setEditingId(m.memberId)}
-                    className="whitespace-nowrap rounded-full border border-brand-border px-2.5 py-1 text-label font-semibold text-brand-gray"
-                  >
+                  <button onClick={() => setEditingId(m.memberId)} className="hit-44 min-h-9 whitespace-nowrap rounded-full border border-brand-border px-3 py-1.5 text-label font-semibold text-brand-near-black">
                     {t.admin.common.edit}
                   </button>
+                  <div className="hidden items-center gap-2 lg:flex">
+                    {m.active && (
+                      <button
+                        onClick={() => handleInvite(m)}
+                        disabled={inviting}
+                        className="min-h-9 whitespace-nowrap rounded-full border border-brand-border px-3 py-1.5 text-label font-semibold text-accent-text disabled:opacity-40"
+                      >
+                        {t.admin.members.invite}
+                      </button>
+                    )}
+                    {m.householdOfName && (
+                      <button
+                        onClick={() => handleUnlink(m)}
+                        disabled={unlinking}
+                        className="min-h-9 whitespace-nowrap rounded-full border border-brand-border px-3 py-1.5 text-label font-semibold text-brand-gray disabled:opacity-40"
+                      >
+                        {t.admin.members.familyUnlink}
+                      </button>
+                    )}
+                    {canMerge(m) && (
+                      <button onClick={() => requestMerge({ absorbedId: m.memberId })} className="min-h-9 whitespace-nowrap rounded-full border border-brand-border px-3 py-1.5 text-label font-semibold text-brand-gray">
+                        {t.admin.members.merge.button}
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleDelete(m)}
+                      disabled={deletingId}
+                      aria-label={t.admin.members.deleteAria(m.fullName)}
+                      className="flex h-9 w-9 items-center justify-center rounded-full border border-brand-red/30 text-label font-semibold text-brand-red disabled:opacity-40"
+                    >
+                      <span aria-hidden>✕</span>
+                    </button>
+                  </div>
                   <button
-                    onClick={() => handleDelete(m)}
-                    disabled={deletingId}
-                    aria-label={t.admin.members.deleteAria(m.fullName)}
-                    className="flex h-9 w-9 items-center justify-center rounded-full border border-brand-red/30 text-label font-semibold text-brand-red disabled:opacity-40"
+                    onClick={() => setActionsFor(m)}
+                    aria-label={t.admin.members.moreAria(m.fullName)}
+                    aria-haspopup="dialog"
+                    className="hit-44 flex h-9 w-9 items-center justify-center rounded-full border border-brand-border text-[16px] leading-none text-brand-near-black lg:hidden"
                   >
-                    <span aria-hidden>✕</span>
+                    <span aria-hidden>⋯</span>
                   </button>
                 </div>
               </div>
@@ -421,6 +437,34 @@ export function SociList({
       {visible.length === 0 && (
         <div className="py-6 text-center text-[12px] text-brand-gray">{t.admin.common.noResults}</div>
       )}
+      <Sheet
+        open={actionsFor !== null}
+        onRequestClose={() => setActionsFor(null)}
+        size="sm"
+        title={actionsFor?.fullName}
+        subtitle={actionsFor ? getRoleLabel(actionsFor.role) : undefined}
+      >
+        {actionsFor && (
+          <div className="divide-y divide-brand-border pb-[env(safe-area-inset-bottom)]">
+            {actionsFor.active && (
+              <SheetAction onClick={() => runAction(() => handleInvite(actionsFor))} className="text-accent-text">
+                {t.admin.members.invite}
+              </SheetAction>
+            )}
+            {actionsFor.householdOfName && (
+              <SheetAction onClick={() => runAction(() => handleUnlink(actionsFor))}>{t.admin.members.familyUnlink}</SheetAction>
+            )}
+            {canMerge(actionsFor) && (
+              <SheetAction onClick={() => runAction(() => requestMerge({ absorbedId: actionsFor.memberId }))}>
+                {t.admin.members.merge.button}
+              </SheetAction>
+            )}
+            <SheetAction onClick={() => runAction(() => handleDelete(actionsFor))} className="text-brand-red">
+              {t.admin.members.deleteAction}
+            </SheetAction>
+          </div>
+        )}
+      </Sheet>
       {mergeRequest && (
         <MergeMembersDialog
           key={`${mergeRequest.absorbedId}:${mergeRequest.survivorId ?? ""}`}
@@ -434,5 +478,13 @@ export function SociList({
         />
       )}
     </div>
+  );
+}
+
+function SheetAction({ onClick, className = "text-brand-near-black", children }: { onClick: () => void; className?: string; children: React.ReactNode }) {
+  return (
+    <button type="button" onClick={onClick} className={`flex min-h-12 w-full items-center px-1 text-left text-[15px] font-semibold ${className}`}>
+      {children}
+    </button>
   );
 }
