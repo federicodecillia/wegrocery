@@ -154,7 +154,9 @@ sign in, and card holders join by themselves at their first sign-in.
 
 ## Staging and preview deployments
 
-Every branch you push gets a preview deployment. Outside production every
+Only `main` (production) and `staging` (a preview) are deployed: `git.deploymentEnabled`
+in `vercel.json` skips every other branch, because each kept deployment counts
+toward the Hobby plan's Function Storage. Add a branch there to preview it. Outside production every
 email is redirected to `EMAIL_REDIRECT_TO` (set it on the Preview
 environment, never on Production): without it, emails are not sent there.
 If previews share the production database, they see real data: the Neon

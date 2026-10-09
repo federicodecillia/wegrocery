@@ -93,7 +93,7 @@ npm run test:int     # Integration tests on a test database (see below)
 
 **Stripe on staging**: `scripts/stripe-staging-check.mjs` runs real sandbox refunds against the staging deploy; it refuses live keys and any database other than `STAGING_DB_HOST`. The events the webhook endpoint must subscribe to are `REQUIRED_STRIPE_EVENTS` (`lib/payments/config.ts`).
 
-**Deploy**: push to `main` → Vercel auto-deploys production. Development PRs target `staging` and are tested on its Preview deployment before `staging` → `main`; other branches create ordinary preview deployments.
+**Deploy**: push to `main` → Vercel auto-deploys production. Development PRs target `staging` and are tested on its Preview deployment before `staging` → `main`; other branches are not deployed (`git.deploymentEnabled` in `vercel.json`: only `main` and `staging`, since every kept deployment counts toward the Hobby plan's 10 GB of Function Storage; PRs are checked in CI and locally).
 
 **Vercel Root Directory**: repo root (empty / not set)
 
