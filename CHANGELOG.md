@@ -20,6 +20,10 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ## [Unreleased]
 
+## [1.26.0] — 2026-10-09
+
+*A cleaner app on every screen, card payment for a single cycle, and the bank transfer reference filled in for you.*
+
 ### Added
 - 💳 **Card payment for a single cycle.** A group that runs on the wallet can now pick, when creating a cycle, whether members pay it from their balance or by card when they confirm the order. Card cycles are marked in Admin, and the money paid by card does not change anyone's balance until "Settle accounts".
 - 🏦 **The bank transfer reference, filled in for each order.** Top up and each order in History show the reference to write on the transfer, with a Copy button, and where to send the receipt. Admins set the wording and the receipt address in Settings.
@@ -583,6 +587,7 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ---
 
+[1.26.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.26.0
 [1.25.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.25.0
 [1.24.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.24.0
 [1.23.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.23.0
