@@ -21,6 +21,11 @@ stanno nella PR.
 
 ## [Non rilasciato]
 
+### Aggiunte
+- 🎨 **Nome, logo e colori si cambiano dall'app.** Gli admin cambiano nome del gruppo, logo, colori, indirizzi di contatto e link in Impostazioni, con anteprima e controllo di leggibilità: niente nuovo deploy, e l'icona sul telefono segue.
+- 🧭 **Configurazione guidata per un gruppo nuovo.** Il primo admin viene accompagnato passo per passo: identità, contatti, pagamenti, "Il nostro gruppo" e una verifica di email e Stripe (email di prova, eventi del webhook). I gruppi già attivi non la vedono.
+- 📊 **Statistiche anonime per chi gestisce più gruppi.** Con `INSTANCE_STATS_SECRET` impostato, una richiesta firmata restituisce solo conteggi (soci, cicli, ordini, versione, configurazione); senza, l'indirizzo non esiste.
+
 ## [1.26.0] — 9 ottobre 2026
 
 *Un'app più ordinata su ogni schermo, il pagamento con carta per un singolo ciclo e la causale del bonifico già compilata.*

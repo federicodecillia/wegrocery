@@ -1,10 +1,11 @@
-import { brand } from "@/lib/brand";
+import { getBrand } from "@/lib/brand/get-brand";
 import { EmptyIcon } from "@/components/ui-icon";
 import { t } from "@/lib/i18n";
 
 // "Other questions?": the group's support and technical addresses, last on
 // every guide page.
-export function GuideContact() {
+export async function GuideContact() {
+  const brand = await getBrand();
   const sameAddress = brand.techEmail.trim().toLowerCase() === brand.supportEmail.trim().toLowerCase();
   return (
     <div className="mt-6 rounded-card border border-brand-border bg-white p-6 text-center shadow-card">

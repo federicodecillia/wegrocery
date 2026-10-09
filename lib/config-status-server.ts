@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
-import { brand, brandContrastWarnings } from "@/lib/brand";
+import { brandContrastWarnings } from "@/lib/brand";
+import { getBrand, getGroupIdentity } from "@/lib/brand/get-brand";
 import { brandUnknownFields } from "@/lib/brand/parse";
 import { configStatus, type ConfigItem } from "@/lib/config-status";
 import { getDb } from "@/lib/db/client";
@@ -22,9 +23,11 @@ export async function getConfigStatus(): Promise<ConfigItem[]> {
   } catch {
     // No database: the database item already says so.
   }
+  const [brand, identity] = await Promise.all([getBrand(), getGroupIdentity()]);
   return configStatus(process.env, {
     appliedMigrations: applied,
     brandWarnings: brandContrastWarnings(brand.theme),
+    identityInApp: Boolean(identity.overrides.appName),
     brandError: null,
     brandUnknownFields: brandUnknownFields(process.env.NEXT_PUBLIC_BRAND_JSON),
     hasActiveAdmin,

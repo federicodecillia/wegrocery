@@ -11,6 +11,7 @@ import { TabSoci } from "@/components/admin/tab-soci";
 import { TabFornitori } from "@/components/admin/tab-fornitori";
 import { TabStatistiche } from "@/components/admin/tab-statistiche";
 import { TabImpostazioni } from "@/components/admin/tab-impostazioni";
+import { SetupBanner } from "@/components/admin/setup/setup-banner";
 import type { Metadata } from "next";
 import { adminTitle, resolveAdminRoute } from "@/lib/admin/nav";
 import type { CycleView } from "@/lib/admin/cycle-views";
@@ -76,6 +77,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Search
       <Suspense fallback={null}>
         <AdminNav />
       </Suspense>
+      <SetupBanner />
 
       <Suspense
         key={`${section}-${view ?? ""}-${newParam ?? ""}-${cycleId ?? ""}-${filterMemberId ?? ""}-${filterSupplierId ?? ""}-${balanceFilter ?? ""}`}

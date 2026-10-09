@@ -324,6 +324,33 @@ export const guideSearchMisses = pgTable(
   (table) => [check("guide_search_misses_query_length", sql`char_length(${table.query}) BETWEEN 3 AND 60`)],
 );
 
+// The group's identity edited in the app over the brand JSON
+// (drizzle/0034_group_identity.sql). At most one row, id = 1. Read it through
+// getBrand (lib/brand/get-brand.ts), never directly.
+export const groupIdentity = pgTable(
+  "group_identity",
+  {
+    id: integer("id").primaryKey().default(1),
+    overrides: jsonb("overrides").notNull().default({}),
+    logoBase64: text("logo_base64"),
+    logoType: text("logo_type"),
+    logoUpdatedAt: timestamp("logo_updated_at", { withTimezone: true }),
+    setupCompletedAt: timestamp("setup_completed_at", { withTimezone: true }),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
+    updatedBy: text("updated_by").notNull(),
+  },
+  (table) => [
+    check("group_identity_single_row", sql`${table.id} = 1`),
+    check("group_identity_overrides_object", sql`jsonb_typeof(${table.overrides}) = 'object'`),
+    check("group_identity_logo_type", sql`${table.logoType} IN ('image/png', 'image/jpeg', 'image/webp')`),
+    check("group_identity_logo_size", sql`char_length(${table.logoBase64}) <= 700000`),
+    check(
+      "group_identity_logo_complete",
+      sql`(${table.logoBase64} IS NULL AND ${table.logoType} IS NULL AND ${table.logoUpdatedAt} IS NULL) OR (${table.logoBase64} IS NOT NULL AND ${table.logoType} IS NOT NULL AND ${table.logoUpdatedAt} IS NOT NULL)`,
+    ),
+  ],
+);
+
 // Payment settings chosen by the admins in Impostazioni
 // (drizzle/0019_payment_settings_and_drafts.sql). At most one row, id = 1; no
 // row = the brand defaults. Read it through getPaymentSettings

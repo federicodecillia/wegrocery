@@ -71,8 +71,16 @@ member: members are added by an admin (step 5).
 
 ## 4. Your group's name, logo and colours
 
-Add these in Vercel → Settings → Environment Variables, then redeploy
-(Deployments → ⋯ → Redeploy): they are read when the app is built.
+The simplest way is in the app: after your first sign-in, Admin offers a
+**first-run setup** (also at `/admin/avvio`) that walks you through name,
+logo, colours, contacts, payments and "Our group", then checks that email
+and Stripe work. Everything stays editable in Admin → Impostazioni.
+
+Language, currency and time zone are chosen once, in the environment. The
+same identity can also be given as a starting point there (the app's
+settings win over it). Add these in Vercel → Settings → Environment
+Variables, then redeploy (Deployments → ⋯ → Redeploy): they are read when
+the app is built.
 
 - `NEXT_PUBLIC_BRAND_JSON`: the group's identity as one line of JSON. Start
   from [brand.example.json](brand.example.json); every field is optional and
@@ -145,6 +153,14 @@ Credentials → OAuth client of type *Web application*, with redirect URI
 
 `SENTRY_DSN` of a Sentry project: server errors are reported without member
 data.
+
+### Anonymous stats for an operator console
+
+If you run several groups with the WeGrocery Console (`console/` in this
+repository), set `INSTANCE_STATS_SECRET` (`openssl rand -hex 32`) on each
+installation and give the same value to the console: it then reads counts
+only (members, cycles, orders, version, configuration states), never names,
+addresses or amounts. Without the variable the endpoint answers 404.
 
 ### Membership card check (WallyFor)
 
