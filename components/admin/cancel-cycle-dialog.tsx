@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import * as Dialog from "@radix-ui/react-dialog";
+import { Sheet, SheetActions } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import { confirmDiscard } from "@/components/ui/confirm-dialog";
 import { adminCancelClosedCycle } from "@/lib/actions/admin";
 import { formatMoney } from "@/lib/i18n/format";
 import { toast } from "@/components/ui/toast";
@@ -65,75 +67,59 @@ function CancelCycleDialog({
     });
   }
 
+  // A typed reason is unsaved work: closing asks first.
+  async function requestClose() {
+    if (isPending) return;
+    if (reason.trim() && !(await confirmDiscard())) return;
+    onOpenChange(false);
+  }
+
   return (
-    <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-[150] bg-black/30 backdrop-blur-[4px] data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0" />
-        <Dialog.Content
-          aria-describedby={undefined}
-          className="fixed left-1/2 top-1/2 z-[151] w-[94%] max-w-[440px] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl border border-brand-border bg-white shadow-[0_8px_32px_rgba(45,43,41,0.15)] data-[state=open]:animate-in data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:zoom-out-95"
-        >
-          <div className="flex items-center justify-between border-b border-brand-border p-5">
-            <div>
-              <Dialog.Title className="text-[15px] font-bold text-brand-near-black">
-                {t.admin.cycleCancel.modalTitle}
-              </Dialog.Title>
-              <p className="mt-0.5 text-label text-brand-gray">{cycleTitle}</p>
-            </div>
-            <button
-              onClick={() => onOpenChange(false)}
-              className="rounded-full bg-brand-border p-2 text-brand-gray hover:bg-brand-gray-light"
-            >
-              ✕
-            </button>
-          </div>
+    <Sheet
+      open={open}
+      onRequestClose={() => void requestClose()}
+      title={t.admin.cycleCancel.modalTitle}
+      subtitle={cycleTitle}
+      footer={
+        <SheetActions>
+          <Button variant="outline" className="flex-1" onClick={() => void requestClose()} disabled={isPending}>
+            {t.admin.common.cancel}
+          </Button>
+          <Button variant="danger" className="flex-[2]" onClick={handleConfirm} disabled={isPending || !reason.trim()}>
+            {isPending ? t.admin.cycleCancel.cancelling : t.admin.cycleCancel.confirmButton}
+          </Button>
+        </SheetActions>
+      }
+    >
+      <div className="space-y-4">
+        <p className="rounded-lg border border-brand-red/30 bg-brand-red-light p-3 text-[13px] text-brand-red">
+          {t.admin.cycleCancel.modalDescription}
+        </p>
 
-          <div className="space-y-4 p-5">
-            <p className="rounded-lg border border-brand-red/30 bg-brand-red-light p-3 text-[12px] text-brand-red">
-              {t.admin.cycleCancel.modalDescription}
-            </p>
+        <div>
+          <label htmlFor="cancel-cycle-reason" className="mb-1 block text-label font-semibold text-brand-gray">
+            {t.admin.cycleCancel.reasonLabel}
+          </label>
+          <textarea
+            id="cancel-cycle-reason"
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            placeholder={t.admin.cycleCancel.reasonPlaceholder}
+            rows={3}
+            className="w-full rounded-lg border border-brand-border bg-white px-3 py-2 text-[14px] text-brand-near-black"
+          />
+        </div>
 
-            <div>
-              <label className="mb-1 block text-label font-semibold text-brand-gray">
-                {t.admin.cycleCancel.reasonLabel}
-              </label>
-              <textarea
-                value={reason}
-                onChange={(e) => setReason(e.target.value)}
-                placeholder={t.admin.cycleCancel.reasonPlaceholder}
-                rows={3}
-                className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-brand-red/30"
-              />
-            </div>
-
-            <label className="flex items-center gap-2 text-[12px] font-semibold text-brand-near-black">
-              <input
-                type="checkbox"
-                checked={refundShipping}
-                onChange={(e) => setRefundShipping(e.target.checked)}
-                className="h-4 w-4 rounded border-brand-border"
-              />
-              {t.admin.cycleCancel.refundShippingLabel}
-            </label>
-          </div>
-
-          <div className="flex gap-2 border-t border-brand-border p-5">
-            <button
-              onClick={() => onOpenChange(false)}
-              className="flex-1 rounded-xl border border-brand-border bg-white px-4 py-2.5 text-[13px] font-semibold text-brand-gray"
-            >
-              {t.admin.common.cancel}
-            </button>
-            <button
-              onClick={handleConfirm}
-              disabled={isPending || !reason.trim()}
-              className="flex-[2] rounded-xl bg-brand-red px-4 py-2.5 text-[13px] font-bold text-white disabled:opacity-60"
-            >
-              {isPending ? t.admin.cycleCancel.cancelling : t.admin.cycleCancel.confirmButton}
-            </button>
-          </div>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+        <label className="flex min-h-11 items-center gap-3 text-[13px] font-semibold text-brand-near-black">
+          <input
+            type="checkbox"
+            checked={refundShipping}
+            onChange={(e) => setRefundShipping(e.target.checked)}
+            className="h-5 w-5 shrink-0 rounded border-brand-border"
+          />
+          {t.admin.cycleCancel.refundShippingLabel}
+        </label>
+      </div>
+    </Sheet>
   );
 }

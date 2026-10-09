@@ -3,6 +3,7 @@ import { getDb } from "@/lib/db/client";
 import { getGuideSearchMisses } from "@/lib/db/queries";
 import { formatAmountInput } from "@/lib/i18n/format";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
+import { cardCyclesSelectable } from "@/lib/payments/cycle-mode";
 import { modeChangeBlockers, readModeChangeState } from "@/lib/payments/mode-change";
 import { getConfigStatus } from "@/lib/config-status-server";
 import { ConfigStatusCard } from "./config-status-card";
@@ -34,7 +35,16 @@ export async function TabImpostazioni() {
   });
   return (
     <div className="space-y-4">
-      <PaymentModeCard mode={settings.mode} state={modeState} blockers={blockers} />
+      <PaymentModeCard
+        mode={settings.mode}
+        state={modeState}
+        blockers={blockers}
+        cardCycles={cardCyclesSelectable({
+          groupMode: settings.mode,
+          stripeUsable: settings.stripeKey.usable,
+          currency: brand.currency,
+        })}
+      />
       <PaymentSettingsForm
         // A save remounts the form with the values as stored (IBAN compacted).
         key={savedAt ?? "defaults"}
@@ -47,6 +57,8 @@ export async function TabImpostazioni() {
           bankTransferEnabled: settings.bankTransferEnabled,
           bankHolder: settings.bankHolder ?? "",
           bankIban: settings.bankIban ?? "",
+          bankReferenceTemplate: settings.bankReferenceTemplate ?? "",
+          bankReceiptEmail: settings.bankReceiptEmail ?? "",
           onlinePaymentsEnabled: settings.onlinePaymentsEnabled,
         }}
         stripeKey={settings.stripeKey}

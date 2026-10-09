@@ -7,7 +7,7 @@ import { admitEmail } from "@/lib/auth/admission";
 import { eq, and, isNull, notInArray, sql, inArray } from "drizzle-orm";
 import { requireAdmin } from "@/lib/auth/session";
 import { t } from "@/lib/i18n";
-import { formatMoney, formatDate, formatDateTime } from "@/lib/i18n/format";
+import { formatMoney, formatDate } from "@/lib/i18n/format";
 import { parseCycleDates } from "@/lib/cycle-dates";
 import { brand } from "@/lib/brand";
 import { getDb } from "@/lib/db/client";
@@ -55,6 +55,7 @@ import {
 import { selectCycleAccessMembers } from "@/lib/notifications/reminder";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
 import { resolveCycleFee, type HandlingFee } from "@/lib/payments/order-payment";
+import { resolveNewCycleMode } from "@/lib/payments/cycle-mode";
 import { reverseEntry, reverseEntrySql } from "@/lib/ledger-reversal";
 import { liveLedger } from "@/lib/db/ledger-live";
 import { retryRequestedRefunds } from "@/lib/payments/refund-request";
@@ -62,6 +63,7 @@ import { previewSettlement, settleCycle, type SettleResult } from "@/lib/payment
 import { getStripe } from "@/lib/payments/stripe";
 import { isAboveMaxBalance } from "@/lib/payments/settings";
 import { DEFAULT_ACCESS_LEVEL, normalizeAccessLevel, normalizeRole, type AccessLevel } from "@/lib/roles";
+import { formatDeadline } from "@/lib/i18n/deadline";
 
 function ledgerAmountErrorMessage(code: LedgerAmountError): string {
   switch (code) {
@@ -128,6 +130,8 @@ export type CreateCycleInput = {
   /** "none" (wallet cycles only), "percent" or "fixed". Omitted: the last cycle's fee of the same payment mode. */
   handlingFeeType?: string;
   handlingFeeValue?: string;
+  /** "wallet" or "per_order" (lib/payments/cycle-mode.ts). Omitted: the group's mode. */
+  paymentMode?: string;
 };
 
 export async function adminCreateCycle(data: CreateCycleInput): Promise<{error?: string}> {
@@ -147,9 +151,16 @@ export async function adminCreateCycle(data: CreateCycleInput): Promise<{error?:
 
     const db = getDb();
 
-    // The cycle keeps the group's payment mode of this moment for its whole
-    // life, with its handling fee.
-    const { mode: paymentMode } = await getPaymentSettings();
+    // The cycle keeps its payment mode for its whole life, with its handling
+    // fee: the group's mode, or a card cycle in a wallet group.
+    const settings = await getPaymentSettings();
+    const chosen = resolveNewCycleMode(data.paymentMode, {
+      groupMode: settings.mode,
+      stripeUsable: settings.stripeKey.usable,
+      currency: brand.currency,
+    });
+    if ("error" in chosen) return { error: t.errors.cyclePaymentModeUnavailable };
+    const paymentMode = chosen.mode;
     const fee = resolveCycleFee(
       paymentMode,
       data.handlingFeeType !== undefined && data.handlingFeeValue !== undefined
@@ -217,7 +228,7 @@ export async function adminCreateCycle(data: CreateCycleInput): Promise<{error?:
           title: t.notificationsServer.cycleOpenedTitle,
           body: t.notificationsServer.cycleOpenedBody(
             data.title.trim(),
-            formatDateTime(orderCloseAt),
+            formatDeadline(orderCloseAt),
           ),
           href: "/ordine",
         },

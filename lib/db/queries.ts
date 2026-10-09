@@ -18,6 +18,7 @@ import {
   supplierProducts,
   type DraftLine,
 } from "./schema";
+import type { CycleLedgerRow } from "@/lib/admin/cycle-money";
 import { buildCycleHistory, type CycleHistoryEntry } from "@/lib/cycle-history";
 import { MISS_RETENTION_DAYS } from "@/lib/guide/search-misses";
 import { normalizeEmail } from "@/lib/member-email";
@@ -135,8 +136,9 @@ export async function getMemberBalance(memberId: string): Promise<number> {
 }
 
 // Order totals that are saved but not yet charged to the ledger: the member's
-// lines on OTHER cycles still `open` (closing is what posts order_charge), and
-// the member's current total on `cycleId`, which a save replaces.
+// lines on OTHER wallet cycles still `open` (closing is what posts
+// order_charge; a card cycle's order is paid already and stays off the
+// wallet), and the member's current total on `cycleId`, which a save replaces.
 export async function getMemberPendingOrderTotals(
   memberId: string,
   cycleId: string,
@@ -144,7 +146,7 @@ export async function getMemberPendingOrderTotals(
   const db = getDb();
   const [row] = await db
     .select({
-      other: sql<string>`coalesce(sum(${orders.lineTotal}) filter (where ${orders.cycleId} <> ${cycleId}), '0')`,
+      other: sql<string>`coalesce(sum(${orders.lineTotal}) filter (where ${orders.cycleId} <> ${cycleId} and ${orderCycles.paymentMode} <> 'per_order'), '0')`,
       current: sql<string>`coalesce(sum(${orders.lineTotal}) filter (where ${orders.cycleId} = ${cycleId}), '0')`,
     })
     .from(orders)
@@ -601,6 +603,8 @@ export async function getAllCycles(limit = 30) {
       shippingCostPerMember: orderCycles.shippingCostPerMember,
       shippingTotal: orderCycles.shippingTotal,
       paymentMode: orderCycles.paymentMode,
+      handlingFeeType: orderCycles.handlingFeeType,
+      handlingFeeValue: orderCycles.handlingFeeValue,
       settledAt: orderCycles.settledAt,
     })
     .from(orderCycles)
@@ -1106,58 +1110,6 @@ export async function getAllMembersLedger(): Promise<Record<string, LedgerEntryI
   return result;
 }
 
-// ── Admin home insights ──────────────────────────────────────────────────────
-// Quick at-a-glance metrics surfaced at the top of the admin "Ciclo" tab.
-// Each one is fast (single small aggregate) so the row stays cheap even on
-// every admin page load.
-
-export type AdminInsights = {
-  // Open cycles right now. Surface = "what's live for members".
-  openCyclesCount: number;
-  // Open cycles closing within the next 7 days. Surface = "imminent deadlines".
-  closingSoonCount: number;
-  // Cycles closed in the last 7 days. Surface = "recently wrapped up".
-  recentlyClosedCount: number;
-};
-
-export async function getAdminInsights(): Promise<AdminInsights> {
-  const db = getDb();
-
-  const [openRows, closingSoonRows, recentlyClosedRows] = await Promise.all([
-    db
-      .select({ cycleId: orderCycles.cycleId })
-      .from(orderCycles)
-      .where(eq(orderCycles.status, "open")),
-    db
-      .select({ cycleId: orderCycles.cycleId })
-      .from(orderCycles)
-      .where(
-        and(
-          eq(orderCycles.status, "open"),
-          isNotNull(orderCycles.orderCloseAt),
-          sql`${orderCycles.orderCloseAt} <= now() + interval '7 days'`,
-          sql`${orderCycles.orderCloseAt} > now()`,
-        ),
-      ),
-    db
-      .select({ cycleId: orderCycles.cycleId })
-      .from(orderCycles)
-      .where(
-        and(
-          eq(orderCycles.status, "closed"),
-          isNotNull(orderCycles.closedAt),
-          sql`${orderCycles.closedAt} >= now() - interval '7 days'`,
-        ),
-      ),
-  ]);
-
-  return {
-    openCyclesCount: openRows.length,
-    closingSoonCount: closingSoonRows.length,
-    recentlyClosedCount: recentlyClosedRows.length,
-  };
-}
-
 // ── Analytics ────────────────────────────────────────────────────────────────
 // Aggregations used by the admin "Statistiche" tab. They all operate over
 // closed cycles only (status = 'closed') because that's when the data is
@@ -1573,4 +1525,67 @@ export async function getGuideSearchMisses(limit = 30) {
     .where(sql`${guideSearchMisses.lastAt} >= now() - make_interval(days => ${MISS_RETENTION_DAYS})`)
     .orderBy(desc(guideSearchMisses.count), desc(guideSearchMisses.lastAt))
     .limit(limit);
+}
+
+/**
+ * A cycle's live ledger rows (not reversed, not a reversal), with the member's
+ * name, for Admin → Ciclo → Conti. Read only; summarized by
+ * summarizeCycleMoney (lib/admin/cycle-money.ts).
+ */
+export async function getCycleLedgerRows(cycleId: string): Promise<CycleLedgerRow[]> {
+  const db = getDb();
+  return db
+    .select({
+      entryId: ledgerEntries.entryId,
+      memberName: members.fullName,
+      entryDate: ledgerEntries.entryDate,
+      type: ledgerEntries.type,
+      amount: ledgerEntries.amount,
+      paymentId: ledgerEntries.paymentId,
+      note: ledgerEntries.note,
+      replaces: ledgerEntries.replaces,
+    })
+    .from(ledgerEntries)
+    .innerJoin(members, eq(members.memberId, ledgerEntries.memberId))
+    .where(and(eq(ledgerEntries.cycleId, cycleId), liveLedger))
+    .orderBy(asc(ledgerEntries.entryDate), asc(ledgerEntries.entryId));
+}
+
+/**
+ * What "Da fare ora" (lib/admin/cycle-phase.ts) needs per cycle: members with
+ * an order, whether the order sheet was emailed from the app, and whether any
+ * correction was recorded after the close (a live correction row, an imported
+ * supplier sheet, or per-member shipping). Read only.
+ */
+export async function getCycleTaskFacts(cycleIds: string[]): Promise<
+  Map<string, { orderMembers: number; supplierSent: boolean; adjusted: boolean }>
+> {
+  const out = new Map<string, { orderMembers: number; supplierSent: boolean; adjusted: boolean }>();
+  if (cycleIds.length === 0) return out;
+  const ids = sql.join(
+    cycleIds.map((id) => sql`${id}`),
+    sql`, `,
+  );
+  const { rows } = await getDb().execute<{
+    cycle_id: string;
+    order_members: number;
+    supplier_sent: boolean;
+    adjusted: boolean;
+  }>(sql`
+    SELECT c.cycle_id,
+      (SELECT count(DISTINCT o.member_id)::int FROM orders o WHERE o.cycle_id = c.cycle_id) AS order_members,
+      EXISTS (SELECT 1 FROM audit_log a WHERE a.entity_type = 'cycle' AND a.entity_id = c.cycle_id
+              AND a.action = 'supplier_email_sent') AS supplier_sent,
+      (c.shipping_mode = 'manual'
+        OR EXISTS (SELECT 1 FROM audit_log a WHERE a.entity_type = 'cycle' AND a.entity_id = c.cycle_id
+                   AND a.action = 'supplier_distinta_imported')
+        OR EXISTS (SELECT 1 FROM ledger_entries l WHERE l.cycle_id = c.cycle_id AND l.type = 'correction'
+                   AND l.reversed_by IS NULL)) AS adjusted
+    FROM order_cycles c
+    WHERE c.cycle_id IN (${ids})
+  `);
+  for (const r of rows) {
+    out.set(r.cycle_id, { orderMembers: r.order_members, supplierSent: r.supplier_sent, adjusted: r.adjusted });
+  }
+  return out;
 }

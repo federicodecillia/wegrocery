@@ -4,21 +4,30 @@ import { AppShell } from "@/components/app-shell";
 import { checkAccess } from "@/lib/auth/access";
 import { requireUserSession } from "@/lib/auth/session";
 import { AdminNav } from "@/components/admin/admin-nav";
-import { TabCiclo } from "@/components/admin/tab-ciclo";
+import { CycleWorkspace } from "@/components/admin/cycle-workspace";
 import { TabProdotti } from "@/components/admin/tab-prodotti";
-import { TabOrdini } from "@/components/admin/tab-ordini";
 import { TabCassa } from "@/components/admin/tab-cassa";
 import { TabSoci } from "@/components/admin/tab-soci";
 import { TabFornitori } from "@/components/admin/tab-fornitori";
 import { TabStatistiche } from "@/components/admin/tab-statistiche";
 import { TabImpostazioni } from "@/components/admin/tab-impostazioni";
+import type { Metadata } from "next";
+import { adminTitle, resolveAdminRoute } from "@/lib/admin/nav";
+import type { CycleView } from "@/lib/admin/cycle-views";
+
+export async function generateMetadata({ searchParams }: { searchParams: SearchParams }): Promise<Metadata> {
+  const { tab, view, member, cycle } = await searchParams;
+  return { title: `${adminTitle(tab, view, member, cycle)} · Admin` };
+}
 
 type SearchParams = Promise<{
   tab?: string;
+  view?: string;
   cycle?: string;
   member?: string;
   supplier?: string;
   balance?: string;
+  new?: string;
 }>;
 
 function parseCsvParam(raw: string | undefined): string[] {
@@ -50,39 +59,47 @@ export default async function AdminPage({ searchParams }: { searchParams: Search
 
   const {
     tab: tabParam,
+    view: viewParam,
     cycle: cycleId,
     member: filterMemberId,
     supplier: filterSupplierId,
     balance: balanceParam,
+    new: newParam,
   } = await searchParams;
-  const tab = tabParam ?? "ciclo";
+  const { section, view } = resolveAdminRoute(tabParam, viewParam, filterMemberId, cycleId);
   const balanceFilter =
     balanceParam === "negative" || balanceParam === "above_max" ? balanceParam : undefined;
 
   return (
-    <AppShell email={session.user.email} name={session.user.fullName} isAdmin memberId={session.user.memberId!} personId={session.user.personId} width="admin">
+    <AppShell email={session.user.email} name={session.user.fullName} isAdmin memberId={session.user.memberId!} personId={session.user.personId} layout="wide">
+      <h1 className="sr-only">{`Admin: ${adminTitle(tabParam, viewParam, filterMemberId, cycleId)}`}</h1>
       <Suspense fallback={null}>
         <AdminNav />
       </Suspense>
 
       <Suspense
-        key={`${tab}-${cycleId ?? ""}-${filterMemberId ?? ""}-${filterSupplierId ?? ""}-${balanceFilter ?? ""}`}
+        key={`${section}-${view ?? ""}-${newParam ?? ""}-${cycleId ?? ""}-${filterMemberId ?? ""}-${filterSupplierId ?? ""}-${balanceFilter ?? ""}`}
         fallback={<TabSkeleton />}
       >
-        {tab === "ciclo" && <TabCiclo />}
-        {tab === "prodotti" && <TabProdotti />}
-        {tab === "ordini" && <TabOrdini cycleId={cycleId} memberId={filterMemberId} />}
-        {tab === "cassa" && <TabCassa balanceFilter={balanceFilter} />}
-        {tab === "fornitori" && <TabFornitori />}
-        {tab === "soci" && <TabSoci />}
-        {tab === "statistiche" && (
+        {section === "ciclo" && (
+          <CycleWorkspace
+            cycleId={cycleId}
+            view={view as CycleView | null}
+            creating={newParam === "1"}
+          />
+        )}
+        {view === "prodotti" && <TabProdotti supplierId={filterSupplierId} />}
+        {view === "fornitori" && <TabFornitori />}
+        {section === "cassa" && <TabCassa balanceFilter={balanceFilter} memberId={filterMemberId} />}
+        {section === "soci" && <TabSoci memberId={filterMemberId} />}
+        {section === "statistiche" && (
           <TabStatistiche
             cycleIds={parseCsvParam(cycleId)}
             supplierIds={parseCsvParam(filterSupplierId)}
             memberIds={parseCsvParam(filterMemberId)}
           />
         )}
-        {tab === "impostazioni" && <TabImpostazioni />}
+        {section === "impostazioni" && <TabImpostazioni />}
       </Suspense>
     </AppShell>
   );

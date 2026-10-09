@@ -1,13 +1,14 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { confirm } from "@/components/ui/confirm-dialog";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "@/components/ui/toast";
 import { adminDeleteLedgerEntry, adminUpdateLedgerEntry } from "@/lib/actions/admin";
 import { formatDate, formatEur } from "@/lib/utils";
 import { DEFAULT_ROLE, normalizeRole, type Role } from "@/lib/roles";
 import { t } from "@/lib/i18n";
-import { formatMoney } from "@/lib/i18n/format";
+import { formatMoney, formatSignedMoney } from "@/lib/i18n/format";
 import {
   MANUAL_PAYMENT_METHODS,
   applyOriginalSign,
@@ -16,7 +17,12 @@ import {
 } from "@/lib/ledger";
 import type { LedgerEntryItem, MemberWithBalance } from "@/lib/db/queries";
 import { ledgerBadge } from "@/lib/ledger-badge";
+import { movementKind } from "@/lib/movement-label";
+import { MovementIcon } from "@/components/movement-icon";
 import { isAboveMaxBalance } from "@/lib/payments/settings";
+import { useWide } from "@/lib/ui/use-wide";
+import { Button } from "@/components/ui/button";
+import { Sheet } from "@/components/ui/sheet";
 
 // ── Summary Cards ─────────────────────────────────────────────────────────────
 
@@ -147,7 +153,7 @@ export function CassaSummaryCards({
   );
 
   return (
-    <div className={`grid gap-2 ${aboveMaxCount === null ? "grid-cols-3" : "grid-cols-2"}`}>
+    <div className={`grid grid-cols-2 gap-2 ${aboveMaxCount === null ? "sm:grid-cols-3" : "lg:grid-cols-4"}`}>
       {total}
       {avg}
       {negative}
@@ -184,7 +190,7 @@ function movementDetails(entry: LedgerEntry): string {
 export function LedgerEntryRow({ entry }: { entry: LedgerEntry }) {
   const [editing, setEditing] = useState(false);
   const [amount, setAmount] = useState(Math.abs(parseFloat(entry.amount)).toFixed(2));
-  const [note, setNote] = useState(entry.note ?? "");
+  const [draftNote, setDraftNote] = useState(entry.note ?? "");
   const [isPending, startTransition] = useTransition();
 
   // Order/shipping charges are corrected from the cycle, never edited here;
@@ -196,7 +202,7 @@ export function LedgerEntryRow({ entry }: { entry: LedgerEntry }) {
     // Invalid input becomes NaN and the server answers with a readable error.
     const newAmount = applyOriginalSign(entry.amount, amount);
     startTransition(async () => {
-      const result = await adminUpdateLedgerEntry(entry.entryId, { amount: newAmount, note });
+      const result = await adminUpdateLedgerEntry(entry.entryId, { amount: newAmount, note: draftNote });
       if (result.error) {
         toast.error(result.error);
         return;
@@ -206,8 +212,8 @@ export function LedgerEntryRow({ entry }: { entry: LedgerEntry }) {
     });
   }
 
-  function handleDelete() {
-    if (!window.confirm(t.admin.treasury.deleteConfirm)) return;
+  async function handleDelete() {
+    if (!(await confirm({ title: t.admin.treasury.deleteConfirm, danger: true }))) return;
     startTransition(async () => {
       const result = await adminDeleteLedgerEntry(entry.entryId);
       if (result.error) {
@@ -220,87 +226,99 @@ export function LedgerEntryRow({ entry }: { entry: LedgerEntry }) {
 
   const amountNum = parseFloat(entry.amount);
   const details = movementDetails(entry);
-  const badge = ledgerBadge({ ...entry, paymentId: entry.paymentId ?? null }, t.admin.treasury);
+  const movement = { ...entry, paymentId: entry.paymentId ?? null };
+  const badge = ledgerBadge(movement, t.admin.treasury);
+  const kindLabel = badge.label.charAt(0).toUpperCase() + badge.label.slice(1);
+  // The cycle names the row when there is one; otherwise the note, else the kind.
+  const title = entry.cycleTitle ?? entry.note ?? kindLabel;
+  // A note that only repeats the kind ("Spedizione", "Addebito ordine") adds nothing.
+  const repeatsKind = (n: string) => n === t.ledger.orderCharge || n.toLowerCase() === badge.label.toLowerCase();
+  const note = entry.cycleTitle && entry.note && !repeatsKind(entry.note) ? entry.note : null;
 
   if (editing && isEditable) {
     return (
-      <div className="bg-primary-soft px-4 py-3">
-        <div className="flex items-center gap-2">
+      <div className="space-y-2 bg-primary-soft px-4 py-3">
+        <div className="text-[13px] font-medium text-brand-near-black">
+          {title} <span className="font-mono text-label font-normal text-muted">· {kindLabel}</span>
+        </div>
+        <div className="flex gap-2">
           <input
             type="number"
             min="0.01"
             step="0.01"
+            inputMode="decimal"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            className="w-24 rounded-lg border border-brand-border px-2 py-1 font-mono text-[12px]"
+            aria-label={t.admin.treasury.amountLabel}
+            className="min-h-11 w-28 shrink-0 rounded-lg border border-brand-border bg-white px-2 py-1 font-mono text-[14px]"
           />
           <input
             type="text"
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
+            aria-label={isOutgoingLedgerType(entry.type) ? t.admin.treasury.reasonLabel : t.admin.treasury.noteLabel}
+            value={draftNote}
+            onChange={(e) => setDraftNote(e.target.value)}
             // An outgoing movement's causale is required (the member sees it).
             placeholder={isOutgoingLedgerType(entry.type) ? t.admin.treasury.reasonLabel : t.admin.treasury.noteLabel}
-            className="w-0 min-w-0 flex-1 rounded-lg border border-brand-border px-2 py-1 text-[12px]"
+            className="min-h-11 min-w-0 flex-1 rounded-lg border border-brand-border bg-white px-2 py-1 text-[14px]"
           />
-          <button
-            onClick={handleSave}
-            disabled={isPending}
-            className="rounded-lg bg-accent px-3 py-1 text-label font-bold text-on-accent disabled:opacity-60"
-          >
+        </div>
+        <div className="flex justify-end gap-2">
+          <Button size="sm" variant="outline" className="min-h-11 px-4" onClick={() => setEditing(false)}>
+            {t.admin.common.cancel}
+          </Button>
+          <Button size="sm" variant="accent" className="min-h-11 px-4" onClick={handleSave} disabled={isPending}>
             {t.admin.common.save}
-          </button>
-          <button
-            onClick={() => setEditing(false)}
-            className="rounded-lg border border-brand-border px-3 py-1 text-label text-brand-gray"
-          >
-            ✕
-          </button>
+          </Button>
         </div>
       </div>
     );
   }
 
+  // One layout for every movement: icon, then the name with the signed amount
+  // always on the right, then kind and day, then the note and the payment
+  // details on lines of their own, and the actions last.
   return (
-    <div className="flex items-center justify-between gap-2 px-4 py-2.5">
+    <div className="flex gap-3 px-4 py-3">
+      <MovementIcon kind={movementKind(movement)} incoming={amountNum >= 0} />
       <div className="min-w-0 flex-1">
-        <span className={`mr-2 rounded-full px-1.5 py-0.5 text-label font-bold uppercase ${badge.className}`}>
-          {badge.label}
-        </span>
-        <span className="text-[12px] text-brand-gray">
-          {entry.cycleTitle ? (
-            <span className="font-medium text-brand-near-black">{entry.cycleTitle}</span>
-          ) : (
-            entry.note ?? (details ? null : "—")
-          )}
-          {entry.cycleTitle && entry.note && entry.note !== t.ledger.orderCharge && (
-            <span className="ml-1 text-muted">· {entry.note}</span>
-          )}
-        </span>
-        {details && <div className="mt-0.5 break-all font-mono text-label text-muted">{details}</div>}
-      </div>
-      <div className="flex items-center gap-2">
-        <span
-          className={`font-mono text-[13px] font-bold ${amountNum >= 0 ? "text-accent-text" : "text-brand-red"}`}
-        >
-          {amountNum >= 0 ? "+" : ""}
-          {formatMoney(Math.abs(amountNum))}
-        </span>
+        <div className="flex items-baseline justify-between gap-3">
+          <span className="min-w-0 text-[14px] font-medium text-brand-near-black">{title}</span>
+          <span
+            className={`shrink-0 whitespace-nowrap font-mono text-[14px] font-bold tabular-nums ${
+              amountNum >= 0 ? "text-accent-text" : "text-brand-red"
+            }`}
+          >
+            {formatSignedMoney(entry.amount)}
+          </span>
+        </div>
+        <div className="mt-0.5 font-mono text-label text-muted">
+          {kindLabel} · {entry.entryDate ? formatDate(entry.entryDate) : "—"}
+          {entry.correctedAt && ` · ${t.ledger.correctedOn(formatDate(entry.correctedAt))}`}
+        </div>
+        {note && <p className="mt-1 text-[13px] text-brand-gray">{note}</p>}
+        {details && <p className="mt-0.5 break-all font-mono text-label text-muted">{details}</p>}
         {isEditable && (
-          <>
-            <button
+          <div className="mt-2 flex gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              className="min-h-11 px-4"
               onClick={() => setEditing(true)}
-              className="rounded px-1.5 py-0.5 text-label text-brand-gray hover:text-brand-near-black"
+              aria-label={t.admin.treasury.editEntryAria}
             >
-              ✏
-            </button>
-            <button
+              {t.admin.common.edit}
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="min-h-11 px-4 text-brand-red hover:bg-brand-red-light"
               onClick={handleDelete}
               disabled={isPending}
-              className="rounded px-1.5 py-0.5 text-label text-brand-red disabled:opacity-40"
+              aria-label={t.admin.treasury.deleteEntryAria}
             >
-              ✕
-            </button>
-          </>
+              {t.admin.common.delete}
+            </Button>
+          </div>
         )}
       </div>
     </div>
@@ -314,14 +332,25 @@ export function CassaInlineList({
   ledgerByMember,
   balanceFilter = null,
   maxBalance,
+  openMemberId,
 }: {
   members: MemberWithBalance[];
   ledgerByMember: Record<string, LedgerEntryItem[]>;
   balanceFilter?: BalanceFilter | null;
   maxBalance: number | null;
+  /** From a member's page in Soci: their movements, open and in view. */
+  openMemberId?: string;
 }) {
   const [filter, setFilter] = useState("");
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  // From lg the history opens under the row; on phones and tablets in a sheet,
+  // like a movement in Storico.
+  const wide = useWide();
+  const [expandedId, setExpandedId] = useState<string | null>(openMemberId ?? null);
+  const sheetMember = wide ? null : (members.find((m) => m.memberId === expandedId) ?? null);
+
+  useEffect(() => {
+    if (openMemberId) document.getElementById(`cassa-${openMemberId}`)?.scrollIntoView({ block: "start" });
+  }, [openMemberId]);
 
   const filtered = members.filter((m) => {
     if (balanceFilter === "negative" && m.balance >= 0) return false;
@@ -337,14 +366,38 @@ export function CassaInlineList({
   // canonical role, an unknown one under the least-privileged group.
   const inGroup = (role: Role) => filtered.filter((m) => (normalizeRole(m.role) ?? DEFAULT_ROLE) === role);
 
+  function renderEntries(entries: LedgerEntryItem[]) {
+    if (entries.length === 0) {
+      return <p className="px-4 py-3 text-center text-[12px] text-brand-gray">{t.admin.treasury.noMovements}</p>;
+    }
+    return (
+      <div className="divide-y divide-brand-border">
+        {entries.map((entry) => (
+          <LedgerEntryRow key={entry.entryId} entry={entry} />
+        ))}
+      </div>
+    );
+  }
+
+  function renderBalance(balance: number) {
+    return (
+      <span className={`font-mono text-[13px] font-bold ${balance >= 0 ? "text-accent-text" : "text-brand-red"}`}>
+        {balance >= 0 ? "+" : ""}
+        {formatMoney(Math.abs(balance))}
+      </span>
+    );
+  }
+
   function renderRow(m: MemberWithBalance) {
     const entries = ledgerByMember[m.memberId] ?? [];
-    const isExpanded = expandedId === m.memberId;
+    const isExpanded = wide && expandedId === m.memberId;
     return (
-      <div key={m.memberId}>
+      <div key={m.memberId} id={`cassa-${m.memberId}`} className="scroll-mt-20">
         <button
-          onClick={() => setExpandedId(isExpanded ? null : m.memberId)}
-          className="flex w-full items-center justify-between px-4 py-2.5 text-left"
+          onClick={() => setExpandedId(expandedId === m.memberId && wide ? null : m.memberId)}
+          aria-expanded={wide ? isExpanded : undefined}
+          aria-haspopup={wide ? undefined : "dialog"}
+          className="flex min-h-14 w-full items-center justify-between px-4 py-2.5 text-left"
         >
           <div className="min-w-0 flex-1">
             <div className="text-[13px] font-medium text-brand-near-black">{m.fullName}</div>
@@ -354,37 +407,12 @@ export function CassaInlineList({
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <span
-              className={`font-mono text-[13px] font-bold ${
-                m.balance >= 0 ? "text-accent-text" : "text-brand-red"
-              }`}
-            >
-              {m.balance >= 0 ? "+" : ""}
-              {formatMoney(Math.abs(m.balance))}
-            </span>
-            <span className="text-label text-muted">{isExpanded ? "▲" : "▼"}</span>
+            {renderBalance(m.balance)}
+            <span aria-hidden className="text-label text-muted">{wide ? (isExpanded ? "▲" : "▼") : "›"}</span>
           </div>
         </button>
 
-        {isExpanded && (
-          <div className="border-t border-brand-border bg-black/[0.01]">
-            {entries.length === 0 ? (
-              <p className="px-4 py-3 text-center text-[12px] text-brand-gray">
-                {t.admin.treasury.noMovements}
-              </p>
-            ) : (
-              entries.map((entry) => (
-                <div key={entry.entryId}>
-                  <div className="px-4 pt-2 font-mono text-label text-muted">
-                    {entry.entryDate ? formatDate(entry.entryDate) : "—"}
-                    {entry.correctedAt && ` · ${t.ledger.correctedOn(formatDate(entry.correctedAt))}`}
-                  </div>
-                  <LedgerEntryRow entry={entry} />
-                </div>
-              ))
-            )}
-          </div>
-        )}
+        {isExpanded && <div className="border-t border-brand-border bg-black/[0.01]">{renderEntries(entries)}</div>}
       </div>
     );
   }
@@ -409,7 +437,8 @@ export function CassaInlineList({
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
           placeholder={t.admin.treasury.searchMember}
-          className="w-full rounded-lg border border-brand-border px-3 py-1.5 text-[12px] text-brand-near-black placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary/30"
+          aria-label={t.admin.treasury.searchMember}
+          className="min-h-11 w-full rounded-lg border border-brand-border px-3 py-1.5 text-[14px] text-brand-near-black placeholder:text-muted"
         />
       </div>
       <div className="divide-y divide-brand-border">
@@ -422,6 +451,25 @@ export function CassaInlineList({
           </p>
         )}
       </div>
+
+      <Sheet
+        open={sheetMember !== null}
+        onRequestClose={() => setExpandedId(null)}
+        title={sheetMember?.fullName}
+        subtitle={
+          sheetMember && (
+            <>
+              {t.admin.treasury.movementsCount((ledgerByMember[sheetMember.memberId] ?? []).length)} ·{" "}
+              {renderBalance(sheetMember.balance)}
+            </>
+          )
+        }
+        footer={<Button block onClick={() => setExpandedId(null)}>{t.common.close}</Button>}
+      >
+        {sheetMember && (
+          <div className="-mx-4 -my-4">{renderEntries(ledgerByMember[sheetMember.memberId] ?? [])}</div>
+        )}
+      </Sheet>
     </div>
   );
 }

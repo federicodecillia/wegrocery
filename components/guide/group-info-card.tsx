@@ -24,7 +24,7 @@ export function GroupInfoCard({ text }: { text: string }) {
   return (
     <section
       id={GROUP_INFO_SLUG}
-      className="mb-6 scroll-mt-24 rounded-[18px] border border-accent bg-accent-soft p-[18px] target:ring-2 target:ring-accent/20"
+      className="mb-6 scroll-mt-24 rounded-card border border-accent bg-accent-soft p-[18px] target:ring-2 target:ring-accent/20"
     >
       <h2 className="mb-2 flex items-center gap-2 text-[16px] font-extrabold tracking-[-0.01em] text-brand-near-black">
         <span aria-hidden>🏠</span>

@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 // underneath, and a chevron when it leads somewhere. At least 44px tall.
 
 export const profileCard =
-  "overflow-hidden rounded-[18px] border border-brand-border bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)] divide-y divide-brand-border";
+  "overflow-hidden rounded-card border border-brand-border bg-white shadow-card divide-y divide-brand-border";
 
 const rowClass = "flex min-h-[52px] items-center gap-3 px-4 py-[12px]";
 
@@ -45,7 +45,7 @@ export function SettingsRow({ title, detail, href, badge }: RowProps) {
       </div>
     );
   }
-  const hover = "transition-colors hover:bg-black/[0.02] focus-visible:bg-black/[0.03] focus-visible:outline-none";
+  const hover = "transition-colors hover:bg-black/[0.02] focus-visible:bg-black/[0.03]";
   if (href.startsWith("/")) {
     return (
       <Link href={href} className={`${rowClass} ${hover}`}>

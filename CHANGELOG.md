@@ -20,6 +20,42 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ## [Unreleased]
 
+## [1.26.0] — 2026-10-09
+
+*A cleaner app on every screen, card payment for a single cycle, and the bank transfer reference filled in for you.*
+
+### Added
+- 💳 **Card payment for a single cycle.** A group that runs on the wallet can now pick, when creating a cycle, whether members pay it from their balance or by card when they confirm the order. Card cycles are marked in Admin, and the money paid by card does not change anyone's balance until "Settle accounts".
+- 🏦 **The bank transfer reference, filled in for each order.** Top up and each order in History show the reference to write on the transfer, with a Copy button, and where to send the receipt. Admins set the wording and the receipt address in Settings.
+
+### Changed
+- 🔒 **One clear way to close a cycle.** "Close cycle…" opens a sheet that says how many members get charged and asks for confirmation there, instead of the browser's pop-up. Price adjustments sit behind "Adjust prices", and leaving with changed prices asks first. The order recap of an open cycle is read-only, since corrections only work after closing.
+- 🛒 **Smoother order buttons.** The "+" stays under your finger when a product goes from 0 to 1, and screen readers now say which product each button changes and the new quantity.
+- 💬 **Messages you have time to read.** Errors and warnings stay longer and can be closed, and a failed save says to check the connection. Deleting an order starts on "Cancel", so a stray Enter deletes nothing.
+- ⌨️ **Easier to use with a keyboard.** Every button and field shows a clear outline when reached with Tab, a "Skip to content" link jumps past the menu, and each page has its own title in the browser tab.
+- 🧩 **Same look for the same things.** Confirmations in Admin (deleting a member, archiving a product, removing it from a cycle...) use the app's own window instead of the browser pop-up, and statuses, back links and buttons share one style.
+- 📲 **Windows that fit the phone.** Every window (order sent, a past order or a movement in History, a member's movements in Cassa, closing accounts, cancelling a cycle, the supplier, merging members, importing a price list) rises from the bottom on phones with its buttons near the thumb, closes with Esc or the ✕, and asks before throwing away what you typed.
+- 💰 **Tidier Cassa and Members.** Every movement in Cassa reads the same way (name and amount on the right, then kind and day, then the note) with "Edit" and "Delete" underneath; in Members the role sits next to the name and the actions stay on one line, with Invite, Merge and Delete behind ⋯ on phones and tablets. Every field and icon button in Admin has a name screen readers can say.
+- 📱 **A lighter bar at the bottom.** Members see four items (Home, Order, History, Guide) instead of a greyed-out "Admin", the bell, the avatar and the "?" are easier to tap, and switching page no longer looks like a reload.
+- 🔤 **Easier to read.** Prices in the order and the text of notifications are bigger and in the normal font, and the Profile no longer shows "Utenti" under the name of ordinary members.
+- 🏠 **The open order first on Home.** The cycle you can order in comes before the balance, with one plain line on when it closes ("Closes in 5 days · Mon 13 Oct, 23:59") and pickup days written once. The ticking countdown appears only on the last day, and after the first visit the welcome folds to one line.
+- 🛒 **More room to shop on the Order page.** The bar at the bottom is one row (total, balance after and "Confirm"), with the breakdown behind "Details"; a refused order also says why right above the button. "Discard changes" appears only when you changed something, the + and − buttons are bigger, and products without their own emoji no longer show a cart.
+- 🏷️ **Find products faster.** On the Order page the categories stay at the top as chips that jump to each section, "In the cart (3)" shows only what you picked, and with more than 15 products a search box finds them by name.
+- 👆 **Drag down to close.** On a phone, windows that rise from the bottom (confirmations included) close by dragging them down; on a confirmation that always means "Cancel". The window that closes a cycle closes only with its buttons.
+- 🔄 **Always up to date.** Coming back to the app after a few minutes reloads balance, cycle and notifications, tapping the current item of the bottom bar scrolls up and refreshes, and a line says when you are offline. The Order page is never refreshed while you edit.
+- 🔔 **Clearer notifications.** Grouped by day (Today, Yesterday...), unread ones say "New" in words, and tapping one opens its page at once.
+- 🧭 **A shorter Admin bar.** Cycle, Treasury, Members and Catalogue fit on a phone without scrolling, with Statistics and Settings behind ⋯ (in line on a computer). Orders now sit under Cycle, Products and Suppliers under Catalogue, and old links still open the right page.
+- 🗂️ **One place per cycle in Admin.** Pick a cycle from the list (on the left on a computer, "All cycles" on a phone), then move between Overview, Products and Orders, or Supplier and Accounts once it is closed. Every past cycle is there with search and filters, not only the last 15, so older ones can still be corrected.
+- 📋 **A cycle's orders on one page.** Orders shows "By member" and "By product" (side by side on a computer) with a single "Download order sheet"; on a closed cycle weights and orders are corrected right there. A member's order history is now in Members, under "Orders", with a link to their movements in Treasury.
+- 💳 **Accounts to settle come first.** In Admin → Cycle the list opens with the card cycles whose accounts still need "Settle accounts" (never settled, to update after a correction, or a refund that failed), then the open ones; on a phone both sit above "All cycles".
+- 🤝 **Supplier in three steps, Accounts in one place.** Supplier shows, numbered on the page, download the order sheet, send it, upload the completed one. Accounts shows what the cycle moved on balances, shipping and the corrections made (read only), how to correct a cycle, "Settle accounts" for card cycles and, at the bottom, cancelling it.
+- ✅ **"To do now" on top of Admin.** The three count tiles give way to the next step of each cycle, with one button: review and close a cycle whose deadline has passed (in red, with how long ago), send the order to the supplier, record the weights, settle accounts; then refunds to retry and possible duplicate members. "Already sent" and "Delivered as ordered" hide a step on that device only.
+- 🧺 **One catalogue, one product form.** Products are edited only in Catalogue → Products; each supplier in Suppliers links to its own products ("5 products in the catalogue →"), and editing a product no longer drops its icon. The guided import is the main way to load a price list, with the template and direct upload under "Other formats". The forms to add a member or a supplier stay closed until you need them.
+- 🖥️ **A real computer layout.** On a computer the app uses the same wider frame on every page, with logo, menu, bell and avatar on one line. Home has two columns (the cycle and your order on the left, balance, pickup and movements on the right); reading pages stay in a comfortable column. The bell, the avatar and Home (for Top up) show where you are.
+- 📰 **Shorter What's new, clearer contacts, branded sign-in.** What's new opens the last three versions and folds the older ones. The guide's contact buttons say what they are for ("Write to the group", "Technical problems") and appear once when the address is the same. The sign-in page shows the group's logo, and an error is read out by screen readers.
+- 🎨 **The same look everywhere.** The balance has the same sign and format on Home, History and Top up, and adjustment notifications no longer say "€ EUR". Recent movements on Home look like those in History and open them, the guide and empty pages use the app's own icons instead of emoji, and cards share one corner shape.
+- 🛒 **Order and History on a computer.** On a computer the Order page keeps your cart on the right (products picked, total, balance after and "Confirm"), next to the catalogue. History shows the list on the left and the selected order or movement on the right; the Orders and Movements tabs are in the address, so a link opens the right one.
+
 ## [1.25.0] — 2026-10-07
 
 *A welcome for newcomers, and the group's own page in the guide.*
@@ -551,6 +587,7 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ---
 
+[1.26.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.26.0
 [1.25.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.25.0
 [1.24.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.24.0
 [1.23.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.23.0

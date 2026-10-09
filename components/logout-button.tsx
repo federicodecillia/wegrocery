@@ -25,7 +25,7 @@ export function LogoutButton({ action }: Props) {
     <button
       type="button"
       onClick={handleClick}
-      className="flex min-h-[52px] w-full items-center rounded-[18px] border border-brand-border bg-white px-4 py-[12px] text-left text-[14px] font-bold text-brand-red shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-colors hover:bg-brand-red-light focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red/30"
+      className="flex min-h-[52px] w-full items-center rounded-card border border-brand-border bg-white px-4 py-[12px] text-left text-[14px] font-bold text-brand-red shadow-card transition-colors hover:bg-brand-red-light"
     >
       {t.logout.confirmButton}
     </button>

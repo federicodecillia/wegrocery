@@ -19,7 +19,7 @@ export default function Error({
       className="flex min-h-dvh flex-col items-center justify-center p-6 text-center"
       style={{ background: "var(--frame)" }}
     >
-      <div className="w-full max-w-[320px] rounded-[18px] border border-brand-border bg-white p-6 shadow-sm">
+      <div className="w-full max-w-[320px] rounded-card border border-brand-border bg-white p-6 shadow-sm">
         <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-brand-red-light text-2xl">
           ⚠
         </div>

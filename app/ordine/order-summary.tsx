@@ -1,16 +1,18 @@
 "use client";
 
 import { t } from "@/lib/i18n";
-import { formatDateTime, formatSignedMoney } from "@/lib/i18n/format";
-import { formatEur, getProductEmoji } from "@/lib/utils";
+import { formatSignedMoney } from "@/lib/i18n/format";
+import { formatEur } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { paidDifference, type OrderAmount } from "@/lib/payments/order-payment";
+import { formatDeadline } from "@/lib/i18n/deadline";
 
 export type ConfirmedLine = {
   productId: string;
   name: string;
   meta: string;
   notes: string | null;
+  emoji: string | null;
   quantity: number;
   unitPrice: number;
 };
@@ -45,7 +47,7 @@ export function OrderSummary({
 }: Props) {
   return (
     <>
-      <div className="mt-4 overflow-hidden rounded-[18px] border border-accent/25 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+      <div className="mt-4 overflow-hidden rounded-card border border-accent/25 bg-white shadow-card">
         <header className="flex items-center gap-3 border-b border-brand-border bg-accent-soft px-4 py-3.5">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent text-on-accent">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -67,7 +69,7 @@ export function OrderSummary({
               className="flex items-center justify-between gap-3 border-b border-brand-border py-2.5 last:border-none"
             >
               <div className="flex min-w-0 items-start gap-2">
-                <span className="text-[18px] leading-none">{getProductEmoji(l.name)}</span>
+                <span aria-hidden="true" className="w-[18px] shrink-0 text-[18px] leading-none">{l.emoji}</span>
                 <div className="min-w-0">
                   <div className="text-[14px] font-medium text-brand-near-black">{l.name}</div>
                   <div className="mt-[1px] font-mono text-label text-brand-gray">
@@ -92,7 +94,7 @@ export function OrderSummary({
               <div className="font-mono text-label uppercase tracking-[0.09em] text-muted">
                 {t.order.totalOrder}
               </div>
-              <div className="mt-[2px] text-[20px] font-black tracking-[-0.03em] text-brand-near-black">
+              <div className="mt-[2px] text-title font-black text-brand-near-black">
                 {formatEur(payment ? payment.amount.requiredCents / 100 : total)}
               </div>
             </div>
@@ -129,7 +131,7 @@ export function OrderSummary({
 
       <p className="mt-3 text-center text-[12px] leading-[1.5] text-brand-gray">
         {orderCloseAt
-          ? t.order.editableUntil(formatDateTime(orderCloseAt))
+          ? t.order.editableUntil(formatDeadline(orderCloseAt))
           : t.order.editableUntilClose}
       </p>
 

@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import * as Dialog from "@radix-ui/react-dialog";
+import { Sheet, SheetActions } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
 import { adminMergeMembers, previewMemberMerge, type MergePreview } from "@/lib/actions/admin-members";
 import { formatMoney } from "@/lib/i18n/format";
 import { toast } from "@/components/ui/toast";
@@ -85,137 +86,114 @@ export function MergeMembersDialog({
   const candidates = members.filter((x) => x.memberId !== absorbed?.memberId);
 
   return (
-    <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-[150] bg-black/30 backdrop-blur-[4px] data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0" />
-        <Dialog.Content
-          aria-describedby={undefined}
-          className="fixed left-1/2 top-1/2 z-[151] flex max-h-[90dvh] w-[94%] max-w-[480px] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-2xl border border-brand-border bg-white shadow-[0_8px_32px_rgba(45,43,41,0.15)] data-[state=open]:animate-in data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:zoom-out-95"
-        >
-          <div className="flex items-center justify-between gap-3 border-b border-brand-border p-5">
-            <Dialog.Title className="min-w-0 break-words text-[15px] font-bold text-brand-near-black">
-              {m.title(absorbed?.fullName ?? "")}
-            </Dialog.Title>
-            <button
-              onClick={() => onOpenChange(false)}
-              aria-label={t.admin.common.cancel}
-              className="shrink-0 rounded-full bg-brand-border p-2 text-brand-gray hover:bg-brand-gray-light"
-            >
-              ✕
-            </button>
-          </div>
+    <Sheet
+      open={open}
+      onRequestClose={() => !isPending && onOpenChange(false)}
+      title={m.title(absorbed?.fullName ?? "")}
+      footer={
+        <SheetActions>
+          <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)} disabled={isPending}>
+            {t.admin.common.cancel}
+          </Button>
+          <Button variant="brand" className="flex-[2]" onClick={handleConfirm} disabled={isPending || loading || !preview}>
+            {isPending ? m.merging : m.confirm}
+          </Button>
+        </SheetActions>
+      }
+    >
+      <div className="space-y-4">
+        <p className="text-[13px] text-brand-gray">{m.intro}</p>
 
-          <div className="space-y-4 overflow-y-auto p-5">
-            <p className="text-[13px] text-brand-gray">{m.intro}</p>
-
-            {absorbed && (
-              <div>
-                <span className="mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray">
-                  {m.absorbedLabel}
-                </span>
-                <div className="flex items-center justify-between gap-2 rounded-lg border border-brand-border bg-brand-warm-white px-3 py-2">
-                  <div className="min-w-0">
-                    <div className="truncate text-[13px] font-semibold text-brand-near-black">{absorbed.fullName}</div>
-                    <div className="truncate font-mono text-label text-brand-gray">{absorbed.email}</div>
-                    <div className="font-mono text-label text-brand-gray">
-                      {t.admin.treasury.memberBalance(formatMoney(absorbed.balance))}
-                    </div>
-                  </div>
-                  {survivor && (
-                    <button
-                      type="button"
-                      onClick={swap}
-                      className="min-h-[36px] shrink-0 rounded-lg border border-brand-border bg-white px-3 text-[12px] font-semibold text-brand-near-black"
-                    >
-                      ⇅ {m.swap}
-                    </button>
-                  )}
+        {absorbed && (
+          <div>
+            <span className="mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray">
+              {m.absorbedLabel}
+            </span>
+            <div className="flex items-center justify-between gap-2 rounded-lg border border-brand-border bg-brand-warm-white px-3 py-2">
+              <div className="min-w-0">
+                <div className="truncate text-[13px] font-semibold text-brand-near-black">{absorbed.fullName}</div>
+                <div className="truncate font-mono text-label text-brand-gray">{absorbed.email}</div>
+                <div className="font-mono text-label text-brand-gray">
+                  {t.admin.treasury.memberBalance(formatMoney(absorbed.balance))}
                 </div>
               </div>
-            )}
+              {survivor && (
+                <button
+                  type="button"
+                  onClick={swap}
+                  className="min-h-11 shrink-0 rounded-lg border border-brand-border bg-white px-3 text-[12px] font-semibold text-brand-near-black"
+                >
+                  ⇅ {m.swap}
+                </button>
+              )}
+            </div>
+          </div>
+        )}
 
-            <MemberCombobox
-              members={candidates}
-              value={survivor}
-              onChange={(next) => {
-                setAlias(undefined);
-                setSurvivor(next);
-              }}
-              label={m.survivorLabel}
-            />
+        <MemberCombobox
+          members={candidates}
+          value={survivor}
+          onChange={(next) => {
+            setAlias(undefined);
+            setSurvivor(next);
+          }}
+          label={m.survivorLabel}
+        />
 
-            {loading && <p className="text-label text-muted">{m.loading}</p>}
+        {loading && <p className="text-label text-muted">{m.loading}</p>}
 
-            {error && !loading && (
-              <p role="alert" className="rounded-lg border border-brand-red/30 bg-brand-red-light p-3 text-[13px] text-brand-red">
-                {error}
-              </p>
-            )}
+        {error && !loading && (
+          <p role="alert" className="rounded-lg border border-brand-red/30 bg-brand-red-light p-3 text-[13px] text-brand-red">
+            {error}
+          </p>
+        )}
 
-            {preview && !loading && (
-              <>
-                {preview.aliasOptions.length > 0 && (
-                  <fieldset>
-                    <legend className="mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray">
-                      {m.aliasLabel}
-                    </legend>
-                    <div className="space-y-1">
-                      {[...preview.aliasOptions, null].map((option) => (
-                        <label
-                          key={option ?? "none"}
-                          className="flex min-h-[36px] items-center gap-2 text-[13px] text-brand-near-black"
-                        >
-                          <input
-                            type="radio"
-                            name="merge-alias"
-                            checked={preview.alias === option}
-                            onChange={() => setAlias(option)}
-                            className="accent-primary"
-                          />
-                          <span className="min-w-0 break-all font-mono">{option ?? m.aliasNone}</span>
-                        </label>
-                      ))}
-                    </div>
-                    {preview.droppedAddresses.map((a) => (
-                      <p key={a} className="mt-1 text-label text-brand-red">
-                        {m.aliasDropped(a)}
-                      </p>
-                    ))}
-                  </fieldset>
-                )}
-
-                <div className="rounded-lg border border-brand-border bg-brand-warm-white p-3">
-                  <p className="mb-1 text-label font-semibold uppercase tracking-wide text-brand-gray">{m.previewTitle}</p>
-                  <ul className="list-disc space-y-1 pl-4 text-[13px] text-brand-near-black">
-                    {preview.movedCycleTitles.length > 0 && <li>{m.previewOrders(preview.movedCycleTitles.join(", "))}</li>}
-                    {preview.transfer && <li>{m.previewBalance(preview.transfer)}</li>}
-                    {preview.alias && <li className="break-words">{m.previewLogin(preview.alias)}</li>}
-                    <li>
-                      {preview.deleteAbsorbed ? m.previewDelete(preview.absorbedName) : m.previewArchive(preview.absorbedName)}
-                    </li>
-                  </ul>
+        {preview && !loading && (
+          <>
+            {preview.aliasOptions.length > 0 && (
+              <fieldset>
+                <legend className="mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray">
+                  {m.aliasLabel}
+                </legend>
+                <div className="space-y-1">
+                  {[...preview.aliasOptions, null].map((option) => (
+                    <label
+                      key={option ?? "none"}
+                      className="flex min-h-11 items-center gap-2 text-[13px] text-brand-near-black"
+                    >
+                      <input
+                        type="radio"
+                        name="merge-alias"
+                        checked={preview.alias === option}
+                        onChange={() => setAlias(option)}
+                        className="accent-primary"
+                      />
+                      <span className="min-w-0 break-all font-mono">{option ?? m.aliasNone}</span>
+                    </label>
+                  ))}
                 </div>
-              </>
+                {preview.droppedAddresses.map((a) => (
+                  <p key={a} className="mt-1 text-label text-brand-red">
+                    {m.aliasDropped(a)}
+                  </p>
+                ))}
+              </fieldset>
             )}
-          </div>
 
-          <div className="flex gap-2 border-t border-brand-border p-5">
-            <button
-              onClick={() => onOpenChange(false)}
-              className="flex-1 rounded-xl border border-brand-border bg-white px-4 py-2.5 text-[13px] font-semibold text-brand-gray"
-            >
-              {t.admin.common.cancel}
-            </button>
-            <button
-              onClick={handleConfirm}
-              disabled={isPending || loading || !preview}
-              className="flex-[2] rounded-xl bg-primary px-4 py-2.5 text-[13px] font-bold text-on-primary disabled:opacity-60"
-            >
-              {isPending ? m.merging : m.confirm}
-            </button>
-          </div>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+            <div className="rounded-lg border border-brand-border bg-brand-warm-white p-3">
+              <p className="mb-1 text-label font-semibold uppercase tracking-wide text-brand-gray">{m.previewTitle}</p>
+              <ul className="list-disc space-y-1 pl-4 text-[13px] text-brand-near-black">
+                {preview.movedCycleTitles.length > 0 && <li>{m.previewOrders(preview.movedCycleTitles.join(", "))}</li>}
+                {preview.transfer && <li>{m.previewBalance(preview.transfer)}</li>}
+                {preview.alias && <li className="break-words">{m.previewLogin(preview.alias)}</li>}
+                <li>
+                  {preview.deleteAbsorbed ? m.previewDelete(preview.absorbedName) : m.previewArchive(preview.absorbedName)}
+                </li>
+              </ul>
+            </div>
+          </>
+        )}
+      </div>
+    </Sheet>
   );
 }

@@ -5,14 +5,27 @@ import { useRouter } from "next/navigation";
 import { toast } from "@/components/ui/toast";
 import { adminUpdatePaymentSettings } from "@/lib/actions/admin-settings";
 import { t } from "@/lib/i18n";
-import { formatDateTime } from "@/lib/i18n/format";
+import { formatDate, formatDateTime } from "@/lib/i18n/format";
+import { BANK_REFERENCE_MAX, fillBankReference } from "@/lib/payments/bank-reference";
 import type { PaymentSettingsInput, StripeKeyState } from "@/lib/payments/settings";
 
 const card = "rounded-xl border border-brand-border bg-white p-4 shadow-sm";
 const inputCls =
-  "w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-accent/30";
+  "w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black";
 const labelCls = "mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray";
 const helpCls = "mt-1 text-label leading-snug text-brand-gray";
+
+// The template as a member would read it, on a sample order closed today.
+function referencePreview(template: string): string {
+  const now = new Date();
+  const sample = t.admin.settings.bankReferenceSample;
+  return fillBankReference(template.trim() || t.topup.bankOrderReferenceDefault, {
+    order: sample.order,
+    month: formatDate(now, { month: "long" }),
+    year: formatDate(now, { year: "numeric" }),
+    member: sample.member,
+  });
+}
 
 export function PaymentSettingsForm({
   initial,
@@ -139,6 +152,46 @@ export function PaymentSettingsForm({
               onChange={(e) => update("bankIban", e.target.value)}
               className={`${inputCls} font-mono`}
             />
+          </div>
+          <div>
+            <label htmlFor="settings-bank-reference" className={labelCls}>
+              {s.bankReferenceLabel}
+            </label>
+            <input
+              id="settings-bank-reference"
+              type="text"
+              autoComplete="off"
+              maxLength={BANK_REFERENCE_MAX}
+              value={values.bankReferenceTemplate}
+              onChange={(e) => update("bankReferenceTemplate", e.target.value)}
+              placeholder={t.topup.bankOrderReferenceDefault}
+              aria-describedby="settings-bank-reference-help"
+              className={inputCls}
+            />
+            <p id="settings-bank-reference-help" className={helpCls}>
+              {s.bankReferenceHelp}
+            </p>
+            <p className="mt-1 break-words text-[12px] font-medium text-brand-near-black">
+              {s.bankReferencePreview(referencePreview(values.bankReferenceTemplate))}
+            </p>
+          </div>
+          <div>
+            <label htmlFor="settings-bank-receipt" className={labelCls}>
+              {s.bankReceiptLabel}
+            </label>
+            <input
+              id="settings-bank-receipt"
+              type="email"
+              autoComplete="off"
+              spellCheck={false}
+              value={values.bankReceiptEmail}
+              onChange={(e) => update("bankReceiptEmail", e.target.value)}
+              aria-describedby="settings-bank-receipt-help"
+              className={inputCls}
+            />
+            <p id="settings-bank-receipt-help" className={helpCls}>
+              {s.bankReceiptHelp}
+            </p>
           </div>
         </div>
       </section>

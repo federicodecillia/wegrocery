@@ -1,12 +1,16 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { t } from "@/lib/i18n";
 import { getUserRole, requireUserSession } from "@/lib/auth/session";
 import { getMemberNotifications, notificationOwners } from "@/lib/db/queries";
-import { markAllNotificationsRead, markNotificationRead } from "@/lib/actions/notifications";
-import { formatDateShort } from "@/lib/utils";
+import { markAllNotificationsRead } from "@/lib/actions/notifications";
+import { formatTime } from "@/lib/i18n/format";
+import { groupByDay } from "@/lib/notifications/day-groups";
+import { NotificationRow } from "./notification-row";
 import { HelpLink } from "@/components/guide/help-link";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: t.notifications.title };
 
 export default async function NotifichePage() {
   const session = await requireUserSession();
@@ -19,14 +23,14 @@ export default async function NotifichePage() {
 
   return (
     <AppShell email={session.user.email} name={session.user.fullName} isAdmin={role === "admin"} memberId={memberId} personId={session.user.personId}>
-      <div className="mb-5 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <h1 className="text-[20px] font-black tracking-[-0.03em] text-brand-near-black">
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2">
+          <h1 className="text-title font-black text-brand-near-black">
             {t.notifications.title}
           </h1>
           <HelpLink href="/guida/notifiche" />
         </div>
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="ml-auto flex items-center gap-2">
           {unreadCount > 0 && (
             <form
               action={async () => {
@@ -36,7 +40,7 @@ export default async function NotifichePage() {
             >
               <button
                 type="submit"
-                className="rounded-full border border-brand-border px-[13px] py-[5px] font-mono text-label font-bold uppercase tracking-widest text-brand-near-black"
+                className="min-h-11 whitespace-nowrap rounded-full border border-brand-border px-[13px] py-[5px] font-mono text-label font-bold uppercase tracking-widest text-brand-near-black"
               >
                 {t.notifications.markAllRead}
               </button>
@@ -46,7 +50,7 @@ export default async function NotifichePage() {
             href="/profilo/notifiche"
             aria-label={t.notifications.settings.link}
             title={t.notifications.settings.link}
-            className="flex h-8 w-8 items-center justify-center rounded-full border border-brand-border text-brand-gray"
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-brand-border text-brand-gray"
           >
             <svg
               width="16"
@@ -75,42 +79,27 @@ export default async function NotifichePage() {
           </p>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-[18px] border border-brand-border bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-          {notifications.map((n, i) => (
-            <form
-              key={n.notificationId}
-              action={async () => {
-                "use server";
-                await markNotificationRead(n.notificationId);
-                redirect(n.href ?? "/storico");
-              }}
-              className={i < notifications.length - 1 ? "border-b border-brand-border" : ""}
-            >
-              <button
-                type="submit"
-                className="flex w-full items-start gap-3 px-4 py-[14px] text-left"
-              >
-                <span
-                  className={`mt-[5px] h-2 w-2 shrink-0 rounded-full ${
-                    n.readAt ? "bg-transparent" : "bg-primary"
-                  }`}
-                  aria-label={n.readAt ? undefined : t.notifications.unreadLabel}
-                />
-                <div className="min-w-0 flex-1">
-                  <div
-                    className={`text-[14px] leading-snug ${
-                      n.readAt ? "font-medium text-brand-gray" : "font-bold text-brand-near-black"
-                    }`}
-                  >
-                    {n.title}
-                  </div>
-                  <div className="mt-[3px] text-[12px] leading-snug text-brand-gray">{n.body}</div>
-                  <div className="mt-[5px] font-mono text-label text-muted">
-                    {formatDateShort(n.createdAt)}
-                  </div>
-                </div>
-              </button>
-            </form>
+        <div className="space-y-4">
+          {groupByDay(notifications, new Date()).map((g) => (
+            <section key={g.key} aria-labelledby={`day-${g.key}`}>
+              <h2 id={`day-${g.key}`} className="mb-2 px-1 text-[13px] font-semibold text-brand-gray first-letter:uppercase">
+                {g.label}
+              </h2>
+              <ul className="overflow-hidden rounded-card border border-brand-border bg-white shadow-card">
+                {g.items.map((n) => (
+                  <li key={n.notificationId} className="border-b border-brand-border last:border-none">
+                    <NotificationRow
+                      id={n.notificationId}
+                      href={n.href ?? "/storico"}
+                      title={n.title}
+                      body={n.body}
+                      time={formatTime(n.createdAt)}
+                      unread={!n.readAt}
+                    />
+                  </li>
+                ))}
+              </ul>
+            </section>
           ))}
         </div>
       )}

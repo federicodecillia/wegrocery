@@ -1,29 +1,31 @@
 "use client";
 
+import { confirm } from "@/components/ui/confirm-dialog";
 import { useState, useTransition, useEffect, useCallback } from "react";
 import { toast } from "@/components/ui/toast";
+import { Sheet } from "@/components/ui/sheet";
+import { formatDeadline, formatPickupSlot } from "@/lib/i18n/deadline";
 import { t } from "@/lib/i18n";
-import { formatMoney, formatDateTime, formatHandlingFee } from "@/lib/i18n/format";
+import { formatMoney, formatHandlingFee } from "@/lib/i18n/format";
 import { HANDLING_FEE_MAX, cycleHandlingFee } from "@/lib/payments/order-payment";
 import { utcToZonedLocalInput } from "@/lib/i18n/zoned-time";
 import {
-  adminCloseCycle,
   adminCreateCycle,
   adminUpdateCycle,
   type CreateCycleInput,
 } from "@/lib/actions/admin";
 import { formatEur } from "@/lib/utils";
 import { ACCESS_LEVELS, DEFAULT_ACCESS_LEVEL, getAccessLabel, normalizeAccessLevel } from "@/lib/roles";
-import { Card, CardBody, CardHeader } from "@/components/ui/card";
+import { Card, CardBody } from "@/components/ui/card";
 import type { CatalogProductItem } from "@/lib/db/queries";
-import { ClosedCycleDetails } from "./closed-cycle-details";
+import Link from "next/link";
+import { adminHref } from "@/lib/admin/nav";
 import { CycleReviewCloseButton } from "./cycle-review-modal";
-import { SupplierActionsDialog } from "./supplier-actions-dialog";
 import { ImportListingWizard } from "./import-listing-wizard";
 
 type Supplier = { supplierId: string; name: string };
 
-type SerializedCycle = {
+export type SerializedCycle = {
   cycleId: string;
   title: string;
   orderCloseAt: string | null;
@@ -53,25 +55,17 @@ function AccessLevelOptions() {
   ));
 }
 
-// ── Open Cycle Card ───────────────────────────────────────────────────────────
+// ── Cycle workspace pieces (Admin → Ciclo, cycle-workspace.tsx) ──────────────
 
-export function OpenCycleCard({
-  cycle,
-  stats,
-  suppliers,
-}: {
-  cycle: SerializedCycle;
-  stats: { orderCount: number; grandTotal: number; unpaidDrafts?: number; pendingPayments?: number };
-  suppliers: Supplier[];
-}) {
-  const [editing, setEditing] = useState(false);
-  const [managingProducts, setManagingProducts] = useState(false);
-  const [importingListing, setImportingListing] = useState(false);
+export type CycleStats = { orderCount: number; grandTotal: number; unpaidDrafts?: number; pendingPayments?: number };
+
+// What to say before closing: unpaid card drafts, and the fee (a typo shows
+// here, not on the charges).
+function closeWarnings(cycle: SerializedCycle, stats: CycleStats) {
   const perOrderWarning =
     cycle.paymentMode === "per_order" && ((stats.unpaidDrafts ?? 0) > 0 || (stats.pendingPayments ?? 0) > 0)
       ? t.admin.cycle.perOrderCloseWarning(stats.unpaidDrafts ?? 0, stats.pendingPayments ?? 0)
       : null;
-  // Said before closing: a typo in the fee shows here, not on the charges.
   const fee = cycleHandlingFee({
     handlingFeeType: cycle.handlingFeeType ?? null,
     handlingFeeValue: cycle.handlingFeeValue ?? null,
@@ -79,158 +73,133 @@ export function OpenCycleCard({
   const closeWarning =
     [perOrderWarning, fee ? t.admin.cycle.closeFeeNote(formatHandlingFee(fee)) : null].filter(Boolean).join("\n\n") ||
     null;
+  return { perOrderWarning, closeWarning };
+}
 
+/** The open cycle's main action, in the workspace header. */
+export function CloseCycleAction({ cycle, stats }: { cycle: SerializedCycle; stats: CycleStats }) {
   return (
-    <Card className="mb-4 border-l-4 border-l-accent">
-      {/* The title stacks above a wrapping button row so the five actions
-          always wrap within the card instead of overflowing — the app caps at
-          640px, too narrow to ever fit them on one line beside the title. */}
-      <CardHeader className="flex flex-col items-start gap-3">
+    <CycleReviewCloseButton
+      cycleId={cycle.cycleId}
+      cycleTitle={cycle.title}
+      memberCount={stats.orderCount}
+      perOrder={cycle.paymentMode === "per_order"}
+      warning={closeWarnings(cycle, stats).closeWarning}
+    />
+  );
+}
+
+/** Deadline, pickups, shipping and access: the facts of a cycle, read-only. */
+export function CycleFacts({ cycle }: { cycle: SerializedCycle }) {
+  return (
+    <div className="space-y-1 text-[13px] text-brand-gray">
+      {cycle.orderCloseAt && (
         <div>
-          <span className="mb-1 inline-flex items-center gap-1.5 rounded-full bg-accent-soft px-2 py-0.5 text-label font-bold uppercase tracking-wider text-accent-text">
-            <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-            {t.admin.cycle.openBadge}
-          </span>
-          <span className="mb-1 ml-1.5 inline-flex rounded-full bg-black/[0.05] px-2 py-0.5 text-label font-semibold text-brand-gray">
-            {t.admin.cycle.accessLabel}: {getAccessLabel(cycle.accessLevel)}
-          </span>
-          <h3 className="mt-1 text-[15px] font-bold text-brand-near-black">{cycle.title}</h3>
+          {t.admin.cycle.orderCloseAt}:{" "}
+          <span className="font-semibold text-brand-near-black">{formatDeadline(cycle.orderCloseAt)}</span>
         </div>
-        <div className="flex w-full flex-wrap gap-2">
+      )}
+      {cycle.pickupDate && (
+        <div>
+          {cycle.pickup2Date ? t.admin.cycle.pickupFirst : t.admin.cycle.pickupSingle}{" "}
+          <span className="font-semibold text-brand-near-black">
+            {formatPickupSlot(cycle.pickupDate, cycle.pickupEndTime ?? null)}
+          </span>
+        </div>
+      )}
+      {cycle.pickup2Date && (
+        <div>
+          {t.admin.cycle.pickupSecond}{" "}
+          <span className="font-semibold text-brand-near-black">
+            {formatPickupSlot(cycle.pickup2Date, cycle.pickup2EndTime ?? null)}
+          </span>
+        </div>
+      )}
+      {cycle.shippingMode === "proportional" && cycle.shippingTotal && parseFloat(cycle.shippingTotal) > 0 && (
+        <div>
+          {t.admin.cycle.shippingLabel}:{" "}
+          <span className="font-semibold text-brand-near-black">
+            {t.admin.cycle.shippingProportionalDisplay(formatMoney(cycle.shippingTotal))}
+          </span>
+        </div>
+      )}
+      {cycle.shippingMode !== "proportional" &&
+        cycle.shippingCostPerMember &&
+        parseFloat(cycle.shippingCostPerMember) > 0 && (
+          <div>
+            {t.admin.cycle.shippingLabel}:{" "}
+            <span className="font-semibold text-brand-near-black">
+              {t.admin.cycle.shippingPerMemberDisplay(formatMoney(cycle.shippingCostPerMember))}
+            </span>
+          </div>
+        )}
+      <div>
+        {t.admin.cycle.accessLabel}:{" "}
+        <span className="font-semibold text-brand-near-black">{getAccessLabel(cycle.accessLevel)}</span>
+      </div>
+    </div>
+  );
+}
+
+/** Panoramica of an open cycle: how many ordered, the total, what to know before closing. */
+export function OpenCycleOverview({ cycle, stats }: { cycle: SerializedCycle; stats: CycleStats }) {
+  const { perOrderWarning } = closeWarnings(cycle, stats);
+  return (
+    <Card>
+      <CardBody>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="rounded-lg bg-primary-soft px-3 py-2">
+            <div className="text-label text-brand-gray">{t.admin.cycle.ordersCount}</div>
+            <div className="text-[20px] font-bold text-brand-near-black">{stats.orderCount}</div>
+          </div>
+          <div className="rounded-lg bg-accent-soft px-3 py-2">
+            <div className="text-label text-brand-gray">{t.admin.cycle.totalAmount}</div>
+            <div className="text-[20px] font-bold tabular-nums text-brand-near-black">{formatEur(stats.grandTotal)}</div>
+          </div>
+        </div>
+        {perOrderWarning && (
+          <div className="mt-3 rounded-lg border border-primary-mid bg-primary-soft p-3 text-[13px] text-brand-near-black">
+            {perOrderWarning}
+          </div>
+        )}
+        {cycle.isOverdue && (
+          <div className="mt-3 rounded-lg border border-brand-red/30 bg-brand-red-light p-3 text-[13px] text-brand-red">
+            {t.admin.cycle.overdueWarning}
+          </div>
+        )}
+        <div className="mt-3">
+          <CycleFacts cycle={cycle} />
+        </div>
+        <div className="mt-3">
+          <OrdersLink cycleId={cycle.cycleId} />
+        </div>
+      </CardBody>
+    </Card>
+  );
+}
+
+/** Prodotti of an open cycle: import a price list, add from the catalogue, edit what is there. */
+export function CycleProductsView({ cycle, suppliers }: { cycle: SerializedCycle; suppliers: Supplier[] }) {
+  const [importing, setImporting] = useState(false);
+  return (
+    <Card>
+      <CardBody>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <p className="max-w-prose text-[13px] text-brand-gray">{t.admin.workspace.productsIntro}</p>
           <button
-            onClick={() => setManagingProducts((v) => !v)}
-            className="rounded-xl border border-accent/30 bg-accent-soft px-3 py-1.5 text-label font-bold text-accent-text"
-          >
-            {managingProducts ? t.admin.cycle.closeProducts : t.admin.cycle.manageProducts}
-          </button>
-          <button
-            onClick={() => setImportingListing(true)}
-            className="rounded-xl border border-primary/30 bg-primary-soft px-3 py-1.5 text-label font-bold text-primary-text"
+            onClick={() => setImporting(true)}
+            className="min-h-10 rounded-xl border border-primary/30 bg-primary-soft px-3 text-[13px] font-bold text-primary-text"
           >
             {t.admin.cycle.importListing}
           </button>
-          <button
-            onClick={() => setEditing((v) => !v)}
-            className="rounded-xl border border-brand-border px-3 py-1.5 text-label font-semibold text-brand-gray"
-          >
-            {editing ? t.admin.common.cancel : t.admin.common.edit}
-          </button>
-          <CycleReviewCloseButton cycleId={cycle.cycleId} cycleTitle={cycle.title} warning={closeWarning} />
-          <CloseCycleButton
-            cycleId={cycle.cycleId}
-            cycleTitle={cycle.title}
-            warning={closeWarning}
-          />
         </div>
-      </CardHeader>
-      {editing ? (
-        <CardBody>
-          <EditCycleForm cycle={cycle} suppliers={suppliers} onClose={() => setEditing(false)} />
-        </CardBody>
-      ) : (
-        <CardBody>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-lg bg-primary-soft px-3 py-2">
-              <div className="font-mono text-label text-brand-gray">{t.admin.cycle.ordersCount}</div>
-              <div className="text-[20px] font-bold text-brand-near-black">{stats.orderCount}</div>
-            </div>
-            <div className="rounded-lg bg-accent-soft px-3 py-2">
-              <div className="font-mono text-label text-brand-gray">{t.admin.cycle.totalAmount}</div>
-              <div className="text-[20px] font-bold text-brand-near-black">
-                {formatEur(stats.grandTotal)}
-              </div>
-            </div>
-          </div>
-          <div className="mt-3 space-y-1 text-[12px] text-brand-gray">
-            {perOrderWarning && (
-              <div className="rounded-lg border border-primary-mid bg-primary-soft p-3 text-brand-near-black">
-                {perOrderWarning}
-              </div>
-            )}
-            {cycle.isOverdue && (
-              <div className="rounded-lg border border-brand-red/30 bg-brand-red-light p-3 text-brand-red">
-                {t.admin.cycle.overdueWarning}
-              </div>
-            )}
-            {cycle.orderCloseAt && (
-              <div>
-                {t.admin.cycle.orderCloseAt}:{" "}
-                <span className="font-semibold text-brand-near-black">
-                  {formatDateTime(new Date(cycle.orderCloseAt), {
-                    day: "numeric",
-                    month: "short",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </span>
-              </div>
-            )}
-            {cycle.pickupDate && (
-              <div>
-                {cycle.pickup2Date ? t.admin.cycle.pickupFirst : t.admin.cycle.pickupSingle}{" "}
-                <span className="font-semibold text-brand-near-black">
-                  {formatDateTime(new Date(cycle.pickupDate), {
-                    day: "numeric",
-                    month: "short",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                  {cycle.pickupEndTime && `–${cycle.pickupEndTime}`}
-                </span>
-              </div>
-            )}
-            {cycle.pickup2Date && (
-              <div>
-                {t.admin.cycle.pickupSecond}{" "}
-                <span className="font-semibold text-brand-near-black">
-                  {formatDateTime(new Date(cycle.pickup2Date), {
-                    day: "numeric",
-                    month: "short",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                  {cycle.pickup2EndTime && `–${cycle.pickup2EndTime}`}
-                </span>
-              </div>
-            )}
-            {cycle.shippingMode === "proportional" &&
-              cycle.shippingTotal &&
-              parseFloat(cycle.shippingTotal) > 0 && (
-                <div>
-                  {t.admin.cycle.shippingLabel}:{" "}
-                  <span className="font-semibold text-brand-near-black">
-                    {t.admin.cycle.shippingProportionalDisplay(formatMoney(cycle.shippingTotal))}
-                  </span>
-                </div>
-              )}
-            {cycle.shippingMode !== "proportional" &&
-              cycle.shippingCostPerMember &&
-              parseFloat(cycle.shippingCostPerMember) > 0 && (
-                <div>
-                  {t.admin.cycle.shippingLabel}:{" "}
-                  <span className="font-semibold text-brand-near-black">
-                    {t.admin.cycle.shippingPerMemberDisplay(formatMoney(cycle.shippingCostPerMember))}
-                  </span>
-                </div>
-              )}
-          </div>
-          <div className="mt-3">
-            <ClosedCycleDetails
-              cycleId={cycle.cycleId}
-              cycleTitle={cycle.title}
-              buttonLabel={t.admin.cycle.recapOrders}
-            />
-          </div>
-          {managingProducts && (
-            <div className="mt-6 border-t border-brand-border pt-4">
-              <CycleProductPicker cycleId={cycle.cycleId} suppliers={suppliers} />
-            </div>
-          )}
-        </CardBody>
-      )}
+        <div className="mt-4 border-t border-brand-border pt-4">
+          <CycleProductPicker cycleId={cycle.cycleId} suppliers={suppliers} />
+        </div>
+      </CardBody>
       <ImportListingWizard
-        open={importingListing}
-        onClose={() => setImportingListing(false)}
+        open={importing}
+        onClose={() => setImporting(false)}
         cycleId={cycle.cycleId}
         cycleTitle={cycle.title}
       />
@@ -246,7 +215,7 @@ function buildDateTime(date: string, time: string): string {
   return `${date}T${time || "00:00"}`;
 }
 
-const inputCls = "rounded-lg border border-brand-border px-2 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-primary/30";
+const inputCls = "rounded-lg border border-brand-border px-2 py-2 text-[13px] text-brand-near-black";
 const labelCls = "mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray";
 const miniLabelCls = "shrink-0 text-label font-medium text-brand-gray";
 
@@ -265,10 +234,10 @@ const TIME_SLOTS: string[] = (() => {
 
 // A single time-slot dropdown. Keeps a legacy off-grid value (e.g. an old
 // "19:10") selectable by prepending it, so editing never silently resets it.
-function TimeSlotSelect({ name, defValue }: { name: string; defValue?: string }) {
+function TimeSlotSelect({ name, defValue, ariaLabel }: { name: string; defValue?: string; ariaLabel: string }) {
   const options = defValue && !TIME_SLOTS.includes(defValue) ? [defValue, ...TIME_SLOTS] : TIME_SLOTS;
   return (
-    <select name={name} defaultValue={defValue ?? ""} className={`min-w-0 flex-1 ${inputCls}`}>
+    <select name={name} defaultValue={defValue ?? ""} aria-label={ariaLabel} className={`min-w-0 flex-1 ${inputCls}`}>
       <option value="">—</option>
       {options.map((t) => (
         <option key={t} value={t}>
@@ -301,14 +270,15 @@ function PickupRow({
       <input
         name={`${prefix}DateOnly`}
         type="date"
+        aria-label={label}
         defaultValue={defDate}
         className={`w-[140px] shrink-0 ${inputCls}`}
       />
       <div className="flex min-w-[190px] flex-1 items-center gap-1.5">
         <span className={miniLabelCls}>{t.admin.cycle.timeFrom}</span>
-        <TimeSlotSelect name={`${prefix}StartTime`} defValue={defStart} />
+        <TimeSlotSelect name={`${prefix}StartTime`} defValue={defStart} ariaLabel={`${label}, ${t.admin.cycle.timeFrom}`} />
         <span className={miniLabelCls}>{t.admin.cycle.timeTo}</span>
-        <TimeSlotSelect name={`${prefix}EndTime`} defValue={defEnd} />
+        <TimeSlotSelect name={`${prefix}EndTime`} defValue={defEnd} ariaLabel={`${label}, ${t.admin.cycle.timeTo}`} />
       </div>
     </div>
   );
@@ -337,7 +307,7 @@ function PickupSection({
   const [showPickup2, setShowPickup2] = useState(Boolean(defPickup2Date));
   return (
     <div>
-      <label className={labelCls}>{t.admin.cycle.pickupSection}</label>
+      <p className={labelCls}>{t.admin.cycle.pickupSection}</p>
       <div className="space-y-2">
         <PickupRow
           label={t.admin.cycle.pickup1Label}
@@ -392,7 +362,7 @@ function ShippingModeFields({
 }) {
   return (
     <div>
-      <label className={labelCls}>{t.admin.cycle.shippingLabel}</label>
+      <p className={labelCls}>{t.admin.cycle.shippingLabel}</p>
       <div className="mb-2 flex rounded-lg bg-black/[0.05] p-0.5">
         {(
           [
@@ -477,7 +447,7 @@ function HandlingFeeFields({
   ];
   return (
     <div>
-      <label className={labelCls}>{t.admin.cycle.handlingFeeLabel}</label>
+      <p className={labelCls}>{t.admin.cycle.handlingFeeLabel}</p>
       <div className="mb-2 flex rounded-lg bg-black/[0.05] p-0.5">
         {options.map((opt) => (
           <button
@@ -605,31 +575,37 @@ export function EditCycleForm({
         </div>
       )}
       <div>
-        <label className={labelCls}>{t.admin.cycle.titleLabel}</label>
-        <input
-          name="title"
-          required
-          defaultValue={cycle.title}
-          className={`w-full ${inputCls}`}
-        />
+        <label className="block">
+          <span className={labelCls}>{t.admin.cycle.titleLabel}
+          </span>
+          <input
+            name="title"
+            required
+            defaultValue={cycle.title}
+            className={`w-full ${inputCls}`}
+          />
+        </label>
       </div>
 
       {!isClosed && (
         <div>
-          <label className={labelCls}>{t.admin.cycle.orderCloseAtLabel}</label>
-          <input
-            name="orderCloseAt"
-            type="datetime-local"
-            required
-            defaultValue={closeAtLocal}
-            className={`w-full ${inputCls}`}
-          />
+          <label className="block">
+            <span className={labelCls}>{t.admin.cycle.orderCloseAtLabel}
+            </span>
+            <input
+              name="orderCloseAt"
+              type="datetime-local"
+              required
+              defaultValue={closeAtLocal}
+              className={`w-full ${inputCls}`}
+            />
+          </label>
         </div>
       )}
 
       {shippingMode === "manual" ? (
         <div>
-          <label className={labelCls}>{t.admin.cycle.shippingLabel}</label>
+          <p className={labelCls}>{t.admin.cycle.shippingLabel}</p>
           <div className="rounded-xl border border-primary/30 bg-primary-soft p-3 text-[12px] text-brand-near-black">
             <div className="font-bold text-primary-text">{t.admin.cycle.shippingManualTitle}</div>
             <p className="mt-1 text-brand-gray">
@@ -668,42 +644,51 @@ export function EditCycleForm({
 
       <div className={isClosed ? "" : "grid grid-cols-2 gap-3"}>
         <div>
-          <label className={labelCls}>{t.admin.cycle.supplierLabel}</label>
-          <select
-            name="supplierId"
-            defaultValue={cycle.supplierId ?? ""}
-            className={`w-full ${inputCls}`}
-          >
-            <option value="">{t.admin.common.noSupplier}</option>
-            {suppliers.map((s) => (
-              <option key={s.supplierId} value={s.supplierId}>
-                {s.name}
-              </option>
-            ))}
-          </select>
+          <label className="block">
+            <span className={labelCls}>{t.admin.cycle.supplierLabel}
+            </span>
+            <select
+              name="supplierId"
+              defaultValue={cycle.supplierId ?? ""}
+              className={`w-full ${inputCls}`}
+            >
+              <option value="">{t.admin.common.noSupplier}</option>
+              {suppliers.map((s) => (
+                <option key={s.supplierId} value={s.supplierId}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+          </label>
         </div>
         {!isClosed && (
           <div>
-            <label className={labelCls}>{t.admin.cycle.accessLabel}</label>
-            <select
-              name="accessLevel"
-              defaultValue={normalizeAccessLevel(cycle.accessLevel) ?? DEFAULT_ACCESS_LEVEL}
-              className={`w-full ${inputCls}`}
-            >
-              <AccessLevelOptions />
-            </select>
+            <label className="block">
+              <span className={labelCls}>{t.admin.cycle.accessLabel}
+              </span>
+              <select
+                name="accessLevel"
+                defaultValue={normalizeAccessLevel(cycle.accessLevel) ?? DEFAULT_ACCESS_LEVEL}
+                className={`w-full ${inputCls}`}
+              >
+                <AccessLevelOptions />
+              </select>
+            </label>
             <p className="mt-1 text-label text-muted">{t.admin.cycle.accessHint}</p>
           </div>
         )}
       </div>
       <div>
-        <label className={labelCls}>{t.admin.common.notes}</label>
-        <textarea
-          name="notes"
-          rows={2}
-          defaultValue={cycle.notes ?? ""}
-          className={`w-full ${inputCls}`}
-        />
+        <label className="block">
+          <span className={labelCls}>{t.admin.common.notes}
+          </span>
+          <textarea
+            name="notes"
+            rows={2}
+            defaultValue={cycle.notes ?? ""}
+            className={`w-full ${inputCls}`}
+          />
+        </label>
         <p className="mt-1 text-label text-muted">{t.admin.cycle.notesHint}</p>
       </div>
       <button
@@ -717,19 +702,68 @@ export function EditCycleForm({
   );
 }
 
+// Wallet or card, for a new cycle of a wallet group. Same look as the
+// shipping and fee toggles.
+function PaymentModeFields({
+  mode,
+  onModeChange,
+}: {
+  mode: "wallet" | "per_order";
+  onModeChange: (mode: "wallet" | "per_order") => void;
+}) {
+  const options = [
+    { v: "wallet" as const, label: t.admin.cycle.paymentModeWallet },
+    { v: "per_order" as const, label: t.admin.cycle.paymentModeCard },
+  ];
+  return (
+    <div>
+      <p className={labelCls}>{t.admin.cycle.paymentModeLabel}</p>
+      <div className="mb-2 flex rounded-lg bg-black/[0.05] p-0.5">
+        {options.map((opt) => (
+          <button
+            key={opt.v}
+            type="button"
+            aria-pressed={mode === opt.v}
+            onClick={() => onModeChange(opt.v)}
+            className={`flex-1 rounded-md py-1.5 text-label font-semibold transition-colors ${
+              mode === opt.v ? "bg-white text-brand-near-black shadow-sm" : "bg-transparent text-brand-gray"
+            }`}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+      <p className="text-label text-muted">
+        {mode === "per_order" ? t.admin.cycle.paymentModeCardHint : t.admin.cycle.paymentModeWalletHint}
+      </p>
+    </div>
+  );
+}
+
 // ── Create Cycle Form ─────────────────────────────────────────────────────────
 
 export function CreateCycleForm({
   suppliers,
-  paymentMode,
-  handlingFee,
+  paymentMode: groupMode,
+  cardSelectable,
+  walletFee,
+  cardFee,
+  defaultOpen = false,
 }: {
   suppliers: Supplier[];
+  /** The group's mode: the default of a new cycle. */
   paymentMode: "wallet" | "per_order";
-  /** The fee the new cycle starts from; null = none. */
-  handlingFee: { type: "percent" | "fixed"; value: string } | null;
+  /** A wallet group may pay this cycle by card (lib/payments/cycle-mode.ts). */
+  cardSelectable: boolean;
+  /** The fee a new cycle of each mode starts from; null = none. */
+  walletFee: { type: "percent" | "fixed"; value: string } | null;
+  cardFee: { type: "percent" | "fixed"; value: string } | null;
+  /** Open from the start (the workspace's "+ Nuovo ciclo", or no cycle yet). */
+  defaultOpen?: boolean;
 }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
+  const [paymentMode, setPaymentMode] = useState<"wallet" | "per_order">(groupMode);
+  const handlingFee = paymentMode === "per_order" ? cardFee : walletFee;
   const [isPending, startTransition] = useTransition();
   const [shippingMode, setShippingMode] = useState<"fixed_per_member" | "proportional">(
     "fixed_per_member",
@@ -753,6 +787,7 @@ export function CreateCycleForm({
       shippingTotal: fd.get("shippingTotal") as string,
       handlingFeeType: fd.get("handlingFeeType") as string,
       handlingFeeValue: fd.get("handlingFeeValue") as string,
+      paymentMode,
     };
     startTransition(async () => {
       const result = await adminCreateCycle(data);
@@ -781,23 +816,29 @@ export function CreateCycleForm({
       <p className="mb-3 text-[13px] font-bold text-brand-near-black">{t.admin.cycle.createTitle}</p>
       <div className="space-y-3">
         <div>
-          <label className={labelCls}>{t.admin.cycle.titleLabel}</label>
-          <input
-            name="title"
-            required
-            placeholder={t.admin.cycle.titlePlaceholder}
-            className={`w-full ${inputCls}`}
-          />
+          <label className="block">
+            <span className={labelCls}>{t.admin.cycle.titleLabel}
+            </span>
+            <input
+              name="title"
+              required
+              placeholder={t.admin.cycle.titlePlaceholder}
+              className={`w-full ${inputCls}`}
+            />
+          </label>
         </div>
 
         <div>
-          <label className={labelCls}>{t.admin.cycle.orderCloseAtLabel}</label>
-          <input
-            name="orderCloseAt"
-            type="datetime-local"
-            required
-            className={`w-full ${inputCls}`}
-          />
+          <label className="block">
+            <span className={labelCls}>{t.admin.cycle.orderCloseAtLabel}
+            </span>
+            <input
+              name="orderCloseAt"
+              type="datetime-local"
+              required
+              className={`w-full ${inputCls}`}
+            />
+          </label>
         </div>
 
         <ShippingModeFields
@@ -807,7 +848,11 @@ export function CreateCycleForm({
           defaultTotal=""
         />
 
+        {cardSelectable && <PaymentModeFields mode={paymentMode} onModeChange={setPaymentMode} />}
+
         <HandlingFeeFields
+          // A new mode starts from its own last fee.
+          key={paymentMode}
           defaultType={handlingFee?.type ?? "none"}
           defaultValue={handlingFee?.value ?? ""}
           allowNone={paymentMode === "wallet"}
@@ -822,31 +867,40 @@ export function CreateCycleForm({
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className={labelCls}>{t.admin.cycle.supplierLabel}</label>
-            <select name="supplierId" required defaultValue="" className={`w-full ${inputCls}`}>
-              <option value="" disabled>{t.admin.common.selectPlaceholder}</option>
-              {suppliers.map((s) => (
-                <option key={s.supplierId} value={s.supplierId}>
-                  {s.name}
-                </option>
-              ))}
-            </select>
+            <label className="block">
+              <span className={labelCls}>{t.admin.cycle.supplierLabel}
+              </span>
+              <select name="supplierId" required defaultValue="" className={`w-full ${inputCls}`}>
+                <option value="" disabled>{t.admin.common.selectPlaceholder}</option>
+                {suppliers.map((s) => (
+                  <option key={s.supplierId} value={s.supplierId}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
           <div>
-            <label className={labelCls}>{t.admin.cycle.accessLabel}</label>
-            <select name="accessLevel" defaultValue={DEFAULT_ACCESS_LEVEL} className={`w-full ${inputCls}`}>
-              <AccessLevelOptions />
-            </select>
+            <label className="block">
+              <span className={labelCls}>{t.admin.cycle.accessLabel}
+              </span>
+              <select name="accessLevel" defaultValue={DEFAULT_ACCESS_LEVEL} className={`w-full ${inputCls}`}>
+                <AccessLevelOptions />
+              </select>
+            </label>
             <p className="mt-1 text-label text-muted">{t.admin.cycle.accessHint}</p>
           </div>
         </div>
         <div>
-          <label className={labelCls}>{t.admin.common.notes}</label>
-          <textarea
-            name="notes"
-            rows={2}
-            className={`w-full ${inputCls}`}
-          />
+          <label className="block">
+            <span className={labelCls}>{t.admin.common.notes}
+            </span>
+            <textarea
+              name="notes"
+              rows={2}
+              className={`w-full ${inputCls}`}
+            />
+          </label>
           <p className="mt-1 text-label text-muted">{t.admin.cycle.notesHint}</p>
         </div>
       </div>
@@ -870,48 +924,6 @@ export function CreateCycleForm({
         </button>
       </div>
     </form>
-  );
-}
-
-// ── Close Cycle Button ────────────────────────────────────────────────────────
-
-export function CloseCycleButton({
-  cycleId,
-  cycleTitle,
-  warning,
-}: {
-  cycleId: string;
-  cycleTitle: string;
-  /** Pay-per-order: unpaid drafts and open payments, said before closing. */
-  warning?: string | null;
-}) {
-  const [isPending, startTransition] = useTransition();
-
-  function handleClose() {
-    const message = t.admin.cycle.closeCycleConfirm(cycleTitle);
-    if (!window.confirm(warning ? `${message}\n\n${warning}` : message)) return;
-    startTransition(async () => {
-      try {
-        const result = await adminCloseCycle(cycleId);
-        if ("error" in result) {
-          toast.error(result.error);
-          return;
-        }
-        toast.success(t.admin.cycle.cycleClosed(result.chargesGenerated));
-      } catch (err) {
-        toast.error(err instanceof Error ? err.message : t.admin.common.error);
-      }
-    });
-  }
-
-  return (
-    <button
-      onClick={handleClose}
-      disabled={isPending}
-      className="rounded-xl border border-brand-red/30 bg-brand-red-light px-4 py-2 text-[12px] font-bold text-brand-red disabled:opacity-60"
-    >
-      {isPending ? t.admin.cycle.closingCycle : t.admin.cycle.closeCycle}
-    </button>
   );
 }
 
@@ -982,8 +994,8 @@ export function CycleProductPicker({
     });
   }
 
-  function handleRemove(productId: string) {
-    if (!window.confirm(t.admin.products.removeFromCycleConfirm)) return;
+  async function handleRemove(productId: string) {
+    if (!(await confirm({ title: t.admin.products.removeFromCycleConfirm, danger: true }))) return;
     startTransition(async () => {
       const result = await adminRemoveProductFromCycle(productId);
       if (result.error) toast.error(result.error);
@@ -1022,7 +1034,7 @@ export function CycleProductPicker({
                     </div>
                     <button
                       onClick={() => handleRemove(p.productId)}
-                      className="ml-2 rounded-lg bg-red-50 px-2 py-1 text-label font-bold text-red-600 hover:bg-red-100"
+                      className="ml-2 min-h-9 rounded-lg bg-brand-red-light px-2 py-1 text-label font-bold text-brand-red hover:bg-brand-red/15"
                     >
                       {t.admin.products.removeFromCycle}
                     </button>
@@ -1043,7 +1055,7 @@ export function CycleProductPicker({
         <select
           value={selectedSupplierId}
           onChange={(e) => setSelectedSupplierId(e.target.value)}
-          className="mb-4 w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-accent/30"
+          className="mb-4 w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black"
         >
           <option value="">{t.admin.products.selectSupplierOption}</option>
           {suppliers.map((s) => (
@@ -1089,103 +1101,55 @@ export function CycleProductPicker({
   );
 }
 
-// ── Supplier Actions Button ──────────────────────────────────────────────────
+// ── Closed Cycle Edit Button ─────────────────────────────────────────────────
 
-// Opens the SupplierActionsDialog hub with three sections: scarica xlsx,
-// invia mail, carica distinta compilata. The button is enabled even when
-// the supplier email is missing — the admin can type it directly into the
-// dialog for that single send, and the download + carica distinta sections
-// are useful regardless of email configuration. Disabled only when there
-// is no supplier at all on the cycle, since most of the dialog's defaults
-// derive from the supplier record.
-export function SupplierActionsButton({
-  cycleId,
-  cycleTitle,
-  supplierName,
+// Opens EditCycleForm in a sheet, for an open or a closed cycle. Reuses the
+// same form to avoid drift; on a closed cycle the form adapts via the
+// `isClosed` flag (warning banner + locked fields + ledger recompute).
+export function EditCycleButton({
+  cycle,
+  suppliers,
+  className,
 }: {
-  cycleId: string;
-  cycleTitle: string;
-  supplierName: string | null;
-  // Kept on the call-site for parity with the previous API but no longer
-  // gating the button — the dialog itself surfaces a missing-email case
-  // by leaving the field empty for the admin to fill in.
-  supplierEmail?: string | null;
+  cycle: SerializedCycle;
+  suppliers: Supplier[];
+  className?: string;
 }) {
   const [open, setOpen] = useState(false);
-  const disabledReason = !supplierName ? t.admin.cycle.noSupplierDisabled : null;
-
+  const isClosed = cycle.status !== "open";
   return (
     <>
       <button
         onClick={() => setOpen(true)}
-        disabled={!!disabledReason}
-        title={disabledReason ?? undefined}
-        className="rounded-lg bg-accent/10 px-3 py-1 text-label font-bold text-accent-text hover:bg-accent/20 disabled:cursor-not-allowed disabled:opacity-50"
+        className={
+          className ??
+          "min-h-10 rounded-xl border border-brand-border bg-white px-3 text-[13px] font-semibold text-brand-near-black hover:bg-black/[0.03]"
+        }
       >
-        {t.admin.cycle.supplierButton}
+        {isClosed ? t.admin.cycle.editClosedButton : t.admin.common.edit}
       </button>
       {open && (
-        <SupplierActionsDialog
-          open={open}
-          onOpenChange={setOpen}
-          cycleId={cycleId}
-          cycleTitle={cycleTitle}
-        />
+        <Sheet
+          open
+          onRequestClose={() => setOpen(false)}
+          title={cycle.title}
+          subtitle={isClosed ? t.admin.cycle.editClosedLabel : undefined}
+        >
+          <EditCycleForm cycle={cycle} suppliers={suppliers} onClose={() => setOpen(false)} isClosed={isClosed} />
+        </Sheet>
       )}
     </>
   );
 }
 
-// ── Closed Cycle Edit Button ─────────────────────────────────────────────────
-
-// Lightweight wrapper that opens EditCycleForm in a modal for a closed cycle.
-// Reuses the same form to avoid drift; the form itself adapts via the
-// `isClosed` flag (warning banner + locked fields + ledger recompute).
-export function ClosedCycleEditButton({
-  cycle,
-  suppliers,
-}: {
-  cycle: SerializedCycle;
-  suppliers: Supplier[];
-}) {
-  const [open, setOpen] = useState(false);
-  if (!open) {
-    return (
-      <button
-        onClick={() => setOpen(true)}
-        className="rounded-lg bg-primary/10 px-3 py-1 text-label font-bold text-primary-text hover:bg-primary/20"
-      >
-        {t.admin.cycle.editClosedButton}
-      </button>
-    );
-  }
+/** From the overview to the cycle's orders, where they are read and corrected. */
+export function OrdersLink({ cycleId }: { cycleId: string }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-      <div className="flex max-h-[92vh] w-full max-w-[600px] flex-col rounded-2xl bg-brand-warm-white shadow-2xl">
-        <div className="flex items-center justify-between border-b border-brand-border p-5">
-          <div>
-            <div className="font-mono text-label uppercase tracking-[0.13em] text-primary-text">
-              {t.admin.cycle.editClosedLabel}
-            </div>
-            <h3 className="mt-1 text-[16px] font-black text-brand-near-black">{cycle.title}</h3>
-          </div>
-          <button
-            onClick={() => setOpen(false)}
-            className="rounded-full bg-brand-border p-2 text-brand-gray hover:bg-brand-gray-light"
-            aria-label={t.admin.common.close}
-          >
-            ✕
-          </button>
-        </div>
-        <div className="flex-1 overflow-y-auto p-5">
-          <EditCycleForm
-            cycle={cycle}
-            suppliers={suppliers}
-            onClose={() => setOpen(false)}
-            isClosed
-          />
-        </div>
-      </div>
-    </div>
+    <Link
+      href={adminHref("ciclo", "ordini", { cycle: cycleId })}
+      className="inline-flex min-h-10 items-center rounded-xl bg-accent/10 px-3 text-[13px] font-bold text-accent-text hover:bg-accent/20"
+    >
+      {t.admin.cycle.recapOrders}
+    </Link>
   );
 }

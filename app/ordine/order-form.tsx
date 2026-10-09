@@ -1,21 +1,27 @@
 "use client";
 
+import { EmptyIcon } from "@/components/ui-icon";
+import { Badge } from "@/components/ui/badge";
+import { buttonClass } from "@/components/ui/button";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "@/components/ui/toast";
 import { confirm } from "@/components/ui/confirm-dialog";
 import { t } from "@/lib/i18n";
-import { formatDateTime, formatSignedMoney } from "@/lib/i18n/format";
-import { formatEur, getProductEmoji, normalizeCategory } from "@/lib/utils";
+import { formatEur, memberProductEmoji, normalizeCategory } from "@/lib/utils";
 import type { OrderState, SaveOrderLine, SaveOrderResult } from "@/lib/actions/order";
 import { discardOrderDraft, loadLastOrderForPrefill, saveOrderDraft } from "@/lib/actions/order";
 import type { OrderPaymentResult } from "@/lib/actions/order-payment";
 import { draftSyncAction, orderLinesKey, type ResumedDraft } from "@/lib/order-draft";
-import { ORDER_PAYMENT_MIN_CENTS, handlingFeeCents, orderPaymentAmount, type HandlingFee } from "@/lib/payments/order-payment";
+import { handlingFeeCents, orderPaymentAmount, type HandlingFee } from "@/lib/payments/order-payment";
 import { OrderSentDialog } from "./order-sent-dialog";
 import { OrderSummary, type ConfirmedLine } from "./order-summary";
+import { OrderTotals } from "./order-totals";
+import { CategoryBar, categoryAnchor } from "./category-bar";
+import { ORDER_SEARCH_MIN_PRODUCTS, filterOrderProducts } from "@/lib/order-filter";
 import { CycleNotes } from "@/components/cycle-notes";
 import { HelpLink } from "@/components/guide/help-link";
+import { formatDeadline } from "@/lib/i18n/deadline";
 
 type Product = {
   productId: string;
@@ -27,6 +33,7 @@ type Product = {
   pricePerKg: string | null;
   notes: string | null;
   category: string | null;
+  emoji: string | null;
   sortOrder: number;
 };
 
@@ -142,6 +149,12 @@ export function OrderForm({
     balanceWarning: string | null;
   } | null>(null);
   const [isPending, startTransition] = useTransition();
+  // The last refusal, shown above "Conferma" too (a toast goes away) while
+  // the cart is the one that was refused.
+  // "Cerca prodotto" and the "Nel carrello" chip (lib/order-filter.ts).
+  const [query, setQuery] = useState("");
+  const [onlyCart, setOnlyCart] = useState(false);
+  const [saveError, setSaveError] = useState<{ key: string; message: string } | null>(null);
   const router = useRouter();
 
   const draftKey = orderLinesKey(toLines(draft));
@@ -285,6 +298,7 @@ export function OrderForm({
       name: p.name,
       meta: [p.variant, p.format].filter(Boolean).join(" · "),
       notes: p.notes,
+      emoji: memberProductEmoji(p.emoji, p.name),
       quantity: savedQty[p.productId],
       unitPrice: parseFloat(p.unitPrice),
     }));
@@ -320,8 +334,10 @@ export function OrderForm({
         // re-proposed. They can still tweak before confirming.
         setDraft(result.quantities);
         toast.success(t.order.reproposeSuccess(result.matched, result.cycleTitle || ""));
-      } catch (err) {
-        toast.error(err instanceof Error ? err.message : t.order.genericError);
+      } catch {
+        // A thrown message is a network or framework one ("Failed to fetch",
+        // masked in production): the member gets ours instead.
+        toast.error(t.order.genericError);
       }
     });
   }
@@ -338,6 +354,7 @@ export function OrderForm({
           // Expected refusal (closed cycle, lapsed card, credit limit...):
           // nothing was saved.
           toast.error(result.error);
+          setSaveError({ key: orderLinesKey(toLines(quantities)), message: result.error });
           // The cycle was closed while the member was editing: refresh so the
           // page reflects the new state (the ordine page will redirect or show
           // "Nessun ordine aperto" instead of the stale form).
@@ -364,8 +381,10 @@ export function OrderForm({
         // Invalidate the client Router Cache so navigating back here (or to
         // the home card) can't paint the pre-save order from a stale payload.
         router.refresh();
-      } catch (err) {
-        toast.error(err instanceof Error ? err.message : t.order.saveError);
+      } catch {
+        // A thrown message is a network or framework one ("Failed to fetch",
+        // masked in production): the member gets ours instead.
+        toast.error(t.order.saveError);
       }
     });
   }
@@ -378,6 +397,7 @@ export function OrderForm({
         const result = await action();
         if (result.status === "error") {
           toast.error(result.error);
+          setSaveError({ key: orderLinesKey(toLines(quantities)), message: result.error });
           if (["cycle_not_open", "changed", "in_progress"].includes(result.code)) router.refresh();
           return;
         }
@@ -400,8 +420,10 @@ export function OrderForm({
           toast.success(t.order.pay.confirmed);
         }
         router.refresh();
-      } catch (err) {
-        toast.error(err instanceof Error ? err.message : t.order.saveError);
+      } catch {
+        // A thrown message is a network or framework one ("Failed to fetch",
+        // masked in production): the member gets ours instead.
+        toast.error(t.order.saveError);
       }
     });
   }
@@ -468,28 +490,52 @@ export function OrderForm({
     persist(draft, false);
   }
 
-  const groups = groupByCategory(products);
+  const cartIds = new Set(Object.keys(draft));
+  const searchable = products.length > ORDER_SEARCH_MIN_PRODUCTS;
+  const filtering = query.trim() !== "" || onlyCart;
+  const groups = groupByCategory(filterOrderProducts(products, query, onlyCart ? cartIds : null));
+  // The category chips list every category, not only the ones the filter left.
+  const allGroups = groupByCategory(products);
+  const showBar = isEditing && (allGroups.filter((g) => g.category).length > 1 || cartIds.size > 0);
+  // A column for the emoji only when some product has one.
+  const anyEmoji = products.some((p) => memberProductEmoji(p.emoji, p.name) !== null);
+
+  // From lg, editing puts the catalogue on the left and the cart (chosen
+  // lines, totals, Confirm) on the right; the recap of a confirmed order
+  // stays a reading column.
+  const sideCart = isEditing && products.length > 0;
+  const totalsProps = {
+    orderTotal,
+    payAmount,
+    afterBalance,
+    walletFeeCents,
+    hasOrder,
+    isPending,
+    error: saveError?.key === draftKey ? saveError.message : null,
+    onConfirm: handleSave,
+  };
 
   return (
     <>
+      <div className={sideCart ? "lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start lg:gap-6" : "lg:mx-auto lg:max-w-[600px]"}>
+      <div className="min-w-0">
       {/* Cycle header */}
       <div className="mb-1">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <h1 className="text-[20px] font-black tracking-[-0.03em] text-brand-near-black">
+            <h1 className="text-title font-black text-brand-near-black">
               {t.order.yourOrder}
             </h1>
             <HelpLink href="/guida/ordinare" />
           </div>
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-accent/20 bg-accent-soft px-2.5 py-0.5 font-mono text-label font-semibold text-accent-text">
-            <span className="h-1.5 w-1.5 rounded-full bg-accent opacity-75" />
+          <Badge tone="accent" dot>
             {t.cycle.open}
-          </span>
+          </Badge>
         </div>
         <p className="font-mono text-label text-brand-gray mt-[3px]">
           {cycleTitle}
           {supplierName ? ` · ${supplierName}` : ""}
-          {orderCloseAt ? ` · ${t.cycle.closes(formatDateTime(orderCloseAt))}` : ""}
+          {orderCloseAt ? ` · ${t.cycle.closes(formatDeadline(orderCloseAt))}` : ""}
         </p>
       </div>
 
@@ -497,7 +543,7 @@ export function OrderForm({
 
       {/* Unconfirmed edits found on arrival (order_drafts). */}
       {isEditing && showDraftBanner && (
-        <div className="mt-3 rounded-[14px] border border-primary-mid bg-primary-soft p-[12px_14px]">
+        <div className="mt-3 rounded-card border border-primary-mid bg-primary-soft p-[12px_14px]">
           <p className="text-[14px] font-bold text-brand-near-black">{t.order.draftBannerTitle}</p>
           <p className="mt-1 text-[12px] leading-[1.45] text-brand-near-black">{t.order.draftBannerBody}</p>
           {resumedDraft !== null && resumedDraft.dropped > 0 && (
@@ -505,6 +551,8 @@ export function OrderForm({
               {t.order.draftDropped(resumedDraft.dropped)}
             </p>
           )}
+          {/* With an order on file, "Annulla modifiche" below does the same. */}
+          {!hasSavedOrder && (
           <button
             type="button"
             onClick={handleDiscardDraft}
@@ -513,6 +561,7 @@ export function OrderForm({
           >
             {t.order.discardDraft}
           </button>
+          )}
         </div>
       )}
 
@@ -520,7 +569,7 @@ export function OrderForm({
           products yet. Same visual as page.tsx's no-open-cycle empty state. */}
       {products.length === 0 && (
         <div className="flex flex-col items-center justify-center py-16 text-center">
-          <span className="mb-4 text-4xl">📦</span>
+          <EmptyIcon name="box" />
           <h2 className="text-[18px] font-bold text-brand-near-black">{t.order.emptyCatalog}</h2>
           <p className="mt-2 text-[14px] text-brand-gray">{t.order.emptyCatalogHint}</p>
         </div>
@@ -555,9 +604,8 @@ export function OrderForm({
       )}
 
       {/* Way out of edit mode without saving: the confirmed order is still
-          on file, so this discards the pending tweaks and shows it again.
-          Tweaks are kept as a draft, so dropping them asks first, like
-          "Annulla modifiche". */}
+          on file. With no change it is a plain way back; with changes it is
+          "Annulla modifiche", which asks first (the tweaks are a draft). */}
       {isEditing && hasSavedOrder && (
         <button
           type="button"
@@ -575,9 +623,13 @@ export function OrderForm({
             setIsEditing(false);
             setShowDraftBanner(false);
           }}
-          className="mt-3 inline-flex items-center gap-1 text-[12px] font-semibold text-accent-text"
+          className={
+            draftKey !== savedKey
+              ? buttonClass({ variant: "outline", size: "sm" }, "mt-3")
+              : "mt-3 inline-flex min-h-11 items-center gap-1 text-[14px] font-semibold text-accent-text"
+          }
         >
-          ← {t.order.backToOrder}
+          {draftKey !== savedKey ? t.order.discardDraft : `← ${t.order.backToOrder}`}
         </button>
       )}
 
@@ -598,13 +650,46 @@ export function OrderForm({
         </button>
       )}
 
+      {/* Search, from ORDER_SEARCH_MIN_PRODUCTS products. */}
+      {isEditing && searchable && (
+        <div className="mt-4">
+          <label htmlFor="order-search" className="sr-only">
+            {t.order.searchLabel}
+          </label>
+          <input
+            id="order-search"
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={t.order.searchPlaceholder}
+            autoComplete="off"
+            className="min-h-11 w-full rounded-full border border-brand-border bg-white px-4 text-[14px] text-brand-near-black placeholder:text-muted"
+          />
+        </div>
+      )}
+
+      {/* Sticky chips: the cart, then a jump to each category. */}
+      {showBar && (
+        <CategoryBar
+          categories={allGroups.map((g) => g.category)}
+          cartCount={cartIds.size}
+          onlyCart={onlyCart}
+          onToggleCart={() => setOnlyCart((v) => !v)}
+          labelOf={(c) => (c === "Altro" ? t.order.otherCategory : c)}
+        />
+      )}
+
+      {isEditing && filtering && groups.length === 0 && (
+        <p className="py-8 text-center text-[14px] text-brand-gray">{onlyCart && query.trim() === "" ? t.order.cartEmpty : t.order.noResults}</p>
+      )}
+
       {/* Product list */}
       {isEditing && groups.map(({ category, products: prods }) => (
-        <div key={category}>
+        <section key={category} id={categoryAnchor(category)} data-category={category} className="scroll-mt-16">
           {category && (
-            <div className="pt-4 pb-2 font-mono text-label uppercase tracking-[0.10em] text-muted">
+            <h2 className="pt-4 pb-2 font-mono text-label font-normal uppercase tracking-[0.10em] text-muted">
               {category === "Altro" ? t.order.otherCategory : category}
-            </div>
+            </h2>
           )}
           {prods.map((p) => {
             const qty = draft[p.productId] ?? 0;
@@ -615,164 +700,131 @@ export function OrderForm({
                 className="flex items-center justify-between border-b border-brand-border py-3 last:border-none"
               >
                 <div className="mr-3 flex min-w-0 flex-1 items-start gap-2">
-                  <span className="mt-[1px] shrink-0 text-[22px] leading-none">
-                    {getProductEmoji(p.name)}
-                  </span>
+                  {anyEmoji && (
+                    <span aria-hidden="true" className="mt-[1px] w-[22px] shrink-0 text-[22px] leading-none">
+                      {memberProductEmoji(p.emoji, p.name)}
+                    </span>
+                  )}
                   <div className="min-w-0 flex-1">
                     <div className="text-[14px] font-medium text-brand-near-black">{p.name}</div>
                     <div className="mt-[2px] flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                      {meta && <span className="font-mono text-label text-brand-gray">{meta}</span>}
-                      <span className="font-mono text-label font-semibold text-primary-text">
+                      {meta && <span className="text-[13px] text-brand-gray">{meta}</span>}
+                      <span className="text-[14px] font-semibold tabular-nums text-primary-text">
                         {formatEur(parseFloat(p.unitPrice))}
                       </span>
                       {p.pricePerKg && (
-                        <span className="font-mono text-label text-muted">
+                        <span className="text-[13px] tabular-nums text-muted">
                           ({formatEur(parseFloat(p.pricePerKg))}/kg)
                         </span>
                       )}
                     </div>
                     {p.notes && (
-                      <p className="mt-[2px] text-label leading-[1.4] text-muted">{p.notes}</p>
+                      <p className="mt-[2px] text-[13px] leading-[1.4] text-muted">{p.notes}</p>
                     )}
                   </div>
                 </div>
-                {qty === 0 ? (
-                  <div className="flex flex-shrink-0 items-center rounded-full bg-black/[0.06] p-0.5">
+                {/* One container whose "+" is always the last child with a
+                    stable key: going 0 → 1 does not remount it, so keyboard
+                    and screen-reader focus stays on the button just pressed. */}
+                <div
+                  className={`flex flex-shrink-0 items-center rounded-full p-0.5 ${
+                    qty === 0 ? "bg-black/[0.06]" : "bg-primary-soft"
+                  }`}
+                >
+                  {qty > 0 && (
                     <button
-                      onClick={() => changeQty(p.productId, 1)}
-                      aria-label={t.order.add}
-                      className="flex h-8 w-8 items-center justify-center rounded-full text-[18px] font-light text-brand-gray"
-                    >
-                      +
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex flex-shrink-0 items-center rounded-full bg-primary-soft p-0.5">
-                    <button
-                      onClick={() => changeQty(p.productId, -1)}
-                      aria-label={t.order.less}
-                      className="flex h-8 w-8 items-center justify-center rounded-full text-[18px] font-light text-brand-gray"
+                      key="minus"
+                      type="button"
+                      onClick={(e) => {
+                        const plus = e.currentTarget.parentElement?.querySelector<HTMLButtonElement>("[data-plus]");
+                        changeQty(p.productId, -1);
+                        // The "−" disappears at 0: hand focus to the "+".
+                        if (qty === 1) plus?.focus();
+                      }}
+                      aria-label={t.order.lessNamed(p.name)}
+                      className="pressable hit-44 flex h-10 w-10 items-center justify-center rounded-full text-[18px] font-light text-brand-gray"
                     >
                       −
                     </button>
-                    <span className="min-w-[22px] text-center font-mono text-[13px] font-bold text-brand-near-black">
+                  )}
+                  {qty > 0 && (
+                    <span
+                      key="qty"
+                      aria-hidden="true"
+                      className="min-w-[22px] text-center font-mono text-[13px] font-bold text-brand-near-black"
+                    >
                       {qty}
                     </span>
-                    <button
-                      onClick={() => changeQty(p.productId, 1)}
-                      aria-label={t.order.more}
-                      className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-[18px] font-light text-on-primary"
-                    >
-                      +
-                    </button>
-                  </div>
-                )}
+                  )}
+                  <button
+                    key="plus"
+                    type="button"
+                    data-plus
+                    onClick={() => changeQty(p.productId, 1)}
+                    aria-label={qty === 0 ? t.order.addNamed(p.name) : t.order.moreNamed(p.name)}
+                    className={`pressable hit-44 flex h-10 w-10 items-center justify-center rounded-full text-[18px] font-light ${
+                      qty === 0 ? "text-brand-gray" : "bg-primary text-on-primary"
+                    }`}
+                  >
+                    +
+                  </button>
+                  <span className="sr-only" aria-live="polite">
+                    {qty > 0 ? t.order.qtyAnnounce(p.name, qty) : ""}
+                  </span>
+                </div>
               </div>
             );
           })}
-        </div>
+        </section>
       ))}
+      </div>
 
-      {/* Sticky footer — rides above the (sticky) bottom nav; from lg the nav
-          is in the header, so it sits at the bottom edge. In-flow sticky
-          inherits the card width at every breakpoint; -mx-5 bleeds it across
-          main's padding to the card edges. iOS WebKit skips repainting a
-          text change inside this sticky layer and leaves the old digits
-          under the new ones: the layer is promoted to its own compositing
-          layer (translateZ), the background is opaque (no backdrop-filter),
-          and each amount is keyed on its value so a change mounts a fresh
-          node, whose old rectangle WebKit does invalidate. */}
-      {isEditing && (hasOrder || hasSavedOrder) && (
-        <div className="sticky z-10 -mx-5 mt-4 -mb-[calc(var(--spacing-nav-h)+1rem)] bottom-[calc(var(--spacing-nav-h)+env(safe-area-inset-bottom))] lg:-mb-4 lg:bottom-0 [transform:translateZ(0)]">
-          <div className="border-t border-brand-border bg-brand-warm-white px-5 py-3.5">
-            <div className="mb-3 flex items-end justify-between">
-              <div>
-                <div className="font-mono text-label uppercase tracking-[0.09em] text-muted">
-                  {t.order.totalOrder}
-                </div>
-                <div
-                  key={payAmount ? payAmount.requiredCents : orderTotal}
-                  className="mt-[2px] text-[24px] font-black tracking-[-0.03em] text-brand-near-black"
-                >
-                  {formatEur(payAmount ? payAmount.requiredCents / 100 : orderTotal)}
-                </div>
-              </div>
-              {payAmount ? (
-                <div className="text-right">
-                  <div className="font-mono text-label uppercase tracking-[0.09em] text-muted">
-                    {t.order.pay.toPay}
-                  </div>
-                  <div key={payAmount.chargeCents} className="mt-[2px] font-mono text-[14px] font-bold text-brand-near-black">
-                    {payAmount.chargeCents > 0 ? formatEur(payAmount.chargeCents / 100) : t.order.pay.nothingToPay}
-                  </div>
-                </div>
-              ) : (
-                <div className="text-right">
-                  <div className="font-mono text-label uppercase tracking-[0.09em] text-muted">
-                    {t.order.balanceAfter}
-                  </div>
-                  <div
-                    key={afterBalance}
-                    className={`mt-[2px] font-mono text-[14px] font-bold ${
-                      afterBalance < 0 ? "text-brand-red" : "text-accent-text"
-                    }`}
-                  >
-                    {formatSignedMoney(afterBalance)}
-                  </div>
-                  {walletFeeCents > 0 && (
-                    <div className="mt-[2px] text-label text-muted">{t.order.feeEstimate(formatEur(walletFeeCents / 100))}</div>
-                  )}
-                </div>
-              )}
-            </div>
-            {payAmount && hasOrder && (
-              <dl className="mb-3 space-y-[2px] text-[12px] text-brand-gray">
-                {[
-                  [t.order.pay.products, payAmount.productsCents],
-                  [t.order.pay.shipping, payAmount.shippingCents],
-                  [t.order.pay.fee, payAmount.feeCents],
-                  [t.order.pay.alreadyPaid, -payAmount.coveredCents],
-                ]
-                  .filter(([, c]) => c !== 0)
-                  .map(([label, c]) => (
-                    <div key={label as string} className="flex justify-between gap-3">
-                      <dt>{label}</dt>
-                      <dd className="font-mono text-brand-near-black">
-                        {(c as number) < 0 ? `−${formatEur(-(c as number) / 100)}` : formatEur((c as number) / 100)}
-                      </dd>
-                    </div>
-                  ))}
-                <p className="pt-[2px] text-muted">
-                  {payAmount.outcome === "pay" && payAmount.chargeCents > payAmount.requiredCents - payAmount.coveredCents
-                    ? t.order.pay.minimumNote(formatEur(ORDER_PAYMENT_MIN_CENTS / 100))
-                    : t.order.pay.feeHint}
-                </p>
-              </dl>
+      {sideCart && (
+        <aside aria-labelledby="cart-title" className="hidden lg:sticky lg:top-4 lg:block">
+          <div className="rounded-card border border-brand-border bg-white p-4 shadow-card">
+            <h2 id="cart-title" className="text-[15px] font-bold text-brand-near-black">
+              {t.order.cartTitle}
+              {cartIds.size > 0 && <span className="ml-1.5 font-normal text-brand-gray">({cartIds.size})</span>}
+            </h2>
+            {cartIds.size === 0 ? (
+              <p className="mt-2 text-[13px] leading-[1.45] text-brand-gray">{t.order.cartPanelEmpty}</p>
+            ) : (
+              <ul className="mt-2 max-h-[45vh] divide-y divide-brand-border overflow-y-auto">
+                {products
+                  .filter((p) => (draft[p.productId] ?? 0) > 0)
+                  .map((p) => {
+                    const qty = draft[p.productId];
+                    return (
+                      <li key={p.productId} className="flex items-center gap-2 py-2">
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-[13px] font-medium text-brand-near-black">{p.name}</span>
+                          <span className="block text-label tabular-nums text-brand-gray">
+                            {qty} × {formatEur(parseFloat(p.unitPrice))}
+                          </span>
+                        </span>
+                        <span className="shrink-0 text-[13px] font-semibold tabular-nums text-brand-near-black">
+                          {formatEur(parseFloat(p.unitPrice) * qty)}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => changeQty(p.productId, -1)}
+                          aria-label={t.order.lessNamed(p.name)}
+                          className="pressable flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-black/[0.06] text-[16px] text-brand-gray hover:bg-black/[0.1]"
+                        >
+                          −
+                        </button>
+                      </li>
+                    );
+                  })}
+              </ul>
             )}
-            <button
-              onClick={handleSave}
-              disabled={isPending}
-              className={`w-full rounded-full px-[22px] py-[14px] text-sm font-bold transition-[opacity,transform] duration-150 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed ${
-                hasOrder
-                  ? "bg-primary text-on-primary"
-                  : "bg-brand-red text-white"
-              }`}
-            >
-              {isPending
-                ? t.order.saving
-                : !hasOrder
-                  ? payPerOrder
-                    ? t.order.pay.cancelOrder
-                    : t.order.removeOrder
-                  : !payAmount
-                    ? t.order.confirmOrder
-                    : payAmount.chargeCents > 0
-                      ? t.order.pay.confirmAndPay(formatEur(payAmount.chargeCents / 100))
-                      : t.order.pay.confirm}
-            </button>
+            {(hasOrder || hasSavedOrder) && <OrderTotals {...totalsProps} variant="panel" />}
           </div>
-        </div>
+        </aside>
       )}
+      </div>
+
+      {isEditing && (hasOrder || hasSavedOrder) && <OrderTotals {...totalsProps} />}
 
       <OrderSentDialog
         open={sent !== null}

@@ -10,6 +10,7 @@
   --near-blk: #2d2b29;
   --red: #c53030;
   --red-l: #feecec;
+  --warning: #b45309; /* warning fills with white text (AA, checked in design-guard) */
   --border: rgba(88, 89, 91, 0.1);
   --nav-h: 82px;
 }
@@ -34,10 +35,18 @@
   --color-brand-warm-white: var(--warm-wh);
   --color-brand-red: var(--red);
   --color-brand-red-light: var(--red-l);
+  --color-warning: var(--warning);
   --color-brand-border: var(--border);
   --spacing-nav-h: var(--nav-h);
   /* Smallest text in the app: labels, badges, captions. Nothing goes under it. */
   --text-label: 0.75rem;
+  /* Page titles (h1). */
+  --text-title: 1.25rem;
+  --text-title--letter-spacing: -0.03em;
+  --text-title--line-height: 1.2;
+  /* Cards and sheets share one radius and one resting shadow. */
+  --radius-card: 18px;
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -47,6 +56,61 @@ body {
   color: var(--foreground);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
   -webkit-tap-highlight-color: transparent;
+}
+
+/* One focus outline for every brand: primary-text is computed for 4.5:1 on
+   the light surfaces, well past the 3:1 a focus indicator needs. Unlayered on
+   purpose, so no utility (a stray focus:outline-none) can hide it. Browsers
+   show it for keyboard focus, and on fields for any focus. */
+:focus-visible {
+  outline: 2px solid var(--primary-text);
+  outline-offset: 2px;
+}
+/* Programmatic focus targets (a heading or <main> after a jump) stay plain. */
+[tabindex="-1"]:focus-visible {
+  outline: none;
+}
+
+@layer base {
+  /* Tailwind 4 leaves buttons on the default arrow. */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  summary,
+  label[for],
+  select {
+    cursor: pointer;
+  }
+}
+
+/* Small uppercase mono labels (section names, field captions, back links). */
+@utility label-caps {
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* Shared press feedback for buttons and tappable rows. */
+/* A small control (a 32 px avatar, a 28 px "?") with a 44 px touch area:
+   the area grows around it without moving anything. */
+@utility hit-44 {
+  position: relative;
+  &::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: max(100%, 44px);
+    height: max(100%, 44px);
+    transform: translate(-50%, -50%);
+  }
+}
+
+@utility pressable {
+  transition: transform 120ms ease-out;
+  &:active:not(:disabled) {
+    transform: scale(0.97);
+  }
 }
 
 /* iOS zooms the page when a focused field is under 16px. Unlayered on

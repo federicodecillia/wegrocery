@@ -77,8 +77,10 @@ export async function startOrderPayment(
       return refuse("cycle_not_open", t.errors.cycleNotOpen);
     }
     const fee = cycleHandlingFee(cycle);
-    // A member who pays outside the app confirms with saveOrder instead.
-    if (cycle.paymentMode !== "per_order" || settings.mode !== "per_order" || !fee || member.paysOffline) {
+    // A member who pays outside the app confirms with saveOrder instead. The
+    // cycle's mode decides, not the group's: a wallet group may pay single
+    // cycles by card (lib/payments/cycle-mode.ts).
+    if (cycle.paymentMode !== "per_order" || !fee || member.paysOffline) {
       return refuse("cycle_not_open", t.errors.cycleNotOpen);
     }
 
@@ -101,7 +103,9 @@ export async function startOrderPayment(
 
     // Open Checkouts first, then the coverage: a payment landing meanwhile is
     // counted, and a Checkout left open cannot later overwrite this order.
-    const stripe = settings.onlineTopupAvailable ? getStripe() : null;
+    // The key is enough: in a wallet group online top-ups may stay off while
+    // its card cycles are paid by card.
+    const stripe = settings.stripeKey.usable ? getStripe() : null;
     if (stripe && (await expireOpenCheckouts(db, stripe, memberId, cycleId)) === "paid") {
       return refuse("in_progress", t.order.pay.inProgress);
     }
@@ -135,8 +139,10 @@ export async function startOrderPayment(
 
     // Something to pay: Stripe Checkout, unless an amount due from earlier
     // cycles is still open (the draft can still change, reduce or cancel).
+    // In a wallet group a negative balance is a wallet debt, topped up as
+    // usual: it does not stop a card cycle.
     if (!stripe) return refuse("unavailable", t.order.pay.unavailable);
-    const dueCents = -(await getConsolidatedBalanceCents(db, memberId));
+    const dueCents = settings.mode === "per_order" ? -(await getConsolidatedBalanceCents(db, memberId)) : 0;
     if (dueCents >= SETTLEMENT_MIN_DUE_CENTS) {
       return refuse("balance_due", t.order.pay.balanceDue(formatMoney(dueCents / 100)));
     }

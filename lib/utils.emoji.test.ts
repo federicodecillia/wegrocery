@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getProductEmoji, getProductEmojiOrNull } from "./utils";
+import { getProductEmoji, getProductEmojiOrNull, memberProductEmoji } from "./utils";
 
 describe("getProductEmoji", () => {
   it("maps melanzana to eggplant, not watermelon", () => {
@@ -59,5 +59,14 @@ describe("getProductEmoji", () => {
     expect(getProductEmoji("Calamari freschi")).toBe("🦑");
     expect(getProductEmoji("Mandarino tardivo")).toBe("🍊");
     expect(getProductEmoji("Olive taggiasche")).toBe("🫒");
+  });
+});
+
+describe("memberProductEmoji", () => {
+  it("prefers the admin's emoji, then the name, never the cart fallback", () => {
+    expect(memberProductEmoji("🥕", "Pomodori")).toBe("🥕");
+    expect(memberProductEmoji("🛒", "Pomodori")).toBe(getProductEmojiOrNull("Pomodori"));
+    expect(memberProductEmoji(null, "Zzz sconosciuto")).toBeNull();
+    expect(memberProductEmoji("🛒", "Zzz sconosciuto")).toBeNull();
   });
 });

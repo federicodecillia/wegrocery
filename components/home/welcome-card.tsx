@@ -8,7 +8,7 @@ import { dismissWelcome } from "@/lib/actions/profile";
 import { WELCOME_LINKS, welcomeSteps, type WelcomeMoney, type WelcomeStep } from "@/lib/guide/welcome";
 import { t } from "@/lib/i18n";
 import { isPhoneOrTablet } from "@/lib/pwa/install-hint";
-import { parseWelcome, readWelcomeRaw, storeWelcome, subscribeNever } from "./welcome-storage";
+import { parseWelcome, readSeenBefore, readWelcomeRaw, storeWelcome, subscribeNever } from "./welcome-storage";
 
 // The first visit's short tour, at the top of Home: a few steps a newcomer
 // pages through, closed for good with "Ho capito" or "Salta"
@@ -62,6 +62,8 @@ export function WelcomeCard({
   const steps = welcomeSteps({ money, families, install: installable });
   const [chosen, setChosen] = useState<WelcomeStep | null>(null);
   const [closed, setClosed] = useState(false);
+  const seenBefore = useSyncExternalStore(subscribeNever, readSeenBefore, () => false);
+  const [expanded, setExpanded] = useState(false);
   const [, startTransition] = useTransition();
 
   if (closed) return null;
@@ -88,10 +90,44 @@ export function WelcomeCard({
     });
   }
 
+  // A later visit, not in the middle of the tour: one line, so the open
+  // cycle's button stays above the bottom bar on a phone.
+  if (seenBefore && !stored && !expanded && !reopened) {
+    return (
+      <section
+        aria-label={t.welcome.title(appName)}
+        className="mb-[14px] flex items-center justify-between gap-2 rounded-card border border-primary-mid bg-white py-1 pl-4 pr-1 shadow-card"
+      >
+        <span className="min-w-0 truncate text-[14px] font-semibold text-brand-near-black">
+          <span aria-hidden>👋 </span>
+          {t.welcome.title(appName)}
+        </span>
+        <span className="flex shrink-0">
+          <button
+            type="button"
+            onClick={() => setExpanded(true)}
+            aria-expanded={false}
+            className="min-h-11 rounded-full px-3 text-[14px] font-bold text-primary-text hover:underline"
+          >
+            {t.welcome.expand}
+          </button>
+          <button
+            type="button"
+            onClick={close}
+            aria-label={t.welcome.close}
+            className="min-h-11 min-w-11 rounded-full text-muted hover:text-brand-near-black"
+          >
+            ✕
+          </button>
+        </span>
+      </section>
+    );
+  }
+
   return (
     <section
       aria-label={t.welcome.title(appName)}
-      className="mb-[14px] rounded-[20px] border-[1.5px] border-primary-mid bg-white p-[18px_20px] shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
+      className="mb-[14px] rounded-card border-[1.5px] border-primary-mid bg-white p-[18px_20px] shadow-card"
     >
       <div className="mb-3 flex items-start justify-between gap-3">
         <span className="font-mono text-label font-semibold uppercase tracking-[0.13em] text-primary-text">
@@ -143,11 +179,11 @@ export function WelcomeCard({
             </Button>
           )}
           {last ? (
-            <Button variant="orange" size="sm" onClick={close}>
+            <Button variant="brand" size="sm" onClick={close}>
               {t.welcome.done}
             </Button>
           ) : (
-            <Button variant="orange" size="sm" onClick={() => go(current + 1)}>
+            <Button variant="brand" size="sm" onClick={() => go(current + 1)}>
               {t.welcome.next}
             </Button>
           )}

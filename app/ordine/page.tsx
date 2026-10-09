@@ -1,11 +1,11 @@
 import { AppShell } from "@/components/app-shell";
+import { EmptyIcon } from "@/components/ui-icon";
 import { OrderForm } from "./order-form";
 import { CycleChooser } from "./cycle-chooser";
 import { t } from "@/lib/i18n";
 import { getUserRole, requireUserSession } from "@/lib/auth/session";
 import {
   getCycleProducts,
-  getMemberBalance,
   getMemberById,
   getMemberOrderLines,
   getOpenCycles,
@@ -16,12 +16,16 @@ import { cancelOrder, startOrderPayment } from "@/lib/actions/order-payment";
 import { PendingRefresh } from "@/components/ricarica/pending-refresh";
 import { getDb } from "@/lib/db/client";
 import { getOrderPaymentStatus } from "@/lib/db/queries";
+import { getWalletBalance } from "@/lib/payments/balance-due";
 import { getCycleCoverageCents } from "@/lib/payments/order-confirm";
 import { cycleHandlingFee, type HandlingFee } from "@/lib/payments/order-payment";
 import { orderLinesKey, orderStateKey, resumeDraft } from "@/lib/order-draft";
 import { canAccessCycle } from "@/lib/roles";
 import { resolveOrderCycle } from "@/lib/order-cycle";
 import Link from "next/link";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: t.nav.order };
 
 export default async function OrdinePage({
   searchParams,
@@ -34,11 +38,9 @@ export default async function OrdinePage({
   const role = getUserRole(session);
   const memberId = session.user.memberId!;
 
-  const [balance, openCycles, member] = await Promise.all([
-    getMemberBalance(memberId),
-    getOpenCycles(),
-    getMemberById(memberId),
-  ]);
+  const [openCycles, member] = await Promise.all([getOpenCycles(), getMemberById(memberId)]);
+  // Without the card cycles not settled yet (lib/payments/balance-due.ts).
+  const balance = await getWalletBalance(getDb(), memberId, member?.paysOffline ?? false);
 
   const activeCycles = openCycles.filter((c) => canAccessCycle(c.accessLevel, role));
 
@@ -56,7 +58,7 @@ export default async function OrdinePage({
     return (
       <AppShell email={session.user.email} name={session.user.fullName} isAdmin={role === "admin"} memberId={memberId} personId={session.user.personId}>
         <div className="flex flex-col items-center justify-center py-16 text-center">
-          <span className="mb-4 text-4xl">🛒</span>
+          <EmptyIcon name="cart" />
           <h2 className="text-[18px] font-bold text-brand-near-black">{t.order.noOpenOrders}</h2>
           <p className="mt-2 text-[14px] text-brand-gray">
             {t.order.noOpenOrdersHint}
@@ -104,10 +106,11 @@ export default async function OrdinePage({
               : null;
 
   return (
-    <AppShell email={session.user.email} name={session.user.fullName} isAdmin={role === "admin"} memberId={memberId} personId={session.user.personId}>
+    // Wide: from lg the form puts the cart beside the catalogue.
+    <AppShell email={session.user.email} name={session.user.fullName} isAdmin={role === "admin"} memberId={memberId} personId={session.user.personId} layout="wide">
       {notice && (
         <div
-          className={`mb-4 rounded-[14px] border p-[12px_14px] text-[14px] ${
+          className={`mb-4 rounded-card border p-[12px_14px] text-[14px] ${
             notice.tone === "ok"
               ? "border-accent bg-accent-soft text-brand-near-black"
               : notice.tone === "error"
@@ -158,6 +161,7 @@ export default async function OrdinePage({
           notes: p.notes,
           unit: p.unit,
           category: p.category,
+          emoji: p.emoji,
           sortOrder: p.sortOrder,
         }))}
         existingLines={existingLines.map((l) => ({

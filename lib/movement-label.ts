@@ -98,6 +98,10 @@ export function movementKind(entry: LedgerMovement): MovementKind {
 }
 
 export function movementLabel(entry: LedgerMovement, labels: MovementLabels): string {
+  return movementKindLabel(movementKind(entry), labels);
+}
+
+export function movementKindLabel(kind: MovementKind, labels: MovementLabels): string {
   const byKind: Record<MovementKind, string> = {
     topup: labels.topup,
     online_topup: labels.onlineTopup,
@@ -118,7 +122,7 @@ export function movementLabel(entry: LedgerMovement, labels: MovementLabels): st
     membership_fee: labels.membershipFee,
     other: labels.otherMovement,
   };
-  return byKind[movementKind(entry)];
+  return byKind[kind];
 }
 
 // The label, then the note when it adds something. Stripe rows carry a fixed

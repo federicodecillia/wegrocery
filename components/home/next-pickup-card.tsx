@@ -17,7 +17,7 @@ export function NextPickupCard({ pickup }: { pickup: NextPickup }) {
   const timeRange = pickup.pickupEndTime ? `${startTime}–${pickup.pickupEndTime}` : startTime;
 
   return (
-    <div className="mb-[14px] rounded-[16px] border border-accent/20 bg-accent-soft p-[14px_16px]">
+    <div className="mb-[14px] rounded-card border border-accent/20 bg-accent-soft p-[14px_16px]">
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0 flex-1">
           <div className="mb-[3px] flex items-center gap-1.5 font-mono text-label uppercase tracking-[0.13em] text-accent-text">

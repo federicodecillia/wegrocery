@@ -1,5 +1,6 @@
 "use client";
 
+import { confirm } from "@/components/ui/confirm-dialog";
 import { useMemo, useState, useTransition } from "react";
 import { toast } from "@/components/ui/toast";
 import { EmojiPicker } from "@/components/ui/emoji-picker";
@@ -29,6 +30,9 @@ const HELP = {
 } as const;
 
 // ── Catalog Product Form ──────────────────────────────────────────────────────
+
+// The one form for a catalogue product (Catalogo → Prodotti). Fornitori used
+// to carry a second copy without the icon field, so saving there wiped it.
 
 export function CatalogProductForm({
   supplierId,
@@ -77,7 +81,9 @@ export function CatalogProductForm({
           toast.error(result.error);
           return;
         }
-        toast.success(product ? t.admin.products.productUpdated : t.admin.products.productCreated);
+        // A price change on an edit archives the old version (past cycles keep it).
+        if (result.archived) toast.success(t.admin.products.priceUpdatedArchived);
+        else toast.success(product ? t.admin.products.productUpdated : t.admin.products.productCreated);
         onClose();
       } catch {
         toast.error(t.admin.products.errorSaving);
@@ -86,7 +92,7 @@ export function CatalogProductForm({
   }
 
   const inputCls =
-    "w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-accent/30";
+    "w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black";
   const labelCls = "mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray";
 
   return (
@@ -233,11 +239,10 @@ function decodeBase64ToBlob(base64: string, mimeType: string): Blob {
   return new Blob([bytes], { type: mimeType });
 }
 
+/** "Altri formati": the WeGrocery template and a direct upload for one supplier. */
 export function CatalogCsvActions({ supplierId }: { supplierId: string }) {
-  void supplierId; // wizard re-asks the supplier; this prop is kept for API parity
   const [isPending, startTransition] = useTransition();
   const [downloading, startDownload] = useTransition();
-  const [wizardOpen, setWizardOpen] = useState(false);
 
   function downloadTemplate() {
     startDownload(async () => {
@@ -307,7 +312,7 @@ export function CatalogCsvActions({ supplierId }: { supplierId: string }) {
   }
 
   const btnBase =
-    "flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border px-3 py-2 text-[12px] font-bold shadow-sm transition disabled:opacity-60";
+    "flex min-h-10 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border px-3 py-2 text-[12px] font-bold shadow-sm transition disabled:opacity-60";
   return (
     <div className="flex flex-wrap gap-2">
       <button
@@ -333,19 +338,24 @@ export function CatalogCsvActions({ supplierId }: { supplierId: string }) {
           disabled={isPending || !supplierId}
         />
       </label>
+    </div>
+  );
+}
+
+/** The main way to load a price list: the guided import, which asks for the supplier itself. */
+export function GuidedImportButton() {
+  const [wizardOpen, setWizardOpen] = useState(false);
+  return (
+    <>
       <button
         onClick={() => setWizardOpen(true)}
         title={t.admin.products.importGuidedTitle}
-        className={`${btnBase} border-primary/30 bg-primary-soft text-primary-text hover:opacity-90`}
+        className="flex min-h-11 w-full items-center justify-center rounded-xl bg-primary px-4 text-[13px] font-bold text-on-primary sm:w-auto"
       >
         {t.admin.products.importGuided}
       </button>
-      <ImportListingWizard
-        open={wizardOpen}
-        onClose={() => setWizardOpen(false)}
-        cycleId={null}
-      />
-    </div>
+      <ImportListingWizard open={wizardOpen} onClose={() => setWizardOpen(false)} cycleId={null} />
+    </>
   );
 }
 
@@ -407,7 +417,7 @@ export function CatalogLoadForm({
               type="checkbox"
               checked={selected.has(p.catalogProductId)}
               onChange={() => toggle(p.catalogProductId)}
-              className="rounded border-brand-border text-accent-text focus:ring-accent"
+              className="rounded border-brand-border text-accent-text"
             />
             <div className="flex-1 text-[13px] text-brand-near-black">
               {p.name}
@@ -490,7 +500,7 @@ export function EditCycleProductForm({
   }
 
   const inputCls =
-    "w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-accent/30";
+    "w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black";
   const labelCls = "mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray";
 
   return (
@@ -679,8 +689,8 @@ export function CatalogManager({
     return Array.from(seen.values());
   }, [products]);
 
-  function handleArchive(id: string, active: boolean) {
-    if (!window.confirm(active ? t.admin.products.reactivateConfirm : t.admin.products.archiveConfirm)) return;
+  async function handleArchive(id: string, active: boolean) {
+    if (!(await confirm({ title: active ? t.admin.products.reactivateConfirm : t.admin.products.archiveConfirm, danger: !active }))) return;
     startTransition(async () => {
       const result = await adminArchiveCatalogProduct(id, active);
       if (result.error) toast.error(result.error);

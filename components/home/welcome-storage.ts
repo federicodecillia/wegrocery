@@ -2,7 +2,7 @@
 // its links (sessionStorage, WELCOME_STORAGE_KEY): the card resumes there and
 // the bar on the other pages (welcome-resume.tsx) offers to go back.
 
-import { isWelcomeStep, WELCOME_STORAGE_KEY, type WelcomeStep } from "@/lib/guide/welcome";
+import { isWelcomeStep, WELCOME_SEEN_KEY, WELCOME_STORAGE_KEY, type WelcomeStep } from "@/lib/guide/welcome";
 
 export type StoredWelcome = { step: WelcomeStep; n: number; total: number };
 
@@ -36,3 +36,18 @@ export function storeWelcome(value: StoredWelcome | null) {
 }
 
 export const subscribeNever = () => () => {};
+
+// One id per page load: the card opens in full on the load that first shows
+// it (and on client navigations within it), then folds to one line on later
+// visits so the open cycle stays above the bottom bar on a phone.
+const LOAD_ID = Math.random().toString(36).slice(2);
+
+export function readSeenBefore(): boolean {
+  try {
+    const seen = window.localStorage.getItem(WELCOME_SEEN_KEY);
+    if (seen === null) window.localStorage.setItem(WELCOME_SEEN_KEY, LOAD_ID);
+    return seen !== null && seen !== LOAD_ID;
+  } catch {
+    return false;
+  }
+}

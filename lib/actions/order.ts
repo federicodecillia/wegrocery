@@ -7,11 +7,11 @@ import { brand } from "@/lib/brand";
 import { t } from "@/lib/i18n";
 import { formatMoney } from "@/lib/i18n/format";
 import { getDb } from "@/lib/db/client";
+import { getWalletBalance } from "@/lib/payments/balance-due";
 import { auditLog, orderDrafts, orders } from "@/lib/db/schema";
 import {
   getCycleProducts,
   getLastMemberOrderForPrefill,
-  getMemberBalance,
   getMemberById,
   getMemberOrderLines,
   getMemberPendingOrderTotals,
@@ -163,7 +163,7 @@ export async function saveOrder(
     // it; the in-transaction SQL guard is Phase 1 work.
     if (minBalance !== null && pending) {
       const credit = evaluateCreditLimit({
-        balance: await getMemberBalance(member.memberId),
+        balance: await getWalletBalance(db, member.memberId, member.paysOffline),
         openOrdersOtherCycles: pending.otherOpenCycles,
         previousOrderTotal: pending.thisCycle,
         newOrderTotal: total,
@@ -231,7 +231,7 @@ export async function saveOrder(
       throw err;
     }
 
-    const balance = await getMemberBalance(member.memberId);
+    const balance = await getWalletBalance(db, member.memberId, member.paysOffline);
     const afterBalance = balance - total;
 
     await db.insert(auditLog).values({

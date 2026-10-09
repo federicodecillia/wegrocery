@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
+import { Sheet } from "@/components/ui/sheet";
+import { confirmDiscard } from "@/components/ui/confirm-dialog";
 import { EmojiPicker } from "@/components/ui/emoji-picker";
 import {
   adminInspectSupplierListing,
@@ -157,74 +159,28 @@ export function ImportListingWizard({ open, onClose, cycleId, cycleTitle }: Prop
     });
   }
 
-  if (!open) return null;
+  // A file already read is work in progress: closing asks first.
+  async function requestClose() {
+    if (pending) return;
+    if (filename && !(await confirmDiscard())) return;
+    onClose();
+  }
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-      <div className="flex max-h-[92vh] w-full max-w-[820px] flex-col rounded-2xl bg-brand-warm-white shadow-2xl">
-        <header className="flex items-start justify-between gap-3 border-b border-brand-border p-5">
-          <div>
-            <div className="font-mono text-label uppercase tracking-[0.13em] text-primary-text">
-              {cycleTitle ? `${cycleTitle} · ` : ""}{t.admin.cycle.importListing} · {t.admin.importWizard.stepIndicator(step, 3)}
-            </div>
-            <h3 className="mt-1 text-[16px] font-black text-brand-near-black">
-              {step === 1 && t.admin.importWizard.step1Title}
-              {step === 2 && t.admin.importWizard.step2Title}
-              {step === 3 && t.admin.importWizard.step3Title}
-            </h3>
-            <p className="mt-1 text-label leading-snug text-brand-gray">
-              {step === 1 && t.admin.importWizard.step1Description}
-              {step === 2 && t.admin.importWizard.step2Description}
-              {step === 3 && t.admin.importWizard.step3Description}
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            className="rounded-full bg-brand-border p-2 text-brand-gray"
-            aria-label={t.admin.common.close}
-          >
-            ✕
-          </button>
-        </header>
-
-        <div className="flex-1 overflow-y-auto p-5">
-          {step === 1 && (
-            <Step1Upload
-              filename={filename}
-              pending={pending}
-              onFile={handleFile}
-              inspection={inspection}
-              sheetIdx={sheetIdx}
-              setSheetIdx={setSheetIdx}
-              supplierMode={supplierMode}
-              setSupplierMode={setSupplierMode}
-              existingSupplierId={existingSupplierId}
-              setExistingSupplierId={setExistingSupplierId}
-              newSupplierName={newSupplierName}
-              setNewSupplierName={setNewSupplierName}
-            />
-          )}
-          {step === 2 && sheet && (
-            <Step2Mapping sheet={sheet} mapping={mapping} setMapping={setMapping} />
-          )}
-          {step === 3 && sheet && (
-            <Step3Review
-              sheet={sheet}
-              mapping={mapping}
-              selectedIndexes={selectedIndexes}
-              setSelectedIndexes={setSelectedIndexes}
-              emojiOverrides={emojiOverrides}
-              setEmojiOverrides={setEmojiOverrides}
-              addToCycle={addToCycle}
-              setAddToCycle={setAddToCycle}
-              updatePriceOnDup={updatePriceOnDup}
-              setUpdatePriceOnDup={setUpdatePriceOnDup}
-              hasCycle={!!cycleId}
-            />
-          )}
-        </div>
-
-        <footer className="flex items-center justify-between gap-3 border-t border-brand-border p-4">
+    <Sheet
+      open={open}
+      onRequestClose={() => void requestClose()}
+      size="lg"
+      title={
+        step === 1
+          ? t.admin.importWizard.step1Title
+          : step === 2
+            ? t.admin.importWizard.step2Title
+            : t.admin.importWizard.step3Title
+      }
+      subtitle={`${cycleTitle ? `${cycleTitle} · ` : ""}${t.admin.cycle.importListing} · ${t.admin.importWizard.stepIndicator(step, 3)}`}
+      footer={
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="text-label text-brand-gray">
             {step === 1 && filename && t.admin.importWizard.fileInfo(filename)}
             {step === 2 && !requiredMapped && (
@@ -242,7 +198,7 @@ export function ImportListingWizard({ open, onClose, cycleId, cycleTitle }: Prop
             )}
             {step < 3 && (
               <Button
-                variant="primary"
+                variant="neutral"
                 disabled={
                   pending ||
                   (step === 1 && (!inspection || !supplierResolved)) ||
@@ -255,7 +211,7 @@ export function ImportListingWizard({ open, onClose, cycleId, cycleTitle }: Prop
             )}
             {step === 3 && (
               <Button
-                variant="primary"
+                variant="neutral"
                 disabled={pending || selectedIndexes.size === 0 || !supplierResolved}
                 onClick={handleApply}
               >
@@ -263,9 +219,49 @@ export function ImportListingWizard({ open, onClose, cycleId, cycleTitle }: Prop
               </Button>
             )}
           </div>
-        </footer>
-      </div>
-    </div>
+        </div>
+      }
+    >
+      <p className="mb-4 text-[13px] leading-snug text-brand-gray">
+        {step === 1 && t.admin.importWizard.step1Description}
+        {step === 2 && t.admin.importWizard.step2Description}
+        {step === 3 && t.admin.importWizard.step3Description}
+      </p>
+      {step === 1 && (
+        <Step1Upload
+          filename={filename}
+          pending={pending}
+          onFile={handleFile}
+          inspection={inspection}
+          sheetIdx={sheetIdx}
+          setSheetIdx={setSheetIdx}
+          supplierMode={supplierMode}
+          setSupplierMode={setSupplierMode}
+          existingSupplierId={existingSupplierId}
+          setExistingSupplierId={setExistingSupplierId}
+          newSupplierName={newSupplierName}
+          setNewSupplierName={setNewSupplierName}
+        />
+      )}
+      {step === 2 && sheet && (
+        <Step2Mapping sheet={sheet} mapping={mapping} setMapping={setMapping} />
+      )}
+      {step === 3 && sheet && (
+        <Step3Review
+          sheet={sheet}
+          mapping={mapping}
+          selectedIndexes={selectedIndexes}
+          setSelectedIndexes={setSelectedIndexes}
+          emojiOverrides={emojiOverrides}
+          setEmojiOverrides={setEmojiOverrides}
+          addToCycle={addToCycle}
+          setAddToCycle={setAddToCycle}
+          updatePriceOnDup={updatePriceOnDup}
+          setUpdatePriceOnDup={setUpdatePriceOnDup}
+          hasCycle={!!cycleId}
+        />
+      )}
+    </Sheet>
   );
 }
 

@@ -68,7 +68,7 @@ export function GuideSearch({ index, synonyms, stopwords, topicTitles, children 
           placeholder={t.guide.searchPlaceholder}
           autoComplete="off"
           enterKeyHint="search"
-          className="w-full rounded-full border border-brand-border bg-white py-3 pl-11 pr-11 text-[14px] text-brand-near-black shadow-[0_1px_2px_rgba(0,0,0,0.04)] placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 [&::-webkit-search-cancel-button]:hidden"
+          className="w-full rounded-full border border-brand-border bg-white py-3 pl-11 pr-11 text-[14px] text-brand-near-black shadow-card placeholder:text-muted focus:border-primary [&::-webkit-search-cancel-button]:hidden"
         />
         {searching && (
           <button
@@ -88,12 +88,12 @@ export function GuideSearch({ index, synonyms, stopwords, topicTitles, children 
             {results.length > 0 ? t.guide.searchResults(results.length) : null}
           </p>
           {results.length === 0 ? (
-            <p className="rounded-[18px] border border-brand-border bg-white p-[18px] text-[14px] leading-[1.5] text-brand-gray">
+            <p className="rounded-card border border-brand-border bg-white p-[18px] text-[14px] leading-[1.5] text-brand-gray">
               {t.guide.searchEmpty}
               <span className="mt-2 block text-[12px] text-muted">{t.guide.searchMissNote}</span>
             </p>
           ) : (
-            <ul className="overflow-hidden rounded-[18px] border border-brand-border bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+            <ul className="overflow-hidden rounded-card border border-brand-border bg-white shadow-card">
               {results.map(({ entry }) => (
                 <li key={entry.slug} className="border-b border-brand-border last:border-b-0">
                   {/* A full navigation, not next/link: only a real load sets :target,

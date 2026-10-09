@@ -204,10 +204,13 @@ export const guideEn: GuideContent = {
       title: "Topping up by bank transfer",
       steps: [
         "On Home tap **Recharge balance**.",
-        "In **Bank transfer** copy the holder, the IBAN and the reference.",
+        "In **Bank transfer** copy the holder, the IBAN and the reference: when paying an order, use that order's reference, already filled in.",
         "Make the transfer from your bank.",
       ],
-      notes: ["Your balance is updated when the treasurer records the transfer: you get a notification."],
+      notes: [
+        "Each order's reference is also in **History**, when you open the order. If the group asks for it, the address for the transfer receipt is there too.",
+        "Your balance is updated when the treasurer records the transfer: you get a notification.",
+      ],
       link: { href: "/ricarica", label: "Open Top up" },
       keywords: ["transfer", "iban", "bank", "money", "credit"],
       when: { mode: "wallet", bankTransfer: true },

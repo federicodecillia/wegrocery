@@ -2,20 +2,29 @@ import { and, eq } from "drizzle-orm";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { BalanceDueCard } from "@/components/balance/balance-due-card";
+import { BalanceSummary } from "@/components/balance/balance-summary";
+import { BankReceipt } from "@/components/ricarica/bank-receipt";
 import { CopyField } from "@/components/ricarica/copy-field";
 import { PendingRefresh } from "@/components/ricarica/pending-refresh";
 import { TopupForm } from "@/components/ricarica/topup-form";
 import { getUserRole, requireUserSession } from "@/lib/auth/session";
 import { getDb } from "@/lib/db/client";
-import { getMemberBalance, getMemberById } from "@/lib/db/queries";
+import { getFamilyMemberIds, getMemberById, getMemberStorico } from "@/lib/db/queries";
 import { payments } from "@/lib/db/schema";
 import { t } from "@/lib/i18n";
 import { formatMoney } from "@/lib/i18n/format";
 import { TOPUP_MIN_CENTS, topupBlockReason, topupCeilingCents, topupPresets } from "@/lib/payments/config";
-import { getConsolidatedBalanceCents } from "@/lib/payments/balance-due";
+import { getConsolidatedBalanceCents, getWalletBalance } from "@/lib/payments/balance-due";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
+import { getOrderBankReferences } from "@/lib/payments/order-reference";
 import { SETTLEMENT_MIN_DUE_CENTS } from "@/lib/payments/settlement";
 import { HelpLink } from "@/components/guide/help-link";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: t.topup.title };
+
+// The orders listed with their bank transfer reference: the latest ones.
+const REFERENCE_ORDERS = 3;
 
 function compactIban(iban: string): string {
   return iban.replace(/\s+/g, "").toUpperCase();
@@ -66,8 +75,7 @@ export default async function RicaricaPage({
   const memberId = session.user.memberId!;
   const { esito, session_id } = await searchParams;
 
-  const [balance, result, settings, member] = await Promise.all([
-    getMemberBalance(memberId),
+  const [result, settings, member] = await Promise.all([
     resultFor(memberId, esito, session_id),
     getPaymentSettings(),
     getMemberById(memberId),
@@ -85,14 +93,14 @@ export default async function RicaricaPage({
           <HelpLink href="/guida/soldi#da-saldare" />
         </div>
         {result && (
-          <div className={`mb-4 rounded-[14px] border p-[12px_14px] text-[14px] ${TONE_CLASSES[result.tone]}`}>
+          <div className={`mb-4 rounded-card border p-[12px_14px] text-[14px] ${TONE_CLASSES[result.tone]}`}>
             {result.text}
             {result.pending && <PendingRefresh />}
           </div>
         )}
         <BalanceDueCard cents={cents} canPay={settings.onlineTopupAvailable} />
         {cents > -SETTLEMENT_MIN_DUE_CENTS && cents <= 0 && (
-          <div className="flex items-center justify-between rounded-[18px] border border-brand-border bg-white p-[18px] shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+          <div className="flex items-center justify-between rounded-card border border-brand-border bg-white p-[18px] shadow-card">
             <span className="text-[14px] text-brand-gray">{t.balance.nothingDue}</span>
             <Link href="/ordine" className="rounded-full bg-primary px-4 py-[10px] text-[14px] font-bold text-on-primary">
               {t.balance.goToOrder}
@@ -102,8 +110,17 @@ export default async function RicaricaPage({
       </AppShell>
     );
   }
+  // Without the card cycles not settled yet (lib/payments/balance-due.ts).
+  const balance = await getWalletBalance(getDb(), memberId, member?.paysOffline ?? false);
   const online = settings.onlineTopupAvailable && !payPerOrder;
   const bank = settings.bankTransfer;
+  const memberName = member?.fullName ?? session.user.fullName ?? session.user.email;
+  // Each recent order paid by bank transfer, with its reference.
+  const history = bank ? await getMemberStorico(await getFamilyMemberIds(memberId)) : [];
+  const bankRefs = await getOrderBankReferences(settings, history, session.user.fullName ?? memberName, member?.paysOffline ?? false);
+  const referenceOrders = bankRefs
+    ? history.filter((o) => bankRefs.references[o.cycleId]).slice(0, REFERENCE_ORDERS)
+    : [];
   // The group's maximum balance, in cents: online top-ups stop there, the
   // bank section says how much still fits.
   const balanceCents = Math.round(balance * 100);
@@ -119,35 +136,16 @@ export default async function RicaricaPage({
       </div>
 
       {result && (
-        <div className={`mb-4 rounded-[14px] border p-[12px_14px] text-[14px] ${TONE_CLASSES[result.tone]}`}>
+        <div className={`mb-4 rounded-card border p-[12px_14px] text-[14px] ${TONE_CLASSES[result.tone]}`}>
           {result.text}
           {result.pending && <PendingRefresh />}
         </div>
       )}
 
-      <div
-        className={`mb-4 rounded-[16px] border p-4 ${
-          balance < 0 ? "border-brand-red/30 bg-brand-red-light" : "border-primary-mid bg-primary-soft"
-        }`}
-      >
-        <div
-          className={`mb-[6px] font-mono text-label uppercase tracking-[0.10em] ${
-            balance < 0 ? "text-brand-red" : "text-primary-text"
-          }`}
-        >
-          {t.topup.currentBalance}
-        </div>
-        <span
-          className={`text-[36px] font-black tracking-[-0.04em] ${
-            balance < 0 ? "text-brand-red" : "text-brand-near-black"
-          }`}
-        >
-          {formatMoney(Math.abs(balance))}
-        </span>
-      </div>
+      <BalanceSummary label={t.topup.currentBalance} balance={balance} />
 
       {online && (
-        <section className="mb-4 rounded-[18px] border border-brand-border bg-white p-[18px] shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+        <section className="mb-4 rounded-card border border-brand-border bg-white p-[18px] shadow-card">
           <h2 className="mb-1 text-[16px] font-extrabold text-brand-near-black">{t.topup.onlineTitle}</h2>
           {ceilingCents === null ? (
             // Only a maximum can leave nothing for Stripe (topupCeilingCents).
@@ -174,7 +172,7 @@ export default async function RicaricaPage({
       {/* Bank details when that channel is on; the "ask the treasurer" line
           only when members have no channel at all. */}
       {(bank || !online) && (
-        <section className="mb-4 rounded-[18px] border border-brand-border bg-white p-[18px] shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+        <section className="mb-4 rounded-card border border-brand-border bg-white p-[18px] shadow-card">
           <h2 className="mb-1 text-[16px] font-extrabold text-brand-near-black">{t.topup.bankTitle}</h2>
           {bank ? (
             <>
@@ -186,10 +184,25 @@ export default async function RicaricaPage({
               )}
               <CopyField label={t.topup.bankHolder} value={bank.holder} />
               <CopyField label={t.topup.bankIban} value={compactIban(bank.iban)} display={formatIban(bank.iban)} mono />
+              {referenceOrders.length > 0 && (
+                <>
+                  <h3 className="mt-4 text-[14px] font-bold text-brand-near-black">{t.topup.bankOrdersTitle}</h3>
+                  {referenceOrders.map((o) => (
+                    <CopyField
+                      key={o.cycleId}
+                      label={`${o.title} · ${formatMoney(Math.max(0, -o.net))}`}
+                      value={bankRefs!.references[o.cycleId]}
+                    />
+                  ))}
+                </>
+              )}
               <CopyField
-                label={t.topup.bankReference}
-                value={t.topup.bankReferenceValue(member?.fullName ?? session.user.fullName ?? session.user.email)}
+                label={referenceOrders.length > 0 ? t.topup.bankTopupReference : t.topup.bankReference}
+                value={t.topup.bankReferenceValue(memberName)}
               />
+              {bankRefs?.receiptEmail && (
+<BankReceipt email={bankRefs.receiptEmail} />
+              )}
             </>
           ) : (
             <p className="text-[14px] text-brand-gray">{t.topup.bankUnavailable}</p>

@@ -18,7 +18,7 @@ import { formatDate } from "@/lib/utils";
 import { MemberCombobox, type PickerMember } from "./member-combobox";
 
 const inputCls =
-  "w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black focus:outline-none focus:ring-2 focus:ring-accent/30";
+  "min-h-11 w-full rounded-lg border border-brand-border px-3 py-2 text-[14px] text-brand-near-black";
 const labelCls = "mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray";
 
 function todayInput(): string {
@@ -94,7 +94,7 @@ function Recap({
 
   return (
     <div>
-      <p ref={headingRef} tabIndex={-1} className="mb-3 text-[13px] font-bold text-brand-near-black focus:outline-none">
+      <p ref={headingRef} tabIndex={-1} className="mb-3 text-[13px] font-bold text-brand-near-black">
         {title}
       </p>
       <dl className="divide-y divide-brand-border rounded-lg border border-brand-border">
@@ -120,7 +120,7 @@ function Recap({
           type="button"
           onClick={onBack}
           disabled={isPending}
-          className="rounded-xl border border-brand-border py-2 text-[13px] font-semibold text-brand-near-black disabled:opacity-60"
+          className="min-h-12 rounded-xl border border-brand-border py-2 text-[13px] font-semibold text-brand-near-black disabled:opacity-60"
         >
           {t.admin.treasury.backToEdit}
         </button>
@@ -128,7 +128,7 @@ function Recap({
           type="button"
           onClick={() => onConfirm(review.warning !== null)}
           disabled={isPending}
-          className="rounded-xl bg-accent py-2 text-[13px] font-bold text-on-accent disabled:opacity-60"
+          className="min-h-12 rounded-xl bg-accent py-2 text-[13px] font-bold text-on-accent disabled:opacity-60"
         >
           {isPending
             ? t.admin.treasury.registeringTopup
@@ -187,7 +187,7 @@ function FoldableCard({
         onClick={onToggle}
         aria-expanded={open}
         aria-controls={panelId}
-        className="flex w-full items-center justify-between gap-3 text-left"
+        className="flex min-h-11 w-full items-center justify-between gap-3 text-left"
       >
         <span>
           <span className="block text-[13px] font-bold text-brand-near-black">{title}</span>
@@ -354,7 +354,7 @@ export function TopupForm({ members }: { members: PickerMember[] }) {
             {formError}
           </p>
         )}
-        <button type="submit" className="mt-4 w-full rounded-xl bg-accent py-2 text-[13px] font-bold text-on-accent">
+        <button type="submit" className="mt-4 min-h-12 w-full rounded-xl bg-accent py-2 text-[13px] font-bold text-on-accent">
           {t.admin.treasury.review}
         </button>
       </form>
@@ -467,7 +467,7 @@ export function OutgoingMovementForm({ members }: { members: PickerMember[] }) {
             {OUTGOING_LEDGER_TYPES.map((k) => (
               <label
                 key={k}
-                className={`flex min-h-[40px] cursor-pointer items-center justify-center rounded-lg border px-1 text-center text-[12px] font-semibold has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent/30 ${
+                className={`flex min-h-11 cursor-pointer items-center justify-center rounded-lg border px-1 text-center text-[12px] font-semibold ${
                   kind === k
                     ? "border-accent bg-accent-soft text-accent-text"
                     : "border-brand-border text-brand-near-black"
@@ -570,7 +570,7 @@ export function OutgoingMovementForm({ members }: { members: PickerMember[] }) {
             {formError}
           </p>
         )}
-        <button type="submit" className="w-full rounded-xl bg-brand-near-black py-2 text-[13px] font-bold text-white">
+        <button type="submit" className="min-h-12 w-full rounded-xl bg-brand-near-black py-2 text-[13px] font-bold text-white">
           {t.admin.treasury.review}
         </button>
       </form>

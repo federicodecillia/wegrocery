@@ -1,10 +1,22 @@
 import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
+import { extendTailwindMerge } from "tailwind-merge";
 import {
   formatMoney,
   formatDate as formatDateIntl,
   formatDateTime as formatDateTimeIntl,
 } from "@/lib/i18n/format";
+
+// The theme's own sizes, radii and shadows (app/globals.css): without them
+// twMerge reads `text-label` as a colour and drops it next to `text-muted`.
+const twMerge = extendTailwindMerge({
+  extend: {
+    theme: {
+      text: ["label", "title"],
+      radius: ["card"],
+      shadow: ["card"],
+    },
+  },
+});
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -107,6 +119,15 @@ const EMOJI_MAP: [RegExp, string][] = [
 
 export function getProductEmoji(name: string): string {
   return getProductEmojiOrNull(name) ?? "🛒";
+}
+
+// What members see next to a product: the admin's emoji, else one matched
+// on the name, else none. The 🛒 fallback is left out (stored too by older
+// imports): it read as the Order icon of the bottom bar.
+export function memberProductEmoji(stored: string | null | undefined, name: string): string | null {
+  const own = stored?.trim();
+  if (own && own !== "🛒") return own;
+  return getProductEmojiOrNull(name);
 }
 
 // Same matching as getProductEmoji but returns null when no category pattern

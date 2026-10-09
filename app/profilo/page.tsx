@@ -9,7 +9,6 @@ import { getUserRole, requireUserSession } from "@/lib/auth/session";
 import { brand } from "@/lib/brand";
 import {
   getFamilyPeople,
-  getMemberBalance,
   getMemberById,
   getNotificationPreferences,
   getPendingFamilyInvites,
@@ -18,10 +17,15 @@ import { t } from "@/lib/i18n";
 import { formatDate, formatSignedMoney } from "@/lib/i18n/format";
 import { isMembershipCheckEnabled } from "@/lib/membership/wallyfor";
 import { resolvePreferences } from "@/lib/notifications/categories";
+import { getDb } from "@/lib/db/client";
+import { getWalletBalance } from "@/lib/payments/balance-due";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
 import { countChannels, familyState, initials } from "@/lib/profile/summary";
-import { getRoleLabel } from "@/lib/roles";
+import { DEFAULT_ROLE, getRoleLabel } from "@/lib/roles";
 import packageJson from "@/package.json";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: t.profile.title };
 
 // The member's own settings in one place, behind the header avatar: account,
 // family, notifications, money, the app, sign-out. Each row says its current
@@ -46,7 +50,9 @@ export default async function ProfilePage() {
   // this member pays in the app; the same rule as Home and /ricarica.
   const wallet = settings.mode !== "per_order" || Boolean(account?.paysOffline ?? person?.paysOffline);
   const paysOffline = settings.mode === "per_order" && Boolean(account?.paysOffline ?? person?.paysOffline);
-  const balance = wallet ? await getMemberBalance(memberId) : 0;
+  const balance = wallet
+    ? await getWalletBalance(getDb(), memberId, Boolean(account?.paysOffline ?? person?.paysOffline))
+    : 0;
 
   const name = person?.fullName ?? session.user.fullName ?? "";
   const channels = countChannels(resolvePreferences(prefRows));
@@ -74,12 +80,18 @@ export default async function ProfilePage() {
           {initials(name, session.user.email)}
         </div>
         <div className="min-w-0">
-          <h1 className="break-words text-[20px] font-black tracking-[-0.03em] text-brand-near-black">{name || t.profile.title}</h1>
+          <h1 className="break-words text-title font-black text-brand-near-black">{name || t.profile.title}</h1>
           <p className="break-all text-[14px] text-brand-gray">{session.user.email}</p>
-          <p className="mt-[2px] text-[12px] text-brand-gray">
-            {role ? getRoleLabel(role) : null}
-            {inFamily && account ? ` · ${t.profile.sharedAccount(account.fullName)}` : null}
-          </p>
+          {/* The role says something only when it is not the default one. */}
+          {(() => {
+            const parts = [
+              role && role !== DEFAULT_ROLE ? getRoleLabel(role) : null,
+              inFamily && account ? t.profile.sharedAccount(account.fullName) : null,
+            ].filter(Boolean);
+            return parts.length > 0 ? (
+              <p className="mt-[2px] text-[13px] text-brand-gray">{parts.join(" · ")}</p>
+            ) : null;
+          })()}
         </div>
       </div>
 

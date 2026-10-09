@@ -210,10 +210,11 @@ export const guideIt: GuideContent = {
       title: "Ricaricare con un bonifico",
       steps: [
         "In Home tocca **Ricarica il saldo**.",
-        "Nella sezione **Bonifico** copia intestatario, IBAN e causale.",
+        "Nella sezione **Bonifico** copia intestatario, IBAN e causale: se paghi un ordine, usa la causale di quell'ordine, già compilata.",
         "Fai il bonifico dalla tua banca.",
       ],
       notes: [
+        "Trovi la causale di ogni ordine anche in **Storico**, aprendo l'ordine. Se il gruppo lo chiede, lì c'è anche l'indirizzo a cui mandare la contabile del bonifico.",
         "Il saldo si aggiorna quando chi gestisce la cassa registra il bonifico: ti arriva una notifica.",
       ],
       link: { href: "/ricarica", label: "Apri Ricarica" },

@@ -10,7 +10,7 @@ export function BalanceDueCard({ cents, canPay }: { cents: number; canPay: boole
   if (cents <= -SETTLEMENT_MIN_DUE_CENTS) {
     const amount = formatMoney(-cents / 100);
     return (
-      <div className="mb-[14px] rounded-[16px] border-[1.5px] border-brand-red/30 bg-brand-red-light p-4">
+      <div className="mb-[14px] rounded-card border-[1.5px] border-brand-red/30 bg-brand-red-light p-4">
         <div className="mb-[6px] font-mono text-label font-semibold uppercase tracking-[0.13em] text-brand-red">
           {t.balance.dueLabel}
         </div>
@@ -22,7 +22,7 @@ export function BalanceDueCard({ cents, canPay }: { cents: number; canPay: boole
   }
   if (cents > 0) {
     return (
-      <div className="mb-[14px] rounded-[16px] border-[1.5px] border-primary-mid bg-primary-soft p-4">
+      <div className="mb-[14px] rounded-card border-[1.5px] border-primary-mid bg-primary-soft p-4">
         <div className="mb-[6px] font-mono text-label font-semibold uppercase tracking-[0.13em] text-primary-text">
           {t.balance.creditLabel}
         </div>

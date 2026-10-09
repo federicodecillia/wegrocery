@@ -51,6 +51,8 @@ export async function adminUpdatePaymentSettings(input: PaymentSettingsInput): P
             bankTransferEnabled: before.bankTransferEnabled,
             bankHolder: before.bankHolder,
             bankIban: before.bankIban,
+            bankReferenceTemplate: before.bankReferenceTemplate,
+            bankReceiptEmail: before.bankReceiptEmail,
             onlinePaymentsEnabled: before.onlinePaymentsEnabled,
           },
           after: planned.values,
@@ -60,6 +62,7 @@ export async function adminUpdatePaymentSettings(input: PaymentSettingsInput): P
     ]);
     revalidatePath("/admin");
     revalidatePath("/ricarica");
+    revalidatePath("/storico");
     return {};
   } catch (e) {
     return { error: actionErrorMessage(e, t.errors.genericError, "adminUpdatePaymentSettings") };

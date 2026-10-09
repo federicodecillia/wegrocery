@@ -74,14 +74,14 @@ export function InstallPrompt() {
   }
 
   return (
-    <section className="mt-[14px] rounded-[18px] border border-accent/20 bg-accent-soft p-[14px_18px]">
+    <section className="mt-[14px] rounded-card border border-accent/20 bg-accent-soft p-[14px_18px]">
       <h2 className="text-[15px] font-black tracking-[-0.01em] text-brand-near-black">{t.install.title}</h2>
       <p className="mt-1 text-[14px] leading-[1.45] text-brand-near-black">
         {hint === "prompt" ? t.install.promptBody : t.install.iosBody}
       </p>
       <div className="mt-3 flex gap-2">
         {hint === "prompt" && (
-          <Button type="button" variant="teal" size="sm" onClick={install}>
+          <Button type="button" variant="accent" size="sm" onClick={install}>
             {t.install.installButton}
           </Button>
         )}

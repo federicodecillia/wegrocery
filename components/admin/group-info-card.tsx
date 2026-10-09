@@ -42,7 +42,7 @@ export function GroupInfoCard({ initial }: { initial: string | null }) {
         onChange={(e) => setValue(e.target.value)}
         rows={8}
         placeholder={s.placeholder}
-        className="mt-3 w-full rounded-xl border border-brand-border px-3 py-2 text-[13px] leading-[1.5] text-brand-near-black placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+        className="mt-3 w-full rounded-xl border border-brand-border px-3 py-2 text-[13px] leading-[1.5] text-brand-near-black placeholder:text-muted focus:border-primary"
       />
       <div className="mt-1 flex items-start justify-between gap-3">
         <p className="text-[12px] text-brand-gray">{value.trim() ? s.format : s.empty}</p>

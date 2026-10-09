@@ -194,6 +194,13 @@ The push triggers a production build, which applies the new migrations
 first (`MIGRATE_ON_BUILD`). Take a backup before (Neon → Branches → create a
 branch from production) if the release notes ask for one.
 
+If Vercel marks the deploy of a push as **Blocked** (on the Hobby plan, when
+the commit's author is not a member of the Vercel team), create a Deploy Hook
+(Vercel → your project → Settings → Git → Deploy Hooks, branch `main`) and
+save its URL as the `VERCEL_DEPLOY_HOOK` secret of your GitHub repository
+(Settings → Secrets and variables → Actions): the `Vercel Deploy Hook`
+workflow then starts the deploy after every push to `main`.
+
 Prefer updating from GitHub's web interface? Fork the repository instead of
 using the button, then import the fork in Vercel (Add New → Project), add
 Neon from the project's Storage tab and set the variables of step 2 by hand:

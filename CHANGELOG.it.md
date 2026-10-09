@@ -21,6 +21,42 @@ stanno nella PR.
 
 ## [Non rilasciato]
 
+## [1.26.0] — 9 ottobre 2026
+
+*Un'app più ordinata su ogni schermo, il pagamento con carta per un singolo ciclo e la causale del bonifico già compilata.*
+
+### Aggiunte
+- 💳 **Pagamento con carta per un singolo ciclo.** Un gruppo che usa il borsellino può scegliere, quando crea un ciclo, se i soci lo pagano dal saldo o con la carta quando confermano l'ordine. I cicli con carta sono segnalati in Admin, e i soldi pagati con la carta non toccano il saldo di nessuno fino a "Chiudi i conti".
+- 🏦 **La causale del bonifico, già compilata per ogni ordine.** Ricarica e ogni ordine nello Storico mostrano la causale da scrivere nel bonifico, con il pulsante Copia, e a chi mandare la contabile. Gli admin scelgono il testo e l'indirizzo in Impostazioni.
+
+### Modificato
+- 🔒 **Un solo modo chiaro per chiudere un ciclo.** "Chiudi ciclo…" apre una finestra che dice quanti soci verranno addebitati e chiede conferma lì, al posto del messaggio del browser. Le rettifiche dei prezzi stanno dietro "Rettifica prezzi", e se esci dopo averle cambiate l'app chiede prima. Il recap ordini di un ciclo aperto è in sola lettura, perché le correzioni valgono solo dopo la chiusura.
+- 🛒 **Pulsanti dell'ordine più comodi.** Il "+" resta sotto il dito quando un prodotto passa da 0 a 1, e i lettori di schermo dicono quale prodotto cambia ogni pulsante e la nuova quantità.
+- 💬 **Messaggi che fai in tempo a leggere.** Errori e avvisi restano più a lungo e si possono chiudere, e un salvataggio non riuscito dice di controllare la connessione. Cancellare un ordine parte da "Annulla", così un Invio per sbaglio non cancella nulla.
+- ⌨️ **Più comoda con la tastiera.** Ogni pulsante e campo mostra un contorno ben visibile quando ci arrivi con Tab, il link "Vai al contenuto" salta il menu e ogni pagina ha il suo titolo nella scheda del browser.
+- 🧩 **Stesso aspetto per le stesse cose.** Le conferme in Admin (eliminare un socio, archiviare un prodotto, toglierlo da un ciclo...) usano la finestra dell'app al posto di quella del browser, e stati, link per tornare indietro e pulsanti hanno uno stile unico.
+- 📲 **Finestre a misura di telefono.** Tutte le finestre (ordine inviato, dettaglio di un ordine passato o di un movimento nello Storico, movimenti di un socio in Cassa, chiusura dei conti, annullamento di un ciclo, fornitore, unione di soci, importazione del listino) salgono dal basso sul telefono con i pulsanti vicino al pollice, si chiudono con Esc o con la ✕ e chiedono prima di buttare quello che hai scritto.
+- 💰 **Cassa e Soci più ordinati.** Ogni movimento in Cassa si legge allo stesso modo (nome e importo a destra, poi tipo e giorno, poi la nota) con "Modifica" ed "Elimina" sotto; in Soci il ruolo sta accanto al nome e le azioni stanno su una riga, con Invita, Unisci ed Elimina dietro ⋯ su telefono e tablet. Ogni campo e pulsante a icona in Admin ha un nome che i lettori di schermo sanno leggere.
+- 📱 **Barra in basso più leggera.** I soci vedono quattro voci (Home, Ordine, Storico, Guida) invece di un "Admin" grigio, campanella, cerchio delle iniziali e "?" si toccano più facilmente, e cambiare pagina non sembra più un ricaricamento.
+- 🔤 **Più facile da leggere.** I prezzi nell'ordine e il testo delle notifiche sono più grandi e nel carattere normale, e il Profilo non mostra più "Utenti" sotto il nome dei soci normali.
+- 🏠 **In Home prima l'ordine aperto.** Il ciclo in cui puoi ordinare viene prima del saldo, con una sola riga chiara sulla chiusura ("Chiude tra 5 giorni · lun 13 ott, 23:59") e i giorni di ritiro scritti una volta. Il conto alla rovescia compare solo l'ultimo giorno, e dopo la prima visita il benvenuto si riduce a una riga.
+- 🛒 **Più spazio per fare la spesa nella pagina Ordine.** La barra in basso è una riga sola (totale, saldo dopo e "Conferma"), con il dettaglio dietro "Dettagli"; un ordine rifiutato dice il perché anche sopra il pulsante. "Annulla modifiche" compare solo se hai cambiato qualcosa, i pulsanti + e − sono più grandi, e i prodotti senza un'emoji propria non mostrano più un carrello.
+- 🏷️ **Trovi i prodotti prima.** Nella pagina Ordine le categorie restano in alto come pulsanti che portano a ogni sezione, "Nel carrello (3)" mostra solo quello che hai scelto, e con più di 15 prodotti una casella di ricerca li trova per nome.
+- 👆 **Trascina giù per chiudere.** Su telefono le finestre che salgono dal basso (comprese le conferme) si chiudono trascinandole verso il basso; su una conferma vale sempre come "Annulla". La finestra che chiude un ciclo si chiude solo con i suoi pulsanti.
+- 🔄 **Sempre aggiornata.** Tornando nell'app dopo qualche minuto saldo, ciclo e notifiche si ricaricano, toccare la voce attiva della barra in basso torna in cima e aggiorna, e una riga avvisa quando sei offline. La pagina Ordine non si aggiorna mai mentre la modifichi.
+- 🔔 **Notifiche più chiare.** Raggruppate per giorno (Oggi, Ieri...), quelle non lette dicono "Nuova" a parole, e toccarne una apre subito la sua pagina.
+- 🧭 **Una barra Admin più corta.** Ciclo, Cassa, Soci e Catalogo stanno sul telefono senza scorrere, con Statistiche e Impostazioni dietro ⋯ (in fila da computer). Ordini ora è dentro Ciclo, Prodotti e Fornitori dentro Catalogo, e i vecchi link aprono ancora la pagina giusta.
+- 🗂️ **Un posto per ogni ciclo in Admin.** Scegli un ciclo dall'elenco (a sinistra da computer, "Tutti i cicli" da telefono), poi passa tra Panoramica, Prodotti e Ordini, o Fornitore e Conti quando è chiuso. Ci sono tutti i cicli passati con ricerca e filtri, non solo gli ultimi 15, così anche i più vecchi si possono ancora correggere.
+- 📋 **Gli ordini del ciclo in una pagina.** Ordini mostra "Per socio" e "Per prodotto" (affiancati da computer) con un solo "Scarica distinta"; a ciclo chiuso pesi e ordini si correggono lì. Lo storico ordini di un socio ora è in Soci, alla voce "Ordini", con il link ai suoi movimenti in Cassa.
+- 💳 **Prima i conti da chiudere.** In Admin → Ciclo l'elenco parte dai cicli con carta che chiedono ancora "Chiudi i conti" (mai chiusi, da aggiornare dopo una correzione, o con un rimborso non riuscito), poi gli aperti; da telefono stanno entrambi sopra "Tutti i cicli".
+- 🤝 **Fornitore in tre passi, Conti in un posto solo.** Fornitore mostra, numerati nella pagina, scarica la distinta, inviala, carica quella compilata. Conti mostra cosa il ciclo ha mosso sui saldi, la spedizione e le rettifiche fatte (in sola lettura), come si corregge un ciclo, "Chiudi i conti" per i cicli con carta e, in fondo, l'annullamento.
+- ✅ **"Da fare ora" in cima ad Admin.** Le tre caselle con i conteggi lasciano il posto al prossimo passo di ogni ciclo, con un solo pulsante: rivedere e chiudere un ciclo scaduto (in rosso, con da quanto), inviare l'ordine al fornitore, registrare i pesi, chiudere i conti; poi i rimborsi da ritentare e i possibili doppioni tra i soci. "Già inviato" e "Consegnato come ordinato" nascondono un passo solo su quel dispositivo.
+- 🧺 **Un solo catalogo, un solo modulo prodotto.** I prodotti si modificano solo in Catalogo → Prodotti; ogni fornitore in Fornitori porta ai suoi prodotti ("5 prodotti nel catalogo →"), e modificare un prodotto non gli toglie più l'icona. L'import guidato è la via principale per caricare un listino, con il modello e il caricamento diretto sotto "Altri formati". I moduli per aggiungere un socio o un fornitore restano chiusi finché non servono.
+- 🖥️ **Una vera versione da computer.** Da computer l'app usa lo stesso riquadro più largo su ogni pagina, con logo, menu, campanella e avatar su una riga. La Home è su due colonne (il ciclo e il tuo ordine a sinistra, saldo, ritiro e movimenti a destra); le pagine da leggere restano in una colonna comoda. Campanella, avatar e Home (per Ricarica) mostrano dove sei.
+- 📰 **Novità più corte, contatti più chiari, accesso con il logo.** "Cosa è cambiato" apre le ultime tre versioni e richiude le altre. I pulsanti dei contatti nella guida dicono a cosa servono ("Scrivi al gruppo", "Problemi tecnici") e compaiono una volta sola se l'indirizzo è lo stesso. La pagina di accesso mostra il logo del gruppo, e un errore viene letto dai lettori di schermo.
+- 🎨 **Lo stesso aspetto ovunque.** Il saldo ha lo stesso segno e formato in Home, Storico e Ricarica, e gli avvisi di rettifica non scrivono più "€ EUR". Gli ultimi movimenti in Home sono uguali a quelli dello Storico e lo aprono, la guida e le pagine vuote usano le icone dell'app al posto delle emoji, e le schede hanno tutte gli stessi angoli.
+- 🛒 **Ordine e Storico da computer.** Da computer la pagina Ordine tiene il carrello a destra (prodotti scelti, totale, saldo dopo e "Conferma"), accanto al catalogo. Lo Storico mostra l'elenco a sinistra e l'ordine o il movimento scelto a destra; le schede Ordini e Movimenti sono nell'indirizzo, così un link apre quella giusta.
+
 ## [1.25.0] — 7 ottobre 2026
 
 *Un benvenuto per chi arriva, e la pagina del gruppo nella guida.*
@@ -553,6 +589,7 @@ stanno nella PR.
 
 ---
 
+[1.26.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.26.0
 [1.25.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.25.0
 [1.24.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.24.0
 [1.23.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.23.0

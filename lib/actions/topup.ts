@@ -5,7 +5,8 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { brand } from "@/lib/brand";
 import { getDb } from "@/lib/db/client";
-import { getMemberBalance, getMemberById } from "@/lib/db/queries";
+import { getMemberById } from "@/lib/db/queries";
+import { getWalletBalance } from "@/lib/payments/balance-due";
 import { payments } from "@/lib/db/schema";
 import { t } from "@/lib/i18n";
 import { formatMoney } from "@/lib/i18n/format";
@@ -54,7 +55,7 @@ export async function startOnlineTopup(amountInput: string): Promise<StartTopupR
   // The group's maximum balance: /ricarica only offers what fits, this is the
   // check. Read before the insert, so two checkouts opened together can
   // overshoot it (a soft limit, see topupCeilingCents).
-  const balanceCents = Math.round((await getMemberBalance(member.memberId)) * 100);
+  const balanceCents = Math.round((await getWalletBalance(getDb(), member.memberId, member.paysOffline)) * 100);
   const maxBalanceCents = settings.maxBalance === null ? null : Math.round(settings.maxBalance * 100);
   const ceiling = topupCeilingCents(balanceCents, maxBalanceCents);
   if (ceiling === null) return { error: t.topup.atMaximum };

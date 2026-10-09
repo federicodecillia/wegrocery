@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { UiIcon, topicIcon } from "@/components/ui-icon";
+import { BackLink } from "@/components/ui/back-link";
 import { notFound } from "next/navigation";
 import { t } from "@/lib/i18n";
 import { AppShell } from "@/components/app-shell";
@@ -8,6 +10,12 @@ import { getUserRole, requireUserSession } from "@/lib/auth/session";
 import { guideContent } from "@/lib/guide";
 import { guideContext, visibleGuide } from "@/lib/guide/types";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
+import type { Metadata } from "next";
+
+export async function generateMetadata({ params }: { params: Promise<{ topic: string }> }): Promise<Metadata> {
+  const { topic: topicId } = await params;
+  return { title: guideContent.topics.find((x) => x.id === topicId)?.title ?? t.guide.title };
+}
 
 // One topic of the guide: its cards, then the other topics. A topic this
 // deploy does not show (families off) is a 404, like an unknown one.
@@ -23,12 +31,12 @@ export default async function GuideTopicPage({ params }: { params: Promise<{ top
   return (
     <AppShell email={session.user.email} name={session.user.fullName} isAdmin={role === "admin"} memberId={session.user.memberId!} personId={session.user.personId}>
       <div className="mb-4">
-        <Link href="/guida" className="font-mono text-label font-bold uppercase tracking-widest text-brand-gray">
-          ← {t.guide.backToGuide}
-        </Link>
+        <BackLink href="/guida">{t.guide.backToGuide}</BackLink>
       </div>
-      <h1 className="mb-1 flex items-center gap-2 text-[20px] font-black tracking-[-0.03em] text-brand-near-black">
-        <span aria-hidden>{topic.emoji}</span>
+      <h1 className="mb-1 flex items-center gap-2 text-title font-black text-brand-near-black">
+        <span className="text-primary-text">
+          <UiIcon name={topicIcon(topic.id)} className="h-6 w-6" />
+        </span>
         {topic.title}
       </h1>
       <p className="mb-5 text-[14px] leading-snug text-brand-gray">{topic.summary}</p>
@@ -47,7 +55,7 @@ export default async function GuideTopicPage({ params }: { params: Promise<{ top
               href={`/guida/${x.id}`}
               className="inline-flex items-center gap-1 rounded-full border border-brand-border bg-white px-3 py-[6px] text-[12px] font-bold text-brand-near-black hover:border-primary-mid"
             >
-              <span aria-hidden>{x.emoji}</span>
+              <UiIcon name={topicIcon(x.id)} className="h-4 w-4 text-primary-text" />
               {x.title}
             </Link>
           ))}

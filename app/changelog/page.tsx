@@ -11,6 +11,9 @@ import {
 
 type SearchParams = Promise<{ lang?: string }>;
 
+/** The latest releases are shown open; the older ones fold under their version and tagline. */
+const OPEN_VERSIONS = 3;
+
 export default async function ChangelogPage({
   searchParams,
 }: {
@@ -36,7 +39,7 @@ export default async function ChangelogPage({
     >
       <div className="mb-4 flex items-start justify-between gap-3">
         <div>
-          <h1 className="text-[20px] font-black tracking-[-0.03em] text-brand-near-black">
+          <h1 className="text-title font-black text-brand-near-black">
             {t.title}
           </h1>
           <p className="mt-1 text-[14px] text-brand-gray">{t.subtitle}</p>
@@ -45,10 +48,23 @@ export default async function ChangelogPage({
       </div>
 
       <div className="space-y-5">
-        {versions.map((v) => (
+        {versions.slice(0, OPEN_VERSIONS).map((v) => (
           <VersionBlock key={v.version} version={v} lang={lang} />
         ))}
       </div>
+
+      {versions.length > OPEN_VERSIONS && (
+        <section aria-labelledby="older-versions" className="mt-8">
+          <h2 id="older-versions" className="mb-3 font-mono text-label font-semibold uppercase tracking-wide text-muted">
+            {t.older}
+          </h2>
+          <div className="space-y-2">
+            {versions.slice(OPEN_VERSIONS).map((v) => (
+              <VersionBlock key={v.version} version={v} lang={lang} collapsed />
+            ))}
+          </div>
+        </section>
+      )}
 
       <div className="mt-8 text-center text-label text-muted">
         <Link href="/guida" className="text-accent-text underline-offset-2 hover:underline">
@@ -64,42 +80,77 @@ export default async function ChangelogPage({
 function VersionBlock({
   version,
   lang,
+  collapsed = false,
 }: {
   version: ChangelogVersion;
   lang: ChangelogLanguage;
+  /** Folded under its version and tagline (a <details>, no script). */
+  collapsed?: boolean;
 }) {
   const isUnreleased =
     version.version === "Unreleased" || version.version === "Non rilasciato";
   const t = strings[lang];
+  const Heading = collapsed ? "h3" : "h2";
 
-  return (
-    <article className="overflow-hidden rounded-[18px] border border-brand-border bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-      <header className="border-b border-brand-border bg-brand-warm-white px-4 py-3">
-        <div className="flex items-baseline justify-between gap-2">
-          <h2 className="text-[15px] font-black tracking-[-0.01em] text-brand-near-black">
-            {isUnreleased ? t.unreleased : `v${version.version}`}
-          </h2>
+  const head = (
+    <>
+      <div className="flex items-baseline justify-between gap-2">
+        <Heading className="text-[15px] font-black tracking-[-0.01em] text-brand-near-black">
+          {isUnreleased ? t.unreleased : `v${version.version}`}
+        </Heading>
+        <span className="flex shrink-0 items-baseline gap-2">
           {version.date && (
             <span className="font-mono text-label uppercase tracking-wide text-muted">
               {version.date}
             </span>
           )}
-        </div>
-        {version.tagline && (
-          <p className="mt-1.5 text-[12px] italic leading-[1.45] text-brand-gray">
-            {version.tagline}
-          </p>
-        )}
-      </header>
+          {collapsed && (
+            <span aria-hidden="true" className="text-brand-gray transition-transform group-open:rotate-90">
+              ›
+            </span>
+          )}
+        </span>
+      </div>
+      {version.tagline && (
+        <p className="mt-1.5 text-[12px] italic leading-[1.45] text-brand-gray">
+          {version.tagline}
+        </p>
+      )}
+    </>
+  );
+
+  const body = <VersionSections version={version} heading={collapsed ? "h4" : "h3"} />;
+
+  if (collapsed) {
+    return (
+      <details className="group overflow-hidden rounded-card border border-brand-border bg-white shadow-card">
+        <summary className="cursor-pointer hover:bg-black/[0.02] list-none bg-brand-warm-white px-4 py-3 group-open:border-b group-open:border-brand-border [&::-webkit-details-marker]:hidden">
+          {head}
+        </summary>
+        {body}
+      </details>
+    );
+  }
+
+  return (
+    <article className="overflow-hidden rounded-card border border-brand-border bg-white shadow-card">
+      <header className="border-b border-brand-border bg-brand-warm-white px-4 py-3">{head}</header>
+      {body}
+    </article>
+  );
+}
+
+function VersionSections({ version, heading: SectionHeading }: { version: ChangelogVersion; heading: "h3" | "h4" }) {
+  return (
       <div className="space-y-4 px-4 py-4">
         {version.sections.map((s) => (
           <section key={s.heading}>
-            <h3
+            <SectionHeading
               className={`mb-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-mono text-label font-bold uppercase tracking-wide ${toneFor(s.heading)}`}
             >
               <span aria-hidden="true">{emojiFor(s.heading)}</span>
               {s.heading}
-            </h3>
+            </SectionHeading>
             <ul className="space-y-2">
               {s.items.map((item, idx) => (
                 <li key={idx} className="text-[14px] leading-[1.5] text-brand-near-black">
@@ -119,7 +170,6 @@ function VersionBlock({
           </section>
         ))}
       </div>
-    </article>
   );
 }
 
@@ -146,7 +196,7 @@ function toneFor(heading: string): string {
   if (h === "fixed" || h === "risolto") return "bg-brand-red-light text-brand-red";
   if (h === "changed" || h === "modificato")
     return "bg-primary-soft text-primary-text";
-  if (h === "performance") return "bg-[#e7ddff] text-[#5e2dc8]";
+  if (h === "performance") return "bg-black/[0.06] text-brand-near-black";
   if (h === "removed" || h === "rimosso") return "bg-black/[0.08] text-brand-gray";
   if (h === "security" || h === "sicurezza")
     return "bg-brand-red-light text-brand-red";
@@ -198,17 +248,19 @@ function LanguageToggle({ current }: { current: ChangelogLanguage }) {
 
 // ── Localised UI strings ─────────────────────────────────────────────────────
 
-const strings: Record<ChangelogLanguage, { title: string; subtitle: string; unreleased: string; backToGuide: string }> = {
+const strings: Record<ChangelogLanguage, { title: string; subtitle: string; unreleased: string; older: string; backToGuide: string }> = {
   it: {
     title: "Cosa è cambiato",
     subtitle: "Tutte le novità dell'app, dalla più recente alla più vecchia.",
     unreleased: "In arrivo",
+    older: "Versioni precedenti",
     backToGuide: "Torna alla guida",
   },
   en: {
     title: "What's new",
     subtitle: "All app changes, most recent first.",
     unreleased: "Upcoming",
+    older: "Earlier versions",
     backToGuide: "Back to the guide",
   },
 };
