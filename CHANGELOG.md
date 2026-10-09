@@ -22,6 +22,7 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ### Added
 - 💳 **Card payment for a single cycle.** A group that runs on the wallet can now pick, when creating a cycle, whether members pay it from their balance or by card when they confirm the order. Card cycles are marked in Admin, and the money paid by card does not change anyone's balance until "Settle accounts".
+- 🏦 **The bank transfer reference, filled in for each order.** Top up and each order in History show the reference to write on the transfer, with a Copy button, and where to send the receipt. Admins set the wording and the receipt address in Settings.
 
 ### Changed
 - 🔒 **One clear way to close a cycle.** "Close cycle…" opens a sheet that says how many members get charged and asks for confirmation there, instead of the browser's pop-up. Price adjustments sit behind "Adjust prices", and leaving with changed prices asks first. The order recap of an open cycle is read-only, since corrections only work after closing.

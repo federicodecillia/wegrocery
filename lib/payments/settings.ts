@@ -4,6 +4,11 @@
 // lib/payments/get-settings.ts reads the row.
 
 import type { BrandConfig } from "@/lib/brand/types";
+import {
+  checkBankReferenceTemplate,
+  isValidReceiptEmail,
+  normalizeBankReferenceTemplate,
+} from "./bank-reference";
 import type { StripeKeyStatus } from "./config";
 
 export type PaymentMode = "wallet" | "per_order";
@@ -21,6 +26,9 @@ export type PaymentSettingsRow = {
   familiesEnabled?: boolean;
   // Optional: rows read before migration 0030 have no such column.
   groupInfo?: string | null;
+  // Optional: rows read before migration 0033 have no such columns.
+  bankReferenceTemplate?: string | null;
+  bankReceiptEmail?: string | null;
   updatedAt: Date;
 };
 
@@ -41,6 +49,11 @@ export type PaymentSettings = {
   bankTransferEnabled: boolean;
   bankHolder: string | null;
   bankIban: string | null;
+  // The reference of an order paid by bank transfer (lib/payments/
+  // bank-reference.ts), null = the app's generic one; where members send the
+  // transfer receipt, null = nowhere.
+  bankReferenceTemplate: string | null;
+  bankReceiptEmail: string | null;
   onlinePaymentsEnabled: boolean;
   // Members may invite each other into one account (lib/members/family.ts).
   familiesEnabled: boolean;
@@ -72,6 +85,8 @@ export function resolvePaymentSettings(
         bankTransferEnabled: row.bankTransferEnabled,
         bankHolder: row.bankHolder,
         bankIban: row.bankIban,
+        bankReferenceTemplate: row.bankReferenceTemplate ?? null,
+        bankReceiptEmail: row.bankReceiptEmail ?? null,
         onlinePaymentsEnabled: row.onlinePaymentsEnabled,
         familiesEnabled: row.familiesEnabled ?? false,
         groupInfo: row.groupInfo ?? null,
@@ -84,6 +99,8 @@ export function resolvePaymentSettings(
         bankTransferEnabled: brand.bankTransfer !== null,
         bankHolder: brand.bankTransfer?.holder ?? null,
         bankIban: brand.bankTransfer?.iban ?? null,
+        bankReferenceTemplate: null,
+        bankReceiptEmail: null,
         onlinePaymentsEnabled: true,
         familiesEnabled: false,
         groupInfo: null,
@@ -112,6 +129,8 @@ export type PaymentSettingsInput = {
   bankTransferEnabled: boolean;
   bankHolder: string;
   bankIban: string;
+  bankReferenceTemplate: string;
+  bankReceiptEmail: string;
   onlinePaymentsEnabled: boolean;
 };
 
@@ -121,6 +140,9 @@ export type PaymentSettingsError =
   | "bankHolderRequired"
   | "bankHolderTooLong"
   | "ibanInvalid"
+  | "referenceTooLong"
+  | "referencePlaceholder"
+  | "receiptEmailInvalid"
   | "noChannel";
 
 // app_settings columns ready to write: numeric as strings, blanks as NULL.
@@ -130,6 +152,8 @@ export type PaymentSettingsValues = {
   bankTransferEnabled: boolean;
   bankHolder: string | null;
   bankIban: string | null;
+  bankReferenceTemplate: string | null;
+  bankReceiptEmail: string | null;
   onlinePaymentsEnabled: boolean;
 };
 
@@ -173,6 +197,12 @@ export function planPaymentSettingsUpdate(
   if (iban !== "" && !isValidIban(iban)) return { error: "ibanInvalid" };
   if (input.bankTransferEnabled && holder === "") return { error: "bankHolderRequired" };
   if (input.bankTransferEnabled && iban === "") return { error: "ibanInvalid" };
+  const reference = normalizeBankReferenceTemplate(input.bankReferenceTemplate);
+  const referenceError = reference === null ? null : checkBankReferenceTemplate(reference);
+  if (referenceError === "tooLong") return { error: "referenceTooLong" };
+  if (referenceError === "unknownPlaceholder") return { error: "referencePlaceholder" };
+  const receiptEmail = input.bankReceiptEmail.trim().toLowerCase();
+  if (receiptEmail !== "" && !isValidReceiptEmail(receiptEmail)) return { error: "receiptEmailInvalid" };
   // Members need a way to top up: the bank details, or Stripe with a key that
   // works on this deploy.
   if (!input.bankTransferEnabled && !(input.onlinePaymentsEnabled && stripeKey.usable)) {
@@ -186,6 +216,8 @@ export function planPaymentSettingsUpdate(
       bankTransferEnabled: input.bankTransferEnabled,
       bankHolder: holder === "" ? null : holder,
       bankIban: iban === "" ? null : iban,
+      bankReferenceTemplate: reference,
+      bankReceiptEmail: receiptEmail === "" ? null : receiptEmail,
       onlinePaymentsEnabled: input.onlinePaymentsEnabled,
     },
   };

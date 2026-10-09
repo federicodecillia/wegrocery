@@ -4,6 +4,8 @@ import { getUserRole, requireUserSession } from "@/lib/auth/session";
 import { getFamilyMemberIds, getMemberById, getMemberLedger, getMemberStorico } from "@/lib/db/queries";
 import { getDb } from "@/lib/db/client";
 import { getWalletBalance } from "@/lib/payments/balance-due";
+import { getPaymentSettings } from "@/lib/payments/get-settings";
+import { getOrderBankReferences } from "@/lib/payments/order-reference";
 import { movementRecorder } from "@/lib/movement-label";
 import type { Metadata } from "next";
 import { t } from "@/lib/i18n";
@@ -17,11 +19,19 @@ export default async function StoricoPage() {
 
   // A family's account shows the history its people had before joining too.
   const historyIds = await getFamilyMemberIds(memberId);
-  const [member, orderHistory, movements] = await Promise.all([
+  const [member, orderHistory, movements, settings] = await Promise.all([
     getMemberById(memberId),
     getMemberStorico(historyIds),
     getMemberLedger(historyIds),
+    getPaymentSettings(),
   ]);
+  // The reference of each order paid by bank transfer, in its detail.
+  const bankRefs = await getOrderBankReferences(
+    settings,
+    orderHistory,
+    session.user.fullName ?? member?.fullName ?? session.user.email,
+    member?.paysOffline ?? false,
+  );
   // Without the card cycles not settled yet, like Home.
   const balance = await getWalletBalance(getDb(), memberId, member?.paysOffline ?? false);
 
@@ -45,6 +55,7 @@ export default async function StoricoPage() {
           recordedBy: movementRecorder(e),
         }))}
         balance={balance}
+        bankRefs={bankRefs}
       />
     </AppShell>
   );

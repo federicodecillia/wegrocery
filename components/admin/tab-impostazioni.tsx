@@ -57,6 +57,8 @@ export async function TabImpostazioni() {
           bankTransferEnabled: settings.bankTransferEnabled,
           bankHolder: settings.bankHolder ?? "",
           bankIban: settings.bankIban ?? "",
+          bankReferenceTemplate: settings.bankReferenceTemplate ?? "",
+          bankReceiptEmail: settings.bankReceiptEmail ?? "",
           onlinePaymentsEnabled: settings.onlinePaymentsEnabled,
         }}
         stripeKey={settings.stripeKey}

@@ -345,6 +345,9 @@ export const appSettings = pgTable(
     familiesEnabled: boolean("families_enabled").notNull().default(false),
     // "Il nostro gruppo", shown at the top of the guide (drizzle/0030_group_info.sql).
     groupInfo: text("group_info"),
+    // Bank transfer reference per order and receipt address (drizzle/0033_bank_reference.sql).
+    bankReferenceTemplate: text("bank_reference_template"),
+    bankReceiptEmail: text("bank_receipt_email"),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
     updatedBy: text("updated_by").notNull(),
   },
@@ -357,6 +360,8 @@ export const appSettings = pgTable(
       sql`${table.maxBalance} >= 0 AND ${table.maxBalance} <> 'NaN'`,
     ),
     check("app_settings_group_info_length", sql`char_length(${table.groupInfo}) <= 2000`),
+    check("app_settings_bank_reference_length", sql`char_length(${table.bankReferenceTemplate}) <= 140`),
+    check("app_settings_bank_receipt_email_length", sql`char_length(${table.bankReceiptEmail}) <= 254`),
     check("app_settings_balance_range_check", sql`${table.minBalance} <= ${table.maxBalance}`),
     check(
       "app_settings_bank_complete_check",
