@@ -13,6 +13,10 @@ import { MovementRow } from "@/components/movement-row";
 import { useWide } from "@/lib/ui/use-wide";
 import { Button } from "@/components/ui/button";
 import { Sheet } from "@/components/ui/sheet";
+import { BankReceipt } from "@/components/ricarica/bank-receipt";
+import { CopyField } from "@/components/ricarica/copy-field";
+import type { OrderBankReferences } from "@/lib/payments/order-reference";
+import Link from "next/link";
 import { MovementDetailDialog, MovementDetailPanel, type MovementDetail } from "./movement-detail";
 
 type LedgerEntry = MovementDetail & { entryId: string; correctedAt?: string | null };
@@ -24,9 +28,11 @@ type Props = {
   orderHistory: CycleHistoryEntry[];
   movements: LedgerEntry[];
   balance: number;
+  // null when the group has the bank transfer off.
+  bankRefs: OrderBankReferences | null;
 };
 
-export function StoricoTabs({ orderHistory, movements, balance }: Props) {
+export function StoricoTabs({ orderHistory, movements, balance, bankRefs }: Props) {
   const searchParams = useSearchParams();
   const deepLinkCycleId = searchParams.get("cycleId");
 
@@ -181,7 +187,7 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
             <section aria-labelledby="cycle-detail-title" className="hidden rounded-card border border-brand-border bg-white p-4 shadow-card lg:sticky lg:top-4 lg:block">
               <h2 id="cycle-detail-title" className="text-[15px] font-bold text-brand-near-black">{shownCycle.title}</h2>
               <p className="mt-[2px] mb-3 font-mono text-label text-muted">{formatDate(shownCycle.pickupDate)}</p>
-              <CycleDetail entry={shownCycle} />
+              <CycleDetail entry={shownCycle} bankRefs={bankRefs} />
             </section>
           )}
         </div>
@@ -238,14 +244,15 @@ export function StoricoTabs({ orderHistory, movements, balance }: Props) {
           </Button>
         }
       >
-        {sheetCycle && <CycleDetail entry={sheetCycle} />}
+        {sheetCycle && <CycleDetail entry={sheetCycle} bankRefs={bankRefs} />}
       </Sheet>
     </>
   );
 }
 
 // A cycle's products and totals: in a sheet below lg, beside the list from lg.
-function CycleDetail({ entry }: { entry: CycleHistoryEntry }) {
+function CycleDetail({ entry, bankRefs }: { entry: CycleHistoryEntry; bankRefs: OrderBankReferences | null }) {
+  const reference = bankRefs?.references[entry.cycleId];
   return (
     <>
       {entry.lines.length > 0 && (
@@ -290,6 +297,17 @@ function CycleDetail({ entry }: { entry: CycleHistoryEntry }) {
         </>
       )}
       <CycleTotals entry={entry} />
+      {reference && (
+        <section className="mt-4 rounded-xl border border-brand-border bg-brand-warm-white p-3">
+          <h3 className="text-[14px] font-bold text-brand-near-black">{t.topup.bankOrderTitle}</h3>
+          <p className="mt-1 text-[14px] text-brand-gray">{t.topup.bankOrderHint}</p>
+          <CopyField label={t.topup.bankReference} value={reference} />
+          {bankRefs?.receiptEmail && <BankReceipt email={bankRefs.receiptEmail} subject={reference} />}
+          <Link href="/ricarica" className="mt-2 inline-block text-[14px] font-semibold text-primary-text">
+            {t.topup.bankDetailsLink}
+          </Link>
+        </section>
+      )}
     </>
   );
 }

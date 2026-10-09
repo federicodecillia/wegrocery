@@ -23,6 +23,7 @@ stanno nella PR.
 
 ### Aggiunte
 - 💳 **Pagamento con carta per un singolo ciclo.** Un gruppo che usa il borsellino può scegliere, quando crea un ciclo, se i soci lo pagano dal saldo o con la carta quando confermano l'ordine. I cicli con carta sono segnalati in Admin, e i soldi pagati con la carta non toccano il saldo di nessuno fino a "Chiudi i conti".
+- 🏦 **La causale del bonifico, già compilata per ogni ordine.** Ricarica e ogni ordine nello Storico mostrano la causale da scrivere nel bonifico, con il pulsante Copia, e a chi mandare la contabile. Gli admin scelgono il testo e l'indirizzo in Impostazioni.
 
 ### Modificato
 - 🔒 **Un solo modo chiaro per chiudere un ciclo.** "Chiudi ciclo…" apre una finestra che dice quanti soci verranno addebitati e chiede conferma lì, al posto del messaggio del browser. Le rettifiche dei prezzi stanno dietro "Rettifica prezzi", e se esci dopo averle cambiate l'app chiede prima. Il recap ordini di un ciclo aperto è in sola lettura, perché le correzioni valgono solo dopo la chiusura.

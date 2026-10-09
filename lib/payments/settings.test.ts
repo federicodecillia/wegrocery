@@ -34,6 +34,8 @@ describe("resolvePaymentSettings", () => {
       bankTransferEnabled: true,
       bankHolder: "Porta Moneta APS",
       bankIban: SPACED_IBAN,
+      bankReferenceTemplate: null,
+      bankReceiptEmail: null,
       onlinePaymentsEnabled: true,
       familiesEnabled: false,
       groupInfo: null,
@@ -85,6 +87,8 @@ const input: PaymentSettingsInput = {
   bankTransferEnabled: true,
   bankHolder: " Porta Moneta APS ",
   bankIban: "it60 x054 2811 1010 0000 0123 456",
+  bankReferenceTemplate: "",
+  bankReceiptEmail: "",
   onlinePaymentsEnabled: true,
 };
 const usable = { usable: true, livemode: false } as const;
@@ -99,8 +103,36 @@ describe("planPaymentSettingsUpdate", () => {
         bankTransferEnabled: true,
         bankHolder: "Porta Moneta APS",
         bankIban: IBAN,
+        bankReferenceTemplate: null,
+        bankReceiptEmail: null,
         onlinePaymentsEnabled: true,
       },
+    });
+  });
+
+  it("keeps the order reference on one line and the receipt address lower case", () => {
+    expect(
+      planPaymentSettingsUpdate(
+        { ...input, bankReferenceTemplate: "  Rimborso spese ordine {ordine}\n {mese} {anno} {socio} ", bankReceiptEmail: " Cassa@Example.org " },
+        usable,
+      ),
+    ).toMatchObject({
+      values: {
+        bankReferenceTemplate: "Rimborso spese ordine {ordine} {mese} {anno} {socio}",
+        bankReceiptEmail: "cassa@example.org",
+      },
+    });
+  });
+
+  it("refuses an order reference it could not fill in, and a broken receipt address", () => {
+    expect(planPaymentSettingsUpdate({ ...input, bankReferenceTemplate: "Ordine {nome}" }, usable)).toEqual({
+      error: "referencePlaceholder",
+    });
+    expect(planPaymentSettingsUpdate({ ...input, bankReferenceTemplate: "x".repeat(141) }, usable)).toEqual({
+      error: "referenceTooLong",
+    });
+    expect(planPaymentSettingsUpdate({ ...input, bankReceiptEmail: "cassa@" }, usable)).toEqual({
+      error: "receiptEmailInvalid",
     });
   });
 
