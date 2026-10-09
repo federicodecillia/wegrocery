@@ -1,6 +1,8 @@
 import { defineConfig } from "vitest/config";
 import path from "path";
 
+// Pure unit tests only: no database, no network (provider adapters take an
+// injectable fetch).
 export default defineConfig({
   resolve: {
     alias: {
@@ -9,8 +11,6 @@ export default defineConfig({
   },
   test: {
     environment: "node",
-    // *.int.test.ts need a database: npm run test:int (vitest.int.config.ts).
-    // console/ runs its own tests (console/vitest.config.ts).
-    exclude: ["**/*.int.test.ts", "node_modules/**", ".next/**", "console/**"],
+    exclude: ["node_modules/**", ".next/**"],
   },
 });

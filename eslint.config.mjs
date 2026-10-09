@@ -17,7 +17,8 @@ const eslintConfig = defineConfig([
       "react-hooks/set-state-in-effect": "off",
     },
   },
-  globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts"]),
+  // console/ is a separate app with its own ESLint config (console/eslint.config.mjs).
+  globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts", "console/**"]),
 ]);
 
 export default eslintConfig;

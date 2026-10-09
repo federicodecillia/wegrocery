@@ -1,0 +1,60 @@
+name: Console
+
+# The WeGrocery Console (console/) is a separate Next.js app with its own
+# package.json and lockfile: typecheck, lint, unit tests and a production
+# build, on every PR that touches it. Pure checks, no secrets: the build needs
+# no database (MIGRATE_ON_BUILD is unset, so nothing migrates).
+
+on:
+  pull_request:
+    branches: [main, staging]
+    paths:
+      - "console/**"
+      - ".github/workflows/console.yml"
+  push:
+    branches: [main]
+    paths:
+      - "console/**"
+      - ".github/workflows/console.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: console-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: console
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: console/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests
+        run: npx vitest run
+
+      - name: Build
+        run: npx next build
