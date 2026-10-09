@@ -58,6 +58,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ├── proxy.ts                     # Redirect unauthenticated to /login (Next.js 16's middleware)
 ├── auth.ts                     # Better Auth instance, auth() (session + member), signOut()
 ├── drizzle/                    # SQL migrations (0000–0033)
+├── console/                    # WeGrocery Console: separate Next.js app (own package.json, registry DB, Vercel project with
+│                               #   Root Directory `console`) for the operator's fleet; excluded from the root tsc/eslint/vitest; see console/README.md
 └── public/logo.png
 ```
 
