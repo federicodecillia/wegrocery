@@ -21,6 +21,10 @@ stanno nella PR.
 
 ## [Non rilasciato]
 
+## [1.26.0] — 9 ottobre 2026
+
+*Un'app più ordinata su ogni schermo, il pagamento con carta per un singolo ciclo e la causale del bonifico già compilata.*
+
 ### Aggiunte
 - 💳 **Pagamento con carta per un singolo ciclo.** Un gruppo che usa il borsellino può scegliere, quando crea un ciclo, se i soci lo pagano dal saldo o con la carta quando confermano l'ordine. I cicli con carta sono segnalati in Admin, e i soldi pagati con la carta non toccano il saldo di nessuno fino a "Chiudi i conti".
 - 🏦 **La causale del bonifico, già compilata per ogni ordine.** Ricarica e ogni ordine nello Storico mostrano la causale da scrivere nel bonifico, con il pulsante Copia, e a chi mandare la contabile. Gli admin scelgono il testo e l'indirizzo in Impostazioni.
@@ -585,6 +589,7 @@ stanno nella PR.
 
 ---
 
+[1.26.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.26.0
 [1.25.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.25.0
 [1.24.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.24.0
 [1.23.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.23.0
