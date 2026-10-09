@@ -1,20 +1,21 @@
 "use client";
 
-import { brand } from "@/lib/brand";
 import { t } from "@/lib/i18n";
 import { confirm } from "@/components/ui/confirm-dialog";
 
 type Props = {
   action: () => Promise<void>;
+  /** The group's name as the admins set it (getBrand), for the question. */
+  appName: string;
 };
 
 // The last row of the Profile page (app/profilo), away from the header's
 // bell so it is not tapped by mistake; asks before signing out.
-export function LogoutButton({ action }: Props) {
+export function LogoutButton({ action, appName }: Props) {
   async function handleClick() {
     const ok = await confirm({
       title: t.logout.confirmTitle,
-      message: t.logout.confirmMessage(brand.appName),
+      message: t.logout.confirmMessage(appName),
       confirmLabel: t.logout.confirmButton,
       cancelLabel: t.common.cancel,
     });

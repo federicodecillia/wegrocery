@@ -10,6 +10,7 @@ import { t } from "@/lib/i18n";
 import { formatMoney, formatDate } from "@/lib/i18n/format";
 import { parseCycleDates } from "@/lib/cycle-dates";
 import { brand } from "@/lib/brand";
+import { getBrand } from "@/lib/brand/get-brand";
 import { getDb } from "@/lib/db/client";
 import { auditLog, authUsers, ledgerEntries, members, notifications, orderCycles, orders, payments, products, suppliers, supplierProducts } from "@/lib/db/schema";
 import { upsertCycleProducts } from "@/lib/db/cycle-products";
@@ -1229,8 +1230,8 @@ export async function adminGetSupplierEmailDefaults(cycleId: string): Promise<
       ok: true,
       to: cycle.supplierEmail ?? "",
       from,
-      cc: Array.from(new Set([admin.email, ...(brand.archiveCcEmail ? [brand.archiveCcEmail] : [])])),
-      subject: `Ordine ${brand.orgName} — ${cycle.title}`,
+      cc: Array.from(new Set([admin.email, ...[(await getBrand()).archiveCcEmail].filter((e): e is string => Boolean(e))])),
+      subject: `Ordine ${(await getBrand()).orgName} — ${cycle.title}`,
       supplierName: cycle.supplierName,
     };
   } catch (e) {
@@ -1293,7 +1294,7 @@ export async function adminSendSupplierEmail(
       grandTotal: distinta.grandTotal,
       productCount: distinta.productCount,
       memberCount: distinta.memberCount,
-    });
+    }, await getBrand());
     const subject = overrides?.subject?.trim() || defaults.subject;
 
     // Always keep the GAS shared archive in CC so the cooperative has a
@@ -1302,7 +1303,7 @@ export async function adminSendSupplierEmail(
     // admin's email is the archive itself.
     const cc = overrides?.cc
       ? Array.from(new Set(overrides.cc.map((e) => e.trim()).filter(Boolean)))
-      : Array.from(new Set([admin.email, ...(brand.archiveCcEmail ? [brand.archiveCcEmail] : [])]));
+      : Array.from(new Set([admin.email, ...[(await getBrand()).archiveCcEmail].filter((e): e is string => Boolean(e))]));
 
     const { sendMail } = await import("@/lib/email/resend");
     const result = await sendMail({

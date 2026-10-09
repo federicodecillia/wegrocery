@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { brand } from "@/lib/brand";
+import { getBrand } from "@/lib/brand/get-brand";
 import { t } from "@/lib/i18n";
 import { BottomNav } from "@/components/bottom-nav";
 import { DemoBanner } from "@/components/demo-banner";
@@ -27,6 +27,7 @@ type AppShellProps = {
 };
 
 export async function AppShell({ children, email, name, isAdmin, memberId, personId, layout = "reading" }: AppShellProps) {
+  const brand = await getBrand();
   const unreadCount = await getUnreadNotificationCount(notificationOwners(memberId, personId));
 
   return (

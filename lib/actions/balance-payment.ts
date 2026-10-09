@@ -4,6 +4,7 @@ import { and, eq, sql } from "drizzle-orm";
 import { actionErrorMessage } from "@/lib/action-error";
 import { requireActiveMember } from "@/lib/auth/session";
 import { brand } from "@/lib/brand";
+import { getBrand } from "@/lib/brand/get-brand";
 import { getDb } from "@/lib/db/client";
 import { getMemberById } from "@/lib/db/queries";
 import { payments } from "@/lib/db/schema";
@@ -59,7 +60,7 @@ export async function startBalancePayment(): Promise<BalancePaymentResult> {
     try {
       const origin = await requestOrigin();
       const metadata = { paymentId, memberId, kind: "balance" };
-      const name = t.balance.lineItem(brand.orgName);
+      const name = t.balance.lineItem((await getBrand()).orgName);
       const checkout = await stripe.checkout.sessions.create(
         {
           mode: "payment",

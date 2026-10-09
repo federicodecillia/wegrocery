@@ -96,11 +96,22 @@ describe("configStatus", () => {
       status: "warning",
       note: "defaultBrand",
     });
+    // Named in the app by the admins: no brand JSON needed.
+    expect(item(configStatus({ ...complete, NEXT_PUBLIC_BRAND_JSON: "" }, { ...facts, identityInApp: true }), "brand").status).toBe("ok");
     expect(item(configStatus(complete, { ...facts, brandWarnings: ["a", "b"] }), "brand")).toMatchObject({
       status: "warning",
       note: "contrast",
       detail: ["a", "b"],
     });
+  });
+
+  it("opens the fleet stats only with a long enough secret", () => {
+    expect(item(configStatus(complete, facts), "fleet").status).toBe("off");
+    expect(item(configStatus({ ...complete, INSTANCE_STATS_SECRET: "short" }, facts), "fleet")).toMatchObject({
+      status: "warning",
+      note: "shortStatsSecret",
+    });
+    expect(item(configStatus({ ...complete, INSTANCE_STATS_SECRET: "x".repeat(64) }, facts), "fleet").status).toBe("ok");
   });
 
   it("names a brand that does not parse, and the fields it does not know", () => {

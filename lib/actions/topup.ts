@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { brand } from "@/lib/brand";
+import { getBrand } from "@/lib/brand/get-brand";
 import { getDb } from "@/lib/db/client";
 import { getMemberById } from "@/lib/db/queries";
 import { getWalletBalance } from "@/lib/payments/balance-due";
@@ -93,14 +94,14 @@ export async function startOnlineTopup(amountInput: string): Promise<StartTopupR
             price_data: {
               currency,
               unit_amount: parsed.cents,
-              product_data: { name: t.topup.lineItemName(brand.orgName) },
+              product_data: { name: t.topup.lineItemName((await getBrand()).orgName) },
             },
           },
         ],
         metadata: { paymentId, memberId: member.memberId },
         payment_intent_data: {
           metadata: { paymentId, memberId: member.memberId },
-          description: t.topup.lineItemName(brand.orgName),
+          description: t.topup.lineItemName((await getBrand()).orgName),
         },
         // Short-lived: an abandoned session expires and its row is closed by
         // the checkout.session.expired webhook. Stripe's minimum is 30 min

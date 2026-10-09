@@ -7,7 +7,8 @@ import { NextPickupCard } from "@/components/home/next-pickup-card";
 import { InstallPrompt } from "@/components/install-prompt";
 import { MovementRow } from "@/components/movement-row";
 import { WelcomeCard } from "@/components/home/welcome-card";
-import { brand } from "@/lib/brand";
+import { SetupBanner } from "@/components/admin/setup/setup-banner";
+import { getBrand } from "@/lib/brand/get-brand";
 import { WELCOME_QUERY, welcomeMoney } from "@/lib/guide/welcome";
 import { t } from "@/lib/i18n";
 import { formatSignedMoney } from "@/lib/i18n/format";
@@ -40,6 +41,7 @@ export default async function HomePage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  const brand = await getBrand();
   const session = await requireUserSession();
   const role = getUserRole(session);
   const memberId = session.user.memberId!;
@@ -365,6 +367,7 @@ export default async function HomePage({
   return (
     <AppShell email={session.user.email} name={session.user.fullName} isAdmin={role === "admin"} memberId={memberId} personId={session.user.personId} layout="wide">
       <h1 className="sr-only">{t.nav.home}</h1>
+      {role === "admin" && <SetupBanner />}
       {showWelcome && (
         <WelcomeCard
           appName={brand.appName}

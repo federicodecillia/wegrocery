@@ -9,6 +9,7 @@
 import { inArray } from "drizzle-orm";
 import { getDb } from "@/lib/db/client";
 import { members, notificationPreferences, notifications } from "@/lib/db/schema";
+import { getBrand } from "@/lib/brand/get-brand";
 import { notificationEmail } from "@/lib/email/templates";
 import { sendMail, sendMailBatch } from "@/lib/email/resend";
 import {
@@ -115,11 +116,10 @@ export async function dispatchNotification(
   }
 
   if (channels.email && input.memberEmail) {
-    const { subject, text } = notificationEmail({
-      title: input.title,
-      body: input.body,
-      href: input.href,
-    });
+    const { subject, text } = notificationEmail(
+      { title: input.title, body: input.body, href: input.href },
+      await getBrand(),
+    );
     const result = await sendMail({ to: input.memberEmail, subject, text });
     if ("error" in result) console.error("[notifications] email send failed:", result.error);
   }
@@ -160,10 +160,11 @@ export async function dispatchWithBodies(
     }));
   if (appRows.length > 0) await db.insert(notifications).values(appRows);
 
+  const identity = await getBrand();
   const emailItems = items
     .filter((i) => i.email && channelsForType(type, prefsByMember.get(i.memberId)!).email)
     .map((i) => {
-      const { subject, text } = notificationEmail({ title: i.title, body: i.body, href: i.href });
+      const { subject, text } = notificationEmail({ title: i.title, body: i.body, href: i.href }, identity);
       return { to: i.email as string, subject, text };
     });
   if (emailItems.length > 0) {

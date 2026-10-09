@@ -28,6 +28,7 @@ Every migration is additive and can run twice without harm.
 | Version | Migration | Environment | Stripe webhook events |
 |---|---|---|---|
 | 1.25.0 | `0030_group_info.sql` (additive: `app_settings.group_info`), `0031_welcome.sql` (additive: `members.welcome_dismissed_at`, set for members who already ordered), `0032_guide_search_misses.sql` (additive: table `guide_search_misses`); apply them before deploying | none | none |
+| Unreleased | `0034_group_identity.sql` (additive: table `group_identity`, marked as set up where members exist); apply it before deploying | `INSTANCE_STATS_SECRET` (optional, at least 32 characters: opens `/api/instance-stats` to a fleet console) | none |
 | 1.26.0 | `0033_bank_reference.sql` (additive: `app_settings.bank_reference_template`, `app_settings.bank_receipt_email`); apply it before deploying | none | none |
 | 1.23.0 | `0028_member_duplicate_dismissals.sql` (additive: table `member_duplicate_dismissals`), `0029_families.sql` (additive: `members.household_of`, `app_settings.families_enabled`, table `family_invites`); apply them before deploying | none | none |
 | 1.22.0 | `0027_member_merge.sql` (additive: `members.merged_into`, `ledger_entries.counterpart`; apply it before deploying) | none | none |

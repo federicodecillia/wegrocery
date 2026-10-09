@@ -4,14 +4,15 @@ import { findMemberById, findMemberByLoginEmail } from "@/lib/auth/admission";
 import { sessionClaims } from "@/lib/auth/access";
 import { createAuth, MAGIC_LINK_MINUTES, type AuthEmail } from "@/lib/auth/config";
 import type { AppSession } from "@/lib/auth/session";
-import { brand } from "@/lib/brand";
+import type { BrandConfig } from "@/lib/brand";
+import { getBrand } from "@/lib/brand/get-brand";
 import { getDb } from "@/lib/db/client";
 import { sendMail } from "@/lib/email/resend";
 import { t } from "@/lib/i18n";
 import { familyRole, sessionAccount } from "@/lib/members/family";
 import { reportError } from "@/lib/observability";
 
-function authEmailText({ kind, email, url, code }: AuthEmail): string {
+function authEmailText({ kind, email, url, code }: AuthEmail, brand: BrandConfig): string {
   const e = t.authEmail;
   switch (kind) {
     case "login":
@@ -44,10 +45,11 @@ const buildInstance = () => createAuth(getDb(), {
   // response: a member's request must not take longer than a stranger's.
   defer: (task) => after(task),
   async sendAuthEmail(message) {
+    const brand = await getBrand();
     const result = await sendMail({
       to: message.email,
       subject: t.authEmail.subject(message.kind, brand.appName),
-      text: authEmailText(message),
+      text: authEmailText(message, brand),
     });
     if ("error" in result) reportError("auth email", new Error(result.error), { kind: message.kind });
   },

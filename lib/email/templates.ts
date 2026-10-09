@@ -1,4 +1,5 @@
 import { brand } from "@/lib/brand";
+import type { BrandConfig } from "@/lib/brand";
 import { t } from "@/lib/i18n";
 import { formatMoney } from "@/lib/i18n/format";
 import { formatPickupSlot } from "@/lib/i18n/deadline";
@@ -15,18 +16,19 @@ type SupplierEmailInput = {
 // A pickup with no time (stored at 00:00) shows the day alone, not "00:00".
 const formatPickup = (d: Date): string => formatPickupSlot(d, null, true);
 
-export function supplierOrderEmail(input: SupplierEmailInput): {
+// `identity`: the brand in force (getBrand), the brand JSON when omitted.
+export function supplierOrderEmail(input: SupplierEmailInput, identity: Pick<BrandConfig, "appName" | "orgName"> = brand): {
   subject: string;
   text: string;
   html: string;
 } {
   const { cycleTitle, pickupDate, grandTotal, productCount, memberCount } = input;
-  const subject = t.email.supplierOrderSubject(brand.orgName, cycleTitle);
+  const subject = t.email.supplierOrderSubject(identity.orgName, cycleTitle);
   const pickupStr = pickupDate ? formatPickup(pickupDate) : null;
   const grandTotalStr = formatMoney(grandTotal);
   const text = t.email.supplierOrderBody({
-    appName: brand.appName,
-    orgName: brand.orgName,
+    appName: identity.appName,
+    orgName: identity.orgName,
     cycleTitle,
     pickupDate: pickupStr,
     grandTotal: grandTotalStr,
@@ -57,13 +59,16 @@ function textToHtml(text: string): string {
 // appends a CTA to the relevant page and a manage-preferences link when a base
 // URL is configured, then the org signature. Links are omitted (not broken)
 // when no base URL is available.
-export function notificationEmail(input: {
-  title: string;
-  body: string;
-  href?: string | null;
-}): { subject: string; text: string } {
+export function notificationEmail(
+  input: {
+    title: string;
+    body: string;
+    href?: string | null;
+  },
+  identity: Pick<BrandConfig, "appName" | "orgName"> = brand,
+): { subject: string; text: string } {
   const baseUrl = getAppBaseUrl();
-  const subject = t.email.notificationSubject(brand.appName, input.title);
+  const subject = t.email.notificationSubject(identity.appName, input.title);
 
   const lines: string[] = [input.body, ""];
   if (baseUrl && input.href) {
@@ -72,7 +77,7 @@ export function notificationEmail(input: {
   if (baseUrl) {
     lines.push(t.email.notificationManagePrefs(`${baseUrl}/profilo/notifiche`), "");
   }
-  lines.push(t.email.notificationFooter(brand.orgName));
+  lines.push(t.email.notificationFooter(identity.orgName));
 
   return { subject, text: lines.join("\n") };
 }

@@ -1,4 +1,5 @@
 import { MIGRATIONS } from "./migrations";
+import { MIN_SECRET_LENGTH } from "./instance-stats/constants";
 import { REQUIRED_STRIPE_EVENTS, resolveStripeKey } from "./payments/config";
 
 export { MIGRATIONS };
@@ -21,6 +22,9 @@ export type ConfigFacts = {
   brandUnknownFields: readonly string[];
   // Whether the members table has an active admin; null = it could not be read.
   hasActiveAdmin: boolean | null;
+  // Whether the admins set the group's name in the app (group_identity):
+  // then no brand JSON is needed.
+  identityInApp?: boolean;
 };
 
 export type ConfigItemId =
@@ -33,7 +37,8 @@ export type ConfigItemId =
   | "email"
   | "stripe"
   | "membership"
-  | "sentry";
+  | "sentry"
+  | "fleet";
 
 export type ConfigItem = {
   id: ConfigItemId;
@@ -116,7 +121,9 @@ function firstAdmin(env: Env, facts: ConfigFacts): ConfigItem {
 function brandItem(env: Env, facts: ConfigFacts): ConfigItem {
   const base = { id: "brand", required: false, vars: ["NEXT_PUBLIC_BRAND_JSON"] } as const;
   if (facts.brandError) return { ...base, status: "missing", note: "invalidBrand", detail: [facts.brandError] };
-  if (!set(env.NEXT_PUBLIC_BRAND_JSON)) return { ...base, status: "warning", note: "defaultBrand" };
+  if (!set(env.NEXT_PUBLIC_BRAND_JSON) && !facts.identityInApp) {
+    return { ...base, status: "warning", note: "defaultBrand" };
+  }
   if (facts.brandUnknownFields.length > 0) {
     return { ...base, status: "warning", note: "unknownBrandFields", detail: facts.brandUnknownFields };
   }
@@ -159,5 +166,15 @@ export function configStatus(env: Env, facts: ConfigFacts): ConfigItem[] {
       vars: ["SENTRY_DSN"],
       status: set(env.SENTRY_DSN) ? "ok" : "off",
     },
+    fleet(env),
   ];
+}
+
+// Anonymous counts for whoever operates several installations
+// (/api/instance-stats, lib/instance-stats): closed without the secret.
+function fleet(env: Env): ConfigItem {
+  const base = { id: "fleet", required: false, vars: ["INSTANCE_STATS_SECRET"] } as const;
+  const secret = env.INSTANCE_STATS_SECRET?.trim() ?? "";
+  if (!secret) return { ...base, status: "off" };
+  return secret.length < MIN_SECRET_LENGTH ? { ...base, status: "warning", note: "shortStatsSecret" } : { ...base, status: "ok" };
 }
