@@ -83,11 +83,21 @@ export function resolveStripeKey(env: StripeEnv): StripeKeyStatus {
 export function applyStripeKeyPolicy(rawKey: string | null | undefined, env: StripeEnv): StripeKeyStatus {
   const key = rawKey?.trim();
   if (!key) return { enabled: false, reason: "missing" };
-  const isRealProduction = env.VERCEL_ENV === "production" && env.DEMO_MODE !== "true";
   const livemode = isLiveStripeKey(key);
-  if (livemode && !isRealProduction) return { enabled: false, reason: "liveKeyOutsideProduction" };
-  if (!livemode && isRealProduction) return { enabled: false, reason: "testKeyInProduction" };
+  const refusal = stripeModeRefusal(livemode, env);
+  if (refusal) return { enabled: false, reason: refusal };
   return { enabled: true, secretKey: key, livemode };
+}
+
+// Why a key of this mode cannot be used here; null = it can.
+export function stripeModeRefusal(
+  livemode: boolean,
+  env: StripeEnv,
+): "liveKeyOutsideProduction" | "testKeyInProduction" | null {
+  const isRealProduction = env.VERCEL_ENV === "production" && env.DEMO_MODE !== "true";
+  if (livemode && !isRealProduction) return "liveKeyOutsideProduction";
+  if (!livemode && isRealProduction) return "testKeyInProduction";
+  return null;
 }
 
 export function isLiveStripeKey(key: string): boolean {
