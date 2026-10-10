@@ -682,9 +682,9 @@ export const en: Strings = {
         `Refunds sent ${sent}, waiting ${waiting}, due ${due}, write-offs ${writeOffs}`,
     },
     configStatus: {
-      title: "Configuration status",
+      title: "Technical settings",
       intro:
-        "What is connected in this installation. The values live in the project's environment variables on Vercel: only their names show here.",
+        "These are not changed here: they are variables of the hosting project on Vercel, set by whoever hosts the app. To turn one on, open it and pass the instructions to whoever runs the installation. Only names show here, never values.",
       status: { ok: "OK", missing: "Missing", warning: "Check", off: "Off" },
       required: "required",
       items: {
@@ -725,6 +725,57 @@ export const en: Strings = {
         stripeEvents: "Events to enable on the webhook endpoint:",
         shortStatsSecret: "The secret is too short (at least 32 characters): the stats stay closed.",
       } as Record<string, string>,
+      groups: {
+        essential: "Essential",
+        optional: "Optional",
+      },
+      howTo: "What it does and how to turn it on",
+      help: {
+        database: [
+          "Where the app keeps members, orders and balances (Postgres on Neon).",
+          "Create a project on neon.tech in an EU region, copy its connection string into DATABASE_URL. With MIGRATE_ON_BUILD=true migrations are applied on every deploy.",
+        ],
+        authSecret: [
+          "Signs the sessions of signed-in people.",
+          "Generate a long random value (openssl rand -base64 32) and set it as AUTH_SECRET. Changing it signs everyone out.",
+        ],
+        signIn: [
+          "How members get in: a link and a code by email, and Google if you want it.",
+          "Email only needs \"Sending email\". For Google, create an OAuth client on console.cloud.google.com with the redirect URI <app address>/api/auth/callback/google, then set AUTH_GOOGLE_ID and AUTH_GOOGLE_SECRET.",
+        ],
+        firstAdmin: [
+          "Who becomes admin at the first sign-in of a new installation.",
+          "Put the address in BOOTSTRAP_ADMIN_EMAIL and sign in with it. Once an admin exists the variable can go.",
+        ],
+        baseUrl: [
+          "The app's address in email links.",
+          "Set APP_BASE_URL to the public address, for example https://coop.example.org. On Vercel the project's production address is used when it is missing.",
+        ],
+        email: [
+          "Sign-in links, member notifications and supplier orders.",
+          "Create an account on resend.com, verify the group's domain (a few DNS records), create a sending-only key and set RESEND_API_KEY and MAIL_FROM (for example: Riva Coop <noreply@rivacoop.org>).",
+        ],
+        brand: [
+          "Starting name, logo and colours, plus language, currency and time zone.",
+          "Name, logo and colours are edited at the top of this page. NEXT_PUBLIC_BRAND_JSON is only needed for language, currency and time zone, chosen once at installation.",
+        ],
+        stripe: [
+          "Card top-ups and order payments, on the group's own Stripe account.",
+          "On the group's Stripe account create a restricted key (Checkout Sessions: write, PaymentIntents: read, Refunds: write) and a webhook to <app address>/api/stripe/webhook with the events below, then set STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET. Try test keys first.",
+        ],
+        membership: [
+          "Lets in only people with a valid WallyFor card, and creates the member at their first sign-in.",
+          "Ask WallyFor for the group's API key and merchant number and set WALLYFOR_API_KEY and WALLYFOR_MERCHANT_ID. Without them only people already in Members get in.",
+        ],
+        sentry: [
+          "Emails whoever runs the app when something fails, with no member data.",
+          "Create a free Next.js project on sentry.io (EU region), copy the DSN from Settings, Client Keys, and set it as SENTRY_DSN for production only.",
+        ],
+        fleet: [
+          "Only for whoever runs several groups: their console reads anonymous counts (members, cycles, orders, version) without touching the database. Nothing changes for the group.",
+          "Generate a secret (openssl rand -hex 32), set it as INSTANCE_STATS_SECRET and paste the same value in the console under Add existing instance. Use a different secret for each installation.",
+        ],
+      } as Record<string, readonly [string, string]>,
       variables: "Variables:",
     },
     common: {
