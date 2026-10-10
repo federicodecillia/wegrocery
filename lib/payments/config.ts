@@ -74,13 +74,24 @@ export type StripeKeyStatus =
 // balance with money that never arrived. The demo is a production deploy with
 // fake data, so it counts as "not production" here.
 export function resolveStripeKey(env: StripeEnv): StripeKeyStatus {
-  const key = env.STRIPE_SECRET_KEY?.trim();
+  return applyStripeKeyPolicy(env.STRIPE_SECRET_KEY, env);
+}
+
+// The same rules for a key from anywhere: the env above, or the group's
+// in-app connection (lib/payments/stripe-credentials.ts). Reads VERCEL_ENV and
+// DEMO_MODE from `env`.
+export function applyStripeKeyPolicy(rawKey: string | null | undefined, env: StripeEnv): StripeKeyStatus {
+  const key = rawKey?.trim();
   if (!key) return { enabled: false, reason: "missing" };
   const isRealProduction = env.VERCEL_ENV === "production" && env.DEMO_MODE !== "true";
-  const livemode = /^(sk|rk)_live_/.test(key);
+  const livemode = isLiveStripeKey(key);
   if (livemode && !isRealProduction) return { enabled: false, reason: "liveKeyOutsideProduction" };
   if (!livemode && isRealProduction) return { enabled: false, reason: "testKeyInProduction" };
   return { enabled: true, secretKey: key, livemode };
+}
+
+export function isLiveStripeKey(key: string): boolean {
+  return /^(sk|rk)_live_/.test(key);
 }
 
 // The events the Stripe webhook endpoint of a deploy must subscribe to

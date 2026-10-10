@@ -35,10 +35,9 @@ type RequestedRefund = {
   stale: boolean;
 };
 
-export async function sendRequestedRefund(
-  refundId: string,
-  stripe: RefundApi | null = getStripe(),
-): Promise<RefundSendResult> {
+// `stripe` left out: this deploy's client; an explicit null means none.
+export async function sendRequestedRefund(refundId: string, stripeArg?: RefundApi | null): Promise<RefundSendResult> {
+  const stripe = stripeArg === undefined ? await getStripe() : stripeArg;
   const db = getDb();
   const { rows } = await db.execute<RequestedRefund>(sql`
     SELECT r.refund_id, r.payment_id, r.member_id, r.amount_cents, p.payment_intent_id,
@@ -110,9 +109,10 @@ export async function sendRequestedRefund(
 // (a server action has minutes, not hours). Rows younger than two minutes are
 // left alone: their first call may still be running.
 export async function retryRequestedRefunds(
-  stripe: RefundApi | null = getStripe(),
+  stripeArg?: RefundApi | null,
   budgetMs = 240_000,
 ): Promise<{ sent: number; failed: number; waiting: number }> {
+  const stripe = stripeArg === undefined ? await getStripe() : stripeArg;
   const started = Date.now();
   const db = getDb();
   const { rows } = await db.execute<{ refund_id: string }>(sql`

@@ -106,7 +106,7 @@ export async function startOrderPayment(
     // counted, and a Checkout left open cannot later overwrite this order.
     // The key is enough: in a wallet group online top-ups may stay off while
     // its card cycles are paid by card.
-    const stripe = settings.stripeKey.usable ? getStripe() : null;
+    const stripe = settings.stripeKey.usable ? await getStripe() : null;
     if (stripe && (await expireOpenCheckouts(db, stripe, memberId, cycleId)) === "paid") {
       return refuse("in_progress", t.order.pay.inProgress);
     }
@@ -239,7 +239,7 @@ async function cancelOrderOf(memberId: string, email: string, cycleId: string): 
   const db = getDb();
   // An open Checkout would bring the order back if it were paid after the
   // cancel: expire it first. One already paid lands in the settlement.
-  const stripe = getStripe();
+  const stripe = await getStripe();
   if (stripe && (await expireOpenCheckouts(db, stripe, memberId, cycleId)) === "paid") {
     return refuse("in_progress", t.order.pay.inProgress);
   }
