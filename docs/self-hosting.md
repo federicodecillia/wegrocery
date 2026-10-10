@@ -133,6 +133,17 @@ All of them can be added at any time: set the variables, redeploy, and check
 Members top up their balance (or pay each order, depending on the payment
 mode chosen in Impostazioni) by card.
 
+The simplest way needs no variables: an admin opens Admin → Impostazioni →
+*Collegamento a Stripe* and pastes a restricted key of the group's own Stripe
+account (Checkout Sessions write, PaymentIntents read, Refunds write, Webhook
+Endpoints write). The app checks it, creates the webhook endpoint itself and
+stores both secrets encrypted with a key derived from `AUTH_SECRET` (rotating
+`AUTH_SECRET` means connecting again). It needs `APP_BASE_URL` (or Vercel's
+production URL) so Stripe knows where to post.
+
+Alternatively, whoever hosts the app sets the variables below; they take
+priority, and the in-app card then only says Stripe is configured by the host.
+
 1. Stripe → Developers → API keys: put the secret key in
    `STRIPE_SECRET_KEY`. Live keys (`sk_live_…`) work only on the production
    deployment, test keys (`sk_test_…`) everywhere else.
