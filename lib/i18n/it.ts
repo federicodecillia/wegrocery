@@ -1499,6 +1499,11 @@ export const it = {
         body: "Nome, logo, colori, pagamenti e verifiche: pochi minuti, una volta sola.",
         cta: "Inizia",
       },
+      revisit: {
+        title: "Configurazione guidata",
+        body: "Rivedi in pochi passi nome, logo, colori, contatti, pagamenti e verifiche (email di prova, webhook Stripe).",
+        cta: "Apri",
+      },
       checks: {
         intro: "Le chiavi dei servizi (email, pagamenti online) stanno nelle impostazioni del progetto su Vercel, non nell'app: qui vedi solo cosa è collegato e puoi provarlo.",
         testEmail: "Invia un'email di prova",

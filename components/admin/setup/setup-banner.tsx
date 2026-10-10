@@ -5,13 +5,18 @@ import { t } from "@/lib/i18n";
 
 // Shown to admins until someone finishes the first-run setup (app/admin/avvio).
 // Installations that already had members were marked as set up by migration
-// 0034, so only a new group sees it.
-export async function SetupBanner() {
+// 0034, so only a new group sees it. With `revisit` (Admin → Impostazioni) it
+// shows only once the setup is finished, as the way back into it.
+export async function SetupBanner({ revisit = false }: { revisit?: boolean }) {
   const identity = await getGroupIdentity();
-  if (identity.setupCompletedAt) return null;
-  const s = t.admin.setup.banner;
+  if (Boolean(identity.setupCompletedAt) !== revisit) return null;
+  const s = revisit ? t.admin.setup.revisit : t.admin.setup.banner;
   return (
-    <section className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-card border border-primary-mid bg-primary-soft p-4 shadow-card">
+    <section
+      className={`flex flex-wrap items-center justify-between gap-3 rounded-card border p-4 shadow-card ${
+        revisit ? "border-brand-border bg-white" : "mb-4 border-primary-mid bg-primary-soft"
+      }`}
+    >
       <div className="min-w-0">
         <h2 className="text-[15px] font-bold text-brand-near-black">{s.title}</h2>
         <p className="mt-[2px] text-[13px] text-brand-gray">{s.body}</p>
