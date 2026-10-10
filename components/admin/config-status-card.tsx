@@ -14,8 +14,9 @@ const STATUS_CLASSES: Record<ConfigItem["status"], string> = {
 const OPTIONAL = new Set<ConfigItem["id"]>(["brand", "stripe", "membership", "sentry", "fleet"]);
 
 // What this installation has connected (lib/config-status.ts): names and
-// states only, never a value. Nothing here is set from the app: each item
-// says what it does and how whoever hosts the app turns it on.
+// states only, never a value. Nothing here is set from this card: each item
+// says what it does and how it is turned on (by whoever hosts the app, or,
+// for Stripe, also from the payment settings' Stripe card).
 export function ConfigStatusCard({ items }: { items: ConfigItem[] }) {
   const s = t.admin.configStatus;
   const groups = [

@@ -26,6 +26,7 @@ stanno nella PR.
 - 🧭 **Configurazione guidata per un gruppo nuovo.** Il primo admin viene accompagnato passo per passo: identità, contatti, pagamenti, "Il nostro gruppo" e una verifica di email e Stripe (email di prova, eventi del webhook). Ai gruppi già attivi non viene proposta, e ogni admin può rifarla da Admin → Impostazioni.
 - 📊 **Statistiche anonime per chi gestisce più gruppi.** Con `INSTANCE_STATS_SECRET` impostato, una richiesta firmata restituisce solo conteggi (soci, cicli, ordini, versione, configurazione); senza, l'indirizzo non esiste.
 - 🛠️ **Impostazioni tecniche spiegate.** In Admin → Impostazioni lo stato della configurazione diventa "Impostazioni tecniche", divise in essenziali e facoltative, e ogni voce dice a cosa serve e come la attiva chi ospita l'app.
+- 💳 **Stripe si collega dall'app.** In Admin → Impostazioni un admin incolla una chiave con restrizioni dell'account Stripe del gruppo: l'app controlla i permessi e prepara da sola il webhook, e i pagamenti con carta arrivano sull'account del gruppo. Dove chi ospita l'app ha già messo le chiavi, resta tutto com'è.
 
 ## [1.26.0] — 9 ottobre 2026
 

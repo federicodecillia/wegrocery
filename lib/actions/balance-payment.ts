@@ -28,7 +28,7 @@ export async function startBalancePayment(): Promise<BalancePaymentResult> {
     const { memberId } = await requireActiveMember();
     const [member, settings] = await Promise.all([getMemberById(memberId), getPaymentSettings()]);
     if (!member || settings.mode !== "per_order" || member.paysOffline) return refuse(t.balance.nothingToPay);
-    const stripe = settings.onlineTopupAvailable ? getStripe() : null;
+    const stripe = settings.onlineTopupAvailable ? await getStripe() : null;
     if (!stripe) return refuse(t.order.pay.unavailable);
 
     const db = getDb();

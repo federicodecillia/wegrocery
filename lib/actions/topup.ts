@@ -43,7 +43,7 @@ export async function startOnlineTopup(amountInput: string): Promise<StartTopupR
   // Switched off in Impostazioni, or no usable key on this deploy.
   const settings = await getPaymentSettings();
   // A pay-per-order group has no wallet to top up.
-  const stripe = settings.onlineTopupAvailable && settings.mode === "wallet" ? getStripe() : null;
+  const stripe = settings.onlineTopupAvailable && settings.mode === "wallet" ? await getStripe() : null;
   if (!stripe) return { error: t.topup.unavailable };
 
   const member = await getMemberById(memberId);

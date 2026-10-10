@@ -351,6 +351,26 @@ export const groupIdentity = pgTable(
   ],
 );
 
+// The group's Stripe account connected from the app
+// (drizzle/0035_stripe_connection.sql). At most one row, id = 1. The two
+// secrets are sealed (lib/payments/stripe-secret-box.ts) and read only through
+// getStripeCredentials (lib/payments/stripe-credentials.ts), which ignores the
+// row while STRIPE_SECRET_KEY is set.
+export const stripeConnection = pgTable(
+  "stripe_connection",
+  {
+    id: integer("id").primaryKey().default(1),
+    secretKeyEnc: text("secret_key_enc").notNull(),
+    webhookSecretEnc: text("webhook_secret_enc").notNull(),
+    webhookEndpointId: text("webhook_endpoint_id").notNull(),
+    livemode: boolean("livemode").notNull(),
+    accountLabel: text("account_label"),
+    connectedAt: timestamp("connected_at", { withTimezone: true }).notNull(),
+    connectedBy: text("connected_by").notNull(),
+  },
+  (table) => [check("stripe_connection_single_row", sql`${table.id} = 1`)],
+);
+
 // Payment settings chosen by the admins in Impostazioni
 // (drizzle/0019_payment_settings_and_drafts.sql). At most one row, id = 1; no
 // row = the brand defaults. Read it through getPaymentSettings

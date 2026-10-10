@@ -60,7 +60,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 │                               #   access.ts: pure checkAccess/sessionClaims (no imports, used by proxy.ts)
 ├── proxy.ts                     # Redirect unauthenticated to /login (Next.js 16's middleware)
 ├── auth.ts                     # Better Auth instance, auth() (session + member), signOut()
-├── drizzle/                    # SQL migrations (0000–0034)
+├── drizzle/                    # SQL migrations (0000–0035)
 ├── console/                    # WeGrocery Console: separate Next.js app (own package.json, registry DB, Vercel project with
 │                               #   Root Directory `console`) for the operator's fleet; excluded from the root tsc/eslint/vitest; see console/README.md
 └── public/logo.png
@@ -426,6 +426,26 @@ All four emit `order_adjusted` or `order_corrected` notifications and `audit_log
   needs Checkout Sessions: Write, PaymentIntents: Read and, since 1.15.0,
   Refunds: Read (`charge.refunded` re-lists the charge's refunds); without it
   every `charge.refunded` answers 500.
+- **In-app connection** (migration 0035, table `stripe_connection`, one row):
+  without `STRIPE_SECRET_KEY` an admin connects the group's own account from
+  Impostazioni → Collegamento a Stripe (`components/admin/stripe-connection-card.tsx`,
+  also in the setup wizard's payments step) by pasting a restricted key
+  (Checkout Sessions write, PaymentIntents read, Refunds write, Webhook
+  Endpoints write). `adminConnectStripe` (`lib/actions/admin-stripe.ts`, pure
+  rules in `lib/payments/stripe-connect.ts`) checks mode and permissions with
+  list calls, replaces endpoints with exactly our URL, creates the webhook
+  endpoint (`REQUIRED_STRIPE_EVENTS`, SDK API version) and stores key and
+  endpoint secret sealed with AES-256-GCM under a key derived from
+  `AUTH_SECRET` (`lib/payments/stripe-secret-box.ts`): rotating `AUTH_SECRET`
+  makes them unreadable and the card asks to reconnect. Disconnect (and
+  replacing a working connection) is refused while a checkout of the last 3
+  days is pending, a refund is requested/pending or a per_order cycle is
+  running or unsettled. **The env always wins**: everything reads
+  `getStripeCredentials()` (`lib/payments/stripe-credentials.ts`: env, else
+  the row, same live/test policy via `applyStripeKeyPolicy`; per-request plus
+  30 s module cache, a missing table = not connected), and with
+  `STRIPE_SECRET_KEY` set it never queries the database. `getStripe()` is
+  async; refusals for the demo (`DEMO_MODE`), where every visitor is an admin.
 - Flow: `startOnlineTopup` (`lib/actions/topup.ts`) validates the amount
   (0,50-300 €; 0,50 is Stripe's EUR minimum charge), inserts a `pending` payment and opens a hosted Checkout Session
   (idempotency key = paymentId, 30 min expiry) whose success/cancel URLs point

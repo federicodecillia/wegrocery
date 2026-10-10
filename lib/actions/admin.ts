@@ -1160,7 +1160,7 @@ export async function adminSettleCycle(cycleId: string): Promise<SettleResult | 
   try {
     const admin = await requireAdmin();
     const db = getDb();
-    const result = await settleCycle(db, cycleId, { by: admin.email, stripe: getStripe() });
+    const result = await settleCycle(db, cycleId, { by: admin.email, stripe: await getStripe() });
     await writeAudit(db, admin.email, "settle_cycle", "cycle", cycleId, result);
     revalidatePath("/admin");
     revalidatePath("/storico");

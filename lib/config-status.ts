@@ -1,6 +1,6 @@
 import { MIGRATIONS } from "./migrations";
 import { MIN_SECRET_LENGTH } from "./instance-stats/constants";
-import { REQUIRED_STRIPE_EVENTS, resolveStripeKey } from "./payments/config";
+import { REQUIRED_STRIPE_EVENTS, resolveStripeKey, stripeModeRefusal } from "./payments/config";
 
 export { MIGRATIONS };
 
@@ -25,6 +25,10 @@ export type ConfigFacts = {
   // Whether the admins set the group's name in the app (group_identity):
   // then no brand JSON is needed.
   identityInApp?: boolean;
+  // The group's Stripe account connected by an admin in the app
+  // (stripe_connection), used only while STRIPE_SECRET_KEY is unset: its
+  // mode, or "unreadable" when its secrets no longer open (AUTH_SECRET changed).
+  stripeInApp?: { livemode: boolean } | "unreadable";
 };
 
 export type ConfigItemId =
@@ -79,14 +83,25 @@ function email(env: Env): ConfigItem {
   return { ...base, status: "ok" };
 }
 
-function stripe(env: Env): ConfigItem {
+function stripe(env: Env, facts: ConfigFacts): ConfigItem {
   const base = {
     id: "stripe",
     required: false,
     vars: ["STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET"],
     detail: REQUIRED_STRIPE_EVENTS,
   } as const;
-  if (!set(env.STRIPE_SECRET_KEY)) return { ...base, status: "off" };
+  if (!set(env.STRIPE_SECRET_KEY)) {
+    // Connected by an admin in the app: the app created the webhook endpoint
+    // itself, so its events need no listing.
+    const { detail: _events, ...inApp } = base;
+    void _events;
+    if (facts.stripeInApp === "unreadable") return { ...inApp, status: "warning", note: "reconnectStripe" };
+    if (facts.stripeInApp) {
+      const refusal = stripeModeRefusal(facts.stripeInApp.livemode, env);
+      return refusal ? { ...inApp, status: "warning", note: refusal } : { ...inApp, status: "ok", note: "connectedInApp" };
+    }
+    return { ...base, status: "off" };
+  }
   const key = resolveStripeKey(env);
   if (!key.enabled) return { ...base, status: "warning", note: key.reason };
   if (!set(env.STRIPE_WEBHOOK_SECRET)) return { ...base, status: "warning", note: "noWebhookSecret" };
@@ -153,7 +168,7 @@ export function configStatus(env: Env, facts: ConfigFacts): ConfigItem[] {
         : { status: "warning" as const, note: "noBaseUrl" }),
     },
     email(env),
-    stripe(env),
+    stripe(env, facts),
     {
       id: "membership",
       required: false,

@@ -725,6 +725,8 @@ export const it = {
         liveKeyOutsideProduction: "Chiave live fuori dalla produzione: pagamenti disattivati.",
         testKeyInProduction: "Chiave di test in produzione: pagamenti disattivati.",
         stripeEvents: "Eventi da attivare sull'endpoint del webhook:",
+        connectedInApp: "Collegato da un admin dal riquadro «Collegamento a Stripe», tra le impostazioni dei pagamenti.",
+        reconnectStripe: "Il collegamento a Stripe salvato non si legge più (è cambiata AUTH_SECRET): ricollegalo dal riquadro «Collegamento a Stripe».",
         shortStatsSecret: "Il segreto è troppo corto (servono almeno 32 caratteri): le statistiche restano chiuse.",
       } as Record<string, string>,
       groups: {
@@ -763,7 +765,7 @@ export const it = {
         ],
         stripe: [
           "Ricariche e pagamenti degli ordini con carta, sull'account Stripe del gruppo.",
-          "Sull'account Stripe del gruppo crea una chiave ristretta (Checkout Sessions: scrittura, PaymentIntents: lettura, Refunds: scrittura) e un webhook verso <indirizzo dell'app>/api/stripe/webhook con gli eventi qui sotto, poi metti STRIPE_SECRET_KEY e STRIPE_WEBHOOK_SECRET. Prova prima con le chiavi di test.",
+          "Lo collega un admin dal riquadro «Collegamento a Stripe», tra le impostazioni dei pagamenti: incolla una chiave ristretta dell'account Stripe del gruppo e l'app prepara da sola il webhook. In alternativa chi ospita l'app mette STRIPE_SECRET_KEY e STRIPE_WEBHOOK_SECRET (con un webhook verso <indirizzo dell'app>/api/stripe/webhook e gli eventi qui sotto), che hanno la precedenza. Prova prima con le chiavi di test.",
         ],
         membership: [
           "Fa entrare solo chi ha la tessera valida su WallyFor, e crea da solo il socio al primo accesso.",
@@ -1662,6 +1664,65 @@ export const it = {
         saved: "Impostazione salvata",
         offNote: "Spegnendole, le famiglie già formate restano: non se ne possono creare di nuove.",
       },
+      stripeConnection: {
+        title: "Collegamento a Stripe",
+        moneyNote: "I pagamenti con carta arrivano direttamente sull'account Stripe del gruppo, non a chi gestisce l'app.",
+        hostManaged:
+          "Configurato da chi ospita l'app: la chiave e il webhook stanno nelle variabili d'ambiente (STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET) e da qui non si cambiano.",
+        notConnected: "Non collegato: i soci non possono pagare con carta.",
+        stepsTitle: "Come collegarlo",
+        steps: [
+          "Crea l'account Stripe del gruppo su stripe.com, o accedi a quello che avete già.",
+          "Vai in Sviluppatori → Chiavi API e scegli Crea chiave con restrizioni.",
+          "Dai questi permessi: Checkout Sessions scrittura, PaymentIntents lettura, Refunds scrittura, Webhook Endpoints scrittura. Lascia gli altri su Nessuno.",
+          "Comincia con una chiave di test (inizia con rk_test_) e prova una ricarica; per l'app vera serve poi la chiave live (rk_live_).",
+          "Incolla qui la chiave e premi Collega: l'app controlla i permessi e crea da sola il webhook.",
+        ],
+        keyLabel: "Chiave con restrizioni di Stripe",
+        keyHelp: "Resta cifrata nel database e non si rivede più. Per cambiarla, incollane una nuova.",
+        replaceLabel: "Cambia chiave",
+        replaceHelp: "Per passare dalla chiave di test a quella live, o a un altro account, incolla la nuova chiave.",
+        connect: "Collega",
+        reconnect: "Ricollega",
+        connecting: "Collegamento…",
+        connectedToast: "Stripe collegato",
+        connectedTitle: "Collegato",
+        modeTest: "modalità test: nessun addebito reale",
+        modeLive: "modalità live: pagamenti reali",
+        account: (label: string) => `Account: ${label}`,
+        since: (date: string, who: string) => `Collegato il ${date} da ${who}`,
+        unreadable:
+          "Il collegamento salvato non si legge più: è cambiata la chiave delle sessioni (AUTH_SECRET). Incolla di nuovo la chiave per ricollegarlo.",
+        disconnect: "Scollega Stripe",
+        disconnecting: "Scollegamento…",
+        disconnectConfirm: "Scollegare Stripe?",
+        disconnectMessage: "I pagamenti con carta si spengono finché non lo ricolleghi. Il webhook creato dall'app viene tolto.",
+        disconnectedToast: "Stripe scollegato",
+        levels: { read: "lettura", write: "scrittura" },
+        errors: {
+          envSet: "Stripe è configurato da chi ospita l'app: da qui non si cambia.",
+          demo: "Nella demo Stripe non si collega.",
+          noAuthSecret: "Manca AUTH_SECRET: senza non posso custodire la chiave. Chiedi a chi ospita l'app.",
+          empty: "Incolla la chiave.",
+          publishable: "Questa è la chiave pubblicabile (pk_): serve una chiave con restrizioni (rk_) o segreta (sk_).",
+          format: "Non sembra una chiave Stripe: deve iniziare con rk_test_, rk_live_, sk_test_ o sk_live_.",
+          liveKeyOutsideProduction: "È una chiave live ma questo non è l'ambiente reale: usa una chiave di test.",
+          testKeyInProduction: "È una chiave di test ma questo è l'ambiente reale: usa la chiave live.",
+          noBaseUrl:
+            "Manca l'indirizzo pubblico dell'app (APP_BASE_URL): Stripe non saprebbe dove mandare le conferme di pagamento.",
+          invalidKey: "Stripe non riconosce questa chiave: controlla di averla copiata per intero e che non sia stata revocata.",
+          missingPermission: (name: string, level: string) =>
+            `Alla chiave manca il permesso ${name}: ${level}. Modificala su Stripe e riprova.`,
+          rejected: (url: string) => `Stripe ha rifiutato l'indirizzo del webhook ${url}: serve un indirizzo pubblico in https.`,
+          unreachable: "Non riesco a parlare con Stripe: riprova tra poco.",
+          blocked: "Non ancora:",
+          blockers: {
+            pendingPayments: "ci sono pagamenti con carta in corso: aspetta che si concludano (di solito mezz'ora).",
+            openRefunds: "ci sono rimborsi in corso: aspetta che Stripe li completi.",
+            unsettledCycles: "ci sono cicli pagati con carta aperti o con i conti da chiudere (Admin → Ciclo → Chiudi i conti).",
+          },
+        },
+      },
       mode: {
         title: "Modalità di pagamento",
         wallet: "Borsellino: i soci ricaricano un saldo e gli ordini si addebitano alla chiusura.",
@@ -1709,7 +1770,7 @@ export const it = {
       onlineHint: "Con carta o con gli altri metodi di Stripe. Il saldo si aggiorna da solo.",
       testMode: "modalità test",
       stripeUnavailable: {
-        missing: "Questo ambiente non ha le chiavi Stripe: chiedi a chi gestisce l'app.",
+        missing: "Stripe non è collegato: collegalo dal riquadro «Collegamento a Stripe» qui sotto.",
         liveKeyOutsideProduction:
           "La chiave Stripe è di produzione ma questo ambiente non lo è: il pagamento online resta spento.",
         testKeyInProduction:

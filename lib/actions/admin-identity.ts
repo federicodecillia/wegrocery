@@ -171,7 +171,7 @@ export type StripeSetupCheck = WebhookCheck | { status: "off" } | { status: "unv
 // compares the one pointing at this app with the events it needs.
 export async function adminCheckStripeWebhook(): Promise<StripeSetupCheck> {
   await requireAdmin();
-  const stripe = getStripe();
+  const stripe = await getStripe();
   if (!stripe) return { status: "off" };
   const base = getAppBaseUrl();
   if (!base) return { status: "noBaseUrl" };

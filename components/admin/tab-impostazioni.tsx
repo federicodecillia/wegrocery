@@ -15,14 +15,15 @@ import { PaymentSettingsForm } from "./impostazioni-form";
 import { PaymentModeCard } from "./payment-mode-card";
 import { SearchMissesCard } from "./search-misses-card";
 import { SetupBanner } from "./setup/setup-banner";
+import { StripeConnectionCard } from "./stripe-connection-card";
 
 // An amount in euros as the form's text input shows it; "" = no limit.
 function toInput(euros: number | null): string {
   return euros === null ? "" : formatAmountInput(euros);
 }
 
-// The payment mode and the payment settings, shared with the first-run setup
-// (app/admin/avvio).
+// The payment mode, the payment settings and the Stripe connection, shared
+// with the first-run setup (app/admin/avvio).
 export async function PaymentSettingsSection() {
   const [settings, modeState] = await Promise.all([getPaymentSettings(), readModeChangeState(getDb())]);
   const savedAt = settings.savedAt?.toISOString() ?? null;
@@ -65,6 +66,7 @@ export async function PaymentSettingsSection() {
         savedAt={savedAt}
         showLimits={settings.mode === "wallet"}
       />
+      <StripeConnectionCard />
     </>
   );
 }
