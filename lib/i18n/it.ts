@@ -684,9 +684,9 @@ export const it = {
         `Rimborsi inviati ${sent}, in attesa ${waiting}, da saldare ${due}, abbuoni ${writeOffs}`,
     },
     configStatus: {
-      title: "Stato della configurazione",
+      title: "Impostazioni tecniche",
       intro:
-        "Cosa è collegato in questa installazione. I valori stanno nelle variabili d'ambiente del progetto su Vercel: qui compaiono solo i nomi.",
+        "Queste voci non si cambiano da qui: sono variabili del progetto su Vercel, che imposta chi ospita l'app. Per attivarne una, apri la voce e passa le istruzioni a chi gestisce l'installazione. Qui compaiono solo i nomi, mai i valori.",
       status: { ok: "OK", missing: "Manca", warning: "Da controllare", off: "Spento" },
       required: "obbligatorio",
       items: {
@@ -727,6 +727,57 @@ export const it = {
         stripeEvents: "Eventi da attivare sull'endpoint del webhook:",
         shortStatsSecret: "Il segreto è troppo corto (servono almeno 32 caratteri): le statistiche restano chiuse.",
       } as Record<string, string>,
+      groups: {
+        essential: "Essenziali",
+        optional: "Facoltative",
+      },
+      howTo: "A cosa serve e come attivarla",
+      help: {
+        database: [
+          "Dove l'app salva soci, ordini e saldi (Postgres su Neon).",
+          "Crea un progetto su neon.tech in una regione UE, copia la stringa di connessione e mettila in DATABASE_URL. Con MIGRATE_ON_BUILD=true le migrazioni si applicano a ogni deploy.",
+        ],
+        authSecret: [
+          "Firma le sessioni di chi ha fatto l'accesso.",
+          "Genera un valore lungo e casuale (sul Mac: openssl rand -base64 32) e mettilo in AUTH_SECRET. Se lo cambi, tutti devono rifare l'accesso.",
+        ],
+        signIn: [
+          "Come entrano i soci: link e codice via email, e Google se lo vuoi.",
+          "Per l'email basta la voce \"Invio delle email\". Per Google crea un client OAuth su console.cloud.google.com con indirizzo di ritorno <indirizzo dell'app>/api/auth/callback/google, poi metti AUTH_GOOGLE_ID e AUTH_GOOGLE_SECRET.",
+        ],
+        firstAdmin: [
+          "Chi diventa admin al primo accesso di un'installazione nuova.",
+          "Metti l'email in BOOTSTRAP_ADMIN_EMAIL e accedi con quell'indirizzo. Quando c'è un admin la variabile si può togliere.",
+        ],
+        baseUrl: [
+          "L'indirizzo dell'app nei link delle email.",
+          "Metti in APP_BASE_URL l'indirizzo pubblico, per esempio https://gas.esempio.it. Su Vercel, se manca, si usa l'indirizzo di produzione del progetto.",
+        ],
+        email: [
+          "Link di accesso, notifiche ai soci e ordini ai fornitori.",
+          "Crea un account su resend.com, verifica il dominio del gruppo (alcuni record DNS), crea una chiave di solo invio e metti RESEND_API_KEY e MAIL_FROM (per esempio: GAS Riva <noreply@gasriva.it>).",
+        ],
+        brand: [
+          "Nome, logo e colori di partenza, più lingua, valuta e fuso orario.",
+          "Nome, logo e colori si cambiano in cima a questa pagina. NEXT_PUBLIC_BRAND_JSON serve solo per lingua, valuta e fuso orario, scelti una volta all'installazione.",
+        ],
+        stripe: [
+          "Ricariche e pagamenti degli ordini con carta, sull'account Stripe del gruppo.",
+          "Sull'account Stripe del gruppo crea una chiave ristretta (Checkout Sessions: scrittura, PaymentIntents: lettura, Refunds: scrittura) e un webhook verso <indirizzo dell'app>/api/stripe/webhook con gli eventi qui sotto, poi metti STRIPE_SECRET_KEY e STRIPE_WEBHOOK_SECRET. Prova prima con le chiavi di test.",
+        ],
+        membership: [
+          "Fa entrare solo chi ha la tessera valida su WallyFor, e crea da solo il socio al primo accesso.",
+          "Chiedi a WallyFor la chiave API e il numero esercente del gruppo e mettili in WALLYFOR_API_KEY e WALLYFOR_MERCHANT_ID. Senza, entra solo chi è già in Soci.",
+        ],
+        sentry: [
+          "Manda a chi gestisce l'app un'email quando qualcosa va in errore, senza dati dei soci.",
+          "Crea un progetto Next.js gratuito su sentry.io (regione UE), copia il DSN da Settings, Client Keys, e mettilo in SENTRY_DSN, solo per la produzione.",
+        ],
+        fleet: [
+          "Serve solo a chi gestisce più gruppi: la sua console legge numeri anonimi (soci, cicli, ordini, versione) senza entrare nel database. Per il gruppo non cambia nulla.",
+          "Genera un segreto (openssl rand -hex 32), mettilo in INSTANCE_STATS_SECRET e incollalo uguale nella console, alla voce Aggiungi istanza esistente. Un segreto diverso per ogni installazione.",
+        ],
+      } as Record<string, readonly [string, string]>,
       variables: "Variabili:",
     },
     common: {
