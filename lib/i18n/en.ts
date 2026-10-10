@@ -1495,6 +1495,11 @@ export const en: Strings = {
         body: "Name, logo, colours, payments and checks: a few minutes, once.",
         cta: "Start",
       },
+      revisit: {
+        title: "Guided setup",
+        body: "Go through name, logo, colours, contacts, payments and checks (test email, Stripe webhook) again in a few steps.",
+        cta: "Open",
+      },
       checks: {
         intro: "The services' keys (email, online payments) live in the project's settings on Vercel, not in the app: here you only see what is connected and can try it.",
         testEmail: "Send a test email",

@@ -14,6 +14,7 @@ import { GroupInfoCard } from "./group-info-card";
 import { PaymentSettingsForm } from "./impostazioni-form";
 import { PaymentModeCard } from "./payment-mode-card";
 import { SearchMissesCard } from "./search-misses-card";
+import { SetupBanner } from "./setup/setup-banner";
 
 // An amount in euros as the form's text input shows it; "" = no limit.
 function toInput(euros: number | null): string {
@@ -88,6 +89,7 @@ export async function TabImpostazioni() {
   const [settings, config, misses] = await Promise.all([getPaymentSettings(), getConfigStatus(), getGuideSearchMisses()]);
   return (
     <div className="space-y-4">
+      <SetupBanner revisit />
       <IdentitySection section="identity" />
       <IdentitySection section="contacts" />
       <PaymentSettingsSection />
