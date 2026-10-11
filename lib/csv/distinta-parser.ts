@@ -41,6 +41,10 @@ export type DistintaImportPreview = {
   shippingChanges: DistintaShippingChange[];
   warnings: string[];
   errors: string[];
+  // What the file was matched against, so the screen can say why nothing
+  // changed: products and members recognized, and how many ordered lines
+  // were compared with the amounts on record.
+  matched: { products: number; members: number; lines: number };
 };
 
 // ── Format-agnostic intermediate shape ──
@@ -269,7 +273,15 @@ async function collectViaCsv(grid: string[][], expectedCycleId: string): Promise
       shippingGridRow = r;
       break;
     }
-    if (!first) continue; // blank separator row
+    if (!first) {
+      // A blank separator row has nothing in the member columns; a row whose
+      // product name was cleared but still carries amounts is skipped too,
+      // and says so instead of vanishing.
+      if (memberCols.some((c) => (row[c] ?? "").trim() !== "")) {
+        warnings.push(t.errors.distintaCsvRowWithoutProduct(r + 1));
+      }
+      continue;
+    }
     const variant = (row[1] ?? "").trim();
     const key = norm(`${first} ${variant}`);
     const hit = productByKey.get(key);
@@ -319,9 +331,13 @@ async function buildPreviewFromRaw(c: Collected): Promise<DistintaImportPreview>
   const { cycleId } = c;
   const warnings = [...c.warnings];
   const errors = [...c.errors];
-  if (errors.length > 0) {
-    return { cycleId, cycleTitle: c.cycleTitle, corrections: [], shippingChanges: [], warnings, errors };
-  }
+  const matched = {
+    products: new Set(c.cells.map((x) => x.productId)).size,
+    members: new Set([...c.cells, ...c.shipping].map((x) => x.memberId)).size,
+    lines: 0,
+  };
+  const base = { cycleId, cycleTitle: c.cycleTitle, corrections: [], shippingChanges: [], warnings, errors, matched };
+  if (errors.length > 0) return base;
 
   const db = getDb();
 
@@ -332,11 +348,11 @@ async function buildPreviewFromRaw(c: Collected): Promise<DistintaImportPreview>
     .limit(1);
   if (!cycle) {
     errors.push(t.errors.cycleNoLongerInDb);
-    return { cycleId, cycleTitle: c.cycleTitle, corrections: [], shippingChanges: [], warnings, errors };
+    return base;
   }
   if (cycle.status !== "closed") {
     errors.push(t.errors.cycleNotClosedDistinta);
-    return { cycleId, cycleTitle: cycle.title, corrections: [], shippingChanges: [], warnings, errors };
+    return { ...base, cycleTitle: cycle.title };
   }
 
   const lines = await db
@@ -381,6 +397,7 @@ async function buildPreviewFromRaw(c: Collected): Promise<DistintaImportPreview>
       }
       continue;
     }
+    matched.lines++;
     if (newTotal == null) {
       warnings.push(`${memberName} · ${productName}: valore non leggibile come numero — ignorato.`);
       continue;
@@ -414,7 +431,7 @@ async function buildPreviewFromRaw(c: Collected): Promise<DistintaImportPreview>
     shippingChanges.push({ memberId, memberName, oldShipping, newShipping });
   }
 
-  return { cycleId, cycleTitle: cycle.title, corrections, shippingChanges, warnings, errors };
+  return { cycleId, cycleTitle: cycle.title, corrections, shippingChanges, warnings, errors, matched };
 }
 
 // ── exceljs adapter (.xlsx) ──
@@ -471,6 +488,31 @@ export function parseCsv(text: string): string[][] {
   return rows;
 }
 
+// CSV bytes → text. Excel on Windows saves "CSV (delimitato)" in the ANSI
+// code page (Windows-1252 for Italian), not UTF-8: accented names would turn
+// into U+FFFD and stop matching. Bytes that are not valid UTF-8 are read as
+// Windows-1252 instead.
+export function decodeCsvText(buf: Buffer): string {
+  try {
+    return new TextDecoder("utf-8", { fatal: true }).decode(buf);
+  } catch {
+    // Decoded by hand: Node's TextDecoder reads "windows-1252" as Latin-1 when
+    // built without full ICU, which loses € and the curly quotes (0x80-0x9F).
+    let out = "";
+    for (const byte of buf) {
+      out += byte >= 0x80 && byte <= 0x9f ? (CP1252_HIGH[byte - 0x80] ?? "") : String.fromCharCode(byte);
+    }
+    return out;
+  }
+}
+// Windows-1252 0x80-0x9F (undefined positions decode to nothing).
+const CP1252_HIGH = [
+  "\u20ac", "", "\u201a", "\u0192", "\u201e", "\u2026", "\u2020", "\u2021",
+  "\u02c6", "\u2030", "\u0160", "\u2039", "\u0152", "", "\u017d", "",
+  "", "\u2018", "\u2019", "\u201c", "\u201d", "\u2022", "\u2013", "\u2014",
+  "\u02dc", "\u2122", "\u0161", "\u203a", "\u0153", "", "\u017e", "\u0178",
+];
+
 // Picks the collector by file format. Extension drives detection; if absent we
 // sniff the magic bytes (zip → .xlsx/.ods, otherwise text → .csv).
 function detectFormat(fileBuffer: Buffer, fileName?: string): "xlsx" | "ods" | "csv" {
@@ -498,11 +540,12 @@ export async function parseSupplierDistinta(
     shippingChanges: [],
     warnings: [],
     errors: [t.errors.distintaOpenError(e instanceof Error ? e.message : "errore sconosciuto")],
+    matched: { products: 0, members: 0, lines: 0 },
   });
 
   try {
     if (format === "csv") {
-      const grid = parseCsv(fileBuffer.toString("utf8"));
+      const grid = parseCsv(decodeCsvText(fileBuffer));
       return await buildPreviewFromRaw(await collectViaCsv(grid, expectedCycleId));
     }
     if (format === "ods") {

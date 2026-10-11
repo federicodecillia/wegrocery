@@ -311,6 +311,16 @@ export function SupplierSteps({ cycleId }: { cycleId: string }) {
               }))}
             />
 
+            {preview.errors.length === 0 &&
+              preview.corrections.length === 0 &&
+              preview.shippingChanges.length === 0 && (
+                <p role="status" className="rounded-lg border border-brand-border bg-brand-warm-white p-3 text-[12px] text-brand-near-black">
+                  {preview.matched.lines === 0
+                    ? sa.nothingMatched
+                    : sa.nothingChanged(preview.matched.products, preview.matched.members)}
+                </p>
+              )}
+
             {preview.warnings.length > 0 && (
               <div className="rounded-lg border border-primary/30 bg-primary-soft p-3 text-[12px] text-brand-near-black">
                 <div className="mb-1 font-bold text-primary-text">{t.admin.supplierActions.warningsTitle}</div>

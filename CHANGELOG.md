@@ -20,6 +20,10 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ## [Unreleased]
 
+### Fixed
+
+- 🧾 **Supplier sheet upload says why there is nothing to apply.** Instead of two empty lists, the preview tells how many products and members it recognized and that every amount already matches, or that nothing in the file could be matched. A CSV saved by Excel on Windows now keeps accented names.
+
 ## [1.26.0] — 2026-10-09
 
 *A cleaner app on every screen, card payment for a single cycle, and the bank transfer reference filled in for you.*

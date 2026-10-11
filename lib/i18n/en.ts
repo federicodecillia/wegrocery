@@ -1403,6 +1403,10 @@ export const en: Strings = {
       applyButton: "Apply changes",
       applying: "Applying…",
       nothingToApply: "No changes to apply",
+      nothingMatched:
+        "The file has no product rows and member columns to compare with this cycle. Check that it is the sheet downloaded from the app for this cycle, or upload the original .xlsx file.",
+      nothingChanged: (products: number, members: number) =>
+        `File read: ${products} ${products === 1 ? "product" : "products"} and ${members} ${members === 1 ? "member" : "members"} recognized, but every amount matches what is already recorded, so there is nothing to apply. This happens when the supplier changed no cell or the corrections were already applied (see Accounts).`,
       cannotReadFile: "Cannot read file",
       errorReadingFile: "Error reading file",
       appliedSuccess: (corrections: number, shipping: number, members: number) => {
@@ -1843,6 +1847,8 @@ export const en: Strings = {
       `Member column "${name}" is ambiguous (several members share the name) — skipped.`,
     distintaCsvProductUnmatched: (name: string) =>
       `Product "${name}" not recognized — row skipped. (CSV matches by name: check it wasn't renamed.)`,
+    distintaCsvRowWithoutProduct: (row: number) =>
+      `CSV row ${row}: it has amounts but no product name, row skipped.`,
     distintaCsvProductAmbiguous: (name: string) =>
       `Product "${name}" is ambiguous (several products share the name) — row skipped.`,
     cancelReasonRequired: "The cancellation reason is required",

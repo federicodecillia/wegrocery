@@ -21,6 +21,10 @@ stanno nella PR.
 
 ## [Non rilasciato]
 
+### Risolto
+
+- 🧾 **Il caricamento della distinta dice perché non c'è niente da applicare.** Al posto di due elenchi vuoti, l'anteprima dice quanti prodotti e soci ha riconosciuto e che gli importi sono già uguali, oppure che nel file non ha trovato niente da confrontare. Un CSV salvato da Excel su Windows non perde più gli accenti nei nomi.
+
 ## [1.26.0] — 9 ottobre 2026
 
 *Un'app più ordinata su ogni schermo, il pagamento con carta per un singolo ciclo e la causale del bonifico già compilata.*
