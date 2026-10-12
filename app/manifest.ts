@@ -1,8 +1,10 @@
 import type { MetadataRoute } from "next";
-import { brand, resolvePalette } from "@/lib/brand";
+import { resolvePalette } from "@/lib/brand";
+import { getBrand } from "@/lib/brand/get-brand";
 import { iconPath, MANIFEST_ICONS } from "@/lib/pwa/icons";
 
-export default function manifest(): MetadataRoute.Manifest {
+export default async function manifest(): Promise<MetadataRoute.Manifest> {
+  const brand = await getBrand();
   return {
     name: brand.appName,
     short_name: brand.shortName,

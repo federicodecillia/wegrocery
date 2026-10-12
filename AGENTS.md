@@ -21,7 +21,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 │   ├── profilo/page.tsx        # Profile (header avatar): name, emails, card, family, notifications, money, app, sign-out (privacy stays in the footer)
 │   ├── guida/page.tsx          # Guide index: "Il nostro gruppo" (admin text), search, topics, news; cards in guida/[topic] (content in lib/guide)
 │   ├── admin/page.tsx          # Admin: Ciclo ("Da fare ora" on top, lib/admin/cycle-phase.ts; workspace: cycle list + Panoramica/Prodotti/Ordini/Fornitore/Conti, components/admin/cycle-workspace.tsx, lib/admin/cycle-views.ts) · Cassa · Soci · Catalogo (Prodotti, Fornitori) · ⋯ Statistiche, Impostazioni (lib/admin/nav.ts; old ?tab= links resolve)
+│   ├── admin/avvio/page.tsx    # First-run setup wizard (lib/admin/setup-steps.ts), offered by a banner while group_identity.setup_completed_at is null
+│   ├── brand/[file]/route.ts   # Uploaded logo (/brand/logo-<ms>.<ext>), public, immutable cache
 │   ├── login/page.tsx          # Login with Google
+│   ├── api/instance-stats/     # Signed anonymous counts for the operator console (404 without a valid signature)
 │   └── api/auth/[...all]/      # Better Auth handler, limited to lib/auth/public-endpoints.ts
 ├── components/
 │   ├── app-shell.tsx           # Async layout wrapper: header (logo, top nav from lg, bell, Profile avatar on one row) + bottom nav
@@ -57,7 +60,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 │                               #   access.ts: pure checkAccess/sessionClaims (no imports, used by proxy.ts)
 ├── proxy.ts                     # Redirect unauthenticated to /login (Next.js 16's middleware)
 ├── auth.ts                     # Better Auth instance, auth() (session + member), signOut()
-├── drizzle/                    # SQL migrations (0000–0033)
+├── drizzle/                    # SQL migrations (0000–0035)
+├── console/                    # WeGrocery Console: separate Next.js app (own package.json, registry DB, Vercel project with
+│                               #   Root Directory `console`) for the operator's fleet; excluded from the root tsc/eslint/vitest; see console/README.md
 └── public/logo.png
 ```
 
@@ -81,6 +86,10 @@ npm run test:int     # Integration tests on a test database (see below)
 
 **Configuration status**: `configStatus` (`lib/config-status.ts`, pure) lists what a deploy has set up, by variable name and state, never a value: the card in admin → Impostazioni and `npm run doctor` show it. A new migration goes in `lib/migrations.ts` too (a test compares it with `drizzle/`); a new environment variable gets an item there, a line in `.env.example` and a row in `docs/upgrading.md`. `MIGRATE_ON_BUILD=true` makes `npm run build` apply pending migrations first, on production builds (and builds outside Vercel) only. **New installations**: `docs/self-hosting.md` (Deploy to Vercel button, keep it in sync with the variables a deploy needs); `BOOTSTRAP_ADMIN_EMAIL` makes its address the first admin while no active admin exists (`lib/auth/admission.ts`). CI applies every migration to an empty database and runs `test/int/fresh-install.int.test.ts` there: a migration must work from `0000` too.
 
+**Runtime identity** (migration 0034, table `group_identity`, one row `id = 1`): name, short name, contacts, URLs, colours and logo can be changed by an admin (admin → Impostazioni, or the first-run wizard at `/admin/avvio`). Server code reads `await getBrand()` (`lib/brand/get-brand.ts`: `NEXT_PUBLIC_BRAND_JSON` merged with the DB overrides, rules in `lib/brand/identity.ts`), never the static `brand` import, for anything a group can change; locale, currency and time zone stay build-time (`brand` is fine for those, and in client components). The logo is stored base64 (PNG/JPEG/WebP checked by magic bytes, 512 KB max, no SVG) and served by `app/brand/[file]`; PWA icons and the manifest follow it. Installs that already had members got a completed row, so the wizard shows only on new installs.
+
+**Instance stats** (`/api/instance-stats`, `lib/instance-stats/`): with `INSTANCE_STATS_SECRET` (32+ chars) set, a GET signed with HMAC-SHA256 of `<ts>.GET./api/instance-stats` (`x-wegrocery-timestamp`, `x-wegrocery-signature`, 5-minute window) returns anonymous counts (members, cycles, orders in 30 days, DB size, config states, pending migrations, version); anything else is a 404. No amounts and no personal data, ever. The `console/` app is the caller.
+
 **Append-only ledger** (since `drizzle/0023_ledger_append_only.sql`): a trigger refuses every UPDATE and DELETE on `ledger_entries`, except setting `reversed_by` once. A correction is `reverseEntry` / `reverseEntrySql` (`lib/ledger-reversal.ts`): a `reversal` row with the opposite amount (`reverses` → the original, which gets `reversed_by`), plus, for an edit, a replacement of the same type (`replaces` → the original, same entry date, no bank reference). Cassa "edit" and "delete", the shipping recompute of a closed cycle and the supplier-sheet import all work this way. **Any filter by type must use `liveLedger`** (`lib/db/ledger-live.ts`: not reversed, not a reversal), or a corrected movement counts twice; plain sums (balances, a cycle's net) are the same either way. Movement lists show live rows only, a replacement with "corrected on <date>". The one-charge-per-member-and-cycle index counts live rows only. Maintenance that must delete rows sets `wegrocery.ledger_maintenance = on` in its own transaction (the integration tests' cleanup); the demo's TRUNCATE does not fire the trigger.
 
 **Money invariants**: `lib/invariants.ts` lists read-only checks that must return no rows (refunded cents match the refunds, every accepted refund is debited, every paid payment credited once, every closed-cycle order charged...). The nightly backup workflow runs them on production (`scripts/check-invariants.mts`, job `invariants`, independent of the dump so a failed backup never skips it); a failure fails the run and the `notify` job opens (or comments on) a GitHub issue. Run them on any database with `node --env-file=<env> node_modules/tsx/dist/cli.mjs scripts/check-invariants.mts`. A new money rule gets a check there and a case in `lib/invariants.int.test.ts`.
@@ -89,11 +98,11 @@ npm run test:int     # Integration tests on a test database (see below)
 
 **Releases**: open the `staging` → `main` PR with `?template=release.md` (`.github/PULL_REQUEST_TEMPLATE/release.md`): upgrade notes, migration before the merge, smoke test on `/api/health`, rollback. The merge to `main` tags `vX.Y.Z` and publishes the GitHub release by itself (`.github/workflows/release.yml`, notes from that version's `CHANGELOG.md` entry, upstream repository only). An installation whose Git deploys Vercel blocks sets the `VERCEL_DEPLOY_HOOK` repository secret: `.github/workflows/deploy-hook.yml` then calls the hook on every push to `main`.
 
-**Health and errors**: `/api/health` (public) returns `{ ok, version, db }`, 503 when the database does not answer. Unexpected errors go through `reportError` (`lib/observability.ts`): always the server log, Sentry too when `SENTRY_DSN` is set (server only, errors only; data collection is off and `beforeSend` cuts the query parameters a driver error quotes; initialized in `instrumentation.ts`). Use it instead of a bare `console.error` for errors someone should look at.
+**Health and errors**: `/api/health` (public) returns `{ ok, version, db }`, 503 when the database does not answer. Unexpected errors go through `reportError` (`lib/observability.ts`): always the server log, Sentry too when `SENTRY_DSN` is set, or `NEXT_PUBLIC_SENTRY_DSN` as Vercel's Sentry integration sets it (server only, errors only; data collection is off and `beforeSend` cuts the query parameters a driver error quotes; initialized in `instrumentation.ts`). Use it instead of a bare `console.error` for errors someone should look at.
 
 **Stripe on staging**: `scripts/stripe-staging-check.mjs` runs real sandbox refunds against the staging deploy; it refuses live keys and any database other than `STAGING_DB_HOST`. The events the webhook endpoint must subscribe to are `REQUIRED_STRIPE_EVENTS` (`lib/payments/config.ts`).
 
-**Deploy**: push to `main` → Vercel auto-deploys production. Development PRs target `staging` and are tested on its Preview deployment before `staging` → `main`; other branches create ordinary preview deployments.
+**Deploy**: push to `main` → Vercel auto-deploys production. Development PRs target `staging` and are tested on its Preview deployment before `staging` → `main`; other branches are not deployed (`git.deploymentEnabled` in `vercel.json`: only `main` and `staging`, since every kept deployment counts toward the Hobby plan's 10 GB of Function Storage; PRs are checked in CI and locally).
 
 **Vercel Root Directory**: repo root (empty / not set)
 
@@ -417,6 +426,26 @@ All four emit `order_adjusted` or `order_corrected` notifications and `audit_log
   needs Checkout Sessions: Write, PaymentIntents: Read and, since 1.15.0,
   Refunds: Read (`charge.refunded` re-lists the charge's refunds); without it
   every `charge.refunded` answers 500.
+- **In-app connection** (migration 0035, table `stripe_connection`, one row):
+  without `STRIPE_SECRET_KEY` an admin connects the group's own account from
+  Impostazioni → Collegamento a Stripe (`components/admin/stripe-connection-card.tsx`,
+  also in the setup wizard's payments step) by pasting a restricted key
+  (Checkout Sessions write, PaymentIntents read, Refunds write, Webhook
+  Endpoints write). `adminConnectStripe` (`lib/actions/admin-stripe.ts`, pure
+  rules in `lib/payments/stripe-connect.ts`) checks mode and permissions with
+  list calls, replaces endpoints with exactly our URL, creates the webhook
+  endpoint (`REQUIRED_STRIPE_EVENTS`, SDK API version) and stores key and
+  endpoint secret sealed with AES-256-GCM under a key derived from
+  `AUTH_SECRET` (`lib/payments/stripe-secret-box.ts`): rotating `AUTH_SECRET`
+  makes them unreadable and the card asks to reconnect. Disconnect (and
+  replacing a working connection) is refused while a checkout of the last 3
+  days is pending, a refund is requested/pending or a per_order cycle is
+  running or unsettled. **The env always wins**: everything reads
+  `getStripeCredentials()` (`lib/payments/stripe-credentials.ts`: env, else
+  the row, same live/test policy via `applyStripeKeyPolicy`; per-request plus
+  30 s module cache, a missing table = not connected), and with
+  `STRIPE_SECRET_KEY` set it never queries the database. `getStripe()` is
+  async; refusals for the demo (`DEMO_MODE`), where every visitor is an admin.
 - Flow: `startOnlineTopup` (`lib/actions/topup.ts`) validates the amount
   (0,50-300 €; 0,50 is Stripe's EUR minimum charge), inserts a `pending` payment and opens a hosted Checkout Session
   (idempotency key = paymentId, 30 min expiry) whose success/cancel URLs point

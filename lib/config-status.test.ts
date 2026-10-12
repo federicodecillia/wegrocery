@@ -84,6 +84,31 @@ describe("configStatus", () => {
     expect(item(wrongMode, "stripe")).toMatchObject({ status: "warning", note: "testKeyInProduction" });
   });
 
+  it("shows a Stripe account connected in the app, unless the env has a key", () => {
+    const live = { ...facts, stripeInApp: { livemode: true } } as const;
+    expect(item(configStatus(complete, live), "stripe")).toEqual({
+      id: "stripe",
+      required: false,
+      vars: ["STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET"],
+      status: "ok",
+      note: "connectedInApp",
+    });
+    // The same mode rules as the env key.
+    const testInProd = { ...facts, stripeInApp: { livemode: false } } as const;
+    expect(item(configStatus(complete, testInProd), "stripe")).toMatchObject({ status: "warning", note: "testKeyInProduction" });
+    expect(item(configStatus({ ...complete, VERCEL_ENV: "preview" }, testInProd), "stripe")).toMatchObject({
+      status: "ok",
+      note: "connectedInApp",
+    });
+    expect(item(configStatus(complete, { ...facts, stripeInApp: "unreadable" }), "stripe")).toMatchObject({
+      status: "warning",
+      note: "reconnectStripe",
+    });
+    // The env key wins: the item reads exactly as before.
+    const env = { ...complete, STRIPE_SECRET_KEY: "sk_live_x", STRIPE_WEBHOOK_SECRET: "whsec" };
+    expect(item(configStatus(env, { ...facts, stripeInApp: "unreadable" }), "stripe")).toEqual(item(configStatus(env, facts), "stripe"));
+  });
+
   it("wants both membership-card variables or none", () => {
     expect(item(configStatus({ ...complete, WALLYFOR_API_KEY: "k" }, facts), "membership").status).toBe("warning");
     expect(
@@ -96,11 +121,22 @@ describe("configStatus", () => {
       status: "warning",
       note: "defaultBrand",
     });
+    // Named in the app by the admins: no brand JSON needed.
+    expect(item(configStatus({ ...complete, NEXT_PUBLIC_BRAND_JSON: "" }, { ...facts, identityInApp: true }), "brand").status).toBe("ok");
     expect(item(configStatus(complete, { ...facts, brandWarnings: ["a", "b"] }), "brand")).toMatchObject({
       status: "warning",
       note: "contrast",
       detail: ["a", "b"],
     });
+  });
+
+  it("opens the fleet stats only with a long enough secret", () => {
+    expect(item(configStatus(complete, facts), "fleet").status).toBe("off");
+    expect(item(configStatus({ ...complete, INSTANCE_STATS_SECRET: "short" }, facts), "fleet")).toMatchObject({
+      status: "warning",
+      note: "shortStatsSecret",
+    });
+    expect(item(configStatus({ ...complete, INSTANCE_STATS_SECRET: "x".repeat(64) }, facts), "fleet").status).toBe("ok");
   });
 
   it("names a brand that does not parse, and the fields it does not know", () => {

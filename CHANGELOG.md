@@ -20,6 +20,21 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ## [Unreleased]
 
+## [1.27.0] — 2026-10-12
+
+*Each new group sets itself up from the app: name, logo, colours and Stripe, with every technical setting explained.*
+
+### Added
+- 🎨 **Name, logo and colours set from the app.** Admins change the group's name, logo, colours, contact addresses and links in Settings, with a live preview and a readability check: no redeploy, and the phone icon follows.
+- 🧭 **First-run setup for a new group.** The first admin is guided step by step through identity, contacts, payments, "Our group" and a check of email and Stripe (a test email, the webhook's events). Existing groups do not get the prompt, and any admin can go through it again from Admin → Settings.
+- 📊 **Anonymous stats for whoever runs several groups.** With `INSTANCE_STATS_SECRET` set, a signed request returns only counts (members, cycles, orders, version, configuration); without it the address does not exist.
+- 🛠️ **Technical settings explained.** In Admin → Settings the setup status becomes "Technical settings", split into essential and optional, and each item says what it does and how whoever hosts the app turns it on.
+- 💳 **Connect Stripe from the app.** In Admin → Settings an admin pastes a restricted key of the group's Stripe account: the app checks its permissions and sets up the webhook by itself, and card payments go to the group's account. Where whoever hosts the app already set the keys, nothing changes.
+- 🚨 **Error reporting with Vercel's Sentry integration.** Installing Sentry from the Vercel marketplace is enough: the app now picks up the address that integration sets, with no variable to copy by hand.
+
+### Fixed
+- 🧾 **Supplier sheet upload says why there is nothing to apply.** Instead of two empty lists, the preview tells how many products and members it recognized and that every amount already matches, or that nothing in the file could be matched. A CSV saved by Excel on Windows now keeps accented names.
+
 ## [1.26.0] — 2026-10-09
 
 *A cleaner app on every screen, card payment for a single cycle, and the bank transfer reference filled in for you.*
@@ -587,6 +602,7 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ---
 
+[1.27.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.27.0
 [1.26.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.26.0
 [1.25.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.25.0
 [1.24.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.24.0

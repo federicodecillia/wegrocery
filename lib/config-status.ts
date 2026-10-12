@@ -1,5 +1,6 @@
 import { MIGRATIONS } from "./migrations";
-import { REQUIRED_STRIPE_EVENTS, resolveStripeKey } from "./payments/config";
+import { MIN_SECRET_LENGTH } from "./instance-stats/constants";
+import { REQUIRED_STRIPE_EVENTS, resolveStripeKey, stripeModeRefusal } from "./payments/config";
 
 export { MIGRATIONS };
 
@@ -21,6 +22,13 @@ export type ConfigFacts = {
   brandUnknownFields: readonly string[];
   // Whether the members table has an active admin; null = it could not be read.
   hasActiveAdmin: boolean | null;
+  // Whether the admins set the group's name in the app (group_identity):
+  // then no brand JSON is needed.
+  identityInApp?: boolean;
+  // The group's Stripe account connected by an admin in the app
+  // (stripe_connection), used only while STRIPE_SECRET_KEY is unset: its
+  // mode, or "unreadable" when its secrets no longer open (AUTH_SECRET changed).
+  stripeInApp?: { livemode: boolean } | "unreadable";
 };
 
 export type ConfigItemId =
@@ -33,7 +41,8 @@ export type ConfigItemId =
   | "email"
   | "stripe"
   | "membership"
-  | "sentry";
+  | "sentry"
+  | "fleet";
 
 export type ConfigItem = {
   id: ConfigItemId;
@@ -74,14 +83,25 @@ function email(env: Env): ConfigItem {
   return { ...base, status: "ok" };
 }
 
-function stripe(env: Env): ConfigItem {
+function stripe(env: Env, facts: ConfigFacts): ConfigItem {
   const base = {
     id: "stripe",
     required: false,
     vars: ["STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET"],
     detail: REQUIRED_STRIPE_EVENTS,
   } as const;
-  if (!set(env.STRIPE_SECRET_KEY)) return { ...base, status: "off" };
+  if (!set(env.STRIPE_SECRET_KEY)) {
+    // Connected by an admin in the app: the app created the webhook endpoint
+    // itself, so its events need no listing.
+    const { detail: _events, ...inApp } = base;
+    void _events;
+    if (facts.stripeInApp === "unreadable") return { ...inApp, status: "warning", note: "reconnectStripe" };
+    if (facts.stripeInApp) {
+      const refusal = stripeModeRefusal(facts.stripeInApp.livemode, env);
+      return refusal ? { ...inApp, status: "warning", note: refusal } : { ...inApp, status: "ok", note: "connectedInApp" };
+    }
+    return { ...base, status: "off" };
+  }
   const key = resolveStripeKey(env);
   if (!key.enabled) return { ...base, status: "warning", note: key.reason };
   if (!set(env.STRIPE_WEBHOOK_SECRET)) return { ...base, status: "warning", note: "noWebhookSecret" };
@@ -116,7 +136,9 @@ function firstAdmin(env: Env, facts: ConfigFacts): ConfigItem {
 function brandItem(env: Env, facts: ConfigFacts): ConfigItem {
   const base = { id: "brand", required: false, vars: ["NEXT_PUBLIC_BRAND_JSON"] } as const;
   if (facts.brandError) return { ...base, status: "missing", note: "invalidBrand", detail: [facts.brandError] };
-  if (!set(env.NEXT_PUBLIC_BRAND_JSON)) return { ...base, status: "warning", note: "defaultBrand" };
+  if (!set(env.NEXT_PUBLIC_BRAND_JSON) && !facts.identityInApp) {
+    return { ...base, status: "warning", note: "defaultBrand" };
+  }
   if (facts.brandUnknownFields.length > 0) {
     return { ...base, status: "warning", note: "unknownBrandFields", detail: facts.brandUnknownFields };
   }
@@ -146,7 +168,7 @@ export function configStatus(env: Env, facts: ConfigFacts): ConfigItem[] {
         : { status: "warning" as const, note: "noBaseUrl" }),
     },
     email(env),
-    stripe(env),
+    stripe(env, facts),
     {
       id: "membership",
       required: false,
@@ -157,7 +179,18 @@ export function configStatus(env: Env, facts: ConfigFacts): ConfigItem[] {
       id: "sentry",
       required: false,
       vars: ["SENTRY_DSN"],
-      status: set(env.SENTRY_DSN) ? "ok" : "off",
+      // Vercel's Sentry integration sets only the public name.
+      status: set(env.SENTRY_DSN) || set(env.NEXT_PUBLIC_SENTRY_DSN) ? "ok" : "off",
     },
+    fleet(env),
   ];
+}
+
+// Anonymous counts for whoever operates several installations
+// (/api/instance-stats, lib/instance-stats): closed without the secret.
+function fleet(env: Env): ConfigItem {
+  const base = { id: "fleet", required: false, vars: ["INSTANCE_STATS_SECRET"] } as const;
+  const secret = env.INSTANCE_STATS_SECRET?.trim() ?? "";
+  if (!secret) return { ...base, status: "off" };
+  return secret.length < MIN_SECRET_LENGTH ? { ...base, status: "warning", note: "shortStatsSecret" } : { ...base, status: "ok" };
 }

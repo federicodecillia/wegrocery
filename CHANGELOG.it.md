@@ -21,6 +21,21 @@ stanno nella PR.
 
 ## [Non rilasciato]
 
+## [1.27.0] — 12 ottobre 2026
+
+*Ogni nuovo gruppo si configura dall'app: nome, logo, colori e Stripe, con ogni impostazione tecnica spiegata.*
+
+### Aggiunte
+- 🎨 **Nome, logo e colori si cambiano dall'app.** Gli admin cambiano nome del gruppo, logo, colori, indirizzi di contatto e link in Impostazioni, con anteprima e controllo di leggibilità: niente nuovo deploy, e l'icona sul telefono segue.
+- 🧭 **Configurazione guidata per un gruppo nuovo.** Il primo admin viene accompagnato passo per passo: identità, contatti, pagamenti, "Il nostro gruppo" e una verifica di email e Stripe (email di prova, eventi del webhook). Ai gruppi già attivi non viene proposta, e ogni admin può rifarla da Admin → Impostazioni.
+- 📊 **Statistiche anonime per chi gestisce più gruppi.** Con `INSTANCE_STATS_SECRET` impostato, una richiesta firmata restituisce solo conteggi (soci, cicli, ordini, versione, configurazione); senza, l'indirizzo non esiste.
+- 🛠️ **Impostazioni tecniche spiegate.** In Admin → Impostazioni lo stato della configurazione diventa "Impostazioni tecniche", divise in essenziali e facoltative, e ogni voce dice a cosa serve e come la attiva chi ospita l'app.
+- 💳 **Stripe si collega dall'app.** In Admin → Impostazioni un admin incolla una chiave con restrizioni dell'account Stripe del gruppo: l'app controlla i permessi e prepara da sola il webhook, e i pagamenti con carta arrivano sull'account del gruppo. Dove chi ospita l'app ha già messo le chiavi, resta tutto com'è.
+- 🚨 **Segnalazione degli errori con l'integrazione Sentry di Vercel.** Basta installare Sentry dal marketplace di Vercel: l'app ora usa da sola l'indirizzo che l'integrazione imposta, senza variabili da copiare a mano.
+
+### Risolto
+- 🧾 **Il caricamento della distinta dice perché non c'è niente da applicare.** Al posto di due elenchi vuoti, l'anteprima dice quanti prodotti e soci ha riconosciuto e che gli importi sono già uguali, oppure che nel file non ha trovato niente da confrontare. Un CSV salvato da Excel su Windows non perde più gli accenti nei nomi.
+
 ## [1.26.0] — 9 ottobre 2026
 
 *Un'app più ordinata su ogni schermo, il pagamento con carta per un singolo ciclo e la causale del bonifico già compilata.*
@@ -589,6 +604,7 @@ stanno nella PR.
 
 ---
 
+[1.27.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.27.0
 [1.26.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.26.0
 [1.25.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.25.0
 [1.24.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.24.0

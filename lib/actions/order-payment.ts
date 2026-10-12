@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { actionErrorMessage } from "@/lib/action-error";
 import { requireActiveMember } from "@/lib/auth/session";
 import { brand } from "@/lib/brand";
+import { getBrand } from "@/lib/brand/get-brand";
 import { getDb } from "@/lib/db/client";
 import { getCycleProducts, getMemberById, getMemberPendingOrderTotals, getOpenCycles } from "@/lib/db/queries";
 import { auditLog, orderDrafts, payments } from "@/lib/db/schema";
@@ -98,14 +99,14 @@ export async function startOrderPayment(
     const checkEnabled = isMembershipCheckEnabled() && member.role !== "admin";
     const raises = raisesOrderTotal(pending.thisCycle, productsCents / 100);
     if (!(await membershipAllowsOrder(member, checkEnabled, now, raises, "startOrderPayment"))) {
-      return refuse("membership_inactive", t.errors.membershipInactive(brand.membershipUrl));
+      return refuse("membership_inactive", t.errors.membershipInactive((await getBrand()).membershipUrl));
     }
 
     // Open Checkouts first, then the coverage: a payment landing meanwhile is
     // counted, and a Checkout left open cannot later overwrite this order.
     // The key is enough: in a wallet group online top-ups may stay off while
     // its card cycles are paid by card.
-    const stripe = settings.stripeKey.usable ? getStripe() : null;
+    const stripe = settings.stripeKey.usable ? await getStripe() : null;
     if (stripe && (await expireOpenCheckouts(db, stripe, memberId, cycleId)) === "paid") {
       return refuse("in_progress", t.order.pay.inProgress);
     }
@@ -194,7 +195,7 @@ export async function startOrderPayment(
             price_data: { currency, unit_amount: item.amountCents, product_data: { name: item.name } },
           })),
           metadata,
-          payment_intent_data: { metadata, description: `${brand.orgName}: ${cycle.title}` },
+          payment_intent_data: { metadata, description: `${(await getBrand()).orgName}: ${cycle.title}` },
           // Same short life as a top-up's session (Stripe's minimum is 30 min).
           expires_at: Math.floor(Date.now() / 1000) + 31 * 60,
           success_url: `${back}&esito=ok&session_id={CHECKOUT_SESSION_ID}`,
@@ -238,7 +239,7 @@ async function cancelOrderOf(memberId: string, email: string, cycleId: string): 
   const db = getDb();
   // An open Checkout would bring the order back if it were paid after the
   // cancel: expire it first. One already paid lands in the settlement.
-  const stripe = getStripe();
+  const stripe = await getStripe();
   if (stripe && (await expireOpenCheckouts(db, stripe, memberId, cycleId)) === "paid") {
     return refuse("in_progress", t.order.pay.inProgress);
   }

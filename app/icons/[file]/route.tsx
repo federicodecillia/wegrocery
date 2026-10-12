@@ -2,21 +2,22 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { notFound } from "next/navigation";
 import { ImageResponse } from "next/og";
-import { brand, resolvePalette } from "@/lib/brand";
+import { resolvePalette, type BrandConfig } from "@/lib/brand";
+import { getBrand, getLogoBytes } from "@/lib/brand/get-brand";
 import { reportError } from "@/lib/observability";
-import { ALL_ICONS, fallbackInitial, findIcon, localLogoPath, logoMimeType } from "@/lib/pwa/icons";
+import { fallbackInitial, findIcon, localLogoPath, logoMimeType } from "@/lib/pwa/icons";
 
-// The installable app's icons, drawn at build time from the brand's logo on
-// the app background (lib/pwa/icons.ts lists them).
-export const dynamic = "force-static";
-export const dynamicParams = false;
+// The installable app's icons, drawn from the group's logo on the app
+// background (lib/pwa/icons.ts lists them). Drawn on request, since the admins
+// can change the logo and colours in the app, and cached for an hour.
+export const dynamic = "force-dynamic";
 
-export function generateStaticParams() {
-  return ALL_ICONS.map((icon) => ({ file: icon.file }));
-}
-
-async function logoDataUri(): Promise<string | null> {
+async function logoDataUri(brand: BrandConfig): Promise<string | null> {
   try {
+    if (brand.logoUrl.startsWith("/brand/")) {
+      const uploaded = await getLogoBytes();
+      if (uploaded) return `data:${uploaded.type};base64,${uploaded.bytes.toString("base64")}`;
+    }
     const local = localLogoPath(brand.logoUrl);
     if (local) {
       const bytes = await readFile(path.join(process.cwd(), "public", local));
@@ -35,7 +36,8 @@ async function logoDataUri(): Promise<string | null> {
 export async function GET(_request: Request, { params }: { params: Promise<{ file: string }> }) {
   const icon = findIcon((await params).file);
   if (!icon) notFound();
-  const logo = await logoDataUri();
+  const brand = await getBrand();
+  const logo = await logoDataUri(brand);
   const side = Math.round(icon.size * icon.logoScale);
   const palette = resolvePalette(brand.theme);
   return new ImageResponse(
@@ -58,6 +60,6 @@ export async function GET(_request: Request, { params }: { params: Promise<{ fil
         )}
       </div>
     ),
-    { width: icon.size, height: icon.size },
+    { width: icon.size, height: icon.size, headers: { "Cache-Control": "public, max-age=3600" } },
   );
 }
