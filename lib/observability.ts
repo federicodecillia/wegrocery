@@ -1,12 +1,13 @@
 // Error reporting. Always the server log; Sentry too when the deploy sets
-// SENTRY_DSN (optional: without it the SDK is never loaded). instrumentation.ts
+// SENTRY_DSN, or NEXT_PUBLIC_SENTRY_DSN as Vercel's Sentry integration does
+// (optional: without either the SDK is never loaded). instrumentation.ts
 // initializes it once per server process.
 
 type Env = Record<string, string | undefined>;
 type SentryLike = { captureException: (error: unknown, hint?: { tags?: Record<string, string>; extra?: Record<string, unknown> }) => unknown };
 
 export function sentryDsn(env: Env): string | null {
-  return env.SENTRY_DSN?.trim() || null;
+  return env.SENTRY_DSN?.trim() || env.NEXT_PUBLIC_SENTRY_DSN?.trim() || null;
 }
 
 // A failed query's error message quotes its parameters (drizzle: "Failed

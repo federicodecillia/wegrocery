@@ -179,7 +179,8 @@ export function configStatus(env: Env, facts: ConfigFacts): ConfigItem[] {
       id: "sentry",
       required: false,
       vars: ["SENTRY_DSN"],
-      status: set(env.SENTRY_DSN) ? "ok" : "off",
+      // Vercel's Sentry integration sets only the public name.
+      status: set(env.SENTRY_DSN) || set(env.NEXT_PUBLIC_SENTRY_DSN) ? "ok" : "off",
     },
     fleet(env),
   ];
