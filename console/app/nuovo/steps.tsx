@@ -370,7 +370,7 @@ export function StripeForm({ instanceId, webhookUrl }: { instanceId: string; web
         htmlFor="stripeKey"
         hint="sk_… o rk_… (limitata: Webhook Endpoints in scrittura, Checkout Sessions in scrittura, PaymentIntents e Refunds in lettura). Va subito su Vercel, la console non la conserva."
       >
-        <Input id="stripeKey" name="stripeKey" type="password" autoComplete="off" required />
+        <Input id="stripeKey" name="stripeKey" type="password" autoComplete="new-password" required />
       </Field>
       <p className="text-sm text-muted">
         Endpoint del webhook: <span className="font-mono break-all">{webhookUrl}</span>
