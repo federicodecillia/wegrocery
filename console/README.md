@@ -74,7 +74,8 @@ See `.env.example`.
 4. **Cron**: `vercel.json` schedules `/api/cron/refresh` once a day at 05:00
    UTC. That is within the Hobby plan, whose cron jobs run at most once a day
    (and at an imprecise minute); no Pro plan needed.
-5. Sign in at `/login`. Share `/richiesta` with groups that want the app.
+5. Only `main` deploys (`git.deploymentEnabled` in `console/vercel.json`): the console has no staging, and preview builds of every branch would only fill the Hobby plan's Function Storage.
+6. Sign in at `/login`. Share `/richiesta` with groups that want the app.
 
 Locally: `cp .env.example .env.local`, fill it, `npm install`,
 `npm run db:migrate`, `npm run dev` (port 3100).
