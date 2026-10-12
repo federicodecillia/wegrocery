@@ -771,7 +771,7 @@ export const en: Strings = {
         ],
         sentry: [
           "Emails whoever runs the app when something fails, with no member data.",
-          "Create a free Next.js project on sentry.io (EU region), copy the DSN from Settings, Client Keys, and set it as SENTRY_DSN for production only.",
+          "Install the Sentry integration from the Vercel marketplace (free plan) and connect it to the project: that is all. Or create a Next.js project on sentry.io (EU region) and set its DSN as SENTRY_DSN, for production only.",
         ],
         fleet: [
           "Only for whoever runs several groups: their console reads anonymous counts (members, cycles, orders, version) without touching the database. Nothing changes for the group.",

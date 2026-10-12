@@ -773,7 +773,7 @@ export const it = {
         ],
         sentry: [
           "Manda a chi gestisce l'app un'email quando qualcosa va in errore, senza dati dei soci.",
-          "Crea un progetto Next.js gratuito su sentry.io (regione UE), copia il DSN da Settings, Client Keys, e mettilo in SENTRY_DSN, solo per la produzione.",
+          "Installa l'integrazione Sentry dal marketplace di Vercel (piano gratuito) e collegala al progetto: basta così. In alternativa crea un progetto Next.js su sentry.io (regione UE) e metti il suo DSN in SENTRY_DSN, solo per la produzione.",
         ],
         fleet: [
           "Serve solo a chi gestisce più gruppi: la sua console legge numeri anonimi (soci, cicli, ordini, versione) senza entrare nel database. Per il gruppo non cambia nulla.",

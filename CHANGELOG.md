@@ -26,6 +26,7 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 - 📊 **Anonymous stats for whoever runs several groups.** With `INSTANCE_STATS_SECRET` set, a signed request returns only counts (members, cycles, orders, version, configuration); without it the address does not exist.
 - 🛠️ **Technical settings explained.** In Admin → Settings the setup status becomes "Technical settings", split into essential and optional, and each item says what it does and how whoever hosts the app turns it on.
 - 💳 **Connect Stripe from the app.** In Admin → Settings an admin pastes a restricted key of the group's Stripe account: the app checks its permissions and sets up the webhook by itself, and card payments go to the group's account. Where whoever hosts the app already set the keys, nothing changes.
+- 🚨 **Error reporting with Vercel's Sentry integration.** Installing Sentry from the Vercel marketplace is enough: the app now picks up the address that integration sets, with no variable to copy by hand.
 
 ## [1.26.0] — 2026-10-09
 

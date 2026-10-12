@@ -163,7 +163,9 @@ Credentials → OAuth client of type *Web application*, with redirect URI
 ### Error reporting (Sentry)
 
 `SENTRY_DSN` of a Sentry project: server errors are reported without member
-data.
+data. Vercel's Sentry integration works as is: it sets `NEXT_PUBLIC_SENTRY_DSN`,
+which the app reads when `SENTRY_DSN` is not set. Skip its log drain (it would
+forward every log line) and its SDK setup steps (the app already has them).
 
 ### Anonymous stats for an operator console
 
