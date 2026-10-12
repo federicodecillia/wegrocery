@@ -81,7 +81,7 @@ async function findPayment(
 // 200 would drop the refund forever, so throw (-> 500, Stripe retries later)
 // when the intent belongs to one of our payments that is still pending.
 async function ensureRefundNotEarly(db: Db, paymentIntentId: string): Promise<void> {
-  const intent = await getStripe()?.paymentIntents.retrieve(paymentIntentId);
+  const intent = await (await getStripe())?.paymentIntents.retrieve(paymentIntentId);
   const paymentId = intent?.metadata?.paymentId;
   if (!paymentId) return; // not a payment of this app
   const { rows } = await db.execute<{ one: number }>(
@@ -282,7 +282,7 @@ export async function upsertStripeRefund(input: StripeRefundInput): Promise<void
 // charge.refunded: read every refund of the charge again, oldest first. The
 // safety net for refund.* events that never arrived or are not subscribed.
 export async function syncChargeRefunds(paymentIntentId: string): Promise<void> {
-  const stripe = getStripe();
+  const stripe = await getStripe();
   if (!stripe) return;
   const { data } = await stripe.refunds.list({ payment_intent: paymentIntentId, limit: 100 });
   for (const refund of [...data].sort((a, b) => a.created - b.created)) {

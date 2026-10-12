@@ -13,6 +13,13 @@ describe("observability", () => {
     expect(sentryDsn({ SENTRY_DSN: " https://key@o1.ingest.sentry.io/1 " })).toBe("https://key@o1.ingest.sentry.io/1");
   });
 
+  it("falls back to the public name Vercel's Sentry integration sets", () => {
+    expect(sentryDsn({ NEXT_PUBLIC_SENTRY_DSN: "https://pub@o1.ingest.sentry.io/2" })).toBe("https://pub@o1.ingest.sentry.io/2");
+    expect(sentryDsn({ SENTRY_DSN: "https://key@o1.ingest.sentry.io/1", NEXT_PUBLIC_SENTRY_DSN: "https://pub@o1.ingest.sentry.io/2" })).toBe(
+      "https://key@o1.ingest.sentry.io/1",
+    );
+  });
+
   it("logs and never throws when Sentry is not initialized", () => {
     const log = vi.spyOn(console, "error").mockImplementation(() => {});
     expect(() => reportError("test", new Error("boom"), { paymentId: "pay_1" })).not.toThrow();

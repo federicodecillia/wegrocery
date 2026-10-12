@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { brand } from "@/lib/brand";
+import { getBrand } from "@/lib/brand/get-brand";
 import { t } from "@/lib/i18n";
 import { googleCredentials } from "@/lib/auth/config";
 import { LoginForm } from "./login-form";
@@ -16,6 +16,7 @@ type LoginPageProps = {
 };
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
+  const brand = await getBrand();
   const session = await auth();
   const params = await searchParams;
   const error = typeof params.error === "string" ? params.error : null;

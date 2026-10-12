@@ -12,7 +12,7 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["**/*.int.test.ts"],
-    exclude: ["node_modules/**", ".next/**"],
+    exclude: ["node_modules/**", ".next/**", "console/**"],
     setupFiles: ["./test/int/setup.ts"],
     // One database for every file: run them one after the other.
     fileParallelism: false,

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { UiIcon, topicIcon } from "@/components/ui-icon";
-import { brand } from "@/lib/brand";
+import { brand as staticBrand } from "@/lib/brand";
+import { getBrand } from "@/lib/brand/get-brand";
 import { t } from "@/lib/i18n";
 import { AppShell } from "@/components/app-shell";
 import { GroupInfoCard } from "@/components/guide/group-info-card";
@@ -24,13 +25,14 @@ export const metadata: Metadata = { title: t.guide.title };
 // Cards live on the topic pages (app/guida/[topic]); only the ones this
 // deploy's settings make relevant are shown or searched.
 export default async function GuidaPage() {
+  const brand = await getBrand();
   const session = await requireUserSession();
   const role = getUserRole(session);
 
   // Pull the most recent released version (skip the [Unreleased] block) for
   // the teaser, in the deploy's locale — same default as /changelog, where
   // users can still switch language explicitly.
-  const [versions, settings] = await Promise.all([loadChangelog(brand.locale), getPaymentSettings()]);
+  const [versions, settings] = await Promise.all([loadChangelog(staticBrand.locale), getPaymentSettings()]);
   const guide = visibleGuide(guideContent, guideContext(settings));
   const latest = versions.find((v) => v.date !== null) ?? null;
   const topicTitles: Record<string, string> = Object.fromEntries(

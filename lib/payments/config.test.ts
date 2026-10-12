@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { parseTopupAmount, resolveStripeKey, topupBlockReason, topupCeilingCents, topupPresets } from "./config";
+import {
+  applyStripeKeyPolicy,
+  parseTopupAmount,
+  resolveStripeKey,
+  topupBlockReason,
+  topupCeilingCents,
+  topupPresets,
+} from "./config";
 
 describe("parseTopupAmount", () => {
   it("accepts whole euros and both decimal separators", () => {
@@ -59,6 +66,32 @@ describe("resolveStripeKey", () => {
     expect(
       resolveStripeKey({ STRIPE_SECRET_KEY: "sk_live_x", VERCEL_ENV: "production", DEMO_MODE: "true" }),
     ).toEqual({ enabled: false, reason: "liveKeyOutsideProduction" });
+  });
+});
+
+describe("applyStripeKeyPolicy", () => {
+  // A key from the in-app connection follows the env key's rules, and ignores
+  // any STRIPE_SECRET_KEY in the env it is given.
+  it("applies the same mode rules to a key not from the env", () => {
+    expect(applyStripeKeyPolicy("rk_test_x", { VERCEL_ENV: "preview", STRIPE_SECRET_KEY: "sk_live_y" })).toEqual({
+      enabled: true,
+      secretKey: "rk_test_x",
+      livemode: false,
+    });
+    expect(applyStripeKeyPolicy(" rk_live_x ", { VERCEL_ENV: "production" })).toEqual({
+      enabled: true,
+      secretKey: "rk_live_x",
+      livemode: true,
+    });
+    expect(applyStripeKeyPolicy("rk_live_x", { VERCEL_ENV: "production", DEMO_MODE: "true" })).toEqual({
+      enabled: false,
+      reason: "liveKeyOutsideProduction",
+    });
+    expect(applyStripeKeyPolicy("sk_test_x", { VERCEL_ENV: "production" })).toEqual({
+      enabled: false,
+      reason: "testKeyInProduction",
+    });
+    expect(applyStripeKeyPolicy(null, {})).toEqual({ enabled: false, reason: "missing" });
   });
 });
 

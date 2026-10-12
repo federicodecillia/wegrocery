@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { EXTERNAL_REF_UNIQUE_INDEX } from "@/lib/ledger";
-import { isUniqueViolation } from "./errors";
+import { isUndefinedTable, isUniqueViolation } from "./errors";
 
 // Shape of a Postgres error from the Neon driver, and of drizzle's
 // DrizzleQueryError, which wraps it as `cause`.
@@ -57,5 +57,18 @@ describe("isUniqueViolation of a named constraint", () => {
     const a: { cause?: unknown } = {};
     a.cause = { cause: a };
     expect(isUniqueViolation(a, EXTERNAL_REF_UNIQUE_INDEX)).toBe(false);
+  });
+});
+
+describe("isUndefinedTable", () => {
+  it("recognises a missing table, wrapped by drizzle or not", () => {
+    expect(isUndefinedTable(pgError("42P01"))).toBe(true);
+    expect(isUndefinedTable(drizzleError(pgError("42P01")))).toBe(true);
+  });
+
+  it("ignores every other error", () => {
+    expect(isUndefinedTable(drizzleError(pgError("42703")))).toBe(false);
+    expect(isUndefinedTable(new Error("connection refused"))).toBe(false);
+    expect(isUndefinedTable(null)).toBe(false);
   });
 });

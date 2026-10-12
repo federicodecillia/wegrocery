@@ -1,4 +1,4 @@
-import { brand } from "@/lib/brand";
+import { getBrand } from "@/lib/brand/get-brand";
 import { safeCallbackPath } from "@/lib/auth/hosts";
 import { t } from "@/lib/i18n";
 import type { Metadata } from "next";
@@ -13,6 +13,7 @@ export default async function ConfirmSignInPage({
 }: {
   searchParams: Promise<{ token?: string; next?: string }>;
 }) {
+  const brand = await getBrand();
   const { token, next } = await searchParams;
   const callbackURL = safeCallbackPath(next);
   return (

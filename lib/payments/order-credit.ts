@@ -194,7 +194,9 @@ async function afterCredit(db: Db, a: OrderCreditAction, payment: PaymentRow): P
   );
 }
 
-export async function applyOrderCredit(a: OrderCreditAction, stripe: RefundApi | null = getStripe()): Promise<void> {
+// `stripe` left out: this deploy's client; an explicit null means none.
+export async function applyOrderCredit(a: OrderCreditAction, stripeArg?: RefundApi | null): Promise<void> {
+  const stripe = stripeArg === undefined ? await getStripe() : stripeArg;
   const db = getDb();
   const before = await readPayment(db, a.paymentId);
   if (!before || before.kind !== "order" || before.cycle_id !== a.cycleId) {

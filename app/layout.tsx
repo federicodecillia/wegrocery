@@ -6,6 +6,7 @@ import { ConfirmDialogProvider } from "@/components/ui/confirm-dialog";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { brand, deriveRoleVars, resolvePalette } from "@/lib/brand";
+import { getBrand } from "@/lib/brand/get-brand";
 import { APPLE_TOUCH_ICON, iconPath } from "@/lib/pwa/icons";
 
 const geistSans = Geist({
@@ -18,38 +19,47 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: {
-    default: brand.appName,
-    template: `%s · ${brand.shortName}`,
-  },
-  description: brand.description,
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "default",
-    title: brand.shortName,
-  },
-  formatDetection: { telephone: false },
-};
+// The identity the admins may have changed in the app (getBrand), read per
+// request; language stays the deploy's.
+export async function generateMetadata(): Promise<Metadata> {
+  const b = await getBrand();
+  return {
+    title: {
+      default: b.appName,
+      template: `%s · ${b.shortName}`,
+    },
+    description: b.description,
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: "default",
+      title: b.shortName,
+    },
+    formatDetection: { telephone: false },
+  };
+}
 
-export const viewport: Viewport = {
-  width: "device-width",
-  initialScale: 1,
-  // The safe-area insets (env(safe-area-inset-*)) are only non-zero with "cover".
-  viewportFit: "cover",
-  themeColor: resolvePalette(brand.theme).primary,
-};
+export async function generateViewport(): Promise<Viewport> {
+  const b = await getBrand();
+  return {
+    width: "device-width",
+    initialScale: 1,
+    // The safe-area insets (env(safe-area-inset-*)) are only non-zero with "cover".
+    viewportFit: "cover",
+    themeColor: resolvePalette(b.theme).primary,
+  };
+}
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const b = await getBrand();
   return (
     <html
       lang={brand.locale}
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-      style={deriveRoleVars(brand.theme) as React.CSSProperties}
+      style={deriveRoleVars(b.theme) as React.CSSProperties}
     >
       <head>
         <link rel="apple-touch-icon" sizes="180x180" href={iconPath(APPLE_TOUCH_ICON)} />

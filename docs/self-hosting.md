@@ -71,8 +71,16 @@ member: members are added by an admin (step 5).
 
 ## 4. Your group's name, logo and colours
 
-Add these in Vercel → Settings → Environment Variables, then redeploy
-(Deployments → ⋯ → Redeploy): they are read when the app is built.
+The simplest way is in the app: after your first sign-in, Admin offers a
+**first-run setup** (also at `/admin/avvio`) that walks you through name,
+logo, colours, contacts, payments and "Our group", then checks that email
+and Stripe work. Everything stays editable in Admin → Impostazioni.
+
+Language, currency and time zone are chosen once, in the environment. The
+same identity can also be given as a starting point there (the app's
+settings win over it). Add these in Vercel → Settings → Environment
+Variables, then redeploy (Deployments → ⋯ → Redeploy): they are read when
+the app is built.
 
 - `NEXT_PUBLIC_BRAND_JSON`: the group's identity as one line of JSON. Start
   from [brand.example.json](brand.example.json); every field is optional and
@@ -125,6 +133,17 @@ All of them can be added at any time: set the variables, redeploy, and check
 Members top up their balance (or pay each order, depending on the payment
 mode chosen in Impostazioni) by card.
 
+The simplest way needs no variables: an admin opens Admin → Impostazioni →
+*Collegamento a Stripe* and pastes a restricted key of the group's own Stripe
+account (Checkout Sessions write, PaymentIntents read, Refunds write, Webhook
+Endpoints write). The app checks it, creates the webhook endpoint itself and
+stores both secrets encrypted with a key derived from `AUTH_SECRET` (rotating
+`AUTH_SECRET` means connecting again). It needs `APP_BASE_URL` (or Vercel's
+production URL) so Stripe knows where to post.
+
+Alternatively, whoever hosts the app sets the variables below; they take
+priority, and the in-app card then only says Stripe is configured by the host.
+
 1. Stripe → Developers → API keys: put the secret key in
    `STRIPE_SECRET_KEY`. Live keys (`sk_live_…`) work only on the production
    deployment, test keys (`sk_test_…`) everywhere else.
@@ -144,7 +163,17 @@ Credentials → OAuth client of type *Web application*, with redirect URI
 ### Error reporting (Sentry)
 
 `SENTRY_DSN` of a Sentry project: server errors are reported without member
-data.
+data. Vercel's Sentry integration works as is: it sets `NEXT_PUBLIC_SENTRY_DSN`,
+which the app reads when `SENTRY_DSN` is not set. Skip its log drain (it would
+forward every log line) and its SDK setup steps (the app already has them).
+
+### Anonymous stats for an operator console
+
+If you run several groups with the WeGrocery Console (`console/` in this
+repository), set `INSTANCE_STATS_SECRET` (`openssl rand -hex 32`) on each
+installation and give the same value to the console: it then reads counts
+only (members, cycles, orders, version, configuration states), never names,
+addresses or amounts. Without the variable the endpoint answers 404.
 
 ### Membership card check (WallyFor)
 
@@ -154,7 +183,9 @@ sign in, and card holders join by themselves at their first sign-in.
 
 ## Staging and preview deployments
 
-Every branch you push gets a preview deployment. Outside production every
+Only `main` (production) and `staging` (a preview) are deployed: `git.deploymentEnabled`
+in `vercel.json` skips every other branch, because each kept deployment counts
+toward the Hobby plan's Function Storage. Add a branch there to preview it. Outside production every
 email is redirected to `EMAIL_REDIRECT_TO` (set it on the Preview
 environment, never on Production): without it, emails are not sent there.
 If previews share the production database, they see real data: the Neon

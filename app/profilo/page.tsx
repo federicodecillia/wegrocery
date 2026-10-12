@@ -6,7 +6,7 @@ import { SettingsRow, SettingsSection } from "@/components/profile/settings-row"
 import { signOut } from "@/auth";
 import { redirect } from "next/navigation";
 import { getUserRole, requireUserSession } from "@/lib/auth/session";
-import { brand } from "@/lib/brand";
+import { getBrand } from "@/lib/brand/get-brand";
 import {
   getFamilyPeople,
   getMemberById,
@@ -31,6 +31,7 @@ export const metadata: Metadata = { title: t.profile.title };
 // family, notifications, money, the app, sign-out. Each row says its current
 // state; rows for what this deploy has not switched on are left out.
 export default async function ProfilePage() {
+  const brand = await getBrand();
   const session = await requireUserSession();
   const role = getUserRole(session);
   const memberId = session.user.memberId!;
@@ -171,6 +172,7 @@ export default async function ProfilePage() {
       </SettingsSection>
 
       <LogoutButton
+        appName={brand.appName}
         action={async () => {
           "use server";
           await signOut();

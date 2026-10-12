@@ -3,7 +3,7 @@
 import { and, eq, sql } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { brand } from "@/lib/brand";
+import { getBrand } from "@/lib/brand/get-brand";
 import { t } from "@/lib/i18n";
 import { formatMoney } from "@/lib/i18n/format";
 import { getDb } from "@/lib/db/client";
@@ -153,7 +153,7 @@ export async function saveOrder(
     if (!(await membershipAllowsOrder(member, checkEnabled, now, raisesOrder, "saveOrder"))) {
       return {
         success: false,
-        error: t.errors.membershipInactive(brand.membershipUrl),
+        error: t.errors.membershipInactive((await getBrand()).membershipUrl),
         code: "membership_inactive",
       };
     }
