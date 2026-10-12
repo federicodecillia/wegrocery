@@ -28,6 +28,9 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 - 💳 **Connect Stripe from the app.** In Admin → Settings an admin pastes a restricted key of the group's Stripe account: the app checks its permissions and sets up the webhook by itself, and card payments go to the group's account. Where whoever hosts the app already set the keys, nothing changes.
 - 🚨 **Error reporting with Vercel's Sentry integration.** Installing Sentry from the Vercel marketplace is enough: the app now picks up the address that integration sets, with no variable to copy by hand.
 
+### Fixed
+- 🧾 **Supplier sheet upload says why there is nothing to apply.** Instead of two empty lists, the preview tells how many products and members it recognized and that every amount already matches, or that nothing in the file could be matched. A CSV saved by Excel on Windows now keeps accented names.
+
 ## [1.26.0] — 2026-10-09
 
 *A cleaner app on every screen, card payment for a single cycle, and the bank transfer reference filled in for you.*

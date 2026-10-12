@@ -1462,6 +1462,10 @@ export const it = {
       applyButton: "Applica modifiche",
       applying: "Applicazione in corso…",
       nothingToApply: "Nessuna modifica da applicare",
+      nothingMatched:
+        "Nel file non ho trovato righe prodotto e colonne soci da confrontare con questo ciclo. Controlla che sia la distinta scaricata dall'app per questo ciclo, oppure carica il file .xlsx originale.",
+      nothingChanged: (products: number, members: number) =>
+        `File letto: ${products} ${products === 1 ? "prodotto" : "prodotti"} e ${members} ${members === 1 ? "socio" : "soci"} riconosciuti, ma tutti gli importi sono uguali a quelli già registrati, quindi non c'è niente da applicare. Succede se il fornitore non ha cambiato nessuna cella o se le rettifiche sono già state applicate (le trovi in Conti).`,
       cannotReadFile: "Impossibile leggere il file",
       errorReadingFile: "Errore lettura file",
       appliedSuccess: (corrections: number, shipping: number, members: number) => {
@@ -2068,6 +2072,8 @@ export const it = {
       `Colonna socio "${name}" ambigua (più soci con lo stesso nome) — saltata.`,
     distintaCsvProductUnmatched: (name: string) =>
       `Prodotto "${name}" non riconosciuto — riga saltata. (Nel CSV il match è per nome: verifica che non sia stato rinominato.)`,
+    distintaCsvRowWithoutProduct: (row: number) =>
+      `Riga ${row} del CSV: ci sono importi ma il nome del prodotto è vuoto, riga saltata.`,
     distintaCsvProductAmbiguous: (name: string) =>
       `Prodotto "${name}" ambiguo (più prodotti con lo stesso nome) — riga saltata.`,
     cancelReasonRequired: "Il motivo dell'annullamento è obbligatorio",

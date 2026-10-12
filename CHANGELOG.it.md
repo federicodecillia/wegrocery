@@ -29,6 +29,9 @@ stanno nella PR.
 - 💳 **Stripe si collega dall'app.** In Admin → Impostazioni un admin incolla una chiave con restrizioni dell'account Stripe del gruppo: l'app controlla i permessi e prepara da sola il webhook, e i pagamenti con carta arrivano sull'account del gruppo. Dove chi ospita l'app ha già messo le chiavi, resta tutto com'è.
 - 🚨 **Segnalazione degli errori con l'integrazione Sentry di Vercel.** Basta installare Sentry dal marketplace di Vercel: l'app ora usa da sola l'indirizzo che l'integrazione imposta, senza variabili da copiare a mano.
 
+### Risolto
+- 🧾 **Il caricamento della distinta dice perché non c'è niente da applicare.** Al posto di due elenchi vuoti, l'anteprima dice quanti prodotti e soci ha riconosciuto e che gli importi sono già uguali, oppure che nel file non ha trovato niente da confrontare. Un CSV salvato da Excel su Windows non perde più gli accenti nei nomi.
+
 ## [1.26.0] — 9 ottobre 2026
 
 *Un'app più ordinata su ogni schermo, il pagamento con carta per un singolo ciclo e la causale del bonifico già compilata.*

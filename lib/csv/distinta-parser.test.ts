@@ -1,6 +1,6 @@
 import { describe, it as test, expect } from "vitest";
 import { zipSync, strToU8 } from "fflate";
-import { parseCsv, collectViaMeta, readNumber } from "./distinta-parser";
+import { parseCsv, collectViaMeta, decodeCsvText, readNumber } from "./distinta-parser";
 import { parseOds } from "./ods-reader";
 
 // readNumber silently feeds supplier price corrections: a wrong parse here
@@ -147,5 +147,20 @@ describe("collectViaMeta over .ods", () => {
   test("rejects a distinta from a different cycle", () => {
     const c = collectViaMeta(parseOds(buildOds()), "cyc_other");
     expect(c.errors.length).toBeGreaterThan(0);
+  });
+});
+
+describe("decodeCsvText", () => {
+  test("reads UTF-8 as is", () => {
+    expect(decodeCsvText(Buffer.from("Prodotto;Varietà\nBietà;€", "utf8"))).toBe("Prodotto;Varietà\nBietà;€");
+  });
+
+  test("reads a Windows-1252 CSV (Excel 'CSV delimitato' on Windows) without mangling accents", () => {
+    // "Varietà;Niccolò;€" in Windows-1252: à = 0xE0, ò = 0xF2, € = 0x80.
+    const ansi = Buffer.from([
+      ...Buffer.from("Variet", "latin1"), 0xe0, 0x3b,
+      ...Buffer.from("Niccol", "latin1"), 0xf2, 0x3b, 0x80,
+    ]);
+    expect(decodeCsvText(ansi)).toBe("Varietà;Niccolò;€");
   });
 });
