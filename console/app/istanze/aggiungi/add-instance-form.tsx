@@ -28,7 +28,7 @@ export function AddInstanceForm() {
         />
       </Field>
       <Field label="URL" htmlFor="url" hint="L'indirizzo dell'app, es. https://gas.portamoneta.org">
-        <Input id="url" name="url" type="url" required placeholder="https://" />
+        <Input id="url" name="url" type="url" autoComplete="off" required placeholder="https://" />
       </Field>
       <Field label="Modello" htmlFor="hostingModel">
         <select id="hostingModel" name="hostingModel" className={inputClass} defaultValue="managed">
@@ -42,14 +42,14 @@ export function AddInstanceForm() {
           htmlFor="statsSecret"
           hint="Lo stesso valore impostato sull'istanza (almeno 32 caratteri, es. openssl rand -hex 32). Viene salvato cifrato e non si rilegge più."
         >
-          <Input id="statsSecret" name="statsSecret" type="password" autoComplete="off" minLength={32} />
+          <Input id="statsSecret" name="statsSecret" type="password" autoComplete="new-password" minLength={32} />
         </Field>
       </div>
       <Field label="Ordine di rilascio" htmlFor="rolloutOrder" hint="Più alto = aggiornata più tardi (es. 1000 per la produzione con soci veri).">
         <Input id="rolloutOrder" name="rolloutOrder" type="number" min={0} max={10000} defaultValue={100} />
       </Field>
       <Field label="Team Vercel (slug, per i link)" htmlFor="vercelTeamSlug">
-        <Input id="vercelTeamSlug" name="vercelTeamSlug" />
+        <Input id="vercelTeamSlug" name="vercelTeamSlug" autoComplete="off" />
       </Field>
       <Field label="Team ID Vercel (facoltativo)" htmlFor="vercelTeamId">
         <Input id="vercelTeamId" name="vercelTeamId" placeholder="team_…" />
