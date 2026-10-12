@@ -9,9 +9,16 @@ version: 2
 # TypeScript 5→7 with routine patches, and both PRs failed the build as a whole.
 # Routine updates should flow on their own; a major deserves its own PR, its own
 # red build, and a decision.
+#
+# Version updates target staging, like every development PR: they reach
+# production with the next staging -> main release, after being tested there.
+# Dependabot reads this file from the default branch, so the setting works once
+# it is on main. Security updates still open against main (GitHub ignores
+# target-branch for them).
 updates:
   - package-ecosystem: npm
     directory: /
+    target-branch: staging
     schedule:
       interval: weekly
       day: monday
@@ -76,6 +83,7 @@ updates:
 
   - package-ecosystem: github-actions
     directory: /
+    target-branch: staging
     schedule:
       interval: monthly
     labels: ["dependencies"]
