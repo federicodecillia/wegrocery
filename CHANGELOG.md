@@ -20,6 +20,10 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ## [Unreleased]
 
+## [1.27.0] — 2026-10-12
+
+*Each new group sets itself up from the app: name, logo, colours and Stripe, with every technical setting explained.*
+
 ### Added
 - 🎨 **Name, logo and colours set from the app.** Admins change the group's name, logo, colours, contact addresses and links in Settings, with a live preview and a readability check: no redeploy, and the phone icon follows.
 - 🧭 **First-run setup for a new group.** The first admin is guided step by step through identity, contacts, payments, "Our group" and a check of email and Stripe (a test email, the webhook's events). Existing groups do not get the prompt, and any admin can go through it again from Admin → Settings.
@@ -598,6 +602,7 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ---
 
+[1.27.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.27.0
 [1.26.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.26.0
 [1.25.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.25.0
 [1.24.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.24.0

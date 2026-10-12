@@ -21,6 +21,10 @@ stanno nella PR.
 
 ## [Non rilasciato]
 
+## [1.27.0] — 12 ottobre 2026
+
+*Ogni nuovo gruppo si configura dall'app: nome, logo, colori e Stripe, con ogni impostazione tecnica spiegata.*
+
 ### Aggiunte
 - 🎨 **Nome, logo e colori si cambiano dall'app.** Gli admin cambiano nome del gruppo, logo, colori, indirizzi di contatto e link in Impostazioni, con anteprima e controllo di leggibilità: niente nuovo deploy, e l'icona sul telefono segue.
 - 🧭 **Configurazione guidata per un gruppo nuovo.** Il primo admin viene accompagnato passo per passo: identità, contatti, pagamenti, "Il nostro gruppo" e una verifica di email e Stripe (email di prova, eventi del webhook). Ai gruppi già attivi non viene proposta, e ogni admin può rifarla da Admin → Impostazioni.
@@ -600,6 +604,7 @@ stanno nella PR.
 
 ---
 
+[1.27.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.27.0
 [1.26.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.26.0
 [1.25.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.25.0
 [1.24.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.24.0
