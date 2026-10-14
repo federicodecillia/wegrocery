@@ -4,6 +4,7 @@ import {
   bigint,
   boolean,
   check,
+  date,
   index,
   integer,
   jsonb,
@@ -324,6 +325,18 @@ export const guideSearchMisses = pgTable(
     lastAt: timestamp("last_at", { withTimezone: true }).notNull(),
   },
   (table) => [check("guide_search_misses_query_length", sql`char_length(${table.query}) BETWEEN 3 AND 60`)],
+);
+
+// Usage counters, one row per day and event name, nothing about who
+// (drizzle/0037_usage_events.sql, lib/usage/events.ts).
+export const usageEvents = pgTable(
+  "usage_events",
+  {
+    day: date("day").notNull(),
+    name: text("name").notNull(),
+    count: integer("count").notNull().default(0),
+  },
+  (table) => [primaryKey({ columns: [table.day, table.name] })],
 );
 
 // The group's identity edited in the app over the brand JSON

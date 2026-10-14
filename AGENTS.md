@@ -35,7 +35,7 @@ Found in the review of 2026-10-14 (each line, its reason and its timing are in
 - 6.3 and 9.5 Claude runs releases end to end, production migrations included, after a green manual backup and with Federico's explicit ok for each production operation, instead of handing him commands: Federico's choice (2026-10-07). This stays.
 - 6.5 A weekly job (`.github/workflows/restore-test.yml`) restores the latest dump into a throwaway Neon branch, counts the main tables and runs the money invariants on it. It is skipped until Federico sets `NEON_API_KEY` and the variable `RESTORE_TEST_NEON_PROJECT_ID` (a project of the same organisation).
 - 7.6 Done for notification emails (idempotency key, one-click unsubscribe, see "Email compliance"). The branded HTML template (7.7) waits for the kit registry. Sign-in emails and the supplier and family emails carry no unsubscribe on purpose.
-- 7.8 No `usage_events` yet: own minimal events arrive at stage 1 (Vercel Analytics and Speed Insights are gone).
+- 7.8 Done: `usage_events` (migration 0037) counts a fixed list of events per day, no member id, no text, nothing in the demo (`lib/usage/events.ts`, shown in Admin → Statistiche); Vercel Analytics and Speed Insights are gone.
 - 7.10 The Console (`console/`) redirects to its password login instead of answering 404: a 404 would hide the only way in. This stays.
 - 8.1 No versioned legal documents in the app: each group owns its privacy notice (`brand.privacyUrl`) as data controller. This stays for groups; FlyLabs-hosted terms are decided with hosting model A.
 - 9.1 Feature specs live in the private project folder (Italian, with group details), not in `docs/`: from now on a dated English plan goes in `docs/` with no group or member data.
@@ -372,6 +372,7 @@ all in `lib/roles.ts`:
 | `order_drafts` | A member's unconfirmed edits on an open cycle (`member_id`, `cycle_id`, `lines` jsonb), autosaved by the order form; `saveOrder` and the cycle close delete them in their batch |
 | `order_cycles.payment_mode` / `handling_fee_*`, `payments.kind` / `cycle_id` / `order_snapshot` | Pay-per-order (`drizzle/0021_pay_per_order.sql`): see Online top-ups (Stripe). Ledger types `order_payment` (+) and `order_refund` (−) sit on the cycle. `order_cycles.settled_at` and `members.pays_offline` (`drizzle/0024_settlement.sql`): see Pay-per-order |
 | `audit_log` | Append-only admin action log |
+| `usage_events` | Usage counters (migration 0037): `day`, `name` (a fixed list in `lib/usage/events.ts`), `count`; no member id, no text, no amount, and `DEMO_MODE` records nothing. Written by `recordUsage` (never throws), read by Admin → Statistiche; pruned after 400 days at sign-in |
 | `guide_search_misses` | Guide searches with no results, counted with no member id (migration 0032): `query` normalized by `missQuery` (`lib/guide/search-misses.ts`, which drops addresses, long numbers and sentences), `count`, `last_at`; pruned after 90 days, listed in admin → Impostazioni |
 | `suppliers` | Supplier registry |
 | `supplier_products` | Supplier product catalog (source for cycle products) |

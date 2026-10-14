@@ -11,6 +11,7 @@ import {
 import { formatEur, getProductEmoji } from "@/lib/utils";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { StatsFilters } from "./statistiche-client";
+import { getUsageTotals } from "@/lib/usage/events";
 import { t } from "@/lib/i18n";
 
 type Props = {
@@ -35,6 +36,7 @@ export async function TabStatistiche({ cycleIds, supplierIds, memberIds }: Props
       getAllSuppliersAdmin(),
       getAllMembers(),
     ]);
+  const usage = await getUsageTotals(30);
 
   const filterOptions = {
     cycles: allCycles.map((c) => ({ cycleId: c.cycleId, title: c.title })),
@@ -54,6 +56,7 @@ export async function TabStatistiche({ cycleIds, supplierIds, memberIds }: Props
     return (
       <div className="space-y-4">
         <StatsFilters {...filterOptions} />
+        <UsageCard usage={usage} />
         <Card>
           <CardBody>
             <div className="py-12 text-center">
@@ -78,6 +81,7 @@ export async function TabStatistiche({ cycleIds, supplierIds, memberIds }: Props
       <ProductRankingsCard rankings={products} />
       <RevenueTrendCard trend={trend} />
       <SupplierStatsCard suppliers={suppliers} />
+      <UsageCard usage={usage} />
       <MemberParticipationCard members={members} />
     </div>
   );
@@ -347,6 +351,33 @@ function RevenueTrendCard({
             </div>
           </div>
         </div>
+      </CardBody>
+    </Card>
+  );
+}
+
+// ── Usage counters (lib/usage/events.ts) ─────────────────────────────────────
+
+function UsageCard({ usage }: { usage: Awaited<ReturnType<typeof getUsageTotals>> }) {
+  return (
+    <Card>
+      <CardHeader>
+        <h2 className="text-[13px] font-bold text-brand-near-black">{t.admin.stats.usageTitle}</h2>
+      </CardHeader>
+      <CardBody>
+        {usage.length === 0 ? (
+          <p className="text-[12px] text-brand-gray">{t.admin.stats.usageEmpty}</p>
+        ) : (
+          <ul className="divide-y divide-brand-border">
+            {usage.map((u) => (
+              <li key={u.name} className="flex items-center justify-between gap-2 py-1.5 text-[13px]">
+                <span className="text-brand-near-black">{t.admin.stats.usageEvents[u.name] ?? u.name}</span>
+                <span className="font-bold tabular-nums text-brand-near-black">{u.total}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+        <p className="mt-2 text-[12px] text-muted">{t.admin.stats.usageHint}</p>
       </CardBody>
     </Card>
   );

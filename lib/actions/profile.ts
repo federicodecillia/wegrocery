@@ -1,5 +1,6 @@
 "use server";
 
+import { recordUsage } from "@/lib/usage/events";
 import { and, eq, isNull } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { actionErrorMessage } from "@/lib/action-error";
@@ -62,6 +63,7 @@ export async function dismissWelcome(): Promise<{ error?: string }> {
       .where(and(eq(members.memberId, session.personId), isNull(members.welcomeDismissedAt)));
     // The tour is over: nothing to resume.
     await db.update(members).set({ welcomeStep: null }).where(eq(members.memberId, session.personId));
+    await recordUsage("welcome_closed");
     revalidatePath("/");
     return {};
   } catch (e) {

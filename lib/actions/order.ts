@@ -1,5 +1,6 @@
 "use server";
 
+import { recordUsage } from "@/lib/usage/events";
 import { and, eq, sql } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
@@ -244,6 +245,7 @@ export async function saveOrder(
       createdAt: now,
     });
 
+    await recordUsage("order_saved");
     return {
       success: true,
       balanceWarning:

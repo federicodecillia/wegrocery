@@ -1,5 +1,6 @@
 "use server";
 
+import { recordUsage } from "@/lib/usage/events";
 import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
@@ -117,6 +118,7 @@ export async function startOnlineTopup(amountInput: string): Promise<StartTopupR
       .set({ checkoutSessionId: checkout.id, updatedAt: new Date() })
       .where(eq(payments.paymentId, paymentId));
     if (!checkout.url) throw new Error("Checkout Session without url");
+    await recordUsage("topup_started");
     return { url: checkout.url };
   } catch (e) {
     console.error("[stripe] could not start checkout", paymentId, e);
