@@ -10,6 +10,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Live**: gas.portamoneta.org
 
+## FlyLabs Kit
+
+This app follows the FlyLabs Playbook: https://github.com/flylabs-ai/flylabs-kit/blob/main/PLAYBOOK.md
+(internal to the flylabs-ai organization). Check the Playbook rule before choices about stack, style,
+copy, tests, migrations and operations. Intended deviations are listed below with the reason; flag any
+deviation that is not listed instead of deciding alone. A solution that fits every app goes to
+flylabs-kit as a PR.
+
+Intended deviations (as of 2026-10-14):
+- 2.3 and 2.4 Light theme only, no contrast test yet: dark theme and the contrast test arrive with stage 1 of the kit (December 2026).
+- 2.10 The group's own colours instead of the FlyLabs palette: WeGrocery is white-label, so this stays.
+- 3.3 Repository docs in English: the repo is public and a portfolio piece, so this stays.
+- 7.1 `/api/health` returns `db` as `true | false` and `version` from `package.json`: aligned with Stellar when the FlyLabs Console arrives.
+
 ## Codebase structure
 
 ```
