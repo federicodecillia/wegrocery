@@ -1,4 +1,5 @@
 import { betterAuth } from "better-auth";
+import { recordUsage } from "@/lib/usage/events";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError, createAuthMiddleware } from "better-auth/api";
 import { nextCookies } from "better-auth/next-js";
@@ -189,6 +190,7 @@ export function createAuth(db: Db, options: CreateAuthOptions) {
                   AND (lower(m.email) = lower(u.email) OR lower(m.alias_email) = lower(u.email))
                 LIMIT 1
               )`);
+            await recordUsage("login");
           },
         },
       },

@@ -15,15 +15,15 @@ export function OrdersSplit({ byMember, byProduct }: { byMember: ReactNode; byPr
   ];
   return (
     <div>
-      <div role="group" aria-label={o.splitAria} className="mb-3 flex gap-1 rounded-full bg-black/[0.05] p-1 lg:hidden">
+      <div role="group" aria-label={o.splitAria} className="mb-3 flex gap-1 rounded-full bg-tint/[0.05] p-1 lg:hidden">
         {options.map((opt) => (
           <button
             key={opt.id}
             type="button"
             aria-pressed={side === opt.id}
             onClick={() => setSide(opt.id)}
-            className={`min-h-10 flex-1 rounded-full text-[13px] font-semibold ${
-              side === opt.id ? "bg-white text-brand-near-black shadow-sm" : "text-brand-gray"
+            className={`min-h-(--control-h) flex-1 rounded-full text-[13px] font-semibold ${
+              side === opt.id ? "bg-surface text-brand-near-black shadow-sm" : "text-brand-gray"
             }`}
           >
             {opt.label}

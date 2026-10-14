@@ -78,7 +78,7 @@ export function FornitoriForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="rounded-xl border border-brand-border bg-white p-4 shadow-sm"
+      className="rounded-xl border border-brand-border bg-surface p-4"
     >
       <div className="mb-3 flex items-center justify-between">
         <p className="text-[13px] font-bold text-brand-near-black">
@@ -243,7 +243,7 @@ export function FornitoriList({
         <p className="mb-1 px-1 font-mono text-label uppercase tracking-wider text-muted">
           {label} ({list.length})
         </p>
-        <div className="overflow-hidden rounded-xl border border-brand-border bg-white shadow-sm">
+        <div className="overflow-hidden rounded-xl border border-brand-border bg-surface">
           {list.map((s) => (
             <div key={s.supplierId} className="divide-y divide-brand-border">
               {editingId === s.supplierId ? (
@@ -268,12 +268,12 @@ export function FornitoriList({
                         <span className="flex items-center gap-2">
                           <span className="text-[13px] font-semibold text-brand-near-black">{s.name}</span>
                           {!s.active && (
-                            <span className="rounded-full bg-black/[0.05] px-1.5 py-0.5 text-label font-bold text-brand-gray">
+                            <span className="rounded-full bg-tint/[0.05] px-1.5 py-0.5 text-label font-bold text-brand-gray">
                               {t.admin.suppliers.archivedBadge}
                             </span>
                           )}
                         </span>
-                        <span className="mt-0.5 block font-mono text-label text-muted">
+                        <span className="mt-0.5 block tabular-nums text-label text-muted">
                           {s.macroCategory && `${s.macroCategory} · `}
                           {s.contactName && `${s.contactName} · `}
                           {t.admin.suppliers.cyclesCount(s.cycleCount)}
@@ -284,14 +284,14 @@ export function FornitoriList({
                       <button
                         type="button"
                         onClick={() => setEditingId(s.supplierId)}
-                        className="min-h-9 rounded-full border border-brand-border px-3 py-1 text-label font-semibold text-brand-gray"
+                        className="min-h-(--control-h) rounded-full border border-brand-border px-3 py-1 text-label font-semibold text-brand-gray"
                       >
                         {t.admin.common.edit}
                       </button>
                       <button
                         type="button"
                         onClick={() => handleArchive(s)}
-                        className="min-h-9 rounded-full border border-brand-border px-3 py-1 text-label font-semibold text-brand-gray"
+                        className="min-h-(--control-h) rounded-full border border-brand-border px-3 py-1 text-label font-semibold text-brand-gray"
                       >
                         {s.active ? t.admin.common.archive : t.admin.common.restore}
                       </button>
@@ -300,7 +300,7 @@ export function FornitoriList({
                           type="button"
                           onClick={() => handleDelete(s)}
                           aria-label={t.admin.suppliers.deleteAria(s.name)}
-                          className="flex h-9 w-9 items-center justify-center rounded-full border border-brand-red/30 text-label font-semibold text-brand-red"
+                          className="flex h-9 w-9 items-center justify-center rounded-full border border-danger-text/30 text-label font-semibold text-danger-text"
                         >
                           <span aria-hidden>✕</span>
                         </button>
@@ -310,9 +310,9 @@ export function FornitoriList({
 
                   {/* Contact details + products */}
                   {expandedId === s.supplierId && (
-                    <div className="bg-black/[0.01] px-4 py-3">
+                    <div className="bg-tint/[0.01] px-4 py-3">
                       {(s.phone || s.email || s.address) && (
-                        <div className="mb-3 space-y-0.5 font-mono text-label text-brand-gray">
+                        <div className="mb-3 space-y-0.5 tabular-nums text-label text-brand-gray">
                           {s.phone && <div>📞 {s.phone}</div>}
                           {s.email && <div>✉ {s.email}</div>}
                           {s.address && <div>📍 {s.address}</div>}
@@ -323,7 +323,7 @@ export function FornitoriList({
                       {/* The catalogue is edited in one place: Catalogo → Prodotti. */}
                       <Link
                         href={adminHref("catalogo", "prodotti", { supplier: s.supplierId })}
-                        className="inline-flex min-h-10 items-center text-[13px] font-semibold text-primary-text"
+                        className="inline-flex min-h-(--control-h) items-center text-[13px] font-semibold text-primary-text"
                       >
                         {t.admin.suppliers.productsLink(productCounts[s.supplierId] ?? 0)}
                       </Link>

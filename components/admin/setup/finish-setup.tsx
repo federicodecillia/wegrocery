@@ -25,7 +25,7 @@ export function FinishSetup() {
   }
 
   return (
-    <section className="rounded-xl border border-brand-border bg-white p-4 shadow-sm">
+    <section className="rounded-xl border border-brand-border bg-surface p-4">
       <h2 className="text-[15px] font-bold text-brand-near-black">{s.finishTitle}</h2>
       <p className="mt-1 text-[13px] text-brand-gray">{s.finishBody}</p>
       <button

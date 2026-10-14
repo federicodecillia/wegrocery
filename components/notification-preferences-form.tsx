@@ -42,20 +42,20 @@ export function NotificationPreferencesForm({ initial }: Props) {
   }
 
   return (
-    <div className="overflow-hidden rounded-card border border-brand-border bg-white shadow-card">
+    <div className="overflow-hidden rounded-card border border-brand-border bg-surface shadow-card">
       {NOTIFICATION_CATEGORIES.map((category, i) => {
         const cfg = t.notifications.settings.categories[category];
         const p = prefs[category];
         return (
           <div
             key={category}
-            className={`flex items-start gap-3 px-4 py-[14px] ${
+            className={`flex items-start gap-3 px-4 py-3.5 ${
               i < NOTIFICATION_CATEGORIES.length - 1 ? "border-b border-brand-border" : ""
             }`}
           >
             <div className="min-w-0 flex-1">
               <div className="text-[14px] font-bold text-brand-near-black">{cfg.label}</div>
-              <div className="mt-[3px] text-[12px] leading-snug text-brand-gray">{cfg.hint}</div>
+              <div className="mt-0.75 text-[12px] leading-snug text-brand-gray">{cfg.hint}</div>
             </div>
             <div className="flex shrink-0 gap-1">
               <ChannelToggle

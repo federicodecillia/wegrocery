@@ -68,7 +68,7 @@ export function CategoryBar({
     setActive(category);
   }
 
-  const chip = "hit-44 inline-flex min-h-9 shrink-0 items-center whitespace-nowrap rounded-full border px-3 text-[13px] font-semibold";
+  const chip = "hit-44 inline-flex min-h-(--control-h) shrink-0 items-center whitespace-nowrap rounded-full border px-3 text-[13px] font-semibold";
 
   return (
     <nav
@@ -96,7 +96,7 @@ export function CategoryBar({
                 onClick={(e) => jump(c, e.timeStamp)}
                 aria-current={active === c ? "true" : undefined}
                 className={`${chip} ${
-                  active === c ? "border-brand-near-black bg-brand-near-black text-white" : "border-brand-border bg-white text-brand-gray"
+                  active === c ? "border-inverse bg-inverse text-on-inverse" : "border-brand-border bg-surface text-brand-gray"
                 }`}
               >
                 {labelOf(c)}

@@ -399,7 +399,7 @@ async function buildPreviewFromRaw(c: Collected): Promise<DistintaImportPreview>
     }
     matched.lines++;
     if (newTotal == null) {
-      warnings.push(`${memberName} · ${productName}: valore non leggibile come numero — ignorato.`);
+      warnings.push(`${memberName} · ${productName}: valore non leggibile come numero, ignorato.`);
       continue;
     }
     const currentEffective =

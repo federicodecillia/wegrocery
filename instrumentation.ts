@@ -1,5 +1,5 @@
 import { after } from "next/server";
-import { scrubMessage, sentryDsn, setSentry, withoutQuery } from "@/lib/observability";
+import { keepBreadcrumb, scrubMessage, sentryDsn, setSentry, withoutQuery } from "@/lib/observability";
 
 // Runs once when a server process starts. Sentry is optional: without
 // SENTRY_DSN the SDK is never loaded and errors only go to the server log.
@@ -23,6 +23,8 @@ export async function register() {
       databaseQueryData: false,
       stackFrameVariables: false,
     },
+    // The server log, quoted by the Console integration, stays on the server.
+    beforeBreadcrumb: keepBreadcrumb,
     // A driver error quotes the failed query's parameters in its message.
     beforeSend(event) {
       for (const exception of event.exception?.values ?? []) {

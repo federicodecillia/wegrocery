@@ -34,7 +34,7 @@ const STATUS: Record<string, string> = {
 const DOT: Record<string, string> = {
   open: "bg-accent",
   closed: "bg-brand-gray-light",
-  cancelled: "bg-brand-red",
+  cancelled: "bg-danger",
 };
 
 // Every cycle, newest first, with a status filter, a search and pages of 20:
@@ -62,7 +62,7 @@ export function CycleList({
       <Link
         href={adminHref("ciclo", null, { new: "1" })}
         onClick={onNavigate}
-        className="mb-3 flex min-h-10 items-center justify-center rounded-xl border border-dashed border-primary-mid bg-primary-soft text-[13px] font-bold text-primary-text"
+        className="mb-3 flex min-h-(--control-h) items-center justify-center rounded-xl border border-dashed border-primary-mid bg-primary-soft text-[13px] font-bold text-primary-text"
       >
         {w.newCycle}
       </Link>
@@ -78,7 +78,7 @@ export function CycleList({
           setShown(PAGE);
         }}
         placeholder={w.search}
-        className="min-h-10 w-full rounded-xl border border-brand-border bg-white px-3 text-[13px] placeholder:text-muted"
+        className="min-h-(--control-h) w-full rounded-xl border border-brand-border bg-surface px-3 text-[13px] placeholder:text-muted"
       />
       <div role="group" aria-label={w.listTitle} className="mt-2 flex flex-wrap gap-1">
         {(Object.keys(w.filters) as CycleFilter[]).map((f) => (
@@ -90,8 +90,8 @@ export function CycleList({
               setFilter(f);
               setShown(PAGE);
             }}
-            className={`min-h-8 rounded-full px-2.5 text-label font-semibold ${
-              filter === f ? "bg-brand-near-black text-white" : "bg-black/[0.05] text-brand-gray"
+            className={`min-h-(--control-h) rounded-full px-2.5 text-label font-semibold ${
+              filter === f ? "bg-inverse text-on-inverse" : "bg-tint/[0.05] text-brand-gray"
             }`}
           >
             {w.filters[f]}
@@ -109,7 +109,7 @@ export function CycleList({
         <button
           type="button"
           onClick={() => setShown((n) => n + PAGE)}
-          className="mt-2 min-h-10 w-full rounded-xl border border-brand-border text-[13px] font-semibold text-brand-near-black"
+          className="mt-2 min-h-(--control-h) w-full rounded-xl border border-brand-border text-[13px] font-semibold text-brand-near-black"
         >
           {w.showMore} ({list.length - shown})
         </button>
@@ -154,7 +154,7 @@ function CycleGroupSection({
                 onClick={onNavigate}
                 aria-current={current ? "page" : undefined}
                 className={`flex min-h-11 items-center gap-2 rounded-lg px-2 py-2 ${
-                  current ? "bg-primary-soft" : "hover:bg-black/[0.03]"
+                  current ? "bg-primary-soft" : "hover:bg-tint/[0.03]"
                 }`}
               >
                 <span aria-hidden className={`h-2 w-2 shrink-0 rounded-full ${c.toSettle ? "bg-primary" : (DOT[c.status] ?? DOT.closed)}`} />
@@ -193,7 +193,7 @@ export function CycleShortlist({
   const groups = groupCycles(cycles).filter((g) => g.group !== "others");
   if (groups.length === 0) return null;
   return (
-    <div className="mb-3 rounded-xl border border-brand-border bg-white p-2 lg:hidden">
+    <div className="mb-3 rounded-xl border border-brand-border bg-surface p-2 lg:hidden">
       {groups.map(({ group, cycles: items }) => (
         <CycleGroupSection key={group} group={group} cycles={items} selectedId={selectedId} view={view} idPrefix="shortlist" />
       ))}
@@ -217,7 +217,7 @@ export function CyclePicker({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="mb-3 flex min-h-11 w-full items-center justify-between gap-2 rounded-xl border border-brand-border bg-white px-3 text-left text-[13px] font-semibold text-brand-near-black lg:hidden"
+        className="mb-3 flex min-h-11 w-full items-center justify-between gap-2 rounded-xl border border-brand-border bg-surface px-3 text-left text-[13px] font-semibold text-brand-near-black lg:hidden"
       >
         <span>
           {t.admin.workspace.allCycles} ({cycles.length})

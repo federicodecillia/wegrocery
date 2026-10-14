@@ -55,6 +55,7 @@ export const it = {
   welcome: {
     title: (appName: string) => `Ti diamo il benvenuto in ${appName}`,
     stepOf: (step: number, total: number) => `${step} di ${total}`,
+    stepDone: "Già fatto",
     back: "Indietro",
     next: "Avanti",
     done: "Ho capito",
@@ -524,6 +525,11 @@ export const it = {
     news: "Novità",
     newsDetail: "Cosa è cambiato nell'app",
     contact: "Contatta il gruppo",
+    appearance: "Aspetto",
+    appearanceHint: "Vale solo per questo dispositivo.",
+    themeSystem: "Come il dispositivo",
+    themeLight: "Chiaro",
+    themeDark: "Scuro",
     version: (v: string) => `Versione ${v}`,
   },
   demo: {
@@ -700,6 +706,7 @@ export const it = {
         stripe: "Pagamenti online (Stripe)",
         membership: "Verifica della tessera (WallyFor)",
         sentry: "Segnalazione degli errori (Sentry)",
+        dbRole: "Accesso al database con ruolo limitato",
         fleet: "Statistiche anonime per la console (WeGrocery Console)",
       } as Record<string, string>,
       notes: {
@@ -775,6 +782,10 @@ export const it = {
           "Manda a chi gestisce l'app un'email quando qualcosa va in errore, senza dati dei soci.",
           "Installa l'integrazione Sentry dal marketplace di Vercel (piano gratuito) e collegala al progetto: basta così. In alternativa crea un progetto Next.js su sentry.io (regione UE) e metti il suo DSN in SENTRY_DSN, solo per la produzione.",
         ],
+        dbRole: [
+          "L'app usa un ruolo che legge e scrive i dati ma non può cambiare lo schema: se una chiave trapela, il database non si può cancellare. Gli aggiornamenti usano un'altra connessione.",
+          "Lancia scripts/create-app-role.mjs con l'indirizzo del proprietario, metti il nuovo indirizzo in DATABASE_URL e quello vecchio in DATABASE_MIGRATION_URL (istruzioni in docs/upgrading.md).",
+        ],
         fleet: [
           "Serve solo a chi gestisce più gruppi: la sua console legge numeri anonimi (soci, cicli, ordini, versione) senza entrare nel database. Per il gruppo non cambia nulla.",
           "Genera un segreto (openssl rand -hex 32), mettilo in INSTANCE_STATS_SECRET e incollalo uguale nella console, alla voce Aggiungi istanza esistente. Un segreto diverso per ogni installazione.",
@@ -827,8 +838,8 @@ export const it = {
       date: "Data",
       optional: "opzionale",
       searchPlaceholder: "Cerca…",
-      selectPlaceholder: "— seleziona —",
-      noSupplier: "— nessuno —",
+      selectPlaceholder: "Seleziona…",
+      noSupplier: "Nessuno",
     },
     cycle: {
       recentCycles: "Ultimi cicli",
@@ -887,7 +898,7 @@ export const it = {
       creating: "Creazione…",
       cycleCreated: "Ciclo creato",
       cycleUpdated: "Ciclo aggiornato",
-      cycleUpdatedShipping: (n: number) => `Ciclo aggiornato — ricalcolata spedizione per ${n} soci`,
+      cycleUpdatedShipping: (n: number) => `Ciclo aggiornato: ricalcolata spedizione per ${n} soci`,
       manageProducts: "Gestisci Prodotti",
       closeProducts: "Chiudi Prodotti",
       importListing: "📥 Importa listino",
@@ -959,7 +970,7 @@ export const it = {
       cycleProductsCount: (n: number) => `${n} prodotti`,
       noCycleProducts: "Nessun prodotto selezionato per questo ciclo.",
       addFromCatalog: "Aggiungi dal Catalogo",
-      selectSupplierOption: "— seleziona fornitore —",
+      selectSupplierOption: "Seleziona fornitore…",
       loadingCatalog: "Caricamento catalogo...",
       noSupplierCatalog: "Nessun prodotto trovato a catalogo per questo fornitore.",
       errorLoadingProducts: "Errore nel caricamento prodotti",
@@ -974,7 +985,7 @@ export const it = {
       loadedFromCatalog: (n: number) => `${n} prodotti caricati dal catalogo`,
       otherFormats: "Altri formati",
       otherFormatsHint: "Il modello Excel di WeGrocery e il caricamento diretto di un file per un fornitore.",
-      priceUpdatedArchived: "Prezzo aggiornato — versione precedente archiviata",
+      priceUpdatedArchived: "Prezzo aggiornato: versione precedente archiviata",
       editCatalogProduct: "Modifica prodotto",
       helpNome: "Es: Mela rossa, Insalata, Pane integrale. È quello che vede il socio nel form ordine.",
       helpVarieta: "Es: Bio, Stark, Granny Smith. Aggiungilo se ne esiste più di una variante.",
@@ -1283,6 +1294,19 @@ export const it = {
       productArchivedSuccess: "Prodotto archiviato",
     },
     stats: {
+      usageTitle: "Uso dell'app, ultimi 30 giorni",
+      usageHint: "Conteggi anonimi: nessun socio, nessun testo, niente dati della demo.",
+      usageEmpty: "Ancora nessun dato.",
+      usageEvents: {
+        login: "Accessi",
+        order_saved: "Ordini confermati",
+        order_cancelled: "Ordini cancellati",
+        topup_started: "Ricariche avviate",
+        card_order_started: "Pagamenti d'ordine con carta avviati",
+        cycle_created: "Cicli aperti",
+        cycle_closed: "Cicli chiusi",
+        welcome_closed: "Benvenuti chiusi",
+      } as Record<string, string>,
       noDataTitle: "Nessun dato disponibile",
       noDataFiltered: "Nessun dato per questo filtro",
       noDataHint: "Le statistiche compariranno qui dopo la chiusura del primo ciclo.",
@@ -1410,7 +1434,7 @@ export const it = {
       priceWeightBridge:
         "Devi correggere il prezzo o il peso effettivo (es. 1 kg → 800 g)? Chiudi e tocca il prodotto nel recap ordini.",
       memberLabel: "Socio",
-      selectMember: "— Scegli un socio —",
+      selectMember: "Scegli un socio…",
       noProducts:
         "Questo ciclo non ha prodotti attivi. Riattivane qualcuno per poter modificare l'ordine.",
       noteLabel: "Motivo (opzionale, mostrato al socio)",
@@ -1453,7 +1477,7 @@ export const it = {
         "Quando il fornitore ti rimanda il file con le pesate, caricalo qui per applicare le rettifiche. Accetta .xlsx, .ods e .csv (col CSV il riconoscimento è per nome socio/prodotto).",
       previewButton: "Anteprima modifiche",
       previewing: "Lettura in corso…",
-      errorsTitle: "Errori — niente verrà salvato:",
+      errorsTitle: "Errori, niente verrà salvato:",
       previewCorrections: "Rettifiche righe",
       noCorrections: "Nessuna riga modificata.",
       previewShipping: "Spedizione per socio",
@@ -1472,7 +1496,7 @@ export const it = {
         const parts: string[] = [];
         if (corrections > 0) parts.push(`${corrections} rettifiche`);
         if (shipping > 0) parts.push(`${shipping} spedizioni`);
-        return `Distinta applicata: ${parts.join(", ")} — ${members} soci aggiornati`;
+        return `Distinta applicata: ${parts.join(", ")}, ${members} soci aggiornati`;
       },
     },
     importWizard: {
@@ -1494,10 +1518,10 @@ export const it = {
       supplierLabel: "Fornitore",
       supplierExisting: "Esistente",
       supplierNew: "Crea nuovo",
-      supplierSelectPlaceholder: "— seleziona —",
+      supplierSelectPlaceholder: "Seleziona…",
       supplierNewPlaceholder: "Nome del nuovo fornitore",
       supplierSuggestedHint: (name: string) => `💡 Suggerito dal file: ${name}`,
-      supplierNoMatch: " — nessun match. Considera \"Crea nuovo\".",
+      supplierNoMatch: ": nessun match. Considera \"Crea nuovo\".",
       previewLabel: (n: number) => `Anteprima (${n} righe)`,
       noColumnsDetected: "Nessuna colonna rilevata.",
       columnPlaceholder: (n: number) => `Col ${n}`,
@@ -1505,7 +1529,7 @@ export const it = {
       requiredMissingWarning: "Mappa almeno Nome e Prezzo per continuare.",
       updatePriceOnDup: "Aggiorna il prezzo dei prodotti già in catalogo",
       addToCycle: "Aggiungi anche al ciclo aperto",
-      unmatchedEmojis: (n: number) => `⚠ ${n} icone non riconosciute — scegline una qui sotto`,
+      unmatchedEmojis: (n: number) => `⚠ ${n} icone non riconosciute: scegline una qui sotto`,
       colIconHeader: "Icona",
       colNameHeader: "Nome",
       colVariantHeader: "Varietà",
@@ -2061,29 +2085,39 @@ export const it = {
       "Invio email disabilitato fuori produzione: imposta EMAIL_REDIRECT_TO per ricevere le email di test.",
     emailSendFailed: "Errore invio email",
     distintaWarningNoOrder: (memberName: string, productName: string, amount: string) =>
-      `${memberName} · ${productName}: ${amount} inserito ma non c'era un ordine — ignorato.`,
+      `${memberName} · ${productName}: ${amount} inserito ma non c'era un ordine, ignorato.`,
     distintaOpenError: (detail: string) =>
       `Impossibile aprire il file: ${detail}. Carica un .xlsx, .ods o .csv generato dall'app.`,
     distintaCsvHeaderMissing:
       "Intestazione non trovata nel CSV: assicurati di aver salvato la distinta dell'app (deve esserci la colonna \"Prodotto\" e \"Totale prodotto\").",
     distintaCsvMemberUnmatched: (name: string) =>
-      `Colonna socio "${name}" non riconosciuta — saltata. (Nel CSV il match è per nome: verifica che corrisponda a un socio.)`,
+      `Colonna socio "${name}" non riconosciuta, saltata. (Nel CSV il match è per nome: verifica che corrisponda a un socio.)`,
     distintaCsvMemberAmbiguous: (name: string) =>
-      `Colonna socio "${name}" ambigua (più soci con lo stesso nome) — saltata.`,
+      `Colonna socio "${name}" ambigua (più soci con lo stesso nome), saltata.`,
     distintaCsvProductUnmatched: (name: string) =>
-      `Prodotto "${name}" non riconosciuto — riga saltata. (Nel CSV il match è per nome: verifica che non sia stato rinominato.)`,
+      `Prodotto "${name}" non riconosciuto, riga saltata. (Nel CSV il match è per nome: verifica che non sia stato rinominato.)`,
     distintaCsvRowWithoutProduct: (row: number) =>
       `Riga ${row} del CSV: ci sono importi ma il nome del prodotto è vuoto, riga saltata.`,
     distintaCsvProductAmbiguous: (name: string) =>
-      `Prodotto "${name}" ambiguo (più prodotti con lo stesso nome) — riga saltata.`,
+      `Prodotto "${name}" ambiguo (più prodotti con lo stesso nome), riga saltata.`,
     cancelReasonRequired: "Il motivo dell'annullamento è obbligatorio",
   },
+  unsubscribe: {
+    title: "Non ricevere più queste email",
+    confirm: (category: string, app: string) =>
+      `Vuoi smettere di ricevere per email gli avvisi «${category}» di ${app}? Li vedrai ancora nell'app, e puoi riattivare le email quando vuoi da Profilo, Preferenze notifiche.`,
+    button: "Non ricevere più queste email",
+    doneTitle: "Fatto",
+    done: "Non riceverai più queste email. Gli avvisi restano nell'app.",
+    invalidTitle: "Link non valido",
+    invalid: "Questo link non è valido o è scaduto. Puoi cambiare le email da Profilo, Preferenze notifiche.",
+  },
   email: {
-    notificationSubject: (appName: string, title: string) => `${appName} — ${title}`,
+    notificationSubject: (appName: string, title: string) => `${appName}: ${title}`,
     notificationCta: (url: string) => `Apri nell'app: ${url}`,
     notificationManagePrefs: (url: string) => `Gestisci le tue preferenze di notifica: ${url}`,
     notificationFooter: (orgName: string) => orgName,
-    supplierOrderSubject: (orgName: string, cycleTitle: string) => `Ordine ${orgName} — ${cycleTitle}`,
+    supplierOrderSubject: (orgName: string, cycleTitle: string) => `Ordine ${orgName}: ${cycleTitle}`,
     supplierOrderBody: (input: {
       appName: string;
       orgName: string;
@@ -2102,7 +2136,7 @@ in allegato la distinta dell'ordine di ${input.appName} per il ciclo "${input.cy
 
 Il file Excel ha una riga per ogni prodotto e una colonna per ogni socio. Le celle gialle sono già pre-compilate con il preventivo: dopo la pesata, modifichi solo le celle dove il costo effettivo è diverso (lasciando le altre invariate). La riga "Spedizione" indica la quota per socio (anche questa modificabile se varia). I totali per socio e per prodotto si ricalcolano da soli.
 
-Quando ha finito, ci rimandi il file in risposta a questa email — lo carichiamo nell'app con un click e i saldi dei soci vengono aggiornati automaticamente.
+Quando ha finito, ci rimandi il file in risposta a questa email: lo carichiamo nell'app con un click e i saldi dei soci vengono aggiornati automaticamente.
 
 Riepilogo del preventivo: ${input.grandTotal} euro su ${input.productCount} ${input.productCount === 1 ? "prodotto" : "prodotti"} per ${input.memberCount} ${input.memberCount === 1 ? "socio" : "soci"}.
 ${pickupLine}
@@ -2117,9 +2151,9 @@ ${input.orgName}
   csv: {
     distintaSheetName: "Distinta",
     distintaTitle: (cycleTitle: string, supplierName?: string) =>
-      `${cycleTitle} — Distinta fornitore${supplierName ? ` (${supplierName})` : ""}`,
+      `${cycleTitle}: Distinta fornitore${supplierName ? ` (${supplierName})` : ""}`,
     distintaInstructions:
-      'Compila le celle gialle con il costo effettivo (in euro) per ciascun socio. La riga "Spedizione" e il "Totale per socio" sono auto-calcolati. Non rinominare le colonne soci né eliminare il foglio _meta — servono per ricaricare la distinta nell\'app.',
+      'Compila le celle gialle con il costo effettivo (in euro) per ciascun socio. La riga "Spedizione" e il "Totale per socio" sono auto-calcolati. Non rinominare le colonne soci né eliminare il foglio _meta, servono per ricaricare la distinta nell\'app.',
     columnProduct: "Prodotto",
     columnVariant: "Varietà",
     columnFormat: "Formato",

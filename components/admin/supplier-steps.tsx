@@ -174,7 +174,7 @@ export function SupplierSteps({ cycleId }: { cycleId: string }) {
 
   const labelCls = "block text-label font-semibold uppercase tracking-wide text-brand-gray";
   const inputCls =
-    "w-full rounded-lg border border-brand-border bg-white min-h-11 px-3 py-2 text-[14px] font-mono text-brand-near-black disabled:bg-brand-warm-white";
+    "w-full rounded-lg border border-brand-border bg-surface min-h-11 px-3 py-2 text-[14px] tabular-nums text-brand-near-black disabled:bg-brand-warm-white";
   const sa = t.admin.supplierActions;
 
   return (
@@ -245,7 +245,7 @@ export function SupplierSteps({ cycleId }: { cycleId: string }) {
             <button
               onClick={handleSendMail}
               disabled={defaultsLoading || sending}
-              className="min-h-11 w-full rounded-xl px-5 sm:w-auto bg-brand-near-black py-2.5 text-[13px] font-bold text-white shadow-lg active:scale-95 disabled:opacity-50"
+              className="min-h-11 w-full rounded-xl px-5 sm:w-auto bg-inverse py-2.5 text-[13px] font-bold text-on-inverse shadow-lg active:scale-95 disabled:opacity-50"
             >
               {sending ? t.admin.common.sending : t.admin.supplierActions.sendButton}
             </button>
@@ -259,7 +259,7 @@ export function SupplierSteps({ cycleId }: { cycleId: string }) {
           aria-label={t.admin.supplierActions.uploadSection}
           accept=".xlsx,.ods,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.oasis.opendocument.spreadsheet,text/csv"
           onChange={onFileChange}
-          className="block w-full cursor-pointer rounded-xl border border-dashed border-primary/40 bg-white px-3 py-2 text-[12px] file:mr-3 file:rounded-lg file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-label file:font-bold file:text-on-primary"
+          className="block w-full cursor-pointer rounded-xl border border-dashed border-primary/40 bg-surface px-3 py-2 text-[12px] file:mr-3 file:rounded-lg file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-label file:font-bold file:text-on-primary"
         />
         {fileName && (
           <p className="mt-1 text-label text-brand-gray">
@@ -277,7 +277,7 @@ export function SupplierSteps({ cycleId }: { cycleId: string }) {
         {preview && (
           <div className="mt-3 space-y-3">
             {preview.errors.length > 0 && (
-              <div className="rounded-lg border border-brand-red/30 bg-brand-red-light p-3 text-[12px] text-brand-red">
+              <div className="rounded-lg border border-danger-text/30 bg-danger-soft p-3 text-[12px] text-danger-text">
                 <div className="mb-1 font-bold">{t.admin.supplierActions.errorsTitle}</div>
                 <ul className="list-disc pl-4">
                   {preview.errors.map((e, i) => (
@@ -339,7 +339,7 @@ export function SupplierSteps({ cycleId }: { cycleId: string }) {
                 (preview.corrections.length === 0 && preview.shippingChanges.length === 0) ||
                 applying
               }
-              className="min-h-11 w-full rounded-xl px-5 sm:w-auto bg-brand-near-black py-2.5 text-[13px] font-bold text-white shadow-lg active:scale-95 disabled:opacity-50"
+              className="min-h-11 w-full rounded-xl px-5 sm:w-auto bg-inverse py-2.5 text-[13px] font-bold text-on-inverse shadow-lg active:scale-95 disabled:opacity-50"
             >
               {applying ? t.admin.supplierActions.applying : t.admin.supplierActions.applyButton}
             </button>
@@ -352,7 +352,7 @@ export function SupplierSteps({ cycleId }: { cycleId: string }) {
 
 function Step({ n, title, description, children }: { n: number; title: string; description: string; children: ReactNode }) {
   return (
-    <li className="rounded-2xl border border-brand-border bg-white p-4">
+    <li className="rounded-2xl border border-brand-border bg-surface p-4">
       <h3 className="flex items-center gap-2 text-[14px] font-bold text-brand-near-black">
         <span aria-hidden className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-label font-bold text-on-primary">
           {n}
@@ -378,8 +378,8 @@ function PreviewSection({
   rows: Array<{ key: string; left: string; oldVal: number; newVal: number; delta: number }>;
 }) {
   return (
-    <div className="overflow-hidden rounded-lg border border-brand-border bg-white">
-      <div className="border-b border-brand-border bg-black/[0.02] px-3 py-1.5 text-label font-bold text-brand-near-black">
+    <div className="overflow-hidden rounded-lg border border-brand-border bg-surface">
+      <div className="border-b border-brand-border bg-tint/[0.02] px-3 py-1.5 text-label font-bold text-brand-near-black">
         {title} <span className="font-normal text-brand-gray">({rows.length})</span>
       </div>
       {rows.length === 0 ? (
@@ -389,12 +389,12 @@ function PreviewSection({
           {rows.map((r) => (
             <li key={r.key} className="flex items-center justify-between px-3 py-1.5 text-[12px]">
               <span className="truncate pr-2 text-brand-near-black">{r.left}</span>
-              <span className="shrink-0 font-mono text-label">
+              <span className="shrink-0 tabular-nums text-label">
                 <span className="text-muted line-through">{formatEur(r.oldVal)}</span>
                 <span className="mx-1 text-brand-gray">→</span>
                 <span className="font-bold text-brand-near-black">{formatEur(r.newVal)}</span>
                 <span
-                  className={`ml-2 ${r.delta > 0 ? "text-brand-red" : r.delta < 0 ? "text-accent-text" : "text-brand-gray"}`}
+                  className={`ml-2 ${r.delta > 0 ? "text-danger-text" : r.delta < 0 ? "text-accent-text" : "text-brand-gray"}`}
                 >
                   ({r.delta > 0 ? "+" : ""}
                   {formatEur(r.delta)})

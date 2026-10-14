@@ -62,14 +62,14 @@ export async function CycleAccountsView({
                       {movementKindLabel(l.kind, h)}
                       <span className="ml-1.5 text-label text-muted">{a.movementsCount(l.count)}</span>
                     </span>
-                    <span className="shrink-0 font-mono text-[13px] tabular-nums text-brand-near-black">{signed(l.cents)}</span>
+                    <span className="shrink-0 text-[13px] tabular-nums text-brand-near-black">{signed(l.cents)}</span>
                   </li>
                 ))}
               </ul>
               <CardBody className="border-t border-brand-border py-2.5">
                 <div className="flex justify-between text-[13px] font-bold text-brand-near-black">
                   <span>{a.net}</span>
-                  <span className="font-mono tabular-nums">{signed(money.netCents)}</span>
+                  <span className=" tabular-nums">{signed(money.netCents)}</span>
                 </div>
               </CardBody>
             </>
@@ -108,7 +108,7 @@ export async function CycleAccountsView({
                       {movementText(r, h)} · {formatDate(r.entryDate, { day: "numeric", month: "short" })}
                     </span>
                   </span>
-                  <span className="shrink-0 font-mono text-[13px] tabular-nums text-brand-near-black">{formatMoney(r.amount)}</span>
+                  <span className="shrink-0 text-[13px] tabular-nums text-brand-near-black">{formatMoney(r.amount)}</span>
                 </li>
               ))}
               {money.adjustments.length > shown.length && (
@@ -142,9 +142,9 @@ export async function CycleAccountsView({
         )}
 
         {cycle.status === "closed" && (
-          <Card className="border-brand-red/30">
+          <Card className="border-danger-text/30">
             <CardBody>
-              <h3 className="text-[14px] font-bold text-brand-red">{w.dangerZone}</h3>
+              <h3 className="text-[14px] font-bold text-danger-text">{w.dangerZone}</h3>
               <p className="mt-1 mb-3 max-w-prose text-[13px] text-brand-gray">{w.cancelIntro}</p>
               <CancelCycleButton cycleId={cycle.cycleId} cycleTitle={cycle.title} />
             </CardBody>

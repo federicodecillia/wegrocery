@@ -97,7 +97,7 @@ export function StoricoTabs({ orderHistory, movements, balance, bankRefs }: Prop
     <>
       <h1 className="mb-3 text-title font-black text-brand-near-black">{t.nav.history}</h1>
       {/* Segmented tabs */}
-      <div role="tablist" aria-label={t.nav.history} className="mb-5 flex rounded-xl bg-black/[0.07] p-1 lg:max-w-[420px]">
+      <div role="tablist" aria-label={t.nav.history} className="mb-5 flex rounded-xl bg-tint/[0.07] p-1 lg:max-w-[420px]">
         {TABS.map((tabKey) => (
           <button
             key={tabKey}
@@ -109,9 +109,9 @@ export function StoricoTabs({ orderHistory, movements, balance, bankRefs }: Prop
             tabIndex={tab === tabKey ? 0 : -1}
             onClick={() => setTab(tabKey)}
             onKeyDown={onTabKey}
-            className={`flex-1 rounded-lg py-[9px] text-[14px] font-semibold transition-all ${
+            className={`flex-1 rounded-lg py-2.25 text-[14px] font-semibold transition-all ${
               tab === tabKey
-                ? "bg-white text-brand-near-black shadow-[0_1px_4px_rgba(45,43,41,0.10)]"
+                ? "bg-surface text-brand-near-black shadow-[0_1px_4px_rgba(45,43,41,0.10)]"
                 : "bg-transparent text-brand-gray"
             }`}
           >
@@ -140,7 +140,7 @@ export function StoricoTabs({ orderHistory, movements, balance, bankRefs }: Prop
                     if (el) cycleRefs.current.set(o.cycleId, el);
                     else cycleRefs.current.delete(o.cycleId);
                   }}
-                  className={`mb-3 overflow-hidden rounded-card border bg-white shadow-card ${
+                  className={`mb-3 overflow-hidden rounded-card border bg-surface shadow-card ${
                     isShown ? "lg:border-primary-mid lg:bg-primary-soft" : "border-brand-border"
                   }`}
                 >
@@ -149,13 +149,13 @@ export function StoricoTabs({ orderHistory, movements, balance, bankRefs }: Prop
                     onClick={() => openCycle(o.cycleId)}
                     aria-haspopup={wide ? undefined : "dialog"}
                     aria-current={wide && isShown ? "true" : undefined}
-                    className="flex w-full items-center justify-between gap-3 px-4 py-[14px] text-left hover:bg-black/[0.02]"
+                    className="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left hover:bg-tint/[0.02]"
                   >
                     <div className="min-w-0 flex-1">
                       <div className="text-[14px] font-bold tracking-[-0.01em] text-brand-near-black">
                         {o.title}
                       </div>
-                      <div className="mt-[2px] font-mono text-label text-muted">
+                      <div className="mt-0.5 tabular-nums text-label text-muted">
                         {formatDate(o.pickupDate)}
                       </div>
                     </div>
@@ -163,7 +163,7 @@ export function StoricoTabs({ orderHistory, movements, balance, bankRefs }: Prop
                       {/* Not charged yet: what the order costs, muted and unsigned
                           until the close moves the balance. */}
                       <span
-                        className={`whitespace-nowrap font-mono text-[15px] font-bold tabular-nums ${
+                        className={`whitespace-nowrap text-[15px] font-bold tabular-nums ${
                           o.charged ? "text-brand-near-black" : "text-muted"
                         }`}
                       >
@@ -184,9 +184,9 @@ export function StoricoTabs({ orderHistory, movements, balance, bankRefs }: Prop
           )}
           </div>
           {shownCycle && (
-            <section aria-labelledby="cycle-detail-title" className="hidden rounded-card border border-brand-border bg-white p-4 shadow-card lg:sticky lg:top-4 lg:block">
+            <section aria-labelledby="cycle-detail-title" className="hidden rounded-card border border-brand-border bg-surface p-4 shadow-card lg:sticky lg:top-4 lg:block">
               <h2 id="cycle-detail-title" className="text-[15px] font-bold text-brand-near-black">{shownCycle.title}</h2>
-              <p className="mt-[2px] mb-3 font-mono text-label text-muted">{formatDate(shownCycle.pickupDate)}</p>
+              <p className="mt-0.5 mb-3 tabular-nums text-label text-muted">{formatDate(shownCycle.pickupDate)}</p>
               <CycleDetail entry={shownCycle} bankRefs={bankRefs} />
             </section>
           )}
@@ -207,7 +207,7 @@ export function StoricoTabs({ orderHistory, movements, balance, bankRefs }: Prop
               <p className="mt-1 text-[14px] text-brand-gray">{t.history.noMovementsHint}</p>
             </div>
           ) : (
-            <div className="overflow-hidden rounded-card border border-brand-border bg-white shadow-card">
+            <div className="overflow-hidden rounded-card border border-brand-border bg-surface shadow-card">
               {movements.map((e) => (
                 <MovementRow
                   key={e.entryId}
@@ -257,8 +257,8 @@ function CycleDetail({ entry, bankRefs }: { entry: CycleHistoryEntry; bankRefs: 
     <>
       {entry.lines.length > 0 && (
         <>
-          <div className="mb-[5px] font-mono text-label text-muted">{t.history.products}</div>
-          <div className="divide-y divide-brand-border rounded-xl border border-brand-border bg-white">
+          <div className="mb-1.25 tabular-nums text-label text-muted">{t.history.products}</div>
+          <div className="divide-y divide-brand-border rounded-xl border border-brand-border bg-surface">
             {entry.lines.map((l, index) => (
               <div key={`${l.productName}-${index}`} className="flex items-start gap-3 px-3 py-2.5">
                 <span aria-hidden="true" className="w-[18px] shrink-0 text-[18px] leading-none">
@@ -269,10 +269,10 @@ function CycleDetail({ entry, bankRefs }: { entry: CycleHistoryEntry; bankRefs: 
                     {l.productName}
                     {l.variant && <span className="ml-1 font-normal text-brand-gray">{l.variant}</span>}
                   </div>
-                  <div className="mt-[2px] text-label leading-snug text-brand-gray">
+                  <div className="mt-0.5 text-label leading-snug text-brand-gray">
                     {[l.supplierName, l.category].filter(Boolean).join(" · ")}
                   </div>
-                  <div className="mt-[2px] font-mono text-label text-muted">
+                  <div className="mt-0.5 tabular-nums text-label text-muted">
                     {l.quantity} × {formatEur(l.unitPrice)} ={" "}
                     {l.actualLineTotal !== null && l.actualLineTotal !== l.lineTotal ? (
                       // Weighed by the supplier: what the member actually pays.
@@ -318,14 +318,14 @@ function CycleTotals({ entry }: { entry: CycleHistoryEntry }) {
   const perOrder = entry.paymentMode === "per_order";
   if (!entry.charged) {
     return (
-      <div className="mt-[10px] space-y-[3px] font-mono text-label text-brand-gray">
+      <div className="mt-2.5 space-y-0.75 tabular-nums text-label text-brand-gray">
         {perOrder && entry.paid !== 0 && <TotalRow label={t.history.paid} value={formatSignedMoney(entry.paid)} />}
         <p>{perOrder ? t.history.settledAtClose : t.history.chargedAtClose}</p>
       </div>
     );
   }
   return (
-    <div className="mt-[10px] space-y-[3px] font-mono text-label text-brand-gray">
+    <div className="mt-2.5 space-y-0.75 tabular-nums text-label text-brand-gray">
       {perOrder && <TotalRow label={t.history.paid} value={formatSignedMoney(entry.paid)} />}
       <TotalRow label={t.history.products} value={formatSignedMoney(-entry.productsTotal)} />
       {entry.shipping !== 0 && (
@@ -340,7 +340,7 @@ function CycleTotals({ entry }: { entry: CycleHistoryEntry }) {
       {perOrder && entry.refunded !== 0 && (
         <TotalRow label={t.history.refunded} value={formatSignedMoney(-entry.refunded)} />
       )}
-      <div className="flex justify-between border-t border-brand-border pt-[5px] text-[12px] font-bold text-brand-near-black">
+      <div className="flex justify-between border-t border-brand-border pt-1.25 text-[12px] font-bold text-brand-near-black">
         <span>{perOrder ? t.history.cycleNetPerOrder : t.history.cycleNet}</span>
         <span>{formatSignedMoney(entry.net)}</span>
       </div>

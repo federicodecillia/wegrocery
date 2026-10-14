@@ -59,7 +59,7 @@ export function DuplicateMembers({
         {rows.map(({ pair, survivor, absorbed }) => (
           <li
             key={`${pair.survivorId}:${pair.absorbedId}`}
-            className="space-y-2 rounded-lg border border-brand-border bg-white p-3"
+            className="space-y-2 rounded-lg border border-brand-border bg-surface p-3"
           >
             {line(survivor)}
             {line(absorbed)}
@@ -74,7 +74,7 @@ export function DuplicateMembers({
               <button
                 onClick={() => dismiss(pair)}
                 disabled={isPending}
-                className="min-h-[36px] rounded-full border border-brand-border bg-white px-3 text-label font-semibold text-brand-gray disabled:opacity-40"
+                className="min-h-[36px] rounded-full border border-brand-border bg-surface px-3 text-label font-semibold text-brand-gray disabled:opacity-40"
               >
                 {d.dismiss}
               </button>

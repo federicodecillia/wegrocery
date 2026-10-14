@@ -27,7 +27,7 @@ export function SearchMissesCard({ misses }: { misses: { query: string; count: n
   }
 
   return (
-    <section className="rounded-xl border border-brand-border bg-white p-4 shadow-sm">
+    <section className="rounded-xl border border-brand-border bg-surface p-4">
       <h3 className="text-[13px] font-bold text-brand-near-black">{s.title}</h3>
       <p className="mt-1 text-[12px] text-brand-gray">{s.hint(MISS_RETENTION_DAYS)}</p>
       {misses.length === 0 ? (
@@ -40,7 +40,7 @@ export function SearchMissesCard({ misses }: { misses: { query: string; count: n
                 key={m.query}
                 className="rounded-full border border-brand-border bg-brand-warm-white px-3 py-1 text-[13px] text-brand-near-black"
               >
-                {m.query} <span className="font-mono text-label text-muted">{s.times(m.count)}</span>
+                {m.query} <span className="tabular-nums text-label text-muted">{s.times(m.count)}</span>
               </li>
             ))}
           </ul>

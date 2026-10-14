@@ -29,7 +29,7 @@ export function CopyField({
   }
 
   return (
-    <div className="flex items-center justify-between gap-3 border-b border-brand-border py-[10px] last:border-none">
+    <div className="flex items-center justify-between gap-3 border-b border-brand-border py-2.5 last:border-none">
       <div className="min-w-0">
         <div className="font-mono text-label uppercase tracking-[0.1em] text-brand-gray">{label}</div>
         <div className={`text-[14px] text-brand-near-black ${mono ? "break-all font-mono" : "break-words font-medium"}`}>
@@ -39,7 +39,7 @@ export function CopyField({
       <button
         type="button"
         onClick={handleCopy}
-        className="hit-44 shrink-0 rounded-full border border-brand-border px-[12px] py-[5px] font-mono text-label font-bold uppercase tracking-widest text-brand-near-black"
+        className="hit-44 shrink-0 rounded-full border border-brand-border px-3 py-1.25 font-mono text-label font-bold uppercase tracking-widest text-brand-near-black"
       >
         {copied ? t.topup.copied : t.topup.copy}
       </button>

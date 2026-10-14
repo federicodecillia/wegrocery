@@ -74,7 +74,7 @@ export function InstallPrompt() {
   }
 
   return (
-    <section className="mt-[14px] rounded-card border border-accent/20 bg-accent-soft p-[14px_18px]">
+    <section className="mt-3.5 rounded-card border border-accent/20 bg-accent-soft py-3.5 px-4.5">
       <h2 className="text-[15px] font-black tracking-[-0.01em] text-brand-near-black">{t.install.title}</h2>
       <p className="mt-1 text-[14px] leading-[1.45] text-brand-near-black">
         {hint === "prompt" ? t.install.promptBody : t.install.iosBody}

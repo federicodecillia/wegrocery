@@ -21,6 +21,24 @@ stanno nella PR.
 
 ## [Non rilasciato]
 
+## [1.28.0] — 14 ottobre 2026
+
+*L'app ha un tema scuro, e gli aggiornamenti del database sono più sicuri.*
+
+### Aggiunte
+- 📊 **L'uso dell'app a colpo d'occhio.** In Admin → Statistiche si vedono accessi, ordini, ricariche e cicli degli ultimi 30 giorni: conteggi anonimi, senza soci e senza testi, e nulla dalla demo.
+- 👋 **Il benvenuto si ricorda di te.** Riparte dal passo in cui eri rimasto, su qualsiasi dispositivo, e segna ciò che hai già fatto (una ricarica, un ordine, le scelte sulle notifiche, la famiglia).
+- 📧 **Disiscrizione con un tocco.** Le email di avviso mostrano il pulsante "Annulla iscrizione" della tua app di posta, che spegne le email di quel tipo (gli avvisi restano nell'app), e un doppio clic non manda mai due volte la stessa email.
+- 🔐 **Ruolo limitato per il database (facoltativo).** L'app può collegarsi con un ruolo che legge e scrive i dati ma non può cambiare lo schema; `scripts/create-app-role.mjs` lo crea e lo stato della configurazione lo mostra.
+- 🌙 **Tema scuro.** In Profilo → App c'è "Aspetto": come il telefono, sempre chiaro o sempre scuro. I colori del gruppo restano e si leggono bene.
+
+### Modificato
+- 🔤 **Nuovi caratteri.** I testi usano Inter, i titoli Geist e le piccole etichette maiuscole JetBrains Mono; gli importi sono allineati in colonna.
+- 🗄️ **Aggiornamenti del database più sicuri.** Ogni aggiornamento si applica in un solo passo e si ferma se il database è occupato, così un errore non lascia nulla a metà. Per applicarlo in produzione serve una conferma esplicita.
+
+### Risolto
+- 🐞 **Le segnalazioni di errore arrivano a chi mantiene l'app.** Alcuni errori (pagamenti, email di accesso) restavano solo nei registri del server e nessuno veniva avvisato: ora arrivano anche al servizio che li raccoglie, senza dati dei soci.
+
 ## [1.27.0] — 12 ottobre 2026
 
 *Ogni nuovo gruppo si configura dall'app: nome, logo, colori e Stripe, con ogni impostazione tecnica spiegata.*
@@ -604,6 +622,7 @@ stanno nella PR.
 
 ---
 
+[1.28.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.28.0
 [1.27.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.27.0
 [1.26.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.26.0
 [1.25.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.25.0

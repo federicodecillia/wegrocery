@@ -25,6 +25,16 @@ export async function getConfigStatus(): Promise<ConfigItem[]> {
   } catch {
     // No database: the database item already says so.
   }
+  let restrictedRole: boolean | null = null;
+  try {
+    const { rows } = await getDb().execute<{ restricted: boolean }>(sql`
+      SELECT NOT has_schema_privilege(current_user, 'public', 'CREATE')
+         AND NOT EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'members' AND tableowner = current_user)
+         AS restricted`);
+    restrictedRole = rows[0]?.restricted === true;
+  } catch {
+    // No database: the database item already says so.
+  }
   let stripeInApp: ConfigFacts["stripeInApp"];
   try {
     const credentials = await getStripeCredentials();
@@ -42,6 +52,7 @@ export async function getConfigStatus(): Promise<ConfigItem[]> {
     brandError: null,
     brandUnknownFields: brandUnknownFields(process.env.NEXT_PUBLIC_BRAND_JSON),
     hasActiveAdmin,
+    restrictedRole,
     stripeInApp,
   });
 }

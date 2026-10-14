@@ -112,8 +112,8 @@ export function MergeMembersDialog({
             <div className="flex items-center justify-between gap-2 rounded-lg border border-brand-border bg-brand-warm-white px-3 py-2">
               <div className="min-w-0">
                 <div className="truncate text-[13px] font-semibold text-brand-near-black">{absorbed.fullName}</div>
-                <div className="truncate font-mono text-label text-brand-gray">{absorbed.email}</div>
-                <div className="font-mono text-label text-brand-gray">
+                <div className="truncate tabular-nums text-label text-brand-gray">{absorbed.email}</div>
+                <div className="tabular-nums text-label text-brand-gray">
                   {t.admin.treasury.memberBalance(formatMoney(absorbed.balance))}
                 </div>
               </div>
@@ -121,7 +121,7 @@ export function MergeMembersDialog({
                 <button
                   type="button"
                   onClick={swap}
-                  className="min-h-11 shrink-0 rounded-lg border border-brand-border bg-white px-3 text-[12px] font-semibold text-brand-near-black"
+                  className="min-h-11 shrink-0 rounded-lg border border-brand-border bg-surface px-3 text-[12px] font-semibold text-brand-near-black"
                 >
                   ⇅ {m.swap}
                 </button>
@@ -143,7 +143,7 @@ export function MergeMembersDialog({
         {loading && <p className="text-label text-muted">{m.loading}</p>}
 
         {error && !loading && (
-          <p role="alert" className="rounded-lg border border-brand-red/30 bg-brand-red-light p-3 text-[13px] text-brand-red">
+          <p role="alert" className="rounded-lg border border-danger-text/30 bg-danger-soft p-3 text-[13px] text-danger-text">
             {error}
           </p>
         )}
@@ -173,7 +173,7 @@ export function MergeMembersDialog({
                   ))}
                 </div>
                 {preview.droppedAddresses.map((a) => (
-                  <p key={a} className="mt-1 text-label text-brand-red">
+                  <p key={a} className="mt-1 text-label text-danger-text">
                     {m.aliasDropped(a)}
                   </p>
                 ))}

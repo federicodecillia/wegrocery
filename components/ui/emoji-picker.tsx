@@ -134,7 +134,7 @@ export function EmojiPicker({ name, value, onChange }: Props) {
               width: Math.min(POPOVER_WIDTH, window.innerWidth - VIEWPORT_MARGIN * 2),
               maxHeight: coords.maxHeight,
             }}
-            className="z-[80] flex flex-col overflow-hidden rounded-xl border border-brand-border bg-white shadow-lg"
+            className="z-[80] flex flex-col overflow-hidden rounded-xl border border-brand-border bg-surface shadow-lg"
           >
             <div className="border-b border-brand-border p-2">
               <input
@@ -202,7 +202,7 @@ export function EmojiPicker({ name, value, onChange }: Props) {
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="dialog"
         aria-expanded={open}
-        className="flex h-[38px] w-full items-center justify-center rounded-lg border border-brand-border bg-white text-2xl leading-none transition hover:border-accent/60"
+        className="flex h-[38px] w-full items-center justify-center rounded-lg border border-brand-border bg-surface text-2xl leading-none transition hover:border-accent/60"
       >
         {current}
       </button>

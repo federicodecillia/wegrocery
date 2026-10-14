@@ -532,7 +532,7 @@ export function OrderForm({
             {t.cycle.open}
           </Badge>
         </div>
-        <p className="font-mono text-label text-brand-gray mt-[3px]">
+        <p className="tabular-nums text-label text-brand-gray mt-0.75">
           {cycleTitle}
           {supplierName ? ` · ${supplierName}` : ""}
           {orderCloseAt ? ` · ${t.cycle.closes(formatDeadline(orderCloseAt))}` : ""}
@@ -543,7 +543,7 @@ export function OrderForm({
 
       {/* Unconfirmed edits found on arrival (order_drafts). */}
       {isEditing && showDraftBanner && (
-        <div className="mt-3 rounded-card border border-primary-mid bg-primary-soft p-[12px_14px]">
+        <div className="mt-3 rounded-card border border-primary-mid bg-primary-soft py-3 px-3.5">
           <p className="text-[14px] font-bold text-brand-near-black">{t.order.draftBannerTitle}</p>
           <p className="mt-1 text-[12px] leading-[1.45] text-brand-near-black">{t.order.draftBannerBody}</p>
           {resumedDraft !== null && resumedDraft.dropped > 0 && (
@@ -663,7 +663,7 @@ export function OrderForm({
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t.order.searchPlaceholder}
             autoComplete="off"
-            className="min-h-11 w-full rounded-full border border-brand-border bg-white px-4 text-[14px] text-brand-near-black placeholder:text-muted"
+            className="min-h-11 w-full rounded-full border border-brand-border bg-surface px-4 text-[14px] text-brand-near-black placeholder:text-muted"
           />
         </div>
       )}
@@ -701,13 +701,13 @@ export function OrderForm({
               >
                 <div className="mr-3 flex min-w-0 flex-1 items-start gap-2">
                   {anyEmoji && (
-                    <span aria-hidden="true" className="mt-[1px] w-[22px] shrink-0 text-[22px] leading-none">
+                    <span aria-hidden="true" className="mt-0.25 w-[22px] shrink-0 text-[22px] leading-none">
                       {memberProductEmoji(p.emoji, p.name)}
                     </span>
                   )}
                   <div className="min-w-0 flex-1">
                     <div className="text-[14px] font-medium text-brand-near-black">{p.name}</div>
-                    <div className="mt-[2px] flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                    <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
                       {meta && <span className="text-[13px] text-brand-gray">{meta}</span>}
                       <span className="text-[14px] font-semibold tabular-nums text-primary-text">
                         {formatEur(parseFloat(p.unitPrice))}
@@ -719,7 +719,7 @@ export function OrderForm({
                       )}
                     </div>
                     {p.notes && (
-                      <p className="mt-[2px] text-[13px] leading-[1.4] text-muted">{p.notes}</p>
+                      <p className="mt-0.5 text-[13px] leading-[1.4] text-muted">{p.notes}</p>
                     )}
                   </div>
                 </div>
@@ -728,7 +728,7 @@ export function OrderForm({
                     and screen-reader focus stays on the button just pressed. */}
                 <div
                   className={`flex flex-shrink-0 items-center rounded-full p-0.5 ${
-                    qty === 0 ? "bg-black/[0.06]" : "bg-primary-soft"
+                    qty === 0 ? "bg-tint/[0.06]" : "bg-primary-soft"
                   }`}
                 >
                   {qty > 0 && (
@@ -742,7 +742,7 @@ export function OrderForm({
                         if (qty === 1) plus?.focus();
                       }}
                       aria-label={t.order.lessNamed(p.name)}
-                      className="pressable hit-44 flex h-10 w-10 items-center justify-center rounded-full text-[18px] font-light text-brand-gray"
+                      className="pressable hit-44 flex size-(--control-h) items-center justify-center rounded-full text-[18px] font-light text-brand-gray"
                     >
                       −
                     </button>
@@ -751,7 +751,7 @@ export function OrderForm({
                     <span
                       key="qty"
                       aria-hidden="true"
-                      className="min-w-[22px] text-center font-mono text-[13px] font-bold text-brand-near-black"
+                      className="min-w-[22px] text-center tabular-nums text-[13px] font-bold text-brand-near-black"
                     >
                       {qty}
                     </span>
@@ -762,7 +762,7 @@ export function OrderForm({
                     data-plus
                     onClick={() => changeQty(p.productId, 1)}
                     aria-label={qty === 0 ? t.order.addNamed(p.name) : t.order.moreNamed(p.name)}
-                    className={`pressable hit-44 flex h-10 w-10 items-center justify-center rounded-full text-[18px] font-light ${
+                    className={`pressable hit-44 flex size-(--control-h) items-center justify-center rounded-full text-[18px] font-light ${
                       qty === 0 ? "text-brand-gray" : "bg-primary text-on-primary"
                     }`}
                   >
@@ -781,7 +781,7 @@ export function OrderForm({
 
       {sideCart && (
         <aside aria-labelledby="cart-title" className="hidden lg:sticky lg:top-4 lg:block">
-          <div className="rounded-card border border-brand-border bg-white p-4 shadow-card">
+          <div className="rounded-card border border-brand-border bg-surface p-4 shadow-card">
             <h2 id="cart-title" className="text-[15px] font-bold text-brand-near-black">
               {t.order.cartTitle}
               {cartIds.size > 0 && <span className="ml-1.5 font-normal text-brand-gray">({cartIds.size})</span>}
@@ -809,7 +809,7 @@ export function OrderForm({
                           type="button"
                           onClick={() => changeQty(p.productId, -1)}
                           aria-label={t.order.lessNamed(p.name)}
-                          className="pressable flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-black/[0.06] text-[16px] text-brand-gray hover:bg-black/[0.1]"
+                          className="pressable flex size-(--control-h) shrink-0 items-center justify-center rounded-full bg-tint/[0.06] text-[16px] text-brand-gray hover:bg-tint/[0.1]"
                         >
                           −
                         </button>

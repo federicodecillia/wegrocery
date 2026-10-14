@@ -49,6 +49,26 @@ describe("sendMail outbound policy wiring", () => {
     await sendMail(mail);
     expect(send).toHaveBeenCalledWith(
       expect.objectContaining({ to: ["member@example.org"], cc: ["admin@example.org"], subject: "Ordine" }),
+      expect.objectContaining({ idempotencyKey: expect.any(String) }),
+    );
+  });
+
+  it("sends the same key for the same message in the same minute, another key for another message", async () => {
+    process.env.VERCEL_ENV = "production";
+    await sendMail(mail);
+    await sendMail(mail);
+    await sendMail({ ...mail, text: "altro" });
+    const keys = send.mock.calls.map((c) => ((c as unknown[])[1] as { idempotencyKey: string }).idempotencyKey);
+    expect(keys[0]).toBe(keys[1]);
+    expect(keys[2]).not.toBe(keys[0]);
+  });
+
+  it("uses the caller's key and forwards the headers", async () => {
+    process.env.VERCEL_ENV = "production";
+    await sendMail({ ...mail, idempotencyKey: "notification-1", headers: { "List-Unsubscribe": "<https://a>" } });
+    expect(send).toHaveBeenCalledWith(
+      expect.objectContaining({ headers: { "List-Unsubscribe": "<https://a>" } }),
+      { idempotencyKey: "notification-1" },
     );
   });
 

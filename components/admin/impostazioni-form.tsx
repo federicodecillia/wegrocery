@@ -9,7 +9,7 @@ import { formatDate, formatDateTime } from "@/lib/i18n/format";
 import { BANK_REFERENCE_MAX, fillBankReference } from "@/lib/payments/bank-reference";
 import type { PaymentSettingsInput, StripeKeyState } from "@/lib/payments/settings";
 
-const card = "rounded-xl border border-brand-border bg-white p-4 shadow-sm";
+const card = "rounded-xl border border-brand-border bg-surface p-4";
 const inputCls =
   "w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black";
 const labelCls = "mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray";
@@ -150,7 +150,7 @@ export function PaymentSettingsForm({
               spellCheck={false}
               value={values.bankIban}
               onChange={(e) => update("bankIban", e.target.value)}
-              className={`${inputCls} font-mono`}
+              className={`${inputCls} tabular-nums`}
             />
           </div>
           <div>
@@ -202,7 +202,7 @@ export function PaymentSettingsForm({
             <span className="flex items-center gap-2 text-[13px] font-bold text-brand-near-black">
               {s.onlineTitle}
               {stripeKey.usable && !stripeKey.livemode && (
-                <span className="rounded-full bg-primary-soft px-2 py-0.5 font-mono text-label font-semibold text-primary-text">
+                <span className="rounded-full bg-primary-soft px-2 py-0.5 tabular-nums text-label font-semibold text-primary-text">
                   {s.testMode}
                 </span>
               )}
@@ -218,7 +218,7 @@ export function PaymentSettingsForm({
           />
         </label>
         {!stripeKey.usable && (
-          <p className="mt-2 rounded-lg bg-brand-red-light px-3 py-2 text-[12px] text-brand-red">
+          <p className="mt-2 rounded-lg bg-danger-soft px-3 py-2 text-[12px] text-danger-text">
             {s.stripeUnavailable[stripeKey.reason]}
           </p>
         )}
@@ -232,7 +232,7 @@ export function PaymentSettingsForm({
         {isPending ? t.admin.common.saving : t.admin.common.save}
       </button>
       {savedAt && (
-        <p className="text-center font-mono text-label text-muted">
+        <p className="text-center tabular-nums text-label text-muted">
           {s.lastSaved(
             formatDateTime(savedAt, { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" }),
           )}

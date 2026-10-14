@@ -123,8 +123,8 @@ function VersionBlock({
 
   if (collapsed) {
     return (
-      <details className="group overflow-hidden rounded-card border border-brand-border bg-white shadow-card">
-        <summary className="cursor-pointer hover:bg-black/[0.02] list-none bg-brand-warm-white px-4 py-3 group-open:border-b group-open:border-brand-border [&::-webkit-details-marker]:hidden">
+      <details className="group overflow-hidden rounded-card border border-brand-border bg-surface shadow-card">
+        <summary className="cursor-pointer hover:bg-tint/[0.02] list-none bg-brand-warm-white px-4 py-3 group-open:border-b group-open:border-brand-border [&::-webkit-details-marker]:hidden">
           {head}
         </summary>
         {body}
@@ -133,7 +133,7 @@ function VersionBlock({
   }
 
   return (
-    <article className="overflow-hidden rounded-card border border-brand-border bg-white shadow-card">
+    <article className="overflow-hidden rounded-card border border-brand-border bg-surface shadow-card">
       <header className="border-b border-brand-border bg-brand-warm-white px-4 py-3">{head}</header>
       {body}
     </article>
@@ -193,13 +193,13 @@ function emojiFor(heading: string): string {
 function toneFor(heading: string): string {
   const h = heading.toLowerCase();
   if (h === "added" || h === "aggiunte") return "bg-accent-soft text-accent-text";
-  if (h === "fixed" || h === "risolto") return "bg-brand-red-light text-brand-red";
+  if (h === "fixed" || h === "risolto") return "bg-danger-soft text-danger-text";
   if (h === "changed" || h === "modificato")
     return "bg-primary-soft text-primary-text";
-  if (h === "performance") return "bg-black/[0.06] text-brand-near-black";
-  if (h === "removed" || h === "rimosso") return "bg-black/[0.08] text-brand-gray";
+  if (h === "performance") return "bg-tint/[0.06] text-brand-near-black";
+  if (h === "removed" || h === "rimosso") return "bg-tint/[0.08] text-brand-gray";
   if (h === "security" || h === "sicurezza")
-    return "bg-brand-red-light text-brand-red";
+    return "bg-danger-soft text-danger-text";
   if (h === "documentation" || h === "documentazione")
     return "bg-accent-soft text-accent-text";
   return "bg-brand-warm-white text-brand-gray";
@@ -227,17 +227,17 @@ function InlineMarkdown({ text }: { text: string }) {
 
 function LanguageToggle({ current }: { current: ChangelogLanguage }) {
   return (
-    <div className="flex shrink-0 overflow-hidden rounded-full border border-brand-border bg-white text-label font-bold">
+    <div className="flex shrink-0 overflow-hidden rounded-full border border-brand-border bg-surface text-label font-bold">
       <Link
         href="/changelog?lang=it"
-        className={`px-2.5 py-1 ${current === "it" ? "bg-brand-near-black text-white" : "text-brand-gray"}`}
+        className={`px-2.5 py-1 ${current === "it" ? "bg-inverse text-on-inverse" : "text-brand-gray"}`}
         aria-current={current === "it" ? "page" : undefined}
       >
         IT
       </Link>
       <Link
         href="/changelog?lang=en"
-        className={`px-2.5 py-1 ${current === "en" ? "bg-brand-near-black text-white" : "text-brand-gray"}`}
+        className={`px-2.5 py-1 ${current === "en" ? "bg-inverse text-on-inverse" : "text-brand-gray"}`}
         aria-current={current === "en" ? "page" : undefined}
       >
         EN

@@ -16,23 +16,23 @@ export async function MemberOrders({ memberId }: { memberId: string }) {
       <div className="flex flex-wrap items-center justify-between gap-2">
         <Link
           href={adminHref("soci")}
-          className="inline-flex min-h-10 items-center text-[13px] font-semibold text-primary-text"
+          className="inline-flex min-h-(--control-h) items-center text-[13px] font-semibold text-primary-text"
         >
           {t.admin.members.backToMembers}
         </Link>
         {member && (
           <Link
             href={adminHref("cassa", null, { member: memberId })}
-            className="inline-flex min-h-10 items-center rounded-xl border border-brand-border bg-white px-3 text-[13px] font-semibold text-brand-near-black"
+            className="inline-flex min-h-(--control-h) items-center rounded-xl border border-brand-border bg-surface px-3 text-[13px] font-semibold text-brand-near-black"
           >
             {t.admin.members.seeMovements}
           </Link>
         )}
       </div>
       {member && (
-        <div className="rounded-xl border border-brand-border bg-white px-4 py-3 shadow-sm">
+        <div className="rounded-xl border border-brand-border bg-surface px-4 py-3 shadow-sm">
           <h2 className="text-[15px] font-bold text-brand-near-black">{member.fullName}</h2>
-          <div className="mt-0.5 font-mono text-label text-muted">
+          <div className="mt-0.5 tabular-nums text-label text-muted">
             {member.email} ·{" "}
             {t.admin.orders.memberSummary(orders.length, formatEur(orders.reduce((s, o) => s + o.total, 0)))}
           </div>
@@ -56,7 +56,7 @@ export async function MemberOrders({ memberId }: { memberId: string }) {
                     {cycle.cycleTitle}
                   </Link>
                   {cycle.pickupDate && (
-                    <div className="mt-0.5 font-mono text-label text-muted">
+                    <div className="mt-0.5 tabular-nums text-label text-muted">
                       {t.admin.orders.pickupLabel} {formatDate(cycle.pickupDate)}
                     </div>
                   )}
@@ -66,12 +66,12 @@ export async function MemberOrders({ memberId }: { memberId: string }) {
                     className={`rounded-full px-2 py-0.5 text-label font-bold ${
                       cycle.cycleStatus === "open"
                         ? "bg-accent-soft text-accent-text"
-                        : "bg-black/[0.05] text-brand-gray"
+                        : "bg-tint/[0.05] text-brand-gray"
                     }`}
                   >
                     {cycle.cycleStatus === "open" ? t.admin.orders.openBadge : t.admin.orders.closedBadge}
                   </span>
-                  <span className="font-mono text-[13px] font-bold text-brand-near-black">
+                  <span className="tabular-nums text-[13px] font-bold text-brand-near-black">
                     {formatEur(cycle.total)}
                   </span>
                 </div>
@@ -85,11 +85,11 @@ export async function MemberOrders({ memberId }: { memberId: string }) {
                       {line.variant && (
                         <span className="text-brand-gray">· {line.variant}</span>
                       )}
-                      <span className="font-mono text-label text-muted">
+                      <span className="tabular-nums text-label text-muted">
                         ×{line.quantity}
                       </span>
                     </span>
-                    <span className="font-mono text-[12px] text-brand-near-black">
+                    <span className="tabular-nums text-[12px] text-brand-near-black">
                       {formatEur(line.lineTotal)}
                     </span>
                   </div>

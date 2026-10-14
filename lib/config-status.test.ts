@@ -24,7 +24,7 @@ const item = (items: ConfigItem[], id: string) => items.find((i) => i.id === id)
 
 describe("MIGRATIONS", () => {
   it("lists every file in drizzle/, in order", () => {
-    const files = readdirSync("drizzle").filter((f) => f.endsWith(".sql")).sort();
+    const files = readdirSync("drizzle").filter((f) => f.endsWith(".sql") && !f.endsWith("_down.sql")).sort();
     expect(MIGRATIONS).toEqual(files);
   });
 });
@@ -137,6 +137,13 @@ describe("configStatus", () => {
       note: "shortStatsSecret",
     });
     expect(item(configStatus({ ...complete, INSTANCE_STATS_SECRET: "x".repeat(64) }, facts), "fleet").status).toBe("ok");
+  });
+
+  it("shows the restricted database role only when the database says the role cannot change the schema", () => {
+    expect(item(configStatus(complete, facts), "dbRole").status).toBe("off");
+    expect(item(configStatus(complete, { ...facts, restrictedRole: false }), "dbRole").status).toBe("off");
+    expect(item(configStatus(complete, { ...facts, restrictedRole: null }), "dbRole").status).toBe("off");
+    expect(item(configStatus(complete, { ...facts, restrictedRole: true }), "dbRole").status).toBe("ok");
   });
 
   it("names a brand that does not parse, and the fields it does not know", () => {

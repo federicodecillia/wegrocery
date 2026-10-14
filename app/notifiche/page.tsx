@@ -40,7 +40,7 @@ export default async function NotifichePage() {
             >
               <button
                 type="submit"
-                className="min-h-11 whitespace-nowrap rounded-full border border-brand-border px-[13px] py-[5px] font-mono text-label font-bold uppercase tracking-widest text-brand-near-black"
+                className="min-h-11 whitespace-nowrap rounded-full border border-brand-border px-3.25 py-1.25 font-mono text-label font-bold uppercase tracking-widest text-brand-near-black"
               >
                 {t.notifications.markAllRead}
               </button>
@@ -85,7 +85,7 @@ export default async function NotifichePage() {
               <h2 id={`day-${g.key}`} className="mb-2 px-1 text-[13px] font-semibold text-brand-gray first-letter:uppercase">
                 {g.label}
               </h2>
-              <ul className="overflow-hidden rounded-card border border-brand-border bg-white shadow-card">
+              <ul className="overflow-hidden rounded-card border border-brand-border bg-surface shadow-card">
                 {g.items.map((n) => (
                   <li key={n.notificationId} className="border-b border-brand-border last:border-none">
                     <NotificationRow

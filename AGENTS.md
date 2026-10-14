@@ -1,6 +1,6 @@
 # AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Guidance for every coding agent (Claude Code, Codex and others) working in this repository. This is the only instructions file: there is no CLAUDE.md (FlyLabs Playbook 9.2).
 
 ## Project Overview
 
@@ -9,6 +9,38 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **Stack**: Next.js 16 App Router · Postgres (Neon serverless) · Better Auth (email link, optional Google) · Drizzle ORM · Tailwind CSS v4 · Vercel
 
 **Live**: gas.portamoneta.org
+
+## FlyLabs Kit
+
+This app follows the FlyLabs Playbook: https://github.com/flylabs-ai/flylabs-kit/blob/main/PLAYBOOK.md
+(internal to the flylabs-ai organization). Check the Playbook rule before choices about stack, style,
+copy, tests, migrations and operations. Intended deviations are listed below with the reason; flag any
+deviation that is not listed instead of deciding alone. A solution that fits every app goes to
+flylabs-kit as a PR.
+
+Intended deviations (as of 2026-10-14):
+- 2.3 and 2.4 Light theme only, no contrast test yet: dark theme and the contrast test arrive with stage 1 of the kit (December 2026).
+- 2.10 The group's own colours instead of the FlyLabs palette: WeGrocery is white-label, so this stays.
+- 3.3 Repository docs in English: the repo is public and a portfolio piece, so this stays.
+- 7.1 `/api/health` returns `db` as `true | false` and `version` from `package.json`: aligned with Stellar when the FlyLabs Console arrives.
+
+Found in the review of 2026-10-14 (each line, its reason and its timing are in
+[`docs/2026-10-14-flylabs-playbook-alignment.md`](./docs/2026-10-14-flylabs-playbook-alignment.md)):
+- 1.4 The app can connect with a role without schema privileges (`scripts/create-app-role.mjs`, `DATABASE_MIGRATION_URL` for the owner's address, `docs/upgrading.md`), tested end to end; it is not enforced on any installation yet: each database needs the role created by its owner (Federico).
+- 2.1, 2.7 Geist and Geist Mono instead of Geist, Inter and JetBrains Mono; own components on Radix Dialog and hand-drawn icons instead of shadcn on Base UI and lucide: the app predates the FlyLabs style, which arrives with the dark theme at stage 1.
+- 2.8 Bottom bar up to `lg` and a top nav in the header from `lg`, inside one centred card, instead of a rail on tablet and a sidebar on PC: changing it reshapes every page, so it is a separate stage 1 proposal.
+- 3.4 Em dashes remain in the changelog version headings (and as the empty-value placeholder in tables): the UI and email strings are clean and `lib/i18n/no-em-dash.test.ts` keeps them so; the heading switches at stage 1.
+- 4.4 Welcome card: the steps shown follow the settings; the ones the member's own rows already show as done (top-up or payment, an order, saved preferences, a family) carry "Già fatto" (`getWelcomeFacts`, `welcomeDone`), and the step they stopped at is `members.welcome_step` (migration 0036). The "Riprendi" bar on other pages still uses `sessionStorage`, per tab, on purpose.
+- 5.1 Integration tests run on a throwaway Neon branch that needs `NEON_API_KEY` (skipped on forks), not on a plain Postgres: the Neon HTTP driver needs Neon's proxy. This stays.
+- 6.3 and 9.5 Claude runs releases end to end, production migrations included, after a green manual backup and with Federico's explicit ok for each production operation, instead of handing him commands: Federico's choice (2026-10-07). This stays.
+- 6.5 A weekly job (`.github/workflows/restore-test.yml`) restores the latest dump into a throwaway Neon branch, counts the main tables and runs the money invariants on it. It is skipped until Federico sets `RESTORE_TEST_NEON_API_KEY` (a Neon key scoped to the restore project; CI's `NEON_API_KEY` is scoped to the CI project) and the variable `RESTORE_TEST_NEON_PROJECT_ID` (a project of the same organisation).
+- 7.6 Done for notification emails (idempotency key, one-click unsubscribe, see "Email compliance"). The branded HTML template (7.7) waits for the kit registry. Sign-in emails and the supplier and family emails carry no unsubscribe on purpose.
+- 7.8 Done: `usage_events` (migration 0037) counts a fixed list of events per day, no member id, no text, nothing in the demo (`lib/usage/events.ts`, shown in Admin → Statistiche); Vercel Analytics and Speed Insights are gone.
+- 7.10 The Console (`console/`) redirects to its password login instead of answering 404: a 404 would hide the only way in. This stays.
+- 8.1 No versioned legal documents in the app: each group owns its privacy notice (`brand.privacyUrl`) as data controller. This stays for groups; FlyLabs-hosted terms are decided with hosting model A.
+- 9.1 Feature specs live in the private project folder (Italian, with group details), not in `docs/`: from now on a dated English plan goes in `docs/` with no group or member data.
+
+Never read `.env*` files other than `.env.example` (Playbook 8.3).
 
 ## Codebase structure
 
@@ -82,7 +114,7 @@ npm test             # Unit tests (pure, no database)
 npm run test:int     # Integration tests on a test database (see below)
 ```
 
-**Integration tests** (`*.int.test.ts`, `vitest.int.config.ts`): the real queries against Postgres, for what unit tests cannot show (guarded writes, concurrent events, migrations). They run only with `INT_TEST_DATABASE_URL` set, or with `INT_TEST_USE_DATABASE_URL=1` when the `DATABASE_URL` in the environment is already a test database (e.g. `INT_TEST_USE_DATABASE_URL=1 node --env-file=.env.demo.local node_modules/vitest/vitest.mjs run -c vitest.int.config.ts`); otherwise they are skipped. Never point them at production. Each test builds its rows with `makeScope()` (`test/int/fixtures.ts`): one fake member per run, ids prefixed `int_`, removed in `afterAll`. The setup drops `RESEND_API_KEY` and `STRIPE_SECRET_KEY` from the environment, so a test can neither send an email nor call Stripe. In CI the `integration` job creates a throwaway Neon branch, applies the pending migrations and runs the suite; it needs the `NEON_API_KEY` secret and the `NEON_PROJECT_ID` variable and is skipped without them (forks). `NEON_PROJECT_ID` must be a project with fake data only (the demo), never production: the repository is public, so the job masks the branch's connection string before any step can print it.
+**Integration tests** (`*.int.test.ts`, `vitest.int.config.ts`): the real queries against Postgres, for what unit tests cannot show (guarded writes, concurrent events, migrations). They run only with `INT_TEST_DATABASE_URL` set, or with `INT_TEST_USE_DATABASE_URL=1` when the `DATABASE_URL` in the environment is already a test database (e.g. `INT_TEST_USE_DATABASE_URL=1 node --env-file=.env.demo.local node_modules/vitest/vitest.mjs run -c vitest.int.config.ts`); otherwise they are skipped. Never point them at production. Each test builds its rows with `makeScope()` (`test/int/fixtures.ts`): one fake member per run, ids prefixed `int_`, removed in `afterAll`. The setup drops `RESEND_API_KEY` and `STRIPE_SECRET_KEY` from the environment, so a test can neither send an email nor call Stripe. In CI the `integration` job creates a throwaway Neon branch, applies the pending migrations and runs the suite; it needs the `NEON_API_KEY` secret and the `NEON_PROJECT_ID` variable and is skipped without them (forks). `NEON_PROJECT_ID` must be a project with fake data only (the demo), never production: the repository is public, so the job masks the branch's connection string before any step can print it. Once the project has a restricted role (`app_rw`) next to the owner, `neonctl connection-string` needs the owner named: the workflows pass `--role-name "${NEON_OWNER_ROLE:-neondb_owner}"` (set the `NEON_OWNER_ROLE` variable if the project's owner has another name).
 
 **Configuration status**: `configStatus` (`lib/config-status.ts`, pure) lists what a deploy has set up, by variable name and state, never a value: the card in admin → Impostazioni and `npm run doctor` show it. A new migration goes in `lib/migrations.ts` too (a test compares it with `drizzle/`); a new environment variable gets an item there, a line in `.env.example` and a row in `docs/upgrading.md`. `MIGRATE_ON_BUILD=true` makes `npm run build` apply pending migrations first, on production builds (and builds outside Vercel) only. **New installations**: `docs/self-hosting.md` (Deploy to Vercel button, keep it in sync with the variables a deploy needs); `BOOTSTRAP_ADMIN_EMAIL` makes its address the first admin while no active admin exists (`lib/auth/admission.ts`). CI applies every migration to an empty database and runs `test/int/fresh-install.int.test.ts` there: a migration must work from `0000` too.
 
@@ -96,9 +128,9 @@ npm run test:int     # Integration tests on a test database (see below)
 
 **Nightly UI check**: `.github/workflows/ui-check.yml` runs `scripts/ui-check.mjs` after the demo reset: the main member and admin pages at 390 and 1280 px against the demo (`vars.UI_CHECK_URL`, else the public demo on the upstream repository; a `DEMO_MODE` deploy only, it signs in through the demo buttons). It fails on axe problems of serious or critical impact, horizontal scrolling and four keyboard paths (order stepper, focus back after a sheet, visible focus outline, Esc on the cycle-close review), and the `notify` job opens (or comments on) one issue. Labels are matched in English and Italian. Locally: install `playwright` and `@axe-core/playwright` next to a copy of the script and run it with `UI_CHECK_URL=http://localhost:3000` (`CHROMIUM_PATH` for a preinstalled browser).
 
-**Releases**: open the `staging` → `main` PR with `?template=release.md` (`.github/PULL_REQUEST_TEMPLATE/release.md`): upgrade notes, migration before the merge, smoke test on `/api/health`, rollback. The merge to `main` tags `vX.Y.Z` and publishes the GitHub release by itself (`.github/workflows/release.yml`, notes from that version's `CHANGELOG.md` entry, upstream repository only). An installation whose Git deploys Vercel blocks sets the `VERCEL_DEPLOY_HOOK` repository secret: `.github/workflows/deploy-hook.yml` then calls the hook on every push to `main`.
+**Releases**: open the `staging` → `main` PR with `?template=release.md` (`.github/PULL_REQUEST_TEMPLATE/release.md`): upgrade notes, migration before the merge, smoke test on `/api/health`, rollback. The merge to `main` tags `vX.Y.Z` and publishes the GitHub release by itself (`.github/workflows/release.yml`, notes from that version's `CHANGELOG.md` entry, upstream repository only). An installation whose Git deploys Vercel blocks sets the `VERCEL_DEPLOY_HOOK` repository secret: `.github/workflows/deploy-hook.yml` then calls the hook on every push to `main`. To redeploy production without a code change (a new variable, a rotated key), run `.github/workflows/deploy-production.yml` from the Actions tab: it calls the `VERCEL_PRODUCTION_DEPLOY_HOOK` hook once, never on push, and fails when the secret is missing.
 
-**Health and errors**: `/api/health` (public) returns `{ ok, version, db }`, 503 when the database does not answer. Unexpected errors go through `reportError` (`lib/observability.ts`): always the server log, Sentry too when `SENTRY_DSN` is set, or `NEXT_PUBLIC_SENTRY_DSN` as Vercel's Sentry integration sets it (server only, errors only; data collection is off and `beforeSend` cuts the query parameters a driver error quotes; initialized in `instrumentation.ts`). Use it instead of a bare `console.error` for errors someone should look at.
+**Health and errors**: `/api/health` (public) returns `{ ok, version, db }`, 503 when the database does not answer. Unexpected errors go through `reportError` (`lib/observability.ts`): always the server log, Sentry too when `SENTRY_DSN` is set, or `NEXT_PUBLIC_SENTRY_DSN` as Vercel's Sentry integration sets it (server only, errors only; data collection is off, console breadcrumbs are dropped and `beforeSend` cuts the query parameters a driver error quotes; initialized in `instrumentation.ts`, which hands the client to `reportError` through `globalThis`, since each route is a separate server bundle with its own copy of the module). Use it instead of a bare `console.error` for errors someone should look at.
 
 **Stripe on staging**: `scripts/stripe-staging-check.mjs` runs real sandbox refunds against the staging deploy; it refuses live keys and any database other than `STAGING_DB_HOST`. The events the webhook endpoint must subscribe to are `REQUIRED_STRIPE_EVENTS` (`lib/payments/config.ts`).
 
@@ -327,7 +359,7 @@ all in `lib/roles.ts`:
 
 | Table | Purpose |
 |---|---|
-| `members` | User registry; `role`: admin / attivi / utenti; `merged_into` on an account absorbed by a merge (see Member merge); `household_of` on a person who joined a family (see Families); `welcome_dismissed_at` when the person closed the welcome card on Home (migration 0031, `lib/guide/welcome.ts`; `/?benvenuto=1` shows it again) |
+| `members` | User registry; `role`: admin / attivi / utenti; `merged_into` on an account absorbed by a merge (see Member merge); `household_of` on a person who joined a family (see Families); `welcome_dismissed_at` when the person closed the welcome card on Home (migration 0031, `lib/guide/welcome.ts`; `/?benvenuto=1` shows it again) and `welcome_step` where they stopped (migration 0036, `saveWelcomeStep`) |
 | `order_cycles` | Weekly order windows; one `open` at a time |
 | `products` | Per-cycle product list |
 | `orders` | Order lines per member per cycle |
@@ -340,6 +372,7 @@ all in `lib/roles.ts`:
 | `order_drafts` | A member's unconfirmed edits on an open cycle (`member_id`, `cycle_id`, `lines` jsonb), autosaved by the order form; `saveOrder` and the cycle close delete them in their batch |
 | `order_cycles.payment_mode` / `handling_fee_*`, `payments.kind` / `cycle_id` / `order_snapshot` | Pay-per-order (`drizzle/0021_pay_per_order.sql`): see Online top-ups (Stripe). Ledger types `order_payment` (+) and `order_refund` (−) sit on the cycle. `order_cycles.settled_at` and `members.pays_offline` (`drizzle/0024_settlement.sql`): see Pay-per-order |
 | `audit_log` | Append-only admin action log |
+| `usage_events` | Usage counters (migration 0037): `day`, `name` (a fixed list in `lib/usage/events.ts`), `count`; no member id, no text, no amount, and `DEMO_MODE` records nothing. Written by `recordUsage` (never throws), read by Admin → Statistiche; pruned after 400 days at sign-in |
 | `guide_search_misses` | Guide searches with no results, counted with no member id (migration 0032): `query` normalized by `missQuery` (`lib/guide/search-misses.ts`, which drops addresses, long numbers and sentences), `count`, `last_at`; pruned after 90 days, listed in admin → Impostazioni |
 | `suppliers` | Supplier registry |
 | `supplier_products` | Supplier product catalog (source for cycle products) |
@@ -492,7 +525,7 @@ All four emit `order_adjusted` or `order_corrected` notifications and `audit_log
 - Resend SDK detail: the `content` field on attachments base64-decodes strings — always pass a `Buffer`.
 - **Notification emails** reuse the same wrapper. `sendMailBatch` (in `resend.ts`) sends up to 100 one-off messages per Resend `batch.send` call (chunked internally) — used for cycle-close and broadcasts to sidestep the 2 req/s limit. `notificationEmail` (in `templates.ts`) wraps a notification's already-localized title/body with a CTA + a manage-preferences link; links need a base URL from `lib/email/base-url.ts` (`APP_BASE_URL`, falling back to `VERCEL_PROJECT_PRODUCTION_URL`; links omitted if neither is set). All notification email is fire-and-forget — a send failure is logged, never rolled back onto the caller's DB work — and `DEMO_MODE` blocks it like every other send.
 - Env var added for notifications: `APP_BASE_URL` (email links). See `.env.example`. `CRON_SECRET` went away with the reminder cron in v1.9.0; the GitHub repo secret and the Vercel env var are leftovers that can be deleted from both dashboards.
-- **Email compliance**: these are low-volume service messages to a small private group, so the manage-preferences link in the footer is the opt-out; we intentionally do **not** set a `List-Unsubscribe` header. Revisit if the audience ever grows or messages become promotional.
+- **Email compliance**: notification emails carry `List-Unsubscribe` and `List-Unsubscribe-Post: List-Unsubscribe=One-Click` (RFC 8058, `lib/email/unsubscribe.ts`): a link `/api/unsubscribe?t=<token>`, HMAC-SHA256 signed with a key derived from `AUTH_SECRET` (rotating it retires old links), that turns off the email channel of that one category for that member (`lib/notifications/unsubscribe-store.ts`). A GET only shows a button; only the POST writes (mail scanners open links). The footer keeps the manage-preferences link. Every send goes with a Resend `Idempotency-Key` (`lib/email/idempotency.ts`): notifications use their own id, other emails the message plus the minute it was asked in, so a double click sends once and a deliberate resend later still goes out. Sign-in emails, the supplier email and family invitations have no unsubscribe header (not optional notices).
 
 ### Database environments & access (since 2026-07-10)
 
@@ -532,9 +565,14 @@ All four emit `order_adjusted` or `order_corrected` notifications and `audit_log
   and exit unless an explicit flag (e.g. `--allow-prod`) is passed, so a
   mis-pointed `.env` cannot mutate production silently. Existing scripts:
   `seed-demo.ts` refuses to run without `DEMO_MODE=true` (prod never sets
-  it); `db-migrate.mjs` targets production on purpose at promotion time and
-  has no such flag yet (open follow-up), so run it only with the connection
-  string typed explicitly on the command line.
+  it); `db-migrate.mjs` targets production on purpose at promotion time:
+  with `PRODUCTION_DB_HOST` set to the production host (in the local env
+  files of whoever migrates) it refuses that host unless `--allow-prod` is
+  passed; `MIGRATE_ON_BUILD` passes it itself. Each migration file runs in one
+  transaction with `lock_timeout` 10 s and its `_migrations` record; a new
+  migration has `Apply:` and `Rollback:` lines in its header, a
+  `NNNN_name_down.sql` the runner never applies, and a test (Playbook 5.3, 6.1,
+  6.2; `docs/operating-two-environments.md`).
 - **Integration tests against a real DB** (recipe, not wired into CI): create
   a throwaway Neon branch, point the test run at it, delete it after —
   `npx -y neonctl branches create --name test-x --parent production --project-id small-breeze-14972344 --org-id org-gentle-violet-55538692`
@@ -579,6 +617,8 @@ Neon free tier only retains 6 hours of point-in-time history (the Launch plan go
 | `DATABASE_URL` | Neon production connection string (same as Vercel) |
 | `RCLONE_CONFIG` | Full contents of local `~/.config/rclone/rclone.conf` after running `rclone config` (remote named `gdrive`) |
 | `GDRIVE_BACKUP_PATH` | `gdrive:PortaMoneta/GAS-Backups` |
+
+**Weekly proof.** `restore-test.yml` (Sundays 04:30 UTC) does steps 2 to 4 below on its own and opens an issue if the restore, the counts or the invariants fail.
 
 **Restore procedure.** **Never restore directly into production** — always do it on a throwaway Neon branch first, verify, then promote or selectively copy rows back.
 
@@ -649,6 +689,7 @@ Rules (enforced by `lib/brand/design-guard.test.ts`):
   computed contrast. Tints of a fill behind its own text go up to `/20`.
 - Never `text-brand-gray-light`: use `text-muted`.
 - No palette names (`orange`, `teal`) and no hard-coded brand hex.
+- Spacing (padding, margin, gap) uses the Tailwind scale (`p-4.5` is 18px), never `p-[18px]`: `design-guard.test.ts` refuses the pixel form.
 - No text under 12px: `text-label` (12px) is the smallest size. On phones
   `input`, `select` and `textarea` are forced to 16px in `globals.css` (iOS
   zooms the page on smaller fields), so do not size fields below that.
@@ -661,7 +702,7 @@ Key patterns:
 - **Notification bell**: in header, red badge with count, links to `/notifiche`
 - **Gestures** (`lib/ui/use-swipe.ts`, Pointer Events, no library): drag down on a `Sheet`'s handle or header closes it on phones (`swipeToClose={false}` on the cycle-close review), a confirm's drag is "Annulla"; off with reduced motion, never from the left edge. `components/app-refresh.tsx` refreshes the page after 5 minutes in the background and shows the offline line; tapping the current bottom-bar item scrolls up and refreshes. Neither ever runs on `/ordine` (`lib/ui/refresh.ts`)
 - Shell `max-w-[480px]`, `md:max-w-[640px]`, `lg:max-w-[960px]` on every page, centered; `bg-brand-frame` frames the app, and the card never resizes between pages. Inside it, `<AppShell layout="reading">` (the default) keeps a 600 px column from lg (Guida, Profilo, Notifiche, Changelog, Ricarica); `layout="wide"` uses the whole card (Home's two columns, Admin). Widths live in `shell-width.ts`, mirrored by `ShellSkeleton`
-- Member pages: reading text is 14px, prices and notification bodies included (sans, `tabular-nums`); mono stays for small labels and totals
+- Member pages: reading text is 14px, prices and notification bodies included (Inter, `tabular-nums`); titles (h1 to h3) are Geist; JetBrains Mono is only for uppercase labels, the one-time code field and code-like values (IBAN, addresses: `break-all`), kept by `design-guard.test.ts` (Playbook 2.1)
 - Small header controls (bell, avatar, "?") keep their look and get a 44 px touch area with the `hit-44` utility
 - The header holds the bell and the Profile avatar (initials, `lib/profile/summary.ts`); the email, sign-out and personal settings are on `/profilo`, whose rows hide what the deploy has not switched on
 

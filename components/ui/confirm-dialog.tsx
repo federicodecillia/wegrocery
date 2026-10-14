@@ -79,9 +79,9 @@ export function ConfirmDialogProvider() {
           ref={swipeTarget}
           aria-describedby={undefined}
           {...swipeHandlers}
-          className="fixed inset-x-0 bottom-0 z-[151] touch-none rounded-t-3xl border border-brand-border bg-white px-6 pt-2 pb-[calc(1.5rem+env(safe-area-inset-bottom))] text-center shadow-[0_8px_32px_rgba(45,43,41,0.15)] sm:inset-x-auto sm:bottom-auto sm:left-1/2 sm:top-1/2 sm:w-[90%] sm:max-w-[340px] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:touch-auto sm:rounded-3xl sm:p-8 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0"
+          className="fixed inset-x-0 bottom-0 z-[151] touch-none rounded-t-3xl border border-brand-border bg-surface px-6 pt-2 pb-[calc(1.5rem+env(safe-area-inset-bottom))] text-center shadow-[0_8px_32px_rgba(45,43,41,0.15)] sm:inset-x-auto sm:bottom-auto sm:left-1/2 sm:top-1/2 sm:w-[90%] sm:max-w-[340px] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:touch-auto sm:rounded-3xl sm:p-8 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0"
         >
-          <div aria-hidden className="mx-auto mb-4 h-1 w-10 rounded-full bg-black/15 sm:hidden" />
+          <div aria-hidden className="mx-auto mb-4 h-1 w-10 rounded-full bg-tint/15 sm:hidden" />
           <Dialog.Title className="mb-3 text-lg font-bold text-brand-near-black">
             {request?.title}
           </Dialog.Title>

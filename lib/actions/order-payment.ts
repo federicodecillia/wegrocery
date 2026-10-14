@@ -1,5 +1,6 @@
 "use server";
 
+import { recordUsage } from "@/lib/usage/events";
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { actionErrorMessage } from "@/lib/action-error";
@@ -135,6 +136,7 @@ export async function startOrderPayment(
       if (written === "changed") return refuse("changed", t.order.pay.changed);
       await writeAudit(email, "confirmMyOrder", cycleId, { lineCount: priced.length, amount });
       revalidateOrderPages();
+      await recordUsage("order_saved");
       return { status: "confirmed" };
     }
 
@@ -215,6 +217,7 @@ export async function startOrderPayment(
         return refuse("changed", t.order.pay.changed);
       }
       if (!checkout.url) throw new Error("Checkout Session without url");
+      await recordUsage("card_order_started");
       return { status: "redirect", url: checkout.url };
     } catch (e) {
       reportError("order checkout", e, { paymentId });
@@ -255,6 +258,7 @@ async function cancelOrderOf(memberId: string, email: string, cycleId: string): 
     }
   }
   revalidateOrderPages();
+  await recordUsage("order_cancelled");
   return { status: "cancelled", refunded: written.refundIds.length > 0 };
 }
 

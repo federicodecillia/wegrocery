@@ -9,10 +9,11 @@ const v = (name: string) => new RegExp(`${name}:\\s*(#[0-9a-f]{3,6});`, "i").exe
 // The colours in globals.css are not brand-themed, so they are checked
 // against the default page background and against white cards.
 describe("globals.css constants", () => {
-  it("danger text reads on its backgrounds and under white text", () => {
-    for (const bg of [v("--red-l"), DEFAULT_PALETTE.background, "#ffffff"]) {
-      expect(contrastRatio(v("--red"), bg)).toBeGreaterThanOrEqual(4.5);
+  it("danger text reads on its backgrounds, and the danger fill carries its text", () => {
+    for (const bg of [v("--danger-soft"), DEFAULT_PALETTE.background, v("--surface")]) {
+      expect(contrastRatio(v("--danger-text"), bg)).toBeGreaterThanOrEqual(4.5);
     }
+    expect(contrastRatio(v("--on-danger"), v("--danger"))).toBeGreaterThanOrEqual(4.5);
   });
 
   it("defines no brand colour: those come from lib/brand/roles.ts", () => {
