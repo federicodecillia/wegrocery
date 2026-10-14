@@ -524,6 +524,11 @@ export const en: Strings = {
     news: "What's new",
     newsDetail: "What changed in the app",
     contact: "Contact the group",
+    appearance: "Appearance",
+    appearanceHint: "Applies to this device only.",
+    themeSystem: "Same as the device",
+    themeLight: "Light",
+    themeDark: "Dark",
     version: (v: string) => `Version ${v}`,
   },
   demo: {

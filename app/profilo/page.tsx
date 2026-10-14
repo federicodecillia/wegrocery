@@ -1,9 +1,11 @@
 import { AppShell } from "@/components/app-shell";
 import { LogoutButton } from "@/components/logout-button";
 import { InstallRow } from "@/components/profile/install-row";
+import { ThemeRow } from "@/components/profile/theme-row";
 import { NameEditor } from "@/components/profile/name-editor";
 import { SettingsRow, SettingsSection } from "@/components/profile/settings-row";
 import { signOut } from "@/auth";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getUserRole, requireUserSession } from "@/lib/auth/session";
 import { getBrand } from "@/lib/brand/get-brand";
@@ -22,6 +24,7 @@ import { getWalletBalance } from "@/lib/payments/balance-due";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
 import { countChannels, familyState, initials } from "@/lib/profile/summary";
 import { DEFAULT_ROLE, getRoleLabel } from "@/lib/roles";
+import { parseTheme, THEME_COOKIE } from "@/lib/theme";
 import packageJson from "@/package.json";
 import type { Metadata } from "next";
 
@@ -165,6 +168,7 @@ export default async function ProfilePage() {
       </SettingsSection>
 
       <SettingsSection title={t.profile.app}>
+        <ThemeRow initial={parseTheme((await cookies()).get(THEME_COOKIE)?.value)} />
         <InstallRow />
         <SettingsRow href="/guida" title={t.nav.guide} detail={t.profile.guideDetail} />
         <SettingsRow href="/changelog" title={t.profile.news} detail={t.profile.newsDetail} />

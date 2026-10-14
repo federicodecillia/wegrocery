@@ -524,6 +524,11 @@ export const it = {
     news: "Novità",
     newsDetail: "Cosa è cambiato nell'app",
     contact: "Contatta il gruppo",
+    appearance: "Aspetto",
+    appearanceHint: "Vale solo per questo dispositivo.",
+    themeSystem: "Come il dispositivo",
+    themeLight: "Chiaro",
+    themeDark: "Scuro",
     version: (v: string) => `Versione ${v}`,
   },
   demo: {

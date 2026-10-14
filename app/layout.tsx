@@ -3,7 +3,10 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/providers/toaster";
 import { ConfirmDialogProvider } from "@/components/ui/confirm-dialog";
+import { cookies } from "next/headers";
 import { brand, resolvePalette, roleVarsCss } from "@/lib/brand";
+import { DARK } from "@/lib/brand/roles";
+import { parseTheme, THEME_COOKIE, type Theme } from "@/lib/theme";
 import { getBrand } from "@/lib/brand/get-brand";
 import { APPLE_TOUCH_ICON, iconPath } from "@/lib/pwa/icons";
 
@@ -36,14 +39,26 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
+function themeColors(chosen: Theme, primary: string): Viewport["themeColor"] {
+  if (chosen === "light") return primary;
+  if (chosen === "dark") return DARK.background;
+  return [
+    { media: "(prefers-color-scheme: light)", color: primary },
+    { media: "(prefers-color-scheme: dark)", color: DARK.background },
+  ];
+}
+
 export async function generateViewport(): Promise<Viewport> {
   const b = await getBrand();
+  const chosen = parseTheme((await cookies()).get(THEME_COOKIE)?.value);
   return {
     width: "device-width",
     initialScale: 1,
     // The safe-area insets (env(safe-area-inset-*)) are only non-zero with "cover".
     viewportFit: "cover",
-    themeColor: resolvePalette(b.theme).primary,
+    // The browser's own bar: the group's colour in light, the page in dark.
+    // With no choice made the device decides, so both are offered.
+    themeColor: themeColors(chosen, resolvePalette(b.theme).primary),
   };
 }
 
@@ -53,9 +68,11 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const b = await getBrand();
+  const chosen = parseTheme((await cookies()).get(THEME_COOKIE)?.value);
   return (
     <html
       lang={brand.locale}
+      data-theme={chosen === "system" ? undefined : chosen}
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <head>

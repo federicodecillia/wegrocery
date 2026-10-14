@@ -94,7 +94,7 @@ const FILL_MIN = 3; // a fill against the surface it sits on (WCAG 1.4.11)
 /**
  * The same variables as deriveRoleVars for the dark theme, plus the neutrals
  * that globals.css holds for the light one. Emitted under
- * :root[data-theme="dark"] by app/layout.tsx.
+ * the dark selectors by roleVarsCss.
  */
 export function deriveDarkRoleVars(theme: BrandTheme): Record<string, string> {
   const p = resolvePalette(theme);
@@ -140,7 +140,7 @@ const SAFE_VALUE = /^[#a-z0-9(),.% -]+$/i;
 
 /**
  * The stylesheet that carries the brand's colours: light on :root, dark on
- * :root[data-theme="dark"]. Every value is a hex or rgba computed here from
+ * :root[data-theme="dark"] and, with no choice made, when the device is dark. Every value is a hex or rgba computed here from
  * validated hex colours; anything else is dropped rather than written.
  */
 export function roleVarsCss(theme: BrandTheme): string {
@@ -149,7 +149,13 @@ export function roleVarsCss(theme: BrandTheme): string {
       .filter(([, v]) => SAFE_VALUE.test(v))
       .map(([k, v]) => `${k}:${v}`)
       .join(";");
-  return `:root{${block(deriveRoleVars(theme))}}:root[data-theme="dark"]{color-scheme:dark;${block(deriveDarkRoleVars(theme))}}`;
+  const dark = `color-scheme:dark;${block(deriveDarkRoleVars(theme))}`;
+  // Dark when chosen, and when the device is dark and the choice is not "light".
+  return (
+    `:root{${block(deriveRoleVars(theme))}}` +
+    `:root[data-theme="dark"]{${dark}}` +
+    `@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){${dark}}}`
+  );
 }
 
 /** Human-readable problems with the brand palette; empty when it is fine. */

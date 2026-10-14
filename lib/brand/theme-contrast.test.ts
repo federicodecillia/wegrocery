@@ -99,11 +99,12 @@ describe("theme contrast", () => {
     expect(light.filter((k) => !dark.has(k) && !shared.has(k) && k !== "--nav-h")).toEqual([]);
   });
 
-  it("writes one stylesheet: light on :root, dark under data-theme", () => {
+  it("writes one stylesheet: light on :root, dark when chosen and when the device is dark", () => {
     const sheet = roleVarsCss({});
     expect(sheet).toMatch(/^:root\{--primary:#f5a623/);
     expect(sheet).toContain(':root[data-theme="dark"]{color-scheme:dark;--primary:');
-    expect(sheet).not.toMatch(/[<>{};]{2}/);
+    expect(sheet).toContain('@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;');
+    expect(sheet).not.toContain("<");
   });
 
   it("writes only plain colour values", () => {
