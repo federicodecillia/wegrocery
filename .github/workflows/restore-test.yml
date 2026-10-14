@@ -8,8 +8,9 @@ name: Weekly Backup Restore Test
 # comments on) a GitHub issue, like the nightly backup.
 #
 # Needs, besides the backup's own secrets (RCLONE_CONFIG, GDRIVE_BACKUP_PATH):
-#   - secret   NEON_API_KEY                   a Neon API key with branch rights
-#                                             on the project below
+#   - secret   NEON_RESTORE_API_KEY           a Neon API key scoped to the project
+#                                             below (branch rights); NEON_API_KEY is
+#                                             the fallback when it is not set
 #   - project  late-frost-62618439            "wegrocery-restore-test" in the
 #                                             PortaMoneta Neon organisation, empty;
 #                                             its throwaway branch receives the dump
@@ -36,12 +37,12 @@ jobs:
         env:
           HAS_RCLONE: ${{ secrets.RCLONE_CONFIG != '' }}
           HAS_PATH: ${{ secrets.GDRIVE_BACKUP_PATH != '' }}
-          HAS_NEON_KEY: ${{ secrets.NEON_API_KEY != '' }}
+          HAS_NEON_KEY: ${{ (secrets.NEON_RESTORE_API_KEY || secrets.NEON_API_KEY) != '' }}
         run: |
           if [ "$HAS_RCLONE" = "true" ] && [ "$HAS_PATH" = "true" ] && [ "$HAS_NEON_KEY" = "true" ]; then
             echo "enabled=true" >> "$GITHUB_OUTPUT"
           else
-            echo "::warning::Restore test skipped: RCLONE_CONFIG, GDRIVE_BACKUP_PATH or NEON_API_KEY is missing."
+            echo "::warning::Restore test skipped: RCLONE_CONFIG, GDRIVE_BACKUP_PATH or NEON_RESTORE_API_KEY (or NEON_API_KEY) is missing."
           fi
 
   restore:
@@ -116,7 +117,7 @@ jobs:
       - name: Create a throwaway database branch
         id: branch
         env:
-          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_API_KEY: ${{ secrets.NEON_RESTORE_API_KEY || secrets.NEON_API_KEY }}
           NEON_PROJECT_ID: ${{ vars.RESTORE_TEST_NEON_PROJECT_ID || 'late-frost-62618439' }}
           BRANCH: restore-${{ github.run_id }}-${{ github.run_attempt }}
         run: |
@@ -155,7 +156,7 @@ jobs:
       - name: Delete the database branch and the local files
         if: always()
         env:
-          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_API_KEY: ${{ secrets.NEON_RESTORE_API_KEY || secrets.NEON_API_KEY }}
           NEON_PROJECT_ID: ${{ vars.RESTORE_TEST_NEON_PROJECT_ID || 'late-frost-62618439' }}
           BRANCH: ${{ steps.branch.outputs.name }}
         run: |
