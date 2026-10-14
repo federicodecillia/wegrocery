@@ -92,7 +92,7 @@ jobs:
           npx -y neonctl@7.0.1 branches create --project-id "$NEON_PROJECT_ID" --name "$BRANCH" \
             --expires-at "$EXPIRES" --output json > /dev/null
           echo "name=$BRANCH" >> "$GITHUB_OUTPUT"
-          URL=$(npx -y neonctl@7.0.1 connection-string "$BRANCH" --project-id "$NEON_PROJECT_ID")
+          URL=$(npx -y neonctl@7.0.1 connection-string "$BRANCH" --project-id "$NEON_PROJECT_ID" --role-name "${NEON_OWNER_ROLE:-neondb_owner}")
           echo "::add-mask::$URL"
           PASSWORD=$(node -e 'process.stdout.write(decodeURIComponent(new URL(process.argv[1]).password))' "$URL")
           echo "::add-mask::$PASSWORD"
@@ -119,7 +119,7 @@ jobs:
         run: |
           npx -y neonctl@7.0.1 databases create --project-id "$NEON_PROJECT_ID" --branch "$BRANCH" --name fresh \
             --output json > /dev/null
-          URL=$(npx -y neonctl@7.0.1 connection-string "$BRANCH" --project-id "$NEON_PROJECT_ID" --database-name fresh)
+          URL=$(npx -y neonctl@7.0.1 connection-string "$BRANCH" --project-id "$NEON_PROJECT_ID" --role-name "${NEON_OWNER_ROLE:-neondb_owner}" --database-name fresh)
           echo "::add-mask::$URL"
           echo "FRESH_DATABASE_URL=$URL" >> "$GITHUB_ENV"
 
