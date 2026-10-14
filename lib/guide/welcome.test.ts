@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { guideIt } from "./it";
-import { isWelcomeStep, WELCOME_LINKS, welcomeMoney, welcomeSteps } from "./welcome";
+import { isWelcomeStep, WELCOME_LINKS, welcomeDone, welcomeMoney, welcomeSteps } from "./welcome";
 
 const base = { families: false, install: false };
 
@@ -49,5 +49,31 @@ describe("welcome steps", () => {
       const [, topic, slug] = match;
       expect(guideIt.articles.some((a) => a.topic === topic && a.slug === slug)).toBe(true);
     }
+  });
+});
+
+describe("welcome steps done from real data", () => {
+  const none = { money: false, ordered: false, preferences: false, family: false };
+
+  it("ticks nothing for a newcomer", () => {
+    expect(welcomeDone(none)).toEqual([]);
+  });
+
+  it("ticks each step from its own fact", () => {
+    expect(welcomeDone({ ...none, ordered: true })).toEqual(["order"]);
+    expect(welcomeDone({ ...none, preferences: true })).toEqual(["notify"]);
+    expect(welcomeDone({ ...none, family: true })).toEqual(["family"]);
+  });
+
+  it("ticks both money steps on money moved: only the one the group shows is listed", () => {
+    const done = welcomeDone({ ...none, money: true });
+    expect(done).toEqual(expect.arrayContaining(["balance", "pay"]));
+    const shown = welcomeSteps({ money: welcomeMoney("wallet", false), families: false, install: false });
+    expect(shown.filter((s) => done.includes(s))).toEqual(["balance"]);
+  });
+
+  it("never ticks the informational steps", () => {
+    const all = welcomeDone({ money: true, ordered: true, preferences: true, family: true });
+    for (const info of ["intro", "pickup", "install", "help"] as const) expect(all).not.toContain(info);
   });
 });

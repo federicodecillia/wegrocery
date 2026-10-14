@@ -9,13 +9,14 @@ import { MovementRow } from "@/components/movement-row";
 import { WelcomeCard } from "@/components/home/welcome-card";
 import { SetupBanner } from "@/components/admin/setup/setup-banner";
 import { getBrand } from "@/lib/brand/get-brand";
-import { WELCOME_QUERY, welcomeMoney } from "@/lib/guide/welcome";
+import { isWelcomeStep, WELCOME_QUERY, welcomeDone, welcomeMoney } from "@/lib/guide/welcome";
 import { t } from "@/lib/i18n";
 import { formatSignedMoney } from "@/lib/i18n/format";
 import { getUserRole, requireUserSession } from "@/lib/auth/session";
 import {
   getCycleProducts,
   getMemberById,
+  getWelcomeFacts,
   getMemberLedger,
   getMemberOrderLines,
   getNextMemberPickup,
@@ -59,6 +60,9 @@ export default async function HomePage({
   const person = personId === memberId ? member : await getMemberById(personId);
   const reopenWelcome = (await searchParams)[WELCOME_QUERY] === "1";
   const showWelcome = reopenWelcome || (person !== null && person.welcomeDismissedAt === null);
+  // What the card ticks comes from real rows, only read while it shows.
+  const welcomeDoneSteps = showWelcome ? welcomeDone(await getWelcomeFacts(memberId, personId)) : [];
+  const welcomeSavedStep = person !== null && isWelcomeStep(person.welcomeStep) ? person.welcomeStep : null;
   // A pay-per-order group has no wallet: no balance card, each cycle says
   // where its order stands, and the amount due or the credit comes first. A
   // member who pays outside the app keeps the wallet view.
@@ -375,6 +379,8 @@ export default async function HomePage({
           families={settings.familiesEnabled}
           hasGroupInfo={settings.groupInfo !== null}
           reopened={reopenWelcome}
+          savedStep={welcomeSavedStep}
+          done={welcomeDoneSteps}
         />
       )}
 

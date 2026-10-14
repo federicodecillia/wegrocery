@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useSyncExternalStore, useTransition } from "react";
 import { Button } from "@/components/ui/button";
-import { dismissWelcome } from "@/lib/actions/profile";
+import { dismissWelcome, saveWelcomeStep } from "@/lib/actions/profile";
 import { WELCOME_LINKS, welcomeSteps, type WelcomeMoney, type WelcomeStep } from "@/lib/guide/welcome";
 import { t } from "@/lib/i18n";
 import { isPhoneOrTablet } from "@/lib/pwa/install-hint";
@@ -49,12 +49,18 @@ export function WelcomeCard({
   families,
   hasGroupInfo,
   reopened,
+  savedStep,
+  done,
 }: {
   appName: string;
   money: WelcomeMoney;
   families: boolean;
   hasGroupInfo: boolean;
   reopened: boolean;
+  // Where the person stopped (members.welcome_step), on any device.
+  savedStep: WelcomeStep | null;
+  // Steps the database shows as done already (lib/guide/welcome.ts, welcomeDone).
+  done: readonly WelcomeStep[];
 }) {
   const router = useRouter();
   const installable = useSyncExternalStore(subscribeNever, readInstallable, () => false);
@@ -67,16 +73,23 @@ export function WelcomeCard({
   const [, startTransition] = useTransition();
 
   if (closed) return null;
-  const wanted = chosen ?? stored?.step ?? steps[0];
+  const wanted = chosen ?? stored?.step ?? savedStep ?? steps[0];
   const current = Math.max(0, steps.indexOf(wanted));
   const step = steps[current];
   const text = t.welcome.steps[step];
   const body = step === "help" && hasGroupInfo ? t.welcome.helpBodyGroup : text.body;
   const last = current === steps.length - 1;
 
+  function remember(next: WelcomeStep) {
+    startTransition(async () => {
+      await saveWelcomeStep(next);
+    });
+  }
+
   function go(index: number) {
     const next = steps[index];
     setChosen(next);
+    remember(next);
     // Once the member has been following links, keep the bar in step.
     if (stored) storeWelcome({ step: next, n: index + 1, total: steps.length });
   }
@@ -92,7 +105,7 @@ export function WelcomeCard({
 
   // A later visit, not in the middle of the tour: one line, so the open
   // cycle's button stays above the bottom bar on a phone.
-  if (seenBefore && !stored && !expanded && !reopened) {
+  if (seenBefore && !stored && !savedStep && !expanded && !reopened) {
     return (
       <section
         aria-label={t.welcome.title(appName)}
@@ -148,13 +161,22 @@ export function WelcomeCard({
             {text.emoji}
           </span>
           {text.title}
+          {done.includes(step) && (
+            <span className="ml-1 rounded-full bg-accent-soft px-2 py-0.5 text-label font-semibold text-accent-text">
+              <span aria-hidden>✓ </span>
+              {t.welcome.stepDone}
+            </span>
+          )}
         </h2>
         <p className="mt-2 text-[14px] leading-[1.5] text-brand-near-black">
           <Bold text={body} />
         </p>
         <Link
           href={WELCOME_LINKS[step]}
-          onClick={() => storeWelcome({ step, n: current + 1, total: steps.length })}
+          onClick={() => {
+            storeWelcome({ step, n: current + 1, total: steps.length });
+            remember(step);
+          }}
           className="mt-2 inline-block text-[14px] font-bold text-primary-text hover:underline"
         >
           {text.link} →
@@ -167,10 +189,13 @@ export function WelcomeCard({
             <span
               key={s}
               aria-hidden
-              className={`h-[7px] rounded-full transition-all ${i === current ? "w-[18px] bg-primary" : "w-[7px] bg-brand-gray-light"}`}
+              className={`h-[7px] rounded-full transition-all ${i === current ? "w-[18px] bg-primary" : done.includes(s) ? "w-[7px] bg-accent" : "w-[7px] bg-brand-gray-light"}`}
             />
           ))}
-          <span className="sr-only">{t.welcome.stepOf(current + 1, steps.length)}</span>
+          <span className="sr-only">
+            {t.welcome.stepOf(current + 1, steps.length)}
+            {done.includes(step) ? `, ${t.welcome.stepDone}` : ""}
+          </span>
         </div>
         <div className="flex gap-2">
           {current > 0 && (

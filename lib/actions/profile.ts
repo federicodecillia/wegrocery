@@ -6,6 +6,7 @@ import { actionErrorMessage } from "@/lib/action-error";
 import { requireActiveMember } from "@/lib/auth/session";
 import { getDb } from "@/lib/db/client";
 import { auditLog, members } from "@/lib/db/schema";
+import { isWelcomeStep } from "@/lib/guide/welcome";
 import { t } from "@/lib/i18n";
 import { cleanName, NAME_MAX_LENGTH } from "@/lib/profile/summary";
 
@@ -59,9 +60,25 @@ export async function dismissWelcome(): Promise<{ error?: string }> {
       .update(members)
       .set({ welcomeDismissedAt: new Date() })
       .where(and(eq(members.memberId, session.personId), isNull(members.welcomeDismissedAt)));
+    // The tour is over: nothing to resume.
+    await db.update(members).set({ welcomeStep: null }).where(eq(members.memberId, session.personId));
     revalidatePath("/");
     return {};
   } catch (e) {
     return { error: actionErrorMessage(e, t.errors.genericError, "dismissWelcome") };
+  }
+}
+
+// Where the person is in the welcome tour, kept in the database so it resumes
+// on any device (FlyLabs Playbook 4.4). Not revalidated: the card already shows
+// the step; the next visit reads it.
+export async function saveWelcomeStep(step: string): Promise<{ error?: string }> {
+  try {
+    const session = await requireActiveMember();
+    if (!isWelcomeStep(step)) return { error: t.errors.genericError };
+    await getDb().update(members).set({ welcomeStep: step }).where(eq(members.memberId, session.personId));
+    return {};
+  } catch (e) {
+    return { error: actionErrorMessage(e, t.errors.genericError, "saveWelcomeStep") };
   }
 }

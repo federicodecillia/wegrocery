@@ -30,7 +30,7 @@ Found in the review of 2026-10-14 (each line, its reason and its timing are in
 - 2.1, 2.7 Geist and Geist Mono instead of Geist, Inter and JetBrains Mono; own components on Radix Dialog and hand-drawn icons instead of shadcn on Base UI and lucide: the app predates the FlyLabs style, which arrives with the dark theme at stage 1.
 - 2.8 Bottom bar up to `lg` and a top nav in the header from `lg`, inside one centred card, instead of a rail on tablet and a sidebar on PC: changing it reshapes every page, so it is a separate stage 1 proposal.
 - 3.4 Em dashes remain in the changelog version headings (and as the empty-value placeholder in tables): the UI and email strings are clean and `lib/i18n/no-em-dash.test.ts` keeps them so; the heading switches at stage 1.
-- 4.4 First-run steps follow the settings, not the member's data, and the current step lives in `sessionStorage`: stage 1.
+- 4.4 Welcome card: the steps shown follow the settings; the ones the member's own rows already show as done (top-up or payment, an order, saved preferences, a family) carry "Già fatto" (`getWelcomeFacts`, `welcomeDone`), and the step they stopped at is `members.welcome_step` (migration 0036). The "Riprendi" bar on other pages still uses `sessionStorage`, per tab, on purpose.
 - 5.1 Integration tests run on a throwaway Neon branch that needs `NEON_API_KEY` (skipped on forks), not on a plain Postgres: the Neon HTTP driver needs Neon's proxy. This stays.
 - 6.3 and 9.5 Claude runs releases end to end, production migrations included, after a green manual backup and with Federico's explicit ok for each production operation, instead of handing him commands: Federico's choice (2026-10-07). This stays.
 - 6.5 A weekly job (`.github/workflows/restore-test.yml`) restores the latest dump into a throwaway Neon branch, counts the main tables and runs the money invariants on it. It is skipped until Federico sets `NEON_API_KEY` and the variable `RESTORE_TEST_NEON_PROJECT_ID` (a project of the same organisation).
@@ -359,7 +359,7 @@ all in `lib/roles.ts`:
 
 | Table | Purpose |
 |---|---|
-| `members` | User registry; `role`: admin / attivi / utenti; `merged_into` on an account absorbed by a merge (see Member merge); `household_of` on a person who joined a family (see Families); `welcome_dismissed_at` when the person closed the welcome card on Home (migration 0031, `lib/guide/welcome.ts`; `/?benvenuto=1` shows it again) |
+| `members` | User registry; `role`: admin / attivi / utenti; `merged_into` on an account absorbed by a merge (see Member merge); `household_of` on a person who joined a family (see Families); `welcome_dismissed_at` when the person closed the welcome card on Home (migration 0031, `lib/guide/welcome.ts`; `/?benvenuto=1` shows it again) and `welcome_step` where they stopped (migration 0036, `saveWelcomeStep`) |
 | `order_cycles` | Weekly order windows; one `open` at a time |
 | `products` | Per-cycle product list |
 | `orders` | Order lines per member per cycle |

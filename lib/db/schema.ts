@@ -48,6 +48,8 @@ export const members = pgTable(
     // When the person closed the welcome card on Home
     // (drizzle/0031_welcome.sql); NULL = the card shows.
     welcomeDismissedAt: timestamp("welcome_dismissed_at", { withTimezone: true }),
+    // The step the person left the welcome card on (drizzle/0036_welcome_step.sql).
+    welcomeStep: text("welcome_step"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
   },

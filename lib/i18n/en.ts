@@ -55,6 +55,7 @@ export const en: Strings = {
   welcome: {
     title: (appName: string) => `Welcome to ${appName}`,
     stepOf: (step: number, total: number) => `${step} of ${total}`,
+    stepDone: "Already done",
     back: "Back",
     next: "Next",
     done: "Got it",
