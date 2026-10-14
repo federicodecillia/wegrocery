@@ -1,0 +1,187 @@
+name: Weekly Backup Restore Test
+
+# A backup nobody restores is a hope, not a backup (FlyLabs Playbook 6.5).
+# Every Sunday at 04:30 UTC this restores the latest dump from Google Drive
+# into a throwaway Neon branch, counts the main tables, runs the money
+# invariants on the restored copy, and deletes the branch. Also runnable from
+# the Actions tab. If it fails or is cancelled, the `notify` job opens (or
+# comments on) a GitHub issue, like the nightly backup.
+#
+# Needs, besides the backup's own secrets (RCLONE_CONFIG, GDRIVE_BACKUP_PATH):
+#   - secret   NEON_API_KEY                   a Neon API key with branch rights
+#   - variable RESTORE_TEST_NEON_PROJECT_ID   the Neon project whose throwaway
+#                                             branch receives the dump
+# The dump holds real member data and the branch lives for minutes (Neon also
+# expires it after two hours if the runner dies): pick a project of the same
+# organisation, never a public one. Output carries table counts only. Without
+# these the job is skipped with a warning (forks, new installations).
+
+on:
+  schedule:
+    - cron: '30 4 * * 0'
+  workflow_dispatch:
+
+jobs:
+  configured:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      enabled: ${{ steps.check.outputs.enabled }}
+    steps:
+      - id: check
+        env:
+          HAS_RCLONE: ${{ secrets.RCLONE_CONFIG != '' }}
+          HAS_PATH: ${{ secrets.GDRIVE_BACKUP_PATH != '' }}
+          HAS_NEON_KEY: ${{ secrets.NEON_API_KEY != '' }}
+          HAS_PROJECT: ${{ vars.RESTORE_TEST_NEON_PROJECT_ID != '' }}
+        run: |
+          if [ "$HAS_RCLONE" = "true" ] && [ "$HAS_PATH" = "true" ] && [ "$HAS_NEON_KEY" = "true" ] && [ "$HAS_PROJECT" = "true" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::Restore test skipped: RCLONE_CONFIG, GDRIVE_BACKUP_PATH, NEON_API_KEY or RESTORE_TEST_NEON_PROJECT_ID is missing."
+          fi
+
+  restore:
+    needs: configured
+    if: needs.configured.outputs.enabled == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install PostgreSQL 17 client (matches Neon)
+        timeout-minutes: 8
+        run: |
+          set -euo pipefail
+          retry() {
+            local n=0
+            until "$@"; do
+              n=$((n + 1))
+              if [ "$n" -ge 3 ]; then echo "giving up: $*" >&2; return 1; fi
+              echo "attempt $n failed, retrying: $*" >&2
+              sleep $((n * 10))
+            done
+          }
+          APT_OPTS="-o Acquire::Retries=3 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20 -o DPkg::Lock::Timeout=60"
+          sudo install -d /usr/share/postgresql-common/pgdg
+          retry sudo curl -fsSL --connect-timeout 10 --max-time 30 \
+            https://www.postgresql.org/media/keys/ACCC4CF8.asc \
+            -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] \
+            https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" \
+            | sudo tee /etc/apt/sources.list.d/pgdg.list > /dev/null
+          retry sudo timeout -k 10 90 apt-get $APT_OPTS update
+          retry sudo timeout -k 10 120 apt-get $APT_OPTS install -y --no-install-recommends postgresql-client-17
+          echo "/usr/lib/postgresql/17/bin" >> "$GITHUB_PATH"
+
+      - name: Install rclone
+        timeout-minutes: 3
+        run: |
+          set -euo pipefail
+          curl -fsSL https://rclone.org/install.sh | sudo bash
+
+      - name: Fetch the latest dump
+        env:
+          RCLONE_CONFIG_CONTENT: ${{ secrets.RCLONE_CONFIG }}
+          DEST: ${{ secrets.GDRIVE_BACKUP_PATH }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$HOME/.config/rclone"
+          printf '%s' "$RCLONE_CONFIG_CONTENT" > "$HOME/.config/rclone/rclone.conf"
+          chmod 600 "$HOME/.config/rclone/rclone.conf"
+          case "$DEST" in *:*) ;; *) echo "GDRIVE_BACKUP_PATH is not a remote path" >&2; exit 1 ;; esac
+          LATEST=$(rclone lsf "$DEST" --files-only --include "gas-backup-*.sql.gz" | sort | tail -n 1)
+          [ -n "$LATEST" ] || { echo "no dump found in the backup folder" >&2; exit 1; }
+          echo "Latest dump: $LATEST"
+          rclone copy "$DEST/$LATEST" . --stats=0
+          # Yesterday's dump at the latest: a stale backup is a failed backup.
+          DAY=$(echo "$LATEST" | grep -o '[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}')
+          AGE_DAYS=$(( ( $(date -u +%s) - $(date -u -d "$DAY" +%s) ) / 86400 ))
+          echo "Dump age: ${AGE_DAYS} day(s)"
+          [ "$AGE_DAYS" -le 2 ] || { echo "the latest dump is ${AGE_DAYS} days old" >&2; exit 1; }
+          echo "DUMP_FILE=$LATEST" >> "$GITHUB_ENV"
+
+      - name: Create a throwaway database branch
+        id: branch
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ vars.RESTORE_TEST_NEON_PROJECT_ID }}
+          BRANCH: restore-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          set -euo pipefail
+          EXPIRES=$(date -u -d '+2 hours' +%Y-%m-%dT%H:%M:%SZ)
+          npx -y neonctl@7.0.1 branches create --project-id "$NEON_PROJECT_ID" --name "$BRANCH" \
+            --expires-at "$EXPIRES" --output json > /dev/null
+          echo "name=$BRANCH" >> "$GITHUB_OUTPUT"
+          URL=$(npx -y neonctl@7.0.1 connection-string "$BRANCH" --project-id "$NEON_PROJECT_ID")
+          echo "::add-mask::$URL"
+          PASSWORD=$(node -e 'process.stdout.write(decodeURIComponent(new URL(process.argv[1]).password))' "$URL")
+          echo "::add-mask::$PASSWORD"
+          echo "RESTORE_URL=$URL" >> "$GITHUB_ENV"
+
+      # The branch starts as a copy of the project's default branch: wipe it,
+      # then load the dump as the restore procedure in AGENTS.md does.
+      - name: Restore the dump
+        run: |
+          set -euo pipefail
+          psql "$RESTORE_URL" -v ON_ERROR_STOP=1 -q -c "DROP SCHEMA IF EXISTS public CASCADE; CREATE SCHEMA public;"
+          gunzip -c "$DUMP_FILE" | psql "$RESTORE_URL" -v ON_ERROR_STOP=1 -q -o /dev/null
+
+      # Counts only: no row of member data is printed.
+      - name: Count the main tables
+        run: |
+          set -euo pipefail
+          for t in members order_cycles orders ledger_entries; do
+            n=$(psql "$RESTORE_URL" -At -c "SELECT count(*) FROM $t")
+            echo "$t: $n"
+            [ "$n" -gt 0 ] || { echo "$t is empty after the restore" >&2; exit 1; }
+          done
+
+      - name: Check the money invariants on the restored copy
+        run: DATABASE_URL="$RESTORE_URL" node node_modules/tsx/dist/cli.mjs scripts/check-invariants.mts
+
+      - name: Delete the database branch and the local files
+        if: always()
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ vars.RESTORE_TEST_NEON_PROJECT_ID }}
+          BRANCH: ${{ steps.branch.outputs.name }}
+        run: |
+          rm -f gas-backup-*.sql.gz "$HOME/.config/rclone/rclone.conf"
+          if [ -n "$BRANCH" ]; then
+            npx -y neonctl@7.0.1 branches delete "$BRANCH" --project-id "$NEON_PROJECT_ID" || true
+          fi
+
+  notify:
+    needs: [configured, restore]
+    if: ${{ always() && (contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: Open or update the alert issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          RESTORE: ${{ needs.restore.result }}
+        run: |
+          set -euo pipefail
+          TITLE="Weekly backup restore test needs attention"
+          BODY="$(date -u +%F): restore ${RESTORE}. Run: ${RUN_URL}"
+          OPEN=$(gh issue list --state open --search "in:title \"${TITLE}\"" --json number --jq '.[0].number // empty')
+          if [ -n "$OPEN" ]; then
+            gh issue comment "$OPEN" --body "$BODY"
+          else
+            gh issue create --title "$TITLE" --body "$BODY"
+          fi

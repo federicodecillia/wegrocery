@@ -33,7 +33,7 @@ Found in the review of 2026-10-14 (each line, its reason and its timing are in
 - 4.4 First-run steps follow the settings, not the member's data, and the current step lives in `sessionStorage`: stage 1.
 - 5.1 Integration tests run on a throwaway Neon branch that needs `NEON_API_KEY` (skipped on forks), not on a plain Postgres: the Neon HTTP driver needs Neon's proxy. This stays.
 - 6.3 and 9.5 Claude runs releases end to end, production migrations included, after a green manual backup and with Federico's explicit ok for each production operation, instead of handing him commands: Federico's choice (2026-10-07). This stays.
-- 6.5 The daily backup is not restored to prove it: a weekly restore test is planned for stage 1.
+- 6.5 A weekly job (`.github/workflows/restore-test.yml`) restores the latest dump into a throwaway Neon branch, counts the main tables and runs the money invariants on it. It is skipped until Federico sets `NEON_API_KEY` and the variable `RESTORE_TEST_NEON_PROJECT_ID` (a project of the same organisation).
 - 7.6 No idempotency key and no one-click unsubscribe on notification emails (see "Email compliance"): small private groups so far; planned for stage 1.
 - 7.8 No `usage_events` yet: own minimal events arrive at stage 1 (Vercel Analytics and Speed Insights are gone).
 - 7.10 The Console (`console/`) redirects to its password login instead of answering 404: a 404 would hide the only way in. This stays.
@@ -616,6 +616,8 @@ Neon free tier only retains 6 hours of point-in-time history (the Launch plan go
 | `DATABASE_URL` | Neon production connection string (same as Vercel) |
 | `RCLONE_CONFIG` | Full contents of local `~/.config/rclone/rclone.conf` after running `rclone config` (remote named `gdrive`) |
 | `GDRIVE_BACKUP_PATH` | `gdrive:PortaMoneta/GAS-Backups` |
+
+**Weekly proof.** `restore-test.yml` (Sundays 04:30 UTC) does steps 2 to 4 below on its own and opens an issue if the restore, the counts or the invariants fail.
 
 **Restore procedure.** **Never restore directly into production** — always do it on a throwaway Neon branch first, verify, then promote or selectively copy rows back.
 
