@@ -2088,6 +2088,16 @@ export const it = {
       `Prodotto "${name}" ambiguo (più prodotti con lo stesso nome), riga saltata.`,
     cancelReasonRequired: "Il motivo dell'annullamento è obbligatorio",
   },
+  unsubscribe: {
+    title: "Non ricevere più queste email",
+    confirm: (category: string, app: string) =>
+      `Vuoi smettere di ricevere per email gli avvisi «${category}» di ${app}? Li vedrai ancora nell'app, e puoi riattivare le email quando vuoi da Profilo, Preferenze notifiche.`,
+    button: "Non ricevere più queste email",
+    doneTitle: "Fatto",
+    done: "Non riceverai più queste email. Gli avvisi restano nell'app.",
+    invalidTitle: "Link non valido",
+    invalid: "Questo link non è valido o è scaduto. Puoi cambiare le email da Profilo, Preferenze notifiche.",
+  },
   email: {
     notificationSubject: (appName: string, title: string) => `${appName}: ${title}`,
     notificationCta: (url: string) => `Apri nell'app: ${url}`,

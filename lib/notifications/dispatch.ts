@@ -11,8 +11,12 @@ import { getDb } from "@/lib/db/client";
 import { members, notificationPreferences, notifications } from "@/lib/db/schema";
 import { getBrand } from "@/lib/brand/get-brand";
 import { notificationEmail } from "@/lib/email/templates";
+import { getAppBaseUrl } from "@/lib/email/base-url";
+import { emailIdempotencyKey } from "@/lib/email/idempotency";
 import { sendMail, sendMailBatch } from "@/lib/email/resend";
+import { unsubscribeHeaders } from "@/lib/email/unsubscribe";
 import {
+  categoryForType,
   channelsForType,
   resolvePreferences,
   type ChannelPrefs,
@@ -101,9 +105,11 @@ export async function dispatchNotification(
     prefs ?? (await getResolvedPreferences(db, [input.memberId])).get(input.memberId)!;
   const channels = channelsForType(input.type, resolved);
 
+  const createdAt = input.createdAt ?? new Date();
+  const notificationId = genNotificationId();
   if (channels.app) {
     await db.insert(notifications).values({
-      notificationId: genNotificationId(),
+      notificationId,
       memberId: input.memberId,
       role: null,
       type: input.type,
@@ -111,7 +117,7 @@ export async function dispatchNotification(
       body: input.body,
       href: input.href ?? null,
       readAt: null,
-      createdAt: input.createdAt ?? new Date(),
+      createdAt,
     });
   }
 
@@ -120,7 +126,18 @@ export async function dispatchNotification(
       { title: input.title, body: input.body, href: input.href },
       await getBrand(),
     );
-    const result = await sendMail({ to: input.memberEmail, subject, text });
+    const headers = unsubscribeHeaders(
+      { memberId: input.memberId, category: categoryForType(input.type) },
+      getAppBaseUrl(),
+      process.env.AUTH_SECRET,
+    );
+    const result = await sendMail({
+      to: input.memberEmail,
+      subject,
+      text,
+      ...(headers ? { headers } : {}),
+      idempotencyKey: emailIdempotencyKey("notification", notificationId),
+    });
     if ("error" in result) console.error("[notifications] email send failed:", result.error);
   }
 }
@@ -165,10 +182,15 @@ export async function dispatchWithBodies(
     .filter((i) => i.email && channelsForType(type, prefsByMember.get(i.memberId)!).email)
     .map((i) => {
       const { subject, text } = notificationEmail({ title: i.title, body: i.body, href: i.href }, identity);
-      return { to: i.email as string, subject, text };
+      const headers = unsubscribeHeaders(
+        { memberId: i.memberId, category: categoryForType(type) },
+        getAppBaseUrl(),
+        process.env.AUTH_SECRET,
+      );
+      return { to: i.email as string, subject, text, ...(headers ? { headers } : {}) };
     });
   if (emailItems.length > 0) {
-    const result = await sendMailBatch(emailItems);
+    const result = await sendMailBatch(emailItems, undefined, emailIdempotencyKey("notifications", type, createdAt));
     if ("error" in result) console.error("[notifications] batch email send failed:", result.error);
   }
 }

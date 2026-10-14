@@ -2080,6 +2080,16 @@ export const en: Strings = {
       `Product "${name}" is ambiguous (several products share the name), row skipped.`,
     cancelReasonRequired: "The cancellation reason is required",
   },
+  unsubscribe: {
+    title: "Stop these emails",
+    confirm: (category: string, app: string) =>
+      `Stop receiving "${category}" alerts from ${app} by email? You will still see them in the app, and you can turn the emails back on from Profile, Notification preferences.`,
+    button: "Stop these emails",
+    doneTitle: "Done",
+    done: "You will not receive these emails any more. The alerts stay in the app.",
+    invalidTitle: "Invalid link",
+    invalid: "This link is not valid or has expired. You can change emails from Profile, Notification preferences.",
+  },
   email: {
     notificationSubject: (appName: string, title: string) => `${appName}: ${title}`,
     notificationCta: (url: string) => `Open in the app: ${url}`,

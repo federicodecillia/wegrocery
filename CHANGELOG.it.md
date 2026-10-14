@@ -24,6 +24,7 @@ stanno nella PR.
 *L'app ha un tema scuro, e gli aggiornamenti del database sono più sicuri.*
 
 ### Aggiunte
+- 📧 **Disiscrizione con un tocco.** Le email di avviso mostrano il pulsante "Annulla iscrizione" della tua app di posta, che spegne le email di quel tipo (gli avvisi restano nell'app), e un doppio clic non manda mai due volte la stessa email.
 - 🔐 **Ruolo limitato per il database (facoltativo).** L'app può collegarsi con un ruolo che legge e scrive i dati ma non può cambiare lo schema; `scripts/create-app-role.mjs` lo crea e lo stato della configurazione lo mostra.
 - 🌙 **Tema scuro.** In Profilo → App c'è "Aspetto": come il telefono, sempre chiaro o sempre scuro. I colori del gruppo restano e si leggono bene.
 

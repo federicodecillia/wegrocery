@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 import { t } from "@/lib/i18n";
+import { emailIdempotencyKey, minuteBucket } from "./idempotency";
 import { outboundEnvFromProcess, resolveOutbound, resolveOutboundBatch } from "./outbound-policy";
 
 type Attachment = {
@@ -26,6 +27,12 @@ type SendMailOpts = {
   // plain-text emails carrying an attachment.
   html?: string;
   attachments?: Attachment[];
+  // Extra headers (List-Unsubscribe and its Post companion).
+  headers?: Record<string, string>;
+  // Resend drops a repeat of the same key for 24 hours. When omitted, the key
+  // is derived from the message and the minute it was asked in, so a double
+  // click sends once and a deliberate resend a minute later still goes out.
+  idempotencyKey?: string;
 };
 
 // Returns the configured default sender (MAIL_FROM) so the client can
@@ -60,7 +67,8 @@ export async function sendMail(
 
   try {
     const resend = new Resend(apiKey);
-    const { data, error } = await resend.emails.send({
+    const { data, error } = await resend.emails.send(
+      {
       from,
       to: [target.to],
       ...(target.cc.length > 0 ? { cc: target.cc } : {}),
@@ -69,7 +77,14 @@ export async function sendMail(
       text: opts.text,
       ...(opts.html ? { html: opts.html } : {}),
       ...(opts.attachments ? { attachments: opts.attachments } : {}),
-    });
+      ...(opts.headers ? { headers: opts.headers } : {}),
+      },
+      {
+        idempotencyKey:
+          opts.idempotencyKey ??
+          emailIdempotencyKey(target.to, target.subject, opts.text, opts.attachments?.map((a) => a.filename).join(",") ?? "", minuteBucket()),
+      },
+    );
     if (error) return { error: error.message || t.errors.emailSendFailed };
     return { ok: true, id: data?.id };
   } catch (e) {
@@ -84,8 +99,10 @@ export async function sendMail(
 // throws, returns a discriminated result. No attachments (batch doesn't
 // support them). `sent` counts messages handed to Resend, not deliveries.
 export async function sendMailBatch(
-  items: ReadonlyArray<{ to: string; subject: string; text: string }>,
+  items: ReadonlyArray<{ to: string; subject: string; text: string; headers?: Record<string, string> }>,
   from?: string,
+  // Names this fan-out; each chunk of 100 derives its own key from it.
+  idempotencyKey?: string,
 ): Promise<{ ok: true; sent: number } | { error: string }> {
   if (items.length === 0) return { ok: true, sent: 0 };
   if (process.env.DEMO_MODE === "true") return { error: t.errors.demoEmailDisabled };
@@ -113,7 +130,20 @@ export async function sendMailBatch(
     for (let i = 0; i < targets.length; i += 100) {
       const chunk = targets.slice(i, i + 100);
       const { error } = await resend.batch.send(
-        chunk.map((it) => ({ from: sender, to: [it.to], subject: it.subject, text: it.text })),
+        chunk.map((it) => ({
+          from: sender,
+          to: [it.to],
+          subject: it.subject,
+          text: it.text,
+          ...(it.headers ? { headers: it.headers } : {}),
+        })),
+        {
+          idempotencyKey: emailIdempotencyKey(
+            idempotencyKey ?? minuteBucket(),
+            i,
+            ...chunk.flatMap((it) => [it.to, it.subject]),
+          ),
+        },
       );
       if (error) return { error: error.message || t.errors.emailSendFailed };
     }

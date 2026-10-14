@@ -39,7 +39,7 @@ export function resolveOutbound(
 // are enough to check content and links.
 export const REDIRECT_BATCH_CAP = 3;
 
-type BatchItem = { to: string; subject: string; text: string };
+type BatchItem = { to: string; subject: string; text: string; headers?: Record<string, string> };
 
 export type OutboundBatchDecision =
   | { action: "send"; messages: BatchItem[]; suppressed: number }
@@ -54,7 +54,7 @@ export function resolveOutboundBatch(
   for (const it of items) {
     const d = resolveOutbound(it, env, blockedError);
     if (d.action === "block") return d;
-    messages.push({ to: d.to, subject: d.subject, text: it.text });
+    messages.push({ to: d.to, subject: d.subject, text: it.text, ...(it.headers ? { headers: it.headers } : {}) });
   }
   if (env.vercelEnv === "production") return { action: "send", messages, suppressed: 0 };
   const kept = messages.slice(0, REDIRECT_BATCH_CAP);
