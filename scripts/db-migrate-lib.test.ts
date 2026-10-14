@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isMigrationFile, refusesProduction, splitStatements } from "./db-migrate-lib.mjs";
+import { appRoleRevokeStatements, appRoleStatements, isMigrationFile, refusesProduction, splitStatements } from "./db-migrate-lib.mjs";
 
 describe("isMigrationFile", () => {
   it("applies numbered SQL and never a rollback file", () => {
@@ -44,5 +44,39 @@ describe("refusesProduction", () => {
 
   it("knows nothing about production without PRODUCTION_DB_HOST", () => {
     expect(refusesProduction(prod, {}, [])).toBe(false);
+  });
+});
+
+describe("appRoleStatements", () => {
+  const all = (role = "app_rw", pw = "p".repeat(24)) => appRoleStatements(role, pw, "neondb").join("\n");
+
+  it("grants data access only: no DDL, no ownership, no superuser", () => {
+    const sql = all();
+    expect(sql).toContain("GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public");
+    expect(sql).toContain("NOSUPERUSER NOCREATEDB NOCREATEROLE");
+    expect(sql).not.toMatch(/GRANT (ALL|CREATE)\b|OWNER TO|TRUNCATE|REFERENCES/i);
+  });
+
+  it("covers the tables created later and keeps the migration ledger read only", () => {
+    const sql = all();
+    expect(sql).toContain("ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES");
+    expect(sql).toContain("REVOKE INSERT, UPDATE, DELETE ON public._migrations");
+  });
+
+  it("refuses a role name that is not a plain identifier and a short password", () => {
+    expect(() => appRoleStatements('x"; DROP TABLE members; --', "p".repeat(24), "db")).toThrow(/invalid role/);
+    expect(() => appRoleStatements("app_rw", "short", "db")).toThrow(/24 characters/);
+  });
+
+  it("quotes a password with a single quote", () => {
+    expect(all("app_rw", "a'b".padEnd(24, "x"))).toContain("'a''bxxxxxxxxxxxxxxxxxxxxx'");
+  });
+});
+
+describe("appRoleRevokeStatements", () => {
+  it("revokes everything and drops the role", () => {
+    const sql = appRoleRevokeStatements("app_rw", "neondb");
+    expect(sql.at(-1)).toBe('DROP ROLE IF EXISTS "app_rw"');
+    expect(sql.join("\n")).toContain('REVOKE ALL ON ALL TABLES IN SCHEMA public FROM "app_rw"');
   });
 });

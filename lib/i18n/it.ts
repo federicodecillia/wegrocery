@@ -705,6 +705,7 @@ export const it = {
         stripe: "Pagamenti online (Stripe)",
         membership: "Verifica della tessera (WallyFor)",
         sentry: "Segnalazione degli errori (Sentry)",
+        dbRole: "Accesso al database con ruolo limitato",
         fleet: "Statistiche anonime per la console (WeGrocery Console)",
       } as Record<string, string>,
       notes: {
@@ -779,6 +780,10 @@ export const it = {
         sentry: [
           "Manda a chi gestisce l'app un'email quando qualcosa va in errore, senza dati dei soci.",
           "Installa l'integrazione Sentry dal marketplace di Vercel (piano gratuito) e collegala al progetto: basta così. In alternativa crea un progetto Next.js su sentry.io (regione UE) e metti il suo DSN in SENTRY_DSN, solo per la produzione.",
+        ],
+        dbRole: [
+          "L'app usa un ruolo che legge e scrive i dati ma non può cambiare lo schema: se una chiave trapela, il database non si può cancellare. Gli aggiornamenti usano un'altra connessione.",
+          "Lancia scripts/create-app-role.mjs con l'indirizzo del proprietario, metti il nuovo indirizzo in DATABASE_URL e quello vecchio in DATABASE_MIGRATION_URL (istruzioni in docs/upgrading.md).",
         ],
         fleet: [
           "Serve solo a chi gestisce più gruppi: la sua console legge numeri anonimi (soci, cicli, ordini, versione) senza entrare nel database. Per il gruppo non cambia nulla.",

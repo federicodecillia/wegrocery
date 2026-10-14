@@ -23,6 +23,7 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 *The app gets a dark theme, and the database and build checks get safer.*
 
 ### Added
+- 🔐 **Restricted database role (optional).** The app can connect with a role that reads and writes data but cannot change the schema; `scripts/create-app-role.mjs` creates it and Configuration status shows it.
 - 🌙 **Dark theme.** Profile → App now has "Appearance": follow the phone, always light or always dark. The group's colours carry over and stay readable.
 
 ### Changed

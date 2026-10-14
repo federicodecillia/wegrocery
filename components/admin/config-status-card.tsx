@@ -11,7 +11,7 @@ const STATUS_CLASSES: Record<ConfigItem["status"], string> = {
 };
 
 // Integrations a group can live without: the card lists them apart.
-const OPTIONAL = new Set<ConfigItem["id"]>(["brand", "stripe", "membership", "sentry", "fleet"]);
+const OPTIONAL = new Set<ConfigItem["id"]>(["brand", "stripe", "membership", "sentry", "dbRole", "fleet"]);
 
 // What this installation has connected (lib/config-status.ts): names and
 // states only, never a value. Nothing here is set from this card: each item

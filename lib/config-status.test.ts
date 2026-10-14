@@ -139,6 +139,13 @@ describe("configStatus", () => {
     expect(item(configStatus({ ...complete, INSTANCE_STATS_SECRET: "x".repeat(64) }, facts), "fleet").status).toBe("ok");
   });
 
+  it("shows the restricted database role only when the migrations use another address", () => {
+    const withDb = { ...complete, DATABASE_URL: "postgres://app_rw@host/db" };
+    expect(item(configStatus(withDb, facts), "dbRole").status).toBe("off");
+    expect(item(configStatus({ ...withDb, DATABASE_MIGRATION_URL: "postgres://app_rw@host/db" }, facts), "dbRole").status).toBe("off");
+    expect(item(configStatus({ ...withDb, DATABASE_MIGRATION_URL: "postgres://owner@host/db" }, facts), "dbRole").status).toBe("ok");
+  });
+
   it("names a brand that does not parse, and the fields it does not know", () => {
     expect(item(configStatus(complete, { ...facts, brandError: "brand.locale must be \"it\" or \"en\"" }), "brand")).toMatchObject({
       status: "missing",

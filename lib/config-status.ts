@@ -33,6 +33,7 @@ export type ConfigFacts = {
 
 export type ConfigItemId =
   | "database"
+  | "dbRole"
   | "authSecret"
   | "signIn"
   | "firstAdmin"
@@ -182,8 +183,17 @@ export function configStatus(env: Env, facts: ConfigFacts): ConfigItem[] {
       // Vercel's Sentry integration sets only the public name.
       status: set(env.SENTRY_DSN) || set(env.NEXT_PUBLIC_SENTRY_DSN) ? "ok" : "off",
     },
+    dbRole(env),
     fleet(env),
   ];
+}
+
+// The app connects with a role that cannot change the schema; migrations use
+// the owner's address in DATABASE_MIGRATION_URL (FlyLabs Playbook 1.4).
+function dbRole(env: Env): ConfigItem {
+  const base = { id: "dbRole", required: false, vars: ["DATABASE_MIGRATION_URL"] } as const;
+  const migration = env.DATABASE_MIGRATION_URL?.trim() ?? "";
+  return migration && migration !== env.DATABASE_URL?.trim() ? { ...base, status: "ok" } : { ...base, status: "off" };
 }
 
 // Anonymous counts for whoever operates several installations

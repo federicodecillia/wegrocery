@@ -26,10 +26,44 @@ one transaction with a lock timeout. If your own environment files name the
 production database in `PRODUCTION_DB_HOST`, the script asks for `--allow-prod`
 before touching it (builds with `MIGRATE_ON_BUILD` pass it themselves).
 
+## Restricted database role (optional, recommended)
+
+By default the app connects as the database owner, so a leaked `DATABASE_URL`
+could drop tables. With a restricted role the app can read and write rows
+(`SELECT`, `INSERT`, `UPDATE`, `DELETE`) but never change the schema, and the
+ledger's append-only trigger cannot be dropped by it.
+
+1. Back up, then create the role with the owner's address (Neon refuses a
+   guessable password: use a random one of 24+ characters):
+   ```bash
+   DATABASE_URL="<owner address>" APP_ROLE_PASSWORD="$(openssl rand -base64 24)" \
+     node scripts/create-app-role.mjs        # --role app_rw by default, --allow-prod when asked
+   ```
+   Keep the password: the script never prints it. Running it again resets the
+   password and re-grants tables created since (new tables are covered by
+   default privileges for later owner migrations too).
+2. On the Vercel project, set `DATABASE_URL` to the same address with the role
+   name and its password (user `app_rw`), and add `DATABASE_MIGRATION_URL` with
+   the owner's address. `scripts/db-migrate.mjs` uses `DATABASE_MIGRATION_URL`
+   when set, so migrations keep working. Redeploy and open `/api/health`.
+3. Admin → Impostazioni → *Configuration status* shows "Database access with a
+   restricted role" as OK.
+
+`MIGRATE_ON_BUILD` runs inside the Vercel build, so with it the owner's address
+must be in the project environment too: for the full benefit run the migrations
+from your machine or CI instead and leave the variable off.
+
+Way back: put the owner's address in `DATABASE_URL` again and redeploy; then
+revoke the role (`appRoleRevokeStatements` in `scripts/db-migrate-lib.mjs` lists
+the statements; on Neon the owner cannot `DROP OWNED BY`, so privileges are
+revoked one by one before `DROP ROLE`). `test/int/app-role.int.test.ts` checks
+the role end to end, and the whole integration suite passes with it.
+
 ## Per version
 
 | Version | Migration | Environment | Stripe webhook events |
 |---|---|---|---|
+| Unreleased | none | `DATABASE_MIGRATION_URL` (optional: the owner's address for `scripts/db-migrate.mjs` while `DATABASE_URL` is a restricted role) | none |
 | 1.25.0 | `0030_group_info.sql` (additive: `app_settings.group_info`), `0031_welcome.sql` (additive: `members.welcome_dismissed_at`, set for members who already ordered), `0032_guide_search_misses.sql` (additive: table `guide_search_misses`); apply them before deploying | none | none |
 | 1.27.0 | `0034_group_identity.sql` (additive: table `group_identity`, marked as set up where members exist); apply it before deploying. `0035_stripe_connection.sql` (additive: table `stripe_connection`, for a Stripe account connected from Admin → Impostazioni; the code treats a missing table as "not connected") | `INSTANCE_STATS_SECRET` (optional, at least 32 characters: opens `/api/instance-stats` to a fleet console); no new variable for the in-app Stripe connection, which is ignored while `STRIPE_SECRET_KEY` is set | none (an in-app connection creates its own endpoint) |
 | 1.26.0 | `0033_bank_reference.sql` (additive: `app_settings.bank_reference_template`, `app_settings.bank_receipt_email`); apply it before deploying | none | none |

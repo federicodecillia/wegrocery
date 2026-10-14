@@ -5,6 +5,8 @@
 // onto hand-written SQL invites permanent spurious diffs.
 //
 //   DATABASE_URL="postgres://…" node scripts/db-migrate.mjs             # apply pending
+//   (DATABASE_MIGRATION_URL, when set, wins: the owner's address while the app
+//   runs as a restricted role, see scripts/create-app-role.mjs)
 //   DATABASE_URL="postgres://…" node scripts/db-migrate.mjs --baseline  # record all as applied, run nothing
 //   DATABASE_URL="postgres://…" node scripts/db-migrate.mjs --status    # list applied vs pending
 //
@@ -22,9 +24,10 @@ import { fileURLToPath } from "node:url";
 import { neon } from "@neondatabase/serverless";
 import { LOCK_TIMEOUT, isMigrationFile, refusesProduction, splitStatements } from "./db-migrate-lib.mjs";
 
-const url = process.env.DATABASE_URL;
+// The owner's connection when the app runs as a restricted role (Playbook 1.4).
+const url = process.env.DATABASE_MIGRATION_URL || process.env.DATABASE_URL;
 if (!url) {
-  console.error("DATABASE_URL is required");
+  console.error("DATABASE_URL (or DATABASE_MIGRATION_URL) is required");
   process.exit(1);
 }
 if (refusesProduction(url, process.env, process.argv)) {

@@ -26,7 +26,7 @@ Intended deviations (as of 2026-10-14):
 
 Found in the review of 2026-10-14 (each line, its reason and its timing are in
 [`docs/2026-10-14-flylabs-playbook-alignment.md`](./docs/2026-10-14-flylabs-playbook-alignment.md)):
-- 1.4 The app connects with the database owner, not a role without schema privileges: one `DATABASE_URL` per installation so far; an `app_rw` role is planned for stage 1.
+- 1.4 The app can connect with a role without schema privileges (`scripts/create-app-role.mjs`, `DATABASE_MIGRATION_URL` for the owner's address, `docs/upgrading.md`), tested end to end; it is not enforced on any installation yet: each database needs the role created by its owner (Federico).
 - 2.1, 2.7 Geist and Geist Mono instead of Geist, Inter and JetBrains Mono; own components on Radix Dialog and hand-drawn icons instead of shadcn on Base UI and lucide: the app predates the FlyLabs style, which arrives with the dark theme at stage 1.
 - 2.8 Bottom bar up to `lg` and a top nav in the header from `lg`, inside one centred card, instead of a rail on tablet and a sidebar on PC: changing it reshapes every page, so it is a separate stage 1 proposal.
 - 3.4 Em dashes remain in the changelog version headings (and as the empty-value placeholder in tables): the UI and email strings are clean and `lib/i18n/no-em-dash.test.ts` keeps them so; the heading switches at stage 1.
