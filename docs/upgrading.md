@@ -21,7 +21,10 @@ status*, or `npm run doctor` from a checkout with your environment.
    below.
 4. Deploy, then open `/api/health`: it answers `ok: true` with the version.
 
-Every migration is additive and can run twice without harm.
+Every migration is additive and can run twice without harm. Each file runs in
+one transaction with a lock timeout. If your own environment files name the
+production database in `PRODUCTION_DB_HOST`, the script asks for `--allow-prod`
+before touching it (builds with `MIGRATE_ON_BUILD` pass it themselves).
 
 ## Per version
 

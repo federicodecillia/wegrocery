@@ -332,7 +332,7 @@ export async function adminCancelClosedCycle(
             type: "correction",
             amount: (-r.net).toFixed(2),
             cycleId,
-            note: `${t.ledger.cycleCancelled} — ${reason}`,
+            note: `${t.ledger.cycleCancelled}: ${reason}`,
             createdBy: admin.email,
             createdAt: now,
           })),
@@ -1231,7 +1231,7 @@ export async function adminGetSupplierEmailDefaults(cycleId: string): Promise<
       to: cycle.supplierEmail ?? "",
       from,
       cc: Array.from(new Set([admin.email, ...[(await getBrand()).archiveCcEmail].filter((e): e is string => Boolean(e))])),
-      subject: `Ordine ${(await getBrand()).orgName} — ${cycle.title}`,
+      subject: `Ordine ${(await getBrand()).orgName}: ${cycle.title}`,
       supplierName: cycle.supplierName,
     };
   } catch (e) {

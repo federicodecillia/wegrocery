@@ -83,7 +83,7 @@ export function AdminNav() {
             <span aria-hidden className="text-[16px] leading-none">⋯</span>
             {inMore && <span className="sr-only">{ADMIN_MORE.find((s) => s.id === section)?.label}</span>}
           </summary>
-          <ul className="absolute right-0 z-30 mt-2 min-w-[180px] overflow-hidden rounded-xl border border-brand-border bg-white py-1 shadow-card">
+          <ul className="absolute right-0 z-30 mt-2 min-w-[180px] overflow-hidden rounded-xl border border-brand-border bg-white py-1 shadow-md">
             {ADMIN_MORE.map((s) => (
               <li key={s.id}>
                 <Link

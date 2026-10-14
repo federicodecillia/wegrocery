@@ -44,9 +44,10 @@
   --text-title: 1.25rem;
   --text-title--letter-spacing: -0.03em;
   --text-title--line-height: 1.2;
-  /* Cards and sheets share one radius and one resting shadow. */
+  /* Cards and sheets share one radius. */
   --radius-card: 18px;
-  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04);
+  /* Cards are a 1px border, no shadow (FlyLabs Playbook 2.9). */
+  --shadow-card: none;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }

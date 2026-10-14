@@ -8,16 +8,27 @@
 //   DATABASE_URL="postgres://…" node scripts/db-migrate.mjs --baseline  # record all as applied, run nothing
 //   DATABASE_URL="postgres://…" node scripts/db-migrate.mjs --status    # list applied vs pending
 //
+// Each file runs in one transaction with a lock timeout, and is recorded in
+// the same transaction: a failure leaves the database as it was. A file named
+// `NNNN_name_down.sql` is the rollback of `NNNN_name.sql`; the runner never
+// applies it (run it by hand, see docs/upgrading.md). When PRODUCTION_DB_HOST
+// names this database the runner needs --allow-prod (FlyLabs Playbook 6.4).
+//
 // Baseline is for databases whose schema is already current (prod/demo/dev
 // as of 0010): it seeds the ledger so only future files ever run.
 import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { neon } from "@neondatabase/serverless";
+import { LOCK_TIMEOUT, isMigrationFile, refusesProduction, splitStatements } from "./db-migrate-lib.mjs";
 
 const url = process.env.DATABASE_URL;
 if (!url) {
   console.error("DATABASE_URL is required");
+  process.exit(1);
+}
+if (refusesProduction(url, process.env, process.argv)) {
+  console.error(`${new URL(url).host} is the production database (PRODUCTION_DB_HOST): pass --allow-prod to run against it`);
   process.exit(1);
 }
 const mode = process.argv.includes("--baseline")
@@ -28,7 +39,7 @@ const mode = process.argv.includes("--baseline")
 
 const sql = neon(url);
 const dir = join(dirname(fileURLToPath(import.meta.url)), "..", "drizzle");
-const files = readdirSync(dir).filter((f) => f.endsWith(".sql")).sort();
+const files = readdirSync(dir).filter(isMigrationFile).sort();
 
 console.log(`== ${new URL(url).host} · mode: ${mode} ==`);
 
@@ -53,33 +64,14 @@ if (mode === "baseline") {
   process.exit(0);
 }
 
-// apply: run each pending file, statement by statement, then record it.
-// Statements are separated by drizzle's `--> statement-breakpoint` marker when
-// present, otherwise by semicolons after stripping `--` comment lines (some
-// file headers contain example SQL with semicolons inside comments).
+// apply: run each pending file in one transaction, with the record of it.
 for (const f of pending) {
-  const raw = readFileSync(join(dir, f), "utf8");
-  const stripped = raw
-    .split("\n")
-    .filter((line) => !line.trimStart().startsWith("--"))
-    .join("\n");
-  const statements = (
-    raw.includes("--> statement-breakpoint")
-      ? raw.split("--> statement-breakpoint").map((s) =>
-          s
-            .split("\n")
-            .filter((line) => !line.trimStart().startsWith("--"))
-            .join("\n"),
-        )
-      : stripped.split(";")
-  )
-    .map((s) => s.trim().replace(/;$/, ""))
-    .filter(Boolean);
-
+  const statements = splitStatements(readFileSync(join(dir, f), "utf8"));
   console.log(`applying ${f} (${statements.length} statement(s))…`);
-  for (const st of statements) {
-    await sql.query(st);
-  }
-  await sql`INSERT INTO _migrations (name) VALUES (${f}) ON CONFLICT DO NOTHING`;
+  await sql.transaction((txn) => [
+    txn.query(`SET LOCAL lock_timeout = '${LOCK_TIMEOUT}'`),
+    ...statements.map((st) => txn.query(st)),
+    txn.query("INSERT INTO _migrations (name) VALUES ($1) ON CONFLICT DO NOTHING", [f]),
+  ]);
 }
 console.log(pending.length ? `✅ applied ${pending.length} migration(s)` : "✅ nothing pending");

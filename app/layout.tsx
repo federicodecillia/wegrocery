@@ -3,8 +3,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/providers/toaster";
 import { ConfirmDialogProvider } from "@/components/ui/confirm-dialog";
-import { Analytics } from "@vercel/analytics/next";
-import { SpeedInsights } from "@vercel/speed-insights/next";
 import { brand, deriveRoleVars, resolvePalette } from "@/lib/brand";
 import { getBrand } from "@/lib/brand/get-brand";
 import { APPLE_TOUCH_ICON, iconPath } from "@/lib/pwa/icons";
@@ -68,8 +66,6 @@ export default async function RootLayout({
         {children}
         <Toaster />
         <ConfirmDialogProvider />
-        <Analytics />
-        <SpeedInsights />
       </body>
     </html>
   );

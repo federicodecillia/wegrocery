@@ -504,7 +504,7 @@ export function EditCycleProductForm({
   const labelCls = "mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray";
 
   return (
-    <form onSubmit={handleSubmit} className="my-2 rounded-lg border border-brand-border bg-[#fdfdfd] p-3 shadow-sm">
+    <form onSubmit={handleSubmit} className="my-2 rounded-lg border border-brand-border bg-brand-warm-white p-3 shadow-sm">
       <div className="mb-2 flex items-center justify-between">
         <p className="text-[12px] font-bold text-brand-near-black">{t.admin.products.editCatalogProduct}</p>
         <button type="button" onClick={onClose} className="text-label text-brand-gray">
@@ -698,7 +698,7 @@ export function CatalogManager({
   }
 
   return (
-    <div className="space-y-4 rounded-xl border border-brand-border bg-[#fdfdfd] p-4 shadow-sm">
+    <div className="space-y-4 rounded-xl border border-brand-border bg-brand-warm-white p-4 shadow-sm">
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-[14px] font-bold text-brand-near-black">{supplierName}</h3>

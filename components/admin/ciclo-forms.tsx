@@ -1070,7 +1070,7 @@ export function CycleProductPicker({
             {loading ? (
               <div className="text-center py-4 text-brand-gray text-[12px]">{t.admin.products.loadingCatalog}</div>
             ) : catalog.length > 0 ? (
-              <div className="max-h-[300px] overflow-y-auto divide-y divide-brand-border rounded-lg border border-brand-border bg-[#fdfdfd]">
+              <div className="max-h-[300px] overflow-y-auto divide-y divide-brand-border rounded-lg border border-brand-border bg-brand-warm-white">
                 {catalog.filter(cp => !currentProducts.some(p => p.name === cp.name && p.variant === cp.variant && p.format === cp.format)).map((cp) => (
                   <div key={cp.catalogProductId} className="flex items-center justify-between p-2.5 hover:bg-brand-warm-white/50">
                     <div className="min-w-0 flex-1">

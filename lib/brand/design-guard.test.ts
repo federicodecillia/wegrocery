@@ -56,10 +56,9 @@ describe("design guard", () => {
   });
 
   it("keeps member pages on the radius scale and off hard-coded colours", () => {
-    // Admin keeps its own until it is migrated; member pages use rounded-card,
-    // rounded-xl, rounded-lg or rounded-full, and colours from tokens.
-    const member = hits(/rounded-\[\d+px\]|(bg|text|border)-\[#[0-9a-f]{3,8}\]/i).filter((h) => !h.includes("admin"));
-    expect(member).toEqual([]);
+    // Member and admin pages use rounded-card, rounded-xl, rounded-lg or
+    // rounded-full, and colours from tokens (FlyLabs Playbook 2.2, 2.4).
+    expect(hits(/rounded-\[\d+px\]|(bg|text|border)-\[#[0-9a-f]{3,8}\]/i)).toEqual([]);
   });
 
   it("keeps the fixed colours AA with white text", () => {

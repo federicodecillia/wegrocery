@@ -24,7 +24,7 @@ const item = (items: ConfigItem[], id: string) => items.find((i) => i.id === id)
 
 describe("MIGRATIONS", () => {
   it("lists every file in drizzle/, in order", () => {
-    const files = readdirSync("drizzle").filter((f) => f.endsWith(".sql")).sort();
+    const files = readdirSync("drizzle").filter((f) => f.endsWith(".sql") && !f.endsWith("_down.sql")).sort();
     expect(MIGRATIONS).toEqual(files);
   });
 });

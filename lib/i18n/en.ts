@@ -825,8 +825,8 @@ export const en: Strings = {
       date: "Date",
       optional: "optional",
       searchPlaceholder: "Search…",
-      selectPlaceholder: "— select —",
-      noSupplier: "— none —",
+      selectPlaceholder: "Select…",
+      noSupplier: "None",
     },
     cycle: {
       recentCycles: "Recent cycles",
@@ -885,7 +885,7 @@ export const en: Strings = {
       creating: "Creating…",
       cycleCreated: "Cycle created",
       cycleUpdated: "Cycle updated",
-      cycleUpdatedShipping: (n: number) => `Cycle updated — shipping recalculated for ${n} members`,
+      cycleUpdatedShipping: (n: number) => `Cycle updated: shipping recalculated for ${n} members`,
       manageProducts: "Manage Products",
       closeProducts: "Close Products",
       importListing: "📥 Import listing",
@@ -956,7 +956,7 @@ export const en: Strings = {
       cycleProductsCount: (n: number) => `${n} products`,
       noCycleProducts: "No products selected for this cycle.",
       addFromCatalog: "Add from Catalog",
-      selectSupplierOption: "— select supplier —",
+      selectSupplierOption: "Select supplier…",
       loadingCatalog: "Loading catalog...",
       noSupplierCatalog: "No products found in catalog for this supplier.",
       errorLoadingProducts: "Error loading products",
@@ -971,7 +971,7 @@ export const en: Strings = {
       loadedFromCatalog: (n: number) => `${n} products loaded from catalog`,
       otherFormats: "Other formats",
       otherFormatsHint: "The WeGrocery Excel template and a direct file upload for one supplier.",
-      priceUpdatedArchived: "Price updated — previous version archived",
+      priceUpdatedArchived: "Price updated: previous version archived",
       editCatalogProduct: "Edit product",
       helpNome: "E.g. Red apple, Salad, Wholemeal bread. This is what members see in the order form.",
       helpVarieta: "E.g. Organic, Stark, Granny Smith. Add this if more than one variety exists.",
@@ -1406,7 +1406,7 @@ export const en: Strings = {
       priceWeightBridge:
         "Need to correct the actual price or weight (e.g. 1 kg → 800 g)? Close and tap the product in the order recap.",
       memberLabel: "Member",
-      selectMember: "— Choose a member —",
+      selectMember: "Choose a member…",
       noProducts:
         "This cycle has no active products. Reactivate some to be able to edit the order.",
       noteLabel: "Reason (optional, shown to member)",
@@ -1449,7 +1449,7 @@ export const en: Strings = {
         "When the supplier sends back the file with actual weights, upload it here to apply adjustments. Accepts .xlsx, .ods and .csv (with CSV, matching is by member/product name).",
       previewButton: "Preview changes",
       previewing: "Reading…",
-      errorsTitle: "Errors — nothing will be saved:",
+      errorsTitle: "Errors, nothing will be saved:",
       previewCorrections: "Line adjustments",
       noCorrections: "No lines modified.",
       previewShipping: "Shipping per member",
@@ -1468,7 +1468,7 @@ export const en: Strings = {
         const parts: string[] = [];
         if (corrections > 0) parts.push(`${corrections} adjustments`);
         if (shipping > 0) parts.push(`${shipping} shipping changes`);
-        return `Order sheet applied: ${parts.join(", ")} — ${members} members updated`;
+        return `Order sheet applied: ${parts.join(", ")}, ${members} members updated`;
       },
     },
     importWizard: {
@@ -1483,17 +1483,17 @@ export const en: Strings = {
       step3Description:
         "Review the rows to import and the suggested icon. Items without an auto-match are highlighted.",
       fileDropLabel: "📎 Click here or drag a .xlsx / .csv",
-      fileDropHint: "One row per product. Column order doesn't matter — we map it in the next step.",
+      fileDropHint: "One row per product. Column order doesn't matter, we map it in the next step.",
       fileSelected: (name: string) => `📄 ${name} (click to change)`,
       readingFile: "Reading…",
       sheetLabel: "Sheet to import",
       supplierLabel: "Supplier",
       supplierExisting: "Existing",
       supplierNew: "Create new",
-      supplierSelectPlaceholder: "— select —",
+      supplierSelectPlaceholder: "Select…",
       supplierNewPlaceholder: "New supplier name",
       supplierSuggestedHint: (name: string) => `💡 Suggested by file: ${name}`,
-      supplierNoMatch: ` — no match. Consider "Create new".`,
+      supplierNoMatch: `: no match. Consider "Create new".`,
       previewLabel: (n: number) => `Preview (${n} rows)`,
       noColumnsDetected: "No columns detected.",
       columnPlaceholder: (n: number) => `Col ${n}`,
@@ -1501,7 +1501,7 @@ export const en: Strings = {
       requiredMissingWarning: "Map at least Name and Price to continue.",
       updatePriceOnDup: "Update the price of products already in catalog",
       addToCycle: "Also add to open cycle",
-      unmatchedEmojis: (n: number) => `⚠ ${n} unrecognised icons — choose one below`,
+      unmatchedEmojis: (n: number) => `⚠ ${n} unrecognised icons: choose one below`,
       colIconHeader: "Icon",
       colNameHeader: "Name",
       colVariantHeader: "Variety",
@@ -2053,29 +2053,29 @@ export const en: Strings = {
       "Email sending disabled outside production: set EMAIL_REDIRECT_TO to receive test emails.",
     emailSendFailed: "Error sending email",
     distintaWarningNoOrder: (memberName: string, productName: string, amount: string) =>
-      `${memberName} · ${productName}: ${amount} entered but no order existed — ignored.`,
+      `${memberName} · ${productName}: ${amount} entered but no order existed, ignored.`,
     distintaOpenError: (detail: string) =>
       `Could not open the file: ${detail}. Upload a .xlsx, .ods or .csv generated by the app.`,
     distintaCsvHeaderMissing:
       'Header row not found in the CSV: make sure you saved the app\'s order sheet (it must have a "Prodotto" and "Totale prodotto" column).',
     distintaCsvMemberUnmatched: (name: string) =>
-      `Member column "${name}" not recognized — skipped. (CSV matches by name: check it corresponds to a member.)`,
+      `Member column "${name}" not recognized, skipped. (CSV matches by name: check it corresponds to a member.)`,
     distintaCsvMemberAmbiguous: (name: string) =>
-      `Member column "${name}" is ambiguous (several members share the name) — skipped.`,
+      `Member column "${name}" is ambiguous (several members share the name), skipped.`,
     distintaCsvProductUnmatched: (name: string) =>
-      `Product "${name}" not recognized — row skipped. (CSV matches by name: check it wasn't renamed.)`,
+      `Product "${name}" not recognized, row skipped. (CSV matches by name: check it wasn't renamed.)`,
     distintaCsvRowWithoutProduct: (row: number) =>
       `CSV row ${row}: it has amounts but no product name, row skipped.`,
     distintaCsvProductAmbiguous: (name: string) =>
-      `Product "${name}" is ambiguous (several products share the name) — row skipped.`,
+      `Product "${name}" is ambiguous (several products share the name), row skipped.`,
     cancelReasonRequired: "The cancellation reason is required",
   },
   email: {
-    notificationSubject: (appName: string, title: string) => `${appName} — ${title}`,
+    notificationSubject: (appName: string, title: string) => `${appName}: ${title}`,
     notificationCta: (url: string) => `Open in the app: ${url}`,
     notificationManagePrefs: (url: string) => `Manage your notification preferences: ${url}`,
     notificationFooter: (orgName: string) => orgName,
-    supplierOrderSubject: (orgName: string, cycleTitle: string) => `Order ${orgName} — ${cycleTitle}`,
+    supplierOrderSubject: (orgName: string, cycleTitle: string) => `Order ${orgName}: ${cycleTitle}`,
     supplierOrderBody: (input: {
       appName: string;
       orgName: string;
@@ -2094,7 +2094,7 @@ please find attached the order sheet for ${input.appName} for the cycle "${input
 
 The Excel file has one row per product and one column per member. Yellow cells are already pre-filled with the estimate: after weighing, edit only the cells where the actual cost differs (leaving the others unchanged). The "Shipping" row shows the share per member (also editable if it varies). Totals per member and per product are auto-calculated.
 
-When you're done, send the file back to us — we'll load it into the app with one click and members' balances will be updated automatically.
+When you're done, send the file back to us and we'll load it into the app with one click and members' balances will be updated automatically.
 
 Budget summary: ${input.grandTotal} EUR for ${input.productCount} ${input.productCount === 1 ? "product" : "products"} for ${input.memberCount} ${input.memberCount === 1 ? "member" : "members"}.
 ${pickupLine}
@@ -2109,9 +2109,9 @@ ${input.orgName}
   csv: {
     distintaSheetName: "Order Sheet",
     distintaTitle: (cycleTitle: string, supplierName?: string) =>
-      `${cycleTitle} — Supplier Order Sheet${supplierName ? ` (${supplierName})` : ""}`,
+      `${cycleTitle}: Supplier Order Sheet${supplierName ? ` (${supplierName})` : ""}`,
     distintaInstructions:
-      'Fill in the yellow cells with the actual cost (in EUR) for each member. The "Shipping" row and "Total per member" are auto-calculated. Do not rename member columns or delete the _meta sheet — they are needed to reload the sheet into the app.',
+      'Fill in the yellow cells with the actual cost (in EUR) for each member. The "Shipping" row and "Total per member" are auto-calculated. Do not rename member columns or delete the _meta sheet, they are needed to reload the sheet into the app.',
     columnProduct: "Product",
     columnVariant: "Variety",
     columnFormat: "Format",
