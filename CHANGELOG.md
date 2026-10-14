@@ -20,6 +20,8 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ## [Unreleased]
 
+## [1.28.0] — 2026-10-14
+
 *The app gets a dark theme, and the database and build checks get safer.*
 
 ### Added
@@ -615,6 +617,7 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ---
 
+[1.28.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.28.0
 [1.27.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.27.0
 [1.26.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.26.0
 [1.25.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.25.0

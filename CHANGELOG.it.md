@@ -21,6 +21,8 @@ stanno nella PR.
 
 ## [Non rilasciato]
 
+## [1.28.0] — 14 ottobre 2026
+
 *L'app ha un tema scuro, e gli aggiornamenti del database sono più sicuri.*
 
 ### Aggiunte
@@ -617,6 +619,7 @@ stanno nella PR.
 
 ---
 
+[1.28.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.28.0
 [1.27.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.27.0
 [1.26.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.26.0
 [1.25.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.25.0
