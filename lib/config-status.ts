@@ -22,6 +22,9 @@ export type ConfigFacts = {
   brandUnknownFields: readonly string[];
   // Whether the members table has an active admin; null = it could not be read.
   hasActiveAdmin: boolean | null;
+  // Whether the app's database role cannot change the schema (no CREATE on
+  // public, owns no table); null = it could not be read.
+  restrictedRole?: boolean | null;
   // Whether the admins set the group's name in the app (group_identity):
   // then no brand JSON is needed.
   identityInApp?: boolean;
@@ -183,17 +186,18 @@ export function configStatus(env: Env, facts: ConfigFacts): ConfigItem[] {
       // Vercel's Sentry integration sets only the public name.
       status: set(env.SENTRY_DSN) || set(env.NEXT_PUBLIC_SENTRY_DSN) ? "ok" : "off",
     },
-    dbRole(env),
+    dbRole(facts),
     fleet(env),
   ];
 }
 
-// The app connects with a role that cannot change the schema; migrations use
-// the owner's address in DATABASE_MIGRATION_URL (FlyLabs Playbook 1.4).
-function dbRole(env: Env): ConfigItem {
-  const base = { id: "dbRole", required: false, vars: ["DATABASE_MIGRATION_URL"] } as const;
-  const migration = env.DATABASE_MIGRATION_URL?.trim() ?? "";
-  return migration && migration !== env.DATABASE_URL?.trim() ? { ...base, status: "ok" } : { ...base, status: "off" };
+// The app connects with a role that cannot change the schema (FlyLabs Playbook
+// 1.4, scripts/create-app-role.mjs); migrations use the owner's address, in
+// DATABASE_MIGRATION_URL or typed on the command line. Read from the database,
+// not guessed from the variables.
+function dbRole(facts: ConfigFacts): ConfigItem {
+  const base = { id: "dbRole", required: false, vars: ["DATABASE_URL", "DATABASE_MIGRATION_URL"] } as const;
+  return facts.restrictedRole === true ? { ...base, status: "ok" } : { ...base, status: "off" };
 }
 
 // Anonymous counts for whoever operates several installations

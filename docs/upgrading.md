@@ -47,7 +47,7 @@ ledger's append-only trigger cannot be dropped by it.
    the owner's address. `scripts/db-migrate.mjs` uses `DATABASE_MIGRATION_URL`
    when set, so migrations keep working. Redeploy and open `/api/health`.
 3. Admin → Impostazioni → *Configuration status* shows "Database access with a
-   restricted role" as OK.
+   restricted role" as OK (it asks the database whether the connected role can change the schema, so it does not depend on which variables are set).
 
 `MIGRATE_ON_BUILD` runs inside the Vercel build, so with it the owner's address
 must be in the project environment too: for the full benefit run the migrations
