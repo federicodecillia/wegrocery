@@ -33,6 +33,9 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 - 🔤 **New typefaces.** Text is set in Inter, titles in Geist, and the small uppercase labels in JetBrains Mono; amounts line up in columns.
 - 🗄️ **Safer database updates.** Each migration file runs as a single step and stops if the database is busy, so a failed update leaves nothing half applied. Applying one to production now needs an explicit flag.
 
+### Fixed
+- 🐞 **Error reports reach Sentry.** Errors the app catches and reports itself (payments, sign-in emails, the instance stats) were only written to the server log; they now reach Sentry too, tagged with where they happened, and without the server log lines that could quote query values.
+
 ## [1.27.0] — 2026-10-12
 
 *Each new group sets itself up from the app: name, logo, colours and Stripe, with every technical setting explained.*
