@@ -108,7 +108,7 @@ export function OrderTotals({ orderTotal, payAmount, afterBalance, walletFeeCent
           <span className="text-[20px] font-black tabular-nums tracking-[-0.02em] text-brand-near-black">{formatEur(shown)}</span>
         </div>
         {hasOrder && <div className="mt-2">{breakdown}</div>}
-        {error && <p className="mt-2 text-[13px] leading-[1.4] text-brand-red">{error}</p>}
+        {error && <p className="mt-2 text-[13px] leading-[1.4] text-danger-text">{error}</p>}
         <Button variant={hasOrder ? "brand" : "danger"} onClick={onConfirm} disabled={isPending} className="mt-3 min-h-12 w-full px-5">
           {label}
         </Button>
@@ -120,7 +120,7 @@ export function OrderTotals({ orderTotal, payAmount, afterBalance, walletFeeCent
     <div className="sticky z-10 -mx-5 mt-4 -mb-[calc(var(--spacing-nav-h)+1rem)] bottom-[calc(var(--spacing-nav-h)+env(safe-area-inset-bottom))] lg:hidden [transform:translateZ(0)]">
       <div className="border-t border-brand-border bg-brand-warm-white px-5 py-2.5">
         {error && (
-          <p className="mb-2 text-[13px] leading-[1.4] text-brand-red">{error}</p>
+          <p className="mb-2 text-[13px] leading-[1.4] text-danger-text">{error}</p>
         )}
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
@@ -142,7 +142,7 @@ export function OrderTotals({ orderTotal, payAmount, afterBalance, walletFeeCent
                   {t.order.balanceAfter}{" "}
                   <span
                     key={afterBalance}
-                    className={`font-semibold tabular-nums ${afterBalance < 0 ? "text-brand-red" : "text-accent-text"}`}
+                    className={`font-semibold tabular-nums ${afterBalance < 0 ? "text-danger-text" : "text-accent-text"}`}
                   >
                     {formatSignedMoney(afterBalance)}
                   </span>

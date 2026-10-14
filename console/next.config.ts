@@ -17,6 +17,12 @@ const nextConfig: NextConfig = {
           { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
         ],
       },
+      {
+        // Operator pages hold fleet data: never cached (FlyLabs Playbook 7.10).
+        // The hashed assets under /_next keep their own long cache.
+        source: "/((?!_next/static|_next/image).*)",
+        headers: [{ key: "Cache-Control", value: "no-store" }],
+      },
     ];
   },
 };

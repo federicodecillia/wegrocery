@@ -22,17 +22,17 @@ const base =
   "pressable inline-flex items-center justify-center rounded-full font-sans font-bold tracking-tight select-none transition-[opacity,transform] duration-150 disabled:opacity-40 disabled:cursor-not-allowed";
 
 const variants: Record<ButtonVariant, string> = {
-  neutral: "bg-brand-near-black text-white",
+  neutral: "bg-inverse text-on-inverse",
   brand: "bg-primary text-on-primary",
   accent: "bg-accent text-on-accent",
-  danger: "bg-brand-red text-white",
+  danger: "bg-danger text-on-danger",
   outline: "bg-transparent border border-brand-border text-brand-near-black",
-  ghost: "bg-transparent text-brand-near-black hover:bg-black/[0.04]",
+  ghost: "bg-transparent text-brand-near-black hover:bg-tint/[0.04]",
 };
 
 const sizes: Record<ButtonSize, string> = {
-  md: "min-h-12 px-[22px] py-[14px] text-sm",
-  sm: "min-h-9 px-3 py-1.5 text-xs",
+  md: "min-h-12 px-5.5 py-3.5 text-sm",
+  sm: "min-h-(--control-h) px-3 py-1.5 text-xs",
 };
 
 /** The button look, for a Link or an <a> that should read as a button. */

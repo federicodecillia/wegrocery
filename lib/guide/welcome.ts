@@ -32,6 +32,29 @@ export function welcomeSteps({ money, families, install }: WelcomeOptions): Welc
   return steps;
 }
 
+// What the database says the person has already done: the steps that follow
+// from it are shown as done (FlyLabs Playbook 4.4). The others are
+// information, never ticked.
+export type WelcomeFacts = {
+  // A top-up or a payment on the account (a live ledger movement).
+  money: boolean;
+  // An order on any cycle.
+  ordered: boolean;
+  // The person saved notification preferences.
+  preferences: boolean;
+  // The person is in a family (joined one, or others joined theirs).
+  family: boolean;
+};
+
+export function welcomeDone(facts: WelcomeFacts): WelcomeStep[] {
+  const done: WelcomeStep[] = [];
+  if (facts.money) done.push("balance", "pay");
+  if (facts.ordered) done.push("order");
+  if (facts.preferences) done.push("notify");
+  if (facts.family) done.push("family");
+  return done;
+}
+
 // Where each step's link goes: a page of the app or a guide card.
 export const WELCOME_LINKS: Record<WelcomeStep, string> = {
   intro: "/guida/primi-passi#com-e-fatta",

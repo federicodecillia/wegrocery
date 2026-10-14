@@ -38,7 +38,7 @@ export function AppRefresh() {
 
   if (online) return null;
   return (
-    <p role="status" className="mb-3 rounded-card border border-brand-border bg-white px-4 py-2.5 text-[14px] text-brand-near-black">
+    <p role="status" className="mb-3 rounded-card border border-brand-border bg-surface px-4 py-2.5 text-[14px] text-brand-near-black">
       <span aria-hidden>📡 </span>
       {t.common.offline}
     </p>

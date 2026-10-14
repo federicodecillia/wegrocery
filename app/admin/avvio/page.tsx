@@ -44,7 +44,7 @@ export default async function SetupPage({ searchParams }: { searchParams: Promis
                 href={setupHref(id)}
                 aria-current={i === index ? "step" : undefined}
                 className={`inline-flex min-h-11 items-center rounded-full border px-3 py-1 text-[12px] font-bold ${
-                  i === index ? "border-primary bg-primary text-on-primary" : "border-brand-border bg-white text-brand-near-black"
+                  i === index ? "border-primary bg-primary text-on-primary" : "border-brand-border bg-surface text-brand-near-black"
                 }`}
               >
                 {i + 1}. {s.steps[id]}
@@ -60,14 +60,14 @@ export default async function SetupPage({ searchParams }: { searchParams: Promis
 
       <div className="mt-6 flex items-center justify-between gap-3 pb-6">
         {prev ? (
-          <Link href={setupHref(prev)} className="inline-flex min-h-11 items-center rounded-full border border-brand-border bg-white px-5 py-2 text-[14px] font-bold text-brand-near-black">
+          <Link href={setupHref(prev)} className="inline-flex min-h-11 items-center rounded-full border border-brand-border bg-surface px-5 py-2 text-[14px] font-bold text-brand-near-black">
             {s.back}
           </Link>
         ) : (
           <span />
         )}
         {next && (
-          <Link href={setupHref(next)} className="inline-flex min-h-11 items-center rounded-full bg-brand-near-black px-5 py-2 text-[14px] font-bold text-white">
+          <Link href={setupHref(next)} className="inline-flex min-h-11 items-center rounded-full bg-inverse px-5 py-2 text-[14px] font-bold text-on-inverse">
             {s.next}
           </Link>
         )}

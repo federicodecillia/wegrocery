@@ -80,7 +80,7 @@ function detailRows(entry: MovementDetail, onShowCycle: (cycleId: string) => voi
   const method = MANUAL_PAYMENT_METHODS.find((m) => m === entry.method);
   if (method) rows.push({ label: h.detailMethod, value: t.admin.treasury.methods[method] });
   if (entry.externalRef) {
-    rows.push({ label: h.detailReference, value: <span className="font-mono">{entry.externalRef}</span> });
+    rows.push({ label: h.detailReference, value: <span className="tabular-nums">{entry.externalRef}</span> });
   }
   if (entry.paymentId) rows.push({ label: h.detailPaymentStatus, value: paymentStatusLabel(entry.paymentStatus) });
   rows.push({ label: h.detailRecordedBy, value: recorderLabel(entry.recordedBy) });
@@ -128,13 +128,13 @@ function MovementDetailBody({ entry, onShowCycle }: { entry: MovementDetail; onS
   return (
     <>
       <p
-        className={`font-mono text-[26px] font-black tracking-[-0.03em] ${
-          incoming ? "text-accent-text" : "text-brand-red"
+        className={`tabular-nums text-[26px] font-black tracking-[-0.03em] ${
+          incoming ? "text-accent-text" : "text-danger-text"
         }`}
       >
         {formatSignedMoney(entry.amount)}
       </p>
-      <dl className="mt-4 divide-y divide-brand-border rounded-xl border border-brand-border bg-white">
+      <dl className="mt-4 divide-y divide-brand-border rounded-xl border border-brand-border bg-surface">
         {detailRows(entry, onShowCycle).map((row) => (
           <div key={row.label} className="flex items-baseline justify-between gap-3 px-3 py-2">
             <dt className="shrink-0 text-label font-semibold uppercase tracking-wide text-brand-gray">

@@ -44,13 +44,13 @@ export function PaymentModeCard({
   }
 
   return (
-    <section className="rounded-xl border border-brand-border bg-white p-4 shadow-sm">
+    <section className="rounded-xl border border-brand-border bg-surface p-4">
       <h3 className="text-[13px] font-bold text-brand-near-black">{s.title}</h3>
       <p className="mt-1 text-[12px] font-semibold text-brand-near-black">{s.current(name(mode))}</p>
       <p className={`${cardCycles ? "" : "mb-3 "}mt-1 text-[12px] text-brand-gray`}>{mode === "wallet" ? s.wallet : s.perOrder}</p>
       {cardCycles && <p className="mb-3 mt-1 text-[12px] text-brand-gray">{s.cardCyclesHint}</p>}
       {blockers.length > 0 ? (
-        <div className="rounded-lg border border-brand-border bg-[#f5f1ec] px-3 py-2 text-[12px] text-brand-near-black">
+        <div className="rounded-lg border border-brand-border bg-brand-warm-white px-3 py-2 text-[12px] text-brand-near-black">
           <p className="font-semibold">{s.blockedTitle}</p>
           <ul className="mt-1 list-disc pl-4">
             {blockers.map((b) => (

@@ -43,7 +43,7 @@ describe("ledgerBadge (Cassa type badge)", () => {
 
   it("colours money in teal and money out red or orange", () => {
     expect(badge("topup", "5.00").className).toContain("accent");
-    expect(badge("order_charge").className).toContain("red");
+    expect(badge("order_charge").className).toContain("danger");
     expect(badge("payout").className).toContain("primary");
   });
 

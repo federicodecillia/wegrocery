@@ -4,6 +4,7 @@ import {
   bigint,
   boolean,
   check,
+  date,
   index,
   integer,
   jsonb,
@@ -48,6 +49,8 @@ export const members = pgTable(
     // When the person closed the welcome card on Home
     // (drizzle/0031_welcome.sql); NULL = the card shows.
     welcomeDismissedAt: timestamp("welcome_dismissed_at", { withTimezone: true }),
+    // The step the person left the welcome card on (drizzle/0036_welcome_step.sql).
+    welcomeStep: text("welcome_step"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
   },
@@ -322,6 +325,18 @@ export const guideSearchMisses = pgTable(
     lastAt: timestamp("last_at", { withTimezone: true }).notNull(),
   },
   (table) => [check("guide_search_misses_query_length", sql`char_length(${table.query}) BETWEEN 3 AND 60`)],
+);
+
+// Usage counters, one row per day and event name, nothing about who
+// (drizzle/0037_usage_events.sql, lib/usage/events.ts).
+export const usageEvents = pgTable(
+  "usage_events",
+  {
+    day: date("day").notNull(),
+    name: text("name").notNull(),
+    count: integer("count").notNull().default(0),
+  },
+  (table) => [primaryKey({ columns: [table.day, table.name] })],
 );
 
 // The group's identity edited in the app over the brand JSON

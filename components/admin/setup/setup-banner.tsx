@@ -14,12 +14,12 @@ export async function SetupBanner({ revisit = false }: { revisit?: boolean }) {
   return (
     <section
       className={`flex flex-wrap items-center justify-between gap-3 rounded-card border p-4 shadow-card ${
-        revisit ? "border-brand-border bg-white" : "mb-4 border-primary-mid bg-primary-soft"
+        revisit ? "border-brand-border bg-surface" : "mb-4 border-primary-mid bg-primary-soft"
       }`}
     >
       <div className="min-w-0">
         <h2 className="text-[15px] font-bold text-brand-near-black">{s.title}</h2>
-        <p className="mt-[2px] text-[13px] text-brand-gray">{s.body}</p>
+        <p className="mt-0.5 text-[13px] text-brand-gray">{s.body}</p>
       </div>
       <Link
         href={setupHref("identity")}

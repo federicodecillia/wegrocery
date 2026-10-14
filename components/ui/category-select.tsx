@@ -105,7 +105,7 @@ export function CategorySelect({ name, value, extra = [], placeholder = t.common
   }
 
   const triggerCls =
-    "flex w-full items-center justify-between rounded-lg border border-brand-border bg-white px-3 py-2 text-left text-[13px] text-brand-near-black";
+    "flex w-full items-center justify-between rounded-lg border border-brand-border bg-surface px-3 py-2 text-left text-[13px] text-brand-near-black";
 
   return (
     <div ref={rootRef} className="relative">
@@ -127,7 +127,7 @@ export function CategorySelect({ name, value, extra = [], placeholder = t.common
       {open && (
         <div
           role="listbox"
-          className="absolute left-0 right-0 z-50 mt-1 max-h-[260px] overflow-y-auto rounded-lg border border-brand-border bg-white shadow-lg"
+          className="absolute left-0 right-0 z-50 mt-1 max-h-[260px] overflow-y-auto rounded-lg border border-brand-border bg-surface shadow-lg"
         >
           {options.map((opt) => (
             <button
@@ -161,7 +161,7 @@ export function CategorySelect({ name, value, extra = [], placeholder = t.common
                     }
                   }}
                   placeholder={t.common.newCategoryPlaceholder}
-                  className="flex-1 rounded-md border border-brand-border bg-white px-2 py-1 text-[12px]"
+                  className="flex-1 rounded-md border border-brand-border bg-surface px-2 py-1 text-[12px]"
                 />
                 <button
                   type="button"

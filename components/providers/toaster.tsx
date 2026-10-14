@@ -14,14 +14,14 @@ export function Toaster() {
         closeButtonAriaLabel: t.common.close,
         classNames: {
           toast:
-            "relative flex items-center justify-center w-full max-w-[90vw] mx-auto px-6 py-3 [&:has([data-close-button])]:pr-12 rounded-full font-medium text-sm text-white bg-brand-near-black shadow-[0_4px_16px_rgba(45,43,41,0.2)]",
-          success: "bg-brand-near-black",
-          warning: "bg-warning",
-          error: "bg-brand-red",
-          info: "bg-brand-near-black",
+            "relative flex items-center justify-center w-full max-w-[90vw] mx-auto px-6 py-3 [&:has([data-close-button])]:pr-12 rounded-full font-medium text-sm text-on-inverse bg-inverse shadow-[0_4px_16px_rgba(45,43,41,0.2)]",
+          success: "bg-inverse",
+          warning: "bg-warning text-on-warning",
+          error: "bg-danger text-on-danger",
+          info: "bg-inverse",
           // Set per toast by components/ui/toast.tsx (errors and warnings).
           closeButton:
-            "absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-white hover:bg-white/15",
+            "absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-on-inverse hover:bg-on-inverse/15",
         },
       }}
     />

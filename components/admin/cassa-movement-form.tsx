@@ -53,7 +53,7 @@ function MethodSelect({
       id={id}
       value={value}
       onChange={(e) => onChange(e.target.value as ManualPaymentMethod)}
-      className={`${inputCls} bg-white`}
+      className={`${inputCls} bg-surface`}
     >
       {MANUAL_PAYMENT_METHODS.map((m) => (
         <option key={m} value={m}>
@@ -111,7 +111,7 @@ function Recap({
         </p>
       )}
       {review.error && (
-        <p role="alert" className="mt-3 rounded-lg border border-brand-red/30 bg-brand-red-light px-3 py-2 text-[12px] text-brand-red">
+        <p role="alert" className="mt-3 rounded-lg border border-danger-text/30 bg-danger-soft px-3 py-2 text-[12px] text-danger-text">
           {review.error}
         </p>
       )}
@@ -181,7 +181,7 @@ function FoldableCard({
 }) {
   const panelId = useId();
   return (
-    <div className="rounded-xl border border-brand-border bg-white p-4 shadow-sm">
+    <div className="rounded-xl border border-brand-border bg-surface p-4">
       <button
         type="button"
         onClick={onToggle}
@@ -350,7 +350,7 @@ export function TopupForm({ members }: { members: PickerMember[] }) {
           </Field>
         </div>
         {formError && (
-          <p role="alert" className="mt-3 text-[12px] text-brand-red">
+          <p role="alert" className="mt-3 text-[12px] text-danger-text">
             {formError}
           </p>
         )}
@@ -566,11 +566,11 @@ export function OutgoingMovementForm({ members }: { members: PickerMember[] }) {
           )}
         </Field>
         {formError && (
-          <p role="alert" className="text-[12px] text-brand-red">
+          <p role="alert" className="text-[12px] text-danger-text">
             {formError}
           </p>
         )}
-        <button type="submit" className="min-h-12 w-full rounded-xl bg-brand-near-black py-2 text-[13px] font-bold text-white">
+        <button type="submit" className="min-h-12 w-full rounded-xl bg-inverse py-2 text-[13px] font-bold text-on-inverse">
           {t.admin.treasury.review}
         </button>
       </form>

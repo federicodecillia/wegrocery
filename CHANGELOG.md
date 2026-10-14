@@ -20,6 +20,19 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ## [Unreleased]
 
+*The app gets a dark theme, and the database and build checks get safer.*
+
+### Added
+- 📊 **Usage at a glance.** Admin → Statistiche shows how many sign-ins, orders, top-ups and cycles the last 30 days saw: anonymous counts, no member and no text, and nothing from the demo.
+- 👋 **The welcome tour remembers you.** It resumes at the step you left, on any device, and marks what you have already done (a top-up, an order, your notification choices, your family).
+- 📧 **Unsubscribe in one click.** Notification emails now show your mail app's own "Unsubscribe" button, which turns off the emails of that kind (the alerts stay in the app), and a double click never sends the same email twice.
+- 🔐 **Restricted database role (optional).** The app can connect with a role that reads and writes data but cannot change the schema; `scripts/create-app-role.mjs` creates it and Configuration status shows it.
+- 🌙 **Dark theme.** Profile → App now has "Appearance": follow the phone, always light or always dark. The group's colours carry over and stay readable.
+
+### Changed
+- 🔤 **New typefaces.** Text is set in Inter, titles in Geist, and the small uppercase labels in JetBrains Mono; amounts line up in columns.
+- 🗄️ **Safer database updates.** Each migration file runs as a single step and stops if the database is busy, so a failed update leaves nothing half applied. Applying one to production now needs an explicit flag.
+
 ## [1.27.0] — 2026-10-12
 
 *Each new group sets itself up from the app: name, logo, colours and Stripe, with every technical setting explained.*

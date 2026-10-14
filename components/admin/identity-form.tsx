@@ -118,7 +118,7 @@ function IdentitySection({ defaults, current, logoUrl, uploadedLogo }: Props) {
   }
 
   return (
-    <section className="rounded-xl border border-brand-border bg-white p-4 shadow-sm">
+    <section className="rounded-xl border border-brand-border bg-surface p-4">
       <h3 className="text-[13px] font-bold text-brand-near-black">{s.title}</h3>
       <p className={hint}>{s.hint}</p>
 
@@ -162,7 +162,7 @@ function IdentitySection({ defaults, current, logoUrl, uploadedLogo }: Props) {
         </div>
       </div>
       {warnings.length > 0 && (
-        <div className="mt-3 rounded-lg bg-brand-red-light p-3 text-[12px] text-brand-red">
+        <div className="mt-3 rounded-lg bg-danger-soft p-3 text-[12px] text-danger-text">
           <p className="font-bold">{s.contrastWarnings}</p>
           <ul className="mt-1 list-disc pl-4">
             {warnings.map((w) => (
@@ -176,7 +176,7 @@ function IdentitySection({ defaults, current, logoUrl, uploadedLogo }: Props) {
         type="button"
         onClick={handleSave}
         disabled={isPending}
-        className="mt-4 rounded-xl bg-brand-near-black px-4 py-2 text-[13px] font-bold text-white disabled:opacity-60"
+        className="mt-4 rounded-xl bg-inverse px-4 py-2 text-[13px] font-bold text-on-inverse disabled:opacity-60"
       >
         {isPending ? t.admin.common.saving : s.save}
       </button>
@@ -211,7 +211,7 @@ function ColorField({
           aria-label={title}
           value={pickerValue}
           onChange={(e) => onChange(e.target.value)}
-          className="h-10 w-12 shrink-0 cursor-pointer rounded-lg border border-brand-border bg-white p-1"
+          className="h-10 w-12 shrink-0 cursor-pointer rounded-lg border border-brand-border bg-surface p-1"
         />
         <input
           id={id}
@@ -220,7 +220,7 @@ function ColorField({
           onChange={(e) => onChange(e.target.value.trim())}
           placeholder={fallback ?? s.colorDefault}
           maxLength={7}
-          className="w-full rounded-xl border border-brand-border px-3 py-2 font-mono text-[13px] text-brand-near-black placeholder:text-muted focus:border-primary"
+          className="w-full rounded-xl border border-brand-border px-3 py-2 tabular-nums text-[13px] text-brand-near-black placeholder:text-muted focus:border-primary"
         />
       </div>
     </div>
@@ -265,7 +265,7 @@ function LogoField({ logoUrl, uploaded, shortName }: { logoUrl: string; uploaded
     <div className="mt-4">
       <p className={label}>{s.logo}</p>
       <div className="mt-2 flex flex-wrap items-center gap-3">
-        <span className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-xl border border-brand-border bg-white">
+        <span className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-xl border border-brand-border bg-surface">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={logoUrl} alt={shortName} className="max-h-14 max-w-14 object-contain" />
         </span>
@@ -288,7 +288,7 @@ function LogoField({ logoUrl, uploaded, shortName }: { logoUrl: string; uploaded
             type="button"
             onClick={handleRemove}
             disabled={isPending}
-            className="min-h-11 rounded-xl px-3 py-2 text-[13px] font-bold text-brand-red disabled:opacity-60"
+            className="min-h-11 rounded-xl px-3 py-2 text-[13px] font-bold text-danger-text disabled:opacity-60"
           >
             {s.logoRemove}
           </button>
@@ -310,7 +310,7 @@ function ContactsSection({ defaults, current }: Props) {
   const [membershipUrl, setMembership] = useState(optional(current.membershipUrl, defaults.membershipUrl));
 
   return (
-    <section className="rounded-xl border border-brand-border bg-white p-4 shadow-sm">
+    <section className="rounded-xl border border-brand-border bg-surface p-4">
       <h3 className="text-[13px] font-bold text-brand-near-black">{s.contacts}</h3>
       <p className={hint}>{s.contactsHint}</p>
       <div className="mt-4 grid gap-3 md:grid-cols-2">
@@ -324,7 +324,7 @@ function ContactsSection({ defaults, current }: Props) {
         type="button"
         onClick={() => save({ supportEmail, techEmail, archiveCcEmail, privacyUrl, membershipUrl })}
         disabled={isPending}
-        className="mt-4 rounded-xl bg-brand-near-black px-4 py-2 text-[13px] font-bold text-white disabled:opacity-60"
+        className="mt-4 rounded-xl bg-inverse px-4 py-2 text-[13px] font-bold text-on-inverse disabled:opacity-60"
       >
         {isPending ? t.admin.common.saving : s.save}
       </button>

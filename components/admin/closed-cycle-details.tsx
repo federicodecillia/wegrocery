@@ -135,7 +135,7 @@ export function CycleOrdersByMember({
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder={c.searchMember}
-                  className="min-h-10 w-full rounded-xl border border-brand-border bg-white px-3 text-[13px] placeholder:text-muted"
+                  className="min-h-(--control-h) w-full rounded-xl border border-brand-border bg-surface px-3 text-[13px] placeholder:text-muted"
                 />
               </>
             )}
@@ -167,7 +167,7 @@ export function CycleOrdersByMember({
                         </span>
                       </span>
                       <span className="flex shrink-0 items-center gap-2">
-                        <span className="font-mono text-[13px] font-bold tabular-nums text-brand-near-black">{formatEur(total)}</span>
+                        <span className=" text-[13px] font-bold tabular-nums text-brand-near-black">{formatEur(total)}</span>
                         <span aria-hidden className="text-muted">
                           {open ? "▴" : "▾"}
                         </span>
@@ -185,7 +185,7 @@ export function CycleOrdersByMember({
                     )}
                   </div>
                   {open && (
-                    <div className="space-y-1 bg-black/[0.02] px-4 pt-1 pb-3">
+                    <div className="space-y-1 bg-tint/[0.02] px-4 pt-1 pb-3">
                       {lines.map((l) => (
                         <OrderLineRow key={l.orderLineId} line={l} editable={editable} onSaved={refetch} />
                       ))}
@@ -231,7 +231,7 @@ function ExtraRow({ emoji, label, hint, amount }: { emoji: string; label: string
           {hint && <div className="text-label text-brand-gray">{hint}</div>}
         </div>
       </div>
-      <span className="shrink-0 font-mono text-label font-bold text-brand-near-black">{formatEur(amount)}</span>
+      <span className="shrink-0 tabular-nums text-label font-bold text-brand-near-black">{formatEur(amount)}</span>
     </div>
   );
 }
@@ -288,7 +288,7 @@ function OrderLineRow({
             </div>
           </div>
         </div>
-        <span className="shrink-0 text-right font-mono text-label text-brand-gray">
+        <span className="shrink-0 text-right tabular-nums text-label text-brand-gray">
           {adjusted ? (
             <>
               {/* Original (struck): same `qty × unit_price = total` format
@@ -422,7 +422,7 @@ function OrderLineEditForm({
       <div className="flex items-center gap-2 text-label text-brand-near-black">
         <span className="text-[14px]">{line.emoji || getProductEmoji(line.productName)}</span>
         <span className="font-bold">{line.productName}</span>
-        <span className="font-mono text-brand-gray">
+        <span className="tabular-nums text-brand-gray">
           {t.admin.closedCycleDetails.orderedLabel} {line.quantity}{unitSuffix} = {formatEur(parseFloat(line.lineTotal))}
         </span>
       </div>
@@ -435,7 +435,7 @@ function OrderLineEditForm({
             value={qty}
             onChange={(e) => onQtyChange(e.target.value)}
             disabled={isPending}
-            className="min-h-11 rounded-md border border-brand-border bg-white px-2 py-1.5 text-[14px] font-mono text-brand-near-black"
+            className="min-h-11 rounded-md border border-brand-border bg-surface px-2 py-1.5 text-[14px] tabular-nums text-brand-near-black"
           />
         </label>
         <label className="flex flex-col gap-0.5 text-label font-semibold uppercase tracking-wide text-brand-gray">
@@ -449,7 +449,7 @@ function OrderLineEditForm({
               setTotalTouched(true);
             }}
             disabled={isPending}
-            className="min-h-11 rounded-md border border-brand-border bg-white px-2 py-1.5 text-[14px] font-mono text-brand-near-black"
+            className="min-h-11 rounded-md border border-brand-border bg-surface px-2 py-1.5 text-[14px] tabular-nums text-brand-near-black"
           />
         </label>
       </div>
@@ -458,7 +458,7 @@ function OrderLineEditForm({
           type="button"
           onClick={handleSave}
           disabled={isPending}
-          className="min-h-10 flex-1 rounded-md bg-primary px-3 py-1.5 text-[13px] font-bold text-on-primary disabled:opacity-60"
+          className="min-h-(--control-h) flex-1 rounded-md bg-primary px-3 py-1.5 text-[13px] font-bold text-on-primary disabled:opacity-60"
         >
           {isPending ? t.admin.common.saving : t.admin.common.save}
         </button>
@@ -466,7 +466,7 @@ function OrderLineEditForm({
           type="button"
           onClick={onCancel}
           disabled={isPending}
-          className="min-h-10 rounded-md border border-brand-border bg-white px-3 py-1.5 text-[13px] font-bold text-brand-gray"
+          className="min-h-(--control-h) rounded-md border border-brand-border bg-surface px-3 py-1.5 text-[13px] font-bold text-brand-gray"
         >
           {t.admin.common.cancel}
         </button>

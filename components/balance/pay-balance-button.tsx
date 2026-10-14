@@ -25,7 +25,7 @@ export function PayBalanceButton({ amountLabel }: { amountLabel: string }) {
       type="button"
       onClick={handlePay}
       disabled={isPending}
-      className="flex w-full items-center justify-center rounded-full bg-brand-red px-4 py-[10px] text-[14px] font-bold text-white disabled:opacity-60"
+      className="flex w-full items-center justify-center rounded-full bg-danger px-4 py-2.5 text-[14px] font-bold text-on-danger disabled:opacity-60"
     >
       {isPending ? t.order.pay.redirecting : t.balance.payNow(amountLabel)}
     </button>

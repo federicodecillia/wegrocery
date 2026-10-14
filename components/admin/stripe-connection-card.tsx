@@ -3,16 +3,16 @@ import { formatDate } from "@/lib/i18n/format";
 import { getStripeCredentials } from "@/lib/payments/stripe-credentials";
 import { StripeConnectForm } from "./stripe-connect-form";
 
-const card = "rounded-xl border border-brand-border bg-white p-4 shadow-sm";
+const card = "rounded-xl border border-brand-border bg-surface p-4";
 
 function ModeBadge({ livemode }: { livemode: boolean }) {
   const s = t.admin.settings.stripeConnection;
   return livemode ? (
-    <span className="rounded-full bg-accent-soft px-2 py-0.5 font-mono text-label font-semibold text-accent-text">
+    <span className="rounded-full bg-accent-soft px-2 py-0.5 tabular-nums text-label font-semibold text-accent-text">
       {s.modeLive}
     </span>
   ) : (
-    <span className="rounded-full bg-primary-soft px-2 py-0.5 font-mono text-label font-semibold text-primary-text">
+    <span className="rounded-full bg-primary-soft px-2 py-0.5 tabular-nums text-label font-semibold text-primary-text">
       {s.modeTest}
     </span>
   );
@@ -35,7 +35,7 @@ export async function StripeConnectionCard() {
         </h3>
         <p className="mt-1 text-[12px] text-brand-gray">{s.hostManaged}</p>
         {!credentials.status.enabled && (
-          <p className="mt-2 rounded-lg bg-brand-red-light px-3 py-2 text-[12px] text-brand-red">
+          <p className="mt-2 rounded-lg bg-danger-soft px-3 py-2 text-[12px] text-danger-text">
             {t.admin.settings.stripeUnavailable[credentials.status.reason]}
           </p>
         )}
@@ -75,10 +75,10 @@ export async function StripeConnectionCard() {
         {s.since(formatDate(connection.connectedAt), connection.connectedBy)}
       </p>
       {credentials.unreadable ? (
-        <p className="mt-2 rounded-lg bg-brand-red-light px-3 py-2 text-[12px] text-brand-red">{s.unreadable}</p>
+        <p className="mt-2 rounded-lg bg-danger-soft px-3 py-2 text-[12px] text-danger-text">{s.unreadable}</p>
       ) : (
         !credentials.status.enabled && (
-          <p className="mt-2 rounded-lg bg-brand-red-light px-3 py-2 text-[12px] text-brand-red">
+          <p className="mt-2 rounded-lg bg-danger-soft px-3 py-2 text-[12px] text-danger-text">
             {t.admin.settings.stripeUnavailable[credentials.status.reason]}
           </p>
         )

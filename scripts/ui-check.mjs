@@ -65,12 +65,48 @@ async function signIn(browser, width, who) {
 async function checkPage(page, label) {
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
   if (overflow) fail(`${label}: the page scrolls horizontally`);
-  const { violations } = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
+  if (await page.evaluate(() => matchMedia("(pointer: coarse)").matches)) await touchTargets(page, label);
+  const { violations } = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
   for (const v of violations) {
     const line = `${label}: axe ${v.id} (${v.impact}, ${v.nodes.length}) ${v.help}`;
     if (FAILING_IMPACT.has(v.impact)) fail(line);
     else notes.push(line);
   }
+}
+
+// FlyLabs Playbook 2.6: a finger's target is 44 px. Touch viewports only. A
+// control whose own box is smaller still passes through a `hit-44` area (its
+// ::after). Inline links inside a sentence are exempt, as in WCAG. Listed, not
+// failing, until the first run shows how many there are: set
+// TOUCH_TARGET_FAILS=1 to make them fail.
+async function touchTargets(page, label) {
+  const small = await page.evaluate(() => {
+    const out = [];
+    const sel = 'button, [role="button"], a[href], input:not([type="hidden"]), select, textarea, summary';
+    for (const el of document.querySelectorAll(sel)) {
+      const cs = getComputedStyle(el);
+      if (cs.visibility === "hidden" || cs.display === "none") continue;
+      const r = el.getBoundingClientRect();
+      if (r.width === 0 || r.height === 0) continue;
+      if (el.tagName === "A" && cs.display === "inline" && el.parentElement && el.parentElement.textContent.trim() !== el.textContent.trim()) continue;
+      if (el.closest("[inert], [aria-hidden='true']")) continue;
+      const after = getComputedStyle(el, "::after");
+      const area = after.content !== "none" && after.position === "absolute"
+        ? { w: parseFloat(after.width) || 0, h: parseFloat(after.height) || 0 }
+        : { w: 0, h: 0 };
+      const w = Math.max(r.width, area.w);
+      const h = Math.max(r.height, area.h);
+      if (w < 43.5 || h < 43.5) {
+        const name = (el.getAttribute("aria-label") || el.textContent || el.getAttribute("name") || "").trim().replace(/\s+/g, " ").slice(0, 30);
+        out.push(`${el.tagName.toLowerCase()} "${name}" ${Math.round(w)}x${Math.round(h)}`);
+      }
+    }
+    return out;
+  });
+  if (!small.length) return;
+  const line = `${label}: ${small.length} control(s) under 44 px, e.g. ${small.slice(0, 4).join("; ")}`;
+  if (process.env.TOUCH_TARGET_FAILS === "1") fail(line);
+  else notes.push(line);
 }
 
 async function visit(page, path, label) {

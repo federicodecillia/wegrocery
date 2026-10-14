@@ -96,7 +96,7 @@ export function CatalogProductForm({
   const labelCls = "mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray";
 
   return (
-    <form onSubmit={handleSubmit} className="mb-4 rounded-xl border border-brand-border bg-white p-4 shadow-sm">
+    <form onSubmit={handleSubmit} className="mb-4 rounded-xl border border-brand-border bg-surface p-4">
       <div className="mb-4 flex items-center justify-between">
         <h4 className="text-[14px] font-bold text-brand-near-black">
           {product ? t.admin.products.editProduct : t.admin.products.newProduct}
@@ -312,20 +312,20 @@ export function CatalogCsvActions({ supplierId }: { supplierId: string }) {
   }
 
   const btnBase =
-    "flex min-h-10 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border px-3 py-2 text-[12px] font-bold shadow-sm transition disabled:opacity-60";
+    "flex min-h-(--control-h) flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border px-3 py-2 text-[12px] font-bold shadow-sm transition disabled:opacity-60";
   return (
     <div className="flex flex-wrap gap-2">
       <button
         onClick={downloadTemplate}
         disabled={downloading}
         title={t.admin.products.templateTitle}
-        className={`${btnBase} border-brand-border bg-white text-accent-text hover:bg-brand-warm-white/50`}
+        className={`${btnBase} border-brand-border bg-surface text-accent-text hover:bg-brand-warm-white/50`}
       >
         {downloading ? t.admin.common.generating : t.admin.products.templateDownload}
       </button>
       <label
         title={t.admin.products.uploadFileTitle}
-        className={`${btnBase} cursor-pointer border-brand-border bg-white text-accent-text hover:bg-brand-warm-white/50 ${
+        className={`${btnBase} cursor-pointer border-brand-border bg-surface text-accent-text hover:bg-brand-warm-white/50 ${
           isPending || !supplierId ? "opacity-60" : ""
         }`}
       >
@@ -396,7 +396,7 @@ export function CatalogLoadForm({
   }
 
   return (
-    <div className="rounded-xl border border-brand-border bg-white p-4 shadow-sm">
+    <div className="rounded-xl border border-brand-border bg-surface p-4">
       <div className="mb-3 flex items-center justify-between">
         <p className="text-[13px] font-bold text-brand-near-black">{t.admin.products.loadFromCatalogTitle}</p>
         <button
@@ -423,10 +423,10 @@ export function CatalogLoadForm({
               {p.name}
               {p.variant && <span className="ml-1 text-[12px] text-brand-gray">{p.variant}</span>}
               {p.format && (
-                <span className="ml-1 font-mono text-label text-muted">({p.format})</span>
+                <span className="ml-1 tabular-nums text-label text-muted">({p.format})</span>
               )}
             </div>
-            <div className="font-mono text-[12px] font-semibold text-brand-near-black">
+            <div className="tabular-nums text-[12px] font-semibold text-brand-near-black">
               {formatEur(parseFloat(p.unitPrice))}
             </div>
           </label>
@@ -504,7 +504,7 @@ export function EditCycleProductForm({
   const labelCls = "mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray";
 
   return (
-    <form onSubmit={handleSubmit} className="my-2 rounded-lg border border-brand-border bg-[#fdfdfd] p-3 shadow-sm">
+    <form onSubmit={handleSubmit} className="my-2 rounded-lg border border-brand-border bg-brand-warm-white p-3 shadow-sm">
       <div className="mb-2 flex items-center justify-between">
         <p className="text-[12px] font-bold text-brand-near-black">{t.admin.products.editCatalogProduct}</p>
         <button type="button" onClick={onClose} className="text-label text-brand-gray">
@@ -620,7 +620,7 @@ export function ProductListItem({
 
   return (
     <div className="flex items-center gap-3 px-4 py-2.5 hover:bg-brand-warm-white/50 group">
-      <span className="w-6 shrink-0 font-mono text-label text-muted">
+      <span className="w-6 shrink-0 tabular-nums text-label text-muted">
         {index + 1}
       </span>
       <span className="shrink-0 text-[16px] leading-none">{emoji}</span>
@@ -630,25 +630,25 @@ export function ProductListItem({
           <span className="ml-1.5 text-[12px] text-brand-gray">{product.variant}</span>
         )}
         {product.format && (
-          <span className="ml-1.5 font-mono text-label text-muted">
+          <span className="ml-1.5 tabular-nums text-label text-muted">
             {product.format}
           </span>
         )}
       </div>
       <div className="flex items-center gap-3">
         <div className="shrink-0 text-right">
-          <div className="font-mono text-[13px] font-bold text-brand-near-black">
+          <div className="tabular-nums text-[13px] font-bold text-brand-near-black">
             {formatEur(parseFloat(product.unitPrice))}
           </div>
           {product.pricePerKg && (
-            <div className="font-mono text-label text-muted">
+            <div className="tabular-nums text-label text-muted">
               ({formatEur(parseFloat(product.pricePerKg))}/kg)
             </div>
           )}
         </div>
         <button
           onClick={() => setIsEditing(true)}
-          className="rounded-full bg-white px-2 py-1 text-label font-bold text-accent-text shadow-sm ring-1 ring-inset ring-accent/20 hover:bg-accent hover:text-on-accent transition-colors opacity-0 group-hover:opacity-100"
+          className="rounded-full bg-surface px-2 py-1 text-label font-bold text-accent-text shadow-sm ring-1 ring-inset ring-accent/20 hover:bg-accent hover:text-on-accent transition-colors opacity-0 group-hover:opacity-100"
         >
           {t.admin.common.edit}
         </button>
@@ -698,7 +698,7 @@ export function CatalogManager({
   }
 
   return (
-    <div className="space-y-4 rounded-xl border border-brand-border bg-[#fdfdfd] p-4 shadow-sm">
+    <div className="space-y-4 rounded-xl border border-brand-border bg-brand-warm-white p-4 shadow-sm">
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-[14px] font-bold text-brand-near-black">{supplierName}</h3>
@@ -728,7 +728,7 @@ export function CatalogManager({
       )}
 
       {products.length > 0 ? (
-        <div className="divide-y divide-brand-border rounded-lg border border-brand-border bg-white overflow-hidden shadow-sm">
+        <div className="divide-y divide-brand-border rounded-lg border border-brand-border bg-surface overflow-hidden shadow-sm">
           {products.map((p) => (
             <div
               key={p.catalogProductId}
@@ -744,16 +744,16 @@ export function CatalogManager({
                 </div>
                 <div className="flex items-center gap-2 text-label text-brand-gray">
                   {p.variant && <span>{p.variant}</span>}
-                  {p.format && <span className="font-mono text-label text-muted">({p.format})</span>}
+                  {p.format && <span className="tabular-nums text-label text-muted">({p.format})</span>}
                   {p.category && <span className="rounded-full bg-accent-soft px-2 text-accent-text">{p.category}</span>}
                 </div>
               </div>
               <div className="text-right">
-                <div className="font-mono text-[13px] font-bold text-brand-near-black">
+                <div className="tabular-nums text-[13px] font-bold text-brand-near-black">
                   {formatEur(parseFloat(p.unitPrice))}
                 </div>
                 {p.pricePerKg && (
-                  <div className="font-mono text-label text-muted">
+                  <div className="tabular-nums text-label text-muted">
                     ({formatEur(parseFloat(p.pricePerKg))}/kg)
                   </div>
                 )}

@@ -5,13 +5,13 @@ import { t } from "@/lib/i18n";
 
 const STATUS_CLASSES: Record<ConfigItem["status"], string> = {
   ok: "bg-accent-soft text-accent-text",
-  missing: "bg-brand-red-light text-brand-red",
+  missing: "bg-danger-soft text-danger-text",
   warning: "bg-primary-soft text-primary-text",
-  off: "bg-black/[0.05] text-muted",
+  off: "bg-tint/[0.05] text-muted",
 };
 
 // Integrations a group can live without: the card lists them apart.
-const OPTIONAL = new Set<ConfigItem["id"]>(["brand", "stripe", "membership", "sentry", "fleet"]);
+const OPTIONAL = new Set<ConfigItem["id"]>(["brand", "stripe", "membership", "sentry", "dbRole", "fleet"]);
 
 // What this installation has connected (lib/config-status.ts): names and
 // states only, never a value. Nothing here is set from this card: each item
@@ -31,7 +31,7 @@ export function ConfigStatusCard({ items }: { items: ConfigItem[] }) {
       </CardHeader>
       {groups.map((group) => (
         <section key={group.id}>
-          <h4 className="border-t border-brand-border bg-black/[0.02] px-4 py-2 font-mono text-label uppercase tracking-[0.08em] text-brand-gray">
+          <h4 className="border-t border-brand-border bg-tint/[0.02] px-4 py-2 font-mono text-label uppercase tracking-[0.08em] text-brand-gray">
             {s.groups[group.id]}
           </h4>
           <ul className="divide-y divide-brand-border border-t border-brand-border">
@@ -58,7 +58,7 @@ function ConfigRow({ item }: { item: ConfigItem }) {
             {s.items[item.id]}
             {item.required && <span className="ml-1 font-normal text-muted">({s.required})</span>}
           </div>
-          <div className="mt-[2px] break-words font-mono text-label text-brand-gray">
+          <div className="mt-0.5 break-words tabular-nums text-label text-brand-gray">
             {s.variables} {item.vars.join(", ")}
           </div>
         </div>
@@ -70,7 +70,7 @@ function ConfigRow({ item }: { item: ConfigItem }) {
       {detail && detail.length > 0 && (
         <>
           {item.id === "stripe" && <p className="mt-1 text-[12px] text-brand-near-black">{s.notes.stripeEvents}</p>}
-          <ul className="mt-1 list-inside list-disc font-mono text-label text-brand-gray">
+          <ul className="mt-1 list-inside list-disc tabular-nums text-label text-brand-gray">
             {detail.map((d) => (
               <li key={d} className="break-words">
                 {d}
@@ -85,7 +85,7 @@ function ConfigRow({ item }: { item: ConfigItem }) {
           <p className="text-brand-near-black">{help[0]}</p>
           <p className="mt-1 break-words text-brand-gray">{help[1]}</p>
           {item.id === "stripe" && (
-            <ul className="mt-1 list-inside list-disc font-mono text-label text-brand-gray">
+            <ul className="mt-1 list-inside list-disc tabular-nums text-label text-brand-gray">
               {REQUIRED_STRIPE_EVENTS.map((e) => (
                 <li key={e} className="break-words">
                   {e}

@@ -9,13 +9,14 @@ import { MovementRow } from "@/components/movement-row";
 import { WelcomeCard } from "@/components/home/welcome-card";
 import { SetupBanner } from "@/components/admin/setup/setup-banner";
 import { getBrand } from "@/lib/brand/get-brand";
-import { WELCOME_QUERY, welcomeMoney } from "@/lib/guide/welcome";
+import { isWelcomeStep, WELCOME_QUERY, welcomeDone, welcomeMoney } from "@/lib/guide/welcome";
 import { t } from "@/lib/i18n";
 import { formatSignedMoney } from "@/lib/i18n/format";
 import { getUserRole, requireUserSession } from "@/lib/auth/session";
 import {
   getCycleProducts,
   getMemberById,
+  getWelcomeFacts,
   getMemberLedger,
   getMemberOrderLines,
   getNextMemberPickup,
@@ -59,6 +60,9 @@ export default async function HomePage({
   const person = personId === memberId ? member : await getMemberById(personId);
   const reopenWelcome = (await searchParams)[WELCOME_QUERY] === "1";
   const showWelcome = reopenWelcome || (person !== null && person.welcomeDismissedAt === null);
+  // What the card ticks comes from real rows, only read while it shows.
+  const welcomeDoneSteps = showWelcome ? welcomeDone(await getWelcomeFacts(memberId, personId)) : [];
+  const welcomeSavedStep = person !== null && isWelcomeStep(person.welcomeStep) ? person.welcomeStep : null;
   // A pay-per-order group has no wallet: no balance card, each cycle says
   // where its order stands, and the amount due or the credit comes first. A
   // member who pays outside the app keeps the wallet view.
@@ -128,8 +132,8 @@ export default async function HomePage({
         {cycleDataList.map(({ cycle, cycleProducts, myLines, orderTotal, payStatus }) => {
             const productMap = new Map(cycleProducts.map((p) => [p.productId, p]));
             return (
-              <div key={cycle.cycleId} className="mb-[24px]">
-                <div className="mb-[14px]">
+              <div key={cycle.cycleId} className="mb-6">
+                <div className="mb-3.5">
                   <CycleCountdown
                     cycleId={cycle.cycleId}
                     title={cycle.title}
@@ -143,12 +147,12 @@ export default async function HomePage({
                   />
                 </div>
 
-                <CycleNotes notes={cycle.notes} className="mb-[10px]" />
+                <CycleNotes notes={cycle.notes} className="mb-2.5" />
 
                 {payStatus && (
                   <Link
                     href={`/ordine?cycleId=${cycle.cycleId}`}
-                    className={`mb-[10px] flex items-center justify-between rounded-card border px-4 py-[10px] text-[14px] font-semibold ${
+                    className={`mb-2.5 flex items-center justify-between rounded-card border px-4 py-2.5 text-[14px] font-semibold ${
                       payStatus.kind === "paid"
                         ? "border-accent/25 bg-accent-soft text-accent-text"
                         : "border-primary-mid bg-primary-soft text-primary-text"
@@ -168,14 +172,14 @@ export default async function HomePage({
                 )}
 
                 {myLines.length > 0 ? (
-                  <div className="overflow-hidden rounded-card border border-brand-border bg-white shadow-card">
-                    <div className="flex items-center justify-between border-b border-brand-border px-4 py-[14px]">
+                  <div className="overflow-hidden rounded-card border border-brand-border bg-surface shadow-card">
+                    <div className="flex items-center justify-between border-b border-brand-border px-4 py-3.5">
                       <span className="font-mono text-label uppercase tracking-[0.1em] text-brand-gray">
                         {t.home.yourOrder}
                       </span>
                       <Link
                         href={`/ordine?cycleId=${cycle.cycleId}`}
-                        className="rounded-full border border-brand-border px-[13px] py-[5px] font-mono text-label font-bold uppercase tracking-widest text-brand-near-black"
+                        className="rounded-full border border-brand-border px-3.25 py-1.25 font-mono text-label font-bold uppercase tracking-widest text-brand-near-black"
                       >
                         {t.home.editButton}
                       </Link>
@@ -186,10 +190,10 @@ export default async function HomePage({
                       return (
                         <div
                           key={line.orderLineId}
-                          className="flex items-center justify-between border-b border-brand-border px-4 py-[11px] last:border-none"
+                          className="flex items-center justify-between border-b border-brand-border px-4 py-2.75 last:border-none"
                         >
                           <div className="flex items-start gap-2">
-                            <span aria-hidden="true" className="mt-[1px] w-[18px] shrink-0 text-[18px] leading-none">
+                            <span aria-hidden="true" className="mt-0.25 w-[18px] shrink-0 text-[18px] leading-none">
                               {memberProductEmoji(p?.emoji, p?.name ?? "")}
                             </span>
                             <div>
@@ -197,19 +201,19 @@ export default async function HomePage({
                                 {p?.name ?? "?"}
                               </div>
                               {meta && (
-                                <div className="mt-[1px] font-mono text-label text-brand-gray">{meta}</div>
+                                <div className="mt-0.25 tabular-nums text-label text-brand-gray">{meta}</div>
                               )}
                             </div>
                           </div>
-                          <div className="font-mono text-[13px] font-semibold text-brand-near-black">
+                          <div className="tabular-nums text-[13px] font-semibold text-brand-near-black">
                             ×{line.quantity} · {formatEur(parseFloat(line.lineTotal))}
                           </div>
                         </div>
                       );
                     })}
-                    <div className="flex items-center justify-between border-t border-brand-border bg-black/[0.03] px-4 py-[12px]">
+                    <div className="flex items-center justify-between border-t border-brand-border bg-tint/[0.03] px-4 py-3">
                       <span className="text-[14px] font-extrabold text-brand-near-black">{t.home.totalLabel}</span>
-                      <span className="font-mono text-[13px] font-bold text-brand-near-black">
+                      <span className="tabular-nums text-[13px] font-bold text-brand-near-black">
                         {formatEur(orderTotal)}
                       </span>
                     </div>
@@ -226,15 +230,15 @@ export default async function HomePage({
       {!payPerOrder && (
         <>
       <div
-        className={`mb-[14px] rounded-card p-[20px_22px_22px] ${
+        className={`mb-3.5 rounded-card pt-5 px-5.5 pb-5.5 ${
           isNegative
-            ? "border-[1.5px] border-brand-red/30 bg-brand-red-light"
+            ? "border-[1.5px] border-danger-text/30 bg-danger-soft"
             : "border-[1.5px] border-primary-mid bg-primary-soft"
         }`}
       >
         <div
-          className={`mb-[10px] font-mono text-label font-semibold uppercase tracking-[0.13em] ${
-            isNegative ? "text-brand-red" : "text-primary-text"
+          className={`mb-2.5 font-mono text-label font-semibold uppercase tracking-[0.13em] ${
+            isNegative ? "text-danger-text" : "text-primary-text"
           }`}
         >
           {isNegative ? t.home.balanceToTopUp : t.home.balanceTitle}
@@ -244,11 +248,11 @@ export default async function HomePage({
             phone. 0.61em per character covers the widest format measured
             ("+€888.88" is 0.60; Italian "+888,88 €" is 0.55), and nowrap keeps
             the sign from ever dropping onto its own line. */}
-        <div className="@container mb-[16px] flex items-baseline gap-[6px]">
+        <div className="@container mb-4 flex items-baseline gap-1.5">
           {/* Smaller on phones, where the cycle card above needs the room. */}
           <span
             className={`whitespace-nowrap text-[length:min(52px,var(--fit))] font-black leading-none tracking-[-0.045em] sm:text-[length:min(70px,var(--fit))] ${
-              isNegative ? "text-brand-red" : "text-brand-near-black"
+              isNegative ? "text-danger-text" : "text-brand-near-black"
             }`}
             style={{ "--fit": `calc(100cqi / ${(0.61 * balanceText.length).toFixed(2)})` } as React.CSSProperties}
           >
@@ -257,28 +261,28 @@ export default async function HomePage({
         </div>
         <div
           className={`flex overflow-hidden rounded-xl ${
-            isNegative ? "border border-brand-red/30" : "border border-primary-mid"
+            isNegative ? "border border-danger-text/30" : "border border-primary-mid"
           }`}
         >
-          <div className="flex-1 bg-white/60 p-[9px_13px]">
-            <div className="mb-[3px] font-mono text-label uppercase tracking-[0.07em] text-primary-text">
+          <div className="flex-1 bg-surface/60 py-2.25 px-3.25">
+            <div className="mb-0.75 font-mono text-label uppercase tracking-[0.07em] text-primary-text">
               {t.home.thisOrder}
             </div>
-            <div className="font-mono text-[13px] font-bold text-brand-near-black">
+            <div className="tabular-nums text-[13px] font-bold text-brand-near-black">
               {formatEur(globalOrderTotal)}
             </div>
           </div>
           <div
-            className={`flex-1 bg-white/35 p-[9px_13px] ${
-              isNegative ? "border-l border-brand-red/30" : "border-l border-primary-mid"
+            className={`flex-1 bg-surface/35 py-2.25 px-3.25 ${
+              isNegative ? "border-l border-danger-text/30" : "border-l border-primary-mid"
             }`}
           >
-            <div className="mb-[3px] font-mono text-label uppercase tracking-[0.07em] text-primary-text">
+            <div className="mb-0.75 font-mono text-label uppercase tracking-[0.07em] text-primary-text">
               {t.home.afterOrder}
             </div>
             <div
-              className={`font-mono text-[13px] font-bold ${
-                afterBalance < 0 ? "text-brand-red" : "text-brand-near-black"
+              className={`tabular-nums text-[13px] font-bold ${
+                afterBalance < 0 ? "text-danger-text" : "text-brand-near-black"
               }`}
             >
               {formatSignedMoney(afterBalance)}
@@ -286,19 +290,19 @@ export default async function HomePage({
           </div>
         </div>
         {cycleDataList.some((d) => d.feeCents > 0) && (
-          <p className="mt-[6px] text-label text-muted">{t.home.feeIncluded}</p>
+          <p className="mt-1.5 text-label text-muted">{t.home.feeIncluded}</p>
         )}
         {isNegative ? (
-          <div className="mt-[12px]">
+          <div className="mt-3">
             <Link
               href="/ricarica"
-              className="flex w-full items-center justify-center rounded-full bg-brand-red px-4 py-[10px] text-[14px] font-bold text-white"
+              className="flex w-full items-center justify-center rounded-full bg-danger px-4 py-2.5 text-[14px] font-bold text-on-danger"
             >
               {t.home.rechargeButton}
             </Link>
           </div>
         ) : (
-          <div className="mt-[10px] text-right">
+          <div className="mt-2.5 text-right">
             <Link href="/ricarica" className="font-mono text-label font-bold uppercase tracking-widest text-primary-text">
               {t.home.rechargeLink} →
             </Link>
@@ -324,14 +328,14 @@ export default async function HomePage({
   const noOpenBlock = (
     <>
       {cycleDataList.length === 0 && (
-        <div className="mb-[14px] flex items-center justify-between rounded-card border border-brand-border bg-white p-[18px] shadow-card">
+        <div className="mb-3.5 flex items-center justify-between rounded-card border border-brand-border bg-surface p-4.5 shadow-card">
           <div>
             <div className="text-[15px] font-bold">{t.home.noOpenOrders}</div>
-            <div className="font-mono text-label text-muted">
+            <div className="tabular-nums text-label text-muted">
               {t.home.noOpenOrdersHint}
             </div>
           </div>
-          <span className="rounded-full bg-black/[0.06] px-2.5 py-1 font-mono text-label text-brand-gray">
+          <span className="rounded-full bg-tint/[0.06] px-2.5 py-1 tabular-nums text-label text-brand-gray">
             {t.home.closed}
           </span>
         </div>
@@ -343,14 +347,14 @@ export default async function HomePage({
     <>
       {/* ── Recent movements ── */}
       {recentMovements.length > 0 && (
-        <div className="mt-[4px]">
-          <div className="mb-[10px] flex items-center justify-between">
+        <div className="mt-1">
+          <div className="mb-2.5 flex items-center justify-between">
             <span className="font-mono text-label uppercase tracking-[0.1em] text-brand-gray">
               {t.home.recentMovements}
             </span>
             <Link
               href="/storico"
-              className="font-mono text-label font-bold text-primary-text"
+              className="tabular-nums text-label font-bold text-primary-text"
             >
               {t.home.seeAll}
             </Link>
@@ -375,6 +379,8 @@ export default async function HomePage({
           families={settings.familiesEnabled}
           hasGroupInfo={settings.groupInfo !== null}
           reopened={reopenWelcome}
+          savedStep={welcomeSavedStep}
+          done={welcomeDoneSteps}
         />
       )}
 

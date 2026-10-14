@@ -110,11 +110,11 @@ export default async function OrdinePage({
     <AppShell email={session.user.email} name={session.user.fullName} isAdmin={role === "admin"} memberId={memberId} personId={session.user.personId} layout="wide">
       {notice && (
         <div
-          className={`mb-4 rounded-card border p-[12px_14px] text-[14px] ${
+          className={`mb-4 rounded-card border py-3 px-3.5 text-[14px] ${
             notice.tone === "ok"
               ? "border-accent bg-accent-soft text-brand-near-black"
               : notice.tone === "error"
-                ? "border-brand-red/30 bg-brand-red-light text-brand-red"
+                ? "border-danger-text/30 bg-danger-soft text-danger-text"
                 : "border-primary-mid bg-primary-soft text-brand-near-black"
           }`}
         >
@@ -131,7 +131,7 @@ export default async function OrdinePage({
               className={`shrink-0 rounded-full px-4 py-1.5 text-[12px] font-bold transition-colors ${
                 c.cycleId === openCycle!.cycleId
                   ? "bg-accent text-on-accent shadow-sm"
-                  : "bg-white text-brand-gray border border-brand-border hover:bg-brand-warm-white"
+                  : "bg-surface text-brand-gray border border-brand-border hover:bg-brand-warm-white"
               }`}
             >
               {c.title}

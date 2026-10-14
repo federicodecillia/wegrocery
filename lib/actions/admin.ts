@@ -1,5 +1,6 @@
 "use server";
 
+import { recordUsage } from "@/lib/usage/events";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { getAuthInstance } from "@/auth";
@@ -242,6 +243,7 @@ export async function adminCreateCycle(data: CreateCycleInput): Promise<{error?:
     revalidatePath("/admin");
     revalidatePath("/");
     revalidatePath("/notifiche");
+    await recordUsage("cycle_created");
     return {};
   } catch (e) {
     return { error: e instanceof Error ? e.message : t.errors.cycleCreationError };
@@ -256,6 +258,7 @@ export async function adminCloseCycle(
     const db = getDb();
     const result = await performCycleClose(db, cycleId, admin.email);
     await writeAudit(db, admin.email, "close_cycle", "cycle", cycleId, result);
+    await recordUsage("cycle_closed");
     revalidatePath("/admin");
     revalidatePath("/");
     revalidatePath("/storico");
@@ -332,7 +335,7 @@ export async function adminCancelClosedCycle(
             type: "correction",
             amount: (-r.net).toFixed(2),
             cycleId,
-            note: `${t.ledger.cycleCancelled} — ${reason}`,
+            note: `${t.ledger.cycleCancelled}: ${reason}`,
             createdBy: admin.email,
             createdAt: now,
           })),
@@ -1231,7 +1234,7 @@ export async function adminGetSupplierEmailDefaults(cycleId: string): Promise<
       to: cycle.supplierEmail ?? "",
       from,
       cc: Array.from(new Set([admin.email, ...[(await getBrand()).archiveCcEmail].filter((e): e is string => Boolean(e))])),
-      subject: `Ordine ${(await getBrand()).orgName} — ${cycle.title}`,
+      subject: `Ordine ${(await getBrand()).orgName}: ${cycle.title}`,
       supplierName: cycle.supplierName,
     };
   } catch (e) {

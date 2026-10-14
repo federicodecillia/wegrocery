@@ -1,6 +1,7 @@
 import { and, asc, desc, eq, inArray, isNotNull, isNull, or, sql } from "drizzle-orm";
 import { getDb } from "./client";
 import { liveLedger } from "./ledger-live";
+import type { WelcomeFacts } from "@/lib/guide/welcome";
 import {
   ledgerEntries,
   familyInvites,
@@ -36,6 +37,30 @@ export async function getMemberByEmail(email: string) {
     .where(or(eq(members.email, address), eq(members.aliasEmail, address)))
     .limit(1);
   return member ?? null;
+}
+
+// What the welcome card ticks, from real rows (lib/guide/welcome.ts). One
+// round trip; the account (`memberId`) holds the money and the orders, the
+// person (`personId`) their own preferences and family link.
+export async function getWelcomeFacts(memberId: string, personId: string): Promise<WelcomeFacts> {
+  const db = getDb();
+  const { rows } = await db.execute<{ money: boolean; ordered: boolean; preferences: boolean; family: boolean }>(sql`
+    SELECT
+      EXISTS (
+        SELECT 1 FROM ledger_entries
+        WHERE member_id = ${memberId}
+          AND type IN ('topup', 'order_payment', 'balance_payment')
+          AND reversed_by IS NULL
+      ) AS money,
+      EXISTS (SELECT 1 FROM orders WHERE member_id = ${memberId}) AS ordered,
+      EXISTS (SELECT 1 FROM notification_preferences WHERE member_id = ${personId}) AS preferences,
+      (
+        EXISTS (SELECT 1 FROM members WHERE household_of = ${memberId})
+        OR EXISTS (SELECT 1 FROM members WHERE member_id = ${personId} AND household_of IS NOT NULL)
+      ) AS family
+  `);
+  const row = rows[0];
+  return { money: row?.money === true, ordered: row?.ordered === true, preferences: row?.preferences === true, family: row?.family === true };
 }
 
 export async function getMemberById(memberId: string) {

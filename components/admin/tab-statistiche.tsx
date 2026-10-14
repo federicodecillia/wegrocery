@@ -11,6 +11,7 @@ import {
 import { formatEur, getProductEmoji } from "@/lib/utils";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { StatsFilters } from "./statistiche-client";
+import { getUsageTotals } from "@/lib/usage/events";
 import { t } from "@/lib/i18n";
 
 type Props = {
@@ -35,6 +36,7 @@ export async function TabStatistiche({ cycleIds, supplierIds, memberIds }: Props
       getAllSuppliersAdmin(),
       getAllMembers(),
     ]);
+  const usage = await getUsageTotals(30);
 
   const filterOptions = {
     cycles: allCycles.map((c) => ({ cycleId: c.cycleId, title: c.title })),
@@ -54,6 +56,7 @@ export async function TabStatistiche({ cycleIds, supplierIds, memberIds }: Props
     return (
       <div className="space-y-4">
         <StatsFilters {...filterOptions} />
+        <UsageCard usage={usage} />
         <Card>
           <CardBody>
             <div className="py-12 text-center">
@@ -78,6 +81,7 @@ export async function TabStatistiche({ cycleIds, supplierIds, memberIds }: Props
       <ProductRankingsCard rankings={products} />
       <RevenueTrendCard trend={trend} />
       <SupplierStatsCard suppliers={suppliers} />
+      <UsageCard usage={usage} />
       <MemberParticipationCard members={members} />
     </div>
   );
@@ -141,7 +145,7 @@ function OverviewCards({
             {c.value}
           </div>
           {c.hint && (
-            <div className="mt-0.5 font-mono text-label leading-tight text-muted">
+            <div className="mt-0.5 tabular-nums text-label leading-tight text-muted">
               {c.hint}
             </div>
           )}
@@ -184,7 +188,7 @@ function ProductRankingsCard({
                 .join(" · ");
               return (
                 <li key={`${r.name}-${idx}`} className="flex items-center gap-3">
-                  <span className="w-5 shrink-0 text-right font-mono text-label text-muted">
+                  <span className="w-5 shrink-0 text-right tabular-nums text-label text-muted">
                     {idx + 1}
                   </span>
                   <span className="shrink-0 text-[16px] leading-none">
@@ -198,17 +202,17 @@ function ProductRankingsCard({
                           <span className="ml-1 font-normal text-muted">{meta}</span>
                         )}
                       </span>
-                      <span className="shrink-0 font-mono text-label font-bold text-brand-near-black">
+                      <span className="shrink-0 tabular-nums text-label font-bold text-brand-near-black">
                         {r.totalQty}
                       </span>
                     </div>
-                    <div className="mt-1 h-2 overflow-hidden rounded-full bg-black/[0.05]">
+                    <div className="mt-1 h-2 overflow-hidden rounded-full bg-tint/[0.05]">
                       <div
                         className="h-full rounded-full bg-primary"
                         style={{ width: `${widthPct}%` }}
                       />
                     </div>
-                    <div className="mt-0.5 flex justify-between font-mono text-label text-muted">
+                    <div className="mt-0.5 flex justify-between tabular-nums text-label text-muted">
                       <span>{t.admin.stats.cyclesCountLabel(r.cyclesCount)}</span>
                       <span>{formatEur(r.totalAmount)}</span>
                     </div>
@@ -273,10 +277,10 @@ function RevenueTrendCard({
           </div>
           {trendDelta !== null && (
             <span
-              className={`shrink-0 rounded-full px-2 py-0.5 font-mono text-label font-bold ${
+              className={`shrink-0 rounded-full px-2 py-0.5 tabular-nums text-label font-bold ${
                 trendDelta >= 0
                   ? "bg-accent-soft text-accent-text"
-                  : "bg-brand-red-light text-brand-red"
+                  : "bg-danger-soft text-danger-text"
               }`}
             >
               {trendDelta >= 0 ? "+" : ""}
@@ -323,30 +327,57 @@ function RevenueTrendCard({
             </circle>
           ))}
         </svg>
-        <div className="mt-2 flex justify-between font-mono text-label text-muted">
+        <div className="mt-2 flex justify-between tabular-nums text-label text-muted">
           <span>{trend[0].title}</span>
           <span>{trend[trend.length - 1].title}</span>
         </div>
         <div className="mt-2 grid grid-cols-3 gap-2 text-center">
           <div>
             <div className="font-mono text-label uppercase text-muted">{t.admin.stats.trendLast}</div>
-            <div className="font-mono text-[12px] font-bold text-brand-near-black">
+            <div className="tabular-nums text-[12px] font-bold text-brand-near-black">
               {formatEur(lastPoint.total)}
             </div>
           </div>
           <div>
             <div className="font-mono text-label uppercase text-muted">{t.admin.stats.trendMax}</div>
-            <div className="font-mono text-[12px] font-bold text-brand-near-black">
+            <div className="tabular-nums text-[12px] font-bold text-brand-near-black">
               {formatEur(maxVal)}
             </div>
           </div>
           <div>
             <div className="font-mono text-label uppercase text-muted">{t.admin.stats.trendAvg}</div>
-            <div className="font-mono text-[12px] font-bold text-brand-near-black">
+            <div className="tabular-nums text-[12px] font-bold text-brand-near-black">
               {formatEur(trend.reduce((s, p) => s + p.total, 0) / trend.length)}
             </div>
           </div>
         </div>
+      </CardBody>
+    </Card>
+  );
+}
+
+// ── Usage counters (lib/usage/events.ts) ─────────────────────────────────────
+
+function UsageCard({ usage }: { usage: Awaited<ReturnType<typeof getUsageTotals>> }) {
+  return (
+    <Card>
+      <CardHeader>
+        <h2 className="text-[13px] font-bold text-brand-near-black">{t.admin.stats.usageTitle}</h2>
+      </CardHeader>
+      <CardBody>
+        {usage.length === 0 ? (
+          <p className="text-[12px] text-brand-gray">{t.admin.stats.usageEmpty}</p>
+        ) : (
+          <ul className="divide-y divide-brand-border">
+            {usage.map((u) => (
+              <li key={u.name} className="flex items-center justify-between gap-2 py-1.5 text-[13px]">
+                <span className="text-brand-near-black">{t.admin.stats.usageEvents[u.name] ?? u.name}</span>
+                <span className="font-bold tabular-nums text-brand-near-black">{u.total}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+        <p className="mt-2 text-[12px] text-muted">{t.admin.stats.usageHint}</p>
       </CardBody>
     </Card>
   );
@@ -379,17 +410,17 @@ function SupplierStatsCard({
                   <span className="truncate text-[12px] font-semibold text-brand-near-black">
                     {s.name}
                   </span>
-                  <span className="shrink-0 font-mono text-label font-bold text-brand-near-black">
+                  <span className="shrink-0 tabular-nums text-label font-bold text-brand-near-black">
                     {formatEur(s.totalRevenue)}
                   </span>
                 </div>
-                <div className="mt-1 h-2 overflow-hidden rounded-full bg-black/[0.05]">
+                <div className="mt-1 h-2 overflow-hidden rounded-full bg-tint/[0.05]">
                   <div
                     className="h-full rounded-full bg-accent"
                     style={{ width: `${widthPct}%` }}
                   />
                 </div>
-                <div className="mt-0.5 flex justify-between font-mono text-label text-muted">
+                <div className="mt-0.5 flex justify-between tabular-nums text-label text-muted">
                   <span>{t.admin.stats.cyclesCountLabel(s.cyclesCount)}</span>
                   {s.topProductName && <span>{t.admin.stats.supplierTopProduct(s.topProductName)}</span>}
                 </div>
@@ -429,17 +460,17 @@ function MemberParticipationCard({
           <div className="rounded-lg bg-accent-soft p-2">
             <div className="font-mono text-label uppercase text-accent-text">{t.admin.stats.participationActive}</div>
             <div className="text-[18px] font-black text-brand-near-black">{heavy.length}</div>
-            <div className="font-mono text-label text-muted">{t.admin.stats.participationActiveHint}</div>
+            <div className="tabular-nums text-label text-muted">{t.admin.stats.participationActiveHint}</div>
           </div>
           <div className="rounded-lg bg-primary-soft p-2">
             <div className="font-mono text-label uppercase text-primary-text">{t.admin.stats.participationOccasional}</div>
             <div className="text-[18px] font-black text-brand-near-black">{occasional.length}</div>
-            <div className="font-mono text-label text-muted">{t.admin.stats.participationOccasionalHint}</div>
+            <div className="tabular-nums text-label text-muted">{t.admin.stats.participationOccasionalHint}</div>
           </div>
-          <div className="rounded-lg bg-black/[0.05] p-2">
+          <div className="rounded-lg bg-tint/[0.05] p-2">
             <div className="font-mono text-label uppercase text-brand-gray">{t.admin.stats.participationDormant}</div>
             <div className="text-[18px] font-black text-brand-near-black">{dormant.length}</div>
-            <div className="font-mono text-label text-muted">{t.admin.stats.participationDormantHint}</div>
+            <div className="tabular-nums text-label text-muted">{t.admin.stats.participationDormantHint}</div>
           </div>
         </div>
 
@@ -447,7 +478,7 @@ function MemberParticipationCard({
           <summary className="cursor-pointer font-semibold text-brand-gray hover:text-brand-near-black">
             {t.admin.stats.memberDetail}
           </summary>
-          <ul className="mt-2 divide-y divide-brand-border rounded-lg border border-brand-border bg-white">
+          <ul className="mt-2 divide-y divide-brand-border rounded-lg border border-brand-border bg-surface">
             {members.map((m) => (
               <li
                 key={m.memberId}
@@ -456,10 +487,10 @@ function MemberParticipationCard({
                 <span className="min-w-0 flex-1 truncate text-[12px] text-brand-near-black">
                   {m.fullName}
                 </span>
-                <span className="shrink-0 font-mono text-label text-brand-gray">
+                <span className="shrink-0 tabular-nums text-label text-brand-gray">
                   {t.admin.stats.memberCyclesLabel(m.cyclesOrdered)}
                 </span>
-                <span className="shrink-0 font-mono text-label font-bold text-brand-near-black">
+                <span className="shrink-0 tabular-nums text-label font-bold text-brand-near-black">
                   {formatEur(m.totalSpent)}
                 </span>
               </li>

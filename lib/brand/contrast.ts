@@ -53,3 +53,15 @@ export function darkenToContrast(color: string, against: string[], min = 4.5): s
   }
   return "#000000";
 }
+
+/** Same hue, mixed towards white until it reaches `min` on every background. */
+export function lightenToContrast(color: string, against: string[], min = 4.5): string {
+  const rgb = parseHex(color);
+  if (!rgb) return color;
+  for (let step = 0; step <= 50; step++) {
+    const f = step * 0.02;
+    const candidate = step === 0 ? color : toHex(rgb.map((v) => v + (255 - v) * f) as Rgb);
+    if (against.every((bg) => contrastRatio(candidate, bg) >= min)) return candidate;
+  }
+  return "#ffffff";
+}

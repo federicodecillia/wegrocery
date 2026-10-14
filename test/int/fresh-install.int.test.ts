@@ -24,7 +24,7 @@ describeFresh("a new installation", () => {
   });
 
   it("has applied every migration and has no member", async () => {
-    const files = readdirSync("drizzle").filter((f) => f.endsWith(".sql")).sort();
+    const files = readdirSync("drizzle").filter((f) => f.endsWith(".sql") && !f.endsWith("_down.sql")).sort();
     const applied = await sql`SELECT name FROM _migrations ORDER BY name`;
     expect(applied.map((r) => r.name)).toEqual(files);
     expect(await sql`SELECT 1 FROM members`).toHaveLength(0);
