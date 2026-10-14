@@ -93,7 +93,7 @@ export default async function ProfilePage() {
               inFamily && account ? t.profile.sharedAccount(account.fullName) : null,
             ].filter(Boolean);
             return parts.length > 0 ? (
-              <p className="mt-[2px] text-[13px] text-brand-gray">{parts.join(" · ")}</p>
+              <p className="mt-0.5 text-[13px] text-brand-gray">{parts.join(" · ")}</p>
             ) : null;
           })()}
         </div>

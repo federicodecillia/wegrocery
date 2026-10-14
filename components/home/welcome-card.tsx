@@ -109,7 +109,7 @@ export function WelcomeCard({
     return (
       <section
         aria-label={t.welcome.title(appName)}
-        className="mb-[14px] flex items-center justify-between gap-2 rounded-card border border-primary-mid bg-surface py-1 pl-4 pr-1 shadow-card"
+        className="mb-3.5 flex items-center justify-between gap-2 rounded-card border border-primary-mid bg-surface py-1 pl-4 pr-1 shadow-card"
       >
         <span className="min-w-0 truncate text-[14px] font-semibold text-brand-near-black">
           <span aria-hidden>👋 </span>
@@ -140,7 +140,7 @@ export function WelcomeCard({
   return (
     <section
       aria-label={t.welcome.title(appName)}
-      className="mb-[14px] rounded-card border-[1.5px] border-primary-mid bg-surface p-[18px_20px] shadow-card"
+      className="mb-3.5 rounded-card border-[1.5px] border-primary-mid bg-surface py-4.5 px-5 shadow-card"
     >
       <div className="mb-3 flex items-start justify-between gap-3">
         <span className="font-mono text-label font-semibold uppercase tracking-[0.13em] text-primary-text">
@@ -184,7 +184,7 @@ export function WelcomeCard({
       </div>
 
       <div className="mt-4 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-[5px]">
+        <div className="flex items-center gap-1.25">
           {steps.map((s, i) => (
             <span
               key={s}

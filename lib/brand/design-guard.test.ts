@@ -80,6 +80,11 @@ describe("design guard", () => {
     expect(hits(/border border-brand-border bg-surface (p-[46] )?shadow-sm/)).toEqual([]);
   });
 
+  it("spaces with the Tailwind scale, not hand-written pixels (Playbook 2.1 spacing)", () => {
+    // p-4.5 is 18px: same pixels, one scale.
+    expect(hits(/(?<![\w-])-?(?:(?:p|m)[xytblr]?|gap(?:-[xy])?|space-[xy])-\[\d+px(?:_\d+px){0,2}\]/)).toEqual([]);
+  });
+
   it("has no text under 12px", () => {
     expect(hits(/text-\[(9|10|11)px\]/)).toEqual([]);
   });

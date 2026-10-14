@@ -58,7 +58,7 @@ function ConfigRow({ item }: { item: ConfigItem }) {
             {s.items[item.id]}
             {item.required && <span className="ml-1 font-normal text-muted">({s.required})</span>}
           </div>
-          <div className="mt-[2px] break-words tabular-nums text-label text-brand-gray">
+          <div className="mt-0.5 break-words tabular-nums text-label text-brand-gray">
             {s.variables} {item.vars.join(", ")}
           </div>
         </div>

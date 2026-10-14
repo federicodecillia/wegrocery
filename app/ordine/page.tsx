@@ -110,7 +110,7 @@ export default async function OrdinePage({
     <AppShell email={session.user.email} name={session.user.fullName} isAdmin={role === "admin"} memberId={memberId} personId={session.user.personId} layout="wide">
       {notice && (
         <div
-          className={`mb-4 rounded-card border p-[12px_14px] text-[14px] ${
+          className={`mb-4 rounded-card border py-3 px-3.5 text-[14px] ${
             notice.tone === "ok"
               ? "border-accent bg-accent-soft text-brand-near-black"
               : notice.tone === "error"

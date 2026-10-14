@@ -188,7 +188,7 @@ export function SociForm({
               name="paysOffline"
               type="checkbox"
               defaultChecked={member?.paysOffline ?? false}
-              className="mt-[2px] accent-primary"
+              className="mt-0.5 accent-primary"
             />
             <span>
               <span className="font-semibold">{t.admin.members.paysOfflineLabel}</span>

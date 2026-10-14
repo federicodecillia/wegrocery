@@ -31,10 +31,10 @@ export function NameEditor({ name }: { name: string }) {
 
   if (!editing) {
     return (
-      <div className="flex min-h-[52px] items-center gap-3 px-4 py-[12px]">
+      <div className="flex min-h-[52px] items-center gap-3 px-4 py-3">
         <div className="min-w-0 flex-1">
           <div className="text-[14px] font-bold text-brand-near-black">{t.profile.name}</div>
-          <div className="mt-[2px] break-words text-[12px] leading-snug text-brand-gray">{name}</div>
+          <div className="mt-0.5 break-words text-[12px] leading-snug text-brand-gray">{name}</div>
         </div>
         <Button
           type="button"
@@ -52,11 +52,11 @@ export function NameEditor({ name }: { name: string }) {
   }
 
   return (
-    <form onSubmit={save} className="px-4 py-[12px]">
+    <form onSubmit={save} className="px-4 py-3">
       <label htmlFor="profile-name" className="text-[14px] font-bold text-brand-near-black">
         {t.profile.name}
       </label>
-      <p className="mt-[2px] text-[12px] leading-snug text-brand-gray">{t.profile.nameHint}</p>
+      <p className="mt-0.5 text-[12px] leading-snug text-brand-gray">{t.profile.nameHint}</p>
       <input
         id="profile-name"
         value={value}

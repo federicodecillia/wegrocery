@@ -27,8 +27,8 @@ type Props = {
   balance: string | null;
 };
 
-const card = "mb-[14px] overflow-hidden rounded-card border border-brand-border bg-surface shadow-card";
-const heading = "px-4 pt-[14px] font-mono text-label font-bold uppercase tracking-widest text-brand-gray";
+const card = "mb-3.5 overflow-hidden rounded-card border border-brand-border bg-surface shadow-card";
+const heading = "px-4 pt-3.5 font-mono text-label font-bold uppercase tracking-widest text-brand-gray";
 
 export function FamilyPanel({ enabled, personId, isOwner, people, sent, received, balance }: Props) {
   const router = useRouter();
@@ -88,9 +88,9 @@ export function FamilyPanel({ enabled, personId, isOwner, people, sent, received
         <div className={card}>
           <div className={heading}>{t.family.received}</div>
           {received.map((i) => (
-            <div key={i.inviteId} className="border-b border-brand-border px-4 py-[14px] last:border-b-0">
+            <div key={i.inviteId} className="border-b border-brand-border px-4 py-3.5 last:border-b-0">
               <div className="text-[14px] font-bold text-brand-near-black">{t.family.invitedBy(i.accountName)}</div>
-              <div className="mt-[3px] text-[12px] text-brand-gray">{t.family.expires(i.expires)}</div>
+              <div className="mt-0.75 text-[12px] text-brand-gray">{t.family.expires(i.expires)}</div>
               <div className="mt-3 flex gap-2">
                 <Button size="sm" variant="accent" disabled={isPending} onClick={() => accept(i.inviteId, i.accountName)}>
                   {t.family.accept}
@@ -114,14 +114,14 @@ export function FamilyPanel({ enabled, personId, isOwner, people, sent, received
         {people.map((p) => (
           <div
             key={p.memberId}
-            className="flex items-center gap-3 border-b border-brand-border px-4 py-[14px] last:border-b-0"
+            className="flex items-center gap-3 border-b border-brand-border px-4 py-3.5 last:border-b-0"
           >
             <div className="min-w-0 flex-1">
               <div className="text-[14px] font-bold text-brand-near-black">
                 {p.fullName}
                 {p.memberId === personId && <span className="font-normal text-muted"> ({t.family.you})</span>}
               </div>
-              <div className="mt-[3px] break-all text-[12px] text-brand-gray">{p.email}</div>
+              <div className="mt-0.75 break-all text-[12px] text-brand-gray">{p.email}</div>
             </div>
             {isOwner && p.memberId !== personId && (
               <Button size="sm" variant="outline" disabled={isPending} onClick={() => remove(p.memberId, p.fullName)}>
@@ -130,7 +130,7 @@ export function FamilyPanel({ enabled, personId, isOwner, people, sent, received
             )}
           </div>
         ))}
-        {!inFamily && <p className="px-4 pb-[14px] text-[12px] text-brand-gray">{t.family.alone}</p>}
+        {!inFamily && <p className="px-4 pb-3.5 text-[12px] text-brand-gray">{t.family.alone}</p>}
       </div>
 
       {sent.length > 0 && (
@@ -139,11 +139,11 @@ export function FamilyPanel({ enabled, personId, isOwner, people, sent, received
           {sent.map((i) => (
             <div
               key={i.inviteId}
-              className="flex items-center gap-3 border-b border-brand-border px-4 py-[14px] last:border-b-0"
+              className="flex items-center gap-3 border-b border-brand-border px-4 py-3.5 last:border-b-0"
             >
               <div className="min-w-0 flex-1">
                 <div className="text-[14px] font-bold text-brand-near-black">{i.name}</div>
-                <div className="mt-[3px] break-all text-[12px] text-brand-gray">{i.email}</div>
+                <div className="mt-0.75 break-all text-[12px] text-brand-gray">{i.email}</div>
               </div>
               <Button
                 size="sm"
@@ -160,14 +160,14 @@ export function FamilyPanel({ enabled, personId, isOwner, people, sent, received
 
       {enabled && (
         <form
-          className={`${card} px-4 py-[14px]`}
+          className={`${card} px-4 py-3.5`}
           onSubmit={(e) => {
             e.preventDefault();
             if (email.trim()) run(() => inviteToFamily(email), () => setEmail(""));
           }}
         >
           <div className="text-[14px] font-bold text-brand-near-black">{t.family.inviteTitle}</div>
-          <p className="mt-[3px] text-[12px] leading-snug text-brand-gray">{t.family.inviteHint}</p>
+          <p className="mt-0.75 text-[12px] leading-snug text-brand-gray">{t.family.inviteHint}</p>
           <label className="mt-3 block text-[12px] font-bold text-brand-near-black" htmlFor="family-email">
             {t.family.emailLabel}
           </label>

@@ -9,7 +9,7 @@ export function GuideArticleCard({ article }: { article: GuideArticle }) {
   return (
     <article
       id={article.slug}
-      className="mb-[14px] scroll-mt-24 rounded-card border border-brand-border bg-surface p-[18px] shadow-card target:border-primary target:ring-2 target:ring-primary/20"
+      className="mb-3.5 scroll-mt-24 rounded-card border border-brand-border bg-surface p-4.5 shadow-card target:border-primary target:ring-2 target:ring-primary/20"
     >
       <h2 className="mb-2 text-[16px] font-extrabold tracking-[-0.01em] text-brand-near-black">{article.title}</h2>
       {article.intro && (
@@ -18,7 +18,7 @@ export function GuideArticleCard({ article }: { article: GuideArticle }) {
         </p>
       )}
       {article.steps && (
-        <ol className="mb-3 space-y-[10px]">
+        <ol className="mb-3 space-y-2.5">
           {article.steps.map((step, i) => (
             <li key={i} className="flex gap-3">
               <span
@@ -27,7 +27,7 @@ export function GuideArticleCard({ article }: { article: GuideArticle }) {
               >
                 {i + 1}
               </span>
-              <p className="mt-[2px] text-[14px] leading-[1.5] text-brand-near-black">
+              <p className="mt-0.5 text-[14px] leading-[1.5] text-brand-near-black">
                 <RichText text={step} />
               </p>
             </li>

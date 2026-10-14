@@ -532,7 +532,7 @@ export function OrderForm({
             {t.cycle.open}
           </Badge>
         </div>
-        <p className="tabular-nums text-label text-brand-gray mt-[3px]">
+        <p className="tabular-nums text-label text-brand-gray mt-0.75">
           {cycleTitle}
           {supplierName ? ` · ${supplierName}` : ""}
           {orderCloseAt ? ` · ${t.cycle.closes(formatDeadline(orderCloseAt))}` : ""}
@@ -543,7 +543,7 @@ export function OrderForm({
 
       {/* Unconfirmed edits found on arrival (order_drafts). */}
       {isEditing && showDraftBanner && (
-        <div className="mt-3 rounded-card border border-primary-mid bg-primary-soft p-[12px_14px]">
+        <div className="mt-3 rounded-card border border-primary-mid bg-primary-soft py-3 px-3.5">
           <p className="text-[14px] font-bold text-brand-near-black">{t.order.draftBannerTitle}</p>
           <p className="mt-1 text-[12px] leading-[1.45] text-brand-near-black">{t.order.draftBannerBody}</p>
           {resumedDraft !== null && resumedDraft.dropped > 0 && (
@@ -701,13 +701,13 @@ export function OrderForm({
               >
                 <div className="mr-3 flex min-w-0 flex-1 items-start gap-2">
                   {anyEmoji && (
-                    <span aria-hidden="true" className="mt-[1px] w-[22px] shrink-0 text-[22px] leading-none">
+                    <span aria-hidden="true" className="mt-0.25 w-[22px] shrink-0 text-[22px] leading-none">
                       {memberProductEmoji(p.emoji, p.name)}
                     </span>
                   )}
                   <div className="min-w-0 flex-1">
                     <div className="text-[14px] font-medium text-brand-near-black">{p.name}</div>
-                    <div className="mt-[2px] flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                    <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
                       {meta && <span className="text-[13px] text-brand-gray">{meta}</span>}
                       <span className="text-[14px] font-semibold tabular-nums text-primary-text">
                         {formatEur(parseFloat(p.unitPrice))}
@@ -719,7 +719,7 @@ export function OrderForm({
                       )}
                     </div>
                     {p.notes && (
-                      <p className="mt-[2px] text-[13px] leading-[1.4] text-muted">{p.notes}</p>
+                      <p className="mt-0.5 text-[13px] leading-[1.4] text-muted">{p.notes}</p>
                     )}
                   </div>
                 </div>

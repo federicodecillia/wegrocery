@@ -31,7 +31,7 @@ export function MovementRow({
   inset?: boolean;
 }) {
   const incoming = parseFloat(String(entry.amount)) >= 0;
-  const className = `flex w-full items-center justify-between gap-3 border-b border-brand-border py-[12px] text-left last:border-none ${
+  const className = `flex w-full items-center justify-between gap-3 border-b border-brand-border py-3 text-left last:border-none ${
     inset ? "px-4" : ""
   } ${selected ? "bg-primary-soft" : "hover:bg-tint/[0.02]"}`;
   const body = (
@@ -40,7 +40,7 @@ export function MovementRow({
         <MovementIcon kind={movementKind(entry)} incoming={incoming} />
         <span className="min-w-0">
           <span className="block truncate text-[14px] font-medium text-brand-near-black">{movementText(entry, t.history)}</span>
-          <span className="mt-[2px] block tabular-nums text-label text-muted">
+          <span className="mt-0.5 block tabular-nums text-label text-muted">
             {movementDay(entry.entryDate)}
             {entry.correctedAt && ` · ${t.ledger.correctedOn(formatDate(entry.correctedAt))}`}
           </span>

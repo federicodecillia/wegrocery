@@ -93,16 +93,16 @@ export default async function RicaricaPage({
           <HelpLink href="/guida/soldi#da-saldare" />
         </div>
         {result && (
-          <div className={`mb-4 rounded-card border p-[12px_14px] text-[14px] ${TONE_CLASSES[result.tone]}`}>
+          <div className={`mb-4 rounded-card border py-3 px-3.5 text-[14px] ${TONE_CLASSES[result.tone]}`}>
             {result.text}
             {result.pending && <PendingRefresh />}
           </div>
         )}
         <BalanceDueCard cents={cents} canPay={settings.onlineTopupAvailable} />
         {cents > -SETTLEMENT_MIN_DUE_CENTS && cents <= 0 && (
-          <div className="flex items-center justify-between rounded-card border border-brand-border bg-surface p-[18px] shadow-card">
+          <div className="flex items-center justify-between rounded-card border border-brand-border bg-surface p-4.5 shadow-card">
             <span className="text-[14px] text-brand-gray">{t.balance.nothingDue}</span>
-            <Link href="/ordine" className="rounded-full bg-primary px-4 py-[10px] text-[14px] font-bold text-on-primary">
+            <Link href="/ordine" className="rounded-full bg-primary px-4 py-2.5 text-[14px] font-bold text-on-primary">
               {t.balance.goToOrder}
             </Link>
           </div>
@@ -136,7 +136,7 @@ export default async function RicaricaPage({
       </div>
 
       {result && (
-        <div className={`mb-4 rounded-card border p-[12px_14px] text-[14px] ${TONE_CLASSES[result.tone]}`}>
+        <div className={`mb-4 rounded-card border py-3 px-3.5 text-[14px] ${TONE_CLASSES[result.tone]}`}>
           {result.text}
           {result.pending && <PendingRefresh />}
         </div>
@@ -145,7 +145,7 @@ export default async function RicaricaPage({
       <BalanceSummary label={t.topup.currentBalance} balance={balance} />
 
       {online && (
-        <section className="mb-4 rounded-card border border-brand-border bg-surface p-[18px] shadow-card">
+        <section className="mb-4 rounded-card border border-brand-border bg-surface p-4.5 shadow-card">
           <h2 className="mb-1 text-[16px] font-extrabold text-brand-near-black">{t.topup.onlineTitle}</h2>
           {ceilingCents === null ? (
             // Only a maximum can leave nothing for Stripe (topupCeilingCents).
@@ -172,7 +172,7 @@ export default async function RicaricaPage({
       {/* Bank details when that channel is on; the "ask the treasurer" line
           only when members have no channel at all. */}
       {(bank || !online) && (
-        <section className="mb-4 rounded-card border border-brand-border bg-surface p-[18px] shadow-card">
+        <section className="mb-4 rounded-card border border-brand-border bg-surface p-4.5 shadow-card">
           <h2 className="mb-1 text-[16px] font-extrabold text-brand-near-black">{t.topup.bankTitle}</h2>
           {bank ? (
             <>

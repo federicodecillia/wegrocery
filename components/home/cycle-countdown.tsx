@@ -52,7 +52,7 @@ export function CycleCountdown({ cycleId, title, orderCloseAt, orderOpenAt, pick
   );
 
   return (
-    <div className="mb-[14px] rounded-card border border-brand-border bg-surface p-[18px] shadow-card">
+    <div className="mb-3.5 rounded-card border border-brand-border bg-surface p-4.5 shadow-card">
       <div className="flex items-start justify-between gap-3">
         <h2 className="text-[17px] font-extrabold leading-snug tracking-[-0.02em] text-brand-near-black">{title}</h2>
         <Badge tone="accent" dot>
@@ -70,15 +70,15 @@ export function CycleCountdown({ cycleId, title, orderCloseAt, orderOpenAt, pick
       ))}
 
       {lastDay && (
-        <div className="mt-[14px]">
-          <div className="mb-[10px] flex gap-2" aria-hidden>
+        <div className="mt-3.5">
+          <div className="mb-2.5 flex gap-2" aria-hidden>
             {[
               { num: hrs, unit: t.cycle.hours },
               { num: mins, unit: t.cycle.minutes },
             ].map(({ num, unit }) => (
-              <div key={unit} className="min-w-[62px] rounded-lg bg-tint/[0.06] px-[14px] py-[9px] text-center">
+              <div key={unit} className="min-w-[62px] rounded-lg bg-tint/[0.06] px-3.5 py-2.25 text-center">
                 <div className="tabular-nums text-[22px] font-semibold leading-none text-brand-near-black">{num}</div>
-                <div className="mt-[3px] font-mono text-label uppercase tracking-[0.08em] text-muted">{unit}</div>
+                <div className="mt-0.75 font-mono text-label uppercase tracking-[0.08em] text-muted">{unit}</div>
               </div>
             ))}
           </div>

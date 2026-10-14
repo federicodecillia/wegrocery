@@ -40,7 +40,7 @@ export default async function NotifichePage() {
             >
               <button
                 type="submit"
-                className="min-h-11 whitespace-nowrap rounded-full border border-brand-border px-[13px] py-[5px] font-mono text-label font-bold uppercase tracking-widest text-brand-near-black"
+                className="min-h-11 whitespace-nowrap rounded-full border border-brand-border px-3.25 py-1.25 font-mono text-label font-bold uppercase tracking-widest text-brand-near-black"
               >
                 {t.notifications.markAllRead}
               </button>

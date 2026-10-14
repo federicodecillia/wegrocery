@@ -19,7 +19,7 @@ export async function SetupBanner({ revisit = false }: { revisit?: boolean }) {
     >
       <div className="min-w-0">
         <h2 className="text-[15px] font-bold text-brand-near-black">{s.title}</h2>
-        <p className="mt-[2px] text-[13px] text-brand-gray">{s.body}</p>
+        <p className="mt-0.5 text-[13px] text-brand-gray">{s.body}</p>
       </div>
       <Link
         href={setupHref("identity")}

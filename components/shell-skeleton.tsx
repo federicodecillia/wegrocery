@@ -21,7 +21,7 @@ export function ShellSkeleton() {
           </div>
         </div>
         <div className="flex-1 px-5 py-4 pb-[calc(var(--spacing-nav-h)+1rem)] lg:pb-4">
-          <div className="space-y-[14px]">
+          <div className="space-y-3.5">
             <div className="h-[140px] animate-pulse rounded-card bg-tint/[0.05]" />
             <div className="h-[100px] animate-pulse rounded-card bg-tint/[0.04]" />
             <div className="h-[80px] animate-pulse rounded-card bg-tint/[0.03]" />

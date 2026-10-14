@@ -11,7 +11,7 @@ export function BalanceSummary({ label, balance, className = "mb-4" }: { label: 
       } ${className}`}
     >
       <div
-        className={`mb-[6px] font-mono text-label uppercase tracking-[0.10em] ${
+        className={`mb-1.5 font-mono text-label uppercase tracking-[0.10em] ${
           negative ? "text-danger-text" : "text-primary-text"
         }`}
       >

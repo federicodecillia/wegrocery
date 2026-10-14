@@ -7,7 +7,7 @@ import type { ReactNode } from "react";
 export const profileCard =
   "overflow-hidden rounded-card border border-brand-border bg-surface shadow-card divide-y divide-brand-border";
 
-const rowClass = "flex min-h-[52px] items-center gap-3 px-4 py-[12px]";
+const rowClass = "flex min-h-[52px] items-center gap-3 px-4 py-3";
 
 type RowProps = {
   title: ReactNode;
@@ -26,7 +26,7 @@ function Body({ title, detail, badge, chevron }: Omit<RowProps, "href"> & { chev
           <span className="min-w-0 break-words">{title}</span>
           {badge && <span aria-hidden className="h-2 w-2 shrink-0 rounded-full bg-danger" />}
         </div>
-        {detail != null && <div className="mt-[2px] break-words text-[12px] leading-snug text-brand-gray">{detail}</div>}
+        {detail != null && <div className="mt-0.5 break-words text-[12px] leading-snug text-brand-gray">{detail}</div>}
       </div>
       {chevron && (
         <svg aria-hidden viewBox="0 0 24 24" className="h-4 w-4 shrink-0 text-muted" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -67,8 +67,8 @@ export function SettingsRow({ title, detail, href, badge }: RowProps) {
 
 export function SettingsSection({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section className="mb-[18px]">
-      <h2 className="mb-[6px] px-1 font-mono text-label font-bold uppercase tracking-widest text-brand-gray">{title}</h2>
+    <section className="mb-4.5">
+      <h2 className="mb-1.5 px-1 font-mono text-label font-bold uppercase tracking-widest text-brand-gray">{title}</h2>
       <div className={profileCard}>{children}</div>
     </section>
   );

@@ -88,7 +88,7 @@ export function GuideSearch({ index, synonyms, stopwords, topicTitles, children 
             {results.length > 0 ? t.guide.searchResults(results.length) : null}
           </p>
           {results.length === 0 ? (
-            <p className="rounded-card border border-brand-border bg-surface p-[18px] text-[14px] leading-[1.5] text-brand-gray">
+            <p className="rounded-card border border-brand-border bg-surface p-4.5 text-[14px] leading-[1.5] text-brand-gray">
               {t.guide.searchEmpty}
               <span className="mt-2 block text-[12px] text-muted">{t.guide.searchMissNote}</span>
             </p>
@@ -104,10 +104,10 @@ export function GuideSearch({ index, synonyms, stopwords, topicTitles, children 
                     // the hash: show the index first, so the card exists when
                     // the browser scrolls to it.
                     onClick={entry.href.startsWith("/guida#") ? () => flushSync(() => setQuery("")) : undefined}
-                    className="block px-4 py-[12px] hover:bg-brand-warm-white"
+                    className="block px-4 py-3 hover:bg-brand-warm-white"
                   >
                     <span className="block text-[14px] font-semibold text-brand-near-black">{entry.title}</span>
-                    <span className="mt-[2px] block text-[12px] text-brand-gray">{topicTitles[entry.topic]}</span>
+                    <span className="mt-0.5 block text-[12px] text-brand-gray">{topicTitles[entry.topic]}</span>
                   </a>
                 </li>
               ))}

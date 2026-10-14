@@ -74,7 +74,7 @@ export default async function GuidaPage() {
                   </span>
                   <span className="min-w-0">
                     <span className="block text-[15px] font-bold text-brand-near-black">{topic.title}</span>
-                    <span className="mt-[2px] block text-[12px] leading-snug text-brand-gray">{topic.summary}</span>
+                    <span className="mt-0.5 block text-[12px] leading-snug text-brand-gray">{topic.summary}</span>
                     <span className="mt-1 block tabular-nums text-label text-muted">{t.guide.topicCount(count)}</span>
                   </span>
                 </Link>
@@ -91,7 +91,7 @@ export default async function GuidaPage() {
         {/* Novità: teaser of the latest release, linking the changelog */}
         {latest && (
           <section className="mb-6 overflow-hidden rounded-card border border-primary-mid bg-primary-soft">
-            <div className="flex items-baseline justify-between gap-2 border-b border-primary-mid/40 px-[18px] py-3">
+            <div className="flex items-baseline justify-between gap-2 border-b border-primary-mid/40 px-4.5 py-3">
               <div>
                 <div className="font-mono text-label uppercase tracking-[0.13em] text-primary-text">
                   {t.guide.newsTitle} · v{latest.version}
@@ -102,7 +102,7 @@ export default async function GuidaPage() {
               </div>
               {latest.date && <span className="tabular-nums text-label text-brand-gray">{latest.date}</span>}
             </div>
-            <div className="space-y-3 px-[18px] py-4">
+            <div className="space-y-3 px-4.5 py-4">
               {latest.tagline && (
                 <p className="text-[12px] italic leading-[1.45] text-brand-gray">{latest.tagline}</p>
               )}
@@ -121,7 +121,7 @@ export default async function GuidaPage() {
                 </div>
               ))}
             </div>
-            <div className="border-t border-primary-mid/40 px-[18px] py-3 text-center">
+            <div className="border-t border-primary-mid/40 px-4.5 py-3 text-center">
               <Link
                 href="/changelog"
                 className="inline-flex items-center gap-1 text-[12px] font-bold text-primary-text hover:underline"
