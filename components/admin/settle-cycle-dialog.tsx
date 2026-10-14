@@ -68,7 +68,7 @@ export function SettleCycleButton({
 
   return (
     <>
-      <button onClick={load} className={`min-h-9 rounded-lg px-3 py-1 text-label font-bold ${STATUS_CLASSES[status]}`}>
+      <button onClick={load} className={`min-h-(--control-h) rounded-lg px-3 py-1 text-label font-bold ${STATUS_CLASSES[status]}`}>
         {status === "settled" && settledAt ? s.settledButton(formatDate(settledAt)) : s.status[status]}
       </button>
       <Sheet

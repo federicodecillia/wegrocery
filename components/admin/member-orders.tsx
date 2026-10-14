@@ -16,14 +16,14 @@ export async function MemberOrders({ memberId }: { memberId: string }) {
       <div className="flex flex-wrap items-center justify-between gap-2">
         <Link
           href={adminHref("soci")}
-          className="inline-flex min-h-10 items-center text-[13px] font-semibold text-primary-text"
+          className="inline-flex min-h-(--control-h) items-center text-[13px] font-semibold text-primary-text"
         >
           {t.admin.members.backToMembers}
         </Link>
         {member && (
           <Link
             href={adminHref("cassa", null, { member: memberId })}
-            className="inline-flex min-h-10 items-center rounded-xl border border-brand-border bg-surface px-3 text-[13px] font-semibold text-brand-near-black"
+            className="inline-flex min-h-(--control-h) items-center rounded-xl border border-brand-border bg-surface px-3 text-[13px] font-semibold text-brand-near-black"
           >
             {t.admin.members.seeMovements}
           </Link>

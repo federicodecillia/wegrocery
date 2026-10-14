@@ -118,7 +118,7 @@ function IdentitySection({ defaults, current, logoUrl, uploadedLogo }: Props) {
   }
 
   return (
-    <section className="rounded-xl border border-brand-border bg-surface p-4 shadow-sm">
+    <section className="rounded-xl border border-brand-border bg-surface p-4">
       <h3 className="text-[13px] font-bold text-brand-near-black">{s.title}</h3>
       <p className={hint}>{s.hint}</p>
 
@@ -310,7 +310,7 @@ function ContactsSection({ defaults, current }: Props) {
   const [membershipUrl, setMembership] = useState(optional(current.membershipUrl, defaults.membershipUrl));
 
   return (
-    <section className="rounded-xl border border-brand-border bg-surface p-4 shadow-sm">
+    <section className="rounded-xl border border-brand-border bg-surface p-4">
       <h3 className="text-[13px] font-bold text-brand-near-black">{s.contacts}</h3>
       <p className={hint}>{s.contactsHint}</p>
       <div className="mt-4 grid gap-3 md:grid-cols-2">

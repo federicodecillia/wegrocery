@@ -68,7 +68,7 @@ export function CategoryBar({
     setActive(category);
   }
 
-  const chip = "hit-44 inline-flex min-h-9 shrink-0 items-center whitespace-nowrap rounded-full border px-3 text-[13px] font-semibold";
+  const chip = "hit-44 inline-flex min-h-(--control-h) shrink-0 items-center whitespace-nowrap rounded-full border px-3 text-[13px] font-semibold";
 
   return (
     <nav

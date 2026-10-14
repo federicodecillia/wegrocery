@@ -32,7 +32,7 @@ const variants: Record<ButtonVariant, string> = {
 
 const sizes: Record<ButtonSize, string> = {
   md: "min-h-12 px-[22px] py-[14px] text-sm",
-  sm: "min-h-9 px-3 py-1.5 text-xs",
+  sm: "min-h-(--control-h) px-3 py-1.5 text-xs",
 };
 
 /** The button look, for a Link or an <a> that should read as a button. */

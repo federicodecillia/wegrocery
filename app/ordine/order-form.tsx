@@ -742,7 +742,7 @@ export function OrderForm({
                         if (qty === 1) plus?.focus();
                       }}
                       aria-label={t.order.lessNamed(p.name)}
-                      className="pressable hit-44 flex h-10 w-10 items-center justify-center rounded-full text-[18px] font-light text-brand-gray"
+                      className="pressable hit-44 flex size-(--control-h) items-center justify-center rounded-full text-[18px] font-light text-brand-gray"
                     >
                       −
                     </button>
@@ -762,7 +762,7 @@ export function OrderForm({
                     data-plus
                     onClick={() => changeQty(p.productId, 1)}
                     aria-label={qty === 0 ? t.order.addNamed(p.name) : t.order.moreNamed(p.name)}
-                    className={`pressable hit-44 flex h-10 w-10 items-center justify-center rounded-full text-[18px] font-light ${
+                    className={`pressable hit-44 flex size-(--control-h) items-center justify-center rounded-full text-[18px] font-light ${
                       qty === 0 ? "text-brand-gray" : "bg-primary text-on-primary"
                     }`}
                   >
@@ -809,7 +809,7 @@ export function OrderForm({
                           type="button"
                           onClick={() => changeQty(p.productId, -1)}
                           aria-label={t.order.lessNamed(p.name)}
-                          className="pressable flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-tint/[0.06] text-[16px] text-brand-gray hover:bg-tint/[0.1]"
+                          className="pressable flex size-(--control-h) shrink-0 items-center justify-center rounded-full bg-tint/[0.06] text-[16px] text-brand-gray hover:bg-tint/[0.1]"
                         >
                           −
                         </button>

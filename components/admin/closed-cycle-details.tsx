@@ -135,7 +135,7 @@ export function CycleOrdersByMember({
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder={c.searchMember}
-                  className="min-h-10 w-full rounded-xl border border-brand-border bg-surface px-3 text-[13px] placeholder:text-muted"
+                  className="min-h-(--control-h) w-full rounded-xl border border-brand-border bg-surface px-3 text-[13px] placeholder:text-muted"
                 />
               </>
             )}
@@ -458,7 +458,7 @@ function OrderLineEditForm({
           type="button"
           onClick={handleSave}
           disabled={isPending}
-          className="min-h-10 flex-1 rounded-md bg-primary px-3 py-1.5 text-[13px] font-bold text-on-primary disabled:opacity-60"
+          className="min-h-(--control-h) flex-1 rounded-md bg-primary px-3 py-1.5 text-[13px] font-bold text-on-primary disabled:opacity-60"
         >
           {isPending ? t.admin.common.saving : t.admin.common.save}
         </button>
@@ -466,7 +466,7 @@ function OrderLineEditForm({
           type="button"
           onClick={onCancel}
           disabled={isPending}
-          className="min-h-10 rounded-md border border-brand-border bg-surface px-3 py-1.5 text-[13px] font-bold text-brand-gray"
+          className="min-h-(--control-h) rounded-md border border-brand-border bg-surface px-3 py-1.5 text-[13px] font-bold text-brand-gray"
         >
           {t.admin.common.cancel}
         </button>

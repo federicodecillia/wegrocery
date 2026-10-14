@@ -24,6 +24,14 @@
   --on-inverse: #ffffff;
   --tint: #000000;
   --nav-h: 82px;
+  /* Height of a compact control: 40 px with a mouse, 44 px on touch. */
+  --control-h: 40px;
+}
+
+@media (pointer: coarse) {
+  :root {
+    --control-h: 44px;
+  }
 }
 
 @theme inline {

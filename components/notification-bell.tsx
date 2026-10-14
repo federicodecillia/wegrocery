@@ -15,7 +15,7 @@ export function NotificationBell({ unreadCount }: NotificationBellProps) {
     <Link
       href="/notifiche"
       aria-current={current ? "page" : undefined}
-      className={`hit-44 flex h-8 w-8 items-center justify-center rounded-full transition-colors ${
+      className={`hit-44 flex size-(--control-h) items-center justify-center rounded-full transition-colors ${
         current ? "bg-primary-soft text-primary-text" : "text-brand-gray hover:text-brand-near-black"
       }`}
       aria-label={unreadCount > 0 ? t.notifications.unreadCountLabel(unreadCount) : t.notifications.title}

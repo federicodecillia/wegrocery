@@ -95,12 +95,12 @@ export function SupplierCatalogList({
 
   return (
     <div className="space-y-5">
-      <section className="rounded-xl border border-brand-border bg-surface p-4 shadow-sm">
+      <section className="rounded-xl border border-brand-border bg-surface p-4">
         <h3 className="text-[14px] font-bold text-brand-near-black">{t.admin.products.uploadTitle}</h3>
         <p className="mb-3 text-label text-brand-gray">{t.admin.products.uploadSubtitle}</p>
         <GuidedImportButton />
         <details className="group mt-3">
-          <summary className="flex min-h-10 cursor-pointer list-none items-center gap-1 text-[13px] font-semibold text-brand-gray">
+          <summary className="flex min-h-(--control-h) cursor-pointer list-none items-center gap-1 text-[13px] font-semibold text-brand-gray">
             <span aria-hidden className="text-label transition-transform group-open:rotate-90">▶</span>
             {t.admin.products.otherFormats}
           </summary>
@@ -131,7 +131,7 @@ export function SupplierCatalogList({
         </details>
       </section>
 
-      <section className="rounded-xl border border-brand-border bg-surface p-4 shadow-sm">
+      <section className="rounded-xl border border-brand-border bg-surface p-4">
         <div className="mb-3 flex items-start justify-between gap-3">
           <div>
             <h3 className="text-[14px] font-bold text-brand-near-black">{t.admin.products.catalogSectionTitle}</h3>
@@ -218,7 +218,7 @@ export function SupplierCatalogList({
       {grouped.length > 0 ? (
         <div className="space-y-5">
           {grouped.map(([groupName, products]) => (
-            <section key={groupName} className="overflow-hidden rounded-xl border border-brand-border bg-surface shadow-sm">
+            <section key={groupName} className="overflow-hidden rounded-xl border border-brand-border bg-surface">
               <div className="flex items-center justify-between border-b border-brand-border bg-brand-warm-white px-4 py-3">
                 <h3 className="text-[13px] font-bold text-brand-near-black">{groupName}</h3>
                 <span className="tabular-nums text-label text-brand-gray">{products.length}</span>

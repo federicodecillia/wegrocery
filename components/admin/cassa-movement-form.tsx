@@ -181,7 +181,7 @@ function FoldableCard({
 }) {
   const panelId = useId();
   return (
-    <div className="rounded-xl border border-brand-border bg-surface p-4 shadow-sm">
+    <div className="rounded-xl border border-brand-border bg-surface p-4">
       <button
         type="button"
         onClick={onToggle}

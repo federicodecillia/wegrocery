@@ -62,7 +62,7 @@ export function CycleList({
       <Link
         href={adminHref("ciclo", null, { new: "1" })}
         onClick={onNavigate}
-        className="mb-3 flex min-h-10 items-center justify-center rounded-xl border border-dashed border-primary-mid bg-primary-soft text-[13px] font-bold text-primary-text"
+        className="mb-3 flex min-h-(--control-h) items-center justify-center rounded-xl border border-dashed border-primary-mid bg-primary-soft text-[13px] font-bold text-primary-text"
       >
         {w.newCycle}
       </Link>
@@ -78,7 +78,7 @@ export function CycleList({
           setShown(PAGE);
         }}
         placeholder={w.search}
-        className="min-h-10 w-full rounded-xl border border-brand-border bg-surface px-3 text-[13px] placeholder:text-muted"
+        className="min-h-(--control-h) w-full rounded-xl border border-brand-border bg-surface px-3 text-[13px] placeholder:text-muted"
       />
       <div role="group" aria-label={w.listTitle} className="mt-2 flex flex-wrap gap-1">
         {(Object.keys(w.filters) as CycleFilter[]).map((f) => (
@@ -90,7 +90,7 @@ export function CycleList({
               setFilter(f);
               setShown(PAGE);
             }}
-            className={`min-h-8 rounded-full px-2.5 text-label font-semibold ${
+            className={`min-h-(--control-h) rounded-full px-2.5 text-label font-semibold ${
               filter === f ? "bg-inverse text-on-inverse" : "bg-tint/[0.05] text-brand-gray"
             }`}
           >
@@ -109,7 +109,7 @@ export function CycleList({
         <button
           type="button"
           onClick={() => setShown((n) => n + PAGE)}
-          className="mt-2 min-h-10 w-full rounded-xl border border-brand-border text-[13px] font-semibold text-brand-near-black"
+          className="mt-2 min-h-(--control-h) w-full rounded-xl border border-brand-border text-[13px] font-semibold text-brand-near-black"
         >
           {w.showMore} ({list.length - shown})
         </button>

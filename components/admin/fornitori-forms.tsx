@@ -78,7 +78,7 @@ export function FornitoriForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="rounded-xl border border-brand-border bg-surface p-4 shadow-sm"
+      className="rounded-xl border border-brand-border bg-surface p-4"
     >
       <div className="mb-3 flex items-center justify-between">
         <p className="text-[13px] font-bold text-brand-near-black">
@@ -243,7 +243,7 @@ export function FornitoriList({
         <p className="mb-1 px-1 font-mono text-label uppercase tracking-wider text-muted">
           {label} ({list.length})
         </p>
-        <div className="overflow-hidden rounded-xl border border-brand-border bg-surface shadow-sm">
+        <div className="overflow-hidden rounded-xl border border-brand-border bg-surface">
           {list.map((s) => (
             <div key={s.supplierId} className="divide-y divide-brand-border">
               {editingId === s.supplierId ? (
@@ -284,14 +284,14 @@ export function FornitoriList({
                       <button
                         type="button"
                         onClick={() => setEditingId(s.supplierId)}
-                        className="min-h-9 rounded-full border border-brand-border px-3 py-1 text-label font-semibold text-brand-gray"
+                        className="min-h-(--control-h) rounded-full border border-brand-border px-3 py-1 text-label font-semibold text-brand-gray"
                       >
                         {t.admin.common.edit}
                       </button>
                       <button
                         type="button"
                         onClick={() => handleArchive(s)}
-                        className="min-h-9 rounded-full border border-brand-border px-3 py-1 text-label font-semibold text-brand-gray"
+                        className="min-h-(--control-h) rounded-full border border-brand-border px-3 py-1 text-label font-semibold text-brand-gray"
                       >
                         {s.active ? t.admin.common.archive : t.admin.common.restore}
                       </button>
@@ -323,7 +323,7 @@ export function FornitoriList({
                       {/* The catalogue is edited in one place: Catalogo → Prodotti. */}
                       <Link
                         href={adminHref("catalogo", "prodotti", { supplier: s.supplierId })}
-                        className="inline-flex min-h-10 items-center text-[13px] font-semibold text-primary-text"
+                        className="inline-flex min-h-(--control-h) items-center text-[13px] font-semibold text-primary-text"
                       >
                         {t.admin.suppliers.productsLink(productCounts[s.supplierId] ?? 0)}
                       </Link>

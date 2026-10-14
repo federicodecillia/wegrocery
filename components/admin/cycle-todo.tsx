@@ -123,12 +123,12 @@ export function CycleTodo({
       {(refunds > 0 || duplicates > 0) && (
         <p className="flex flex-wrap gap-x-4 gap-y-1 px-1 pt-2 text-[13px]">
           {refunds > 0 && (
-            <Link href={adminHref("cassa", null)} className="flex min-h-10 items-center font-semibold text-primary-text">
+            <Link href={adminHref("cassa", null)} className="flex min-h-(--control-h) items-center font-semibold text-primary-text">
               {d.refunds(refunds)} →
             </Link>
           )}
           {duplicates > 0 && (
-            <Link href={adminHref("soci", null)} className="flex min-h-10 items-center font-semibold text-primary-text">
+            <Link href={adminHref("soci", null)} className="flex min-h-(--control-h) items-center font-semibold text-primary-text">
               {d.duplicates(duplicates)} →
             </Link>
           )}

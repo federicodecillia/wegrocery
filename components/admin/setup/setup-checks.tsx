@@ -26,7 +26,7 @@ export function SetupChecks({ adminEmail, webhookUrl }: { adminEmail: string; we
   }
 
   return (
-    <section className="space-y-4 rounded-xl border border-brand-border bg-surface p-4 shadow-sm">
+    <section className="space-y-4 rounded-xl border border-brand-border bg-surface p-4">
       <p className="text-[13px] text-brand-gray">{s.intro}</p>
       <div>
         <button

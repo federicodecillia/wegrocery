@@ -7,7 +7,7 @@ import { t } from "@/lib/i18n";
 import { ADMIN_MORE, ADMIN_PRIMARY, ADMIN_VIEWS, adminHref, resolveAdminRoute } from "@/lib/admin/nav";
 
 function tabClass(active: boolean): string {
-  return `flex min-h-10 items-center justify-center rounded-full px-2 text-center text-[13px] font-semibold transition-colors ${
+  return `flex min-h-(--control-h) items-center justify-center rounded-full px-2 text-center text-[13px] font-semibold transition-colors ${
     active ? "bg-surface text-brand-near-black shadow-sm" : "text-brand-gray hover:text-brand-near-black"
   }`;
 }

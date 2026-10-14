@@ -188,7 +188,7 @@ export function CycleProductsView({ cycle, suppliers }: { cycle: SerializedCycle
           <p className="max-w-prose text-[13px] text-brand-gray">{t.admin.workspace.productsIntro}</p>
           <button
             onClick={() => setImporting(true)}
-            className="min-h-10 rounded-xl border border-primary/30 bg-primary-soft px-3 text-[13px] font-bold text-primary-text"
+            className="min-h-(--control-h) rounded-xl border border-primary/30 bg-primary-soft px-3 text-[13px] font-bold text-primary-text"
           >
             {t.admin.cycle.importListing}
           </button>
@@ -812,7 +812,7 @@ export function CreateCycleForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-xl border border-brand-border bg-surface p-4 shadow-sm">
+    <form onSubmit={handleSubmit} className="rounded-xl border border-brand-border bg-surface p-4">
       <p className="mb-3 text-[13px] font-bold text-brand-near-black">{t.admin.cycle.createTitle}</p>
       <div className="space-y-3">
         <div>
@@ -1034,7 +1034,7 @@ export function CycleProductPicker({
                     </div>
                     <button
                       onClick={() => handleRemove(p.productId)}
-                      className="ml-2 min-h-9 rounded-lg bg-danger-soft px-2 py-1 text-label font-bold text-danger-text hover:bg-danger-text/15"
+                      className="ml-2 min-h-(--control-h) rounded-lg bg-danger-soft px-2 py-1 text-label font-bold text-danger-text hover:bg-danger-text/15"
                     >
                       {t.admin.products.removeFromCycle}
                     </button>
@@ -1123,7 +1123,7 @@ export function EditCycleButton({
         onClick={() => setOpen(true)}
         className={
           className ??
-          "min-h-10 rounded-xl border border-brand-border bg-surface px-3 text-[13px] font-semibold text-brand-near-black hover:bg-tint/[0.03]"
+          "min-h-(--control-h) rounded-xl border border-brand-border bg-surface px-3 text-[13px] font-semibold text-brand-near-black hover:bg-tint/[0.03]"
         }
       >
         {isClosed ? t.admin.cycle.editClosedButton : t.admin.common.edit}
@@ -1147,7 +1147,7 @@ export function OrdersLink({ cycleId }: { cycleId: string }) {
   return (
     <Link
       href={adminHref("ciclo", "ordini", { cycle: cycleId })}
-      className="inline-flex min-h-10 items-center rounded-xl bg-accent/10 px-3 text-[13px] font-bold text-accent-text hover:bg-accent/20"
+      className="inline-flex min-h-(--control-h) items-center rounded-xl bg-accent/10 px-3 text-[13px] font-bold text-accent-text hover:bg-accent/20"
     >
       {t.admin.cycle.recapOrders}
     </Link>

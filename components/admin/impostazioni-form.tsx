@@ -9,7 +9,7 @@ import { formatDate, formatDateTime } from "@/lib/i18n/format";
 import { BANK_REFERENCE_MAX, fillBankReference } from "@/lib/payments/bank-reference";
 import type { PaymentSettingsInput, StripeKeyState } from "@/lib/payments/settings";
 
-const card = "rounded-xl border border-brand-border bg-surface p-4 shadow-sm";
+const card = "rounded-xl border border-brand-border bg-surface p-4";
 const inputCls =
   "w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black";
 const labelCls = "mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray";

@@ -30,7 +30,7 @@ export function GroupInfoCard({ initial }: { initial: string | null }) {
   }
 
   return (
-    <section className="rounded-xl border border-brand-border bg-surface p-4 shadow-sm">
+    <section className="rounded-xl border border-brand-border bg-surface p-4">
       <h3 className="text-[13px] font-bold text-brand-near-black">{s.title}</h3>
       <p className="mt-1 text-[12px] text-brand-gray">{s.hint}</p>
       <label htmlFor="group-info" className="sr-only">

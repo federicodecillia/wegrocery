@@ -96,7 +96,7 @@ export function CatalogProductForm({
   const labelCls = "mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray";
 
   return (
-    <form onSubmit={handleSubmit} className="mb-4 rounded-xl border border-brand-border bg-surface p-4 shadow-sm">
+    <form onSubmit={handleSubmit} className="mb-4 rounded-xl border border-brand-border bg-surface p-4">
       <div className="mb-4 flex items-center justify-between">
         <h4 className="text-[14px] font-bold text-brand-near-black">
           {product ? t.admin.products.editProduct : t.admin.products.newProduct}
@@ -312,7 +312,7 @@ export function CatalogCsvActions({ supplierId }: { supplierId: string }) {
   }
 
   const btnBase =
-    "flex min-h-10 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border px-3 py-2 text-[12px] font-bold shadow-sm transition disabled:opacity-60";
+    "flex min-h-(--control-h) flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border px-3 py-2 text-[12px] font-bold shadow-sm transition disabled:opacity-60";
   return (
     <div className="flex flex-wrap gap-2">
       <button
@@ -396,7 +396,7 @@ export function CatalogLoadForm({
   }
 
   return (
-    <div className="rounded-xl border border-brand-border bg-surface p-4 shadow-sm">
+    <div className="rounded-xl border border-brand-border bg-surface p-4">
       <div className="mb-3 flex items-center justify-between">
         <p className="text-[13px] font-bold text-brand-near-black">{t.admin.products.loadFromCatalogTitle}</p>
         <button

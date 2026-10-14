@@ -3,7 +3,7 @@ import { formatDate } from "@/lib/i18n/format";
 import { getStripeCredentials } from "@/lib/payments/stripe-credentials";
 import { StripeConnectForm } from "./stripe-connect-form";
 
-const card = "rounded-xl border border-brand-border bg-surface p-4 shadow-sm";
+const card = "rounded-xl border border-brand-border bg-surface p-4";
 
 function ModeBadge({ livemode }: { livemode: boolean }) {
   const s = t.admin.settings.stripeConnection;
