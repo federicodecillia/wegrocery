@@ -3,7 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/providers/toaster";
 import { ConfirmDialogProvider } from "@/components/ui/confirm-dialog";
-import { brand, deriveRoleVars, resolvePalette } from "@/lib/brand";
+import { brand, resolvePalette, roleVarsCss } from "@/lib/brand";
 import { getBrand } from "@/lib/brand/get-brand";
 import { APPLE_TOUCH_ICON, iconPath } from "@/lib/pwa/icons";
 
@@ -57,9 +57,9 @@ export default async function RootLayout({
     <html
       lang={brand.locale}
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-      style={deriveRoleVars(b.theme) as React.CSSProperties}
     >
       <head>
+        <style dangerouslySetInnerHTML={{ __html: roleVarsCss(b.theme) }} />
         <link rel="apple-touch-icon" sizes="180x180" href={iconPath(APPLE_TOUCH_ICON)} />
       </head>
       <body className="text-brand-near-black flex min-h-full flex-col">

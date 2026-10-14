@@ -1,4 +1,4 @@
-import { contrastRatio, darkenToContrast, mixHex, parseHex, pickOn } from "./contrast";
+import { contrastRatio, darkenToContrast, lightenToContrast, mixHex, parseHex, pickOn } from "./contrast";
 import type { BrandTheme } from "./types";
 
 export type Palette = Required<BrandTheme>;
@@ -69,6 +69,87 @@ export function deriveRoleVars(theme: BrandTheme): Record<string, string> {
     "--warm-wh": p.background,
     "--frame": p.frame,
   };
+}
+
+// The dark theme. The neutrals are the app's own and do not change with the
+// group: dark surfaces, light text, a lighter red for text. What the group
+// brings is its primary and accent, kept as fills (lightened only when they
+// would vanish on a dark surface) and turned into soft fills and readable text.
+export const DARK = {
+  background: "#161514",
+  frame: "#0e0d0d",
+  surface: "#201e1c",
+  foreground: "#f1eee9",
+  gray: "#b9b6b0",
+  grayLight: "#6a6762", // fills and disabled states only
+  dangerText: "#ff9a9a",
+  dangerSoft: "#3b1d1d",
+  muted: "#a29f99",
+  border: "rgba(255, 255, 255, 0.14)",
+} as const;
+
+const DARK_TINT_SOFT = 0.16; // how much of its colour a soft fill takes
+const FILL_MIN = 3; // a fill against the surface it sits on (WCAG 1.4.11)
+
+/**
+ * The same variables as deriveRoleVars for the dark theme, plus the neutrals
+ * that globals.css holds for the light one. Emitted under
+ * :root[data-theme="dark"] by app/layout.tsx.
+ */
+export function deriveDarkRoleVars(theme: BrandTheme): Record<string, string> {
+  const p = resolvePalette(theme);
+  const surfaces = [DARK.background, DARK.surface];
+  const primary = lightenToContrast(p.primary, surfaces, FILL_MIN);
+  const accent = lightenToContrast(p.accent, surfaces, FILL_MIN);
+  const primarySoft = mixHex(primary, DARK.surface, DARK_TINT_SOFT);
+  const accentSoft = mixHex(accent, DARK.surface, DARK_TINT_SOFT);
+  const textOn = (fill: string, soft: string) => [
+    ...surfaces,
+    soft,
+    mixHex(fill, DARK.background, TINT),
+    mixHex(fill, DARK.surface, TINT),
+  ];
+  return {
+    "--primary": primary,
+    "--primary-soft": primarySoft,
+    "--on-primary": pickOn(primary, DARK.surface),
+    "--primary-text": lightenToContrast(primary, textOn(primary, primarySoft), AA),
+    "--accent": accent,
+    "--accent-soft": accentSoft,
+    "--on-accent": pickOn(accent, DARK.surface),
+    "--accent-text": lightenToContrast(accent, textOn(accent, accentSoft), AA),
+    "--muted": lightenToContrast(DARK.muted, [...surfaces, primarySoft, accentSoft, DARK.dangerSoft], AA),
+    "--background": DARK.background,
+    "--warm-wh": DARK.background,
+    "--frame": DARK.frame,
+    "--surface": DARK.surface,
+    "--foreground": DARK.foreground,
+    "--near-blk": DARK.foreground,
+    "--gray": DARK.gray,
+    "--gray-l": DARK.grayLight,
+    "--border": DARK.border,
+    "--danger-text": DARK.dangerText,
+    "--danger-soft": DARK.dangerSoft,
+    "--inverse": DARK.foreground,
+    "--on-inverse": DARK.surface,
+    "--tint": "#ffffff",
+  };
+}
+
+const SAFE_VALUE = /^[#a-z0-9(),.% -]+$/i;
+
+/**
+ * The stylesheet that carries the brand's colours: light on :root, dark on
+ * :root[data-theme="dark"]. Every value is a hex or rgba computed here from
+ * validated hex colours; anything else is dropped rather than written.
+ */
+export function roleVarsCss(theme: BrandTheme): string {
+  const block = (vars: Record<string, string>) =>
+    Object.entries(vars)
+      .filter(([, v]) => SAFE_VALUE.test(v))
+      .map(([k, v]) => `${k}:${v}`)
+      .join(";");
+  return `:root{${block(deriveRoleVars(theme))}}:root[data-theme="dark"]{color-scheme:dark;${block(deriveDarkRoleVars(theme))}}`;
 }
 
 /** Human-readable problems with the brand palette; empty when it is fine. */

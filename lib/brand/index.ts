@@ -11,6 +11,6 @@ if (typeof window === "undefined") {
   for (const w of brandContrastWarnings(brand.theme)) console.warn(`[brand] ${w}`);
 }
 
-export { brandContrastWarnings, deriveRoleVars, resolvePalette } from "./roles";
+export { brandContrastWarnings, deriveDarkRoleVars, deriveRoleVars, resolvePalette, roleVarsCss } from "./roles";
 
 export type { BrandConfig, BrandTheme } from "./types";
