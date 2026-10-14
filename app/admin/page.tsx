@@ -45,7 +45,7 @@ function TabSkeleton() {
       {[1, 2, 3].map((i) => (
         <div
           key={i}
-          className="h-24 animate-pulse rounded-xl bg-black/[0.05]"
+          className="h-24 animate-pulse rounded-xl bg-tint/[0.05]"
           style={{ opacity: 1 - i * 0.2 }}
         />
       ))}

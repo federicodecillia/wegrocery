@@ -13,8 +13,8 @@ export const DEFAULT_PALETTE: Palette = {
 };
 
 const FOREGROUND = "#2d2b29"; // --foreground in globals.css
-const SURFACE = "#ffffff"; // cards are bg-white
-const DANGER_SOFT = "#feecec"; // --red-l in globals.css
+const SURFACE = "#ffffff"; // cards are bg-surface
+const DANGER_SOFT = "#feecec"; // --danger-soft in globals.css
 const MUTED = "#6b6b6b"; // secondary text, darkened further if a soft fill needs it
 const AA = 4.5;
 const TINT = 0.2; // strongest tint of a fill used behind its own text (bg-primary/20)

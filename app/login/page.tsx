@@ -44,7 +44,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-[480px] flex-col items-center justify-center p-6">
-      <div className="w-full overflow-hidden rounded-card border border-brand-border bg-white shadow-card">
+      <div className="w-full overflow-hidden rounded-card border border-brand-border bg-surface shadow-card">
         {/* The demo notice is the card's top edge, as wide as the card. */}
         <DemoBanner />
         <div className="p-6">
@@ -56,7 +56,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           {isDemo ? t.login.demoMessage : t.login.continueMessage}
         </p>
         {deniedMessage ? (
-          <div role="alert" className="mt-3 space-y-1 rounded-xl border border-brand-red/30 bg-brand-red-light p-3 text-sm text-brand-red">
+          <div role="alert" className="mt-3 space-y-1 rounded-xl border border-danger-text/30 bg-danger-soft p-3 text-sm text-danger-text">
             <p>{deniedMessage}</p>
             {error === "MembershipInactive" && brand.membershipUrl ? (
               <p>

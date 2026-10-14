@@ -96,7 +96,7 @@ export function CategoryBar({
                 onClick={(e) => jump(c, e.timeStamp)}
                 aria-current={active === c ? "true" : undefined}
                 className={`${chip} ${
-                  active === c ? "border-brand-near-black bg-brand-near-black text-white" : "border-brand-border bg-white text-brand-gray"
+                  active === c ? "border-inverse bg-inverse text-on-inverse" : "border-brand-border bg-surface text-brand-gray"
                 }`}
               >
                 {labelOf(c)}

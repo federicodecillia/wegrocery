@@ -53,7 +53,7 @@ export default async function GuideTopicPage({ params }: { params: Promise<{ top
             <Link
               key={x.id}
               href={`/guida/${x.id}`}
-              className="inline-flex items-center gap-1 rounded-full border border-brand-border bg-white px-3 py-[6px] text-[12px] font-bold text-brand-near-black hover:border-primary-mid"
+              className="inline-flex items-center gap-1 rounded-full border border-brand-border bg-surface px-3 py-[6px] text-[12px] font-bold text-brand-near-black hover:border-primary-mid"
             >
               <UiIcon name={topicIcon(x.id)} className="h-4 w-4 text-primary-text" />
               {x.title}

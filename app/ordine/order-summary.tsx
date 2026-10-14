@@ -47,7 +47,7 @@ export function OrderSummary({
 }: Props) {
   return (
     <>
-      <div className="mt-4 overflow-hidden rounded-card border border-accent/25 bg-white shadow-card">
+      <div className="mt-4 overflow-hidden rounded-card border border-accent/25 bg-surface shadow-card">
         <header className="flex items-center gap-3 border-b border-brand-border bg-accent-soft px-4 py-3.5">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent text-on-accent">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -114,7 +114,7 @@ export function OrderSummary({
                 </div>
                 <div
                   className={`mt-[2px] font-mono text-[13px] font-bold ${
-                    balanceAfter < 0 ? "text-brand-red" : "text-accent-text"
+                    balanceAfter < 0 ? "text-danger-text" : "text-accent-text"
                   }`}
                 >
                   {formatSignedMoney(balanceAfter)}
@@ -143,7 +143,7 @@ export function OrderSummary({
           type="button"
           onClick={onCancel}
           disabled={isPending}
-          className="w-full rounded-full py-2.5 text-[12px] font-semibold text-brand-red transition-opacity hover:bg-brand-red-light disabled:opacity-40"
+          className="w-full rounded-full py-2.5 text-[12px] font-semibold text-danger-text transition-opacity hover:bg-danger-soft disabled:opacity-40"
         >
           {t.order.cancelOrder}
         </button>

@@ -71,7 +71,7 @@ export function Sheet({ open, onRequestClose, title, subtitle, children, footer,
         >
           {/* The drag zone: handle and header. */}
           <div {...swipeHandlers} className={cn("shrink-0", swipeToClose && "touch-none sm:touch-auto")}>
-            <div aria-hidden className="mx-auto mt-2 h-1 w-10 shrink-0 rounded-full bg-black/15 sm:hidden" />
+            <div aria-hidden className="mx-auto mt-2 h-1 w-10 shrink-0 rounded-full bg-tint/15 sm:hidden" />
             <header className="flex items-start justify-between gap-3 border-b border-brand-border px-5 pt-2 pb-4 sm:pt-4">
               <div className="min-w-0">
                 <Dialog.Title className="text-[16px] font-bold text-brand-near-black">{title}</Dialog.Title>
@@ -83,7 +83,7 @@ export function Sheet({ open, onRequestClose, title, subtitle, children, footer,
                 type="button"
                 onClick={onRequestClose}
                 aria-label={t.common.close}
-                className="-mr-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-brand-gray hover:bg-black/5"
+                className="-mr-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-brand-gray hover:bg-tint/5"
               >
                 <span aria-hidden>✕</span>
               </button>
@@ -91,7 +91,7 @@ export function Sheet({ open, onRequestClose, title, subtitle, children, footer,
           </div>
           <div className="flex-1 overflow-y-auto px-4 py-4">{children}</div>
           {footer && (
-            <footer className="border-t border-brand-border bg-white px-5 pt-3.5 pb-[calc(0.875rem+env(safe-area-inset-bottom))]">
+            <footer className="border-t border-brand-border bg-surface px-5 pt-3.5 pb-[calc(0.875rem+env(safe-area-inset-bottom))]">
               {footer}
             </footer>
           )}

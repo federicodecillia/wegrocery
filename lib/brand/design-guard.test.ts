@@ -47,6 +47,16 @@ describe("design guard", () => {
     expect(hits(/(?<![\w-])text-(primary|accent)(?![-\w])/)).toEqual([]);
   });
 
+  it("paints surfaces and fills with tokens, never white or black (the dark theme swaps them)", () => {
+    // bg-surface, bg-inverse + text-on-inverse, bg-danger + text-on-danger,
+    // bg-tint for faint fills. Overlays behind a sheet stay bg-black/30..40.
+    expect(hits(/(?<![\w-])(?:[a-z-]+:)*bg-white(?![\w-])/)).toEqual([]);
+    expect(hits(/(?<![\w-])(?:[a-z-]+:)*text-white(?![\w-])/)).toEqual([]);
+    expect(hits(/(?<![\w-])(?:[a-z-]+:)*bg-brand-near-black(?![\w-])/)).toEqual([]);
+    expect(hits(/brand-red/)).toEqual([]);
+    expect(hits(/bg-black\/(\[0\.\d+\]|[0-9]|1[0-5])(?![\w-])/)).toEqual([]);
+  });
+
   it("has no text under 12px", () => {
     expect(hits(/text-\[(9|10|11)px\]/)).toEqual([]);
   });
@@ -63,7 +73,7 @@ describe("design guard", () => {
 
   it("keeps the fixed colours AA with white text", () => {
     const css = readFileSync("app/globals.css", "utf8");
-    for (const name of ["red", "warning", "near-blk"]) {
+    for (const name of ["danger", "warning", "inverse"]) {
       const hex = css.match(new RegExp(`--${name}: (#[0-9a-f]{6})`, "i"))?.[1];
       expect(hex, name).toBeDefined();
       expect(contrastRatio(hex!, "#ffffff"), name).toBeGreaterThanOrEqual(4.5);

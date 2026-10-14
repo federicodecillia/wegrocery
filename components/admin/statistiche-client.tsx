@@ -152,14 +152,14 @@ function MultiSelect({
         className={`flex w-full items-center justify-between gap-2 rounded-xl border px-3 py-2 text-left text-[12px] font-semibold ${
           selected.length > 0
             ? "border-primary/40 bg-primary-soft text-brand-near-black"
-            : "border-brand-border bg-white text-brand-near-black"
+            : "border-brand-border bg-surface text-brand-near-black"
         }`}
       >
         <span className="truncate">{summary}</span>
         <span className="shrink-0 text-muted">{open ? "▲" : "▼"}</span>
       </button>
       {open && (
-        <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-[280px] overflow-hidden rounded-xl border border-brand-border bg-white shadow-lg">
+        <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-[280px] overflow-hidden rounded-xl border border-brand-border bg-surface shadow-lg">
           <div className="border-b border-brand-border p-2">
             <input
               type="search"

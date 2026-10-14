@@ -8,7 +8,7 @@ export async function GuideContact() {
   const brand = await getBrand();
   const sameAddress = brand.techEmail.trim().toLowerCase() === brand.supportEmail.trim().toLowerCase();
   return (
-    <div className="mt-6 rounded-card border border-brand-border bg-white p-6 text-center shadow-card">
+    <div className="mt-6 rounded-card border border-brand-border bg-surface p-6 text-center shadow-card">
       <div className="mb-[10px] flex justify-center">
         <EmptyIcon name="mail" />
       </div>
@@ -27,7 +27,7 @@ export async function GuideContact() {
         {sameAddress ? null : (
           <a
             href={`mailto:${brand.techEmail}`}
-            className="inline-flex min-h-11 flex-col items-center justify-center rounded-full border border-brand-border bg-white px-[22px] py-[10px] text-brand-near-black no-underline transition-transform active:scale-95"
+            className="inline-flex min-h-11 flex-col items-center justify-center rounded-full border border-brand-border bg-surface px-[22px] py-[10px] text-brand-near-black no-underline transition-transform active:scale-95"
           >
             <span className="text-sm font-bold">{t.guide.contactTech}</span>
             <span className="text-label text-brand-gray">{brand.techEmail}</span>

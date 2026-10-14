@@ -33,7 +33,7 @@ export function MovementRow({
   const incoming = parseFloat(String(entry.amount)) >= 0;
   const className = `flex w-full items-center justify-between gap-3 border-b border-brand-border py-[12px] text-left last:border-none ${
     inset ? "px-4" : ""
-  } ${selected ? "bg-primary-soft" : "hover:bg-black/[0.02]"}`;
+  } ${selected ? "bg-primary-soft" : "hover:bg-tint/[0.02]"}`;
   const body = (
     <>
       <span className="flex min-w-0 flex-1 items-center gap-3">
@@ -46,7 +46,7 @@ export function MovementRow({
           </span>
         </span>
       </span>
-      <span className={`shrink-0 whitespace-nowrap font-mono text-[14px] font-bold tabular-nums ${incoming ? "text-accent-text" : "text-brand-red"}`}>
+      <span className={`shrink-0 whitespace-nowrap font-mono text-[14px] font-bold tabular-nums ${incoming ? "text-accent-text" : "text-danger-text"}`}>
         {formatSignedMoney(entry.amount)}
       </span>
     </>

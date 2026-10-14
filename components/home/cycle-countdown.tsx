@@ -52,14 +52,14 @@ export function CycleCountdown({ cycleId, title, orderCloseAt, orderOpenAt, pick
   );
 
   return (
-    <div className="mb-[14px] rounded-card border border-brand-border bg-white p-[18px] shadow-card">
+    <div className="mb-[14px] rounded-card border border-brand-border bg-surface p-[18px] shadow-card">
       <div className="flex items-start justify-between gap-3">
         <h2 className="text-[17px] font-extrabold leading-snug tracking-[-0.02em] text-brand-near-black">{title}</h2>
         <Badge tone="accent" dot>
           {t.cycle.open}
         </Badge>
       </div>
-      <p className={`mt-1 text-[14px] ${lastDay ? "font-semibold text-brand-red" : "text-brand-near-black"}`}>
+      <p className={`mt-1 text-[14px] ${lastDay ? "font-semibold text-danger-text" : "text-brand-near-black"}`}>
         {now ? `${closesIn(orderCloseAt, now)} · ` : `${t.cycle.closesLabel} `}
         <span className="whitespace-nowrap">{formatDeadline(orderCloseAt)}</span>
       </p>
@@ -76,14 +76,14 @@ export function CycleCountdown({ cycleId, title, orderCloseAt, orderOpenAt, pick
               { num: hrs, unit: t.cycle.hours },
               { num: mins, unit: t.cycle.minutes },
             ].map(({ num, unit }) => (
-              <div key={unit} className="min-w-[62px] rounded-lg bg-black/[0.06] px-[14px] py-[9px] text-center">
+              <div key={unit} className="min-w-[62px] rounded-lg bg-tint/[0.06] px-[14px] py-[9px] text-center">
                 <div className="font-mono text-[22px] font-semibold leading-none text-brand-near-black">{num}</div>
                 <div className="mt-[3px] font-mono text-label uppercase tracking-[0.08em] text-muted">{unit}</div>
               </div>
             ))}
           </div>
-          <div className="h-[3px] overflow-hidden rounded-full bg-black/[0.07]">
-            <div className="h-full rounded-full bg-brand-red transition-[width] duration-300" style={{ width: `${pct}%` }} />
+          <div className="h-[3px] overflow-hidden rounded-full bg-tint/[0.07]">
+            <div className="h-full rounded-full bg-danger transition-[width] duration-300" style={{ width: `${pct}%` }} />
           </div>
         </div>
       )}

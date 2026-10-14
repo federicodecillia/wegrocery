@@ -184,7 +184,7 @@ export function ImportListingWizard({ open, onClose, cycleId, cycleTitle }: Prop
           <div className="text-label text-brand-gray">
             {step === 1 && filename && t.admin.importWizard.fileInfo(filename)}
             {step === 2 && !requiredMapped && (
-              <span className="text-brand-red">{t.admin.importWizard.requiredMissingWarning}</span>
+              <span className="text-danger-text">{t.admin.importWizard.requiredMissingWarning}</span>
             )}
             {step === 3 && (
               <>{t.admin.importWizard.selectedCount(selectedIndexes.size, sheet?.rows.length ?? 0)}</>
@@ -298,7 +298,7 @@ function Step1Upload({
 }) {
   return (
     <div className="space-y-5">
-      <label className="block rounded-xl border-2 border-dashed border-brand-border bg-white p-6 text-center">
+      <label className="block rounded-xl border-2 border-dashed border-brand-border bg-surface p-6 text-center">
         <input
           type="file"
           accept=".xlsx,.xls,.csv"
@@ -329,7 +329,7 @@ function Step1Upload({
                 className={`rounded-full border px-3 py-1 text-[12px] ${
                   i === sheetIdx
                     ? "border-primary bg-primary-soft text-brand-near-black"
-                    : "border-brand-border bg-white text-brand-gray"
+                    : "border-brand-border bg-surface text-brand-gray"
                 }`}
               >
                 {s.sheetName} ({s.rows.length})
@@ -350,7 +350,7 @@ function Step1Upload({
               className={`flex-1 rounded-lg border px-3 py-2 text-[12px] ${
                 supplierMode === "existing"
                   ? "border-primary bg-primary-soft"
-                  : "border-brand-border bg-white"
+                  : "border-brand-border bg-surface"
               }`}
             >
               {t.admin.importWizard.supplierExisting}
@@ -360,7 +360,7 @@ function Step1Upload({
               className={`flex-1 rounded-lg border px-3 py-2 text-[12px] ${
                 supplierMode === "new"
                   ? "border-primary bg-primary-soft"
-                  : "border-brand-border bg-white"
+                  : "border-brand-border bg-surface"
               }`}
             >
               {t.admin.importWizard.supplierNew}
@@ -370,7 +370,7 @@ function Step1Upload({
             <select
               value={existingSupplierId}
               onChange={(e) => setExistingSupplierId(e.target.value)}
-              className="mt-2 w-full rounded-lg border border-brand-border bg-white px-3 py-2 text-[13px]"
+              className="mt-2 w-full rounded-lg border border-brand-border bg-surface px-3 py-2 text-[13px]"
             >
               <option value="">{t.admin.importWizard.supplierSelectPlaceholder}</option>
               {inspection.suppliers.map((s) => (
@@ -385,7 +385,7 @@ function Step1Upload({
               value={newSupplierName}
               onChange={(e) => setNewSupplierName(e.target.value)}
               placeholder={t.admin.importWizard.supplierNewPlaceholder}
-              className="mt-2 w-full rounded-lg border border-brand-border bg-white px-3 py-2 text-[13px]"
+              className="mt-2 w-full rounded-lg border border-brand-border bg-surface px-3 py-2 text-[13px]"
             />
           )}
           {inspection.inspection.supplierHints.length > 0 && supplierMode === "existing" && (
@@ -434,10 +434,10 @@ function Step2Mapping({
           const required = REQUIRED_FIELDS.includes(field);
           const value = mapping[field];
           return (
-            <label key={field} className="flex items-center gap-2 rounded-lg border border-brand-border bg-white px-3 py-2 text-[12px]">
+            <label key={field} className="flex items-center gap-2 rounded-lg border border-brand-border bg-surface px-3 py-2 text-[12px]">
               <span className="w-24 shrink-0 font-semibold text-brand-near-black">
                 {TARGET_LABEL[field]}
-                {required && <span className="text-brand-red"> *</span>}
+                {required && <span className="text-danger-text"> *</span>}
               </span>
               <select
                 value={value === undefined ? "" : String(value)}
@@ -448,7 +448,7 @@ function Step2Mapping({
                   else next[field] = Number(v);
                   setMapping(next);
                 }}
-                className="flex-1 rounded border border-brand-border bg-white px-2 py-1 text-[12px]"
+                className="flex-1 rounded border border-brand-border bg-surface px-2 py-1 text-[12px]"
               >
                 <option value="">(ignora)</option>
                 {sheet.columns.map((c, i) => (
@@ -551,13 +551,13 @@ function Step3Review({
           </label>
         )}
         {unmatchedEmojiCount > 0 && (
-          <span className="ml-auto text-brand-red">
+          <span className="ml-auto text-danger-text">
             {t.admin.importWizard.unmatchedEmojis(unmatchedEmojiCount)}
           </span>
         )}
       </div>
 
-      <div className="overflow-x-auto rounded-lg border border-brand-border bg-white">
+      <div className="overflow-x-auto rounded-lg border border-brand-border bg-surface">
         <table className="w-full text-[12px]">
           <thead className="border-b border-brand-border bg-brand-warm-white">
             <tr>
@@ -605,10 +605,10 @@ function Step3Review({
                       onChange={(v) => setEmojiOverrides({ ...emojiOverrides, [i]: v })}
                     />
                     {!override && !auto && (
-                      <div className="text-label text-brand-red">{t.admin.importWizard.emojiNotAuto}</div>
+                      <div className="text-label text-danger-text">{t.admin.importWizard.emojiNotAuto}</div>
                     )}
                   </td>
-                  <td className="p-2 align-middle font-semibold">{name || <em className="text-brand-red">{t.admin.importWizard.emptyName}</em>}</td>
+                  <td className="p-2 align-middle font-semibold">{name || <em className="text-danger-text">{t.admin.importWizard.emptyName}</em>}</td>
                   <td className="p-2 align-middle text-brand-gray">{cell(i, "variant")}</td>
                   <td className="p-2 align-middle text-brand-gray">
                     {guessedCategory ? (
@@ -658,7 +658,7 @@ function PreviewTable({
   if (!columns.length) return <div className="text-label text-brand-gray">{t.admin.importWizard.noColumnsDetected}</div>;
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-brand-border bg-white">
+    <div className="overflow-x-auto rounded-lg border border-brand-border bg-surface">
       <table className="w-full text-label">
         <thead className="border-b border-brand-border bg-brand-warm-white">
           <tr>

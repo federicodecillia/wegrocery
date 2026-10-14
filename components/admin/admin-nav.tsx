@@ -8,7 +8,7 @@ import { ADMIN_MORE, ADMIN_PRIMARY, ADMIN_VIEWS, adminHref, resolveAdminRoute } 
 
 function tabClass(active: boolean): string {
   return `flex min-h-10 items-center justify-center rounded-full px-2 text-center text-[13px] font-semibold transition-colors ${
-    active ? "bg-white text-brand-near-black shadow-sm" : "text-brand-gray hover:text-brand-near-black"
+    active ? "bg-surface text-brand-near-black shadow-sm" : "text-brand-gray hover:text-brand-near-black"
   }`;
 }
 
@@ -53,7 +53,7 @@ export function AdminNav() {
 
   return (
     <div className="mb-4 space-y-2">
-      <nav aria-label={t.admin.nav.sections} className="flex gap-1 rounded-full bg-black/[0.05] p-1">
+      <nav aria-label={t.admin.nav.sections} className="flex gap-1 rounded-full bg-tint/[0.05] p-1">
         {ADMIN_PRIMARY.map((s) => (
           <Link
             key={s.id}
@@ -83,14 +83,14 @@ export function AdminNav() {
             <span aria-hidden className="text-[16px] leading-none">⋯</span>
             {inMore && <span className="sr-only">{ADMIN_MORE.find((s) => s.id === section)?.label}</span>}
           </summary>
-          <ul className="absolute right-0 z-30 mt-2 min-w-[180px] overflow-hidden rounded-xl border border-brand-border bg-white py-1 shadow-md">
+          <ul className="absolute right-0 z-30 mt-2 min-w-[180px] overflow-hidden rounded-xl border border-brand-border bg-surface py-1 shadow-md">
             {ADMIN_MORE.map((s) => (
               <li key={s.id}>
                 <Link
                   href={adminHref(s.id)}
                   aria-current={section === s.id ? "page" : undefined}
                   className={`flex min-h-11 items-center px-4 text-[14px] ${
-                    section === s.id ? "font-bold text-primary-text" : "text-brand-near-black hover:bg-black/[0.03]"
+                    section === s.id ? "font-bold text-primary-text" : "text-brand-near-black hover:bg-tint/[0.03]"
                   }`}
                 >
                   {s.label}

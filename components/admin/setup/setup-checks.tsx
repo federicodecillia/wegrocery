@@ -26,14 +26,14 @@ export function SetupChecks({ adminEmail, webhookUrl }: { adminEmail: string; we
   }
 
   return (
-    <section className="space-y-4 rounded-xl border border-brand-border bg-white p-4 shadow-sm">
+    <section className="space-y-4 rounded-xl border border-brand-border bg-surface p-4 shadow-sm">
       <p className="text-[13px] text-brand-gray">{s.intro}</p>
       <div>
         <button
           type="button"
           onClick={sendTest}
           disabled={sending}
-          className="min-h-11 rounded-xl bg-brand-near-black px-4 py-2 text-[13px] font-bold text-white disabled:opacity-60"
+          className="min-h-11 rounded-xl bg-inverse px-4 py-2 text-[13px] font-bold text-on-inverse disabled:opacity-60"
         >
           {sending ? t.admin.common.sending : s.testEmail}
         </button>
@@ -72,7 +72,7 @@ function StripeOutcome({ result, webhookUrl }: { result: StripeSetupCheck; webho
                 ? s.stripeNoBaseUrl
                 : s.stripeUnverifiable;
   return (
-    <div role="status" className={`mt-2 rounded-lg p-3 text-[13px] ${good ? "bg-accent-soft text-accent-text" : "bg-brand-red-light text-brand-red"}`}>
+    <div role="status" className={`mt-2 rounded-lg p-3 text-[13px] ${good ? "bg-accent-soft text-accent-text" : "bg-danger-soft text-danger-text"}`}>
       <p>{text}</p>
       {result.status === "missingEvents" && (
         <ul className="mt-1 list-disc pl-4 font-mono text-label">

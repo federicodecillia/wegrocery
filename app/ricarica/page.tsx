@@ -62,7 +62,7 @@ async function resultFor(memberId: string, esito?: string, sessionId?: string): 
 const TONE_CLASSES = {
   ok: "border-accent bg-accent-soft text-brand-near-black",
   info: "border-primary-mid bg-primary-soft text-brand-near-black",
-  error: "border-brand-red/30 bg-brand-red-light text-brand-red",
+  error: "border-danger-text/30 bg-danger-soft text-danger-text",
 } as const;
 
 export default async function RicaricaPage({
@@ -100,7 +100,7 @@ export default async function RicaricaPage({
         )}
         <BalanceDueCard cents={cents} canPay={settings.onlineTopupAvailable} />
         {cents > -SETTLEMENT_MIN_DUE_CENTS && cents <= 0 && (
-          <div className="flex items-center justify-between rounded-card border border-brand-border bg-white p-[18px] shadow-card">
+          <div className="flex items-center justify-between rounded-card border border-brand-border bg-surface p-[18px] shadow-card">
             <span className="text-[14px] text-brand-gray">{t.balance.nothingDue}</span>
             <Link href="/ordine" className="rounded-full bg-primary px-4 py-[10px] text-[14px] font-bold text-on-primary">
               {t.balance.goToOrder}
@@ -145,7 +145,7 @@ export default async function RicaricaPage({
       <BalanceSummary label={t.topup.currentBalance} balance={balance} />
 
       {online && (
-        <section className="mb-4 rounded-card border border-brand-border bg-white p-[18px] shadow-card">
+        <section className="mb-4 rounded-card border border-brand-border bg-surface p-[18px] shadow-card">
           <h2 className="mb-1 text-[16px] font-extrabold text-brand-near-black">{t.topup.onlineTitle}</h2>
           {ceilingCents === null ? (
             // Only a maximum can leave nothing for Stripe (topupCeilingCents).
@@ -172,7 +172,7 @@ export default async function RicaricaPage({
       {/* Bank details when that channel is on; the "ask the treasurer" line
           only when members have no channel at all. */}
       {(bank || !online) && (
-        <section className="mb-4 rounded-card border border-brand-border bg-white p-[18px] shadow-card">
+        <section className="mb-4 rounded-card border border-brand-border bg-surface p-[18px] shadow-card">
           <h2 className="mb-1 text-[16px] font-extrabold text-brand-near-black">{t.topup.bankTitle}</h2>
           {bank ? (
             <>

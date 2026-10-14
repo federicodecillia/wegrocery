@@ -30,7 +30,7 @@ export function GroupInfoCard({ initial }: { initial: string | null }) {
   }
 
   return (
-    <section className="rounded-xl border border-brand-border bg-white p-4 shadow-sm">
+    <section className="rounded-xl border border-brand-border bg-surface p-4 shadow-sm">
       <h3 className="text-[13px] font-bold text-brand-near-black">{s.title}</h3>
       <p className="mt-1 text-[12px] text-brand-gray">{s.hint}</p>
       <label htmlFor="group-info" className="sr-only">
@@ -46,7 +46,7 @@ export function GroupInfoCard({ initial }: { initial: string | null }) {
       />
       <div className="mt-1 flex items-start justify-between gap-3">
         <p className="text-[12px] text-brand-gray">{value.trim() ? s.format : s.empty}</p>
-        <span className={`shrink-0 font-mono text-label ${tooLong ? "font-bold text-brand-red" : "text-muted"}`}>
+        <span className={`shrink-0 font-mono text-label ${tooLong ? "font-bold text-danger-text" : "text-muted"}`}>
           {s.count(value.length, GROUP_INFO_MAX)}
         </span>
       </div>
@@ -55,7 +55,7 @@ export function GroupInfoCard({ initial }: { initial: string | null }) {
           type="button"
           onClick={handleSave}
           disabled={isPending || unchanged || tooLong}
-          className="rounded-xl bg-brand-near-black px-4 py-2 text-[13px] font-bold text-white disabled:opacity-60"
+          className="rounded-xl bg-inverse px-4 py-2 text-[13px] font-bold text-on-inverse disabled:opacity-60"
         >
           {isPending ? t.admin.common.saving : s.save}
         </button>

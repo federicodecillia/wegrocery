@@ -663,7 +663,7 @@ export function OrderForm({
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t.order.searchPlaceholder}
             autoComplete="off"
-            className="min-h-11 w-full rounded-full border border-brand-border bg-white px-4 text-[14px] text-brand-near-black placeholder:text-muted"
+            className="min-h-11 w-full rounded-full border border-brand-border bg-surface px-4 text-[14px] text-brand-near-black placeholder:text-muted"
           />
         </div>
       )}
@@ -728,7 +728,7 @@ export function OrderForm({
                     and screen-reader focus stays on the button just pressed. */}
                 <div
                   className={`flex flex-shrink-0 items-center rounded-full p-0.5 ${
-                    qty === 0 ? "bg-black/[0.06]" : "bg-primary-soft"
+                    qty === 0 ? "bg-tint/[0.06]" : "bg-primary-soft"
                   }`}
                 >
                   {qty > 0 && (
@@ -781,7 +781,7 @@ export function OrderForm({
 
       {sideCart && (
         <aside aria-labelledby="cart-title" className="hidden lg:sticky lg:top-4 lg:block">
-          <div className="rounded-card border border-brand-border bg-white p-4 shadow-card">
+          <div className="rounded-card border border-brand-border bg-surface p-4 shadow-card">
             <h2 id="cart-title" className="text-[15px] font-bold text-brand-near-black">
               {t.order.cartTitle}
               {cartIds.size > 0 && <span className="ml-1.5 font-normal text-brand-gray">({cartIds.size})</span>}
@@ -809,7 +809,7 @@ export function OrderForm({
                           type="button"
                           onClick={() => changeQty(p.productId, -1)}
                           aria-label={t.order.lessNamed(p.name)}
-                          className="pressable flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-black/[0.06] text-[16px] text-brand-gray hover:bg-black/[0.1]"
+                          className="pressable flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-tint/[0.06] text-[16px] text-brand-gray hover:bg-tint/[0.1]"
                         >
                           −
                         </button>

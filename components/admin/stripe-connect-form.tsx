@@ -98,7 +98,7 @@ export function StripeConnectForm({
         </p>
       </form>
       {error && (
-        <p role="alert" className="mt-2 rounded-lg bg-brand-red-light px-3 py-2 text-[12px] text-brand-red">
+        <p role="alert" className="mt-2 rounded-lg bg-danger-soft px-3 py-2 text-[12px] text-danger-text">
           {error}
         </p>
       )}
@@ -107,7 +107,7 @@ export function StripeConnectForm({
           type="button"
           onClick={handleDisconnect}
           disabled={isPending}
-          className="mt-3 min-h-11 rounded-xl border border-brand-border px-4 py-2 text-[13px] font-bold text-brand-red disabled:opacity-60"
+          className="mt-3 min-h-11 rounded-xl border border-brand-border px-4 py-2 text-[13px] font-bold text-danger-text disabled:opacity-60"
         >
           {isPending && running === "disconnect" ? s.disconnecting : s.disconnect}
         </button>

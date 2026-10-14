@@ -10,21 +10,21 @@ export function ShellSkeleton() {
       >
         <div className="border-b border-brand-border px-5 py-4 lg:py-3">
           <div className="flex items-center justify-between gap-3 lg:gap-6">
-            <div className="h-[26px] w-28 animate-pulse rounded-md bg-black/[0.05]" />
+            <div className="h-[26px] w-28 animate-pulse rounded-md bg-tint/[0.05]" />
             {/* The menu, in the same row from lg. */}
-            <div className="hidden h-9 w-80 flex-1 animate-pulse rounded-full bg-black/[0.04] lg:block" />
+            <div className="hidden h-9 w-80 flex-1 animate-pulse rounded-full bg-tint/[0.04] lg:block" />
             {/* The bell and the avatar. */}
             <div className="flex gap-3">
-              <div className="h-8 w-8 animate-pulse rounded-full bg-black/[0.04]" />
-              <div className="h-8 w-8 animate-pulse rounded-full bg-black/[0.05]" />
+              <div className="h-8 w-8 animate-pulse rounded-full bg-tint/[0.04]" />
+              <div className="h-8 w-8 animate-pulse rounded-full bg-tint/[0.05]" />
             </div>
           </div>
         </div>
         <div className="flex-1 px-5 py-4 pb-[calc(var(--spacing-nav-h)+1rem)] lg:pb-4">
           <div className="space-y-[14px]">
-            <div className="h-[140px] animate-pulse rounded-card bg-black/[0.05]" />
-            <div className="h-[100px] animate-pulse rounded-card bg-black/[0.04]" />
-            <div className="h-[80px] animate-pulse rounded-card bg-black/[0.03]" />
+            <div className="h-[140px] animate-pulse rounded-card bg-tint/[0.05]" />
+            <div className="h-[100px] animate-pulse rounded-card bg-tint/[0.04]" />
+            <div className="h-[80px] animate-pulse rounded-card bg-tint/[0.03]" />
           </div>
         </div>
         {/* The bottom bar's strip, without items: with no session yet the

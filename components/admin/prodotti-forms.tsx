@@ -96,7 +96,7 @@ export function CatalogProductForm({
   const labelCls = "mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray";
 
   return (
-    <form onSubmit={handleSubmit} className="mb-4 rounded-xl border border-brand-border bg-white p-4 shadow-sm">
+    <form onSubmit={handleSubmit} className="mb-4 rounded-xl border border-brand-border bg-surface p-4 shadow-sm">
       <div className="mb-4 flex items-center justify-between">
         <h4 className="text-[14px] font-bold text-brand-near-black">
           {product ? t.admin.products.editProduct : t.admin.products.newProduct}
@@ -319,13 +319,13 @@ export function CatalogCsvActions({ supplierId }: { supplierId: string }) {
         onClick={downloadTemplate}
         disabled={downloading}
         title={t.admin.products.templateTitle}
-        className={`${btnBase} border-brand-border bg-white text-accent-text hover:bg-brand-warm-white/50`}
+        className={`${btnBase} border-brand-border bg-surface text-accent-text hover:bg-brand-warm-white/50`}
       >
         {downloading ? t.admin.common.generating : t.admin.products.templateDownload}
       </button>
       <label
         title={t.admin.products.uploadFileTitle}
-        className={`${btnBase} cursor-pointer border-brand-border bg-white text-accent-text hover:bg-brand-warm-white/50 ${
+        className={`${btnBase} cursor-pointer border-brand-border bg-surface text-accent-text hover:bg-brand-warm-white/50 ${
           isPending || !supplierId ? "opacity-60" : ""
         }`}
       >
@@ -396,7 +396,7 @@ export function CatalogLoadForm({
   }
 
   return (
-    <div className="rounded-xl border border-brand-border bg-white p-4 shadow-sm">
+    <div className="rounded-xl border border-brand-border bg-surface p-4 shadow-sm">
       <div className="mb-3 flex items-center justify-between">
         <p className="text-[13px] font-bold text-brand-near-black">{t.admin.products.loadFromCatalogTitle}</p>
         <button
@@ -648,7 +648,7 @@ export function ProductListItem({
         </div>
         <button
           onClick={() => setIsEditing(true)}
-          className="rounded-full bg-white px-2 py-1 text-label font-bold text-accent-text shadow-sm ring-1 ring-inset ring-accent/20 hover:bg-accent hover:text-on-accent transition-colors opacity-0 group-hover:opacity-100"
+          className="rounded-full bg-surface px-2 py-1 text-label font-bold text-accent-text shadow-sm ring-1 ring-inset ring-accent/20 hover:bg-accent hover:text-on-accent transition-colors opacity-0 group-hover:opacity-100"
         >
           {t.admin.common.edit}
         </button>
@@ -728,7 +728,7 @@ export function CatalogManager({
       )}
 
       {products.length > 0 ? (
-        <div className="divide-y divide-brand-border rounded-lg border border-brand-border bg-white overflow-hidden shadow-sm">
+        <div className="divide-y divide-brand-border rounded-lg border border-brand-border bg-surface overflow-hidden shadow-sm">
           {products.map((p) => (
             <div
               key={p.catalogProductId}

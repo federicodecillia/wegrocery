@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 // underneath, and a chevron when it leads somewhere. At least 44px tall.
 
 export const profileCard =
-  "overflow-hidden rounded-card border border-brand-border bg-white shadow-card divide-y divide-brand-border";
+  "overflow-hidden rounded-card border border-brand-border bg-surface shadow-card divide-y divide-brand-border";
 
 const rowClass = "flex min-h-[52px] items-center gap-3 px-4 py-[12px]";
 
@@ -24,7 +24,7 @@ function Body({ title, detail, badge, chevron }: Omit<RowProps, "href"> & { chev
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2 text-[14px] font-bold text-brand-near-black">
           <span className="min-w-0 break-words">{title}</span>
-          {badge && <span aria-hidden className="h-2 w-2 shrink-0 rounded-full bg-brand-red" />}
+          {badge && <span aria-hidden className="h-2 w-2 shrink-0 rounded-full bg-danger" />}
         </div>
         {detail != null && <div className="mt-[2px] break-words text-[12px] leading-snug text-brand-gray">{detail}</div>}
       </div>
@@ -45,7 +45,7 @@ export function SettingsRow({ title, detail, href, badge }: RowProps) {
       </div>
     );
   }
-  const hover = "transition-colors hover:bg-black/[0.02] focus-visible:bg-black/[0.03]";
+  const hover = "transition-colors hover:bg-tint/[0.02] focus-visible:bg-tint/[0.03]";
   if (href.startsWith("/")) {
     return (
       <Link href={href} className={`${rowClass} ${hover}`}>

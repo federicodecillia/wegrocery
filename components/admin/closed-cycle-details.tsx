@@ -135,7 +135,7 @@ export function CycleOrdersByMember({
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder={c.searchMember}
-                  className="min-h-10 w-full rounded-xl border border-brand-border bg-white px-3 text-[13px] placeholder:text-muted"
+                  className="min-h-10 w-full rounded-xl border border-brand-border bg-surface px-3 text-[13px] placeholder:text-muted"
                 />
               </>
             )}
@@ -185,7 +185,7 @@ export function CycleOrdersByMember({
                     )}
                   </div>
                   {open && (
-                    <div className="space-y-1 bg-black/[0.02] px-4 pt-1 pb-3">
+                    <div className="space-y-1 bg-tint/[0.02] px-4 pt-1 pb-3">
                       {lines.map((l) => (
                         <OrderLineRow key={l.orderLineId} line={l} editable={editable} onSaved={refetch} />
                       ))}
@@ -435,7 +435,7 @@ function OrderLineEditForm({
             value={qty}
             onChange={(e) => onQtyChange(e.target.value)}
             disabled={isPending}
-            className="min-h-11 rounded-md border border-brand-border bg-white px-2 py-1.5 text-[14px] font-mono text-brand-near-black"
+            className="min-h-11 rounded-md border border-brand-border bg-surface px-2 py-1.5 text-[14px] font-mono text-brand-near-black"
           />
         </label>
         <label className="flex flex-col gap-0.5 text-label font-semibold uppercase tracking-wide text-brand-gray">
@@ -449,7 +449,7 @@ function OrderLineEditForm({
               setTotalTouched(true);
             }}
             disabled={isPending}
-            className="min-h-11 rounded-md border border-brand-border bg-white px-2 py-1.5 text-[14px] font-mono text-brand-near-black"
+            className="min-h-11 rounded-md border border-brand-border bg-surface px-2 py-1.5 text-[14px] font-mono text-brand-near-black"
           />
         </label>
       </div>
@@ -466,7 +466,7 @@ function OrderLineEditForm({
           type="button"
           onClick={onCancel}
           disabled={isPending}
-          className="min-h-10 rounded-md border border-brand-border bg-white px-3 py-1.5 text-[13px] font-bold text-brand-gray"
+          className="min-h-10 rounded-md border border-brand-border bg-surface px-3 py-1.5 text-[13px] font-bold text-brand-gray"
         >
           {t.admin.common.cancel}
         </button>

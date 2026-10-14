@@ -93,7 +93,7 @@ export function SociForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-xl border border-brand-border bg-white p-4 shadow-sm">
+    <form onSubmit={handleSubmit} className="rounded-xl border border-brand-border bg-surface p-4 shadow-sm">
       <div className="mb-3 flex items-center justify-between">
         <p className="text-[13px] font-bold text-brand-near-black">
           {isEdit ? t.admin.members.editMember(member.fullName) : t.admin.members.addMember}
@@ -304,7 +304,7 @@ export function SociList({
         <p className="mb-1 px-1 font-mono text-label uppercase tracking-wider text-muted">
           {label} ({list.length})
         </p>
-        <div className="divide-y divide-brand-border rounded-xl border border-brand-border bg-white shadow-sm">
+        <div className="divide-y divide-brand-border rounded-xl border border-brand-border bg-surface shadow-sm">
           {list.map((m) =>
             editingId === m.memberId ? (
               <div key={m.memberId} className="p-4">
@@ -332,7 +332,7 @@ export function SociList({
                       {getRoleLabel(m.role)}
                     </span>
                     {!m.active && (
-                      <span className="rounded-full bg-brand-red-light px-1.5 py-0.5 text-label font-bold text-brand-red">
+                      <span className="rounded-full bg-danger-soft px-1.5 py-0.5 text-label font-bold text-danger-text">
                         {t.admin.members.inactiveBadge}
                       </span>
                     )}
@@ -393,7 +393,7 @@ export function SociList({
                       onClick={() => handleDelete(m)}
                       disabled={deletingId}
                       aria-label={t.admin.members.deleteAria(m.fullName)}
-                      className="flex h-9 w-9 items-center justify-center rounded-full border border-brand-red/30 text-label font-semibold text-brand-red disabled:opacity-40"
+                      className="flex h-9 w-9 items-center justify-center rounded-full border border-danger-text/30 text-label font-semibold text-danger-text disabled:opacity-40"
                     >
                       <span aria-hidden>✕</span>
                     </button>
@@ -423,7 +423,7 @@ export function SociList({
           placeholder={t.admin.members.searchPlaceholder}
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
-          className="w-full rounded-xl border border-brand-border bg-white px-4 py-2.5 text-[13px] text-brand-near-black placeholder:text-muted"
+          className="w-full rounded-xl border border-brand-border bg-surface px-4 py-2.5 text-[13px] text-brand-near-black placeholder:text-muted"
         />
       </div>
       <DuplicateMembers
@@ -433,7 +433,7 @@ export function SociList({
       />
       {renderGroup(t.roles.admin, inGroup("admin"), "bg-primary-soft text-primary-text")}
       {renderGroup(t.roles.attivi, inGroup("attivi"), "bg-accent-soft text-accent-text")}
-      {renderGroup(t.roles.utenti, inGroup("utenti"), "bg-black/[0.05] text-brand-gray")}
+      {renderGroup(t.roles.utenti, inGroup("utenti"), "bg-tint/[0.05] text-brand-gray")}
       {visible.length === 0 && (
         <div className="py-6 text-center text-[12px] text-brand-gray">{t.admin.common.noResults}</div>
       )}
@@ -459,7 +459,7 @@ export function SociList({
                 {t.admin.members.merge.button}
               </SheetAction>
             )}
-            <SheetAction onClick={() => runAction(() => handleDelete(actionsFor))} className="text-brand-red">
+            <SheetAction onClick={() => runAction(() => handleDelete(actionsFor))} className="text-danger-text">
               {t.admin.members.deleteAction}
             </SheetAction>
           </div>

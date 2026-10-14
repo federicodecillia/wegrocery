@@ -27,7 +27,7 @@ export function NotificationRow({
       onClick={() => {
         if (unread) void markNotificationRead(id).catch(() => {});
       }}
-      className="flex w-full items-start gap-3 px-4 py-[14px] text-left hover:bg-black/[0.02]"
+      className="flex w-full items-start gap-3 px-4 py-[14px] text-left hover:bg-tint/[0.02]"
     >
       <span aria-hidden className={`mt-[6px] h-2 w-2 shrink-0 rounded-full ${unread ? "bg-primary" : "bg-transparent"}`} />
       <span className="min-w-0 flex-1">

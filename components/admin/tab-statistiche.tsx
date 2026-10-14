@@ -202,7 +202,7 @@ function ProductRankingsCard({
                         {r.totalQty}
                       </span>
                     </div>
-                    <div className="mt-1 h-2 overflow-hidden rounded-full bg-black/[0.05]">
+                    <div className="mt-1 h-2 overflow-hidden rounded-full bg-tint/[0.05]">
                       <div
                         className="h-full rounded-full bg-primary"
                         style={{ width: `${widthPct}%` }}
@@ -276,7 +276,7 @@ function RevenueTrendCard({
               className={`shrink-0 rounded-full px-2 py-0.5 font-mono text-label font-bold ${
                 trendDelta >= 0
                   ? "bg-accent-soft text-accent-text"
-                  : "bg-brand-red-light text-brand-red"
+                  : "bg-danger-soft text-danger-text"
               }`}
             >
               {trendDelta >= 0 ? "+" : ""}
@@ -383,7 +383,7 @@ function SupplierStatsCard({
                     {formatEur(s.totalRevenue)}
                   </span>
                 </div>
-                <div className="mt-1 h-2 overflow-hidden rounded-full bg-black/[0.05]">
+                <div className="mt-1 h-2 overflow-hidden rounded-full bg-tint/[0.05]">
                   <div
                     className="h-full rounded-full bg-accent"
                     style={{ width: `${widthPct}%` }}
@@ -436,7 +436,7 @@ function MemberParticipationCard({
             <div className="text-[18px] font-black text-brand-near-black">{occasional.length}</div>
             <div className="font-mono text-label text-muted">{t.admin.stats.participationOccasionalHint}</div>
           </div>
-          <div className="rounded-lg bg-black/[0.05] p-2">
+          <div className="rounded-lg bg-tint/[0.05] p-2">
             <div className="font-mono text-label uppercase text-brand-gray">{t.admin.stats.participationDormant}</div>
             <div className="text-[18px] font-black text-brand-near-black">{dormant.length}</div>
             <div className="font-mono text-label text-muted">{t.admin.stats.participationDormantHint}</div>
@@ -447,7 +447,7 @@ function MemberParticipationCard({
           <summary className="cursor-pointer font-semibold text-brand-gray hover:text-brand-near-black">
             {t.admin.stats.memberDetail}
           </summary>
-          <ul className="mt-2 divide-y divide-brand-border rounded-lg border border-brand-border bg-white">
+          <ul className="mt-2 divide-y divide-brand-border rounded-lg border border-brand-border bg-surface">
             {members.map((m) => (
               <li
                 key={m.memberId}

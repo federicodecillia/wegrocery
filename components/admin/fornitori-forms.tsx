@@ -78,7 +78,7 @@ export function FornitoriForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="rounded-xl border border-brand-border bg-white p-4 shadow-sm"
+      className="rounded-xl border border-brand-border bg-surface p-4 shadow-sm"
     >
       <div className="mb-3 flex items-center justify-between">
         <p className="text-[13px] font-bold text-brand-near-black">
@@ -243,7 +243,7 @@ export function FornitoriList({
         <p className="mb-1 px-1 font-mono text-label uppercase tracking-wider text-muted">
           {label} ({list.length})
         </p>
-        <div className="overflow-hidden rounded-xl border border-brand-border bg-white shadow-sm">
+        <div className="overflow-hidden rounded-xl border border-brand-border bg-surface shadow-sm">
           {list.map((s) => (
             <div key={s.supplierId} className="divide-y divide-brand-border">
               {editingId === s.supplierId ? (
@@ -268,7 +268,7 @@ export function FornitoriList({
                         <span className="flex items-center gap-2">
                           <span className="text-[13px] font-semibold text-brand-near-black">{s.name}</span>
                           {!s.active && (
-                            <span className="rounded-full bg-black/[0.05] px-1.5 py-0.5 text-label font-bold text-brand-gray">
+                            <span className="rounded-full bg-tint/[0.05] px-1.5 py-0.5 text-label font-bold text-brand-gray">
                               {t.admin.suppliers.archivedBadge}
                             </span>
                           )}
@@ -300,7 +300,7 @@ export function FornitoriList({
                           type="button"
                           onClick={() => handleDelete(s)}
                           aria-label={t.admin.suppliers.deleteAria(s.name)}
-                          className="flex h-9 w-9 items-center justify-center rounded-full border border-brand-red/30 text-label font-semibold text-brand-red"
+                          className="flex h-9 w-9 items-center justify-center rounded-full border border-danger-text/30 text-label font-semibold text-danger-text"
                         >
                           <span aria-hidden>✕</span>
                         </button>
@@ -310,7 +310,7 @@ export function FornitoriList({
 
                   {/* Contact details + products */}
                   {expandedId === s.supplierId && (
-                    <div className="bg-black/[0.01] px-4 py-3">
+                    <div className="bg-tint/[0.01] px-4 py-3">
                       {(s.phone || s.email || s.address) && (
                         <div className="mb-3 space-y-0.5 font-mono text-label text-brand-gray">
                           {s.phone && <div>📞 {s.phone}</div>}

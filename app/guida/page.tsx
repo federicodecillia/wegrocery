@@ -67,7 +67,7 @@ export default async function GuidaPage() {
               <li key={topic.id}>
                 <Link
                   href={`/guida/${topic.id}`}
-                  className="flex h-full gap-3 rounded-card border border-brand-border bg-white p-4 shadow-card transition-colors hover:border-primary-mid"
+                  className="flex h-full gap-3 rounded-card border border-brand-border bg-surface p-4 shadow-card transition-colors hover:border-primary-mid"
                 >
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary-text">
                     <UiIcon name={topicIcon(topic.id)} />

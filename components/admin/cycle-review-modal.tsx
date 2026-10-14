@@ -229,7 +229,7 @@ function CycleReviewModal({
         {loading ? (
           <div className="py-10 text-center text-[13px] text-brand-gray">{t.admin.cycleReview.loadingProducts}</div>
         ) : loadFailed || !rows ? (
-          <div role="alert" className="rounded-lg border border-brand-red/30 bg-brand-red-light p-3 text-[13px] text-brand-red">
+          <div role="alert" className="rounded-lg border border-danger-text/30 bg-danger-soft p-3 text-[13px] text-danger-text">
             {t.admin.cycleReview.loadFailed}
           </div>
         ) : rows.length === 0 ? (
@@ -241,7 +241,7 @@ function CycleReviewModal({
                 type="button"
                 onClick={() => setAdjusting((v) => !v)}
                 aria-expanded={adjusting}
-                className="min-h-11 rounded-xl border border-brand-border bg-white px-4 text-[13px] font-semibold text-brand-near-black"
+                className="min-h-11 rounded-xl border border-brand-border bg-surface px-4 text-[13px] font-semibold text-brand-near-black"
               >
                 {adjusting ? t.admin.cycleReview.adjustToggleHide : t.admin.cycleReview.adjustToggle}
               </button>
@@ -291,7 +291,7 @@ function ReviewRow({
 
   return (
     <li
-      className={`rounded-lg border bg-white px-3 py-2.5 ${changed ? "border-primary-mid" : "border-brand-border"} ${
+      className={`rounded-lg border bg-surface px-3 py-2.5 ${changed ? "border-primary-mid" : "border-brand-border"} ${
         r.totalQty === 0 ? "border-dashed" : ""
       }`}
     >

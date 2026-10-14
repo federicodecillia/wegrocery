@@ -71,7 +71,7 @@ export function CycleTodo({
   }
 
   return (
-    <section aria-labelledby="todo-title" className="mb-4 rounded-2xl border border-brand-border bg-white p-3 lg:p-4">
+    <section aria-labelledby="todo-title" className="mb-4 rounded-2xl border border-brand-border bg-surface p-3 lg:p-4">
       <h2 id="todo-title" className="px-1 text-label font-bold uppercase tracking-wide text-muted">
         {d.title}
       </h2>
@@ -83,11 +83,11 @@ export function CycleTodo({
             <li
               key={task.cycleId}
               className={`${i >= SHOWN_SMALL ? "hidden lg:flex" : "flex"} flex-col rounded-xl border p-3 ${
-                step === "overdue" ? "border-brand-red/40 bg-brand-red-light" : "border-brand-border bg-brand-warm-white"
+                step === "overdue" ? "border-danger-text/40 bg-danger-soft" : "border-brand-border bg-brand-warm-white"
               }`}
             >
               <span className="truncate text-label font-semibold text-brand-gray">{task.title}</span>
-              <span className={`mt-0.5 text-[13px] ${step === "overdue" ? "font-bold text-brand-red" : "text-brand-near-black"}`}>
+              <span className={`mt-0.5 text-[13px] ${step === "overdue" ? "font-bold text-danger-text" : "text-brand-near-black"}`}>
                 {detail(task, step)}
               </span>
               <span className="mt-2 flex flex-wrap items-center gap-2 lg:mt-auto lg:pt-2">
@@ -95,7 +95,7 @@ export function CycleTodo({
                   href={adminHref("ciclo", VIEW[step], { cycle: task.cycleId })}
                   className={`flex min-h-11 flex-1 items-center justify-center rounded-xl px-3 text-center text-[13px] font-bold ${
                     step === "overdue"
-                      ? "bg-brand-red text-white"
+                      ? "bg-danger text-on-danger"
                       : "bg-primary text-on-primary"
                   }`}
                 >
@@ -106,7 +106,7 @@ export function CycleTodo({
                     type="button"
                     onClick={() => markDone(task.cycleId, step)}
                     title={d.markHint}
-                    className="min-h-11 rounded-xl border border-brand-border bg-white px-3 text-[13px] font-semibold text-brand-near-black"
+                    className="min-h-11 rounded-xl border border-brand-border bg-surface px-3 text-[13px] font-semibold text-brand-near-black"
                   >
                     {step === "to_send" ? d.markSent : d.markDelivered}
                   </button>

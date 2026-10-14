@@ -6,8 +6,8 @@ export type BadgeTone = "accent" | "brand" | "danger" | "neutral";
 const tones: Record<BadgeTone, string> = {
   accent: "border-accent/20 bg-accent-soft text-accent-text",
   brand: "border-primary-mid bg-primary-soft text-primary-text",
-  danger: "border-brand-red/20 bg-brand-red-light text-brand-red",
-  neutral: "border-brand-border bg-black/[0.04] text-brand-gray",
+  danger: "border-danger-text/20 bg-danger-soft text-danger-text",
+  neutral: "border-brand-border bg-tint/[0.04] text-brand-gray",
 };
 
 /** A status, not a control: never clickable (a filter or a link is a Chip or a button). */

@@ -142,9 +142,9 @@ export async function CycleAccountsView({
         )}
 
         {cycle.status === "closed" && (
-          <Card className="border-brand-red/30">
+          <Card className="border-danger-text/30">
             <CardBody>
-              <h3 className="text-[14px] font-bold text-brand-red">{w.dangerZone}</h3>
+              <h3 className="text-[14px] font-bold text-danger-text">{w.dangerZone}</h3>
               <p className="mt-1 mb-3 max-w-prose text-[13px] text-brand-gray">{w.cancelIntro}</p>
               <CancelCycleButton cycleId={cycle.cycleId} cycleTitle={cycle.title} />
             </CardBody>

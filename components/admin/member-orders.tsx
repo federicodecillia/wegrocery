@@ -23,14 +23,14 @@ export async function MemberOrders({ memberId }: { memberId: string }) {
         {member && (
           <Link
             href={adminHref("cassa", null, { member: memberId })}
-            className="inline-flex min-h-10 items-center rounded-xl border border-brand-border bg-white px-3 text-[13px] font-semibold text-brand-near-black"
+            className="inline-flex min-h-10 items-center rounded-xl border border-brand-border bg-surface px-3 text-[13px] font-semibold text-brand-near-black"
           >
             {t.admin.members.seeMovements}
           </Link>
         )}
       </div>
       {member && (
-        <div className="rounded-xl border border-brand-border bg-white px-4 py-3 shadow-sm">
+        <div className="rounded-xl border border-brand-border bg-surface px-4 py-3 shadow-sm">
           <h2 className="text-[15px] font-bold text-brand-near-black">{member.fullName}</h2>
           <div className="mt-0.5 font-mono text-label text-muted">
             {member.email} ·{" "}
@@ -66,7 +66,7 @@ export async function MemberOrders({ memberId }: { memberId: string }) {
                     className={`rounded-full px-2 py-0.5 text-label font-bold ${
                       cycle.cycleStatus === "open"
                         ? "bg-accent-soft text-accent-text"
-                        : "bg-black/[0.05] text-brand-gray"
+                        : "bg-tint/[0.05] text-brand-gray"
                     }`}
                   >
                     {cycle.cycleStatus === "open" ? t.admin.orders.openBadge : t.admin.orders.closedBadge}

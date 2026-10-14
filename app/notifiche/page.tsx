@@ -85,7 +85,7 @@ export default async function NotifichePage() {
               <h2 id={`day-${g.key}`} className="mb-2 px-1 text-[13px] font-semibold text-brand-gray first-letter:uppercase">
                 {g.label}
               </h2>
-              <ul className="overflow-hidden rounded-card border border-brand-border bg-white shadow-card">
+              <ul className="overflow-hidden rounded-card border border-brand-border bg-surface shadow-card">
                 {g.items.map((n) => (
                   <li key={n.notificationId} className="border-b border-brand-border last:border-none">
                     <NotificationRow

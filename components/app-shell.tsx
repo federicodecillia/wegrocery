@@ -43,7 +43,7 @@ export async function AppShell({ children, email, name, isAdmin, memberId, perso
         {/* First stop for keyboard users: past the header and the nav. */}
         <a
           href="#main"
-          className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[200] focus:rounded-full focus:bg-brand-near-black focus:px-4 focus:py-2 focus:text-sm focus:font-bold focus:text-white"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[200] focus:rounded-full focus:bg-inverse focus:px-4 focus:py-2 focus:text-sm focus:font-bold focus:text-on-inverse"
         >
           {t.common.skipToContent}
         </a>

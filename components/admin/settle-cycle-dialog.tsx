@@ -12,10 +12,10 @@ import type { SettlementStatus } from "@/lib/payments/settlement-store";
 
 const STATUS_CLASSES: Record<SettlementStatus, string> = {
   to_settle: "bg-primary-soft text-primary-text",
-  refunds_pending: "bg-black/[0.06] text-brand-gray",
+  refunds_pending: "bg-tint/[0.06] text-brand-gray",
   settled: "bg-accent-soft text-accent-text",
-  needs_update: "bg-brand-red-light text-brand-red",
-  refund_failed: "bg-brand-red-light text-brand-red",
+  needs_update: "bg-danger-soft text-danger-text",
+  refund_failed: "bg-danger-soft text-danger-text",
 };
 
 // "Chiudi i conti" of a pay-per-order cycle, closed or cancelled: a preview of
@@ -109,14 +109,14 @@ export function SettleCycleButton({
                 <div className="shrink-0 text-right text-[13px] text-brand-near-black">
                   {s.action[r.action](formatMoney(r.amountCents / 100))}
                   {r.excessCents > 0 && (
-                    <div className="text-brand-red">{s.excess(formatMoney(r.excessCents / 100))}</div>
+                    <div className="text-danger-text">{s.excess(formatMoney(r.excessCents / 100))}</div>
                   )}
                 </div>
               </li>
             ))}
           </ul>
         )}
-        {excess > 0 && <p className="mt-2 text-[13px] text-brand-red">{s.excessHint}</p>}
+        {excess > 0 && <p className="mt-2 text-[13px] text-danger-text">{s.excessHint}</p>}
       </Sheet>
     </>
   );

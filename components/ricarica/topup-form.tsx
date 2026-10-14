@@ -25,7 +25,7 @@ function presetClass(selected: boolean): string {
   return `rounded-xl border py-[10px] font-mono text-[15px] font-bold ${
     selected
       ? "border-primary bg-primary-soft text-brand-near-black"
-      : "border-brand-border bg-white text-brand-near-black"
+      : "border-brand-border bg-surface text-brand-near-black"
   }`;
 }
 

@@ -175,7 +175,7 @@ export function EditClosedOrderModal({ cycleId, cycleTitle, mode, onClose, onSav
                   Math.abs(delta) < 0.005
                     ? "text-brand-gray"
                     : delta > 0
-                      ? "text-brand-red"
+                      ? "text-danger-text"
                       : "text-accent-text"
                 }`}
               >
@@ -210,7 +210,7 @@ export function EditClosedOrderModal({ cycleId, cycleTitle, mode, onClose, onSav
       ) : (
         <>
           {mode.kind === "create" && (
-            <div className="mb-4 rounded-xl border border-brand-border bg-white p-3">
+            <div className="mb-4 rounded-xl border border-brand-border bg-surface p-3">
               <label htmlFor="edit-order-member" className="mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray">
                 {t.admin.editClosedOrder.memberLabel}
               </label>
@@ -218,7 +218,7 @@ export function EditClosedOrderModal({ cycleId, cycleTitle, mode, onClose, onSav
                 id="edit-order-member"
                 value={memberId}
                 onChange={(e) => setMemberId(e.target.value)}
-                className="w-full rounded-lg border border-brand-border bg-white px-3 py-2 text-[13px] text-brand-near-black"
+                className="w-full rounded-lg border border-brand-border bg-surface px-3 py-2 text-[13px] text-brand-near-black"
               >
                 <option value="">{t.admin.editClosedOrder.selectMember}</option>
                 {bootstrap.members.map((m) => (
@@ -240,7 +240,7 @@ export function EditClosedOrderModal({ cycleId, cycleTitle, mode, onClose, onSav
                 <div className="mb-2 font-mono text-label font-bold uppercase tracking-[0.13em] text-primary-text">
                   {category}
                 </div>
-                <div className="overflow-hidden rounded-xl border border-brand-border bg-white">
+                <div className="overflow-hidden rounded-xl border border-brand-border bg-surface">
                   {prods.map((p, i) => {
                     const qty = quantities[p.productId] ?? 0;
                     const meta = [p.variant, p.format].filter(Boolean).join(" · ");
@@ -276,7 +276,7 @@ export function EditClosedOrderModal({ cycleId, cycleTitle, mode, onClose, onSav
                           <button
                             type="button"
                             onClick={() => bump(p.productId, 1)}
-                            className="flex h-10 min-w-10 shrink-0 items-center justify-center rounded-full bg-black/[0.06] px-3 text-[18px] font-light text-brand-gray"
+                            className="flex h-10 min-w-10 shrink-0 items-center justify-center rounded-full bg-tint/[0.06] px-3 text-[18px] font-light text-brand-gray"
                             aria-label={t.admin.editClosedOrder.increaseAria(p.name)}
                           >
                             +
@@ -312,7 +312,7 @@ export function EditClosedOrderModal({ cycleId, cycleTitle, mode, onClose, onSav
             ))
           )}
 
-          <div className="mt-4 rounded-xl border border-brand-border bg-white p-3">
+          <div className="mt-4 rounded-xl border border-brand-border bg-surface p-3">
             <label htmlFor="edit-order-note" className="mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray">
               {t.admin.editClosedOrder.noteLabel}
             </label>

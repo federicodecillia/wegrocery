@@ -163,7 +163,7 @@ export function OpenCycleOverview({ cycle, stats }: { cycle: SerializedCycle; st
           </div>
         )}
         {cycle.isOverdue && (
-          <div className="mt-3 rounded-lg border border-brand-red/30 bg-brand-red-light p-3 text-[13px] text-brand-red">
+          <div className="mt-3 rounded-lg border border-danger-text/30 bg-danger-soft p-3 text-[13px] text-danger-text">
             {t.admin.cycle.overdueWarning}
           </div>
         )}
@@ -328,7 +328,7 @@ function PickupSection({
             <button
               type="button"
               onClick={() => setShowPickup2(false)}
-              className="text-label font-semibold text-brand-gray hover:text-brand-red"
+              className="text-label font-semibold text-brand-gray hover:text-danger-text"
             >
               {t.admin.cycle.removePickup2}
             </button>
@@ -363,7 +363,7 @@ function ShippingModeFields({
   return (
     <div>
       <p className={labelCls}>{t.admin.cycle.shippingLabel}</p>
-      <div className="mb-2 flex rounded-lg bg-black/[0.05] p-0.5">
+      <div className="mb-2 flex rounded-lg bg-tint/[0.05] p-0.5">
         {(
           [
             { v: "fixed_per_member", label: t.admin.cycle.shippingFixed },
@@ -376,7 +376,7 @@ function ShippingModeFields({
             onClick={() => onModeChange(opt.v)}
             className={`flex-1 rounded-md py-1.5 text-label font-semibold transition-colors ${
               mode === opt.v
-                ? "bg-white text-brand-near-black shadow-sm"
+                ? "bg-surface text-brand-near-black shadow-sm"
                 : "bg-transparent text-brand-gray"
             }`}
           >
@@ -448,14 +448,14 @@ function HandlingFeeFields({
   return (
     <div>
       <p className={labelCls}>{t.admin.cycle.handlingFeeLabel}</p>
-      <div className="mb-2 flex rounded-lg bg-black/[0.05] p-0.5">
+      <div className="mb-2 flex rounded-lg bg-tint/[0.05] p-0.5">
         {options.map((opt) => (
           <button
             key={opt.v}
             type="button"
             onClick={() => setType(opt.v)}
             className={`flex-1 rounded-md py-1.5 text-label font-semibold transition-colors ${
-              type === opt.v ? "bg-white text-brand-near-black shadow-sm" : "bg-transparent text-brand-gray"
+              type === opt.v ? "bg-surface text-brand-near-black shadow-sm" : "bg-transparent text-brand-gray"
             }`}
           >
             {opt.label}
@@ -479,7 +479,7 @@ function HandlingFeeFields({
       )}
       <p className="mt-1 text-label text-muted">{t.admin.cycle.handlingFeeHint}</p>
       {note && <p className="mt-1 text-label text-brand-gray">{note}</p>}
-      {warning && <p className="mt-1 text-label text-brand-red">{warning}</p>}
+      {warning && <p className="mt-1 text-label text-danger-text">{warning}</p>}
     </div>
   );
 }
@@ -718,7 +718,7 @@ function PaymentModeFields({
   return (
     <div>
       <p className={labelCls}>{t.admin.cycle.paymentModeLabel}</p>
-      <div className="mb-2 flex rounded-lg bg-black/[0.05] p-0.5">
+      <div className="mb-2 flex rounded-lg bg-tint/[0.05] p-0.5">
         {options.map((opt) => (
           <button
             key={opt.v}
@@ -726,7 +726,7 @@ function PaymentModeFields({
             aria-pressed={mode === opt.v}
             onClick={() => onModeChange(opt.v)}
             className={`flex-1 rounded-md py-1.5 text-label font-semibold transition-colors ${
-              mode === opt.v ? "bg-white text-brand-near-black shadow-sm" : "bg-transparent text-brand-gray"
+              mode === opt.v ? "bg-surface text-brand-near-black shadow-sm" : "bg-transparent text-brand-gray"
             }`}
           >
             {opt.label}
@@ -812,7 +812,7 @@ export function CreateCycleForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-xl border border-brand-border bg-white p-4 shadow-sm">
+    <form onSubmit={handleSubmit} className="rounded-xl border border-brand-border bg-surface p-4 shadow-sm">
       <p className="mb-3 text-[13px] font-bold text-brand-near-black">{t.admin.cycle.createTitle}</p>
       <div className="space-y-3">
         <div>
@@ -905,7 +905,7 @@ export function CreateCycleForm({
         </div>
       </div>
       {suppliers.length === 0 && (
-        <p className="mt-2 text-label text-brand-red">{t.admin.products.noSupplierAvailable}</p>
+        <p className="mt-2 text-label text-danger-text">{t.admin.products.noSupplierAvailable}</p>
       )}
       <div className="mt-4 flex gap-2">
         <button
@@ -1020,7 +1020,7 @@ export function CycleProductPicker({
               <div className="px-1 text-label font-bold uppercase tracking-wider text-muted">
                 {sName}
               </div>
-              <div className="divide-y divide-brand-border rounded-lg border border-brand-border bg-white overflow-hidden shadow-sm">
+              <div className="divide-y divide-brand-border rounded-lg border border-brand-border bg-surface overflow-hidden shadow-sm">
                 {currentProducts.filter(p => (p.supplierName || "Altro") === sName).map((p) => (
                   <div key={p.productId} className="flex items-center justify-between p-2.5 hover:bg-brand-warm-white/30">
                     <div className="min-w-0 flex-1">
@@ -1034,7 +1034,7 @@ export function CycleProductPicker({
                     </div>
                     <button
                       onClick={() => handleRemove(p.productId)}
-                      className="ml-2 min-h-9 rounded-lg bg-brand-red-light px-2 py-1 text-label font-bold text-brand-red hover:bg-brand-red/15"
+                      className="ml-2 min-h-9 rounded-lg bg-danger-soft px-2 py-1 text-label font-bold text-danger-text hover:bg-danger-text/15"
                     >
                       {t.admin.products.removeFromCycle}
                     </button>
@@ -1123,7 +1123,7 @@ export function EditCycleButton({
         onClick={() => setOpen(true)}
         className={
           className ??
-          "min-h-10 rounded-xl border border-brand-border bg-white px-3 text-[13px] font-semibold text-brand-near-black hover:bg-black/[0.03]"
+          "min-h-10 rounded-xl border border-brand-border bg-surface px-3 text-[13px] font-semibold text-brand-near-black hover:bg-tint/[0.03]"
         }
       >
         {isClosed ? t.admin.cycle.editClosedButton : t.admin.common.edit}

@@ -42,7 +42,7 @@ export function NotificationPreferencesForm({ initial }: Props) {
   }
 
   return (
-    <div className="overflow-hidden rounded-card border border-brand-border bg-white shadow-card">
+    <div className="overflow-hidden rounded-card border border-brand-border bg-surface shadow-card">
       {NOTIFICATION_CATEGORIES.map((category, i) => {
         const cfg = t.notifications.settings.categories[category];
         const p = prefs[category];

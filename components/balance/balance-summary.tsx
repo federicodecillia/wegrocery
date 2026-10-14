@@ -7,19 +7,19 @@ export function BalanceSummary({ label, balance, className = "mb-4" }: { label: 
   return (
     <div
       className={`rounded-card border p-4 ${
-        negative ? "border-brand-red/30 bg-brand-red-light" : "border-primary-mid bg-primary-soft"
+        negative ? "border-danger-text/30 bg-danger-soft" : "border-primary-mid bg-primary-soft"
       } ${className}`}
     >
       <div
         className={`mb-[6px] font-mono text-label uppercase tracking-[0.10em] ${
-          negative ? "text-brand-red" : "text-primary-text"
+          negative ? "text-danger-text" : "text-primary-text"
         }`}
       >
         {label}
       </div>
       <span
         className={`whitespace-nowrap text-[36px] font-black tracking-[-0.04em] ${
-          negative ? "text-brand-red" : "text-brand-near-black"
+          negative ? "text-danger-text" : "text-brand-near-black"
         }`}
       >
         {formatSignedMoney(balance)}

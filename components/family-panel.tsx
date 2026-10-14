@@ -27,7 +27,7 @@ type Props = {
   balance: string | null;
 };
 
-const card = "mb-[14px] overflow-hidden rounded-card border border-brand-border bg-white shadow-card";
+const card = "mb-[14px] overflow-hidden rounded-card border border-brand-border bg-surface shadow-card";
 const heading = "px-4 pt-[14px] font-mono text-label font-bold uppercase tracking-widest text-brand-gray";
 
 export function FamilyPanel({ enabled, personId, isOwner, people, sent, received, balance }: Props) {

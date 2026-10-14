@@ -24,7 +24,7 @@ function BalanceText({ balance }: { balance: number }) {
   return (
     <span
       className={`shrink-0 whitespace-nowrap font-mono text-label font-bold ${
-        balance >= 0 ? "text-accent-text" : "text-brand-red"
+        balance >= 0 ? "text-accent-text" : "text-danger-text"
       }`}
     >
       {t.admin.treasury.memberBalance(formatMoney(balance))}
@@ -131,7 +131,7 @@ export function MemberCombobox({ members, value, onChange, label }: Props) {
               pendingFocus.current = "input";
             }}
             aria-label={t.admin.treasury.memberChangeLabel(value.fullName)}
-            className="min-h-[36px] shrink-0 rounded-lg border border-brand-border bg-white px-3 text-[12px] font-semibold text-brand-near-black"
+            className="min-h-[36px] shrink-0 rounded-lg border border-brand-border bg-surface px-3 text-[12px] font-semibold text-brand-near-black"
           >
             {t.admin.treasury.memberChange}
           </button>
@@ -176,7 +176,7 @@ export function MemberCombobox({ members, value, onChange, label }: Props) {
         {open ? t.admin.treasury.memberResults(matches.length) : ""}
       </p>
       {open && (
-        <div className="absolute left-0 right-0 z-30 mt-1 overflow-hidden rounded-lg border border-brand-border bg-white shadow-lg">
+        <div className="absolute left-0 right-0 z-30 mt-1 overflow-hidden rounded-lg border border-brand-border bg-surface shadow-lg">
           <ul id={listId} role="listbox" aria-label={label} className="max-h-64 overflow-y-auto overscroll-contain">
             {matches.map((m, i) => (
               <li

@@ -18,7 +18,7 @@ export default async function ConfirmSignInPage({
   const callbackURL = safeCallbackPath(next);
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-[480px] flex-col items-center justify-center p-6">
-      <div className="w-full rounded-lg border border-brand-border bg-white p-6 shadow-sm">
+      <div className="w-full rounded-lg border border-brand-border bg-surface p-6 shadow-sm">
         <h1 className="text-xl font-semibold">{brand.appName}</h1>
         {token ? (
           <form action="/api/auth/magic-link/verify" method="get" className="mt-4 space-y-3">
