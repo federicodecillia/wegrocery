@@ -56,7 +56,7 @@ export function OrderSummary({
           </span>
           <div className="min-w-0">
             <div className="text-[15px] font-bold text-accent-text">{t.order.confirmed}</div>
-            <div className="mt-[1px] font-mono text-label text-accent-text">
+            <div className="mt-[1px] tabular-nums text-label text-accent-text">
               {t.order.confirmedSummary(lines.length, formatEur(total))}
             </div>
           </div>
@@ -72,7 +72,7 @@ export function OrderSummary({
                 <span aria-hidden="true" className="w-[18px] shrink-0 text-[18px] leading-none">{l.emoji}</span>
                 <div className="min-w-0">
                   <div className="text-[14px] font-medium text-brand-near-black">{l.name}</div>
-                  <div className="mt-[1px] font-mono text-label text-brand-gray">
+                  <div className="mt-[1px] tabular-nums text-label text-brand-gray">
                     {l.quantity} × {formatEur(l.unitPrice)}
                     {l.meta ? ` · ${l.meta}` : ""}
                   </div>
@@ -81,7 +81,7 @@ export function OrderSummary({
                   )}
                 </div>
               </div>
-              <span className="shrink-0 font-mono text-[12px] font-bold text-brand-near-black">
+              <span className="shrink-0 tabular-nums text-[12px] font-bold text-brand-near-black">
                 {formatEur(l.quantity * l.unitPrice)}
               </span>
             </li>
@@ -103,7 +103,7 @@ export function OrderSummary({
                 <div className="font-mono text-label uppercase tracking-[0.09em] text-muted">
                   {t.order.pay.alreadyPaid}
                 </div>
-                <div className="mt-[2px] font-mono text-[13px] font-bold text-accent-text">
+                <div className="mt-[2px] tabular-nums text-[13px] font-bold text-accent-text">
                   {formatEur(payment.paidCents / 100)}
                 </div>
               </div>
@@ -113,7 +113,7 @@ export function OrderSummary({
                   {t.order.balanceAfter}
                 </div>
                 <div
-                  className={`mt-[2px] font-mono text-[13px] font-bold ${
+                  className={`mt-[2px] tabular-nums text-[13px] font-bold ${
                     balanceAfter < 0 ? "text-danger-text" : "text-accent-text"
                   }`}
                 >
@@ -168,7 +168,7 @@ function PaymentBreakdown({ amount, paidCents }: { amount: OrderAmount; paidCent
         .map(([label, c]) => (
           <div key={label} className="flex justify-between gap-3">
             <span>{label}</span>
-            <span className="font-mono text-brand-near-black">{formatEur(c / 100)}</span>
+            <span className="tabular-nums text-brand-near-black">{formatEur(c / 100)}</span>
           </div>
         ))}
       <p className="pt-1 text-brand-near-black">

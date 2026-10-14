@@ -621,8 +621,8 @@ function Step3Review({
                     )}
                   </td>
                   <td className="p-2 align-middle text-brand-gray">{cell(i, "format")}</td>
-                  <td className="p-2 text-right align-middle font-mono">{cell(i, "unitPrice")}</td>
-                  <td className="p-2 text-right align-middle font-mono text-brand-gray">{cell(i, "pricePerKg")}</td>
+                  <td className="p-2 text-right align-middle tabular-nums">{cell(i, "unitPrice")}</td>
+                  <td className="p-2 text-right align-middle tabular-nums text-brand-gray">{cell(i, "pricePerKg")}</td>
                 </tr>
               );
             })}

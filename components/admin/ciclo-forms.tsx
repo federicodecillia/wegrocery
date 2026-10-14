@@ -1027,7 +1027,7 @@ export function CycleProductPicker({
                       <div className="truncate text-[12px] font-medium text-brand-near-black">{p.name}</div>
                       <div className="flex items-center gap-2 text-label text-brand-gray">
                         <span>{p.variant} {p.format && `(${p.format})`}</span>
-                        <span className="font-mono font-bold text-primary-text">
+                        <span className="tabular-nums font-bold text-primary-text">
                           {formatEur(parseFloat(p.unitPrice))}
                         </span>
                       </div>
@@ -1077,7 +1077,7 @@ export function CycleProductPicker({
                       <div className="truncate text-[12px] font-medium text-brand-near-black">{cp.name}</div>
                       <div className="flex items-center gap-2 text-label text-brand-gray">
                         <span>{cp.variant} {cp.format && `(${cp.format})`}</span>
-                        <span className="font-mono font-bold text-primary-text">
+                        <span className="tabular-nums font-bold text-primary-text">
                           {formatEur(parseFloat(cp.unitPrice))}
                         </span>
                       </div>

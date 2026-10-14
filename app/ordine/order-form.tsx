@@ -532,7 +532,7 @@ export function OrderForm({
             {t.cycle.open}
           </Badge>
         </div>
-        <p className="font-mono text-label text-brand-gray mt-[3px]">
+        <p className="tabular-nums text-label text-brand-gray mt-[3px]">
           {cycleTitle}
           {supplierName ? ` · ${supplierName}` : ""}
           {orderCloseAt ? ` · ${t.cycle.closes(formatDeadline(orderCloseAt))}` : ""}
@@ -751,7 +751,7 @@ export function OrderForm({
                     <span
                       key="qty"
                       aria-hidden="true"
-                      className="min-w-[22px] text-center font-mono text-[13px] font-bold text-brand-near-black"
+                      className="min-w-[22px] text-center tabular-nums text-[13px] font-bold text-brand-near-black"
                     >
                       {qty}
                     </span>

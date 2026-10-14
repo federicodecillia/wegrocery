@@ -50,12 +50,12 @@ export async function CycleOrdersView({
                 <span className="min-w-0 text-[13px] font-medium text-brand-near-black">
                   {p.name}
                   {p.variant && <span className="font-normal text-brand-gray"> · {p.variant}</span>}
-                  {p.unit && <span className="ml-1 font-mono text-label text-muted">/{p.unit}</span>}
+                  {p.unit && <span className="ml-1 tabular-nums text-label text-muted">/{p.unit}</span>}
                 </span>
               </span>
               <span className="flex shrink-0 items-center gap-3">
-                <span className="font-mono text-[12px] text-brand-gray">×{p.totalQty}</span>
-                <span className="font-mono text-[13px] font-bold tabular-nums text-brand-near-black">
+                <span className="tabular-nums text-[12px] text-brand-gray">×{p.totalQty}</span>
+                <span className=" text-[13px] font-bold tabular-nums text-brand-near-black">
                   {formatEur(p.totalAmount)}
                 </span>
               </span>
@@ -66,7 +66,7 @@ export async function CycleOrdersView({
       <CardBody className="border-t border-brand-border py-2.5">
         <div className="flex justify-between text-[13px] font-bold text-brand-near-black">
           <span>{o.totalProducts}</span>
-          <span className="font-mono tabular-nums">{formatEur(summary.productsTotal)}</span>
+          <span className=" tabular-nums">{formatEur(summary.productsTotal)}</span>
         </div>
       </CardBody>
     </Card>

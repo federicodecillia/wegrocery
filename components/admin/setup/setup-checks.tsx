@@ -75,7 +75,7 @@ function StripeOutcome({ result, webhookUrl }: { result: StripeSetupCheck; webho
     <div role="status" className={`mt-2 rounded-lg p-3 text-[13px] ${good ? "bg-accent-soft text-accent-text" : "bg-danger-soft text-danger-text"}`}>
       <p>{text}</p>
       {result.status === "missingEvents" && (
-        <ul className="mt-1 list-disc pl-4 font-mono text-label">
+        <ul className="mt-1 list-disc pl-4 tabular-nums text-label">
           {result.missing.map((e) => (
             <li key={e}>{e}</li>
           ))}

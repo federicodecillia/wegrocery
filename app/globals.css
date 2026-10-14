@@ -66,15 +66,26 @@
   --radius-card: 18px;
   /* Cards are a 1px border, no shadow (FlyLabs Playbook 2.9). */
   --shadow-card: none;
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Inter for text, Geist for titles, JetBrains Mono only for short uppercase
+     labels (FlyLabs Playbook 2.1). Amounts are Inter with tabular-nums. */
+  --font-sans: var(--font-inter);
+  --font-display: var(--font-geist-sans);
+  --font-mono: var(--font-jetbrains-mono);
 }
 
 body {
   background: var(--frame);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-family: var(--font-inter), system-ui, sans-serif;
   -webkit-tap-highlight-color: transparent;
+}
+
+@layer base {
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display), var(--font-inter), system-ui, sans-serif;
+  }
 }
 
 /* One focus outline for every brand: primary-text is computed for 4.5:1 on

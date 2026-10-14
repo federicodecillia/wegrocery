@@ -57,6 +57,18 @@ describe("design guard", () => {
     expect(hits(/bg-black\/(\[0\.\d+\]|[0-9]|1[0-5])(?![\w-])/)).toEqual([]);
   });
 
+  it("keeps mono for uppercase labels and code-like values (Playbook 2.1)", () => {
+    // Amounts and captions are Inter with tabular-nums. Mono stays for
+    // uppercase labels, the one-time code field and values such as an IBAN or
+    // an address (break-all).
+    const lone = hits(/(?<![\w-])font-mono(?![\w-])/).filter((h) => {
+      const [f, n] = h.split(":");
+      const line = readFileSync(f, "utf8").split("\n")[Number(n) - 1];
+      return !/uppercase|tracking-\[0\.3em\]|break-all|\$\{mono/.test(line);
+    });
+    expect(lone).toEqual([]);
+  });
+
   it("has no text under 12px", () => {
     expect(hits(/text-\[(9|10|11)px\]/)).toEqual([]);
   });

@@ -220,7 +220,7 @@ function ColorField({
           onChange={(e) => onChange(e.target.value.trim())}
           placeholder={fallback ?? s.colorDefault}
           maxLength={7}
-          className="w-full rounded-xl border border-brand-border px-3 py-2 font-mono text-[13px] text-brand-near-black placeholder:text-muted focus:border-primary"
+          className="w-full rounded-xl border border-brand-border px-3 py-2 tabular-nums text-[13px] text-brand-near-black placeholder:text-muted focus:border-primary"
         />
       </div>
     </div>

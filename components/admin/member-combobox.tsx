@@ -23,7 +23,7 @@ type Props = {
 function BalanceText({ balance }: { balance: number }) {
   return (
     <span
-      className={`shrink-0 whitespace-nowrap font-mono text-label font-bold ${
+      className={`shrink-0 whitespace-nowrap tabular-nums text-label font-bold ${
         balance >= 0 ? "text-accent-text" : "text-danger-text"
       }`}
     >
@@ -119,7 +119,7 @@ export function MemberCombobox({ members, value, onChange, label }: Props) {
                 <span className="ml-1 font-normal text-brand-gray">{t.admin.treasury.inactiveHint}</span>
               )}
             </div>
-            <div className="truncate font-mono text-label text-brand-gray">{value.email}</div>
+            <div className="truncate tabular-nums text-label text-brand-gray">{value.email}</div>
             <BalanceText balance={value.balance} />
           </div>
           <button
@@ -199,7 +199,7 @@ export function MemberCombobox({ members, value, onChange, label }: Props) {
                     {m.fullName}
                     {!m.active && <span className="ml-1 text-brand-gray">{t.admin.treasury.inactiveHint}</span>}
                   </div>
-                  <div className="truncate font-mono text-label text-brand-gray">{m.email}</div>
+                  <div className="truncate tabular-nums text-label text-brand-gray">{m.email}</div>
                 </div>
                 <BalanceText balance={m.balance} />
               </li>

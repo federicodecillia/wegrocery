@@ -27,6 +27,7 @@ stanno nella PR.
 - 🌙 **Tema scuro.** In Profilo → App c'è "Aspetto": come il telefono, sempre chiaro o sempre scuro. I colori del gruppo restano e si leggono bene.
 
 ### Modificato
+- 🔤 **Nuovi caratteri.** I testi usano Inter, i titoli Geist e le piccole etichette maiuscole JetBrains Mono; gli importi sono allineati in colonna.
 - 🗄️ **Aggiornamenti del database più sicuri.** Ogni aggiornamento si applica in un solo passo e si ferma se il database è occupato, così un errore non lascia nulla a metà. Per applicarlo in produzione serve una conferma esplicita.
 
 ## [1.27.0] — 12 ottobre 2026

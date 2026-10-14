@@ -112,8 +112,8 @@ export function MergeMembersDialog({
             <div className="flex items-center justify-between gap-2 rounded-lg border border-brand-border bg-brand-warm-white px-3 py-2">
               <div className="min-w-0">
                 <div className="truncate text-[13px] font-semibold text-brand-near-black">{absorbed.fullName}</div>
-                <div className="truncate font-mono text-label text-brand-gray">{absorbed.email}</div>
-                <div className="font-mono text-label text-brand-gray">
+                <div className="truncate tabular-nums text-label text-brand-gray">{absorbed.email}</div>
+                <div className="tabular-nums text-label text-brand-gray">
                   {t.admin.treasury.memberBalance(formatMoney(absorbed.balance))}
                 </div>
               </div>

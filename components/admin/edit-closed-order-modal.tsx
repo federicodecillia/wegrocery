@@ -154,7 +154,7 @@ export function EditClosedOrderModal({ cycleId, cycleTitle, mode, onClose, onSav
               <div className="font-mono text-label uppercase tracking-wide text-muted">
                 {t.admin.editClosedOrder.beforeLabel}
               </div>
-              <div className="font-mono text-[13px] font-bold text-brand-gray">
+              <div className="tabular-nums text-[13px] font-bold text-brand-gray">
                 {formatEur(oldTotal)}
               </div>
             </div>
@@ -162,7 +162,7 @@ export function EditClosedOrderModal({ cycleId, cycleTitle, mode, onClose, onSav
               <div className="font-mono text-label uppercase tracking-wide text-muted">
                 {t.admin.editClosedOrder.afterLabel}
               </div>
-              <div className="font-mono text-[13px] font-bold text-brand-near-black">
+              <div className="tabular-nums text-[13px] font-bold text-brand-near-black">
                 {formatEur(newTotal)}
               </div>
             </div>
@@ -171,7 +171,7 @@ export function EditClosedOrderModal({ cycleId, cycleTitle, mode, onClose, onSav
                 {t.admin.editClosedOrder.deltaLabel}
               </div>
               <div
-                className={`font-mono text-[13px] font-bold ${
+                className={`tabular-nums text-[13px] font-bold ${
                   Math.abs(delta) < 0.005
                     ? "text-brand-gray"
                     : delta > 0
@@ -260,12 +260,12 @@ export function EditClosedOrderModal({ cycleId, cycleTitle, mode, onClose, onSav
                               {p.name}
                             </div>
                             <div className="flex flex-wrap items-center gap-x-2 text-label text-brand-gray">
-                              {meta && <span className="font-mono">{meta}</span>}
-                              <span className="font-mono font-semibold text-primary-text">
+                              {meta && <span className="tabular-nums">{meta}</span>}
+                              <span className="tabular-nums font-semibold text-primary-text">
                                 {formatEur(parseFloat(p.unitPrice))}
                               </span>
                               {p.pricePerKg && (
-                                <span className="font-mono text-label text-muted">
+                                <span className="tabular-nums text-label text-muted">
                                   ({formatEur(parseFloat(p.pricePerKg))}/kg)
                                 </span>
                               )}
@@ -291,7 +291,7 @@ export function EditClosedOrderModal({ cycleId, cycleTitle, mode, onClose, onSav
                             >
                               −
                             </button>
-                            <span aria-live="polite" className="min-w-[1.5ch] text-center font-mono text-[13px] font-bold text-brand-near-black">
+                            <span aria-live="polite" className="min-w-[1.5ch] text-center tabular-nums text-[13px] font-bold text-brand-near-black">
                               {qty}
                             </span>
                             <button

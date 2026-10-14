@@ -221,7 +221,7 @@ export function SupplierCatalogList({
             <section key={groupName} className="overflow-hidden rounded-xl border border-brand-border bg-surface shadow-sm">
               <div className="flex items-center justify-between border-b border-brand-border bg-brand-warm-white px-4 py-3">
                 <h3 className="text-[13px] font-bold text-brand-near-black">{groupName}</h3>
-                <span className="font-mono text-label text-brand-gray">{products.length}</span>
+                <span className="tabular-nums text-label text-brand-gray">{products.length}</span>
               </div>
               <div className="divide-y divide-brand-border">
                 {products.map((product) => (
@@ -254,11 +254,11 @@ export function SupplierCatalogList({
                       )}
                     </div>
                     <div className="shrink-0 text-right">
-                      <div className="font-mono text-[13px] font-bold text-brand-near-black">
+                      <div className="tabular-nums text-[13px] font-bold text-brand-near-black">
                         {formatEur(parseFloat(product.unitPrice))}
                       </div>
                       {product.pricePerKg && (
-                        <div className="font-mono text-label text-muted">
+                        <div className="tabular-nums text-label text-muted">
                           ({formatEur(parseFloat(product.pricePerKg))}/kg)
                         </div>
                       )}

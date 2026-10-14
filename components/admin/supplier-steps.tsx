@@ -174,7 +174,7 @@ export function SupplierSteps({ cycleId }: { cycleId: string }) {
 
   const labelCls = "block text-label font-semibold uppercase tracking-wide text-brand-gray";
   const inputCls =
-    "w-full rounded-lg border border-brand-border bg-surface min-h-11 px-3 py-2 text-[14px] font-mono text-brand-near-black disabled:bg-brand-warm-white";
+    "w-full rounded-lg border border-brand-border bg-surface min-h-11 px-3 py-2 text-[14px] tabular-nums text-brand-near-black disabled:bg-brand-warm-white";
   const sa = t.admin.supplierActions;
 
   return (
@@ -389,7 +389,7 @@ function PreviewSection({
           {rows.map((r) => (
             <li key={r.key} className="flex items-center justify-between px-3 py-1.5 text-[12px]">
               <span className="truncate pr-2 text-brand-near-black">{r.left}</span>
-              <span className="shrink-0 font-mono text-label">
+              <span className="shrink-0 tabular-nums text-label">
                 <span className="text-muted line-through">{formatEur(r.oldVal)}</span>
                 <span className="mx-1 text-brand-gray">→</span>
                 <span className="font-bold text-brand-near-black">{formatEur(r.newVal)}</span>

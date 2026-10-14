@@ -698,7 +698,7 @@ Key patterns:
 - **Notification bell**: in header, red badge with count, links to `/notifiche`
 - **Gestures** (`lib/ui/use-swipe.ts`, Pointer Events, no library): drag down on a `Sheet`'s handle or header closes it on phones (`swipeToClose={false}` on the cycle-close review), a confirm's drag is "Annulla"; off with reduced motion, never from the left edge. `components/app-refresh.tsx` refreshes the page after 5 minutes in the background and shows the offline line; tapping the current bottom-bar item scrolls up and refreshes. Neither ever runs on `/ordine` (`lib/ui/refresh.ts`)
 - Shell `max-w-[480px]`, `md:max-w-[640px]`, `lg:max-w-[960px]` on every page, centered; `bg-brand-frame` frames the app, and the card never resizes between pages. Inside it, `<AppShell layout="reading">` (the default) keeps a 600 px column from lg (Guida, Profilo, Notifiche, Changelog, Ricarica); `layout="wide"` uses the whole card (Home's two columns, Admin). Widths live in `shell-width.ts`, mirrored by `ShellSkeleton`
-- Member pages: reading text is 14px, prices and notification bodies included (sans, `tabular-nums`); mono stays for small labels and totals
+- Member pages: reading text is 14px, prices and notification bodies included (Inter, `tabular-nums`); titles (h1 to h3) are Geist; JetBrains Mono is only for uppercase labels, the one-time code field and code-like values (IBAN, addresses: `break-all`), kept by `design-guard.test.ts` (Playbook 2.1)
 - Small header controls (bell, avatar, "?") keep their look and get a 44 px touch area with the `hit-44` utility
 - The header holds the bell and the Profile avatar (initials, `lib/profile/summary.ts`); the email, sign-out and personal settings are on `/profilo`, whose rows hide what the deploy has not switched on
 

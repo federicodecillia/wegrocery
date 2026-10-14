@@ -69,7 +69,7 @@ export function CassaSummaryCards({
       >
         {formatEur(totalBalance)}
       </div>
-      <div className="mt-0.5 font-mono text-label text-muted">
+      <div className="mt-0.5 tabular-nums text-label text-muted">
         {t.admin.treasury.activeMembersHint}
       </div>
     </div>
@@ -90,7 +90,7 @@ export function CassaSummaryCards({
       >
         {formatEur(avgBalance)}
       </div>
-      <div className="mt-0.5 font-mono text-label text-muted">
+      <div className="mt-0.5 tabular-nums text-label text-muted">
         {t.admin.treasury.perActiveMember}
       </div>
     </div>
@@ -119,7 +119,7 @@ export function CassaSummaryCards({
       <div className="text-[18px] font-black tracking-[-0.02em] text-brand-near-black">
         {negativeCount}
       </div>
-      <div className="mt-0.5 font-mono text-label text-muted">
+      <div className="mt-0.5 tabular-nums text-label text-muted">
         {isActive ? t.admin.treasury.filterActive : t.admin.treasury.filterHint}
       </div>
     </button>
@@ -146,7 +146,7 @@ export function CassaSummaryCards({
         <span className="text-[14px] leading-none">📈</span>
       </div>
       <div className="text-[18px] font-black tracking-[-0.02em] text-brand-near-black">{aboveMaxCount}</div>
-      <div className="mt-0.5 font-mono text-label text-muted">
+      <div className="mt-0.5 tabular-nums text-label text-muted">
         {aboveMaxActive ? t.admin.treasury.filterActive : t.admin.treasury.filterHint}
       </div>
     </button>
@@ -239,7 +239,7 @@ export function LedgerEntryRow({ entry }: { entry: LedgerEntry }) {
     return (
       <div className="space-y-2 bg-primary-soft px-4 py-3">
         <div className="text-[13px] font-medium text-brand-near-black">
-          {title} <span className="font-mono text-label font-normal text-muted">· {kindLabel}</span>
+          {title} <span className="tabular-nums text-label font-normal text-muted">· {kindLabel}</span>
         </div>
         <div className="flex gap-2">
           <input
@@ -250,7 +250,7 @@ export function LedgerEntryRow({ entry }: { entry: LedgerEntry }) {
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             aria-label={t.admin.treasury.amountLabel}
-            className="min-h-11 w-28 shrink-0 rounded-lg border border-brand-border bg-surface px-2 py-1 font-mono text-[14px]"
+            className="min-h-11 w-28 shrink-0 rounded-lg border border-brand-border bg-surface px-2 py-1 tabular-nums text-[14px]"
           />
           <input
             type="text"
@@ -284,14 +284,14 @@ export function LedgerEntryRow({ entry }: { entry: LedgerEntry }) {
         <div className="flex items-baseline justify-between gap-3">
           <span className="min-w-0 text-[14px] font-medium text-brand-near-black">{title}</span>
           <span
-            className={`shrink-0 whitespace-nowrap font-mono text-[14px] font-bold tabular-nums ${
+            className={`shrink-0 whitespace-nowrap text-[14px] font-bold tabular-nums ${
               amountNum >= 0 ? "text-accent-text" : "text-danger-text"
             }`}
           >
             {formatSignedMoney(entry.amount)}
           </span>
         </div>
-        <div className="mt-0.5 font-mono text-label text-muted">
+        <div className="mt-0.5 tabular-nums text-label text-muted">
           {kindLabel} · {entry.entryDate ? formatDate(entry.entryDate) : "—"}
           {entry.correctedAt && ` · ${t.ledger.correctedOn(formatDate(entry.correctedAt))}`}
         </div>
@@ -381,7 +381,7 @@ export function CassaInlineList({
 
   function renderBalance(balance: number) {
     return (
-      <span className={`font-mono text-[13px] font-bold ${balance >= 0 ? "text-accent-text" : "text-danger-text"}`}>
+      <span className={`tabular-nums text-[13px] font-bold ${balance >= 0 ? "text-accent-text" : "text-danger-text"}`}>
         {balance >= 0 ? "+" : ""}
         {formatMoney(Math.abs(balance))}
       </span>
@@ -401,7 +401,7 @@ export function CassaInlineList({
         >
           <div className="min-w-0 flex-1">
             <div className="text-[13px] font-medium text-brand-near-black">{m.fullName}</div>
-            <div className="font-mono text-label text-muted">
+            <div className="tabular-nums text-label text-muted">
               {t.admin.treasury.movementsCount(entries.length)}
               {m.active ? "" : ` ${t.admin.treasury.inactiveHint}`}
             </div>

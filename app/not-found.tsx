@@ -8,7 +8,7 @@ export default function NotFound() {
       style={{ background: "var(--frame)" }}
     >
       <div className="w-full max-w-[320px] rounded-card border border-brand-border bg-surface p-6 shadow-sm">
-        <p className="font-mono text-[40px] font-bold text-muted">404</p>
+        <p className="tabular-nums text-[40px] font-bold text-muted">404</p>
         <p className="mt-1 text-[15px] font-semibold text-brand-near-black">{t.common.pageNotFound}</p>
         <Link
           href="/"

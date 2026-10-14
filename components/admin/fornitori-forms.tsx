@@ -273,7 +273,7 @@ export function FornitoriList({
                             </span>
                           )}
                         </span>
-                        <span className="mt-0.5 block font-mono text-label text-muted">
+                        <span className="mt-0.5 block tabular-nums text-label text-muted">
                           {s.macroCategory && `${s.macroCategory} · `}
                           {s.contactName && `${s.contactName} · `}
                           {t.admin.suppliers.cyclesCount(s.cycleCount)}
@@ -312,7 +312,7 @@ export function FornitoriList({
                   {expandedId === s.supplierId && (
                     <div className="bg-tint/[0.01] px-4 py-3">
                       {(s.phone || s.email || s.address) && (
-                        <div className="mb-3 space-y-0.5 font-mono text-label text-brand-gray">
+                        <div className="mb-3 space-y-0.5 tabular-nums text-label text-brand-gray">
                           {s.phone && <div>📞 {s.phone}</div>}
                           {s.email && <div>✉ {s.email}</div>}
                           {s.address && <div>📍 {s.address}</div>}

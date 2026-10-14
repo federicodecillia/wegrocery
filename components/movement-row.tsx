@@ -40,13 +40,13 @@ export function MovementRow({
         <MovementIcon kind={movementKind(entry)} incoming={incoming} />
         <span className="min-w-0">
           <span className="block truncate text-[14px] font-medium text-brand-near-black">{movementText(entry, t.history)}</span>
-          <span className="mt-[2px] block font-mono text-label text-muted">
+          <span className="mt-[2px] block tabular-nums text-label text-muted">
             {movementDay(entry.entryDate)}
             {entry.correctedAt && ` · ${t.ledger.correctedOn(formatDate(entry.correctedAt))}`}
           </span>
         </span>
       </span>
-      <span className={`shrink-0 whitespace-nowrap font-mono text-[14px] font-bold tabular-nums ${incoming ? "text-accent-text" : "text-danger-text"}`}>
+      <span className={`shrink-0 whitespace-nowrap text-[14px] font-bold tabular-nums ${incoming ? "text-accent-text" : "text-danger-text"}`}>
         {formatSignedMoney(entry.amount)}
       </span>
     </>

@@ -150,7 +150,7 @@ export function PaymentSettingsForm({
               spellCheck={false}
               value={values.bankIban}
               onChange={(e) => update("bankIban", e.target.value)}
-              className={`${inputCls} font-mono`}
+              className={`${inputCls} tabular-nums`}
             />
           </div>
           <div>
@@ -202,7 +202,7 @@ export function PaymentSettingsForm({
             <span className="flex items-center gap-2 text-[13px] font-bold text-brand-near-black">
               {s.onlineTitle}
               {stripeKey.usable && !stripeKey.livemode && (
-                <span className="rounded-full bg-primary-soft px-2 py-0.5 font-mono text-label font-semibold text-primary-text">
+                <span className="rounded-full bg-primary-soft px-2 py-0.5 tabular-nums text-label font-semibold text-primary-text">
                   {s.testMode}
                 </span>
               )}
@@ -232,7 +232,7 @@ export function PaymentSettingsForm({
         {isPending ? t.admin.common.saving : t.admin.common.save}
       </button>
       {savedAt && (
-        <p className="text-center font-mono text-label text-muted">
+        <p className="text-center tabular-nums text-label text-muted">
           {s.lastSaved(
             formatDateTime(savedAt, { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" }),
           )}

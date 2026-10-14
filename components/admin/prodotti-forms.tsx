@@ -423,10 +423,10 @@ export function CatalogLoadForm({
               {p.name}
               {p.variant && <span className="ml-1 text-[12px] text-brand-gray">{p.variant}</span>}
               {p.format && (
-                <span className="ml-1 font-mono text-label text-muted">({p.format})</span>
+                <span className="ml-1 tabular-nums text-label text-muted">({p.format})</span>
               )}
             </div>
-            <div className="font-mono text-[12px] font-semibold text-brand-near-black">
+            <div className="tabular-nums text-[12px] font-semibold text-brand-near-black">
               {formatEur(parseFloat(p.unitPrice))}
             </div>
           </label>
@@ -620,7 +620,7 @@ export function ProductListItem({
 
   return (
     <div className="flex items-center gap-3 px-4 py-2.5 hover:bg-brand-warm-white/50 group">
-      <span className="w-6 shrink-0 font-mono text-label text-muted">
+      <span className="w-6 shrink-0 tabular-nums text-label text-muted">
         {index + 1}
       </span>
       <span className="shrink-0 text-[16px] leading-none">{emoji}</span>
@@ -630,18 +630,18 @@ export function ProductListItem({
           <span className="ml-1.5 text-[12px] text-brand-gray">{product.variant}</span>
         )}
         {product.format && (
-          <span className="ml-1.5 font-mono text-label text-muted">
+          <span className="ml-1.5 tabular-nums text-label text-muted">
             {product.format}
           </span>
         )}
       </div>
       <div className="flex items-center gap-3">
         <div className="shrink-0 text-right">
-          <div className="font-mono text-[13px] font-bold text-brand-near-black">
+          <div className="tabular-nums text-[13px] font-bold text-brand-near-black">
             {formatEur(parseFloat(product.unitPrice))}
           </div>
           {product.pricePerKg && (
-            <div className="font-mono text-label text-muted">
+            <div className="tabular-nums text-label text-muted">
               ({formatEur(parseFloat(product.pricePerKg))}/kg)
             </div>
           )}
@@ -744,16 +744,16 @@ export function CatalogManager({
                 </div>
                 <div className="flex items-center gap-2 text-label text-brand-gray">
                   {p.variant && <span>{p.variant}</span>}
-                  {p.format && <span className="font-mono text-label text-muted">({p.format})</span>}
+                  {p.format && <span className="tabular-nums text-label text-muted">({p.format})</span>}
                   {p.category && <span className="rounded-full bg-accent-soft px-2 text-accent-text">{p.category}</span>}
                 </div>
               </div>
               <div className="text-right">
-                <div className="font-mono text-[13px] font-bold text-brand-near-black">
+                <div className="tabular-nums text-[13px] font-bold text-brand-near-black">
                   {formatEur(parseFloat(p.unitPrice))}
                 </div>
                 {p.pricePerKg && (
-                  <div className="font-mono text-label text-muted">
+                  <div className="tabular-nums text-label text-muted">
                     ({formatEur(parseFloat(p.pricePerKg))}/kg)
                   </div>
                 )}

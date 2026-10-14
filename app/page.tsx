@@ -197,11 +197,11 @@ export default async function HomePage({
                                 {p?.name ?? "?"}
                               </div>
                               {meta && (
-                                <div className="mt-[1px] font-mono text-label text-brand-gray">{meta}</div>
+                                <div className="mt-[1px] tabular-nums text-label text-brand-gray">{meta}</div>
                               )}
                             </div>
                           </div>
-                          <div className="font-mono text-[13px] font-semibold text-brand-near-black">
+                          <div className="tabular-nums text-[13px] font-semibold text-brand-near-black">
                             ×{line.quantity} · {formatEur(parseFloat(line.lineTotal))}
                           </div>
                         </div>
@@ -209,7 +209,7 @@ export default async function HomePage({
                     })}
                     <div className="flex items-center justify-between border-t border-brand-border bg-tint/[0.03] px-4 py-[12px]">
                       <span className="text-[14px] font-extrabold text-brand-near-black">{t.home.totalLabel}</span>
-                      <span className="font-mono text-[13px] font-bold text-brand-near-black">
+                      <span className="tabular-nums text-[13px] font-bold text-brand-near-black">
                         {formatEur(orderTotal)}
                       </span>
                     </div>
@@ -264,7 +264,7 @@ export default async function HomePage({
             <div className="mb-[3px] font-mono text-label uppercase tracking-[0.07em] text-primary-text">
               {t.home.thisOrder}
             </div>
-            <div className="font-mono text-[13px] font-bold text-brand-near-black">
+            <div className="tabular-nums text-[13px] font-bold text-brand-near-black">
               {formatEur(globalOrderTotal)}
             </div>
           </div>
@@ -277,7 +277,7 @@ export default async function HomePage({
               {t.home.afterOrder}
             </div>
             <div
-              className={`font-mono text-[13px] font-bold ${
+              className={`tabular-nums text-[13px] font-bold ${
                 afterBalance < 0 ? "text-danger-text" : "text-brand-near-black"
               }`}
             >
@@ -327,11 +327,11 @@ export default async function HomePage({
         <div className="mb-[14px] flex items-center justify-between rounded-card border border-brand-border bg-surface p-[18px] shadow-card">
           <div>
             <div className="text-[15px] font-bold">{t.home.noOpenOrders}</div>
-            <div className="font-mono text-label text-muted">
+            <div className="tabular-nums text-label text-muted">
               {t.home.noOpenOrdersHint}
             </div>
           </div>
-          <span className="rounded-full bg-tint/[0.06] px-2.5 py-1 font-mono text-label text-brand-gray">
+          <span className="rounded-full bg-tint/[0.06] px-2.5 py-1 tabular-nums text-label text-brand-gray">
             {t.home.closed}
           </span>
         </div>
@@ -350,7 +350,7 @@ export default async function HomePage({
             </span>
             <Link
               href="/storico"
-              className="font-mono text-label font-bold text-primary-text"
+              className="tabular-nums text-label font-bold text-primary-text"
             >
               {t.home.seeAll}
             </Link>

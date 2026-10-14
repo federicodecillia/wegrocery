@@ -45,7 +45,7 @@ export function OrderSentDialog({
             <path d="M20 6 9 17l-5-5" />
           </svg>
         </span>
-        <p className="font-mono text-[12px] font-semibold text-accent-text">
+        <p className="tabular-nums text-[12px] font-semibold text-accent-text">
           {t.order.confirmedSummary(itemCount, formatEur(total))}
         </p>
         <p className="mt-3 text-[14px] leading-[1.5] text-brand-gray">{t.order.sentBody}</p>

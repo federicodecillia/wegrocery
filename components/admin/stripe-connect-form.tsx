@@ -83,7 +83,7 @@ export function StripeConnectForm({
             required
             aria-describedby="stripe-key-help"
             aria-invalid={error ? true : undefined}
-            className="min-h-11 w-full min-w-0 flex-1 rounded-lg border border-brand-border px-3 py-2 font-mono text-[13px] text-brand-near-black"
+            className="min-h-11 w-full min-w-0 flex-1 rounded-lg border border-brand-border px-3 py-2 tabular-nums text-[13px] text-brand-near-black"
           />
           <button
             type="submit"

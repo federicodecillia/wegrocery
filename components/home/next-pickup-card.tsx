@@ -30,7 +30,7 @@ export function NextPickupCard({ pickup }: { pickup: NextPickup }) {
           <div className="text-[15px] font-bold tracking-[-0.01em] text-brand-near-black">
             {dayLabel}
           </div>
-          <div className="mt-[2px] font-mono text-[12px] font-semibold text-brand-near-black/80">
+          <div className="mt-[2px] tabular-nums text-[12px] font-semibold text-brand-near-black/80">
             {timeRange}
           </div>
           {(pickup.cycleTitle || pickup.supplierName) && (

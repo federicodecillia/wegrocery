@@ -32,7 +32,7 @@ export async function MemberOrders({ memberId }: { memberId: string }) {
       {member && (
         <div className="rounded-xl border border-brand-border bg-surface px-4 py-3 shadow-sm">
           <h2 className="text-[15px] font-bold text-brand-near-black">{member.fullName}</h2>
-          <div className="mt-0.5 font-mono text-label text-muted">
+          <div className="mt-0.5 tabular-nums text-label text-muted">
             {member.email} ·{" "}
             {t.admin.orders.memberSummary(orders.length, formatEur(orders.reduce((s, o) => s + o.total, 0)))}
           </div>
@@ -56,7 +56,7 @@ export async function MemberOrders({ memberId }: { memberId: string }) {
                     {cycle.cycleTitle}
                   </Link>
                   {cycle.pickupDate && (
-                    <div className="mt-0.5 font-mono text-label text-muted">
+                    <div className="mt-0.5 tabular-nums text-label text-muted">
                       {t.admin.orders.pickupLabel} {formatDate(cycle.pickupDate)}
                     </div>
                   )}
@@ -71,7 +71,7 @@ export async function MemberOrders({ memberId }: { memberId: string }) {
                   >
                     {cycle.cycleStatus === "open" ? t.admin.orders.openBadge : t.admin.orders.closedBadge}
                   </span>
-                  <span className="font-mono text-[13px] font-bold text-brand-near-black">
+                  <span className="tabular-nums text-[13px] font-bold text-brand-near-black">
                     {formatEur(cycle.total)}
                   </span>
                 </div>
@@ -85,11 +85,11 @@ export async function MemberOrders({ memberId }: { memberId: string }) {
                       {line.variant && (
                         <span className="text-brand-gray">· {line.variant}</span>
                       )}
-                      <span className="font-mono text-label text-muted">
+                      <span className="tabular-nums text-label text-muted">
                         ×{line.quantity}
                       </span>
                     </span>
-                    <span className="font-mono text-[12px] text-brand-near-black">
+                    <span className="tabular-nums text-[12px] text-brand-near-black">
                       {formatEur(line.lineTotal)}
                     </span>
                   </div>

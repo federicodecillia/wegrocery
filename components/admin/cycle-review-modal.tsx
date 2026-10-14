@@ -191,7 +191,7 @@ function CycleReviewModal({
                 <div className="font-mono text-label uppercase tracking-wide text-muted">
                   {t.admin.cycleReview.ordersTotalLabel}
                 </div>
-                <div className="font-mono text-[15px] font-bold text-brand-near-black">{formatEur(newGrandTotal)}</div>
+                <div className="tabular-nums text-[15px] font-bold text-brand-near-black">{formatEur(newGrandTotal)}</div>
               </div>
               {Math.abs(totalDelta) > 0.005 && (
                 <div className="text-right">
@@ -199,7 +199,7 @@ function CycleReviewModal({
                     {t.admin.cycleReview.variationLabel}
                   </div>
                   <div
-                    className={`font-mono text-[14px] font-bold ${totalDelta >= 0 ? "text-primary-text" : "text-accent-text"}`}
+                    className={`tabular-nums text-[14px] font-bold ${totalDelta >= 0 ? "text-primary-text" : "text-accent-text"}`}
                   >
                     {signedMoney(totalDelta)}
                   </div>
@@ -305,11 +305,11 @@ function ReviewRow({
           <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-brand-gray">
             <span>
               {t.admin.cycleReview.orderedLabel}{" "}
-              <span className="font-mono font-bold text-brand-near-black">{r.totalQty}</span>
+              <span className="tabular-nums font-bold text-brand-near-black">{r.totalQty}</span>
             </span>
             <span>
               {t.admin.cycleReview.currentTotalLabel}{" "}
-              <span className="font-mono font-bold text-brand-near-black">{formatEur(r.totalAmount)}</span>
+              <span className="tabular-nums font-bold text-brand-near-black">{formatEur(r.totalAmount)}</span>
             </span>
           </div>
         </div>

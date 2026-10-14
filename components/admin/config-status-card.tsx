@@ -58,7 +58,7 @@ function ConfigRow({ item }: { item: ConfigItem }) {
             {s.items[item.id]}
             {item.required && <span className="ml-1 font-normal text-muted">({s.required})</span>}
           </div>
-          <div className="mt-[2px] break-words font-mono text-label text-brand-gray">
+          <div className="mt-[2px] break-words tabular-nums text-label text-brand-gray">
             {s.variables} {item.vars.join(", ")}
           </div>
         </div>
@@ -70,7 +70,7 @@ function ConfigRow({ item }: { item: ConfigItem }) {
       {detail && detail.length > 0 && (
         <>
           {item.id === "stripe" && <p className="mt-1 text-[12px] text-brand-near-black">{s.notes.stripeEvents}</p>}
-          <ul className="mt-1 list-inside list-disc font-mono text-label text-brand-gray">
+          <ul className="mt-1 list-inside list-disc tabular-nums text-label text-brand-gray">
             {detail.map((d) => (
               <li key={d} className="break-words">
                 {d}
@@ -85,7 +85,7 @@ function ConfigRow({ item }: { item: ConfigItem }) {
           <p className="text-brand-near-black">{help[0]}</p>
           <p className="mt-1 break-words text-brand-gray">{help[1]}</p>
           {item.id === "stripe" && (
-            <ul className="mt-1 list-inside list-disc font-mono text-label text-brand-gray">
+            <ul className="mt-1 list-inside list-disc tabular-nums text-label text-brand-gray">
               {REQUIRED_STRIPE_EVENTS.map((e) => (
                 <li key={e} className="break-words">
                   {e}

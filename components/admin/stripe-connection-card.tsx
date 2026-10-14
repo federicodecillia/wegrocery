@@ -8,11 +8,11 @@ const card = "rounded-xl border border-brand-border bg-surface p-4 shadow-sm";
 function ModeBadge({ livemode }: { livemode: boolean }) {
   const s = t.admin.settings.stripeConnection;
   return livemode ? (
-    <span className="rounded-full bg-accent-soft px-2 py-0.5 font-mono text-label font-semibold text-accent-text">
+    <span className="rounded-full bg-accent-soft px-2 py-0.5 tabular-nums text-label font-semibold text-accent-text">
       {s.modeLive}
     </span>
   ) : (
-    <span className="rounded-full bg-primary-soft px-2 py-0.5 font-mono text-label font-semibold text-primary-text">
+    <span className="rounded-full bg-primary-soft px-2 py-0.5 tabular-nums text-label font-semibold text-primary-text">
       {s.modeTest}
     </span>
   );

@@ -23,7 +23,7 @@ export function GuideArticleCard({ article }: { article: GuideArticle }) {
             <li key={i} className="flex gap-3">
               <span
                 aria-hidden
-                className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-accent font-mono text-label font-bold text-on-accent"
+                className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-accent tabular-nums text-label font-bold text-on-accent"
               >
                 {i + 1}
               </span>

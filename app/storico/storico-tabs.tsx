@@ -155,7 +155,7 @@ export function StoricoTabs({ orderHistory, movements, balance, bankRefs }: Prop
                       <div className="text-[14px] font-bold tracking-[-0.01em] text-brand-near-black">
                         {o.title}
                       </div>
-                      <div className="mt-[2px] font-mono text-label text-muted">
+                      <div className="mt-[2px] tabular-nums text-label text-muted">
                         {formatDate(o.pickupDate)}
                       </div>
                     </div>
@@ -163,7 +163,7 @@ export function StoricoTabs({ orderHistory, movements, balance, bankRefs }: Prop
                       {/* Not charged yet: what the order costs, muted and unsigned
                           until the close moves the balance. */}
                       <span
-                        className={`whitespace-nowrap font-mono text-[15px] font-bold tabular-nums ${
+                        className={`whitespace-nowrap text-[15px] font-bold tabular-nums ${
                           o.charged ? "text-brand-near-black" : "text-muted"
                         }`}
                       >
@@ -186,7 +186,7 @@ export function StoricoTabs({ orderHistory, movements, balance, bankRefs }: Prop
           {shownCycle && (
             <section aria-labelledby="cycle-detail-title" className="hidden rounded-card border border-brand-border bg-surface p-4 shadow-card lg:sticky lg:top-4 lg:block">
               <h2 id="cycle-detail-title" className="text-[15px] font-bold text-brand-near-black">{shownCycle.title}</h2>
-              <p className="mt-[2px] mb-3 font-mono text-label text-muted">{formatDate(shownCycle.pickupDate)}</p>
+              <p className="mt-[2px] mb-3 tabular-nums text-label text-muted">{formatDate(shownCycle.pickupDate)}</p>
               <CycleDetail entry={shownCycle} bankRefs={bankRefs} />
             </section>
           )}
@@ -257,7 +257,7 @@ function CycleDetail({ entry, bankRefs }: { entry: CycleHistoryEntry; bankRefs: 
     <>
       {entry.lines.length > 0 && (
         <>
-          <div className="mb-[5px] font-mono text-label text-muted">{t.history.products}</div>
+          <div className="mb-[5px] tabular-nums text-label text-muted">{t.history.products}</div>
           <div className="divide-y divide-brand-border rounded-xl border border-brand-border bg-surface">
             {entry.lines.map((l, index) => (
               <div key={`${l.productName}-${index}`} className="flex items-start gap-3 px-3 py-2.5">
@@ -272,7 +272,7 @@ function CycleDetail({ entry, bankRefs }: { entry: CycleHistoryEntry; bankRefs: 
                   <div className="mt-[2px] text-label leading-snug text-brand-gray">
                     {[l.supplierName, l.category].filter(Boolean).join(" · ")}
                   </div>
-                  <div className="mt-[2px] font-mono text-label text-muted">
+                  <div className="mt-[2px] tabular-nums text-label text-muted">
                     {l.quantity} × {formatEur(l.unitPrice)} ={" "}
                     {l.actualLineTotal !== null && l.actualLineTotal !== l.lineTotal ? (
                       // Weighed by the supplier: what the member actually pays.
@@ -318,14 +318,14 @@ function CycleTotals({ entry }: { entry: CycleHistoryEntry }) {
   const perOrder = entry.paymentMode === "per_order";
   if (!entry.charged) {
     return (
-      <div className="mt-[10px] space-y-[3px] font-mono text-label text-brand-gray">
+      <div className="mt-[10px] space-y-[3px] tabular-nums text-label text-brand-gray">
         {perOrder && entry.paid !== 0 && <TotalRow label={t.history.paid} value={formatSignedMoney(entry.paid)} />}
         <p>{perOrder ? t.history.settledAtClose : t.history.chargedAtClose}</p>
       </div>
     );
   }
   return (
-    <div className="mt-[10px] space-y-[3px] font-mono text-label text-brand-gray">
+    <div className="mt-[10px] space-y-[3px] tabular-nums text-label text-brand-gray">
       {perOrder && <TotalRow label={t.history.paid} value={formatSignedMoney(entry.paid)} />}
       <TotalRow label={t.history.products} value={formatSignedMoney(-entry.productsTotal)} />
       {entry.shipping !== 0 && (

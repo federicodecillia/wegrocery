@@ -32,7 +32,7 @@ export function CycleChooser({ cycles }: Props) {
               <div className="text-[15px] font-bold tracking-[-0.01em] text-brand-near-black">
                 {c.title}
               </div>
-              <div className="mt-[3px] font-mono text-label text-brand-gray">
+              <div className="mt-[3px] tabular-nums text-label text-brand-gray">
                 {[c.supplierName, c.orderCloseAt ? t.cycle.closes(formatDeadline(c.orderCloseAt)) : null]
                   .filter(Boolean)
                   .join(" · ")}

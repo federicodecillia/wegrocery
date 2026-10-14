@@ -104,7 +104,7 @@ export function SettleCycleButton({
               <li key={r.memberId} className="flex items-start justify-between gap-3 py-2 text-[13px]">
                 <div className="min-w-0">
                   <div className="truncate font-medium text-brand-near-black">{r.fullName}</div>
-                  <div className="font-mono text-label text-muted">{s.net(formatMoney(r.netCents / 100))}</div>
+                  <div className="tabular-nums text-label text-muted">{s.net(formatMoney(r.netCents / 100))}</div>
                 </div>
                 <div className="shrink-0 text-right text-[13px] text-brand-near-black">
                   {s.action[r.action](formatMoney(r.amountCents / 100))}

@@ -46,7 +46,7 @@ export function GroupInfoCard({ initial }: { initial: string | null }) {
       />
       <div className="mt-1 flex items-start justify-between gap-3">
         <p className="text-[12px] text-brand-gray">{value.trim() ? s.format : s.empty}</p>
-        <span className={`shrink-0 font-mono text-label ${tooLong ? "font-bold text-danger-text" : "text-muted"}`}>
+        <span className={`shrink-0 tabular-nums text-label ${tooLong ? "font-bold text-danger-text" : "text-muted"}`}>
           {s.count(value.length, GROUP_INFO_MAX)}
         </span>
       </div>

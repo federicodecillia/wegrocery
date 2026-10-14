@@ -75,7 +75,7 @@ export default async function GuidaPage() {
                   <span className="min-w-0">
                     <span className="block text-[15px] font-bold text-brand-near-black">{topic.title}</span>
                     <span className="mt-[2px] block text-[12px] leading-snug text-brand-gray">{topic.summary}</span>
-                    <span className="mt-1 block font-mono text-label text-muted">{t.guide.topicCount(count)}</span>
+                    <span className="mt-1 block tabular-nums text-label text-muted">{t.guide.topicCount(count)}</span>
                   </span>
                 </Link>
               </li>
@@ -100,7 +100,7 @@ export default async function GuidaPage() {
                   {t.guide.newsSubtitle}
                 </h2>
               </div>
-              {latest.date && <span className="font-mono text-label text-brand-gray">{latest.date}</span>}
+              {latest.date && <span className="tabular-nums text-label text-brand-gray">{latest.date}</span>}
             </div>
             <div className="space-y-3 px-[18px] py-4">
               {latest.tagline && (

@@ -80,7 +80,7 @@ function detailRows(entry: MovementDetail, onShowCycle: (cycleId: string) => voi
   const method = MANUAL_PAYMENT_METHODS.find((m) => m === entry.method);
   if (method) rows.push({ label: h.detailMethod, value: t.admin.treasury.methods[method] });
   if (entry.externalRef) {
-    rows.push({ label: h.detailReference, value: <span className="font-mono">{entry.externalRef}</span> });
+    rows.push({ label: h.detailReference, value: <span className="tabular-nums">{entry.externalRef}</span> });
   }
   if (entry.paymentId) rows.push({ label: h.detailPaymentStatus, value: paymentStatusLabel(entry.paymentStatus) });
   rows.push({ label: h.detailRecordedBy, value: recorderLabel(entry.recordedBy) });
@@ -128,7 +128,7 @@ function MovementDetailBody({ entry, onShowCycle }: { entry: MovementDetail; onS
   return (
     <>
       <p
-        className={`font-mono text-[26px] font-black tracking-[-0.03em] ${
+        className={`tabular-nums text-[26px] font-black tracking-[-0.03em] ${
           incoming ? "text-accent-text" : "text-danger-text"
         }`}
       >
