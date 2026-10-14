@@ -1,0 +1,39 @@
+name: Deploy Production
+
+# Starts a production deploy by hand, from the Actions tab or by an agent
+# (workflow_dispatch). Use it when the environment changed but the code did
+# not (a new variable, a rotated key), where a Vercel "Redeploy" would
+# otherwise be a click in the dashboard.
+#
+# Needs one GitHub repository secret:
+#   - VERCEL_PRODUCTION_DEPLOY_HOOK  the hook URL (Vercel → Project → Settings →
+#                                    Git → Deploy Hooks, branch main). It
+#                                    builds the latest commit of main from the
+#                                    GitHub source.
+# Unlike deploy-hook.yml it never runs on push (Git deploys already do that)
+# and it fails loudly when the secret is missing. After it, check /api/health.
+
+on:
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    env:
+      HOOK: ${{ secrets.VERCEL_PRODUCTION_DEPLOY_HOOK }}
+    steps:
+      - name: Call the deploy hook
+        run: |
+          if [ -z "$HOOK" ]; then
+            echo "::error::No VERCEL_PRODUCTION_DEPLOY_HOOK secret: nothing was deployed."
+            exit 1
+          fi
+          curl -fsS -X POST "$HOOK" -o /dev/null
+          echo "Production deploy requested; check /api/health in a minute or two."
