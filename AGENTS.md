@@ -24,6 +24,25 @@ Intended deviations (as of 2026-10-14):
 - 3.3 Repository docs in English: the repo is public and a portfolio piece, so this stays.
 - 7.1 `/api/health` returns `db` as `true | false` and `version` from `package.json`: aligned with Stellar when the FlyLabs Console arrives.
 
+Found in the review of 2026-10-14 (each line, its reason and its timing are in
+[`docs/2026-10-14-flylabs-playbook-alignment.md`](./docs/2026-10-14-flylabs-playbook-alignment.md)):
+- 1.4 The app connects with the database owner, not a role without schema privileges: one `DATABASE_URL` per installation so far; an `app_rw` role is planned for stage 1.
+- 2.1, 2.7, 2.9 Geist and Geist Mono instead of Geist, Inter and JetBrains Mono; own components on Radix Dialog and hand-drawn icons instead of shadcn on Base UI and lucide; cards with a light shadow: the app predates the FlyLabs style, which arrives with the dark theme at stage 1.
+- 2.8 Bottom bar up to `lg` and a top nav in the header from `lg`, inside one centred card, instead of a rail on tablet and a sidebar on PC: changing it reshapes every page, so it is a separate stage 1 proposal.
+- 3.4 Em dashes remain in some UI and email strings (`lib/i18n/it.ts`, `en.ts`) and in the changelog version headings: the strings predate the rule and get a test; the changelog heading switches at stage 1.
+- 4.4 First-run steps follow the settings, not the member's data, and the current step lives in `sessionStorage`: stage 1.
+- 5.1 Integration tests run on a throwaway Neon branch that needs `NEON_API_KEY` (skipped on forks), not on a plain Postgres: the Neon HTTP driver needs Neon's proxy. This stays.
+- 6.2 `scripts/db-migrate.mjs` runs statements one by one, with no transaction, no `lock_timeout` and no `_down.sql`: stage 1.
+- 6.3 and 9.5 Claude runs releases end to end, production migrations included, after a green manual backup and with Federico's explicit ok for each production operation, instead of handing him commands: Federico's choice (2026-10-07). This stays.
+- 6.5 The daily backup is not restored to prove it: a weekly restore test is planned for stage 1.
+- 7.6 No idempotency key and no one-click unsubscribe on notification emails (see "Email compliance"): small private groups so far; planned for stage 1.
+- 7.8 Vercel Analytics and Speed Insights in the root layout, no `usage_events`: third-party analytics to be removed, own events at stage 1.
+- 7.10 The Console (`console/`) redirects to its password login instead of answering 404: a 404 would hide the only way in. This stays.
+- 8.1 No versioned legal documents in the app: each group owns its privacy notice (`brand.privacyUrl`) as data controller. This stays for groups; FlyLabs-hosted terms are decided with hosting model A.
+- 9.1 Feature specs live in the private project folder (Italian, with group details), not in `docs/`: from now on a dated English plan goes in `docs/` with no group or member data.
+
+Never read `.env*` files other than `.env.example` (Playbook 8.3).
+
 ## Codebase structure
 
 ```
