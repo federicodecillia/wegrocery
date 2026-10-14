@@ -9,8 +9,12 @@ name: Weekly Backup Restore Test
 #
 # Needs, besides the backup's own secrets (RCLONE_CONFIG, GDRIVE_BACKUP_PATH):
 #   - secret   NEON_API_KEY                   a Neon API key with branch rights
-#   - variable RESTORE_TEST_NEON_PROJECT_ID   the Neon project whose throwaway
-#                                             branch receives the dump
+#                                             on the project below
+#   - project  late-frost-62618439            "wegrocery-restore-test" in the
+#                                             PortaMoneta Neon organisation, empty;
+#                                             its throwaway branch receives the dump
+#                                             (variable RESTORE_TEST_NEON_PROJECT_ID
+#                                             overrides the id)
 # The dump holds real member data and the branch lives for minutes (Neon also
 # expires it after two hours if the runner dies): pick a project of the same
 # organisation, never a public one. Output carries table counts only. Without
@@ -33,12 +37,11 @@ jobs:
           HAS_RCLONE: ${{ secrets.RCLONE_CONFIG != '' }}
           HAS_PATH: ${{ secrets.GDRIVE_BACKUP_PATH != '' }}
           HAS_NEON_KEY: ${{ secrets.NEON_API_KEY != '' }}
-          HAS_PROJECT: ${{ vars.RESTORE_TEST_NEON_PROJECT_ID != '' }}
         run: |
-          if [ "$HAS_RCLONE" = "true" ] && [ "$HAS_PATH" = "true" ] && [ "$HAS_NEON_KEY" = "true" ] && [ "$HAS_PROJECT" = "true" ]; then
+          if [ "$HAS_RCLONE" = "true" ] && [ "$HAS_PATH" = "true" ] && [ "$HAS_NEON_KEY" = "true" ]; then
             echo "enabled=true" >> "$GITHUB_OUTPUT"
           else
-            echo "::warning::Restore test skipped: RCLONE_CONFIG, GDRIVE_BACKUP_PATH, NEON_API_KEY or RESTORE_TEST_NEON_PROJECT_ID is missing."
+            echo "::warning::Restore test skipped: RCLONE_CONFIG, GDRIVE_BACKUP_PATH or NEON_API_KEY is missing."
           fi
 
   restore:
@@ -114,7 +117,7 @@ jobs:
         id: branch
         env:
           NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
-          NEON_PROJECT_ID: ${{ vars.RESTORE_TEST_NEON_PROJECT_ID }}
+          NEON_PROJECT_ID: ${{ vars.RESTORE_TEST_NEON_PROJECT_ID || 'late-frost-62618439' }}
           BRANCH: restore-${{ github.run_id }}-${{ github.run_attempt }}
         run: |
           set -euo pipefail
@@ -153,7 +156,7 @@ jobs:
         if: always()
         env:
           NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
-          NEON_PROJECT_ID: ${{ vars.RESTORE_TEST_NEON_PROJECT_ID }}
+          NEON_PROJECT_ID: ${{ vars.RESTORE_TEST_NEON_PROJECT_ID || 'late-frost-62618439' }}
           BRANCH: ${{ steps.branch.outputs.name }}
         run: |
           rm -f gas-backup-*.sql.gz "$HOME/.config/rclone/rclone.conf"
