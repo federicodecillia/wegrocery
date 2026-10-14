@@ -1,6 +1,6 @@
 # AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Guidance for every coding agent (Claude Code, Codex and others) working in this repository. This is the only instructions file: there is no CLAUDE.md (FlyLabs Playbook 9.2).
 
 ## Project Overview
 
