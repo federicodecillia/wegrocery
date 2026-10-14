@@ -46,6 +46,18 @@ export function refusesProduction(url, env, argv) {
   return host === productionHost && !argv.includes("--allow-prod");
 }
 
+/**
+ * The app's address for a role: the owner's address with the role's name and
+ * password (URL-encoded by the URL class). Used by create-app-role.mjs to save
+ * the address without ever printing it.
+ */
+export function roleUrl(ownerUrl, role, password) {
+  const u = new URL(ownerUrl);
+  u.username = role;
+  u.password = password;
+  return u.toString();
+}
+
 /** Seconds a migration may wait for a lock before it gives up. */
 export const LOCK_TIMEOUT = "10s";
 

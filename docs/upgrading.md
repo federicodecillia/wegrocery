@@ -39,6 +39,10 @@ ledger's append-only trigger cannot be dropped by it.
    DATABASE_URL="<owner address>" APP_ROLE_PASSWORD="$(openssl rand -base64 24)" \
      node scripts/create-app-role.mjs        # --role app_rw by default, --allow-prod when asked
    ```
+   To avoid handling the password at all, leave `APP_ROLE_PASSWORD` out and add
+   `--save-url <file> --save-as <NAME>`: the script generates one, appends
+   `NAME="<the role's address>"` to the file (mode 600) and checks, connected
+   as the role, that it cannot create objects.
    Keep the password: the script never prints it. Running it again resets the
    password and re-grants tables created since (new tables are covered by
    default privileges for later owner migrations too).

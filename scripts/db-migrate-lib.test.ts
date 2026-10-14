@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { appRoleRevokeStatements, appRoleStatements, isMigrationFile, refusesProduction, splitStatements } from "./db-migrate-lib.mjs";
+import { appRoleRevokeStatements, appRoleStatements, isMigrationFile, refusesProduction, roleUrl, splitStatements } from "./db-migrate-lib.mjs";
 
 describe("isMigrationFile", () => {
   it("applies numbered SQL and never a rollback file", () => {
@@ -78,5 +78,17 @@ describe("appRoleRevokeStatements", () => {
     const sql = appRoleRevokeStatements("app_rw", "neondb");
     expect(sql.at(-1)).toBe('DROP ROLE IF EXISTS "app_rw"');
     expect(sql.join("\n")).toContain('REVOKE ALL ON ALL TABLES IN SCHEMA public FROM "app_rw"');
+  });
+});
+
+describe("roleUrl", () => {
+  it("swaps user and password, keeps host, database and options, encodes the password", () => {
+    const out = roleUrl("postgresql://neondb_owner:old@ep-x.eu-central-1.aws.neon.tech/neondb?sslmode=require", "app_rw", "a/b+c=d");
+    const u = new URL(out);
+    expect(u.username).toBe("app_rw");
+    expect(decodeURIComponent(u.password)).toBe("a/b+c=d");
+    expect(u.host).toBe("ep-x.eu-central-1.aws.neon.tech");
+    expect(u.pathname).toBe("/neondb");
+    expect(u.search).toBe("?sslmode=require");
   });
 });
