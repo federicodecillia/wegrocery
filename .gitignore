@@ -49,8 +49,9 @@ next-env.d.ts
 .idea/
 .vscode/
 
-# Claude Code local config
-.claude/
+# Claude Code local config (shared skills in .claude/skills are tracked)
+.claude/*
+!.claude/skills/
 
 # Old clasp config backup
 .clasp.json.old

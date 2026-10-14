@@ -19,15 +19,14 @@ deviation that is not listed instead of deciding alone. A solution that fits eve
 flylabs-kit as a PR.
 
 Intended deviations (as of 2026-10-14):
-- 2.3 and 2.4 Light theme only, no contrast test yet: dark theme and the contrast test arrive with stage 1 of the kit (December 2026).
 - 2.10 The group's own colours instead of the FlyLabs palette: WeGrocery is white-label, so this stays.
 - 3.3 Repository docs in English: the repo is public and a portfolio piece, so this stays.
 - 7.1 `/api/health` returns `db` as `true | false` and `version` from `package.json`: aligned with Stellar when the FlyLabs Console arrives.
 
 Found in the review of 2026-10-14 (each line, its reason and its timing are in
 [`docs/2026-10-14-flylabs-playbook-alignment.md`](./docs/2026-10-14-flylabs-playbook-alignment.md)):
-- 1.4 The app can connect with a role without schema privileges (`scripts/create-app-role.mjs`, `DATABASE_MIGRATION_URL` for the owner's address, `docs/upgrading.md`), tested end to end; it is not enforced on any installation yet: each database needs the role created by its owner (Federico).
-- 2.1, 2.7 Geist and Geist Mono instead of Geist, Inter and JetBrains Mono; own components on Radix Dialog and hand-drawn icons instead of shadcn on Base UI and lucide: the app predates the FlyLabs style, which arrives with the dark theme at stage 1.
+- 1.4 The app can connect with a role without schema privileges (`scripts/create-app-role.mjs`, `DATABASE_MIGRATION_URL` for the owner's address, `docs/upgrading.md`), tested end to end. Production, demo, staging and dev run on `app_rw` since 2026-10-14; the example-brand installation still connects as the owner because its `DATABASE_URL` is managed by the Neon integration on Vercel and it migrates during the build.
+- 2.1, 2.7 Geist and Geist Mono instead of Geist, Inter and JetBrains Mono; own components on Radix Dialog and hand-drawn icons instead of shadcn on Base UI and lucide: the app predates the FlyLabs style, which arrives at stage 1.
 - 2.8 Bottom bar up to `lg` and a top nav in the header from `lg`, inside one centred card, instead of a rail on tablet and a sidebar on PC: changing it reshapes every page, so it is a separate stage 1 proposal.
 - 3.4 Em dashes remain in the changelog version headings (and as the empty-value placeholder in tables): the UI and email strings are clean and `lib/i18n/no-em-dash.test.ts` keeps them so; the heading switches at stage 1.
 - 4.4 Welcome card: the steps shown follow the settings; the ones the member's own rows already show as done (top-up or payment, an order, saved preferences, a family) carry "Già fatto" (`getWelcomeFacts`, `welcomeDone`), and the step they stopped at is `members.welcome_step` (migration 0036). The "Riprendi" bar on other pages still uses `sessionStorage`, per tab, on purpose.
