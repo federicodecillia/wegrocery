@@ -34,6 +34,9 @@ stanno nella PR.
 - 🔤 **Nuovi caratteri.** I testi usano Inter, i titoli Geist e le piccole etichette maiuscole JetBrains Mono; gli importi sono allineati in colonna.
 - 🗄️ **Aggiornamenti del database più sicuri.** Ogni aggiornamento si applica in un solo passo e si ferma se il database è occupato, così un errore non lascia nulla a metà. Per applicarlo in produzione serve una conferma esplicita.
 
+### Risolto
+- 🐞 **Le segnalazioni di errore arrivano a chi mantiene l'app.** Alcuni errori (pagamenti, email di accesso) restavano solo nei registri del server e nessuno veniva avvisato: ora arrivano anche al servizio che li raccoglie, senza dati dei soci.
+
 ## [1.27.0] — 12 ottobre 2026
 
 *Ogni nuovo gruppo si configura dall'app: nome, logo, colori e Stripe, con ogni impostazione tecnica spiegata.*

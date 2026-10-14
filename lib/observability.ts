@@ -18,15 +18,26 @@ export function scrubMessage(message: string): string {
   return cut === -1 ? message : message.slice(0, cut);
 }
 
+// reportError writes the error to the server log before it captures it, and
+// Sentry's Console integration would attach that log line, driver parameters
+// included, to the event as a breadcrumb: the log stays on the server.
+export function keepBreadcrumb<T extends { category?: string }>(breadcrumb: T): T | null {
+  return breadcrumb.category === "console" ? null : breadcrumb;
+}
+
 export function withoutQuery(path: string): string {
   const cut = path.indexOf("?");
   return cut === -1 ? path : path.slice(0, cut);
 }
 
-let sentry: SentryLike | null = null;
+// On globalThis, not in a module variable: instrumentation.ts and each route
+// are separate server bundles with their own copy of this module, so a module
+// variable set at startup would stay null where reportError runs.
+const SENTRY_KEY = Symbol.for("wegrocery.observability.sentry");
+type WithSentry = { [SENTRY_KEY]?: SentryLike | null };
 
 export function setSentry(client: SentryLike | null): void {
-  sentry = client;
+  (globalThis as WithSentry)[SENTRY_KEY] = client;
 }
 
 /** Logs an unexpected error under `scope` and forwards it to Sentry when on. Never throws. */
@@ -34,7 +45,7 @@ export function reportError(scope: string, error: unknown, extra?: Record<string
   if (extra) console.error(`[${scope}]`, error, extra);
   else console.error(`[${scope}]`, error);
   try {
-    sentry?.captureException(error, { tags: { scope }, extra });
+    (globalThis as WithSentry)[SENTRY_KEY]?.captureException(error, { tags: { scope }, extra });
   } catch {
     // Reporting must never break the request it reports on.
   }
