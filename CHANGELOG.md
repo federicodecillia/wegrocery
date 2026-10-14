@@ -20,6 +20,14 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ## [Unreleased]
 
+*The app gets a dark theme, and the database and build checks get safer.*
+
+### Added
+- 🌙 **Dark theme.** Profile → App now has "Appearance": follow the phone, always light or always dark. The group's colours carry over and stay readable.
+
+### Changed
+- 🗄️ **Safer database updates.** Each migration file runs as a single step and stops if the database is busy, so a failed update leaves nothing half applied. Applying one to production now needs an explicit flag.
+
 ## [1.27.0] — 2026-10-12
 
 *Each new group sets itself up from the app: name, logo, colours and Stripe, with every technical setting explained.*
