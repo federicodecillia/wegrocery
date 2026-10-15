@@ -635,7 +635,7 @@ export const it = {
         howTitle: "Come si corregge un ciclo",
         howPrices: "Prezzi sbagliati: si correggono prima di chiudere, con \"Rettifica prezzi\" nella revisione di chiusura.",
         howWeights: "Pesi o quantità diversi da quelli ordinati: in Ordini, toccando la riga o con ✎ Modifica sul socio.",
-        howDistinta: "Tutte le pesate del fornitore insieme: in Fornitore, passo 3, con la distinta compilata.",
+        howDistinta: "Tutte le pesate del fornitore insieme: con \"Carica la distinta\" quando chiudi il ciclo, o dopo in Fornitore, passo 3.",
         goOrders: "Vai a Ordini →",
         goSupplier: "Vai a Fornitore →",
         settleTitle: "Chiudi i conti",
@@ -1381,6 +1381,19 @@ export const it = {
       closing: "Chiusura…",
       closedSuccess: (charges: number, adjustments: number) =>
         `Ciclo chiuso. ${charges} addebiti, ${adjustments} rettifiche.`,
+      distintaToggle: "Carica la distinta",
+      distintaToggleHide: "Nascondi distinta",
+      distintaDescription:
+        "Hai già la distinta del fornitore con pesi e prezzi veri? Caricala qui: alla chiusura gli addebiti dei soci tengono conto delle pesate e della spedizione del fornitore. Accetta .xlsx, .ods e .csv.",
+      perOrderDistintaNote:
+        "Ciclo pagato con carta: la differenza con quanto pagato si regola quando chiudi i conti.",
+      confirmWithDistinta: (delta: string) => `Chiudi con la distinta (${delta})`,
+      closedWithDistintaSuccess: (charges: number, corrections: number) =>
+        `Ciclo chiuso con la distinta. ${charges} addebiti, ${corrections === 1 ? "1 pesata" : `${corrections} pesate`}.`,
+      distintaFailedAfterClose: (detail: string) =>
+        `Il ciclo è chiuso, ma la distinta non è stata applicata (${detail}). Caricala da Fornitore, passo 3.`,
+      discardDistintaTitle: "Lasciare la distinta?",
+      discardDistintaMessage: "La distinta caricata non viene applicata e il ciclo resta aperto.",
       discardTitle: "Scartare le rettifiche?",
       discardMessage: "I prezzi che hai cambiato non vengono salvati e il ciclo resta aperto.",
       discardConfirm: "Scarta",
@@ -1831,6 +1844,10 @@ export const it = {
       `È stato chiuso "${title}". Ti è stato addebitato ${total} (ordine ${order}${shipping ? ` + spedizione ${shipping}` : ""} + spese di preparazione ${fee}).`,
     orderClosedPerOrderBody: (title: string, total: string) =>
       `È stato chiuso "${title}". Il costo del tuo ordine per ora è ${total}: è provvisorio fino alle pesate e alla distinta del fornitore. A conti chiusi si regola la differenza con quanto hai pagato.`,
+    orderClosedWithDistintaBody: (title: string, total: string) =>
+      `È stato chiuso "${title}". Con le pesate del fornitore ti è stato addebitato ${total}.`,
+    orderClosedWithDistintaPerOrderBody: (title: string, total: string) =>
+      `È stato chiuso "${title}". Con le pesate del fornitore il costo del tuo ordine è ${total}. A conti chiusi si regola la differenza con quanto hai pagato.`,
     cycleCancelledPerOrderBody: (title: string, reason: string) =>
       `L'ordine "${title}" è stato annullato: ${reason}. Quanto hai pagato ti torna sulla carta a conti chiusi.`,
     topupReceivedTitle: "Ricarica registrata",

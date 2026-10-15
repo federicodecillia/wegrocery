@@ -38,6 +38,10 @@ The button walks you through:
    (`MIGRATE_ON_BUILD`), then the app goes live at
    `https://<project>.vercel.app`.
 
+The app connects as the database owner. Once it runs, you can give it a
+restricted role that cannot change the schema: see *Restricted database
+role* in [upgrading.md](./upgrading.md).
+
 Vercel may start a first build before your variables are saved. That build
 runs without them and does not create the tables: when the project shows
 them under Settings → Environment Variables, open Deployments → ⋯ →

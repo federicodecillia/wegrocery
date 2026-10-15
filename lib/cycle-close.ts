@@ -84,3 +84,22 @@ export function cancelledCycleReversalTypes(
   }
   return refundShipping ? null : { exclude: ["shipping_charge"] };
 }
+
+// Closing with the supplier's sheet: what each member ends up paying for the
+// cycle, for the single notification. The close charged order, shipping and
+// fee; the sheet then moved line totals (delta = new - old, positive when the
+// supplier asks more) and shipping shares. The fee stays the one charged at
+// the close, as with every post-closure correction.
+export function finalCostsAfterDistinta(
+  summaries: CycleCloseCharges["summaries"],
+  corrections: ReadonlyArray<{ memberId: string; delta: number }>,
+  shippingChanges: ReadonlyArray<{ memberId: string; oldShipping: number; newShipping: number }>,
+): Map<string, number> {
+  const cents = new Map<string, number>();
+  const add = (memberId: string, amount: number) =>
+    cents.set(memberId, (cents.get(memberId) ?? 0) + Math.round(amount * 100));
+  for (const s of summaries) add(s.memberId, s.orderTotal + s.shippingShare + s.handlingShare);
+  for (const c of corrections) add(c.memberId, c.delta);
+  for (const s of shippingChanges) add(s.memberId, s.newShipping - s.oldShipping);
+  return new Map([...cents].map(([memberId, c]) => [memberId, c / 100]));
+}

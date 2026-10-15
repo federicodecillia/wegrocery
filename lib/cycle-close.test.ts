@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildCycleCloseCharges, ordersSnapshot } from "./cycle-close";
+import { buildCycleCloseCharges, finalCostsAfterDistinta, ordersSnapshot } from "./cycle-close";
 import { cancelledCycleReversalTypes } from "./cycle-close";
 
 const fixed = { shippingMode: "fixed_per_member", shippingCostPerMember: "2.00", shippingTotal: null };
@@ -176,5 +176,39 @@ describe("cancelledCycleReversalTypes", () => {
   it("gives the order preparation fee back even when the group keeps the shipping", () => {
     const wallet = cancelledCycleReversalTypes("wallet", false);
     expect(wallet && "exclude" in wallet ? wallet.exclude : []).not.toContain("handling_charge");
+  });
+});
+
+describe("finalCostsAfterDistinta", () => {
+  const summaries = [
+    { memberId: "a", orderTotal: 3, shippingShare: 1.5, handlingShare: 0 },
+    { memberId: "b", orderTotal: 2, shippingShare: 1.5, handlingShare: 0.2 },
+  ];
+
+  it("adds the supplier's line and shipping changes to what the close charged", () => {
+    const costs = finalCostsAfterDistinta(
+      summaries,
+      [
+        { memberId: "a", delta: -0.3 },
+        { memberId: "a", delta: 0.1 },
+        { memberId: "b", delta: 0.4 },
+      ],
+      [{ memberId: "b", oldShipping: 1.5, newShipping: 1 }],
+    );
+    expect(costs.get("a")).toBe(4.3);
+    expect(costs.get("b")).toBe(3.6);
+  });
+
+  it("is the close's own total when the sheet changes nothing for a member", () => {
+    expect(finalCostsAfterDistinta(summaries, [], []).get("b")).toBe(3.7);
+  });
+
+  it("does not drift on cents", () => {
+    const costs = finalCostsAfterDistinta(
+      [{ memberId: "a", orderTotal: 0.1, shippingShare: 0.2, handlingShare: 0 }],
+      [{ memberId: "a", delta: 0.1 }],
+      [],
+    );
+    expect(costs.get("a")).toBe(0.4);
   });
 });

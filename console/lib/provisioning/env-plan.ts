@@ -4,8 +4,10 @@ import type { EnvVar } from "@/lib/providers/vercel";
 // The environment variables each wizard step writes to the instance's Vercel
 // project, pure. Secrets are `sensitive` (unreadable after creation, so they
 // never come back to the console either); the rest `encrypted`, Vercel's
-// default. DATABASE_URL and MIGRATE_ON_BUILD are production-only: a preview
-// must never reach, let alone migrate, the group's database.
+// default. The database addresses and MIGRATE_ON_BUILD are production-only: a
+// preview must never reach, let alone migrate, the group's database. The app
+// connects as the restricted role (DATABASE_URL); the owner's address is only
+// for the migrations the production build applies (DATABASE_MIGRATION_URL).
 
 const BOTH: EnvVar["target"] = ["production", "preview"];
 const PROD: EnvVar["target"] = ["production"];
@@ -15,7 +17,10 @@ export function randomSecret(bytes = 32): string {
 }
 
 export interface AppEnvInput {
+  /** The restricted role's address (app-role.ts). */
   databaseUrl: string;
+  /** The owner's address, for migrations only. */
+  migrationUrl: string;
   authSecret: string;
   bootstrapAdminEmail: string;
   appBaseUrl: string;
@@ -27,6 +32,7 @@ export interface AppEnvInput {
 export function appEnvVars(i: AppEnvInput): EnvVar[] {
   return [
     { key: "DATABASE_URL", value: i.databaseUrl, type: "sensitive", target: PROD },
+    { key: "DATABASE_MIGRATION_URL", value: i.migrationUrl, type: "sensitive", target: PROD },
     { key: "MIGRATE_ON_BUILD", value: "true", type: "encrypted", target: PROD },
     { key: "AUTH_SECRET", value: i.authSecret, type: "sensitive", target: BOTH },
     { key: "BOOTSTRAP_ADMIN_EMAIL", value: i.bootstrapAdminEmail, type: "encrypted", target: BOTH },

@@ -4,6 +4,7 @@ import ExcelJS from "exceljs";
 import { t } from "@/lib/i18n";
 import { brand } from "@/lib/brand";
 import { getDb } from "@/lib/db/client";
+import { projectedCloseShipping } from "@/lib/cycle-close-store";
 import {
   ledgerEntries,
   members,
@@ -100,6 +101,7 @@ export async function buildSupplierDistinta(cycleId: string): Promise<DistintaBu
     .select({
       cycleId: orderCycles.cycleId,
       title: orderCycles.title,
+      status: orderCycles.status,
       pickupDate: orderCycles.pickupDate,
       supplierId: orderCycles.supplierId,
       supplierName: suppliers.name,
@@ -150,16 +152,22 @@ export async function buildSupplierDistinta(cycleId: string): Promise<DistintaBu
   }
 
   // Per-member shipping currently on file (absolute value — ledger stores
-  // it as a negative charge).
-  const shippingRows = await db
-    .select({ memberId: ledgerEntries.memberId, amount: ledgerEntries.amount })
-    .from(ledgerEntries)
-    .where(
-      and(eq(ledgerEntries.cycleId, cycleId), eq(ledgerEntries.type, "shipping_charge"), liveLedger),
-    );
-  const shippingByMember = new Map<string, number>(
-    shippingRows.map((r) => [r.memberId, Math.abs(parseFloat(r.amount))]),
-  );
+  // it as a negative charge). A cycle still open has none yet: the sheet
+  // starts from the shares its close will charge, so a supplier who leaves
+  // the row as it is does not zero the shipping.
+  const shippingByMember =
+    cycle.status === "open"
+      ? await projectedCloseShipping(db, cycleId)
+      : new Map<string, number>(
+          (
+            await db
+              .select({ memberId: ledgerEntries.memberId, amount: ledgerEntries.amount })
+              .from(ledgerEntries)
+              .where(
+                and(eq(ledgerEntries.cycleId, cycleId), eq(ledgerEntries.type, "shipping_charge"), liveLedger),
+              )
+          ).map((r) => [r.memberId, Math.abs(parseFloat(r.amount))]),
+        );
 
   // Build ordered product + member lists.
   const productOrder: string[] = [];

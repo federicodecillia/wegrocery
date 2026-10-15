@@ -122,14 +122,36 @@ jobs:
           URL=$(npx -y neonctl@7.0.1 connection-string "$BRANCH" --project-id "$NEON_PROJECT_ID" --role-name "${NEON_OWNER_ROLE:-neondb_owner}" --database-name fresh)
           echo "::add-mask::$URL"
           echo "FRESH_DATABASE_URL=$URL" >> "$GITHUB_ENV"
+          # The new database can take a few seconds to reach the compute
+          # ("database fresh does not exist"): wait until it answers.
+          for i in $(seq 1 20); do
+            if FRESH="$URL" node -e 'import("@neondatabase/serverless").then(({ neon }) => neon(process.env.FRESH)`SELECT 1`)' 2> /dev/null; then
+              exit 0
+            fi
+            sleep 3
+          done
+          echo "::error::the fresh database never answered"
+          exit 1
+
+      # As the console installs a group: the restricted role exists before
+      # any table, the migrations run as the owner, the app uses the role.
+      - name: Create the restricted role before any migration
+        if: steps.neon.outputs.available == 'true'
+        run: |
+          SAVE="$RUNNER_TEMP/fresh-role.env"
+          DATABASE_URL="$FRESH_DATABASE_URL" node scripts/create-app-role.mjs --role fresh_app_rw --save-url "$SAVE" --save-as FRESH_APP_URL
+          URL=$(sed -n 's/^FRESH_APP_URL="\(.*\)"$/\1/p' "$SAVE")
+          rm -f "$SAVE"
+          echo "::add-mask::$URL"
+          echo "FRESH_APP_URL=$URL" >> "$GITHUB_ENV"
 
       - name: Apply every migration to the empty database
         if: steps.neon.outputs.available == 'true'
-        run: DATABASE_URL="$FRESH_DATABASE_URL" node scripts/db-migrate.mjs
+        run: DATABASE_URL="$FRESH_APP_URL" DATABASE_MIGRATION_URL="$FRESH_DATABASE_URL" node scripts/db-migrate.mjs
 
       - name: First-day tests on the empty database
         if: steps.neon.outputs.available == 'true'
-        run: INT_TEST_DATABASE_URL="$FRESH_DATABASE_URL" INT_TEST_FRESH=1 npx vitest run -c vitest.int.config.ts test/int/fresh-install.int.test.ts
+        run: INT_TEST_DATABASE_URL="$FRESH_APP_URL" INT_TEST_FRESH=1 INT_TEST_FRESH_RESTRICTED=1 npx vitest run -c vitest.int.config.ts test/int/fresh-install.int.test.ts
 
       - name: Money invariants on the new installation
         if: steps.neon.outputs.available == 'true'

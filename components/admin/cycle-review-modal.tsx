@@ -9,8 +9,18 @@ import { formatEur, getProductEmoji } from "@/lib/utils";
 import {
   adminCloseCycle,
   adminCloseCycleWithAdjustments,
+  adminCloseCycleWithDistinta,
   adminGetCycleProductsForReview,
+  adminPreviewDistintaImport,
 } from "@/lib/actions/admin";
+import type { DistintaImportPreview } from "@/lib/csv/distinta-parser";
+import {
+  DISTINTA_ACCEPT,
+  DistintaPreviewPanel,
+  distintaHasChanges,
+  distintaTotalDelta,
+  readFileAsBase64,
+} from "@/components/admin/distinta-preview";
 import { t } from "@/lib/i18n";
 import { formatMoney } from "@/lib/i18n/format";
 
@@ -42,11 +52,14 @@ function signedMoney(delta: number): string {
 }
 
 // The one way to close a cycle. The sheet shows what the close does (who is
-// charged, the products total, the warnings) and confirms in place. Price
-// adjustments, for when the actual weight differs from the ordered one, sit
-// behind a toggle so a stray digit cannot reprice every member's lines.
-// No adjustment calls adminCloseCycle (audit `close_cycle`); otherwise
-// adminCloseCycleWithAdjustments recomputes the lines and closes.
+// charged, the products total, the warnings) and confirms in place. Two
+// optional corrections sit behind toggles, one at a time, so a stray digit
+// cannot reprice every member's lines:
+// - price adjustments (adminCloseCycleWithAdjustments recomputes the lines
+//   and closes), when one product's price changed for everybody;
+// - the supplier sheet with each member's weights (adminCloseCycleWithDistinta
+//   closes, then applies it like Fornitore, step 3).
+// Neither calls adminCloseCycle (audit `close_cycle`).
 export function CycleReviewCloseButton(props: Props) {
   const [open, setOpen] = useState(false);
 
@@ -75,7 +88,11 @@ function CycleReviewModal({
   const [edits, setEdits] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [loadFailed, setLoadFailed] = useState(false);
-  const [adjusting, setAdjusting] = useState(false);
+  const [mode, setMode] = useState<"none" | "prices" | "distinta">("none");
+  const adjusting = mode === "prices";
+  const [distintaFile, setDistintaFile] = useState<{ name: string; base64: string } | null>(null);
+  const [distintaPreview, setDistintaPreview] = useState<DistintaImportPreview | null>(null);
+  const [previewing, startPreview] = useTransition();
   const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
@@ -103,7 +120,7 @@ function CycleReviewModal({
   }, [cycleId]);
 
   const adjustments = useMemo(() => {
-    if (!rows) return [];
+    if (!rows || mode !== "prices") return [];
     const out: Array<{ productId: string; finalUnitPrice: number }> = [];
     for (const r of rows) {
       const raw = (edits[r.productId] ?? "").replace(",", ".").trim();
@@ -114,7 +131,35 @@ function CycleReviewModal({
       if (Math.abs(next - r.unitPrice) > 0.001) out.push({ productId: r.productId, finalUnitPrice: next });
     }
     return out;
-  }, [rows, edits]);
+  }, [rows, edits, mode]);
+
+  const withDistinta = mode === "distinta" && distintaPreview != null && distintaHasChanges(distintaPreview);
+
+  function toggleMode(next: "prices" | "distinta") {
+    setMode((m) => (m === next ? "none" : next));
+  }
+
+  function onDistintaFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setDistintaPreview(null);
+    setDistintaFile(null);
+    // Read and checked at once against the open cycle: nothing is written.
+    startPreview(async () => {
+      try {
+        const base64 = await readFileAsBase64(file);
+        setDistintaFile({ name: file.name, base64 });
+        const r = await adminPreviewDistintaImport({ cycleId, fileBase64: base64, fileName: file.name, beforeClose: true });
+        if ("error" in r) {
+          toast.error(r.error);
+          return;
+        }
+        setDistintaPreview(r.preview);
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : t.admin.common.error);
+      }
+    });
+  }
 
   const newGrandTotal = useMemo(() => {
     if (!rows) return 0;
@@ -131,7 +176,16 @@ function CycleReviewModal({
   // Leaving with changed prices asks first: the sheet holds unsaved work.
   async function requestClose() {
     if (isPending) return;
-    if (adjustments.length > 0) {
+    if (withDistinta) {
+      const leave = await confirm({
+        title: t.admin.cycleReview.discardDistintaTitle,
+        message: t.admin.cycleReview.discardDistintaMessage,
+        confirmLabel: t.admin.cycleReview.discardConfirm,
+        cancelLabel: t.admin.cycleReview.keepEditing,
+        danger: true,
+      });
+      if (!leave) return;
+    } else if (adjustments.length > 0) {
       const discard = await confirm({
         title: t.admin.cycleReview.discardTitle,
         message: t.admin.cycleReview.discardMessage,
@@ -147,7 +201,20 @@ function CycleReviewModal({
   function handleConfirm() {
     startTransition(async () => {
       try {
-        if (adjustments.length === 0) {
+        if (withDistinta && distintaFile) {
+          const result = await adminCloseCycleWithDistinta({
+            cycleId,
+            fileBase64: distintaFile.base64,
+            fileName: distintaFile.name,
+          });
+          if ("error" in result) {
+            toast.error(result.error);
+            // Closed, sheet not applied: the sheet has nothing left to do here.
+            if (result.closed) onClose();
+            return;
+          }
+          toast.success(t.admin.cycleReview.closedWithDistintaSuccess(result.chargesGenerated, result.corrections));
+        } else if (adjustments.length === 0) {
           const result = await adminCloseCycle(cycleId);
           if ("error" in result) {
             toast.error(result.error);
@@ -171,7 +238,9 @@ function CycleReviewModal({
 
   const confirmLabel = isPending
     ? t.admin.cycleReview.closing
-    : adjustments.length > 0
+    : withDistinta
+      ? t.admin.cycleReview.confirmWithDistinta(signedMoney(distintaTotalDelta(distintaPreview)))
+      : adjustments.length > 0
       ? t.admin.cycleReview.confirmWithAdjustments(adjustments.length, signedMoney(totalDelta))
       : t.admin.cycleReview.confirmCharge(memberCount);
 
@@ -185,7 +254,7 @@ function CycleReviewModal({
       subtitle={cycleTitle}
       footer={
         <>
-          {rows && rows.length > 0 && (
+          {rows && rows.length > 0 && mode !== "distinta" && (
             <div className="mb-3 flex items-end justify-between">
               <div>
                 <div className="font-mono text-label uppercase tracking-wide text-muted">
@@ -211,7 +280,7 @@ function CycleReviewModal({
             <Button variant="outline" className="flex-1" onClick={() => void requestClose()}>
               {t.admin.common.cancel}
             </Button>
-            <Button variant="brand" className="flex-[2]" onClick={handleConfirm} disabled={isPending || loading}>
+            <Button variant="brand" className="flex-[2]" onClick={handleConfirm} disabled={isPending || loading || previewing || (mode === "distinta" && distintaFile != null && !withDistinta)}>
               {confirmLabel}
             </Button>
           </SheetActions>
@@ -236,33 +305,65 @@ function CycleReviewModal({
           <div className="py-10 text-center text-[13px] text-brand-gray">{t.admin.cycleReview.noProducts}</div>
         ) : (
           <>
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-2">
               <button
                 type="button"
-                onClick={() => setAdjusting((v) => !v)}
+                onClick={() => toggleMode("prices")}
                 aria-expanded={adjusting}
                 className="min-h-11 rounded-xl border border-brand-border bg-surface px-4 text-[13px] font-semibold text-brand-near-black"
               >
                 {adjusting ? t.admin.cycleReview.adjustToggleHide : t.admin.cycleReview.adjustToggle}
               </button>
+              <button
+                type="button"
+                onClick={() => toggleMode("distinta")}
+                aria-expanded={mode === "distinta"}
+                className="min-h-11 rounded-xl border border-brand-border bg-surface px-4 text-[13px] font-semibold text-brand-near-black"
+              >
+                {mode === "distinta" ? t.admin.cycleReview.distintaToggleHide : t.admin.cycleReview.distintaToggle}
+              </button>
             </div>
+            {mode === "distinta" && (
+              <div className="space-y-3">
+                <p className="text-[13px] text-brand-gray">
+                  {t.admin.cycleReview.distintaDescription}
+                  {perOrder && <> {t.admin.cycleReview.perOrderDistintaNote}</>}
+                </p>
+                <input
+                  type="file"
+                  aria-label={t.admin.cycleReview.distintaToggle}
+                  accept={DISTINTA_ACCEPT}
+                  onChange={onDistintaFile}
+                  disabled={isPending}
+                  className="block w-full cursor-pointer rounded-xl border border-dashed border-primary/40 bg-surface px-3 py-2 text-[12px] file:mr-3 file:rounded-lg file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-label file:font-bold file:text-on-primary"
+                />
+                {previewing && (
+                  <p role="status" className="text-[13px] text-brand-gray">
+                    {t.admin.supplierActions.previewing}
+                  </p>
+                )}
+                {distintaPreview && <DistintaPreviewPanel preview={distintaPreview} />}
+              </div>
+            )}
             {adjusting && (
               <p className="text-[13px] text-brand-gray">
                 {t.admin.cycleReview.adjustDescription}
                 {perOrder && <> {t.admin.cycleReview.perOrderAdjustNote}</>}
               </p>
             )}
-            <ul className="space-y-1">
-              {rows.map((r) => (
-                <ReviewRow
-                  key={r.productId}
-                  row={r}
-                  adjusting={adjusting}
-                  value={edits[r.productId] ?? ""}
-                  onChange={(v) => setEdits((prev) => ({ ...prev, [r.productId]: v }))}
-                />
-              ))}
-            </ul>
+            {mode !== "distinta" && (
+              <ul className="space-y-1">
+                {rows.map((r) => (
+                  <ReviewRow
+                    key={r.productId}
+                    row={r}
+                    adjusting={adjusting}
+                    value={edits[r.productId] ?? ""}
+                    onChange={(v) => setEdits((prev) => ({ ...prev, [r.productId]: v }))}
+                  />
+                ))}
+              </ul>
+            )}
           </>
         )}
       </div>
