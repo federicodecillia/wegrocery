@@ -73,9 +73,9 @@ export function CategoryBar({
   return (
     <nav
       aria-label={t.order.categoriesAria}
-      className="sticky top-0 z-[5] -mx-5 mt-3 border-b border-brand-border bg-brand-warm-white"
+      className="sticky top-0 z-[5] -mx-5 mt-3 md:-mx-8 border-b border-brand-border bg-brand-warm-white"
     >
-      <ul ref={row} className="flex gap-2 overflow-x-auto px-5 py-2 [scrollbar-width:none]">
+      <ul ref={row} className="flex gap-2 overflow-x-auto px-5 py-2 md:px-8 [scrollbar-width:none]">
         {cartCount > 0 && (
           <li>
             <button

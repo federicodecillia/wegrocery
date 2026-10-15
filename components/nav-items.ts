@@ -12,7 +12,7 @@ export type NavItem = {
   also?: string[];
 };
 
-// Shared by BottomNav (up to lg) and TopNav (from lg). Icons live in
+// Shared by BottomNav (phone) and SideNav (rail from md, sidebar from lg). Icons live in
 // nav-icon.tsx so this file stays plain TypeScript.
 export const navItems: NavItem[] = [
   { href: "/", label: t.nav.home, icon: "home", exact: true, also: ["/ricarica"] },

@@ -33,6 +33,7 @@ export const en: Strings = {
     history: "History",
     guide: "Guide",
     admin: "Admin",
+    mainAria: "Main menu",
   },
   home: {
     balanceTitle: "Your balance",

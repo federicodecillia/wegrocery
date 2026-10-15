@@ -33,6 +33,7 @@ export const it = {
     history: "Storico",
     guide: "Guida",
     admin: "Admin",
+    mainAria: "Menu principale",
   },
   home: {
     balanceTitle: "Il tuo saldo",

@@ -17,7 +17,7 @@ export function BottomNav({ isAdmin }: BottomNavProps) {
   const items = visibleNavItems(isAdmin);
 
   return (
-    <nav className="sticky bottom-0 z-20 border-t border-brand-border bg-brand-warm-white pb-[env(safe-area-inset-bottom)] lg:hidden">
+    <nav className="sticky bottom-0 z-20 border-t border-brand-border bg-brand-warm-white pb-[env(safe-area-inset-bottom)] md:hidden">
       <ul className={`grid h-nav-h ${items.length === 5 ? "grid-cols-5" : "grid-cols-4"}`}>
         {items.map((item) => {
           const active = isItemActive(pathname, item);
