@@ -20,6 +20,16 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ## [Unreleased]
 
+## [1.30.0] — 2026-10-15
+
+*The menu moves to the side on tablets and computers, and the order goes to the supplier before the close.*
+
+### Added
+- 📧 **The order goes to the supplier before the cycle is closed.** Once the order deadline has passed, the Supplier tab already shows: download the sheet and send it, then close the cycle uploading the completed one when it comes back.
+
+### Changed
+- 🧭 **Menu on the side on tablets and computers.** On a tablet the menu is a column on the left, on a computer a side menu with the admin sections under Admin; the app uses the whole screen. Nothing changes on phones.
+
 ## [1.29.0] — 2026-10-15
 
 *The supplier sheet can be uploaded while closing the cycle.*
@@ -633,6 +643,7 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ---
 
+[1.30.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.30.0
 [1.29.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.29.0
 [1.28.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.28.0
 [1.27.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.27.0

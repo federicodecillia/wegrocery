@@ -33,6 +33,7 @@ export const en: Strings = {
     history: "History",
     guide: "Guide",
     admin: "Admin",
+    mainAria: "Main menu",
   },
   home: {
     balanceTitle: "Your balance",
@@ -593,6 +594,7 @@ export const en: Strings = {
       pickup: (slots: string) => `Pickup ${slots}`,
       productsIntro: "The products members see in this cycle. Add them from the suppliers' catalogue or import a price list.",
       supplierIntro: "Three steps: download the sheet, send it to the supplier, then upload the one they filled in with real weights and prices.",
+      supplierIntroOpen: "The order deadline has passed: download the sheet and send it to the supplier. When it comes back with real weights and prices, upload it while closing the cycle.",
       noSupplier: "This cycle has no supplier: add one from ✎ Edit to send the order sheet.",
       todo: {
         title: "To do now",
@@ -1482,6 +1484,7 @@ export const en: Strings = {
       recipientRequired: "Recipient address required",
       subjectRequired: "Subject required",
       uploadSection: "Upload the completed sheet",
+      uploadAtClose: "The cycle is still open: when the supplier sends back the completed sheet, upload it from Close the cycle, Upload the supplier sheet. The cycle then closes with the real costs.",
       uploadDescription:
         "When the supplier sends back the file with actual weights, upload it here to apply adjustments. Accepts .xlsx, .ods and .csv (with CSV, matching is by member/product name).",
       previewButton: "Preview changes",
@@ -2046,6 +2049,7 @@ export const en: Strings = {
     generationError: "Error generating template",
     cycleUpdateError: "Error updating cycle",
     cycleNotClosed: "The cycle is not closed",
+    supplierOrderNotReady: "Orders are still open: the order goes to the supplier after the order deadline or once the cycle is closed.",
     cycleNoSupplier: "The cycle has no associated supplier",
     recipientMissing: "Recipient address missing",
     distintaBuildError: "Error building order sheet",

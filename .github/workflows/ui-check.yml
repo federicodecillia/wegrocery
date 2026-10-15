@@ -1,6 +1,6 @@
 name: Nightly UI Check
 
-# After the nightly demo reset, opens the demo at a phone and a desktop width
+# After the nightly demo reset, opens the demo at a phone, a tablet and a desktop width
 # and checks the main pages: serious accessibility problems (axe), horizontal
 # scrolling and four keyboard paths (scripts/ui-check.mjs). A failure opens
 # (or comments on) one GitHub issue. Also runnable on demand.

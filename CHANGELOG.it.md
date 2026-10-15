@@ -21,6 +21,16 @@ stanno nella PR.
 
 ## [Non rilasciato]
 
+## [1.30.0] — 15 ottobre 2026
+
+*Il menu passa di lato su tablet e computer, e l'ordine al fornitore parte anche prima della chiusura.*
+
+### Aggiunte
+- 📧 **L'ordine al fornitore si invia anche prima di chiudere il ciclo.** Scaduti gli ordini, la scheda Fornitore compare già: scarichi la distinta e la mandi al fornitore, poi quando torna compilata chiudi il ciclo caricandola.
+
+### Modificato
+- 🧭 **Menu di lato su tablet e computer.** Sul tablet il menu è una colonna a sinistra, sul computer un menu laterale con le sezioni admin sotto Admin; l'app usa tutto lo schermo. Sul telefono non cambia nulla.
+
 ## [1.29.0] — 15 ottobre 2026
 
 *La distinta del fornitore si carica anche mentre chiudi il ciclo.*
@@ -635,6 +645,7 @@ stanno nella PR.
 
 ---
 
+[1.30.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.30.0
 [1.29.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.29.0
 [1.28.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.28.0
 [1.27.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.27.0

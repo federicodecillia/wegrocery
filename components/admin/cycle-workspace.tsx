@@ -21,7 +21,7 @@ import { t } from "@/lib/i18n";
 import { formatDate } from "@/lib/i18n/format";
 import { formatDeadline } from "@/lib/i18n/deadline";
 import { adminHref } from "@/lib/admin/nav";
-import { CYCLE_VIEW_LABELS, cycleViews, defaultCycleId, resolveCycleView, settlementCandidate, settlementPending, type CycleView } from "@/lib/admin/cycle-views";
+import { CYCLE_VIEW_LABELS, cycleViews, defaultCycleId, resolveCycleView, settlementCandidate, settlementPending, supplierOrderReady, type CycleView } from "@/lib/admin/cycle-views";
 import { CycleTodo } from "./cycle-todo";
 import { TASK_WINDOW_DAYS, cycleTasks } from "@/lib/admin/cycle-phase";
 import { findDuplicatePairs } from "@/lib/members/duplicates";
@@ -49,13 +49,13 @@ type Props = {
 
 // Admin → Ciclo: one cycle at a time. On the left (a sheet on a phone) every
 // cycle, then the chosen one's header with its main action, and its views:
-// Panoramica · Prodotti · Ordini while open, Panoramica · Ordini · Fornitore ·
-// Conti once closed.
+// Panoramica · Prodotti · Ordini while open (plus Fornitore past the order
+// deadline), Panoramica · Ordini · Fornitore · Conti once closed.
 export async function CycleWorkspace({ cycleId: asked, view: askedView, creating }: Props) {
   const [cycles, suppliers, settings] = await Promise.all([getAllCycles(1000), getAllSuppliers(), getPaymentSettings()]);
   const selectedId = creating ? null : defaultCycleId(cycles, asked);
   const cycle = cycles.find((c) => c.cycleId === selectedId) ?? null;
-  const view = cycle ? resolveCycleView(cycle.status, askedView) : null;
+  const view = cycle ? resolveCycleView(cycle.status, askedView, supplierOrderReady(cycle.status, cycle.orderCloseAt)) : null;
 
   // Card cycles closed or cancelled, unsettled or settled lately: whether
   // their accounts still ask for "Chiudi i conti" (a correction or a failed
@@ -256,7 +256,7 @@ async function SelectedCycle({
       </header>
 
       <nav aria-label={t.admin.nav.views} className="mb-4 flex gap-4 overflow-x-auto border-b border-brand-border px-1 [scrollbar-width:none]">
-        {cycleViews(c.status).map((v) => (
+        {cycleViews(c.status, supplierOrderReady(c.status, c.orderCloseAt)).map((v) => (
           <Link
             key={v}
             href={adminHref("ciclo", v, { cycle: c.cycleId })}
@@ -291,8 +291,8 @@ async function SelectedCycle({
       {view === "fornitore" &&
         (c.supplierName ? (
           <div>
-            <p className="mb-3 max-w-prose text-[13px] text-brand-gray">{w.supplierIntro}</p>
-            <SupplierSteps cycleId={c.cycleId} />
+            <p className="mb-3 max-w-prose text-[13px] text-brand-gray">{isOpen ? w.supplierIntroOpen : w.supplierIntro}</p>
+            <SupplierSteps cycleId={c.cycleId} cycleOpen={isOpen} />
           </div>
         ) : (
           <Card>

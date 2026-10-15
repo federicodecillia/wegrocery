@@ -33,6 +33,7 @@ export const it = {
     history: "Storico",
     guide: "Guida",
     admin: "Admin",
+    mainAria: "Menu principale",
   },
   home: {
     balanceTitle: "Il tuo saldo",
@@ -595,6 +596,7 @@ export const it = {
       pickup: (slots: string) => `Ritiro ${slots}`,
       productsIntro: "I prodotti che i soci vedono in questo ciclo. Aggiungili dal catalogo dei fornitori o importa un listino.",
       supplierIntro: "Tre passi: scarica la distinta, inviala al fornitore, poi carica quella compilata con pesi e prezzi veri.",
+      supplierIntroOpen: "Gli ordini sono scaduti: scarica la distinta e inviala al fornitore. Quando torna compilata con pesi e prezzi veri, caricala chiudendo il ciclo.",
       noSupplier: "Questo ciclo non ha un fornitore: aggiungilo da ✎ Modifica per inviare la distinta.",
       todo: {
         title: "Da fare ora",
@@ -1486,6 +1488,7 @@ export const it = {
       recipientRequired: "Indirizzo destinatario obbligatorio",
       subjectRequired: "Oggetto obbligatorio",
       uploadSection: "Carica la distinta compilata",
+      uploadAtClose: "Il ciclo è ancora aperto: quando il fornitore ti rimanda la distinta compilata, caricala da Chiudi il ciclo, Carica la distinta. Così il ciclo si chiude già con i costi veri.",
       uploadDescription:
         "Quando il fornitore ti rimanda il file con le pesate, caricalo qui per applicare le rettifiche. Accetta .xlsx, .ods e .csv (col CSV il riconoscimento è per nome socio/prodotto).",
       previewButton: "Anteprima modifiche",
@@ -2054,6 +2057,7 @@ export const it = {
     generationError: "Errore generazione template",
     cycleUpdateError: "Errore nell'aggiornamento del ciclo",
     cycleNotClosed: "Il ciclo non è chiuso",
+    supplierOrderNotReady: "Gli ordini sono ancora aperti: l'ordine va al fornitore dopo la scadenza degli ordini o a ciclo chiuso.",
     cycleNotClosedDistinta: "Il ciclo non è chiuso: la distinta si può applicare solo a cicli chiusi.",
     cycleNoSupplier: "Il ciclo non ha un fornitore associato",
     recipientMissing: "Indirizzo destinatario mancante",
