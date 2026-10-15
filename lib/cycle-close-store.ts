@@ -6,7 +6,7 @@
 import { and, eq, inArray, sql, type SQL } from "drizzle-orm";
 import type { BatchItem } from "drizzle-orm/batch";
 import { ActionError } from "@/lib/action-error";
-import { buildCycleCloseCharges, ordersSnapshot } from "@/lib/cycle-close";
+import { buildCycleCloseCharges, ordersSnapshot, type CycleCloseCharges } from "@/lib/cycle-close";
 import { liveLedger } from "@/lib/db/ledger-live";
 import { ledgerEntries, orderCycles, orderDrafts, orders } from "@/lib/db/schema";
 import { t } from "@/lib/i18n";
@@ -38,6 +38,14 @@ export function closeGuardSql(
     THEN 1 ELSE 0 END) AS close_guard`;
 }
 
+// What a committed close hands to its notifications.
+export type CommittedClose = {
+  chargesGenerated: number;
+  title: string;
+  paymentMode: string;
+  summaries: CycleCloseCharges["summaries"];
+};
+
 // Status flip, every order_charge, shipping_charge and handling_charge are
 // committed together in a single db.batch (one Neon transaction), so a
 // failure can no longer leave a cycle reopened with charges already posted.
@@ -48,6 +56,14 @@ export async function performCycleClose(
   cycleId: string,
   adminEmail: string,
 ): Promise<{ chargesGenerated: number }> {
+  const closed = await commitCycleClose(db, cycleId, adminEmail);
+  await notifyCycleClosed(db, cycleId, closed);
+  return { chargesGenerated: closed.chargesGenerated };
+}
+
+// The close without its notifications: closing with the supplier's sheet
+// sends one message per member after the sheet is applied, with the final cost.
+export async function commitCycleClose(db: Db, cycleId: string, adminEmail: string): Promise<CommittedClose> {
   for (let attempt = 1; attempt <= CLOSE_ATTEMPTS; attempt++) {
     const [cycle] = await db
       .select({
@@ -161,48 +177,111 @@ export async function performCycleClose(
       continue; // orders or fee changed: recompute from fresh data
     }
 
-    // Committed. One notification per charged member. A delivery failure is
-    // logged, never rolled back onto the (already committed) close.
-    try {
-      const emailByMember = await getMemberEmails(
-        db,
-        charges.summaries.map((s) => s.memberId),
-      );
-      const items = charges.summaries.map((s) => {
-        const total = formatMoney(s.orderTotal + s.shippingShare + s.handlingShare);
-        const shipping = s.shippingShare > 0 ? formatMoney(s.shippingShare) : null;
-        // Pay-per-order: the charge is provisional until the weighing and the
-        // supplier's sheet, then settled.
-        const body =
-          cycle.paymentMode === "per_order"
-            ? t.notificationsServer.orderClosedPerOrderBody(cycle.title, total)
-            : s.handlingShare > 0
-              ? t.notificationsServer.orderClosedBodyWithFee(
-                  cycle.title,
-                  total,
-                  formatMoney(s.orderTotal),
-                  shipping,
-                  formatMoney(s.handlingShare),
-                )
-              : shipping
-                ? t.notificationsServer.orderClosedBodyWithShipping(cycle.title, total, formatMoney(s.orderTotal), shipping)
-                : t.notificationsServer.orderClosedBody(cycle.title, formatMoney(s.orderTotal));
-        return {
-          memberId: s.memberId,
-          email: emailByMember.get(s.memberId) ?? null,
-          title: t.notificationsServer.orderClosedTitle,
-          body,
-          href: `/storico?cycleId=${cycleId}`,
-        };
-      });
-      if (items.length > 0) await dispatchWithBodies(db, items, "order_closed", now);
-    } catch (notifyError) {
-      console.error("[order_closed] dispatch failed:", notifyError);
-    }
-
-    return { chargesGenerated: charges.orderCharges.length };
+    return {
+      chargesGenerated: charges.orderCharges.length,
+      title: cycle.title,
+      paymentMode: cycle.paymentMode,
+      summaries: charges.summaries,
+    };
   }
   throw new ActionError(t.errors.cycleCloseOrdersChanged);
+}
+
+// One notification per charged member. A delivery failure is logged, never
+// rolled back onto the (already committed) close.
+export async function notifyCycleClosed(db: Db, cycleId: string, closed: CommittedClose): Promise<void> {
+  const now = new Date();
+  try {
+    const emailByMember = await getMemberEmails(
+      db,
+      closed.summaries.map((s) => s.memberId),
+    );
+    const items = closed.summaries.map((s) => {
+      const total = formatMoney(s.orderTotal + s.shippingShare + s.handlingShare);
+      const shipping = s.shippingShare > 0 ? formatMoney(s.shippingShare) : null;
+      // Pay-per-order: the charge is provisional until the weighing and the
+      // supplier's sheet, then settled.
+      const body =
+        closed.paymentMode === "per_order"
+          ? t.notificationsServer.orderClosedPerOrderBody(closed.title, total)
+          : s.handlingShare > 0
+            ? t.notificationsServer.orderClosedBodyWithFee(
+                closed.title,
+                total,
+                formatMoney(s.orderTotal),
+                shipping,
+                formatMoney(s.handlingShare),
+              )
+            : shipping
+              ? t.notificationsServer.orderClosedBodyWithShipping(closed.title, total, formatMoney(s.orderTotal), shipping)
+              : t.notificationsServer.orderClosedBody(closed.title, formatMoney(s.orderTotal));
+      return {
+        memberId: s.memberId,
+        email: emailByMember.get(s.memberId) ?? null,
+        title: t.notificationsServer.orderClosedTitle,
+        body,
+        href: `/storico?cycleId=${cycleId}`,
+      };
+    });
+    if (items.length > 0) await dispatchWithBodies(db, items, "order_closed", now);
+  } catch (notifyError) {
+    console.error("[order_closed] dispatch failed:", notifyError);
+  }
+}
+
+// Closing with the supplier's sheet: one notification per member, with the
+// final cost (order, shipping and fee after the sheet), instead of the
+// provisional close message followed by one per corrected line.
+export async function notifyCycleClosedWithDistinta(
+  db: Db,
+  cycleId: string,
+  closed: CommittedClose,
+  finalCosts: ReadonlyMap<string, number>,
+): Promise<void> {
+  try {
+    const memberIds = [...finalCosts.keys()];
+    const emailByMember = await getMemberEmails(db, memberIds);
+    const items = memberIds.map((memberId) => {
+      const total = formatMoney(finalCosts.get(memberId) ?? 0);
+      return {
+        memberId,
+        email: emailByMember.get(memberId) ?? null,
+        title: t.notificationsServer.orderClosedTitle,
+        body:
+          closed.paymentMode === "per_order"
+            ? t.notificationsServer.orderClosedWithDistintaPerOrderBody(closed.title, total)
+            : t.notificationsServer.orderClosedWithDistintaBody(closed.title, total),
+        href: `/storico?cycleId=${cycleId}`,
+      };
+    });
+    if (items.length > 0) await dispatchWithBodies(db, items, "order_closed");
+  } catch (notifyError) {
+    console.error("[order_closed] dispatch failed:", notifyError);
+  }
+}
+
+// The shipping share each member will be charged when this open cycle closes,
+// computed exactly as the close does. The supplier sheet of an open cycle
+// starts from it, so a sheet sent before the close does not read as "no
+// shipping" once the close has charged it.
+export async function projectedCloseShipping(db: Db, cycleId: string): Promise<Map<string, number>> {
+  const [cycle] = await db
+    .select({
+      shippingMode: orderCycles.shippingMode,
+      shippingCostPerMember: orderCycles.shippingCostPerMember,
+      shippingTotal: orderCycles.shippingTotal,
+    })
+    .from(orderCycles)
+    .where(eq(orderCycles.cycleId, cycleId))
+    .limit(1);
+  if (!cycle) return new Map();
+  const memberTotals = await db
+    .select({ memberId: orders.memberId, total: sql<string>`sum(${orders.lineTotal})` })
+    .from(orders)
+    .where(eq(orders.cycleId, cycleId))
+    .groupBy(orders.memberId);
+  const { shippingCharges } = buildCycleCloseCharges(memberTotals, cycle);
+  return new Map(shippingCharges.map((c) => [c.memberId, -parseFloat(c.amount)]));
 }
 
 // Sets the fee of a cycle that is still open; false when it no longer is.

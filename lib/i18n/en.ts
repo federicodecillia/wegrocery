@@ -633,7 +633,7 @@ export const en: Strings = {
         howTitle: "How to correct a cycle",
         howPrices: "Wrong prices: fix them before closing, with \"Adjust prices\" in the close review.",
         howWeights: "Weights or quantities other than ordered: in Orders, tap the line or ✎ Edit on the member.",
-        howDistinta: "All the supplier's weights at once: in Supplier, step 3, with the completed sheet.",
+        howDistinta: "All the supplier's weights at once: with \"Upload the supplier sheet\" when you close the cycle, or later in Supplier, step 3.",
         goOrders: "Go to Orders →",
         goSupplier: "Go to Supplier →",
         settleTitle: "Settle accounts",
@@ -1377,6 +1377,19 @@ export const en: Strings = {
       closing: "Closing…",
       closedSuccess: (charges: number, adjustments: number) =>
         `Cycle closed. ${charges} charges, ${adjustments} adjustments.`,
+      distintaToggle: "Upload the supplier sheet",
+      distintaToggleHide: "Hide supplier sheet",
+      distintaDescription:
+        "Already have the supplier's sheet with real weights and prices? Upload it here: the close charges members with the supplier's weights and shipping. Accepts .xlsx, .ods and .csv.",
+      perOrderDistintaNote:
+        "Card-paid cycle: the difference with what members paid is settled when you settle the cycle.",
+      confirmWithDistinta: (delta: string) => `Close with the sheet (${delta})`,
+      closedWithDistintaSuccess: (charges: number, corrections: number) =>
+        `Cycle closed with the supplier sheet. ${charges} charges, ${corrections === 1 ? "1 weighing" : `${corrections} weighings`}.`,
+      distintaFailedAfterClose: (detail: string) =>
+        `The cycle is closed, but the sheet was not applied (${detail}). Upload it from Supplier, step 3.`,
+      discardDistintaTitle: "Leave the sheet?",
+      discardDistintaMessage: "The uploaded sheet is not applied and the cycle stays open.",
       discardTitle: "Discard the adjustments?",
       discardMessage: "The prices you changed are not saved and the cycle stays open.",
       discardConfirm: "Discard",
@@ -1823,6 +1836,10 @@ export const en: Strings = {
       `"${title}" has been closed. You have been charged ${total} (order ${order}${shipping ? ` + shipping ${shipping}` : ""} + order preparation fee ${fee}).`,
     orderClosedPerOrderBody: (title: string, total: string) =>
       `"${title}" is closed. Your order costs ${total} for now: it is provisional until the weighing and the supplier's sheet. When the cycle is settled, the difference with what you paid is evened out.`,
+    orderClosedWithDistintaBody: (title: string, total: string) =>
+      `"${title}" has been closed. With the supplier's weights you have been charged ${total}.`,
+    orderClosedWithDistintaPerOrderBody: (title: string, total: string) =>
+      `"${title}" is closed. With the supplier's weights your order costs ${total}. When the cycle is settled, the difference with what you paid is evened out.`,
     cycleCancelledPerOrderBody: (title: string, reason: string) =>
       `The cycle "${title}" was cancelled: ${reason}. What you paid comes back to your card when the cycle is settled.`,
     topupReceivedTitle: "Top-up recorded",

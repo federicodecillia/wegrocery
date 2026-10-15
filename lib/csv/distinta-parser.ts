@@ -2,6 +2,7 @@ import { and, eq } from "drizzle-orm";
 import { liveLedger } from "@/lib/db/ledger-live";
 import ExcelJS from "exceljs";
 import { getDb } from "@/lib/db/client";
+import { projectedCloseShipping } from "@/lib/cycle-close-store";
 import {
   ledgerEntries,
   members,
@@ -327,7 +328,7 @@ function buildNameIndex(pairs: Array<[string, string]>): Map<string, string | ty
 // ── Shared DB diff ──
 // Given resolved (product, member) → raw value cells, look up the cycle's
 // current order/shipping state and produce the correction/shipping diff.
-async function buildPreviewFromRaw(c: Collected): Promise<DistintaImportPreview> {
+async function buildPreviewFromRaw(c: Collected, opts: DistintaParseOptions = {}): Promise<DistintaImportPreview> {
   const { cycleId } = c;
   const warnings = [...c.warnings];
   const errors = [...c.errors];
@@ -350,7 +351,8 @@ async function buildPreviewFromRaw(c: Collected): Promise<DistintaImportPreview>
     errors.push(t.errors.cycleNoLongerInDb);
     return base;
   }
-  if (cycle.status !== "closed") {
+  const previewBeforeClose = opts.allowOpenCycle === true && cycle.status === "open";
+  if (cycle.status !== "closed" && !previewBeforeClose) {
     errors.push(t.errors.cycleNotClosedDistinta);
     return { ...base, cycleTitle: cycle.title };
   }
@@ -375,13 +377,18 @@ async function buildPreviewFromRaw(c: Collected): Promise<DistintaImportPreview>
   const productNameById = new Map<string, string>();
   for (const l of lines) productNameById.set(l.productId, l.productName);
 
-  const shippingRows = await db
-    .select({ memberId: ledgerEntries.memberId, amount: ledgerEntries.amount })
-    .from(ledgerEntries)
-    .where(and(eq(ledgerEntries.cycleId, cycleId), eq(ledgerEntries.type, "shipping_charge"), liveLedger));
-  const shippingByMember = new Map<string, number>(
-    shippingRows.map((s) => [s.memberId, Math.abs(parseFloat(s.amount))]),
-  );
+  // An open cycle has no shipping charged yet: compare with the shares the
+  // close is about to charge, which is what the change will be applied to.
+  const shippingByMember = previewBeforeClose
+    ? await projectedCloseShipping(db, cycleId)
+    : new Map<string, number>(
+        (
+          await db
+            .select({ memberId: ledgerEntries.memberId, amount: ledgerEntries.amount })
+            .from(ledgerEntries)
+            .where(and(eq(ledgerEntries.cycleId, cycleId), eq(ledgerEntries.type, "shipping_charge"), liveLedger))
+        ).map((s) => [s.memberId, Math.abs(parseFloat(s.amount))]),
+      );
 
   // ── Corrections ──
   const corrections: DistintaCorrection[] = [];
@@ -527,10 +534,17 @@ function detectFormat(fileBuffer: Buffer, fileName?: string): "xlsx" | "ods" | "
   return fileBuffer.includes(Buffer.from("opendocument.spreadsheet")) ? "ods" : "xlsx";
 }
 
+export type DistintaParseOptions = {
+  // Preview on a cycle still open, for closing with the sheet: the diff is
+  // against the amounts the close will charge. Applying needs a closed cycle.
+  allowOpenCycle?: boolean;
+};
+
 export async function parseSupplierDistinta(
   fileBuffer: Buffer,
   expectedCycleId: string,
   fileName?: string,
+  opts: DistintaParseOptions = {},
 ): Promise<DistintaImportPreview> {
   const format = detectFormat(fileBuffer, fileName);
   const openError = (e: unknown): DistintaImportPreview => ({
@@ -546,18 +560,18 @@ export async function parseSupplierDistinta(
   try {
     if (format === "csv") {
       const grid = parseCsv(decodeCsvText(fileBuffer));
-      return await buildPreviewFromRaw(await collectViaCsv(grid, expectedCycleId));
+      return await buildPreviewFromRaw(await collectViaCsv(grid, expectedCycleId), opts);
     }
     if (format === "ods") {
       const wb = parseOds(fileBuffer);
-      return await buildPreviewFromRaw(collectViaMeta(wb, expectedCycleId));
+      return await buildPreviewFromRaw(collectViaMeta(wb, expectedCycleId), opts);
     }
     const wb = new ExcelJS.Workbook();
     // The exceljs typings predate @types/node's generic Buffer<ArrayBufferLike>;
     // the value is bit-for-bit fine, only the structural type check trips.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await wb.xlsx.load(fileBuffer as any);
-    return await buildPreviewFromRaw(collectViaMeta(excelSource(wb), expectedCycleId));
+    return await buildPreviewFromRaw(collectViaMeta(excelSource(wb), expectedCycleId), opts);
   } catch (e) {
     return openError(e);
   }
