@@ -1,5 +1,5 @@
 // Nightly UI check against a demo deployment (DEMO_MODE, one-click sign-in,
-// fake data): the main pages at a phone and a desktop width, checked with axe
+// fake data): the main pages at a phone, a tablet and a desktop width, checked with axe
 // for serious accessibility problems and for horizontal scrolling, plus four
 // keyboard checks. Run by .github/workflows/ui-check.yml after the demo
 // reset; locally: UI_CHECK_URL=http://localhost:3000 node scripts/ui-check.mjs
@@ -25,6 +25,8 @@ if (!BASE) {
 
 const WIDTHS = {
   phone: { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true },
+  // Portrait tablet: the navigation rail (SideNav from md) instead of the bottom bar.
+  tablet: { viewport: { width: 820, height: 1180 }, isMobile: true, hasTouch: true },
   desktop: { viewport: { width: 1280, height: 900 } },
 };
 const MEMBER_PAGES = ["/", "/ordine", "/storico", "/storico?tab=movimenti", "/guida", "/guida/ordinare", "/notifiche", "/profilo", "/ricarica", "/changelog"];
@@ -256,11 +258,11 @@ try {
   await browser.close();
 }
 
-const pages = 2 * (1 + MEMBER_PAGES.length + ADMIN_PAGES.length);
+const pages = Object.keys(WIDTHS).length * (1 + MEMBER_PAGES.length + ADMIN_PAGES.length);
 const summary = [
   `## UI check: ${failures.length === 0 ? "passed" : `${failures.length} problem(s)`}`,
   "",
-  `${BASE}, ${pages} page views at 390 and 1280 px, 4 keyboard checks.`,
+  `${BASE}, ${pages} page views at 390, 820 and 1280 px, 4 keyboard checks.`,
   "",
   ...(failures.length ? ["### Failing", ...failures.map((f) => `- ${f}`), ""] : []),
   ...(notes.length ? ["### Notes (not failing)", ...notes.map((n) => `- ${n}`), ""] : []),

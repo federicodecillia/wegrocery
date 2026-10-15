@@ -53,7 +53,8 @@ export function AdminNav() {
 
   return (
     <div className="mb-4 space-y-2">
-      <nav aria-label={t.admin.nav.sections} className="flex gap-1 rounded-full bg-tint/[0.05] p-1">
+      {/* From lg the sections live in the sidebar, under Admin. */}
+      <nav aria-label={t.admin.nav.sections} className="flex gap-1 rounded-full bg-tint/[0.05] p-1 lg:hidden">
         {ADMIN_PRIMARY.map((s) => (
           <Link
             key={s.id}

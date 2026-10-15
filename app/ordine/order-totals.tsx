@@ -34,9 +34,10 @@ type Props = {
 // the right; the breakdown opens in a sheet. It only shows amounts the form
 // already computed.
 //
-// It rides above the (sticky) bottom nav; from lg it is hidden and the cart
+// It rides above the (sticky) bottom nav on a phone and at the bottom of the
+// screen on a tablet (no bottom nav from md); from lg it is hidden and the cart
 // beside the catalogue mounts the "panel" variant instead. In-flow sticky inherits the card width at
-// every breakpoint; -mx-5 bleeds it across main's padding to the card edges.
+// every breakpoint; -mx-5 (-mx-8 from md) bleeds it across main's padding.
 // iOS WebKit skips repainting a text change inside this sticky layer and
 // leaves the old digits under the new ones: the layer is promoted to its own
 // compositing layer (translateZ), the background is opaque (no
@@ -117,8 +118,8 @@ export function OrderTotals({ orderTotal, payAmount, afterBalance, walletFeeCent
   }
 
   return (
-    <div className="sticky z-10 -mx-5 mt-4 -mb-[calc(var(--spacing-nav-h)+1rem)] bottom-[calc(var(--spacing-nav-h)+env(safe-area-inset-bottom))] lg:hidden [transform:translateZ(0)]">
-      <div className="border-t border-brand-border bg-brand-warm-white px-5 py-2.5">
+    <div className="sticky z-10 -mx-5 mt-4 -mb-[calc(var(--spacing-nav-h)+1rem)] bottom-[calc(var(--spacing-nav-h)+env(safe-area-inset-bottom))] md:-mx-8 md:-mb-6 md:bottom-0 lg:hidden [transform:translateZ(0)]">
+      <div className="border-t border-brand-border bg-brand-warm-white px-5 py-2.5 md:px-8">
         {error && (
           <p className="mb-2 text-[13px] leading-[1.4] text-danger-text">{error}</p>
         )}
