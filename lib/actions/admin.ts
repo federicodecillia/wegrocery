@@ -21,8 +21,15 @@ import { getLastHandlingFee, getMembersByEmails } from "@/lib/db/queries";
 import { findEmailConflict, normalizeEmail } from "@/lib/member-email";
 import type { BatchItem } from "drizzle-orm/batch";
 import { orderLinesSnapshot, planClosedOrderEdit } from "@/lib/closed-order-edit";
-import { cancelledCycleReversalTypes, ordersSnapshot } from "@/lib/cycle-close";
-import { performCycleClose, updateCycleFee } from "@/lib/cycle-close-store";
+import { cancelledCycleReversalTypes, finalCostsAfterDistinta, ordersSnapshot } from "@/lib/cycle-close";
+import {
+  commitCycleClose,
+  notifyCycleClosed,
+  notifyCycleClosedWithDistinta,
+  performCycleClose,
+  updateCycleFee,
+} from "@/lib/cycle-close-store";
+import type { DistintaImportPreview, DistintaShippingChange } from "@/lib/csv/distinta-parser";
 import {
   normalizeShippingMode,
   planShippingRecompute,
@@ -265,6 +272,93 @@ export async function adminCloseCycle(
     return result;
   } catch (e) {
     return { error: actionErrorMessage(e, t.errors.genericError, "adminCloseCycle") };
+  }
+}
+
+// Closes an open cycle with the supplier's sheet in hand (pesate and real
+// prices arrived before the close): the file is checked against the open
+// cycle first, so a file with errors or nothing to apply never closes it.
+// Then the ordinary close (performCycleClose's batch), then the ordinary
+// import on the now closed cycle (re-read, so the diff is against what the
+// close actually charged), both append-only. One notification per member,
+// with the final cost. If the sheet fails after the close, the cycle stays
+// closed with the ordinary close messages, and the admin retries from
+// Fornitore, step 3.
+export async function adminCloseCycleWithDistinta(input: {
+  cycleId: string;
+  fileBase64: string;
+  fileName?: string;
+}): Promise<
+  | { ok: true; chargesGenerated: number; corrections: number; shippingChanges: number }
+  | { error: string; closed?: boolean }
+> {
+  try {
+    const admin = await requireAdmin();
+    const db = getDb();
+    const { decodeUploadBase64 } = await import("@/lib/upload-limit");
+    const buf = decodeUploadBase64(input.fileBase64);
+    const { parseSupplierDistinta } = await import("@/lib/csv/distinta-parser");
+
+    const before = await parseSupplierDistinta(buf, input.cycleId, input.fileName, { allowOpenCycle: true });
+    if (before.errors.length > 0) return { error: before.errors[0] };
+    const [current] = await db
+      .select({ status: orderCycles.status })
+      .from(orderCycles)
+      .where(eq(orderCycles.cycleId, input.cycleId))
+      .limit(1);
+    if (!current) return { error: t.errors.cycleNotFound };
+    if (current.status !== "open") return { error: t.errors.cycleNotFoundOrAlreadyClosed };
+    if (before.corrections.length === 0 && before.shippingChanges.length === 0) {
+      return { error: t.admin.supplierActions.nothingToApply };
+    }
+
+    const closed = await commitCycleClose(db, input.cycleId, admin.email);
+    await writeAudit(db, admin.email, "close_cycle", "cycle", input.cycleId, {
+      chargesGenerated: closed.chargesGenerated,
+      withDistinta: true,
+    });
+    await recordUsage("cycle_closed");
+    revalidatePath("/admin");
+    revalidatePath("/");
+    revalidatePath("/storico");
+
+    const failedAfterClose = async (detail: string) => {
+      await notifyCycleClosed(db, input.cycleId, closed);
+      return { error: t.admin.cycleReview.distintaFailedAfterClose(detail), closed: true };
+    };
+    let applied: Awaited<ReturnType<typeof applyDistintaPreview>>;
+    let preview: DistintaImportPreview;
+    try {
+      preview = await parseSupplierDistinta(buf, input.cycleId, input.fileName);
+      if (preview.errors.length > 0) return await failedAfterClose(preview.errors[0]);
+      applied = await applyDistintaPreview(db, admin.email, input.cycleId, preview, { notify: false });
+    } catch (e) {
+      return await failedAfterClose(e instanceof Error ? e.message : t.errors.importApplyError);
+    }
+    if ("error" in applied) return await failedAfterClose(applied.error);
+
+    await notifyCycleClosedWithDistinta(
+      db,
+      input.cycleId,
+      closed,
+      finalCostsAfterDistinta(closed.summaries, preview.corrections, applied.appliedShipping),
+    );
+    await writeAudit(db, admin.email, "supplier_distinta_imported", "cycle", input.cycleId, {
+      corrections: preview.corrections.length,
+      shippingChanges: applied.appliedShipping.length,
+      affectedMembers: applied.affectedMembers,
+      warnings: preview.warnings,
+      atClose: true,
+    });
+    revalidatePath("/ordine");
+    return {
+      ok: true,
+      chargesGenerated: closed.chargesGenerated,
+      corrections: preview.corrections.length,
+      shippingChanges: applied.appliedShipping.length,
+    };
+  } catch (e) {
+    return { error: actionErrorMessage(e, t.errors.genericError, "adminCloseCycleWithDistinta") };
   }
 }
 
@@ -1355,130 +1449,152 @@ export async function adminSendSupplierEmail(
 // Passing both args as `null` resets the line back to "delivered as ordered"
 // and reverses any previous correction by posting a fresh delta in the
 // opposite direction.
-export async function adminUpdateOrderLineActuals(input: {
-  orderLineId: string;
-  actualQuantity: string | null;
-  actualLineTotal: string | null;
-}): Promise<
+export async function adminUpdateOrderLineActuals(input: OrderLineActualsInput): Promise<
   | { ok: true; newOrderTotal: number; correctionAmount: number }
   | { error: string }
 > {
   try {
     const admin = await requireAdmin();
-    const db = getDb();
+    const result = await applyOrderLineActuals(getDb(), admin.email, input);
+    if ("error" in result) return result;
+    revalidatePath("/admin");
+    revalidatePath("/storico");
+    revalidatePath("/notifiche");
+    revalidatePath("/");
+    return result;
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : t.errors.correctionError };
+  }
+}
 
-    const [line] = await db
-      .select({
-        orderLineId: orders.orderLineId,
-        cycleId: orders.cycleId,
-        memberId: orders.memberId,
-        memberEmail: members.email,
-        quantity: orders.quantity,
-        unitPriceSnapshot: orders.unitPriceSnapshot,
-        lineTotal: orders.lineTotal,
-        actualQuantity: orders.actualQuantity,
-        actualLineTotal: orders.actualLineTotal,
-        productName: products.name,
-        productUnit: products.unit,
-        cycleTitle: orderCycles.title,
-        cycleStatus: orderCycles.status,
-      })
-      .from(orders)
-      .innerJoin(products, eq(orders.productId, products.productId))
-      .innerJoin(orderCycles, eq(orders.cycleId, orderCycles.cycleId))
-      .innerJoin(members, eq(orders.memberId, members.memberId))
-      .where(eq(orders.orderLineId, input.orderLineId))
-      .limit(1);
-    if (!line) return { error: t.errors.orderLineNotFound };
-    if (line.cycleStatus !== "closed")
-      return { error: t.errors.cycleNotClosedUseNormal };
+type OrderLineActualsInput = {
+  orderLineId: string;
+  actualQuantity: string | null;
+  actualLineTotal: string | null;
+};
 
-    // Parse + validate inputs.
-    const parseNum = (s: string | null): number | null => {
-      if (s == null || s.trim() === "") return null;
-      const n = parseFloat(s.replace(",", "."));
-      return Number.isFinite(n) && n >= 0 ? n : NaN;
-    };
-    const newActualQty = parseNum(input.actualQuantity);
-    const newActualTotal = parseNum(input.actualLineTotal);
-    if (newActualQty !== null && Number.isNaN(newActualQty))
-      return { error: t.errors.actualQtyInvalid };
-    if (newActualTotal !== null && Number.isNaN(newActualTotal))
-      return { error: t.errors.actualTotalInvalid };
+// The write behind adminUpdateOrderLineActuals, shared with the supplier
+// sheet import. `notify: false` when the caller sends its own message (the
+// close with the sheet sends one per member with the final cost).
+async function applyOrderLineActuals(
+  db: ReturnType<typeof getDb>,
+  adminEmail: string,
+  input: OrderLineActualsInput,
+  opts: { notify?: boolean } = {},
+): Promise<{ ok: true; newOrderTotal: number; correctionAmount: number } | { error: string }> {
+  const [line] = await db
+    .select({
+      orderLineId: orders.orderLineId,
+      cycleId: orders.cycleId,
+      memberId: orders.memberId,
+      memberEmail: members.email,
+      quantity: orders.quantity,
+      unitPriceSnapshot: orders.unitPriceSnapshot,
+      lineTotal: orders.lineTotal,
+      actualQuantity: orders.actualQuantity,
+      actualLineTotal: orders.actualLineTotal,
+      productName: products.name,
+      productUnit: products.unit,
+      cycleTitle: orderCycles.title,
+      cycleStatus: orderCycles.status,
+    })
+    .from(orders)
+    .innerJoin(products, eq(orders.productId, products.productId))
+    .innerJoin(orderCycles, eq(orders.cycleId, orderCycles.cycleId))
+    .innerJoin(members, eq(orders.memberId, members.memberId))
+    .where(eq(orders.orderLineId, input.orderLineId))
+    .limit(1);
+  if (!line) return { error: t.errors.orderLineNotFound };
+  if (line.cycleStatus !== "closed")
+    return { error: t.errors.cycleNotClosedUseNormal };
 
-    const unitPrice = parseFloat(line.unitPriceSnapshot);
-    const originalTotal = parseFloat(line.lineTotal);
-    const prevEffective =
-      line.actualLineTotal != null ? parseFloat(line.actualLineTotal) : originalTotal;
+  // Parse + validate inputs.
+  const parseNum = (s: string | null): number | null => {
+    if (s == null || s.trim() === "") return null;
+    const n = parseFloat(s.replace(",", "."));
+    return Number.isFinite(n) && n >= 0 ? n : NaN;
+  };
+  const newActualQty = parseNum(input.actualQuantity);
+  const newActualTotal = parseNum(input.actualLineTotal);
+  if (newActualQty !== null && Number.isNaN(newActualQty))
+    return { error: t.errors.actualQtyInvalid };
+  if (newActualTotal !== null && Number.isNaN(newActualTotal))
+    return { error: t.errors.actualTotalInvalid };
 
-    // Compute the new effective total. Priority:
-    //   1. explicit actualLineTotal if provided
-    //   2. actualQuantity * unitPrice
-    //   3. fall back to the original lineTotal (reset case)
-    let newEffective: number;
-    if (newActualTotal !== null) {
-      newEffective = newActualTotal;
-    } else if (newActualQty !== null) {
-      newEffective = Math.round(newActualQty * unitPrice * 100) / 100;
+  const unitPrice = parseFloat(line.unitPriceSnapshot);
+  const originalTotal = parseFloat(line.lineTotal);
+  const prevEffective =
+    line.actualLineTotal != null ? parseFloat(line.actualLineTotal) : originalTotal;
+
+  // Compute the new effective total. Priority:
+  //   1. explicit actualLineTotal if provided
+  //   2. actualQuantity * unitPrice
+  //   3. fall back to the original lineTotal (reset case)
+  let newEffective: number;
+  if (newActualTotal !== null) {
+    newEffective = newActualTotal;
+  } else if (newActualQty !== null) {
+    newEffective = Math.round(newActualQty * unitPrice * 100) / 100;
+  } else {
+    newEffective = originalTotal;
+  }
+
+  const delta = Math.round((prevEffective - newEffective) * 100) / 100;
+
+  await db
+    .update(orders)
+    .set({
+      actualQuantity: newActualQty != null ? newActualQty.toFixed(3) : null,
+      actualLineTotal:
+        newActualTotal != null
+          ? newActualTotal.toFixed(2)
+          : newActualQty != null
+            ? newEffective.toFixed(2)
+            : null,
+      updatedAt: new Date(),
+    })
+    .where(eq(orders.orderLineId, line.orderLineId));
+
+  let correctionAmount = 0;
+  if (Math.abs(delta) >= 0.005) {
+    // Sign convention: positive `delta` means the member overpaid (refund)
+    // — same as adminEditClosedOrder so /storico renders consistently.
+    const now = new Date();
+    const noteParts: string[] = [];
+    if (newActualQty !== null) {
+      const qtyText = Number.isInteger(newActualQty)
+        ? `${newActualQty}`
+        : newActualQty.toFixed(3).replace(/0+$/, "").replace(/\.$/, "");
+      const unit = line.productUnit ?? "";
+      noteParts.push(
+        t.notificationsServer.orderLineAdjustedNoteReceived(
+          line.productName,
+          `${line.quantity}${unit ? ` ${unit}` : ""}`,
+          `${qtyText}${unit ? ` ${unit}` : ""}`,
+        ),
+      );
+    } else if (newActualTotal !== null) {
+      noteParts.push(
+        t.notificationsServer.orderLineAdjustedNoteCost(line.productName, formatMoney(newEffective)),
+      );
     } else {
-      newEffective = originalTotal;
+      noteParts.push(t.notificationsServer.orderLineAdjustedNoteReverted(line.productName));
     }
 
-    const delta = Math.round((prevEffective - newEffective) * 100) / 100;
+    await db.insert(ledgerEntries).values({
+      entryId: genId("led"),
+      memberId: line.memberId,
+      entryDate: now,
+      type: "correction",
+      amount: delta.toFixed(2),
+      cycleId: line.cycleId,
+      note: noteParts.join(" · "),
+      createdBy: adminEmail,
+      createdAt: now,
+    });
+    correctionAmount = delta;
 
-    await db
-      .update(orders)
-      .set({
-        actualQuantity: newActualQty != null ? newActualQty.toFixed(3) : null,
-        actualLineTotal:
-          newActualTotal != null
-            ? newActualTotal.toFixed(2)
-            : newActualQty != null
-              ? newEffective.toFixed(2)
-              : null,
-        updatedAt: new Date(),
-      })
-      .where(eq(orders.orderLineId, line.orderLineId));
-
-    let correctionAmount = 0;
-    if (Math.abs(delta) >= 0.005) {
-      // Sign convention: positive `delta` means the member overpaid (refund)
-      // — same as adminEditClosedOrder so /storico renders consistently.
-      const now = new Date();
-      const noteParts: string[] = [];
-      if (newActualQty !== null) {
-        const qtyText = Number.isInteger(newActualQty)
-          ? `${newActualQty}`
-          : newActualQty.toFixed(3).replace(/0+$/, "").replace(/\.$/, "");
-        const unit = line.productUnit ?? "";
-        noteParts.push(
-          t.notificationsServer.orderLineAdjustedNoteReceived(
-            line.productName,
-            `${line.quantity}${unit ? ` ${unit}` : ""}`,
-            `${qtyText}${unit ? ` ${unit}` : ""}`,
-          ),
-        );
-      } else if (newActualTotal !== null) {
-        noteParts.push(
-          t.notificationsServer.orderLineAdjustedNoteCost(line.productName, formatMoney(newEffective)),
-        );
-      } else {
-        noteParts.push(t.notificationsServer.orderLineAdjustedNoteReverted(line.productName));
-      }
-
-      await db.insert(ledgerEntries).values({
-        entryId: genId("led"),
-        memberId: line.memberId,
-        entryDate: now,
-        type: "correction",
-        amount: delta.toFixed(2),
-        cycleId: line.cycleId,
-        note: noteParts.join(" · "),
-        createdBy: admin.email,
-        createdAt: now,
-      });
-      correctionAmount = delta;
-
+    if (opts.notify !== false) {
       const adjustedBody =
         delta > 0
           ? t.notificationsServer.orderLineAdjustedBodyRefund
@@ -1492,34 +1608,28 @@ export async function adminUpdateOrderLineActuals(input: {
         href: "/storico",
       });
     }
-
-    // Recompute the member's effective order total purely for the response.
-    const [agg] = await db
-      .select({
-        total: sql<string>`sum(coalesce(${orders.actualLineTotal}, ${orders.lineTotal}))`,
-      })
-      .from(orders)
-      .where(and(eq(orders.cycleId, line.cycleId), eq(orders.memberId, line.memberId)));
-    const newOrderTotal = parseFloat(agg?.total ?? "0");
-
-    await writeAudit(db, admin.email, "order_line_actuals_updated", "order", line.orderLineId, {
-      cycleId: line.cycleId,
-      memberId: line.memberId,
-      prevEffective,
-      newEffective,
-      delta,
-      actualQuantity: newActualQty,
-      actualLineTotal: newActualTotal,
-    });
-
-    revalidatePath("/admin");
-    revalidatePath("/storico");
-    revalidatePath("/notifiche");
-    revalidatePath("/");
-    return { ok: true, newOrderTotal, correctionAmount };
-  } catch (e) {
-    return { error: e instanceof Error ? e.message : t.errors.correctionError };
   }
+
+  // Recompute the member's effective order total purely for the response.
+  const [agg] = await db
+    .select({
+      total: sql<string>`sum(coalesce(${orders.actualLineTotal}, ${orders.lineTotal}))`,
+    })
+    .from(orders)
+    .where(and(eq(orders.cycleId, line.cycleId), eq(orders.memberId, line.memberId)));
+  const newOrderTotal = parseFloat(agg?.total ?? "0");
+
+  await writeAudit(db, adminEmail, "order_line_actuals_updated", "order", line.orderLineId, {
+    cycleId: line.cycleId,
+    memberId: line.memberId,
+    prevEffective,
+    newEffective,
+    delta,
+    actualQuantity: newActualQty,
+    actualLineTotal: newActualTotal,
+  });
+
+  return { ok: true, newOrderTotal, correctionAmount };
 }
 
 // ── Post-close order editing ─────────────────────────────────────────────────
@@ -2401,6 +2511,8 @@ export async function adminPreviewDistintaImport(input: {
   cycleId: string;
   fileBase64: string;
   fileName?: string;
+  /** From the cycle-close sheet: the cycle is still open. */
+  beforeClose?: boolean;
 }): Promise<
   | { ok: true; preview: import("@/lib/csv/distinta-parser").DistintaImportPreview }
   | { error: string }
@@ -2410,7 +2522,9 @@ export async function adminPreviewDistintaImport(input: {
     const { decodeUploadBase64 } = await import("@/lib/upload-limit");
     const buf = decodeUploadBase64(input.fileBase64);
     const { parseSupplierDistinta } = await import("@/lib/csv/distinta-parser");
-    const preview = await parseSupplierDistinta(buf, input.cycleId, input.fileName);
+    const preview = await parseSupplierDistinta(buf, input.cycleId, input.fileName, {
+      allowOpenCycle: input.beforeClose === true,
+    });
     return { ok: true, preview };
   } catch (e) {
     return { error: e instanceof Error ? e.message : t.errors.distintaReadError };
@@ -2452,97 +2566,146 @@ export async function adminApplyDistintaImport(input: {
     }
 
     const db = getDb();
-    const now = new Date();
-    const affected = new Set<string>();
+    const applied = await applyDistintaPreview(db, admin.email, input.cycleId, preview, { notify: true });
+    if ("error" in applied) return applied;
+    await writeAudit(
+      db,
+      admin.email,
+      "supplier_distinta_imported",
+      "cycle",
+      input.cycleId,
+      {
+        corrections: preview.corrections.length,
+        shippingChanges: preview.shippingChanges.length,
+        affectedMembers: applied.affectedMembers,
+        warnings: preview.warnings,
+      },
+    );
 
-    // Per-member summary so the single notification we emit at the end is
-    // useful (lists the relevant changes for that socio).
-    type ChangeSummary = { product: string; oldTotal: number; newTotal: number };
-    const linesByMember = new Map<string, ChangeSummary[]>();
-    const shippingByMember = new Map<string, { oldShipping: number; newShipping: number }>();
+    revalidatePath("/admin");
+    revalidatePath("/storico");
+    revalidatePath("/");
 
-    // 1) Line corrections — reuse the per-line action so the correction
-    // ledger entry + per-line notification model stays identical to manual
-    // edits. We swallow individual notifications by NOT relying on them in
-    // the summary — but we keep them on, since they carry the per-line
-    // diff which is also useful.
-    for (const c of preview.corrections) {
-      const res = await adminUpdateOrderLineActuals({
-        orderLineId: c.orderLineId,
-        actualQuantity: null,
-        actualLineTotal: c.newTotal.toFixed(2),
-      });
-      if ("error" in res) {
-        return { error: `Errore su ${c.memberName} · ${c.productName}: ${res.error}` };
-      }
-      affected.add(c.memberId);
-      const arr = linesByMember.get(c.memberId) ?? [];
-      arr.push({ product: c.productName, oldTotal: c.oldTotal, newTotal: c.newTotal });
-      linesByMember.set(c.memberId, arr);
+    return {
+      ok: true,
+      corrections: preview.corrections.length,
+      shippingChanges: preview.shippingChanges.length,
+      warnings: preview.warnings,
+      affectedMembers: applied.affectedMembers,
+    };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : t.errors.importApplyError };
+  }
+}
+
+// The write behind adminApplyDistintaImport, shared with the close with the
+// sheet: every product correction goes through applyOrderLineActuals, the
+// shipping row is reversed and posted again per member. `notify: false` when
+// the caller sends its own message.
+async function applyDistintaPreview(
+  db: ReturnType<typeof getDb>,
+  adminEmail: string,
+  cycleId: string,
+  preview: DistintaImportPreview,
+  { notify }: { notify: boolean },
+): Promise<
+  | { ok: true; affectedMembers: number; appliedShipping: DistintaShippingChange[] }
+  | { error: string }
+> {
+  const now = new Date();
+  const affected = new Set<string>();
+  const appliedShipping: DistintaShippingChange[] = [];
+
+  // Per-member summary so the single notification we emit at the end is
+  // useful (lists the relevant changes for that socio).
+  type ChangeSummary = { product: string; oldTotal: number; newTotal: number };
+  const linesByMember = new Map<string, ChangeSummary[]>();
+  const shippingByMember = new Map<string, { oldShipping: number; newShipping: number }>();
+
+  // 1) Line corrections — reuse the per-line write so the correction
+  // ledger entry + per-line notification model stays identical to manual
+  // edits. The per-line notifications stay on (they carry the per-line
+  // diff) unless the caller sends its own message.
+  for (const c of preview.corrections) {
+    const res = await applyOrderLineActuals(
+      db,
+      adminEmail,
+      { orderLineId: c.orderLineId, actualQuantity: null, actualLineTotal: c.newTotal.toFixed(2) },
+      { notify },
+    );
+    if ("error" in res) {
+      return { error: `Errore su ${c.memberName} · ${c.productName}: ${res.error}` };
     }
+    affected.add(c.memberId);
+    const arr = linesByMember.get(c.memberId) ?? [];
+    arr.push({ product: c.productName, oldTotal: c.oldTotal, newTotal: c.newTotal });
+    linesByMember.set(c.memberId, arr);
+  }
 
-    // 2) Shipping changes — upsert ledger entries per member, then flip the
-    // cycle to manual mode.
-    if (preview.shippingChanges.length > 0) {
-      const existing = await db
-        .select({
-          entryId: ledgerEntries.entryId,
-          memberId: ledgerEntries.memberId,
-        })
-        .from(ledgerEntries)
-        .where(
-          and(
-            eq(ledgerEntries.cycleId, input.cycleId),
-            eq(ledgerEntries.type, "shipping_charge"),
-            liveLedger,
-          ),
-        );
-      const existingByMember = new Map(existing.map((e) => [e.memberId, e.entryId]));
+  // 2) Shipping changes — upsert ledger entries per member, then flip the
+  // cycle to manual mode.
+  if (preview.shippingChanges.length > 0) {
+    const existing = await db
+      .select({
+        entryId: ledgerEntries.entryId,
+        memberId: ledgerEntries.memberId,
+      })
+      .from(ledgerEntries)
+      .where(
+        and(
+          eq(ledgerEntries.cycleId, cycleId),
+          eq(ledgerEntries.type, "shipping_charge"),
+          liveLedger,
+        ),
+      );
+    const existingByMember = new Map(existing.map((e) => [e.memberId, e.entryId]));
 
-      for (const s of preview.shippingChanges) {
-        const newAmount = -s.newShipping; // ledger stores it as negative charge
-        const prev = existingByMember.get(s.memberId);
-        if (prev) {
-          // Append-only: the share is reversed and posted again with the
-          // supplier's figure (nothing posted again when it is zero).
-          const reversed = await reverseEntry(db, {
-            entryId: prev,
-            note: t.ledger.shippingFromSupplier,
-            by: admin.email,
-            ...(s.newShipping > 0 && {
-              replacement: { amount: newAmount.toFixed(2), note: t.ledger.shippingFromSupplier },
-            }),
-          });
-          // Another import got there first: its figure stands, nothing to report here.
-          if (!reversed) continue;
-        } else if (s.newShipping > 0) {
-          await db.insert(ledgerEntries).values({
-            entryId: genId("led"),
-            memberId: s.memberId,
-            entryDate: now,
-            type: "shipping_charge",
-            amount: newAmount.toFixed(2),
-            cycleId: input.cycleId,
-            note: t.ledger.shippingFromSupplier,
-            createdBy: admin.email,
-            createdAt: now,
-          });
-        }
-        affected.add(s.memberId);
-        shippingByMember.set(s.memberId, {
-          oldShipping: s.oldShipping,
-          newShipping: s.newShipping,
+    for (const s of preview.shippingChanges) {
+      const newAmount = -s.newShipping; // ledger stores it as negative charge
+      const prev = existingByMember.get(s.memberId);
+      if (prev) {
+        // Append-only: the share is reversed and posted again with the
+        // supplier's figure (nothing posted again when it is zero).
+        const reversed = await reverseEntry(db, {
+          entryId: prev,
+          note: t.ledger.shippingFromSupplier,
+          by: adminEmail,
+          ...(s.newShipping > 0 && {
+            replacement: { amount: newAmount.toFixed(2), note: t.ledger.shippingFromSupplier },
+          }),
+        });
+        // Another import got there first: its figure stands, nothing to report here.
+        if (!reversed) continue;
+      } else if (s.newShipping > 0) {
+        await db.insert(ledgerEntries).values({
+          entryId: genId("led"),
+          memberId: s.memberId,
+          entryDate: now,
+          type: "shipping_charge",
+          amount: newAmount.toFixed(2),
+          cycleId,
+          note: t.ledger.shippingFromSupplier,
+          createdBy: adminEmail,
+          createdAt: now,
         });
       }
-
-      await db
-        .update(orderCycles)
-        .set({ shippingMode: "manual" })
-        .where(eq(orderCycles.cycleId, input.cycleId));
+      affected.add(s.memberId);
+      appliedShipping.push(s);
+      shippingByMember.set(s.memberId, {
+        oldShipping: s.oldShipping,
+        newShipping: s.newShipping,
+      });
     }
 
-    // 3) Per-member roll-up notification (one extra notification on top of
-    // the per-line ones from step 1 — gives the socio the full picture).
+    await db
+      .update(orderCycles)
+      .set({ shippingMode: "manual" })
+      .where(eq(orderCycles.cycleId, cycleId));
+  }
+
+  // 3) Per-member roll-up notification (one extra notification on top of
+  // the per-line ones from step 1 — gives the socio the full picture).
+  if (notify) {
     const affectedIds = [...affected];
     const [distintaEmails, distintaPrefs] = await Promise.all([
       getMemberEmails(db, affectedIds),
@@ -2578,33 +2741,6 @@ export async function adminApplyDistintaImport(input: {
         distintaPrefs.get(memberId),
       );
     }
-
-    await writeAudit(
-      db,
-      admin.email,
-      "supplier_distinta_imported",
-      "cycle",
-      input.cycleId,
-      {
-        corrections: preview.corrections.length,
-        shippingChanges: preview.shippingChanges.length,
-        affectedMembers: affected.size,
-        warnings: preview.warnings,
-      },
-    );
-
-    revalidatePath("/admin");
-    revalidatePath("/storico");
-    revalidatePath("/");
-
-    return {
-      ok: true,
-      corrections: preview.corrections.length,
-      shippingChanges: preview.shippingChanges.length,
-      warnings: preview.warnings,
-      affectedMembers: affected.size,
-    };
-  } catch (e) {
-    return { error: e instanceof Error ? e.message : t.errors.importApplyError };
   }
+  return { ok: true, affectedMembers: affected.size, appliedShipping };
 }

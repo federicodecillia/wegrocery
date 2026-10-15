@@ -21,6 +21,12 @@ stanno nella PR.
 
 ## [Non rilasciato]
 
+### Aggiunte
+- ⚖️ **La distinta del fornitore si carica anche mentre chiudi il ciclo.** Nel foglio "Chiudi il ciclo" c'è "Carica la distinta": vedi prima le pesate e la spedizione, poi un solo pulsante chiude e addebita i costi veri. Ogni socio riceve un solo avviso con il costo finale.
+
+### Risolto
+- 🚚 **La distinta scaricata prima della chiusura non azzera più la spedizione.** Ora parte già con la quota di spedizione di ogni socio, e le riduzioni nell'anteprima hanno il segno meno.
+
 ### Modificato
 - 🔐 **I gruppi nuovi partono con un ruolo database limitato.** Un gruppo installato dalla Console WeGrocery ora si collega con un ruolo che legge e scrive i dati ma non può mai cambiare la struttura del database, come fa già Porta Moneta.
 
