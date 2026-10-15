@@ -19,19 +19,30 @@ export function isCycleView(value: string | undefined | null): value is CycleVie
 }
 
 /**
- * The views of a cycle by status: products only while it is open (the close
- * freezes them), the supplier once there is something to send, the accounts
- * (settlement, cancelling) after the close.
+ * Whether the order can go to the supplier: once the cycle is closed, or while
+ * it is still open past its order deadline (members can no longer order, and
+ * the cycle can wait for the supplier's sheet to close with it).
  */
-export function cycleViews(status: string): CycleView[] {
-  if (status === "open") return ["panoramica", "prodotti", "ordini"];
+export function supplierOrderReady(status: string, orderCloseAt: Date | null, now: Date = new Date()): boolean {
+  if (status === "closed") return true;
+  return status === "open" && orderCloseAt != null && orderCloseAt.getTime() <= now.getTime();
+}
+
+/**
+ * The views of a cycle by status: products only while it is open (the close
+ * freezes them), the supplier once there is something to send (`supplierReady`:
+ * an open cycle past its deadline), the accounts (settlement, cancelling)
+ * after the close.
+ */
+export function cycleViews(status: string, supplierReady = false): CycleView[] {
+  if (status === "open") return supplierReady ? ["panoramica", "prodotti", "ordini", "fornitore"] : ["panoramica", "prodotti", "ordini"];
   if (status === "cancelled") return ["panoramica", "ordini", "conti"];
   return ["panoramica", "ordini", "fornitore", "conti"];
 }
 
 /** The view asked for when the cycle has it, else its overview. */
-export function resolveCycleView(status: string, view: string | undefined | null): CycleView {
-  return isCycleView(view) && cycleViews(status).includes(view) ? view : "panoramica";
+export function resolveCycleView(status: string, view: string | undefined | null, supplierReady = false): CycleView {
+  return isCycleView(view) && cycleViews(status, supplierReady).includes(view) ? view : "panoramica";
 }
 
 type IndexedCycle = { cycleId: string; status: string; orderCloseAt: Date | null; createdAt: Date };

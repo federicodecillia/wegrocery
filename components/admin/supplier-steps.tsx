@@ -14,7 +14,8 @@ import { DISTINTA_ACCEPT, DistintaPreviewPanel, readFileAsBase64 } from "@/compo
 import { toast } from "@/components/ui/toast";
 import { t } from "@/lib/i18n";
 
-// Admin → Ciclo → Fornitore: every supplier action on a closed cycle, as three
+// Admin → Ciclo → Fornitore: every supplier action on a closed cycle (steps 1
+// and 2 also on an open cycle past its order deadline), as three
 // numbered steps on the page (before, a sheet behind the "🤝 Fornitore" button):
 //   1. Scarica la distinta (.xlsx download)
 //   2. Inviala per email al fornitore (4-field form)
@@ -30,7 +31,7 @@ function decodeBase64ToBlob(base64: string, mimeType: string): Blob {
   return new Blob([bytes], { type: mimeType });
 }
 
-export function SupplierSteps({ cycleId }: { cycleId: string }) {
+export function SupplierSteps({ cycleId, cycleOpen = false }: { cycleId: string; cycleOpen?: boolean }) {
   const router = useRouter();
   // After a mail is sent or a distinta applied, the server data on the page
   // (totals, Conti) is read again.
@@ -242,6 +243,10 @@ export function SupplierSteps({ cycleId }: { cycleId: string }) {
         )}
       </Step>
 
+      {cycleOpen ? (
+        // Open past the deadline: the completed sheet is applied by the close itself.
+        <Step n={3} title={sa.uploadSection} description={sa.uploadAtClose} />
+      ) : (
       <Step n={3} title={sa.uploadSection} description={sa.uploadDescription}>
         <input
           type="file"
@@ -281,11 +286,12 @@ export function SupplierSteps({ cycleId }: { cycleId: string }) {
           </div>
         )}
       </Step>
+      )}
     </ol>
   );
 }
 
-function Step({ n, title, description, children }: { n: number; title: string; description: string; children: ReactNode }) {
+function Step({ n, title, description, children }: { n: number; title: string; description: string; children?: ReactNode }) {
   return (
     <li className="rounded-2xl border border-brand-border bg-surface p-4">
       <h3 className="flex items-center gap-2 text-[14px] font-bold text-brand-near-black">
@@ -297,7 +303,7 @@ function Step({ n, title, description, children }: { n: number; title: string; d
           {title}
         </span>
       </h3>
-      <p className="mt-1 mb-3 max-w-prose text-[13px] text-brand-gray">{description}</p>
+      <p className={`mt-1 max-w-prose text-[13px] text-brand-gray ${children ? "mb-3" : ""}`}>{description}</p>
       {children}
     </li>
   );

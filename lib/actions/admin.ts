@@ -30,6 +30,7 @@ import {
   updateCycleFee,
 } from "@/lib/cycle-close-store";
 import type { DistintaImportPreview, DistintaShippingChange } from "@/lib/csv/distinta-parser";
+import { supplierOrderReady } from "@/lib/admin/cycle-views";
 import {
   normalizeShippingMode,
   planShippingRecompute,
@@ -1304,6 +1305,7 @@ export async function adminGetSupplierEmailDefaults(cycleId: string): Promise<
         cycleId: orderCycles.cycleId,
         title: orderCycles.title,
         status: orderCycles.status,
+        orderCloseAt: orderCycles.orderCloseAt,
         supplierId: orderCycles.supplierId,
         supplierEmail: suppliers.email,
         supplierName: suppliers.name,
@@ -1313,7 +1315,7 @@ export async function adminGetSupplierEmailDefaults(cycleId: string): Promise<
       .where(eq(orderCycles.cycleId, cycleId))
       .limit(1);
     if (!cycle) return { error: t.errors.cycleNotFound };
-    if (cycle.status !== "closed") return { error: t.errors.cycleNotClosed };
+    if (!supplierOrderReady(cycle.status, cycle.orderCloseAt)) return { error: t.errors.supplierOrderNotReady };
     if (!cycle.supplierId || !cycle.supplierName)
       return { error: t.errors.cycleNoSupplier };
     // A missing supplier email is NOT an error: the admin can type the
@@ -1360,6 +1362,7 @@ export async function adminSendSupplierEmail(
         title: orderCycles.title,
         status: orderCycles.status,
         pickupDate: orderCycles.pickupDate,
+        orderCloseAt: orderCycles.orderCloseAt,
         supplierId: orderCycles.supplierId,
         supplierEmail: suppliers.email,
         supplierName: suppliers.name,
@@ -1369,7 +1372,7 @@ export async function adminSendSupplierEmail(
       .where(eq(orderCycles.cycleId, cycleId))
       .limit(1);
     if (!cycle) return { error: t.errors.cycleNotFound };
-    if (cycle.status !== "closed") return { error: t.errors.cycleNotClosed };
+    if (!supplierOrderReady(cycle.status, cycle.orderCloseAt)) return { error: t.errors.supplierOrderNotReady };
     if (!cycle.supplierId || !cycle.supplierName)
       return { error: t.errors.cycleNoSupplier };
 
