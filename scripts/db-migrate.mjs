@@ -22,7 +22,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { neon } from "@neondatabase/serverless";
-import { LOCK_TIMEOUT, isMigrationFile, refusesProduction, splitStatements } from "./db-migrate-lib.mjs";
+import { LOCK_TIMEOUT, appRoleFromEnv, isMigrationFile, migrationLedgerRevokeStatement, refusesProduction, splitStatements } from "./db-migrate-lib.mjs";
 
 // The owner's connection when the app runs as a restricted role (Playbook 1.4).
 const url = process.env.DATABASE_MIGRATION_URL || process.env.DATABASE_URL;
@@ -50,6 +50,9 @@ await sql`CREATE TABLE IF NOT EXISTS _migrations (
   name text PRIMARY KEY,
   applied_at timestamptz NOT NULL DEFAULT now()
 )`;
+// A restricted app role created before the ledger existed must not write it.
+const appRole = appRoleFromEnv(process.env);
+if (appRole && mode !== "status") await sql.query(migrationLedgerRevokeStatement(appRole));
 const appliedRows = await sql`SELECT name FROM _migrations`;
 const applied = new Set(appliedRows.map((r) => r.name));
 const pending = files.filter((f) => !applied.has(f));

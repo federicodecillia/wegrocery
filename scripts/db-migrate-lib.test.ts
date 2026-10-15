@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { appRoleRevokeStatements, appRoleStatements, isMigrationFile, refusesProduction, roleUrl, splitStatements } from "./db-migrate-lib.mjs";
+import {
+  appRoleFromEnv,
+  appRoleRevokeStatements,
+  appRoleStatements,
+  isMigrationFile,
+  migrationLedgerRevokeStatement,
+  refusesProduction,
+  roleUrl,
+  splitStatements,
+} from "./db-migrate-lib.mjs";
 
 describe("isMigrationFile", () => {
   it("applies numbered SQL and never a rollback file", () => {
@@ -90,5 +99,34 @@ describe("roleUrl", () => {
     expect(u.host).toBe("ep-x.eu-central-1.aws.neon.tech");
     expect(u.pathname).toBe("/neondb");
     expect(u.search).toBe("?sslmode=require");
+  });
+});
+
+describe("migrationLedgerRevokeStatement", () => {
+  it("takes write access to the ledger away, only when ledger and role exist", () => {
+    const sql = migrationLedgerRevokeStatement("app_rw");
+    expect(sql).toContain('REVOKE INSERT, UPDATE, DELETE ON public._migrations FROM "app_rw"');
+    expect(sql).toContain("to_regclass('public._migrations') IS NOT NULL");
+    expect(sql).toContain("rolname = 'app_rw'");
+  });
+
+  it("refuses a role name that is not a plain identifier", () => {
+    expect(() => migrationLedgerRevokeStatement("x'; DROP TABLE members; --")).toThrow(/invalid role/);
+  });
+});
+
+describe("appRoleFromEnv", () => {
+  const owner = "postgresql://neondb_owner:o@ep-x.neon.tech/neondb";
+  const app = "postgresql://app_rw:a@ep-x.neon.tech/neondb";
+
+  it("is the app's user while migrations run as another user", () => {
+    expect(appRoleFromEnv({ DATABASE_URL: app, DATABASE_MIGRATION_URL: owner })).toBe("app_rw");
+  });
+
+  it("is null with one address, the same user twice or an unreadable address", () => {
+    expect(appRoleFromEnv({ DATABASE_URL: owner })).toBeNull();
+    expect(appRoleFromEnv({ DATABASE_MIGRATION_URL: owner })).toBeNull();
+    expect(appRoleFromEnv({ DATABASE_URL: owner, DATABASE_MIGRATION_URL: owner })).toBeNull();
+    expect(appRoleFromEnv({ DATABASE_URL: "not a url", DATABASE_MIGRATION_URL: owner })).toBeNull();
   });
 });

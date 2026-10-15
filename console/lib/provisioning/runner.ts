@@ -15,6 +15,7 @@ import { vercelProjectName } from "@/lib/slug";
 import { sealStatsSecret } from "@/lib/stats-secret";
 import { neonFor, resendForProvisioning, vercelFor } from "./clients";
 import { registryErrors, type RegistryInput } from "./registry";
+import { createAppRole } from "./app-role";
 import { appEnvVars, baseUrlEnvVar, emailEnvVars, envKeys, randomSecret, stripeEnvVars } from "./env-plan";
 import { appPlan, canReopen, canRun, databasePlan, stepStates, type StepId } from "./steps";
 
@@ -191,10 +192,15 @@ export async function createApp(instanceId: string): Promise<Result> {
       instance = (await getInstance(instanceId))!;
     }
 
-    // One pass: the connection string lives only in this function's memory.
+    // One pass: the connection strings live only in this function's memory.
+    // The restricted role is created and checked before anything is written,
+    // and its password changes on every run together with DATABASE_URL.
+    const ownerUrl = await neonFor().connectionUri(instance.neonProjectId!);
+    const { appUrl } = await createAppRole(ownerUrl);
     const statsSecret = randomSecret();
     const vars = appEnvVars({
-      databaseUrl: await neonFor().connectionUri(instance.neonProjectId!),
+      databaseUrl: appUrl,
+      migrationUrl: ownerUrl,
       authSecret: randomSecret(),
       bootstrapAdminEmail: instance.wizard.adminEmail ?? "",
       appBaseUrl: instance.url,
@@ -204,7 +210,7 @@ export async function createApp(instanceId: string): Promise<Result> {
     });
     await vercel.upsertEnv(instance.vercelProjectId!, vars);
     await updateInstance(instanceId, { statsSecretEnc: sealStatsSecret(instanceId, statsSecret) });
-    return `progetto Vercel ${instance.vercelProjectId}; variabili: ${envKeys(vars)}`;
+    return `progetto Vercel ${instance.vercelProjectId}; ruolo database app_rw; variabili: ${envKeys(vars)}`;
   });
 }
 

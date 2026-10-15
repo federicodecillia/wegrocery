@@ -21,6 +21,9 @@ stanno nella PR.
 
 ## [Non rilasciato]
 
+### Modificato
+- 🔐 **I gruppi nuovi partono con un ruolo database limitato.** Un gruppo installato dalla Console WeGrocery ora si collega con un ruolo che legge e scrive i dati ma non può mai cambiare la struttura del database, come fa già Porta Moneta.
+
 ## [1.28.0] — 14 ottobre 2026
 
 *L'app ha un tema scuro, e gli aggiornamenti del database sono più sicuri.*

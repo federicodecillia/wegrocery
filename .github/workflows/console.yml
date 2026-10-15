@@ -11,11 +11,15 @@ on:
     paths:
       - "console/**"
       - ".github/workflows/console.yml"
+      # console/lib/provisioning/app-role.test.ts compares with it.
+      - "scripts/db-migrate-lib.mjs"
   push:
     branches: [main]
     paths:
       - "console/**"
       - ".github/workflows/console.yml"
+      # console/lib/provisioning/app-role.test.ts compares with it.
+      - "scripts/db-migrate-lib.mjs"
 
 permissions:
   contents: read

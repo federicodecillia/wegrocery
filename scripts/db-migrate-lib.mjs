@@ -86,13 +86,43 @@ export function appRoleStatements(role, password, database) {
     `GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO ${ident(role)}`,
     `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO ${ident(role)}`,
     `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO ${ident(role)}`,
-    // The migration ledger is read by the configuration status, never written by the app.
-    `DO $$ BEGIN
-      IF to_regclass('public._migrations') IS NOT NULL THEN
-        REVOKE INSERT, UPDATE, DELETE ON public._migrations FROM ${ident(role)};
-      END IF;
-    END $$`,
+    migrationLedgerRevokeStatement(role),
   ];
+}
+
+/**
+ * The migration ledger is read by the configuration status, never written by
+ * the app. A role created before the ledger exists (a new installation) gets
+ * write access to it through the default privileges, so db-migrate.mjs runs
+ * this again after creating the ledger. A no-op when the ledger or the role
+ * does not exist.
+ */
+export function migrationLedgerRevokeStatement(role) {
+  if (!/^[a-z_][a-z0-9_]{0,62}$/.test(role)) throw new Error(`invalid role name: ${role}`);
+  const literal = `'${role}'`;
+  return `DO $$ BEGIN
+      IF to_regclass('public._migrations') IS NOT NULL AND EXISTS (SELECT FROM pg_roles WHERE rolname = ${literal}) THEN
+        REVOKE INSERT, UPDATE, DELETE ON public._migrations FROM "${role}";
+      END IF;
+    END $$`;
+}
+
+/**
+ * The restricted role the app connects with, when migrations run with a
+ * different (owner) address: the user of DATABASE_URL while
+ * DATABASE_MIGRATION_URL is set to another user. Null otherwise.
+ */
+export function appRoleFromEnv(env) {
+  const appUrl = env.DATABASE_URL?.trim();
+  const migrationUrl = env.DATABASE_MIGRATION_URL?.trim();
+  if (!appUrl || !migrationUrl) return null;
+  try {
+    const app = decodeURIComponent(new URL(appUrl).username);
+    const owner = decodeURIComponent(new URL(migrationUrl).username);
+    return app && app !== owner && /^[a-z_][a-z0-9_]{0,62}$/.test(app) ? app : null;
+  } catch {
+    return null;
+  }
 }
 
 /**

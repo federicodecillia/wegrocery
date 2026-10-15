@@ -123,13 +123,25 @@ jobs:
           echo "::add-mask::$URL"
           echo "FRESH_DATABASE_URL=$URL" >> "$GITHUB_ENV"
 
+      # As the console installs a group: the restricted role exists before
+      # any table, the migrations run as the owner, the app uses the role.
+      - name: Create the restricted role before any migration
+        if: steps.neon.outputs.available == 'true'
+        run: |
+          SAVE="$RUNNER_TEMP/fresh-role.env"
+          DATABASE_URL="$FRESH_DATABASE_URL" node scripts/create-app-role.mjs --role fresh_app_rw --save-url "$SAVE" --save-as FRESH_APP_URL
+          URL=$(sed -n 's/^FRESH_APP_URL="\(.*\)"$/\1/p' "$SAVE")
+          rm -f "$SAVE"
+          echo "::add-mask::$URL"
+          echo "FRESH_APP_URL=$URL" >> "$GITHUB_ENV"
+
       - name: Apply every migration to the empty database
         if: steps.neon.outputs.available == 'true'
-        run: DATABASE_URL="$FRESH_DATABASE_URL" node scripts/db-migrate.mjs
+        run: DATABASE_URL="$FRESH_APP_URL" DATABASE_MIGRATION_URL="$FRESH_DATABASE_URL" node scripts/db-migrate.mjs
 
       - name: First-day tests on the empty database
         if: steps.neon.outputs.available == 'true'
-        run: INT_TEST_DATABASE_URL="$FRESH_DATABASE_URL" INT_TEST_FRESH=1 npx vitest run -c vitest.int.config.ts test/int/fresh-install.int.test.ts
+        run: INT_TEST_DATABASE_URL="$FRESH_APP_URL" INT_TEST_FRESH=1 INT_TEST_FRESH_RESTRICTED=1 npx vitest run -c vitest.int.config.ts test/int/fresh-install.int.test.ts
 
       - name: Money invariants on the new installation
         if: steps.neon.outputs.available == 'true'

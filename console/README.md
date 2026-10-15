@@ -115,8 +115,13 @@ retried (*Riprova*) or resumed later from the instance page.
    `NEXT_PUBLIC_TIME_ZONE`; the group refines the brand in the app's own setup.
 3. **Database**: Neon project `wegrocery-<slug>`, Postgres 17, `aws-eu-central-1`.
 4. **App**: Vercel project `wegrocery-<slug>` linked to the repository, then
-   every variable in one server action (`DATABASE_URL` and
-   `MIGRATE_ON_BUILD` on production only).
+   every variable in one server action. Before writing them it creates the
+   restricted database role `app_rw` (rows only, no schema changes;
+   `lib/provisioning/app-role.ts`), connects as it and checks it cannot
+   create objects: `DATABASE_URL` is the role's address,
+   `DATABASE_MIGRATION_URL` the owner's (for `MIGRATE_ON_BUILD`), both on
+   production only. Running the step again resets the role's password and
+   rewrites both.
 5. **Email**: the group's domain on Resend (`eu-west-1`, DNS records to copy,
    *Verifica*), or the shared domain; then a sending-only key restricted to that
    domain, written with `MAIL_FROM`. Resend Free allows 3 domains and 100
