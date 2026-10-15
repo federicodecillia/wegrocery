@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cycleViews, defaultCycleId, filterCycles, groupCycles, resolveCycleView, settlementCandidate, settlementPending } from "./cycle-views";
+import { cycleViews, defaultCycleId, filterCycles, groupCycles, resolveCycleView, settlementCandidate, settlementPending, supplierOrderReady } from "./cycle-views";
 
 const d = (iso: string) => new Date(iso);
 
@@ -15,6 +15,18 @@ describe("cycle views", () => {
     expect(resolveCycleView("closed", "ordini")).toBe("ordini");
     expect(resolveCycleView("closed", "nonsense")).toBe("panoramica");
     expect(resolveCycleView("closed", undefined)).toBe("panoramica");
+  });
+
+  it("offers the supplier on an open cycle once its order deadline has passed", () => {
+    const now = d("2026-10-15T12:00:00Z");
+    expect(supplierOrderReady("open", d("2026-10-15T11:00:00Z"), now)).toBe(true);
+    expect(supplierOrderReady("open", d("2026-10-15T13:00:00Z"), now)).toBe(false);
+    expect(supplierOrderReady("open", null, now)).toBe(false);
+    expect(supplierOrderReady("closed", null, now)).toBe(true);
+    expect(supplierOrderReady("cancelled", d("2026-10-01"), now)).toBe(false);
+    expect(cycleViews("open", true)).toEqual(["panoramica", "prodotti", "ordini", "fornitore"]);
+    expect(resolveCycleView("open", "fornitore", true)).toBe("fornitore");
+    expect(resolveCycleView("open", "fornitore")).toBe("panoramica");
   });
 });
 

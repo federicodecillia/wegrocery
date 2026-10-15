@@ -21,6 +21,9 @@ stanno nella PR.
 
 ## [Non rilasciato]
 
+### Aggiunte
+- 📧 **L'ordine al fornitore si invia anche prima di chiudere il ciclo.** Scaduti gli ordini, la scheda Fornitore compare già: scarichi la distinta e la mandi al fornitore, poi quando torna compilata chiudi il ciclo caricandola.
+
 ## [1.29.0] — 15 ottobre 2026
 
 *La distinta del fornitore si carica anche mentre chiudi il ciclo.*

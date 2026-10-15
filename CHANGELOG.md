@@ -20,6 +20,9 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ## [Unreleased]
 
+### Added
+- 📧 **The order goes to the supplier before the cycle is closed.** Once the order deadline has passed, the Supplier tab already shows: download the sheet and send it, then close the cycle uploading the completed one when it comes back.
+
 ## [1.29.0] — 2026-10-15
 
 *The supplier sheet can be uploaded while closing the cycle.*
