@@ -24,7 +24,7 @@ stanno nella PR.
 ### Aggiunte
 - 📧 **L'ordine al fornitore si invia anche prima di chiudere il ciclo.** Scaduti gli ordini, la scheda Fornitore compare già: scarichi la distinta e la mandi al fornitore, poi quando torna compilata chiudi il ciclo caricandola.
 
-### Modifiche
+### Modificato
 - 🧭 **Menu di lato su tablet e computer.** Sul tablet il menu è una colonna a sinistra, sul computer un menu laterale con le sezioni admin sotto Admin; l'app usa tutto lo schermo. Sul telefono non cambia nulla.
 
 ## [1.29.0] — 15 ottobre 2026
