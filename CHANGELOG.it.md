@@ -21,6 +21,10 @@ stanno nella PR.
 
 ## [Non rilasciato]
 
+## [1.29.0] — 15 ottobre 2026
+
+*La distinta del fornitore si carica anche mentre chiudi il ciclo.*
+
 ### Aggiunte
 - ⚖️ **La distinta del fornitore si carica anche mentre chiudi il ciclo.** Nel foglio "Chiudi il ciclo" c'è "Carica la distinta": vedi prima le pesate e la spedizione, poi un solo pulsante chiude e addebita i costi veri. Ogni socio riceve un solo avviso con il costo finale.
 
@@ -631,6 +635,7 @@ stanno nella PR.
 
 ---
 
+[1.29.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.29.0
 [1.28.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.28.0
 [1.27.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.27.0
 [1.26.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.26.0

@@ -20,6 +20,10 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ## [Unreleased]
 
+## [1.29.0] — 2026-10-15
+
+*The supplier sheet can be uploaded while closing the cycle.*
+
 ### Added
 - ⚖️ **The supplier sheet can be uploaded while closing the cycle.** The "Close the cycle" sheet has "Upload the supplier sheet": see the weights and shipping first, then one button closes and charges the real costs. Each member gets a single notice with the final cost.
 
@@ -629,6 +633,7 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ---
 
+[1.29.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.29.0
 [1.28.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.28.0
 [1.27.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.27.0
 [1.26.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.26.0
