@@ -20,6 +20,10 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ## [Unreleased]
 
+## [1.30.0] — 2026-10-15
+
+*The order goes to the supplier before the cycle is closed.*
+
 ### Added
 - 📧 **The order goes to the supplier before the cycle is closed.** Once the order deadline has passed, the Supplier tab already shows: download the sheet and send it, then close the cycle uploading the completed one when it comes back.
 
@@ -636,6 +640,7 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ---
 
+[1.30.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.30.0
 [1.29.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.29.0
 [1.28.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.28.0
 [1.27.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.27.0
