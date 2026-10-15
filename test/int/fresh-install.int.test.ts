@@ -4,12 +4,14 @@ import { getTableConfig, PgTable } from "drizzle-orm/pg-core";
 import * as schema from "@/lib/db/schema";
 import { afterAll, describe, expect, it } from "vitest";
 import { admitEmail, memberForNewSession } from "@/lib/auth/admission";
-import { testSql as sql } from "./fixtures";
+import { rawClient, testSql as sql } from "./fixtures";
 
 // A new installation on its first day: an empty database that has just
 // applied every migration from 0000. CI runs this file alone on such a
 // database with INT_TEST_FRESH=1; everywhere else it is skipped, since its
-// assertions (no member yet) hold only there.
+// assertions (no member yet) hold only there. With INT_TEST_FRESH_RESTRICTED=1
+// the suite connects as the restricted role created before the first
+// migration, as the console installs a group.
 const describeFresh =
   process.env.INT_TEST_DB_READY === "1" && process.env.INT_TEST_FRESH === "1" ? describe : describe.skip;
 
@@ -42,6 +44,18 @@ describeFresh("a new installation", () => {
     }
     expect(missing).toEqual([]);
   });
+
+  it.runIf(process.env.INT_TEST_FRESH_RESTRICTED === "1")(
+    "connects with a role that cannot change the schema or write the migration ledger",
+    async () => {
+      const [{ can_create }] = await sql`SELECT has_schema_privilege(current_user, 'public', 'CREATE') AS can_create`;
+      expect(can_create).toBe(false);
+      const asApp = rawClient();
+      await expect(asApp.query("CREATE TABLE fresh_probe (id int)")).rejects.toThrow();
+      await expect(asApp.query("DROP TRIGGER ledger_entries_append_only ON ledger_entries")).rejects.toThrow();
+      await expect(asApp.query("INSERT INTO _migrations (name) VALUES ('fresh_probe')")).rejects.toThrow();
+    },
+  );
 
   it("has the guards of the order preparation fee (0026)", async () => {
     const [idx] = await sql`SELECT indexdef FROM pg_indexes

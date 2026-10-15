@@ -28,6 +28,10 @@ before touching it (builds with `MIGRATE_ON_BUILD` pass it themselves).
 
 ## Restricted database role (optional, recommended)
 
+A group installed from the WeGrocery Console already has it: the console
+creates `app_rw` and sets both variables. These steps are for the other
+installations.
+
 By default the app connects as the database owner, so a leaked `DATABASE_URL`
 could drop tables. With a restricted role the app can read and write rows
 (`SELECT`, `INSERT`, `UPDATE`, `DELETE`) but never change the schema, and the

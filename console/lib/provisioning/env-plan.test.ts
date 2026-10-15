@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import { appEnvVars, emailEnvVars, envKeys, randomSecret, stripeEnvVars } from "./env-plan";
 
 const input = {
-  databaseUrl: "postgres://u:p@h/db",
+  databaseUrl: "postgres://app_rw:p@h/db",
+  migrationUrl: "postgres://owner:p@h/db",
   authSecret: "a".repeat(64),
   bootstrapAdminEmail: "admin@riva.it",
   appBaseUrl: "https://wegrocery-riva.vercel.app",
@@ -17,17 +18,23 @@ describe("appEnvVars", () => {
 
   it("writes every variable the instance needs", () => {
     expect(envKeys(vars)).toBe(
-      "DATABASE_URL, MIGRATE_ON_BUILD, AUTH_SECRET, BOOTSTRAP_ADMIN_EMAIL, APP_BASE_URL, NEXT_PUBLIC_BRAND_JSON, NEXT_PUBLIC_TIME_ZONE, INSTANCE_STATS_SECRET",
+      "DATABASE_URL, DATABASE_MIGRATION_URL, MIGRATE_ON_BUILD, AUTH_SECRET, BOOTSTRAP_ADMIN_EMAIL, APP_BASE_URL, NEXT_PUBLIC_BRAND_JSON, NEXT_PUBLIC_TIME_ZONE, INSTANCE_STATS_SECRET",
     );
   });
 
   it("keeps the database and the migrations on production only", () => {
     expect(byKey.DATABASE_URL.target).toEqual(["production"]);
+    expect(byKey.DATABASE_MIGRATION_URL.target).toEqual(["production"]);
     expect(byKey.MIGRATE_ON_BUILD.target).toEqual(["production"]);
   });
 
+  it("gives the app the restricted role and keeps the owner for migrations", () => {
+    expect(byKey.DATABASE_URL.value).toBe(input.databaseUrl);
+    expect(byKey.DATABASE_MIGRATION_URL.value).toBe(input.migrationUrl);
+  });
+
   it("marks the secrets sensitive and never targets development with them", () => {
-    for (const k of ["DATABASE_URL", "AUTH_SECRET", "INSTANCE_STATS_SECRET"]) {
+    for (const k of ["DATABASE_URL", "DATABASE_MIGRATION_URL", "AUTH_SECRET", "INSTANCE_STATS_SECRET"]) {
       expect(byKey[k].type).toBe("sensitive");
       expect(byKey[k].target).not.toContain("development");
     }

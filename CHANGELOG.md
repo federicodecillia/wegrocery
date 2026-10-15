@@ -20,6 +20,9 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ## [Unreleased]
 
+### Changed
+- 🔐 **New groups start with a restricted database role.** A group installed from the WeGrocery Console now connects with a role that can read and write data but never change the database's structure, as Porta Moneta already does.
+
 ## [1.28.0] — 2026-10-14
 
 *The app gets a dark theme, and the database and build checks get safer.*
