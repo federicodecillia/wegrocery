@@ -68,11 +68,28 @@ async function checkPage(page, label) {
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
   if (overflow) fail(`${label}: the page scrolls horizontally`);
   if (await page.evaluate(() => matchMedia("(pointer: coarse)").matches)) await touchTargets(page, label);
-  const { violations } = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
+  const violations = await axeFullHeight(page);
   for (const v of violations) {
     const line = `${label}: axe ${v.id} (${v.impact}, ${v.nodes.length}) ${v.help}`;
     if (FAILING_IMPACT.has(v.impact)) fail(line);
     else notes.push(line);
+  }
+}
+
+// On a phone the sticky bottom bar covers whatever row the first screen ends
+// on, and axe's target-size (WCAG 2.2) counts that row as an obscured target
+// although a scroll uncovers it: which row it is changes with the demo data.
+// So axe sees the whole page at once, with the bar after the last row, as a
+// member does when scrolled to the end; the bar itself is still checked.
+async function axeFullHeight(page) {
+  const viewport = page.viewportSize();
+  const height = await page.evaluate(() => document.documentElement.scrollHeight);
+  if (viewport && height > viewport.height) await page.setViewportSize({ width: viewport.width, height: Math.min(height, 10_000) });
+  try {
+    const { violations } = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
+    return violations;
+  } finally {
+    if (viewport) await page.setViewportSize(viewport);
   }
 }
 
