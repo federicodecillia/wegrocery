@@ -20,6 +20,13 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ## [Unreleased]
 
+## [1.30.1] — 2026-10-17
+
+*Maintenance: nothing new for members to learn.*
+
+### Changed
+- 🔍 **The nightly accessibility check looks at the whole page.** The automatic check that verifies every night that the app is comfortable for everyone now scans the full page, with no more false alarms on rows hidden behind the phone's bottom bar.
+
 ## [1.30.0] — 2026-10-15
 
 *The menu moves to the side on tablets and computers, and the order goes to the supplier before the close.*
@@ -643,6 +650,7 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ---
 
+[1.30.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.30.1
 [1.30.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.30.0
 [1.29.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.29.0
 [1.28.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.28.0
