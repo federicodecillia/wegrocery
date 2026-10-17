@@ -109,7 +109,7 @@ export function ConfirmDialogProvider() {
             <Button ref={cancelRef} variant="outline" block onClick={() => close(false)}>
               {request?.cancelLabel ?? t.common.cancel}
             </Button>
-            <Button ref={confirmRef} variant={request?.danger ? "danger" : "neutral"} block onClick={() => close(true)}>
+            <Button ref={confirmRef} variant={request?.danger ? "destructive" : "default"} block onClick={() => close(true)}>
               {request?.confirmLabel ?? t.common.confirm}
             </Button>
           </div>

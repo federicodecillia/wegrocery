@@ -110,7 +110,7 @@ export function OrderTotals({ orderTotal, payAmount, afterBalance, walletFeeCent
         </div>
         {hasOrder && <div className="mt-2">{breakdown}</div>}
         {error && <p className="mt-2 text-[13px] leading-[1.4] text-destructive">{error}</p>}
-        <Button variant={hasOrder ? "brand" : "danger"} onClick={onConfirm} disabled={isPending} className="mt-3 min-h-12 w-full px-5">
+        <Button variant={hasOrder ? "brand" : "destructive"} onClick={onConfirm} disabled={isPending} className="mt-3 min-h-12 w-full px-5">
           {label}
         </Button>
       </div>
@@ -161,7 +161,7 @@ export function OrderTotals({ orderTotal, payAmount, afterBalance, walletFeeCent
             </div>
           </div>
           <Button
-            variant={hasOrder ? "brand" : "danger"}
+            variant={hasOrder ? "brand" : "destructive"}
             onClick={onConfirm}
             disabled={isPending}
             className="min-h-12 shrink-0 px-5"

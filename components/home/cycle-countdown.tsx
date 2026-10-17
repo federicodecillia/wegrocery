@@ -2,7 +2,8 @@
 
 import { Badge } from "@/components/ui/badge";
 import { useEffect, useState } from "react";
-import { buttonClass } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { buttonVariants } from "@/components/ui/button";
 import { t } from "@/lib/i18n";
 import { closesIn, formatDeadline, formatPickups, isLastDay } from "@/lib/i18n/deadline";
 import Link from "next/link";
@@ -91,7 +92,7 @@ export function CycleCountdown({ cycleId, title, orderCloseAt, orderOpenAt, pick
       {!hasOrder && <p className="mt-3 text-[14px] text-secondary-foreground">{t.cycle.notOrderedYet}</p>}
       <Link
         href={`/ordine?cycleId=${cycleId}`}
-        className={buttonClass({ variant: "brand", block: true }, "mt-4")}
+        className={cn(buttonVariants({ variant: "brand", block: true }), "mt-4")}
       >
         {t.cycle.goToOrder}
       </Link>

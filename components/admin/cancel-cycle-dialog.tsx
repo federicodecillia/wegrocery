@@ -85,7 +85,7 @@ function CancelCycleDialog({
           <Button variant="outline" className="flex-1" onClick={() => void requestClose()} disabled={isPending}>
             {t.admin.common.cancel}
           </Button>
-          <Button variant="danger" className="flex-[2]" onClick={handleConfirm} disabled={isPending || !reason.trim()}>
+          <Button variant="destructive" className="flex-[2]" onClick={handleConfirm} disabled={isPending || !reason.trim()}>
             {isPending ? t.admin.cycleCancel.cancelling : t.admin.cycleCancel.confirmButton}
           </Button>
         </SheetActions>
