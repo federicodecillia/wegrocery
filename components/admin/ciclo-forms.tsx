@@ -737,9 +737,10 @@ function PaymentModeFields({
       {cardDisabled && (
         <p id="payment-mode-card-off" className="mt-1 text-label text-muted-foreground">
           {t.admin.cycle.paymentModeCardOff}{" "}
-          <Link href={`${adminHref("impostazioni")}#cicli-carta`} className="font-semibold text-foreground underline underline-offset-2">
+          {/* A full load: a client navigation does not scroll to the card, which renders below the fold. */}
+          <a href={`${adminHref("impostazioni")}#cicli-carta`} className="font-semibold text-foreground underline underline-offset-2">
             {t.admin.cycle.paymentModeCardOffLink}
-          </Link>
+          </a>
         </p>
       )}
     </div>

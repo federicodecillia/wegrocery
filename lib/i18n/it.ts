@@ -2041,6 +2041,7 @@ export const it = {
     invalidAccessLevel: "Livello di accesso non valido",
     handlingFeeLocked: "Il ciclo è già chiuso: le spese di preparazione non si possono più cambiare.",
     handlingFeeInvalid: "Spese di preparazione non valide: un numero con al massimo due decimali, fino al 25% o a 10 €",
+    cardCyclesOff: "I cicli pagati con carta sono spenti per il gruppo: si attivano da Impostazioni > Cicli pagati con carta.",
     cyclePaymentModeUnavailable: "Il pagamento con carta non è disponibile per questo ciclo: serve Stripe configurato e il gruppo in modalità borsellino.",
     cycleNotOpen: "Il ciclo non è più aperto",
     orderChangedElsewhere: "Il carrello è stato modificato nel frattempo, da un altro dispositivo: ecco la versione aggiornata.",
