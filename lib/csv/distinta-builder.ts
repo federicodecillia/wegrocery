@@ -195,7 +195,7 @@ export async function buildSupplierDistinta(cycleId: string): Promise<DistintaBu
   for (const mid of shippingByMember.keys()) {
     if (!memberName.has(mid)) {
       memberOrder.push(mid);
-      memberName.set(mid, "—");
+      memberName.set(mid, "-");
     }
   }
 
@@ -244,7 +244,7 @@ export async function buildSupplierDistinta(cycleId: string): Promise<DistintaBu
     t.csv.columnPricePerUnit,
     t.csv.columnPricePerKg,
     t.csv.columnNotes,
-    ...memberOrder.map((mid) => memberName.get(mid) ?? "—"),
+    ...memberOrder.map((mid) => memberName.get(mid) ?? "-"),
     t.csv.columnTotalProduct,
   ];
   for (let i = 0; i < headers.length; i++) {

@@ -238,7 +238,7 @@ function TimeSlotSelect({ name, defValue, ariaLabel }: { name: string; defValue?
   const options = defValue && !TIME_SLOTS.includes(defValue) ? [defValue, ...TIME_SLOTS] : TIME_SLOTS;
   return (
     <select name={name} defaultValue={defValue ?? ""} aria-label={ariaLabel} className={`min-w-0 flex-1 ${inputCls}`}>
-      <option value="">—</option>
+      <option value="">-</option>
       {options.map((t) => (
         <option key={t} value={t}>
           {t}

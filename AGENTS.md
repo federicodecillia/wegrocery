@@ -29,7 +29,6 @@ Found in the review of 2026-10-14 (each line, its reason and its timing are in
 [`docs/2026-10-14-flylabs-playbook-alignment.md`](./docs/2026-10-14-flylabs-playbook-alignment.md)):
 - 1.4 The app can connect with a role without schema privileges (`scripts/create-app-role.mjs`, `DATABASE_MIGRATION_URL` for the owner's address, `docs/upgrading.md`), tested end to end. Production, demo, staging and dev run on `app_rw` since 2026-10-14; the example-brand installation still connects as the owner because its `DATABASE_URL` is managed by the Neon integration on Vercel and it migrates during the build. A group installed from the console gets `app_rw` at installation (`console/lib/provisioning/app-role.ts`, the same statements as `scripts/db-migrate-lib.mjs`, compared by a test); one installed with the Deploy button starts as the owner (`docs/self-hosting.md`). With both addresses set, `db-migrate` takes write access to `_migrations` away from the app's role (a role created before the ledger gets it through the default privileges); CI builds the empty database that way.
 - 2.1, 2.7 Geist and Geist Mono instead of Geist, Inter and JetBrains Mono; own components on Radix Dialog and hand-drawn icons instead of shadcn on Base UI and lucide: the app predates the FlyLabs style, which arrives at stage 1.
-- 3.4 Em dashes remain in the changelog version headings (and as the empty-value placeholder in tables): the UI and email strings are clean and `lib/i18n/no-em-dash.test.ts` keeps them so; the heading switches at stage 1.
 - 4.4 Welcome card: the steps shown follow the settings; the ones the member's own rows already show as done (top-up or payment, an order, saved preferences, a family) carry "Già fatto" (`getWelcomeFacts`, `welcomeDone`), and the step they stopped at is `members.welcome_step` (migration 0036). The "Riprendi" bar on other pages still uses `sessionStorage`, per tab, on purpose.
 - 5.1 Integration tests run on a throwaway Neon branch that needs `NEON_API_KEY` (skipped on forks), not on a plain Postgres: the Neon HTTP driver needs Neon's proxy. This stays.
 - 6.3 and 9.5 Claude runs releases end to end, production migrations included, after a green manual backup and with Federico's explicit ok for each production operation, instead of handing him commands: Federico's choice (2026-10-07). This stays.
@@ -289,9 +288,12 @@ bug fix, etc.) you must update **both** changelog files:
      env vars are fine, longer implementation detail belongs in the PR.
 
 When cutting a release, move the `[Unreleased]` block to a new
-`## [x.y.z] — YYYY-MM-DD` heading in both files (Italian dates are written out:
-`20 luglio 2026`), add the matching link reference at the bottom, and bump
-`package.json`. Verify the two files still parse in parallel before merging.
+`## [x.y.z] - YYYY-MM-DD` heading in both files, with a plain hyphen (Italian
+dates are written out: `20 luglio 2026`), add the matching link reference at
+the bottom, and bump `package.json`. Verify the two files still parse in
+parallel before merging. No em dash in a heading or in a new entry (Playbook
+3.4): `lib/i18n/no-em-dash.test.ts` checks the headings and everything above
+the first released version; an empty value in a table is a plain `-`.
 
 ## Architecture
 
