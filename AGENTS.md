@@ -18,6 +18,8 @@ copy, tests, migrations and operations. Intended deviations are listed below wit
 deviation that is not listed instead of deciding alone. A solution that fits every app goes to
 flylabs-kit as a PR.
 
+Kit version and modules in use: `flylabs-kit.json` (Playbook 9.7). Every Monday `.github/workflows/kit-sync.yml` compares the app with the latest kit and keeps the issue "FlyLabs Kit: allineamento" open while something is missing (it needs the `FLYLABS_KIT_TOKEN` secret, read-only on flylabs-kit; this public repo gets the brief report). Whoever aligns the app updates `flylabs-kit.json` in the same PR.
+
 Intended deviations (as of 2026-10-17):
 - 2.2 Own token names (`surface`, `muted`, `brand-near-black`, `brand-border`, `on-primary`...) instead of shadcn's: the kit modules are adapted to them (`components/changelog-view.tsx`, `EMAIL_THEME` in `lib/email/layout.ts`); renamed at stage 1.
 - 2.10 The group's own colours instead of the FlyLabs palette: WeGrocery is white-label, so this stays.
