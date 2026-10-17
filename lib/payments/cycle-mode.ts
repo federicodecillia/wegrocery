@@ -5,16 +5,26 @@ import type { PaymentMode } from "./settings";
 // single cycles paid by card, with the same rules as pay-per-order, when this
 // deploy's Stripe key works and the group counts in euros (the fee and
 // Stripe's minimums are set for the euro). A pay-per-order group has no
-// wallet to fall back on, so every cycle stays paid by card.
+// wallet to fall back on, so every cycle stays paid by card. A wallet group
+// can switch card cycles off in Impostazioni (app_settings.card_cycles_enabled,
+// drizzle/0038) while it has not decided to take card payments yet.
 
 export type NewCycleModeContext = {
   groupMode: PaymentMode;
   stripeUsable: boolean;
   currency: string;
+  cardCyclesEnabled: boolean;
 };
 
-export function cardCyclesSelectable(ctx: NewCycleModeContext): boolean {
+// Whether this deploy could run card cycles in a wallet group: what decides
+// if Impostazioni shows the switch at all.
+export function cardCyclesAvailable(ctx: Omit<NewCycleModeContext, "cardCyclesEnabled">): boolean {
   return ctx.groupMode === "wallet" && ctx.stripeUsable && ctx.currency.toUpperCase() === "EUR";
+}
+
+// Whether "Nuovo ciclo" offers Carta: available and not switched off.
+export function cardCyclesSelectable(ctx: NewCycleModeContext): boolean {
+  return cardCyclesAvailable(ctx) && ctx.cardCyclesEnabled;
 }
 
 // What the admin asked for, checked again on the server. Omitted or empty:

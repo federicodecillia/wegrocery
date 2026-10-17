@@ -168,6 +168,7 @@ export async function adminCreateCycle(data: CreateCycleInput): Promise<{error?:
       groupMode: settings.mode,
       stripeUsable: settings.stripeKey.usable,
       currency: brand.currency,
+      cardCyclesEnabled: settings.cardCyclesEnabled,
     });
     if ("error" in chosen) return { error: t.errors.cyclePaymentModeUnavailable };
     const paymentMode = chosen.mode;

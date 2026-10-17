@@ -38,6 +38,7 @@ describe("resolvePaymentSettings", () => {
       bankReceiptEmail: null,
       onlinePaymentsEnabled: true,
       familiesEnabled: false,
+      cardCyclesEnabled: true,
       groupInfo: null,
       bankTransfer: { holder: "Porta Moneta APS", iban: SPACED_IBAN },
       onlineTopupAvailable: true,

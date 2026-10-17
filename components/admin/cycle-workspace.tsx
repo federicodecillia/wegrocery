@@ -11,7 +11,7 @@ import {
 } from "@/lib/db/queries";
 import { getDb } from "@/lib/db/client";
 import { brand } from "@/lib/brand";
-import { cardCyclesSelectable } from "@/lib/payments/cycle-mode";
+import { cardCyclesAvailable, cardCyclesSelectable } from "@/lib/payments/cycle-mode";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
 import { getSettlementStatus } from "@/lib/payments/settlement-store";
 import { DEFAULT_HANDLING_FEE } from "@/lib/payments/order-payment";
@@ -153,11 +153,14 @@ async function NewCycle({
   // Each new cycle starts from the last fee of the same payment mode: none in
   // wallet mode, 10% per order, until one is set. A wallet group may also pay
   // a single cycle by card (lib/payments/cycle-mode.ts).
-  const cardSelectable = cardCyclesSelectable({
+  const cardContext = {
     groupMode: settings.mode,
     stripeUsable: settings.stripeKey.usable,
     currency: brand.currency,
-  });
+    cardCyclesEnabled: settings.cardCyclesEnabled,
+  };
+  const cardSelectable = cardCyclesSelectable(cardContext);
+  const cardSwitchedOff = cardCyclesAvailable(cardContext) && !settings.cardCyclesEnabled;
   const [lastWalletFee, lastCardFee] = await Promise.all([
     settings.mode === "wallet" ? getLastHandlingFee("wallet") : null,
     settings.mode === "per_order" || cardSelectable ? getLastHandlingFee("per_order") : null,
@@ -171,6 +174,7 @@ async function NewCycle({
         suppliers={suppliers}
         paymentMode={settings.mode}
         cardSelectable={cardSelectable}
+        cardSwitchedOff={cardSwitchedOff}
         walletFee={feeInput(lastWalletFee)}
         cardFee={feeInput(lastCardFee ?? DEFAULT_HANDLING_FEE)}
         defaultOpen
