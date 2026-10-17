@@ -18,10 +18,12 @@ copy, tests, migrations and operations. Intended deviations are listed below wit
 deviation that is not listed instead of deciding alone. A solution that fits every app goes to
 flylabs-kit as a PR.
 
-Intended deviations (as of 2026-10-14):
+Kit version and modules in use: `flylabs-kit.json` (Playbook 9.7). Every Monday `.github/workflows/kit-sync.yml` compares the app with the latest kit and keeps the issue "FlyLabs Kit: allineamento" open while something is missing (it needs the `FLYLABS_KIT_TOKEN` secret, read-only on flylabs-kit; this public repo gets the brief report). Whoever aligns the app updates `flylabs-kit.json` in the same PR.
+
+Intended deviations (as of 2026-10-17):
+- 2.2 Own token names (`surface`, `muted`, `brand-near-black`, `brand-border`, `on-primary`...) instead of shadcn's: the kit modules are adapted to them (`components/changelog-view.tsx`, `EMAIL_THEME` in `lib/email/layout.ts`); renamed at stage 1.
 - 2.10 The group's own colours instead of the FlyLabs palette: WeGrocery is white-label, so this stays.
 - 3.3 Repository docs in English: the repo is public and a portfolio piece, so this stays.
-- 7.1 `/api/health` returns `db` as `true | false` and `version` from `package.json`: aligned with Stellar when the FlyLabs Console arrives.
 
 Found in the review of 2026-10-14 (each line, its reason and its timing are in
 [`docs/2026-10-14-flylabs-playbook-alignment.md`](./docs/2026-10-14-flylabs-playbook-alignment.md)):
@@ -32,7 +34,7 @@ Found in the review of 2026-10-14 (each line, its reason and its timing are in
 - 5.1 Integration tests run on a throwaway Neon branch that needs `NEON_API_KEY` (skipped on forks), not on a plain Postgres: the Neon HTTP driver needs Neon's proxy. This stays.
 - 6.3 and 9.5 Claude runs releases end to end, production migrations included, after a green manual backup and with Federico's explicit ok for each production operation, instead of handing him commands: Federico's choice (2026-10-07). This stays.
 - 6.5 A weekly job (`.github/workflows/restore-test.yml`) restores the latest dump into a throwaway Neon branch, counts the main tables and runs the money invariants on it. It is skipped until Federico sets `RESTORE_TEST_NEON_API_KEY` (a Neon key scoped to the restore project; CI's `NEON_API_KEY` is scoped to the CI project) and the variable `RESTORE_TEST_NEON_PROJECT_ID` (a project of the same organisation).
-- 7.6 Done for notification emails (idempotency key, one-click unsubscribe, see "Email compliance"). The branded HTML template (7.7) waits for the kit registry. Sign-in emails and the supplier and family emails carry no unsubscribe on purpose.
+- 7.6 Done for notification emails (idempotency key, one-click unsubscribe, see "Email compliance"). Sign-in emails and the supplier and family emails carry no unsubscribe on purpose.
 - 7.8 Done: `usage_events` (migration 0037) counts a fixed list of events per day, no member id, no text, nothing in the demo (`lib/usage/events.ts`, shown in Admin → Statistiche); Vercel Analytics and Speed Insights are gone.
 - 7.10 The Console (`console/`) redirects to its password login instead of answering 404: a 404 would hide the only way in. This stays.
 - 8.1 No versioned legal documents in the app: each group owns its privacy notice (`brand.privacyUrl`) as data controller. This stays for groups; FlyLabs-hosted terms are decided with hosting model A.
@@ -93,7 +95,7 @@ Never read `.env*` files other than `.env.example` (Playbook 8.3).
 ├── drizzle/                    # SQL migrations (0000–0035)
 ├── console/                    # WeGrocery Console: separate Next.js app (own package.json, registry DB, Vercel project with
 │                               #   Root Directory `console`) for the operator's fleet; excluded from the root tsc/eslint/vitest; see console/README.md
-└── public/logo.png
+└── public/logo.png, public/mail/logo.png (email logo, 3x)
 ```
 
 ## Development Commands
@@ -118,7 +120,7 @@ npm run test:int     # Integration tests on a test database (see below)
 
 **Runtime identity** (migration 0034, table `group_identity`, one row `id = 1`): name, short name, contacts, URLs, colours and logo can be changed by an admin (admin → Impostazioni, or the first-run wizard at `/admin/avvio`). Server code reads `await getBrand()` (`lib/brand/get-brand.ts`: `NEXT_PUBLIC_BRAND_JSON` merged with the DB overrides, rules in `lib/brand/identity.ts`), never the static `brand` import, for anything a group can change; locale, currency and time zone stay build-time (`brand` is fine for those, and in client components). The logo is stored base64 (PNG/JPEG/WebP checked by magic bytes, 512 KB max, no SVG) and served by `app/brand/[file]`; PWA icons and the manifest follow it. Installs that already had members got a completed row, so the wizard shows only on new installs.
 
-**Instance stats** (`/api/instance-stats`, `lib/instance-stats/`): with `INSTANCE_STATS_SECRET` (32+ chars) set, a GET signed with HMAC-SHA256 of `<ts>.GET./api/instance-stats` (`x-wegrocery-timestamp`, `x-wegrocery-signature`, 5-minute window) returns anonymous counts (members, cycles, orders in 30 days, DB size, config states, pending migrations, version); anything else is a 404. No amounts and no personal data, ever. The `console/` app is the caller.
+**Instance stats** (`/api/instance-stats`, `lib/instance-stats/`, FlyLabs Kit module `console`): with `INSTANCE_STATS_SECRET` (32+ chars) set, a GET signed with HMAC-SHA256 of `<ts>.GET./api/instance-stats` (5-minute window) returns anonymous counts (members, cycles, orders in 30 days, DB size, config states, pending migrations, version); anything else is a 404. Signed with `x-flylabs-timestamp` / `x-flylabs-signature` it answers the kit's envelope (`app: "wegrocery"`, `counts` by name, plus `lastClosedAt`, `paymentMode`, `setupCompleted`; `lib/instance-stats/envelope.ts`); signed with the older `x-wegrocery-*` pair, the shape consoles read before the kit. No amounts and no personal data, ever. The `console/` app is the caller: it sends both pairs and reads both shapes.
 
 **Append-only ledger** (since `drizzle/0023_ledger_append_only.sql`): a trigger refuses every UPDATE and DELETE on `ledger_entries`, except setting `reversed_by` once. A correction is `reverseEntry` / `reverseEntrySql` (`lib/ledger-reversal.ts`): a `reversal` row with the opposite amount (`reverses` → the original, which gets `reversed_by`), plus, for an edit, a replacement of the same type (`replaces` → the original, same entry date, no bank reference). Cassa "edit" and "delete", the shipping recompute of a closed cycle and the supplier-sheet import all work this way. **Any filter by type must use `liveLedger`** (`lib/db/ledger-live.ts`: not reversed, not a reversal), or a corrected movement counts twice; plain sums (balances, a cycle's net) are the same either way. Movement lists show live rows only, a replacement with "corrected on <date>". The one-charge-per-member-and-cycle index counts live rows only. Maintenance that must delete rows sets `wegrocery.ledger_maintenance = on` in its own transaction (the integration tests' cleanup); the demo's TRUNCATE does not fire the trigger.
 
@@ -128,7 +130,7 @@ npm run test:int     # Integration tests on a test database (see below)
 
 **Releases**: open the `staging` → `main` PR with `?template=release.md` (`.github/PULL_REQUEST_TEMPLATE/release.md`): upgrade notes, migration before the merge, smoke test on `/api/health`, rollback. The merge to `main` tags `vX.Y.Z` and publishes the GitHub release by itself (`.github/workflows/release.yml`, notes from that version's `CHANGELOG.md` entry, upstream repository only). An installation whose Git deploys Vercel blocks sets the `VERCEL_DEPLOY_HOOK` repository secret: `.github/workflows/deploy-hook.yml` then calls the hook on every push to `main`. To redeploy production without a code change (a new variable, a rotated key), run `.github/workflows/deploy-production.yml` from the Actions tab: it calls the `VERCEL_PRODUCTION_DEPLOY_HOOK` hook once, never on push, and fails when the secret is missing.
 
-**Health and errors**: `/api/health` (public) returns `{ ok, version, db }`, 503 when the database does not answer. Unexpected errors go through `reportError` (`lib/observability.ts`): always the server log, Sentry too when `SENTRY_DSN` is set, or `NEXT_PUBLIC_SENTRY_DSN` as Vercel's Sentry integration sets it (server only, errors only; data collection is off, console breadcrumbs are dropped and `beforeSend` cuts the query parameters a driver error quotes; initialized in `instrumentation.ts`, which hands the client to `reportError` through `globalThis`, since each route is a separate server bundle with its own copy of the module). Use it instead of a bare `console.error` for errors someone should look at.
+**Health and errors**: `/api/health` (public, `lib/health.ts` from the FlyLabs Kit module `console`) returns `{ ok, version, db }`, 503 when the database does not answer within 3 seconds. Unexpected errors go through `reportError` (`lib/observability.ts`): always the server log, Sentry too when `SENTRY_DSN` is set, or `NEXT_PUBLIC_SENTRY_DSN` as Vercel's Sentry integration sets it (server only, errors only; data collection is off, console breadcrumbs are dropped and `beforeSend` cuts the query parameters a driver error quotes; initialized in `instrumentation.ts`, which hands the client to `reportError` through `globalThis`, since each route is a separate server bundle with its own copy of the module). Use it instead of a bare `console.error` for errors someone should look at.
 
 **Stripe on staging**: `scripts/stripe-staging-check.mjs` runs real sandbox refunds against the staging deploy; it refuses live keys and any database other than `STAGING_DB_HOST`. The events the webhook endpoint must subscribe to are `REQUIRED_STRIPE_EVENTS` (`lib/payments/config.ts`).
 
@@ -269,6 +271,13 @@ bug fix, etc.) you must update **both** changelog files:
    - `### Security` / `### Sicurezza` — vulnerability fixes
 5. Write entries from the **user's** perspective, not the developer's.
    Explain what changes for the member or admin, not which file was edited.
+   A bullet that only matters to whoever hosts, runs or develops the app
+   (environment variables, database and migrations, CI, dependencies,
+   monitoring, scripts, refactors) starts with `[tech]` in `CHANGELOG.md` and
+   `[tecnico]` in `CHANGELOG.it.md`, on the same bullet in both (Playbook 4.6,
+   `lib/changelog.test.ts` compares the two shapes, tags included). `/changelog`
+   hides those bullets until "Show technical details" (`?tech=1`), and the
+   Guide's teaser skips them; the GitHub release notes keep them.
 6. House style, enforced by eye (the `/changelog` page renders it):
    - One **italic tagline** on its own line under the version heading, saying
      what the release is about. The parser reads it; `**bold**` is not a tagline.
@@ -521,6 +530,7 @@ All four emit `order_adjusted` or `order_corrected` notifications and `audit_log
 - Env vars: `RESEND_API_KEY`, `MAIL_FROM`. Without them the button toasts the missing-config error and the rest of the app keeps working.
 - Modules: `lib/email/resend.ts` (thin SDK wrapper, lazy env read), `lib/email/templates.ts` (Italian body), `lib/csv/distinta-builder.ts` (round-trip `.xlsx` distinta — products × members matrix with formulas, hidden `_meta` for re-import), `lib/csv/distinta-parser.ts` (reads the supplier-filled file, returns a diff preview). `lib/csv/supplier-export.ts` is kept as a legacy per-product CSV but no longer the default attachment.
 - Resend SDK detail: the `content` field on attachments base64-decodes strings — always pass a `Buffer`.
+- **Branded HTML** (Playbook 7.7, FlyLabs Kit module `email`): `sendMail` and `sendMailBatch` add to every message the HTML of its own text (`lib/email/layout.ts`: escaped, linked, on a card in the default WeGrocery light colours, then the WeGrocery logo `public/mail/logo.png` and "By FlyLabs.ai"). Templates write text only; `lib/email/layout.test.ts` compares the colours with `app/globals.css` and `lib/brand/roles.ts`. `proxy.ts` leaves `mail/` open: mail clients fetch the logo with no session. Without `APP_BASE_URL` (or Vercel's production URL) the logo becomes the name in text.
 - **Notification emails** reuse the same wrapper. `sendMailBatch` (in `resend.ts`) sends up to 100 one-off messages per Resend `batch.send` call (chunked internally) — used for cycle-close and broadcasts to sidestep the 2 req/s limit. `notificationEmail` (in `templates.ts`) wraps a notification's already-localized title/body with a CTA + a manage-preferences link; links need a base URL from `lib/email/base-url.ts` (`APP_BASE_URL`, falling back to `VERCEL_PROJECT_PRODUCTION_URL`; links omitted if neither is set). All notification email is fire-and-forget — a send failure is logged, never rolled back onto the caller's DB work — and `DEMO_MODE` blocks it like every other send.
 - Env var added for notifications: `APP_BASE_URL` (email links). See `.env.example`. `CRON_SECRET` went away with the reminder cron in v1.9.0; the GitHub repo secret and the Vercel env var are leftovers that can be deleted from both dashboards.
 - **Email compliance**: notification emails carry `List-Unsubscribe` and `List-Unsubscribe-Post: List-Unsubscribe=One-Click` (RFC 8058, `lib/email/unsubscribe.ts`): a link `/api/unsubscribe?t=<token>`, HMAC-SHA256 signed with a key derived from `AUTH_SECRET` (rotating it retires old links), that turns off the email channel of that one category for that member (`lib/notifications/unsubscribe-store.ts`). A GET only shows a button; only the POST writes (mail scanners open links). The footer keeps the manage-preferences link. Every send goes with a Resend `Idempotency-Key` (`lib/email/idempotency.ts`): notifications use their own id, other emails the message plus the minute it was asked in, so a double click sends once and a deliberate resend later still goes out. Sign-in emails, the supplier email and family invitations have no unsubscribe header (not optional notices).

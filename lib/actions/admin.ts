@@ -1416,7 +1416,6 @@ export async function adminSendSupplierEmail(
       replyTo: admin.email,
       subject,
       text: defaults.text,
-      html: defaults.html,
       attachments: [{ filename: distinta.filename, content: distinta.content }],
     });
     if ("error" in result) return { error: result.error };

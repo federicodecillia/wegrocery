@@ -19,10 +19,11 @@ export function proxy(request: NextRequest) {
 // check that returns no data, api/instance-stats answers only a request signed
 // with INSTANCE_STATS_SECRET (404 otherwise), api/unsubscribe acts only on a
 // token signed with AUTH_SECRET (one-click unsubscribe from a notification email). The uploaded logo
-// (/brand/logo-*.png|jpg|webp) passes by its extension. The web app manifest is fetched by the browser without
+// (/brand/logo-*.png|jpg|webp) passes by its extension. mail/ holds the email
+// logo (lib/email/layout.ts), which a mail client fetches with no session. The web app manifest is fetched by the browser without
 // cookies: behind the redirect the app could not be installed.
 export const config = {
   matcher: [
-    "/((?!api/auth|api/stripe/webhook|api/health$|api/instance-stats$|api/unsubscribe$|manifest.webmanifest$|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!api/auth|api/stripe/webhook|api/health$|api/instance-stats$|api/unsubscribe$|mail/|manifest.webmanifest$|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

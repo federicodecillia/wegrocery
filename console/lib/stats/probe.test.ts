@@ -23,6 +23,21 @@ const STATS = {
   setupCompleted: true,
 };
 
+// The same instance as the FlyLabs Kit envelope (main app 1.31 and later).
+const KIT_STATS = {
+  app: "wegrocery",
+  version: STATS.version,
+  generatedAt: STATS.generatedAt,
+  installedAt: STATS.installedAt,
+  databaseBytes: STATS.databaseBytes,
+  counts: { activeMembers: 40, admins: 3, members: 52, cycles: 30, openCycles: 1, ordersLast30Days: 75 },
+  config: STATS.config,
+  pendingMigrations: STATS.pendingMigrations,
+  lastClosedAt: STATS.cycles.lastClosedAt,
+  paymentMode: STATS.paymentMode,
+  setupCompleted: STATS.setupCompleted,
+};
+
 describe("probeInstance", () => {
   it("reads health, then the signed stats", async () => {
     const f = mockFetch([{ body: { ok: true, version: "1.26.0", db: true } }, { body: STATS }]);
@@ -34,6 +49,15 @@ describe("probeInstance", () => {
     expect(f.calls[1].url).toBe("https://gas.example.org/api/instance-stats");
     expect(f.calls[1].headers["x-wegrocery-timestamp"]).toBe("1700000000");
     expect(f.calls[1].headers["x-wegrocery-signature"]).toBe(statsSignature(SECRET, 1_700_000_000));
+    expect(f.calls[1].headers["x-flylabs-timestamp"]).toBe("1700000000");
+    expect(f.calls[1].headers["x-flylabs-signature"]).toBe(statsSignature(SECRET, 1_700_000_000));
+  });
+
+  it("reads the kit's envelope the same way", async () => {
+    const f = mockFetch([{ body: { ok: true, version: "1.31.0", db: true } }, { body: KIT_STATS }]);
+    const r = await probeInstance("https://gas.example.org", SECRET, f, 1_700_000_000);
+    expect(r.error).toBeNull();
+    expect(r.stats).toEqual(STATS);
   });
 
   it("keeps the 503 health body and reports a closed stats endpoint", async () => {
@@ -53,8 +77,16 @@ describe("probeInstance", () => {
 });
 
 describe("parseStats", () => {
-  it("accepts the contract", () => {
+  it("accepts the older shape", () => {
     expect(parseStats(STATS)).toEqual(STATS);
+  });
+  it("accepts the kit's envelope and keeps the shape snapshots store", () => {
+    expect(parseStats(KIT_STATS)).toEqual(STATS);
+  });
+  it("rejects an envelope of another app or with a count missing", () => {
+    expect(parseStats({ ...KIT_STATS, app: "stellar" })).toBeNull();
+    expect(parseStats({ ...KIT_STATS, counts: { ...KIT_STATS.counts, openCycles: undefined } })).toBeNull();
+    expect(parseStats({ ...KIT_STATS, setupCompleted: "yes" })).toBeNull();
   });
   it("rejects a wrong shape", () => {
     expect(parseStats({ ...STATS, members: { active: "4" } })).toBeNull();

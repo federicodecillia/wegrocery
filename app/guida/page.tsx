@@ -9,7 +9,7 @@ import { GuideContact } from "@/components/guide/guide-contact";
 import { GuideSearch } from "@/components/guide/guide-search";
 import { RichText } from "@/components/guide/rich-text";
 import { getUserRole, requireUserSession } from "@/lib/auth/session";
-import { loadChangelog } from "@/lib/changelog";
+import { loadChangelog, visibleChangelog } from "@/lib/changelog";
 import { guideContent } from "@/lib/guide";
 import { GROUP_INFO_SLUG } from "@/lib/guide/group-info";
 import { buildSearchIndex, groupInfoSearchEntry } from "@/lib/guide/search";
@@ -34,7 +34,8 @@ export default async function GuidaPage() {
   // users can still switch language explicitly.
   const [versions, settings] = await Promise.all([loadChangelog(staticBrand.locale), getPaymentSettings()]);
   const guide = visibleGuide(guideContent, guideContext(settings));
-  const latest = versions.find((v) => v.date !== null) ?? null;
+  // Changes for members only (Playbook 4.6): the latest release that has any.
+  const latest = visibleChangelog(versions, false).find((v) => v.date !== null && v.sections.length > 0) ?? null;
   const topicTitles: Record<string, string> = Object.fromEntries(
     guide.topics.map((topic) => [topic.id, topic.title]),
   );

@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { describeDb, makeScope } from "@/test/int/fixtures";
 import { collectInstanceStats } from "./collect";
+import { toFlyLabsStats } from "./envelope";
 
 // The anonymous counts on a real database: they count the rows, and nothing
 // that names a member leaves the endpoint.
@@ -24,7 +25,10 @@ describeDb("instance stats", () => {
     expect(stats.pendingMigrations).toEqual([]);
     expect(stats.config.map((c) => c.id)).toContain("database");
 
-    const json = JSON.stringify(stats);
+    const kit = toFlyLabsStats(stats);
+    expect(kit.counts.activeMembers).toBe(stats.members.active);
+
+    const json = JSON.stringify([stats, kit]);
     expect(json).not.toContain(scope.prefix);
     expect(json).not.toContain(scope.memberName);
     expect(json).not.toContain("@");

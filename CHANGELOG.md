@@ -12,6 +12,10 @@ and this project loosely follows [Semantic Versioning](https://semver.org/spec/v
 Writing entries: one italic tagline under the version heading, then one bullet
 per coherent change — a topical emoji, a **bold headline**, and at most two
 lines saying what the user now sees. Implementation detail belongs in the PR.
+A bullet that only matters to whoever hosts, runs or develops the app
+(variables, database, CI, dependencies, monitoring) starts with `[tech]`
+(`[tecnico]` in Italian, on the same bullet): the in-app page hides it behind
+"Show technical details", the GitHub release keeps it.
 
 > 🇮🇹 La versione italiana di questo file è [CHANGELOG.it.md](./CHANGELOG.it.md).
 > Le due versioni devono restare sincronizzate.
@@ -20,12 +24,19 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ## [Unreleased]
 
+### Added
+- ✉️ **Emails with a proper look.** Every email from the app (sign-in, notifications, the supplier order) now arrives on a clean card in the app's colours, with links you can tap and the WeGrocery logo at the bottom; mail apps that show only text get the same words as before.
+
+### Changed
+- 📰 **What's new speaks to members.** The page shows the changes you notice in the app; the ones for whoever runs it (servers, database, updates) sit behind "Show technical details", marked "Technical".
+- [tech] 📊 **Instance stats speak the FlyLabs Console's language.** `/api/instance-stats` also accepts the `x-flylabs-*` signature and then answers the FlyLabs Kit envelope (`app`, `counts`); the WeGrocery Console sends both and reads both shapes, so older installations keep working. `/api/health` gives up on a database that hangs after 3 seconds.
+
 ## [1.30.1] — 2026-10-17
 
 *Maintenance: nothing new for members to learn.*
 
 ### Changed
-- 🔍 **The nightly accessibility check looks at the whole page.** The automatic check that verifies every night that the app is comfortable for everyone now scans the full page, with no more false alarms on rows hidden behind the phone's bottom bar.
+- [tech] 🔍 **The nightly accessibility check looks at the whole page.** The automatic check that verifies every night that the app is comfortable for everyone now scans the full page, with no more false alarms on rows hidden behind the phone's bottom bar.
 
 ## [1.30.0] — 2026-10-15
 
@@ -48,7 +59,7 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 - 🚚 **A sheet downloaded before the close no longer zeroes the shipping.** It now starts from each member's shipping share, and reductions in the preview show their minus sign.
 
 ### Changed
-- 🔐 **New groups start with a restricted database role.** A group installed from the WeGrocery Console now connects with a role that can read and write data but never change the database's structure, as Porta Moneta already does.
+- [tech] 🔐 **New groups start with a restricted database role.** A group installed from the WeGrocery Console now connects with a role that can read and write data but never change the database's structure, as Porta Moneta already does.
 
 ## [1.28.0] — 2026-10-14
 
@@ -58,15 +69,15 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 - 📊 **Usage at a glance.** Admin → Statistiche shows how many sign-ins, orders, top-ups and cycles the last 30 days saw: anonymous counts, no member and no text, and nothing from the demo.
 - 👋 **The welcome tour remembers you.** It resumes at the step you left, on any device, and marks what you have already done (a top-up, an order, your notification choices, your family).
 - 📧 **Unsubscribe in one click.** Notification emails now show your mail app's own "Unsubscribe" button, which turns off the emails of that kind (the alerts stay in the app), and a double click never sends the same email twice.
-- 🔐 **Restricted database role (optional).** The app can connect with a role that reads and writes data but cannot change the schema; `scripts/create-app-role.mjs` creates it and Configuration status shows it.
+- [tech] 🔐 **Restricted database role (optional).** The app can connect with a role that reads and writes data but cannot change the schema; `scripts/create-app-role.mjs` creates it and Configuration status shows it.
 - 🌙 **Dark theme.** Profile → App now has "Appearance": follow the phone, always light or always dark. The group's colours carry over and stay readable.
 
 ### Changed
 - 🔤 **New typefaces.** Text is set in Inter, titles in Geist, and the small uppercase labels in JetBrains Mono; amounts line up in columns.
-- 🗄️ **Safer database updates.** Each migration file runs as a single step and stops if the database is busy, so a failed update leaves nothing half applied. Applying one to production now needs an explicit flag.
+- [tech] 🗄️ **Safer database updates.** Each migration file runs as a single step and stops if the database is busy, so a failed update leaves nothing half applied. Applying one to production now needs an explicit flag.
 
 ### Fixed
-- 🐞 **Error reports reach Sentry.** Errors the app catches and reports itself (payments, sign-in emails, the instance stats) were only written to the server log; they now reach Sentry too, tagged with where they happened, and without the server log lines that could quote query values.
+- [tech] 🐞 **Error reports reach Sentry.** Errors the app catches and reports itself (payments, sign-in emails, the instance stats) were only written to the server log; they now reach Sentry too, tagged with where they happened, and without the server log lines that could quote query values.
 
 ## [1.27.0] — 2026-10-12
 
@@ -75,10 +86,10 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 ### Added
 - 🎨 **Name, logo and colours set from the app.** Admins change the group's name, logo, colours, contact addresses and links in Settings, with a live preview and a readability check: no redeploy, and the phone icon follows.
 - 🧭 **First-run setup for a new group.** The first admin is guided step by step through identity, contacts, payments, "Our group" and a check of email and Stripe (a test email, the webhook's events). Existing groups do not get the prompt, and any admin can go through it again from Admin → Settings.
-- 📊 **Anonymous stats for whoever runs several groups.** With `INSTANCE_STATS_SECRET` set, a signed request returns only counts (members, cycles, orders, version, configuration); without it the address does not exist.
+- [tech] 📊 **Anonymous stats for whoever runs several groups.** With `INSTANCE_STATS_SECRET` set, a signed request returns only counts (members, cycles, orders, version, configuration); without it the address does not exist.
 - 🛠️ **Technical settings explained.** In Admin → Settings the setup status becomes "Technical settings", split into essential and optional, and each item says what it does and how whoever hosts the app turns it on.
 - 💳 **Connect Stripe from the app.** In Admin → Settings an admin pastes a restricted key of the group's Stripe account: the app checks its permissions and sets up the webhook by itself, and card payments go to the group's account. Where whoever hosts the app already set the keys, nothing changes.
-- 🚨 **Error reporting with Vercel's Sentry integration.** Installing Sentry from the Vercel marketplace is enough: the app now picks up the address that integration sets, with no variable to copy by hand.
+- [tech] 🚨 **Error reporting with Vercel's Sentry integration.** Installing Sentry from the Vercel marketplace is enough: the app now picks up the address that integration sets, with no variable to copy by hand.
 
 ### Fixed
 - 🧾 **Supplier sheet upload says why there is nothing to apply.** Instead of two empty lists, the preview tells how many products and members it recognized and that every amount already matches, or that nothing in the file could be matched. A CSV saved by Excel on Windows now keeps accented names.
@@ -193,8 +204,8 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ### Changed
 - 🔔 **Clearer notification preferences.** The four groups now say what they cover: new cycle opened, charges and payments (including the settlement and online payment confirmations), order changes (including a cancelled cycle) and balance and refunds. Your saved choices are kept; payment confirmations now follow "Charges and payments".
-- 🧰 **Next.js 16 and TypeScript 7.** Same app, newer foundations; self-hosters need Node.js 20.19 or later, and lint now runs with `npm run lint`.
-- 🌙 **A sturdier nightly check.** The nightly money check no longer waits for the backup, and a failed or stuck night opens a GitHub issue.
+- [tech] 🧰 **Next.js 16 and TypeScript 7.** Same app, newer foundations; self-hosters need Node.js 20.19 or later, and lint now runs with `npm run lint`.
+- [tech] 🌙 **A sturdier nightly check.** The nightly money check no longer waits for the backup, and a failed or stuck night opens a GitHub issue.
 
 ### Fixed
 - 🏷️ **Cassa names every movement.** Older card refunds and payments, shipping and corrections showed a raw code such as `ORDER_REFUND` in the movement badge; they now read "card refund", "order payment", "shipping" and so on, and an unknown type shows a plain "movement".
@@ -207,15 +218,15 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 *Install it for your own group in half an hour, and an order preparation fee that is a real, checked charge.*
 
 ### Added
-- 🚀 **Run it for your group.** A step-by-step guide (`docs/self-hosting.md`) with a Deploy to Vercel button that creates the project and its Neon database and applies every migration at the first build; `docs/brand.example.json` lists every brand field.
-- 👑 **First admin of a new installation.** The address in `BOOTSTRAP_ADMIN_EMAIL` becomes admin at its first sign-in, only while the group has no admin; Configuration status says when the variable can go.
+- [tech] 🚀 **Run it for your group.** A step-by-step guide (`docs/self-hosting.md`) with a Deploy to Vercel button that creates the project and its Neon database and applies every migration at the first build; `docs/brand.example.json` lists every brand field.
+- [tech] 👑 **First admin of a new installation.** The address in `BOOTSTRAP_ADMIN_EMAIL` becomes admin at its first sign-in, only while the group has no admin; Configuration status says when the variable can go.
 - 🧾 **Order preparation fee.** A cycle can charge a fee for bank fees and running costs, in both payment modes: a percentage of the products or a fixed amount per member, up to 25% or €10. Members see it before ordering; it is charged at the close as its own movement and checked every night. Upgrade note: apply `drizzle/0026_handling_charge.sql` right before deploying when `MIGRATE_ON_BUILD` is off.
 
 ### Changed
 - 💳 **Pay per order: the fee is a cost, not an estimate.** The group keeps it; settlement evens out products and shipping only. With proportional shipping each member pays their share at settlement.
-- 🩹 **New installations no longer fail on the home page.** Three cycle columns were missing from the migrations; one more migration adds them (a no-op on existing installations). A CI test now compares the whole schema with a migrated empty database. Upgrade note: apply `drizzle/0025_schema_catch_up.sql`.
-- 🧭 **Configuration status spots brand mistakes.** A brand field the app does not know (a typo) or a brand that does not parse shows up, with the reason, in Settings and in `npm run doctor`.
-- 🏗️ **Migrations at build on production only.** With `MIGRATE_ON_BUILD=true` preview builds no longer migrate: only production builds (and builds outside Vercel) do.
+- [tech] 🩹 **New installations no longer fail on the home page.** Three cycle columns were missing from the migrations; one more migration adds them (a no-op on existing installations). A CI test now compares the whole schema with a migrated empty database. Upgrade note: apply `drizzle/0025_schema_catch_up.sql`.
+- [tech] 🧭 **Configuration status spots brand mistakes.** A brand field the app does not know (a typo) or a brand that does not parse shows up, with the reason, in Settings and in `npm run doctor`.
+- [tech] 🏗️ **Migrations at build on production only.** With `MIGRATE_ON_BUILD=true` preview builds no longer migrate: only production builds (and builds outside Vercel) do.
 
 ## [1.18.0] — 2026-10-01
 
@@ -237,7 +248,7 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 
 ### Added
 - ✉️ **Sign in with an email link.** Type your address and you get a link that signs you in, no Google account needed; Google stays for whoever prefers it. Admins can send the link as an invitation from Members, and see each member's last sign-in. Upgrade note: apply `drizzle/0022_auth_sessions.sql` before deploying; email (Resend) must be set up; everyone signs in once more after the update; the Google redirect URI does not change.
-- 🧮 **Nightly check of the books.** After the backup, a read-only check makes sure every payment, refund and charge adds up, and fails loudly if not.
+- [tech] 🧮 **Nightly check of the books.** After the backup, a read-only check makes sure every payment, refund and charge adds up, and fails loudly if not.
 - 🧭 **Configuration status.** Settings shows what this installation has connected (database, sign-in, email, payments...) and what is missing, by name only; `npm run doctor` prints the same. Upgrade notes per version are in `docs/upgrading.md`, and `MIGRATE_ON_BUILD=true` applies migrations at every production build (optional).
 - 💳 **Pay per order, groundwork.** The app can now take an order's payment with Stripe, refund it when the order is cancelled or the payment arrives after the close, and retry a refund from Treasury. Not selectable yet: it becomes an option in Settings with the settlement. Upgrade note: apply `drizzle/0021_pay_per_order.sql` before deploying; no new variables, no new Stripe events.
 
@@ -249,7 +260,7 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 *A desktop layout, and the groundwork to watch the app's health.*
 
 ### Added
-- 🩺 **Health check and optional error reporting.** `/api/health` says whether the app and its database answer, and server errors can go to Sentry. Upgrade note: no migration; `SENTRY_DSN` is optional, without it nothing changes.
+- [tech] 🩺 **Health check and optional error reporting.** `/api/health` says whether the app and its database answer, and server errors can go to Sentry. Upgrade note: no migration; `SENTRY_DSN` is optional, without it nothing changes.
 
 ### Changed
 - 🖥️ **A proper desktop layout.** On a computer the menu moves to the top and the pages keep a comfortable reading width; only Admin uses the wider window, and Treasury shows the forms next to the member balances.
@@ -363,10 +374,10 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 - 🔒 **Closing a cycle is all-or-nothing.** Charges, shipping and the status change are written together, and a second charge for the same cycle is rejected by the database.
 
 ### Security
-- ⚡ **Next.js updated to 15.5.25**, patching two critical remote-code-execution advisories. One requires a Windows-hosted server (we run on Vercel/Linux); the other was in image optimization, already narrowed to the brand's own logo host. `sharp` moved to 0.35.4 alongside it.
-- 📤 **A crafted supplier file could no longer stall a distinta import.** Re-importing a `.ods` re-save (e.g. from LibreOffice) used an XML parser with a denial-of-service bug on long runs of whitespace, now fixed.
-- 📊 **A dormant advisory in the spreadsheet library, fixed anyway.** `exceljs` bundles an old, vulnerable `uuid`; unreachable here since the one call site never touches the vulnerable code path, but pinned to the patched release regardless.
-- 🧹 **A development-only dependency** (`js-yaml`) with a denial-of-service advisory refreshed. It never shipped to users.
+- [tech] ⚡ **Next.js updated to 15.5.25**, patching two critical remote-code-execution advisories. One requires a Windows-hosted server (we run on Vercel/Linux); the other was in image optimization, already narrowed to the brand's own logo host. `sharp` moved to 0.35.4 alongside it.
+- [tech] 📤 **A crafted supplier file could no longer stall a distinta import.** Re-importing a `.ods` re-save (e.g. from LibreOffice) used an XML parser with a denial-of-service bug on long runs of whitespace, now fixed.
+- [tech] 📊 **A dormant advisory in the spreadsheet library, fixed anyway.** `exceljs` bundles an old, vulnerable `uuid`; unreachable here since the one call site never touches the vulnerable code path, but pinned to the patched release regardless.
+- [tech] 🧹 **A development-only dependency** (`js-yaml`) with a denial-of-service advisory refreshed. It never shipped to users.
 
 ---
 
@@ -423,10 +434,10 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 *Security patches for the login layer and the image pipeline.*
 
 ### Security
-- 🔒 **Auth.js updated to the version that patches four advisories**, two of them critical (`next-auth` 5.0.0-beta.32, `@auth/core` 0.41.3). None were exploitable here — the app has no magic-link provider, never calls `getToken()`, has a single OAuth provider with no account linking, and every access check reads `session.user.email` rather than the truthiness of the auth object — but the fix is a patch-level bump, so there's no reason to sit on it.
-- 🖼️ **The image endpoint no longer accepts any host on the internet.** It used to allow `https://**`, which in a self-hosted deployment turns `/_next/image` into an open proxy: anyone could have the server fetch arbitrary remote images and run them through the image library. It now allows exactly the brand logo's own URL, taken from the deployment's own configuration.
-- ⚡ **Next.js updated to 15.5.22** for a denial-of-service fix in image optimization, and the image library forced to a build with the patched `libvips` (`sharp` 0.35.3), which upstream has not yet picked up.
-- 🧹 **Two development-only dependencies** with denial-of-service advisories (`js-yaml`, `brace-expansion`) refreshed. They never shipped to users.
+- [tech] 🔒 **Auth.js updated to the version that patches four advisories**, two of them critical (`next-auth` 5.0.0-beta.32, `@auth/core` 0.41.3). None were exploitable here — the app has no magic-link provider, never calls `getToken()`, has a single OAuth provider with no account linking, and every access check reads `session.user.email` rather than the truthiness of the auth object — but the fix is a patch-level bump, so there's no reason to sit on it.
+- [tech] 🖼️ **The image endpoint no longer accepts any host on the internet.** It used to allow `https://**`, which in a self-hosted deployment turns `/_next/image` into an open proxy: anyone could have the server fetch arbitrary remote images and run them through the image library. It now allows exactly the brand logo's own URL, taken from the deployment's own configuration.
+- [tech] ⚡ **Next.js updated to 15.5.22** for a denial-of-service fix in image optimization, and the image library forced to a build with the patched `libvips` (`sharp` 0.35.3), which upstream has not yet picked up.
+- [tech] 🧹 **Two development-only dependencies** with denial-of-service advisories (`js-yaml`, `brace-expansion`) refreshed. They never shipped to users.
 
 ---
 
@@ -464,8 +475,8 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 - 📥 **Guided import of a supplier price list.** A three-step wizard reads the supplier's own `.xlsx` or `.csv`, detects the header row and the supplier, lets you map whatever it couldn't recognise, then previews every row before writing anything.
 - 📦 **"Catalogue in preparation" empty state** in the order form, so an open cycle with no products yet no longer looks broken.
 - 🔒 **A 10 MB cap on admin uploads**, checked before the file is decoded, plus a decompression-bomb guard on `.ods` parsing.
-- 🗄️ **Unique indexes on order lines and per-cycle products**, so concurrent imports can't slip duplicates past the app-side checks (migration `0008`).
-- 🧪 **Tests for the money-adjacent pure functions** — shipping split, changelog parser, header heuristics, spreadsheet number parsing. Suite up to 78.
+- [tech] 🗄️ **Unique indexes on order lines and per-cycle products**, so concurrent imports can't slip duplicates past the app-side checks (migration `0008`).
+- [tech] 🧪 **Tests for the money-adjacent pure functions** — shipping split, changelog parser, header heuristics, spreadsheet number parsing. Suite up to 78.
 
 ### Changed
 - 📅 **Easier pickup entry.** The second pickup is optional behind a toggle, and times come from a 15-minute dropdown, so 19:30 is always selectable instead of being rejected as invalid.
@@ -493,7 +504,7 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 - 🚚 **Shipping recomputes automatically on closed cycles**, and every affected member gets a notification showing the old and new share.
 - 📧 **Send the order to the supplier by email**, with the acting admin and the shared GAS archive in CC and a per-product CSV attached.
 - 🧾 **Shipping is visible in the order recap**, so the totals on screen match what members were actually billed.
-- 💾 **Weekly off-site database backup to Google Drive**, complementing Neon's 7-hour point-in-time history.
+- [tech] 💾 **Weekly off-site database backup to Google Drive**, complementing Neon's 7-hour point-in-time history.
 
 ### Changed
 - 🤝 **Every supplier action lives in one 🤝 Fornitore dialog** — download, email, upload — and a single canonical workbook now circulates everywhere instead of divergent formats.
@@ -591,7 +602,7 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 - 📊 **An analytics dashboard** in the admin panel: top products, revenue trend over the last 12 closed cycles, supplier ranking, member participation, plus four overview cards.
 - 📈 **Insight cards on the admin home** for cycles closing soon, negative balances and the 30-day best seller, each deep-linking into the right tab.
 - 📄 **Supplier CSV export** from the closed-cycle modal, in the layout Italian Excel expects.
-- 📚 **An English README** with architecture notes.
+- [tech] 📚 **An English README** with architecture notes.
 
 ---
 
@@ -604,7 +615,7 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 - 📅 **A "Next pickup" card** on the home page with the day, time window, supplier and a days-until counter.
 
 ### Performance
-- ⚡ **Indexes on `products.cycle_id` and `ledger_entries.cycle_id`**, both queried on every admin and order page load.
+- [tech] ⚡ **Indexes on `products.cycle_id` and `ledger_entries.cycle_id`**, both queried on every admin and order page load.
 
 ---
 
@@ -615,10 +626,10 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 ### Added
 - 🚚 **Proportional shipping split** as an alternative to flat per-member, with rounding drift absorbed deterministically so the total stays exact to the cent.
 - ⚖️ **Close a cycle with price adjustments** for weight-based items: edit each final unit price and every order line and ledger entry is recomputed before charges are posted.
-- 📚 **SETUP.md**, a step-by-step local-development guide covering the `vercel env pull` gotchas.
+- [tech] 📚 **SETUP.md**, a step-by-step local-development guide covering the `vercel env pull` gotchas.
 
 ### Fixed
-- 🗄️ **`drizzle-kit push` reads `.env.local`** via Node's `--env-file`. It used to load only `.env` and fail silently with an empty url.
+- [tech] 🗄️ **`drizzle-kit push` reads `.env.local`** via Node's `--env-file`. It used to load only `.env` and fail silently with an empty url.
 
 ---
 
@@ -646,7 +657,7 @@ lines saying what the user now sees. Implementation detail belongs in the PR.
 - 🛒 **The member app**: balance, order form with per-product steppers, order and movement history, in-app notifications, FAQ guide.
 - 🛠️ **The admin panel** with six tabs — cycles, products, orders, cash, members, suppliers.
 - 🔒 **Google OAuth via Auth.js**, with an email whitelist on the members table.
-- 🗄️ **Neon Postgres and Drizzle ORM**, deployed on Vercel with auto-deploy from `main`.
+- [tech] 🗄️ **Neon Postgres and Drizzle ORM**, deployed on Vercel with auto-deploy from `main`.
 
 ---
 

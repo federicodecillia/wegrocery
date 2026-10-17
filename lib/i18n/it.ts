@@ -2206,6 +2206,18 @@ ${input.orgName}
       columnNotes: "Note",
     },
   },
+  changelog: {
+    title: "Cosa è cambiato",
+    subtitle: "Le novità dell'app, dalla più recente.",
+    showTechnical: "Mostra dettagli tecnici",
+    hideTechnical: "Nascondi dettagli tecnici",
+    technicalBadge: "Tecnico",
+    onlyTechnical: "Solo miglioramenti tecnici in questa versione.",
+    hiddenTechnical: (n: number) => (n === 1 ? "Più 1 dettaglio tecnico." : `Più ${n} dettagli tecnici.`),
+    unreleased: "In arrivo",
+    older: "Versioni precedenti",
+    backToGuide: "Torna alla guida",
+  },
 };
 
 export type Strings = typeof it;

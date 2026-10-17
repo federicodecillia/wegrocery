@@ -13,6 +13,10 @@ Come si scrivono le voci: una tagline in corsivo sotto il titolo di versione,
 poi un punto per ogni modifica coerente — un'emoji a tema, un **titolo in
 grassetto** e al massimo due righe su cosa vede l'utente. I dettagli tecnici
 stanno nella PR.
+Una voce che conta solo per chi ospita, gestisce o sviluppa l'app (variabili,
+database, CI, dipendenze, monitoraggio) comincia con `[tecnico]` (`[tech]` in
+inglese, sulla stessa voce): la pagina nell'app la nasconde dietro "Mostra
+dettagli tecnici", la release su GitHub la tiene.
 
 > 🇬🇧 The English version of this file is [CHANGELOG.md](./CHANGELOG.md).
 > Le due versioni devono restare sincronizzate.
@@ -21,12 +25,19 @@ stanno nella PR.
 
 ## [Non rilasciato]
 
+### Aggiunte
+- ✉️ **Email più curate.** Ogni email dell'app (accesso, notifiche, ordine al fornitore) ora arriva su una scheda pulita nei colori dell'app, con link da toccare e il logo di WeGrocery in fondo; le app di posta che mostrano solo il testo ricevono le stesse parole di prima.
+
+### Modificato
+- 📰 **Le novità parlano ai soci.** La pagina mostra le modifiche che si notano nell'app; quelle per chi la gestisce (server, database, aggiornamenti) stanno dietro "Mostra dettagli tecnici", segnate "Tecnico".
+- [tecnico] 📊 **Le statistiche delle installazioni parlano la lingua della Console FlyLabs.** `/api/instance-stats` accetta anche la firma `x-flylabs-*` e allora risponde con la forma del FlyLabs Kit (`app`, `counts`); la Console WeGrocery manda entrambe e legge entrambe le forme, così le installazioni più vecchie continuano a funzionare. `/api/health` rinuncia dopo 3 secondi a un database che non risponde.
+
 ## [1.30.1] — 17 ottobre 2026
 
 *Manutenzione: nessuna novità da imparare per i soci.*
 
 ### Modificato
-- 🔍 **Il controllo notturno dell'accessibilità guarda tutta la pagina.** Il controllo automatico che ogni notte verifica che l'app sia comoda da usare per tutti ora esamina la pagina intera, senza più falsi allarmi sulle righe nascoste dietro la barra in basso del telefono.
+- [tecnico] 🔍 **Il controllo notturno dell'accessibilità guarda tutta la pagina.** Il controllo automatico che ogni notte verifica che l'app sia comoda da usare per tutti ora esamina la pagina intera, senza più falsi allarmi sulle righe nascoste dietro la barra in basso del telefono.
 
 ## [1.30.0] — 15 ottobre 2026
 
@@ -49,7 +60,7 @@ stanno nella PR.
 - 🚚 **La distinta scaricata prima della chiusura non azzera più la spedizione.** Ora parte già con la quota di spedizione di ogni socio, e le riduzioni nell'anteprima hanno il segno meno.
 
 ### Modificato
-- 🔐 **I gruppi nuovi partono con un ruolo database limitato.** Un gruppo installato dalla Console WeGrocery ora si collega con un ruolo che legge e scrive i dati ma non può mai cambiare la struttura del database, come fa già Porta Moneta.
+- [tecnico] 🔐 **I gruppi nuovi partono con un ruolo database limitato.** Un gruppo installato dalla Console WeGrocery ora si collega con un ruolo che legge e scrive i dati ma non può mai cambiare la struttura del database, come fa già Porta Moneta.
 
 ## [1.28.0] — 14 ottobre 2026
 
@@ -59,15 +70,15 @@ stanno nella PR.
 - 📊 **L'uso dell'app a colpo d'occhio.** In Admin → Statistiche si vedono accessi, ordini, ricariche e cicli degli ultimi 30 giorni: conteggi anonimi, senza soci e senza testi, e nulla dalla demo.
 - 👋 **Il benvenuto si ricorda di te.** Riparte dal passo in cui eri rimasto, su qualsiasi dispositivo, e segna ciò che hai già fatto (una ricarica, un ordine, le scelte sulle notifiche, la famiglia).
 - 📧 **Disiscrizione con un tocco.** Le email di avviso mostrano il pulsante "Annulla iscrizione" della tua app di posta, che spegne le email di quel tipo (gli avvisi restano nell'app), e un doppio clic non manda mai due volte la stessa email.
-- 🔐 **Ruolo limitato per il database (facoltativo).** L'app può collegarsi con un ruolo che legge e scrive i dati ma non può cambiare lo schema; `scripts/create-app-role.mjs` lo crea e lo stato della configurazione lo mostra.
+- [tecnico] 🔐 **Ruolo limitato per il database (facoltativo).** L'app può collegarsi con un ruolo che legge e scrive i dati ma non può cambiare lo schema; `scripts/create-app-role.mjs` lo crea e lo stato della configurazione lo mostra.
 - 🌙 **Tema scuro.** In Profilo → App c'è "Aspetto": come il telefono, sempre chiaro o sempre scuro. I colori del gruppo restano e si leggono bene.
 
 ### Modificato
 - 🔤 **Nuovi caratteri.** I testi usano Inter, i titoli Geist e le piccole etichette maiuscole JetBrains Mono; gli importi sono allineati in colonna.
-- 🗄️ **Aggiornamenti del database più sicuri.** Ogni aggiornamento si applica in un solo passo e si ferma se il database è occupato, così un errore non lascia nulla a metà. Per applicarlo in produzione serve una conferma esplicita.
+- [tecnico] 🗄️ **Aggiornamenti del database più sicuri.** Ogni aggiornamento si applica in un solo passo e si ferma se il database è occupato, così un errore non lascia nulla a metà. Per applicarlo in produzione serve una conferma esplicita.
 
 ### Risolto
-- 🐞 **Le segnalazioni di errore arrivano a chi mantiene l'app.** Alcuni errori (pagamenti, email di accesso) restavano solo nei registri del server e nessuno veniva avvisato: ora arrivano anche al servizio che li raccoglie, senza dati dei soci.
+- [tecnico] 🐞 **Le segnalazioni di errore arrivano a chi mantiene l'app.** Alcuni errori (pagamenti, email di accesso) restavano solo nei registri del server e nessuno veniva avvisato: ora arrivano anche al servizio che li raccoglie, senza dati dei soci.
 
 ## [1.27.0] — 12 ottobre 2026
 
@@ -76,10 +87,10 @@ stanno nella PR.
 ### Aggiunte
 - 🎨 **Nome, logo e colori si cambiano dall'app.** Gli admin cambiano nome del gruppo, logo, colori, indirizzi di contatto e link in Impostazioni, con anteprima e controllo di leggibilità: niente nuovo deploy, e l'icona sul telefono segue.
 - 🧭 **Configurazione guidata per un gruppo nuovo.** Il primo admin viene accompagnato passo per passo: identità, contatti, pagamenti, "Il nostro gruppo" e una verifica di email e Stripe (email di prova, eventi del webhook). Ai gruppi già attivi non viene proposta, e ogni admin può rifarla da Admin → Impostazioni.
-- 📊 **Statistiche anonime per chi gestisce più gruppi.** Con `INSTANCE_STATS_SECRET` impostato, una richiesta firmata restituisce solo conteggi (soci, cicli, ordini, versione, configurazione); senza, l'indirizzo non esiste.
+- [tecnico] 📊 **Statistiche anonime per chi gestisce più gruppi.** Con `INSTANCE_STATS_SECRET` impostato, una richiesta firmata restituisce solo conteggi (soci, cicli, ordini, versione, configurazione); senza, l'indirizzo non esiste.
 - 🛠️ **Impostazioni tecniche spiegate.** In Admin → Impostazioni lo stato della configurazione diventa "Impostazioni tecniche", divise in essenziali e facoltative, e ogni voce dice a cosa serve e come la attiva chi ospita l'app.
 - 💳 **Stripe si collega dall'app.** In Admin → Impostazioni un admin incolla una chiave con restrizioni dell'account Stripe del gruppo: l'app controlla i permessi e prepara da sola il webhook, e i pagamenti con carta arrivano sull'account del gruppo. Dove chi ospita l'app ha già messo le chiavi, resta tutto com'è.
-- 🚨 **Segnalazione degli errori con l'integrazione Sentry di Vercel.** Basta installare Sentry dal marketplace di Vercel: l'app ora usa da sola l'indirizzo che l'integrazione imposta, senza variabili da copiare a mano.
+- [tecnico] 🚨 **Segnalazione degli errori con l'integrazione Sentry di Vercel.** Basta installare Sentry dal marketplace di Vercel: l'app ora usa da sola l'indirizzo che l'integrazione imposta, senza variabili da copiare a mano.
 
 ### Risolto
 - 🧾 **Il caricamento della distinta dice perché non c'è niente da applicare.** Al posto di due elenchi vuoti, l'anteprima dice quanti prodotti e soci ha riconosciuto e che gli importi sono già uguali, oppure che nel file non ha trovato niente da confrontare. Un CSV salvato da Excel su Windows non perde più gli accenti nei nomi.
@@ -195,8 +206,8 @@ stanno nella PR.
 ### Modificato
 - 🔔 **Preferenze di notifica più chiare.** I quattro gruppi dicono cosa coprono: nuovo ciclo aperto, addebiti e pagamenti (compresi il conguaglio e le conferme dei pagamenti online), modifiche all'ordine (compreso un ciclo annullato) e saldo e rimborsi. Le tue scelte salvate restano; le conferme di pagamento ora seguono "Addebiti e pagamenti".
 
-- 🧰 **Next.js 16 e TypeScript 7.** Stessa app, fondamenta più nuove; a chi la installa da sé serve Node.js 20.19 o successivo, e il lint si lancia con `npm run lint`.
-- 🌙 **Controllo notturno più solido.** Il controllo dei conti non aspetta più il backup, e una notte fallita o bloccata apre una issue su GitHub.
+- [tecnico] 🧰 **Next.js 16 e TypeScript 7.** Stessa app, fondamenta più nuove; a chi la installa da sé serve Node.js 20.19 o successivo, e il lint si lancia con `npm run lint`.
+- [tecnico] 🌙 **Controllo notturno più solido.** Il controllo dei conti non aspetta più il backup, e una notte fallita o bloccata apre una issue su GitHub.
 
 ### Risolto
 - 🏷️ **Cassa dà un nome a ogni movimento.** I vecchi rimborsi e pagamenti con carta, le spedizioni e le rettifiche mostravano nel badge un codice tecnico come `ORDER_REFUND`; ora si leggono "rimborso carta", "pagamento ordine", "spedizione" e così via, e un tipo sconosciuto mostra un semplice "movimento".
@@ -209,15 +220,15 @@ stanno nella PR.
 *Installarla per il proprio gruppo in mezz'ora, e spese di preparazione che diventano un addebito vero e controllato.*
 
 ### Aggiunto
-- 🚀 **Installala per il tuo gruppo.** Una guida passo passo (`docs/self-hosting.md`, in inglese) con il pulsante Deploy to Vercel, che crea il progetto e il suo database Neon e applica tutte le migrazioni al primo build; `docs/brand.example.json` elenca tutti i campi del brand.
-- 👑 **Primo admin di un'installazione nuova.** L'indirizzo in `BOOTSTRAP_ADMIN_EMAIL` diventa admin al primo accesso, solo finché il gruppo non ha un admin; lo Stato della configurazione dice quando togliere la variabile.
+- [tecnico] 🚀 **Installala per il tuo gruppo.** Una guida passo passo (`docs/self-hosting.md`, in inglese) con il pulsante Deploy to Vercel, che crea il progetto e il suo database Neon e applica tutte le migrazioni al primo build; `docs/brand.example.json` elenca tutti i campi del brand.
+- [tecnico] 👑 **Primo admin di un'installazione nuova.** L'indirizzo in `BOOTSTRAP_ADMIN_EMAIL` diventa admin al primo accesso, solo finché il gruppo non ha un admin; lo Stato della configurazione dice quando togliere la variabile.
 - 🧾 **Spese di preparazione ordine.** Un ciclo può addebitare una quota per commissioni bancarie e spese di gestione, in entrambe le modalità di pagamento: una percentuale dei prodotti o un importo fisso per socio, fino al 25% o a 10 €. I soci la vedono prima di ordinare; si addebita alla chiusura come movimento a sé e viene controllata ogni notte. Nota di aggiornamento: applica `drizzle/0026_handling_charge.sql` subito prima del deploy se `MIGRATE_ON_BUILD` è spento.
 
 ### Modificato
 - 💳 **Pagamento per ordine: la quota è un costo, non una stima.** Resta all'associazione; il conguaglio regola solo prodotti e spedizione. Con la spedizione proporzionale ogni socio paga la sua parte al conguaglio.
-- 🩹 **Le installazioni nuove non si rompono più nella home.** Tre colonne dei cicli mancavano nelle migrazioni; una migrazione in più le aggiunge (non fa nulla sulle installazioni esistenti). Un test in CI confronta tutto lo schema con un database vuoto migrato. Nota di aggiornamento: applica `drizzle/0025_schema_catch_up.sql`.
-- 🧭 **Lo Stato della configurazione trova gli errori del brand.** Un campo che l'app non conosce (un errore di battitura) o un brand che non si legge compaiono, con il motivo, in Impostazioni e in `npm run doctor`.
-- 🏗️ **Migrazioni al build solo in produzione.** Con `MIGRATE_ON_BUILD=true` i build di anteprima non migrano più: lo fanno solo quelli di produzione (e quelli fuori da Vercel).
+- [tecnico] 🩹 **Le installazioni nuove non si rompono più nella home.** Tre colonne dei cicli mancavano nelle migrazioni; una migrazione in più le aggiunge (non fa nulla sulle installazioni esistenti). Un test in CI confronta tutto lo schema con un database vuoto migrato. Nota di aggiornamento: applica `drizzle/0025_schema_catch_up.sql`.
+- [tecnico] 🧭 **Lo Stato della configurazione trova gli errori del brand.** Un campo che l'app non conosce (un errore di battitura) o un brand che non si legge compaiono, con il motivo, in Impostazioni e in `npm run doctor`.
+- [tecnico] 🏗️ **Migrazioni al build solo in produzione.** Con `MIGRATE_ON_BUILD=true` i build di anteprima non migrano più: lo fanno solo quelli di produzione (e quelli fuori da Vercel).
 
 ## [1.18.0] — 1 ottobre 2026
 
@@ -239,7 +250,7 @@ stanno nella PR.
 
 ### Aggiunte
 - ✉️ **Accesso con un link via email.** Scrivi il tuo indirizzo e ricevi un link che ti fa entrare, senza bisogno di un account Google; Google resta per chi lo preferisce. Gli admin possono mandare il link come invito da Soci e vedono l'ultimo accesso di ogni socio. Nota di aggiornamento: applicare `drizzle/0022_auth_sessions.sql` prima del deploy; l'invio email (Resend) deve essere configurato; dopo l'aggiornamento tutti rientrano una volta; l'indirizzo di ritorno di Google non cambia.
-- 🧮 **Controllo notturno dei conti.** Dopo il backup, un controllo in sola lettura verifica che pagamenti, rimborsi e addebiti tornino, e segnala subito se non tornano.
+- [tecnico] 🧮 **Controllo notturno dei conti.** Dopo il backup, un controllo in sola lettura verifica che pagamenti, rimborsi e addebiti tornino, e segnala subito se non tornano.
 - 🧭 **Stato della configurazione.** In Impostazioni si vede cosa è collegato in questa installazione (database, accesso, email, pagamenti...) e cosa manca, solo per nome; `npm run doctor` stampa lo stesso. Le note di aggiornamento per versione stanno in `docs/upgrading.md`, e `MIGRATE_ON_BUILD=true` applica le migrazioni a ogni build di produzione (facoltativo).
 - 💳 **Pagamento per ordine, le basi.** L'app ora sa incassare il pagamento di un ordine con Stripe, rimborsarlo se l'ordine viene annullato o se il pagamento arriva a ordini chiusi, e riprovare un rimborso dalla Cassa. Non ancora selezionabile: diventa un'opzione in Impostazioni insieme al conguaglio. Nota di aggiornamento: applicare `drizzle/0021_pay_per_order.sql` prima del deploy; nessuna variabile nuova, nessun evento Stripe nuovo.
 
@@ -251,7 +262,7 @@ stanno nella PR.
 *Un layout da computer, e le basi per tenere d'occhio la salute dell'app.*
 
 ### Aggiunte
-- 🩺 **Controllo di stato e segnalazione degli errori facoltativa.** `/api/health` dice se l'app e il suo database rispondono, e gli errori del server possono arrivare a Sentry. Nota di aggiornamento: nessuna migrazione; `SENTRY_DSN` è facoltativa, senza non cambia nulla.
+- [tecnico] 🩺 **Controllo di stato e segnalazione degli errori facoltativa.** `/api/health` dice se l'app e il suo database rispondono, e gli errori del server possono arrivare a Sentry. Nota di aggiornamento: nessuna migrazione; `SENTRY_DSN` è facoltativa, senza non cambia nulla.
 
 ### Modificato
 - 🖥️ **Un vero layout da computer.** Da computer il menu passa in alto e le pagine tengono una larghezza comoda da leggere; solo Admin usa la finestra larga, e in Cassa i form stanno accanto ai saldi dei soci.
@@ -365,10 +376,10 @@ stanno nella PR.
 - 🔒 **La chiusura di un ciclo è tutto-o-niente.** Addebiti, spedizione e cambio di stato vengono scritti insieme, e il database rifiuta un secondo addebito per lo stesso ciclo.
 
 ### Sicurezza
-- ⚡ **Next.js aggiornato alla 15.5.25**, che corregge due vulnerabilità critiche di esecuzione di codice da remoto. Una richiede un server ospitato su Windows (noi giriamo su Vercel/Linux); l'altra riguardava l'ottimizzazione delle immagini, già limitata al solo host del logo del brand. Anche `sharp` è passato alla 0.35.4.
-- 📤 **Un file fornitore malevolo non poteva più bloccare un'importazione distinta.** Ri-importare un file `.ods` (es. da un salvataggio con LibreOffice) usava un parser XML con un bug di denial-of-service su lunghe sequenze di spazi, ora corretto.
-- 📊 **Una vulnerabilità dormiente nella libreria dei fogli di calcolo, corretta comunque.** `exceljs` include una versione vecchia e vulnerabile di `uuid`; non sfruttabile qui perché l'unico punto in cui viene usata non tocca il percorso vulnerabile, ma fissata comunque alla versione corretta.
-- 🧹 **Una dipendenza di sviluppo** (`js-yaml`) con una vulnerabilità di denial-of-service aggiornata. Non ha mai raggiunto gli utenti.
+- [tecnico] ⚡ **Next.js aggiornato alla 15.5.25**, che corregge due vulnerabilità critiche di esecuzione di codice da remoto. Una richiede un server ospitato su Windows (noi giriamo su Vercel/Linux); l'altra riguardava l'ottimizzazione delle immagini, già limitata al solo host del logo del brand. Anche `sharp` è passato alla 0.35.4.
+- [tecnico] 📤 **Un file fornitore malevolo non poteva più bloccare un'importazione distinta.** Ri-importare un file `.ods` (es. da un salvataggio con LibreOffice) usava un parser XML con un bug di denial-of-service su lunghe sequenze di spazi, ora corretto.
+- [tecnico] 📊 **Una vulnerabilità dormiente nella libreria dei fogli di calcolo, corretta comunque.** `exceljs` include una versione vecchia e vulnerabile di `uuid`; non sfruttabile qui perché l'unico punto in cui viene usata non tocca il percorso vulnerabile, ma fissata comunque alla versione corretta.
+- [tecnico] 🧹 **Una dipendenza di sviluppo** (`js-yaml`) con una vulnerabilità di denial-of-service aggiornata. Non ha mai raggiunto gli utenti.
 
 ---
 
@@ -425,10 +436,10 @@ stanno nella PR.
 *Aggiornamenti di sicurezza per il login e per la gestione delle immagini.*
 
 ### Sicurezza
-- 🔒 **Auth.js aggiornato alla versione che corregge quattro vulnerabilità**, due delle quali critiche (`next-auth` 5.0.0-beta.32, `@auth/core` 0.41.3). Nessuna era sfruttabile qui — l'app non ha login via link email, non chiama mai `getToken()`, ha un solo provider OAuth senza collegamento di account, e ogni controllo di accesso legge `session.user.email` invece della semplice esistenza dell'oggetto di sessione — ma la correzione è un aggiornamento minimo, quindi non c'era motivo di rimandare.
-- 🖼️ **L'endpoint delle immagini non accetta più qualsiasi indirizzo su internet.** Prima consentiva `https://**`, che in un'installazione self-hosted trasforma `/_next/image` in un proxy aperto: chiunque poteva far scaricare al server immagini arbitrarie e darle in pasto alla libreria di elaborazione. Ora è ammesso esattamente l'indirizzo del logo del gruppo, preso dalla configurazione del deploy stesso.
-- ⚡ **Next.js aggiornato alla 15.5.22** per una correzione su un blocco del servizio nell'ottimizzazione delle immagini, e la libreria di elaborazione forzata a una versione con `libvips` corretto (`sharp` 0.35.3), che a monte non è ancora stata adottata.
-- 🧹 **Due dipendenze di solo sviluppo** con vulnerabilità di blocco del servizio (`js-yaml`, `brace-expansion`) aggiornate. Non sono mai arrivate agli utenti.
+- [tecnico] 🔒 **Auth.js aggiornato alla versione che corregge quattro vulnerabilità**, due delle quali critiche (`next-auth` 5.0.0-beta.32, `@auth/core` 0.41.3). Nessuna era sfruttabile qui — l'app non ha login via link email, non chiama mai `getToken()`, ha un solo provider OAuth senza collegamento di account, e ogni controllo di accesso legge `session.user.email` invece della semplice esistenza dell'oggetto di sessione — ma la correzione è un aggiornamento minimo, quindi non c'era motivo di rimandare.
+- [tecnico] 🖼️ **L'endpoint delle immagini non accetta più qualsiasi indirizzo su internet.** Prima consentiva `https://**`, che in un'installazione self-hosted trasforma `/_next/image` in un proxy aperto: chiunque poteva far scaricare al server immagini arbitrarie e darle in pasto alla libreria di elaborazione. Ora è ammesso esattamente l'indirizzo del logo del gruppo, preso dalla configurazione del deploy stesso.
+- [tecnico] ⚡ **Next.js aggiornato alla 15.5.22** per una correzione su un blocco del servizio nell'ottimizzazione delle immagini, e la libreria di elaborazione forzata a una versione con `libvips` corretto (`sharp` 0.35.3), che a monte non è ancora stata adottata.
+- [tecnico] 🧹 **Due dipendenze di solo sviluppo** con vulnerabilità di blocco del servizio (`js-yaml`, `brace-expansion`) aggiornate. Non sono mai arrivate agli utenti.
 
 ---
 
@@ -466,8 +477,8 @@ stanno nella PR.
 - 📥 **Import guidato del listino fornitore.** Una procedura in tre passi legge l'`.xlsx` o il `.csv` del fornitore, riconosce la riga di intestazione e il fornitore, ti fa mappare quello che non ha capito e mostra un'anteprima riga per riga prima di scrivere.
 - 📦 **Stato "Catalogo in preparazione" nel form ordine**, così un ciclo aperto senza prodotti non sembra più rotto.
 - 🔒 **Limite di 10 MB sugli upload admin**, controllato prima ancora di decodificare il file, più una protezione contro le bombe di decompressione sui `.ods`.
-- 🗄️ **Indici unici su righe d'ordine e prodotti per ciclo**, così import concorrenti non possono infilare duplicati oltre i controlli applicativi (migrazione `0008`).
-- 🧪 **Test sulle funzioni pure che toccano i soldi** — riparto spedizione, parser del changelog, euristiche di intestazione, lettura numeri da foglio. Suite a 78 test.
+- [tecnico] 🗄️ **Indici unici su righe d'ordine e prodotti per ciclo**, così import concorrenti non possono infilare duplicati oltre i controlli applicativi (migrazione `0008`).
+- [tecnico] 🧪 **Test sulle funzioni pure che toccano i soldi** — riparto spedizione, parser del changelog, euristiche di intestazione, lettura numeri da foglio. Suite a 78 test.
 
 ### Modificato
 - 📅 **Ritiri più facili da inserire.** Il secondo ritiro è opzionale dietro un interruttore, e gli orari si scelgono da un menu a slot di 15 minuti: le 19:30 sono sempre selezionabili invece di essere rifiutate come non valide.
@@ -495,7 +506,7 @@ stanno nella PR.
 - 🚚 **La spedizione si ricalcola da sola sui cicli chiusi**, e ogni socio coinvolto riceve una notifica con la quota vecchia e nuova.
 - 📧 **Invia l'ordine al fornitore via email**, con l'admin che agisce e l'archivio GAS condiviso in CC e un CSV per prodotto allegato.
 - 🧾 **La spedizione è visibile nel recap ordini**, così i totali a schermo coincidono con quello che è stato addebitato ai soci.
-- 💾 **Backup settimanale del database su Google Drive**, a complemento delle 7 ore di storico point-in-time di Neon.
+- [tecnico] 💾 **Backup settimanale del database su Google Drive**, a complemento delle 7 ore di storico point-in-time di Neon.
 
 ### Modificato
 - 🤝 **Tutte le azioni fornitore in un unico riquadro 🤝 Fornitore** — scarica, invia, carica — e da qui circola un solo file ufficiale invece di formati divergenti.
@@ -593,7 +604,7 @@ stanno nella PR.
 - 📊 **Una dashboard di statistiche** nel pannello admin: prodotti più ordinati, andamento della spesa sugli ultimi 12 cicli chiusi, classifica fornitori, partecipazione dei soci e quattro schede di sintesi.
 - 📈 **Schede di sintesi sulla home admin** per i cicli in scadenza, i saldi negativi e il più venduto degli ultimi 30 giorni, ognuna collegata al tab giusto.
 - 📄 **Esportazione CSV fornitore** dal riquadro del ciclo chiuso, nel formato che Excel italiano si aspetta.
-- 📚 **Un README in inglese** con le note di architettura.
+- [tecnico] 📚 **Un README in inglese** con le note di architettura.
 
 ---
 
@@ -606,7 +617,7 @@ stanno nella PR.
 - 📅 **Una scheda "Prossimo ritiro"** in home con giorno, fascia oraria, fornitore e conteggio dei giorni mancanti.
 
 ### Performance
-- ⚡ **Indici su `products.cycle_id` e `ledger_entries.cycle_id`**, interrogati a ogni caricamento delle pagine admin e ordine.
+- [tecnico] ⚡ **Indici su `products.cycle_id` e `ledger_entries.cycle_id`**, interrogati a ogni caricamento delle pagine admin e ordine.
 
 ---
 
@@ -617,10 +628,10 @@ stanno nella PR.
 ### Aggiunte
 - 🚚 **Riparto proporzionale della spedizione** come alternativa alla quota fissa per socio, con lo scarto di arrotondamento assorbito in modo deterministico perché il totale resti esatto al centesimo.
 - ⚖️ **Chiudi un ciclo con rettifiche di prezzo** per i prodotti a peso: modifichi ogni prezzo finale e il sistema ricalcola tutte le righe e le voci di cassa prima di addebitare.
-- 📚 **SETUP.md**, la guida passo passo allo sviluppo locale con le insidie di `vercel env pull`.
+- [tecnico] 📚 **SETUP.md**, la guida passo passo allo sviluppo locale con le insidie di `vercel env pull`.
 
 ### Risolto
-- 🗄️ **`drizzle-kit push` legge `.env.local`** tramite `--env-file` di Node. Prima caricava solo `.env` e falliva in silenzio con url vuoto.
+- [tecnico] 🗄️ **`drizzle-kit push` legge `.env.local`** tramite `--env-file` di Node. Prima caricava solo `.env` e falliva in silenzio con url vuoto.
 
 ---
 
@@ -648,7 +659,7 @@ stanno nella PR.
 - 🛒 **L'app per i soci**: saldo, form ordine con contatori per prodotto, storico ordini e movimenti, notifiche in app, guida con le domande frequenti.
 - 🛠️ **Il pannello admin** con sei tab — cicli, prodotti, ordini, cassa, soci, fornitori.
 - 🔒 **Login Google via Auth.js**, con lista di email autorizzate sulla tabella soci.
-- 🗄️ **Neon Postgres e Drizzle ORM**, in produzione su Vercel con deploy automatico da `main`.
+- [tecnico] 🗄️ **Neon Postgres e Drizzle ORM**, in produzione su Vercel con deploy automatico da `main`.
 
 ---
 

@@ -1,10 +1,13 @@
 import { createHmac } from "node:crypto";
 
 // Request signature for GET /api/instance-stats on a WeGrocery instance.
-// Contract (shared with the main app):
-//   x-wegrocery-timestamp: unix seconds
-//   x-wegrocery-signature: lowercase hex HMAC-SHA256, keyed with the
+// Contract (the FlyLabs Kit module `console`, shared with the main app):
+//   x-flylabs-timestamp: unix seconds
+//   x-flylabs-signature: lowercase hex HMAC-SHA256, keyed with the
 //     instance's INSTANCE_STATS_SECRET, of `${timestamp}.GET./api/instance-stats`
+// The same pair goes out as x-wegrocery-* too: an instance from before the
+// kit (1.30 and older) reads only those and answers its older shape, which
+// parseStats still accepts. A newer instance prefers x-flylabs-*.
 // The instance accepts a clock skew of at most 300 s and a secret of at
 // least 32 characters.
 
@@ -20,9 +23,12 @@ export function signedStatsHeaders(secret: string, nowSeconds: number): Record<s
   if (secret.length < MIN_STATS_SECRET_LENGTH) {
     throw new Error(`INSTANCE_STATS_SECRET must be at least ${MIN_STATS_SECRET_LENGTH} characters`);
   }
-  const timestamp = Math.floor(nowSeconds);
+  const timestamp = String(Math.floor(nowSeconds));
+  const signature = statsSignature(secret, Number(timestamp));
   return {
-    "x-wegrocery-timestamp": String(timestamp),
-    "x-wegrocery-signature": statsSignature(secret, timestamp),
+    "x-flylabs-timestamp": timestamp,
+    "x-flylabs-signature": signature,
+    "x-wegrocery-timestamp": timestamp,
+    "x-wegrocery-signature": signature,
   };
 }

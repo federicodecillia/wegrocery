@@ -12,6 +12,7 @@ Il Playbook è in `flylabs-ai/flylabs-kit`, file `PLAYBOOK.md`. Se la repo non �
 - prima di una scelta di stack, stile, testi, test, migrazioni, email o operatività.
 
 ## Passi
+0. Se l'app ha `flylabs-kit.json`, confrontalo con `kit.json` del kit (`node <kit>/scripts/kit-check.mjs --app .` quando il kit è in locale). Se l'app è indietro, dillo in una riga all'inizio dell'esito, con le versioni; non allineare da solo se il lavoro non lo chiede.
 1. Leggi il blocco "FlyLabs Kit" nell'AGENTS.md dell'app e l'elenco degli scostamenti voluti.
 2. Leggi i capitoli del Playbook che toccano il lavoro (stack 1, stile 2, testi 3, guida 4, qualità 5, dati 6, operatività 7, legale e AI 8, metodo 9).
 3. Per ogni regola toccata scegli un esito: rispettata, scostamento elencato, oppure violata.
