@@ -44,13 +44,13 @@ export function PaymentModeCard({
   }
 
   return (
-    <section className="rounded-xl border border-brand-border bg-surface p-4">
-      <h3 className="text-[13px] font-bold text-brand-near-black">{s.title}</h3>
-      <p className="mt-1 text-[12px] font-semibold text-brand-near-black">{s.current(name(mode))}</p>
-      <p className={`${cardCycles ? "" : "mb-3 "}mt-1 text-[12px] text-brand-gray`}>{mode === "wallet" ? s.wallet : s.perOrder}</p>
-      {cardCycles && <p className="mb-3 mt-1 text-[12px] text-brand-gray">{s.cardCyclesHint}</p>}
+    <section className="rounded-xl border border-border bg-card p-4">
+      <h3 className="text-[13px] font-bold text-foreground">{s.title}</h3>
+      <p className="mt-1 text-[12px] font-semibold text-foreground">{s.current(name(mode))}</p>
+      <p className={`${cardCycles ? "" : "mb-3 "}mt-1 text-[12px] text-secondary-foreground`}>{mode === "wallet" ? s.wallet : s.perOrder}</p>
+      {cardCycles && <p className="mb-3 mt-1 text-[12px] text-secondary-foreground">{s.cardCyclesHint}</p>}
       {blockers.length > 0 ? (
-        <div className="rounded-lg border border-brand-border bg-brand-warm-white px-3 py-2 text-[12px] text-brand-near-black">
+        <div className="rounded-lg border border-border bg-background px-3 py-2 text-[12px] text-foreground">
           <p className="font-semibold">{s.blockedTitle}</p>
           <ul className="mt-1 list-disc pl-4">
             {blockers.map((b) => (
@@ -60,7 +60,7 @@ export function PaymentModeCard({
         </div>
       ) : (
         <>
-          <p className="text-[12px] text-brand-gray">
+          <p className="text-[12px] text-secondary-foreground">
             {s.summary(
               state.negative.count,
               formatMoney(state.negative.cents / 100),
@@ -73,7 +73,7 @@ export function PaymentModeCard({
             type="button"
             onClick={handleChange}
             disabled={isPending}
-            className="mt-3 rounded-xl border border-brand-border px-4 py-2 text-[13px] font-bold text-brand-near-black disabled:opacity-60"
+            className="mt-3 rounded-xl border border-border px-4 py-2 text-[13px] font-bold text-foreground disabled:opacity-60"
           >
             {isPending ? t.admin.common.saving : s.switchTo(name(target))}
           </button>

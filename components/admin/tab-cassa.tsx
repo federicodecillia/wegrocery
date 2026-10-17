@@ -78,7 +78,7 @@ export async function TabCassa({ balanceFilter, memberId }: Props) {
 
         <Card>
           <CardHeader>
-            <h3 className="text-[13px] font-bold text-brand-near-black">
+            <h3 className="text-[13px] font-bold text-foreground">
               {t.admin.treasury.balancesTitle(membersWithBalances.length)}
             </h3>
           </CardHeader>

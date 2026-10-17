@@ -31,22 +31,22 @@ export function MovementRow({
   inset?: boolean;
 }) {
   const incoming = parseFloat(String(entry.amount)) >= 0;
-  const className = `flex w-full items-center justify-between gap-3 border-b border-brand-border py-3 text-left last:border-none ${
+  const className = `flex w-full items-center justify-between gap-3 border-b border-border py-3 text-left last:border-none ${
     inset ? "px-4" : ""
-  } ${selected ? "bg-primary-soft" : "hover:bg-tint/[0.02]"}`;
+  } ${selected ? "bg-primary-bg" : "hover:bg-tint/[0.02]"}`;
   const body = (
     <>
       <span className="flex min-w-0 flex-1 items-center gap-3">
         <MovementIcon kind={movementKind(entry)} incoming={incoming} />
         <span className="min-w-0">
-          <span className="block truncate text-[14px] font-medium text-brand-near-black">{movementText(entry, t.history)}</span>
-          <span className="mt-0.5 block tabular-nums text-label text-muted">
+          <span className="block truncate text-[14px] font-medium text-foreground">{movementText(entry, t.history)}</span>
+          <span className="mt-0.5 block tabular-nums text-label text-muted-foreground">
             {movementDay(entry.entryDate)}
             {entry.correctedAt && ` · ${t.ledger.correctedOn(formatDate(entry.correctedAt))}`}
           </span>
         </span>
       </span>
-      <span className={`shrink-0 whitespace-nowrap text-[14px] font-bold tabular-nums ${incoming ? "text-accent-text" : "text-danger-text"}`}>
+      <span className={`shrink-0 whitespace-nowrap text-[14px] font-bold tabular-nums ${incoming ? "text-accent-text" : "text-destructive"}`}>
         {formatSignedMoney(entry.amount)}
       </span>
     </>

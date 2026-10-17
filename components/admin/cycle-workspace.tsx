@@ -16,7 +16,7 @@ import { getPaymentSettings } from "@/lib/payments/get-settings";
 import { getSettlementStatus } from "@/lib/payments/settlement-store";
 import { DEFAULT_HANDLING_FEE } from "@/lib/payments/order-payment";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardBody } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { t } from "@/lib/i18n";
 import { formatDate } from "@/lib/i18n/format";
 import { formatDeadline } from "@/lib/i18n/deadline";
@@ -166,7 +166,7 @@ async function NewCycle({
     fee && { type: fee.type, value: String(fee.value) };
   return (
     <div>
-      {empty && <p className="mb-3 text-[13px] text-brand-gray">{t.admin.workspace.noCycles}</p>}
+      {empty && <p className="mb-3 text-[13px] text-secondary-foreground">{t.admin.workspace.noCycles}</p>}
       <CreateCycleForm
         suppliers={suppliers}
         paymentMode={settings.mode}
@@ -237,15 +237,15 @@ async function SelectedCycle({
       <header className="mb-3 flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="mb-1 flex flex-wrap gap-1.5">
-            <Badge tone={isOpen ? "accent" : c.status === "cancelled" ? "danger" : "neutral"} dot={isOpen}>
+            <Badge variant={isOpen ? "accent" : c.status === "cancelled" ? "destructive" : "default"} dot={isOpen}>
               {isOpen ? t.admin.cycle.openBadge : c.status === "cancelled" ? t.admin.cycle.cancelledBadge : t.admin.cycle.closedBadge}
             </Badge>
-            {perOrder && <Badge tone="brand">💳 {t.admin.cycle.cardBadge}</Badge>}
+            {perOrder && <Badge variant="brand">💳 {t.admin.cycle.cardBadge}</Badge>}
           </div>
-          <h2 id="cycle-title" className="text-[18px] font-black text-brand-near-black">
+          <h2 id="cycle-title" className="text-[18px] font-black text-foreground">
             {c.title}
           </h2>
-          <p className="mt-0.5 text-[13px] text-brand-gray">
+          <p className="mt-0.5 text-[13px] text-secondary-foreground">
             {[c.supplierName, when].filter(Boolean).join(" · ")}
           </p>
         </div>
@@ -255,14 +255,14 @@ async function SelectedCycle({
         </div>
       </header>
 
-      <nav aria-label={t.admin.nav.views} className="mb-4 flex gap-4 overflow-x-auto border-b border-brand-border px-1 [scrollbar-width:none]">
+      <nav aria-label={t.admin.nav.views} className="mb-4 flex gap-4 overflow-x-auto border-b border-border px-1 [scrollbar-width:none]">
         {cycleViews(c.status, supplierOrderReady(c.status, c.orderCloseAt)).map((v) => (
           <Link
             key={v}
             href={adminHref("ciclo", v, { cycle: c.cycleId })}
             aria-current={view === v ? "page" : undefined}
             className={`-mb-px flex min-h-11 shrink-0 items-center border-b-2 text-[14px] font-semibold ${
-              view === v ? "border-primary text-brand-near-black" : "border-transparent text-brand-gray hover:text-brand-near-black"
+              view === v ? "border-primary text-foreground" : "border-transparent text-secondary-foreground hover:text-foreground"
             }`}
           >
             {CYCLE_VIEW_LABELS[v]}
@@ -275,12 +275,12 @@ async function SelectedCycle({
           <OpenCycleOverview cycle={cycle} stats={stats} />
         ) : (
           <Card>
-            <CardBody>
+            <CardContent>
               <CycleFacts cycle={cycle} />
               <div className="mt-3">
                 <OrdersLink cycleId={c.cycleId} />
               </div>
-            </CardBody>
+            </CardContent>
           </Card>
         ))}
 
@@ -291,14 +291,14 @@ async function SelectedCycle({
       {view === "fornitore" &&
         (c.supplierName ? (
           <div>
-            <p className="mb-3 max-w-prose text-[13px] text-brand-gray">{isOpen ? w.supplierIntroOpen : w.supplierIntro}</p>
+            <p className="mb-3 max-w-prose text-[13px] text-secondary-foreground">{isOpen ? w.supplierIntroOpen : w.supplierIntro}</p>
             <SupplierSteps cycleId={c.cycleId} cycleOpen={isOpen} />
           </div>
         ) : (
           <Card>
-            <CardBody>
-              <p className="max-w-prose text-[13px] text-brand-gray">{w.noSupplier}</p>
-            </CardBody>
+            <CardContent>
+              <p className="max-w-prose text-[13px] text-secondary-foreground">{w.noSupplier}</p>
+            </CardContent>
           </Card>
         ))}
 

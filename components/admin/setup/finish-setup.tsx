@@ -25,14 +25,14 @@ export function FinishSetup() {
   }
 
   return (
-    <section className="rounded-xl border border-brand-border bg-surface p-4">
-      <h2 className="text-[15px] font-bold text-brand-near-black">{s.finishTitle}</h2>
-      <p className="mt-1 text-[13px] text-brand-gray">{s.finishBody}</p>
+    <section className="rounded-xl border border-border bg-card p-4">
+      <h2 className="text-[15px] font-bold text-foreground">{s.finishTitle}</h2>
+      <p className="mt-1 text-[13px] text-secondary-foreground">{s.finishBody}</p>
       <button
         type="button"
         onClick={handleFinish}
         disabled={isPending}
-        className="mt-4 min-h-11 rounded-full bg-primary px-5 py-2 text-[14px] font-bold text-on-primary disabled:opacity-60"
+        className="mt-4 min-h-11 rounded-full bg-primary px-5 py-2 text-[14px] font-bold text-primary-foreground disabled:opacity-60"
       >
         {isPending ? t.admin.common.saving : s.finishButton}
       </button>

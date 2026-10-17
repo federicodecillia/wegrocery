@@ -1,10 +1,14 @@
+import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
+  LOCK_TIMEOUT,
+  ROLLBACK_REQUIRED_FROM,
   appRoleFromEnv,
   appRoleRevokeStatements,
   appRoleStatements,
   isMigrationFile,
   migrationLedgerRevokeStatement,
+  nonTransactionalStatement,
   refusesProduction,
   roleUrl,
   splitStatements,
@@ -31,6 +35,80 @@ describe("splitStatements", () => {
 
   it("drops a file's own BEGIN and COMMIT: the runner wraps the file in a transaction", () => {
     expect(splitStatements("BEGIN;\nALTER TABLE a ADD COLUMN b int;\nCOMMIT;")).toEqual(["ALTER TABLE a ADD COLUMN b int"]);
+  });
+});
+
+describe("nonTransactionalStatement", () => {
+  it("refuses what Postgres cannot run in a transaction", () => {
+    for (const st of [
+      "CREATE INDEX CONCURRENTLY i ON a (id)",
+      "create unique index concurrently if not exists i on a (id)",
+      "DROP INDEX CONCURRENTLY i",
+      "REINDEX INDEX CONCURRENTLY i",
+      "ALTER TABLE p DETACH PARTITION c CONCURRENTLY",
+      "VACUUM ANALYZE a",
+      "ALTER SYSTEM SET work_mem = '64MB'",
+      "CREATE DATABASE x",
+      "REINDEX DATABASE neondb",
+    ]) {
+      expect(nonTransactionalStatement(["CREATE TABLE a (id int)", st])).toBe(st);
+    }
+  });
+
+  it("lets ordinary DDL, DML and DO blocks through", () => {
+    expect(
+      nonTransactionalStatement([
+        "CREATE INDEX IF NOT EXISTS i ON a (id)",
+        "ALTER TABLE a ADD COLUMN b int",
+        "ALTER TYPE t ADD VALUE IF NOT EXISTS 'x'",
+        "REINDEX TABLE a",
+        "DO $$ BEGIN RAISE NOTICE 'ok'; END $$",
+        "UPDATE a SET b = 1",
+      ]),
+    ).toBeNull();
+  });
+});
+
+// Playbook 6.2: every file in drizzle/ runs in one transaction with a lock
+// timeout, and from ROLLBACK_REQUIRED_FROM on each ships with its rollback.
+describe("the migrations in drizzle/", () => {
+  const files = readdirSync("drizzle").filter((f) => f.endsWith(".sql")).sort();
+  const migrations = files.filter(isMigrationFile);
+  const number = (f: string) => Number(f.slice(0, 4));
+
+  it("are numbered NNNN_name.sql, one per number", () => {
+    for (const f of files) expect(f).toMatch(/^\d{4}_[a-z0-9_]+\.sql$/);
+    expect(new Set(migrations.map(number)).size).toBe(migrations.length);
+  });
+
+  it("can all run inside a transaction", () => {
+    const refused = migrations.flatMap((f) => {
+      const st = nonTransactionalStatement(splitStatements(readFileSync(`drizzle/${f}`, "utf8")));
+      return st ? [`${f}: ${st}`] : [];
+    });
+    expect(refused).toEqual([]);
+  });
+
+  it("wait at most 5 seconds for a lock", () => {
+    expect(LOCK_TIMEOUT).toBe("5s");
+  });
+
+  it(`from ${ROLLBACK_REQUIRED_FROM} on, come with a _down.sql and an Apply/Rollback header`, () => {
+    const recent = migrations.filter((f) => number(f) >= ROLLBACK_REQUIRED_FROM);
+    expect(recent.length).toBeGreaterThan(0);
+    for (const f of recent) {
+      const down = f.replace(/\.sql$/, "_down.sql");
+      expect(files, `${f} needs drizzle/${down}`).toContain(down);
+      const header = readFileSync(`drizzle/${f}`, "utf8");
+      expect(header, `${f} header`).toMatch(/^-- Apply:/m);
+      expect(header, `${f} header`).toMatch(new RegExp(`^-- Rollback:.*${down}`, "m"));
+    }
+  });
+
+  it("have no rollback file without its migration", () => {
+    for (const f of files.filter((n) => n.endsWith("_down.sql"))) {
+      expect(migrations).toContain(f.replace(/_down\.sql$/, ".sql"));
+    }
   });
 });
 

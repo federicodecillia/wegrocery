@@ -1,8 +1,10 @@
 "use client";
 
+import { X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { t } from "@/lib/i18n";
 import { canonicalizeCategory, normalizeCategory } from "@/lib/utils";
+import { Input } from "./input";
 
 /**
  * Built-in suggestions, ordered by typical GAS-shopping prevalence.
@@ -105,7 +107,7 @@ export function CategorySelect({ name, value, extra = [], placeholder = t.common
   }
 
   const triggerCls =
-    "flex w-full items-center justify-between rounded-lg border border-brand-border bg-surface px-3 py-2 text-left text-[13px] text-brand-near-black";
+    "flex min-h-(--control-h) w-full items-center justify-between rounded-lg border border-input bg-card px-3 py-2 text-left text-[14px] text-foreground";
 
   return (
     <div ref={rootRef} className="relative">
@@ -118,16 +120,16 @@ export function CategorySelect({ name, value, extra = [], placeholder = t.common
         aria-expanded={open}
         className={triggerCls}
       >
-        <span className={selected ? "" : "text-muted"}>
+        <span className={selected ? "" : "text-muted-foreground"}>
           {selected || placeholder}
         </span>
-        <span className="ml-2 text-muted">▾</span>
+        <span className="ml-2 text-muted-foreground">▾</span>
       </button>
 
       {open && (
         <div
           role="listbox"
-          className="absolute left-0 right-0 z-50 mt-1 max-h-[260px] overflow-y-auto rounded-lg border border-brand-border bg-surface shadow-lg"
+          className="absolute left-0 right-0 z-50 mt-1 max-h-[260px] overflow-y-auto rounded-lg border border-border bg-card shadow-lg"
         >
           {options.map((opt) => (
             <button
@@ -136,8 +138,8 @@ export function CategorySelect({ name, value, extra = [], placeholder = t.common
               role="option"
               aria-selected={normalizeCategory(opt) === normalizeCategory(selected)}
               onClick={() => pick(opt)}
-              className={`flex w-full items-center justify-between px-3 py-1.5 text-left text-[13px] transition hover:bg-accent-soft ${
-                normalizeCategory(opt) === normalizeCategory(selected) ? "bg-accent-soft font-semibold text-accent-text" : "text-brand-near-black"
+              className={`flex w-full items-center justify-between px-3 py-1.5 text-left text-[13px] transition hover:bg-accent-bg ${
+                normalizeCategory(opt) === normalizeCategory(selected) ? "bg-accent-bg font-semibold text-accent-text" : "text-foreground"
               }`}
             >
               <span>{opt}</span>
@@ -146,10 +148,10 @@ export function CategorySelect({ name, value, extra = [], placeholder = t.common
           ))}
 
           {/* "+ aggiungi nuova" row */}
-          <div className="border-t border-brand-border bg-brand-warm-white">
+          <div className="border-t border-border bg-background">
             {adding ? (
               <div className="flex items-center gap-1 p-2">
-                <input
+                <Input
                   ref={newInputRef}
                   type="text"
                   value={newCat}
@@ -161,12 +163,12 @@ export function CategorySelect({ name, value, extra = [], placeholder = t.common
                     }
                   }}
                   placeholder={t.common.newCategoryPlaceholder}
-                  className="flex-1 rounded-md border border-brand-border bg-surface px-2 py-1 text-[12px]"
+                  className="min-h-0 flex-1 rounded-md px-2 py-1 text-[12px]"
                 />
                 <button
                   type="button"
                   onClick={confirmAdd}
-                  className="rounded-md bg-accent px-2 py-1 text-label font-bold text-on-accent"
+                  className="rounded-md bg-accent px-2 py-1 text-label font-bold text-accent-foreground"
                 >
                   OK
                 </button>
@@ -177,16 +179,16 @@ export function CategorySelect({ name, value, extra = [], placeholder = t.common
                     setNewCat("");
                   }}
                   aria-label={t.common.cancel}
-                  className="flex h-9 w-9 items-center justify-center rounded-md text-label text-brand-gray"
+                  className="flex h-9 w-9 items-center justify-center rounded-md text-label text-secondary-foreground"
                 >
-                  <span aria-hidden>✕</span>
+<X aria-hidden className="size-4" />
                 </button>
               </div>
             ) : (
               <button
                 type="button"
                 onClick={() => setAdding(true)}
-                className="flex w-full items-center gap-1.5 px-3 py-2 text-left text-[12px] font-semibold text-accent-text hover:bg-accent-soft"
+                className="flex w-full items-center gap-1.5 px-3 py-2 text-left text-[12px] font-semibold text-accent-text hover:bg-accent-bg"
               >
                 <span aria-hidden>+</span> Aggiungi nuova categoria
               </button>

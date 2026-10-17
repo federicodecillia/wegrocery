@@ -13,6 +13,9 @@ import type { DistintaImportPreview } from "@/lib/csv/distinta-parser";
 import { DISTINTA_ACCEPT, DistintaPreviewPanel, readFileAsBase64 } from "@/components/admin/distinta-preview";
 import { toast } from "@/components/ui/toast";
 import { t } from "@/lib/i18n";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 // Admin → Ciclo → Fornitore: every supplier action on a closed cycle (steps 1
 // and 2 also on an open cycle past its order deadline), as three
@@ -162,9 +165,6 @@ export function SupplierSteps({ cycleId, cycleOpen = false }: { cycleId: string;
     });
   }
 
-  const labelCls = "block text-label font-semibold uppercase tracking-wide text-brand-gray";
-  const inputCls =
-    "w-full rounded-lg border border-brand-border bg-surface min-h-11 px-3 py-2 text-[14px] tabular-nums text-brand-near-black disabled:bg-brand-warm-white";
   const sa = t.admin.supplierActions;
 
   return (
@@ -173,7 +173,7 @@ export function SupplierSteps({ cycleId, cycleOpen = false }: { cycleId: string;
         <button
           onClick={handleDownload}
           disabled={downloading}
-          className="min-h-11 w-full rounded-xl px-5 sm:w-auto border border-accent/30 bg-accent-soft py-2.5 text-[13px] font-bold text-accent-text active:scale-95 disabled:opacity-50"
+          className="min-h-11 w-full rounded-xl px-5 sm:w-auto border border-accent/30 bg-accent-bg py-2.5 text-[13px] font-bold text-accent-text active:scale-95 disabled:opacity-50"
         >
           {downloading ? t.admin.supplierActions.downloading : t.admin.supplierActions.downloadButton}
         </button>
@@ -181,61 +181,61 @@ export function SupplierSteps({ cycleId, cycleOpen = false }: { cycleId: string;
 
       <Step n={2} title={sa.emailSection} description={sa.emailDescription}>
         {defaultsLoading ? (
-          <div className="py-4 text-center text-[12px] text-brand-gray">{t.admin.supplierActions.loadingDefaults}</div>
+          <div className="py-4 text-center text-[12px] text-secondary-foreground">{t.admin.supplierActions.loadingDefaults}</div>
         ) : (
           <div className="space-y-2.5">
             <div>
-              <label htmlFor="sup-mail-to" className={labelCls}>{t.admin.supplierActions.recipientLabel}</label>
-              <input
+              <Label htmlFor="sup-mail-to">{t.admin.supplierActions.recipientLabel}</Label>
+              <Input
                 id="sup-mail-to"
                 type="email"
                 value={to}
                 onChange={(e) => setTo(e.target.value)}
                 disabled={sending}
-                className={inputCls}
+                className="min-h-11"
               />
             </div>
             <div>
-              <label htmlFor="sup-mail-from" className={labelCls}>{t.admin.supplierActions.senderLabel}</label>
-              <input
+              <Label htmlFor="sup-mail-from">{t.admin.supplierActions.senderLabel}</Label>
+              <Input
                 id="sup-mail-from"
                 type="email"
                 value={from}
                 onChange={(e) => setFrom(e.target.value)}
                 disabled={sending}
                 placeholder={t.admin.supplierActions.senderPlaceholder}
-                className={inputCls}
+                className="min-h-11"
               />
-              <p className="mt-0.5 text-label text-muted">
+              <p className="mt-0.5 text-label text-muted-foreground">
                 {t.admin.supplierActions.senderHint}
               </p>
             </div>
             <div>
-              <label htmlFor="sup-mail-cc" className={labelCls}>{t.admin.supplierActions.ccLabel}</label>
-              <textarea
+              <Label htmlFor="sup-mail-cc">{t.admin.supplierActions.ccLabel}</Label>
+              <Textarea
                 id="sup-mail-cc"
                 value={cc}
                 onChange={(e) => setCc(e.target.value)}
                 disabled={sending}
                 rows={2}
-                className={`${inputCls} resize-none`}
+                className="resize-none"
               />
             </div>
             <div>
-              <label htmlFor="sup-mail-subject" className={labelCls}>{t.admin.supplierActions.subjectLabel}</label>
-              <input
+              <Label htmlFor="sup-mail-subject">{t.admin.supplierActions.subjectLabel}</Label>
+              <Input
                 id="sup-mail-subject"
                 type="text"
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
                 disabled={sending}
-                className={inputCls}
+                className="min-h-11"
               />
             </div>
             <button
               onClick={handleSendMail}
               disabled={defaultsLoading || sending}
-              className="min-h-11 w-full rounded-xl px-5 sm:w-auto bg-inverse py-2.5 text-[13px] font-bold text-on-inverse shadow-lg active:scale-95 disabled:opacity-50"
+              className="min-h-11 w-full rounded-xl px-5 sm:w-auto bg-inverse py-2.5 text-[13px] font-bold text-inverse-foreground shadow-lg active:scale-95 disabled:opacity-50"
             >
               {sending ? t.admin.common.sending : t.admin.supplierActions.sendButton}
             </button>
@@ -253,17 +253,17 @@ export function SupplierSteps({ cycleId, cycleOpen = false }: { cycleId: string;
           aria-label={t.admin.supplierActions.uploadSection}
           accept={DISTINTA_ACCEPT}
           onChange={onFileChange}
-          className="block w-full cursor-pointer rounded-xl border border-dashed border-primary/40 bg-surface px-3 py-2 text-[12px] file:mr-3 file:rounded-lg file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-label file:font-bold file:text-on-primary"
+          className="block w-full cursor-pointer rounded-xl border border-dashed border-primary/40 bg-card px-3 py-2 text-[12px] file:mr-3 file:rounded-lg file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-label file:font-bold file:text-primary-foreground"
         />
         {fileName && (
-          <p className="mt-1 text-label text-brand-gray">
+          <p className="mt-1 text-label text-secondary-foreground">
             {t.admin.importWizard.fileInfo(fileName)}
           </p>
         )}
         <button
           onClick={handlePreview}
           disabled={!fileBase64 || previewing}
-          className="mt-2 min-h-11 w-full rounded-xl px-5 sm:w-auto bg-primary py-2.5 text-[13px] font-bold text-on-primary disabled:opacity-50"
+          className="mt-2 min-h-11 w-full rounded-xl px-5 sm:w-auto bg-primary py-2.5 text-[13px] font-bold text-primary-foreground disabled:opacity-50"
         >
           {previewing ? t.admin.supplierActions.previewing : t.admin.supplierActions.previewButton}
         </button>
@@ -279,7 +279,7 @@ export function SupplierSteps({ cycleId, cycleOpen = false }: { cycleId: string;
                 (preview.corrections.length === 0 && preview.shippingChanges.length === 0) ||
                 applying
               }
-              className="min-h-11 w-full rounded-xl px-5 sm:w-auto bg-inverse py-2.5 text-[13px] font-bold text-on-inverse shadow-lg active:scale-95 disabled:opacity-50"
+              className="min-h-11 w-full rounded-xl px-5 sm:w-auto bg-inverse py-2.5 text-[13px] font-bold text-inverse-foreground shadow-lg active:scale-95 disabled:opacity-50"
             >
               {applying ? t.admin.supplierActions.applying : t.admin.supplierActions.applyButton}
             </button>
@@ -293,9 +293,9 @@ export function SupplierSteps({ cycleId, cycleOpen = false }: { cycleId: string;
 
 function Step({ n, title, description, children }: { n: number; title: string; description: string; children?: ReactNode }) {
   return (
-    <li className="rounded-2xl border border-brand-border bg-surface p-4">
-      <h3 className="flex items-center gap-2 text-[14px] font-bold text-brand-near-black">
-        <span aria-hidden className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-label font-bold text-on-primary">
+    <li className="rounded-2xl border border-border bg-card p-4">
+      <h3 className="flex items-center gap-2 text-[14px] font-bold text-foreground">
+        <span aria-hidden className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-label font-bold text-primary-foreground">
           {n}
         </span>
         <span>
@@ -303,7 +303,7 @@ function Step({ n, title, description, children }: { n: number; title: string; d
           {title}
         </span>
       </h3>
-      <p className={`mt-1 max-w-prose text-[13px] text-brand-gray ${children ? "mb-3" : ""}`}>{description}</p>
+      <p className={`mt-1 max-w-prose text-[13px] text-secondary-foreground ${children ? "mb-3" : ""}`}>{description}</p>
       {children}
     </li>
   );

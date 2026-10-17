@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { t } from "@/lib/i18n";
+import { Input } from "@/components/ui/input";
 
 type FilterCycle = { cycleId: string; title: string };
 type FilterSupplier = { supplierId: string; name: string };
@@ -151,23 +152,23 @@ function MultiSelect({
         aria-expanded={open}
         className={`flex w-full items-center justify-between gap-2 rounded-xl border px-3 py-2 text-left text-[12px] font-semibold ${
           selected.length > 0
-            ? "border-primary/40 bg-primary-soft text-brand-near-black"
-            : "border-brand-border bg-surface text-brand-near-black"
+            ? "border-primary/40 bg-primary-bg text-foreground"
+            : "border-border bg-card text-foreground"
         }`}
       >
         <span className="truncate">{summary}</span>
-        <span className="shrink-0 text-muted">{open ? "▲" : "▼"}</span>
+        <span className="shrink-0 text-muted-foreground">{open ? "▲" : "▼"}</span>
       </button>
       {open && (
-        <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-[280px] overflow-hidden rounded-xl border border-brand-border bg-surface shadow-lg">
-          <div className="border-b border-brand-border p-2">
-            <input
+        <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-[280px] overflow-hidden rounded-xl border border-border bg-card shadow-lg">
+          <div className="border-b border-border p-2">
+            <Input
               type="search"
               autoFocus
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t.admin.stats.searchFilter(label.toLowerCase())}
-              className="w-full rounded-lg border border-brand-border px-2 py-1 text-[12px]"
+              className="px-2 py-1 text-[12px]"
             />
             {selected.length > 0 && (
               <button
@@ -181,15 +182,15 @@ function MultiSelect({
           </div>
           <div className="max-h-[220px] overflow-y-auto py-1">
             {visibleOptions.length === 0 ? (
-              <p className="px-3 py-2 text-label text-brand-gray">{t.admin.stats.noFilterResults}</p>
+              <p className="px-3 py-2 text-label text-secondary-foreground">{t.admin.stats.noFilterResults}</p>
             ) : (
               visibleOptions.map((o) => {
                 const checked = selectedSet.has(o.id);
                 return (
                   <label
                     key={o.id}
-                    className={`flex cursor-pointer items-center gap-2 px-3 py-1.5 text-[12px] hover:bg-brand-warm-white/60 ${
-                      checked ? "bg-primary-soft/40" : ""
+                    className={`flex cursor-pointer items-center gap-2 px-3 py-1.5 text-[12px] hover:bg-background/60 ${
+                      checked ? "bg-primary-bg/40" : ""
                     }`}
                   >
                     <input
@@ -198,7 +199,7 @@ function MultiSelect({
                       onChange={() => toggle(o.id)}
                       className="h-3.5 w-3.5 accent-primary"
                     />
-                    <span className="truncate text-brand-near-black">{o.label}</span>
+                    <span className="truncate text-foreground">{o.label}</span>
                   </label>
                 );
               })

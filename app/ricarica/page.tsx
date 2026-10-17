@@ -60,9 +60,9 @@ async function resultFor(memberId: string, esito?: string, sessionId?: string): 
 }
 
 const TONE_CLASSES = {
-  ok: "border-accent bg-accent-soft text-brand-near-black",
-  info: "border-primary-mid bg-primary-soft text-brand-near-black",
-  error: "border-danger-text/30 bg-danger-soft text-danger-text",
+  ok: "border-accent bg-accent-bg text-foreground",
+  info: "border-primary-mid bg-primary-bg text-foreground",
+  error: "border-destructive/30 bg-danger-bg text-destructive",
 } as const;
 
 export default async function RicaricaPage({
@@ -89,7 +89,7 @@ export default async function RicaricaPage({
     return (
       <AppShell email={session.user.email} name={session.user.fullName} isAdmin={role === "admin"} memberId={memberId} personId={session.user.personId}>
         <div className="mb-4 flex items-center gap-2">
-          <h1 className="text-[22px] font-black tracking-[-0.02em] text-brand-near-black">{t.balance.title}</h1>
+          <h1 className="text-[22px] font-black tracking-[-0.02em] text-foreground">{t.balance.title}</h1>
           <HelpLink href="/guida/soldi#da-saldare" />
         </div>
         {result && (
@@ -100,9 +100,9 @@ export default async function RicaricaPage({
         )}
         <BalanceDueCard cents={cents} canPay={settings.onlineTopupAvailable} />
         {cents > -SETTLEMENT_MIN_DUE_CENTS && cents <= 0 && (
-          <div className="flex items-center justify-between rounded-card border border-brand-border bg-surface p-4.5 shadow-card">
-            <span className="text-[14px] text-brand-gray">{t.balance.nothingDue}</span>
-            <Link href="/ordine" className="rounded-full bg-primary px-4 py-2.5 text-[14px] font-bold text-on-primary">
+          <div className="flex items-center justify-between rounded-card border border-border bg-card p-4.5 shadow-card">
+            <span className="text-[14px] text-secondary-foreground">{t.balance.nothingDue}</span>
+            <Link href="/ordine" className="rounded-full bg-primary px-4 py-2.5 text-[14px] font-bold text-primary-foreground">
               {t.balance.goToOrder}
             </Link>
           </div>
@@ -131,7 +131,7 @@ export default async function RicaricaPage({
   return (
     <AppShell email={session.user.email} name={session.user.fullName} isAdmin={role === "admin"} memberId={memberId} personId={session.user.personId}>
       <div className="mb-4 flex items-center gap-2">
-        <h1 className="text-[22px] font-black tracking-[-0.02em] text-brand-near-black">{t.topup.title}</h1>
+        <h1 className="text-[22px] font-black tracking-[-0.02em] text-foreground">{t.topup.title}</h1>
         <HelpLink href="/guida/soldi" />
       </div>
 
@@ -145,11 +145,11 @@ export default async function RicaricaPage({
       <BalanceSummary label={t.topup.currentBalance} balance={balance} />
 
       {online && (
-        <section className="mb-4 rounded-card border border-brand-border bg-surface p-4.5 shadow-card">
-          <h2 className="mb-1 text-[16px] font-extrabold text-brand-near-black">{t.topup.onlineTitle}</h2>
+        <section className="mb-4 rounded-card border border-border bg-card p-4.5 shadow-card">
+          <h2 className="mb-1 text-[16px] font-extrabold text-foreground">{t.topup.onlineTitle}</h2>
           {ceilingCents === null ? (
             // Only a maximum can leave nothing for Stripe (topupCeilingCents).
-            <p className="text-[14px] text-brand-gray">
+            <p className="text-[14px] text-secondary-foreground">
               {maxBalanceCents !== null &&
               roomCents !== null &&
               topupBlockReason(balanceCents, maxBalanceCents) === "belowMinimum"
@@ -158,7 +158,7 @@ export default async function RicaricaPage({
             </p>
           ) : (
             <>
-              <p className="mb-4 text-[14px] text-brand-gray">{t.topup.onlineHint}</p>
+              <p className="mb-4 text-[14px] text-secondary-foreground">{t.topup.onlineHint}</p>
               <TopupForm
                 presets={topupPresets(balanceCents, ceilingCents)}
                 minCents={TOPUP_MIN_CENTS}
@@ -172,21 +172,21 @@ export default async function RicaricaPage({
       {/* Bank details when that channel is on; the "ask the treasurer" line
           only when members have no channel at all. */}
       {(bank || !online) && (
-        <section className="mb-4 rounded-card border border-brand-border bg-surface p-4.5 shadow-card">
-          <h2 className="mb-1 text-[16px] font-extrabold text-brand-near-black">{t.topup.bankTitle}</h2>
+        <section className="mb-4 rounded-card border border-border bg-card p-4.5 shadow-card">
+          <h2 className="mb-1 text-[16px] font-extrabold text-foreground">{t.topup.bankTitle}</h2>
           {bank ? (
             <>
-              <p className="mb-3 text-[14px] text-brand-gray">{t.topup.bankHint}</p>
+              <p className="mb-3 text-[14px] text-secondary-foreground">{t.topup.bankHint}</p>
               {roomCents !== null && (
-                <p className="mb-3 text-[14px] font-semibold text-brand-near-black">
+                <p className="mb-3 text-[14px] font-semibold text-foreground">
                   {roomCents > 0 ? t.topup.bankRoom(formatMoney(roomCents / 100)) : t.topup.atMaximum}
                 </p>
               )}
               <CopyField label={t.topup.bankHolder} value={bank.holder} />
-              <CopyField label={t.topup.bankIban} value={compactIban(bank.iban)} display={formatIban(bank.iban)} mono />
+              <CopyField label={t.topup.bankIban} value={compactIban(bank.iban)} display={formatIban(bank.iban)} code />
               {referenceOrders.length > 0 && (
                 <>
-                  <h3 className="mt-4 text-[14px] font-bold text-brand-near-black">{t.topup.bankOrdersTitle}</h3>
+                  <h3 className="mt-4 text-[14px] font-bold text-foreground">{t.topup.bankOrdersTitle}</h3>
                   {referenceOrders.map((o) => (
                     <CopyField
                       key={o.cycleId}
@@ -205,7 +205,7 @@ export default async function RicaricaPage({
               )}
             </>
           ) : (
-            <p className="text-[14px] text-brand-gray">{t.topup.bankUnavailable}</p>
+            <p className="text-[14px] text-secondary-foreground">{t.topup.bankUnavailable}</p>
           )}
         </section>
       )}

@@ -8,6 +8,8 @@ import { formatEur, getProductEmoji } from "@/lib/utils";
 import { toast } from "@/components/ui/toast";
 import { CatalogCsvActions, CatalogProductForm, GuidedImportButton } from "./prodotti-forms";
 import { t } from "@/lib/i18n";
+import { NativeSelect } from "@/components/ui/native-select";
+import { labelClass } from "@/components/ui/label";
 
 type SupplierWithCatalog = {
   supplier: {
@@ -95,25 +97,24 @@ export function SupplierCatalogList({
 
   return (
     <div className="space-y-5">
-      <section className="rounded-xl border border-brand-border bg-surface p-4">
-        <h3 className="text-[14px] font-bold text-brand-near-black">{t.admin.products.uploadTitle}</h3>
-        <p className="mb-3 text-label text-brand-gray">{t.admin.products.uploadSubtitle}</p>
+      <section className="rounded-xl border border-border bg-card p-4">
+        <h3 className="text-[14px] font-bold text-foreground">{t.admin.products.uploadTitle}</h3>
+        <p className="mb-3 text-label text-secondary-foreground">{t.admin.products.uploadSubtitle}</p>
         <GuidedImportButton />
         <details className="group mt-3">
-          <summary className="flex min-h-(--control-h) cursor-pointer list-none items-center gap-1 text-[13px] font-semibold text-brand-gray">
+          <summary className="flex min-h-(--control-h) cursor-pointer list-none items-center gap-1 text-[13px] font-semibold text-secondary-foreground">
             <span aria-hidden className="text-label transition-transform group-open:rotate-90">▶</span>
             {t.admin.products.otherFormats}
           </summary>
           <div className="mt-2 space-y-3">
-            <p className="text-label text-brand-gray">{t.admin.products.otherFormatsHint}</p>
+            <p className="text-label text-secondary-foreground">{t.admin.products.otherFormatsHint}</p>
             <label className="block">
-              <span className="mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray">
+              <span className={labelClass}>
                 {t.admin.products.uploadSupplierLabel}
               </span>
-              <select
+              <NativeSelect
                 value={uploadSupplierId}
                 onChange={(e) => setUploadSupplierId(e.target.value)}
-                className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black"
               >
                 {suppliers.length === 0 ? (
                   <option value="">{t.admin.products.noSupplierAvailable}</option>
@@ -124,25 +125,25 @@ export function SupplierCatalogList({
                     </option>
                   ))
                 )}
-              </select>
+              </NativeSelect>
             </label>
             <CatalogCsvActions supplierId={uploadSupplierId} />
           </div>
         </details>
       </section>
 
-      <section className="rounded-xl border border-brand-border bg-surface p-4">
+      <section className="rounded-xl border border-border bg-card p-4">
         <div className="mb-3 flex items-start justify-between gap-3">
           <div>
-            <h3 className="text-[14px] font-bold text-brand-near-black">{t.admin.products.catalogSectionTitle}</h3>
-            <p className="text-label text-brand-gray">
+            <h3 className="text-[14px] font-bold text-foreground">{t.admin.products.catalogSectionTitle}</h3>
+            <p className="text-label text-secondary-foreground">
               {t.admin.products.filteredCount(filtered.length, allProducts.length)}
             </p>
           </div>
           <button
             onClick={() => setAddingSupplierId(defaultAddSupplierId || suppliers[0]?.supplierId || null)}
             disabled={suppliers.length === 0}
-            className="rounded-lg bg-accent px-3 py-1.5 text-label font-bold text-on-accent disabled:opacity-50"
+            className="rounded-lg bg-accent px-3 py-1.5 text-label font-bold text-accent-foreground disabled:opacity-50"
           >
             {t.admin.products.addButton}
           </button>
@@ -150,13 +151,12 @@ export function SupplierCatalogList({
 
         <div className="grid gap-3">
           <label className="block">
-            <span className="mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray">
+            <span className={labelClass}>
               {t.admin.products.supplierFilter}
             </span>
-            <select
+            <NativeSelect
               value={supplierFilter}
               onChange={(e) => setSupplierFilter(e.target.value)}
-              className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black"
             >
               <option value={ALL}>{t.admin.products.allSuppliers}</option>
               {suppliers.map((supplier) => (
@@ -164,18 +164,17 @@ export function SupplierCatalogList({
                   {supplier.name}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
           </label>
 
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="block">
-              <span className="mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray">
+              <span className={labelClass}>
                 {t.admin.products.categoryFilter}
               </span>
-              <select
+              <NativeSelect
                 value={categoryFilter}
                 onChange={(e) => setCategoryFilter(e.target.value)}
-                className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black"
               >
                 <option value={ALL}>{t.admin.products.allCategories}</option>
                 {categories.map((category) => (
@@ -183,21 +182,20 @@ export function SupplierCatalogList({
                     {category}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             </label>
 
             <label className="block">
-              <span className="mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray">
+              <span className={labelClass}>
                 {t.admin.products.groupBy}
               </span>
-              <select
+              <NativeSelect
                 value={groupBy}
                 onChange={(e) => setGroupBy(e.target.value as GroupBy)}
-                className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black"
               >
                 <option value="category">{t.admin.products.groupByCategory}</option>
                 <option value="supplier">{t.admin.products.groupBySupplier}</option>
-              </select>
+              </NativeSelect>
             </label>
           </div>
         </div>
@@ -218,16 +216,16 @@ export function SupplierCatalogList({
       {grouped.length > 0 ? (
         <div className="space-y-5">
           {grouped.map(([groupName, products]) => (
-            <section key={groupName} className="overflow-hidden rounded-xl border border-brand-border bg-surface">
-              <div className="flex items-center justify-between border-b border-brand-border bg-brand-warm-white px-4 py-3">
-                <h3 className="text-[13px] font-bold text-brand-near-black">{groupName}</h3>
-                <span className="tabular-nums text-label text-brand-gray">{products.length}</span>
+            <section key={groupName} className="overflow-hidden rounded-xl border border-border bg-card">
+              <div className="flex items-center justify-between border-b border-border bg-background px-4 py-3">
+                <h3 className="text-[13px] font-bold text-foreground">{groupName}</h3>
+                <span className="tabular-nums text-label text-secondary-foreground">{products.length}</span>
               </div>
-              <div className="divide-y divide-brand-border">
+              <div className="divide-y divide-border">
                 {products.map((product) => (
                   <div
                     key={product.catalogProductId}
-                    className={`flex items-start gap-3 px-4 py-3 hover:bg-brand-warm-white/40 ${
+                    className={`flex items-start gap-3 px-4 py-3 hover:bg-background/40 ${
                       !product.active ? "opacity-50 grayscale" : ""
                     }`}
                   >
@@ -236,29 +234,29 @@ export function SupplierCatalogList({
                     </span>
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-[13px] font-bold text-brand-near-black">{product.name}</span>
+                        <span className="text-[13px] font-bold text-foreground">{product.name}</span>
                         {!product.active && (
-                          <span className="rounded bg-brand-gray-light px-1 py-0.5 text-label font-bold uppercase text-brand-gray">
+                          <span className="rounded bg-neutral px-1 py-0.5 text-label font-bold uppercase text-secondary-foreground">
                             {t.admin.products.archivedBadge}
                           </span>
                         )}
                       </div>
-                      <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-label text-brand-gray">
+                      <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-label text-secondary-foreground">
                         <span>{product.supplierName}</span>
                         {product.category && <span>{product.category}</span>}
                         {product.variant && <span>{product.variant}</span>}
                         {product.format && <span>{product.format}</span>}
                       </div>
                       {product.notes && (
-                        <div className="mt-1 text-label text-muted">{product.notes}</div>
+                        <div className="mt-1 text-label text-muted-foreground">{product.notes}</div>
                       )}
                     </div>
                     <div className="shrink-0 text-right">
-                      <div className="tabular-nums text-[13px] font-bold text-brand-near-black">
+                      <div className="tabular-nums text-[13px] font-bold text-foreground">
                         {formatEur(parseFloat(product.unitPrice))}
                       </div>
                       {product.pricePerKg && (
-                        <div className="tabular-nums text-label text-muted">
+                        <div className="tabular-nums text-label text-muted-foreground">
                           ({formatEur(parseFloat(product.pricePerKg))}/kg)
                         </div>
                       )}
@@ -271,7 +269,7 @@ export function SupplierCatalogList({
                         </button>
                         <button
                           onClick={() => handleArchive(product.catalogProductId, !product.active)}
-                          className="text-label font-bold text-brand-gray hover:text-brand-near-black hover:underline"
+                          className="text-label font-bold text-secondary-foreground hover:text-foreground hover:underline"
                         >
                           {product.active ? t.admin.common.archive : t.admin.common.restore}
                         </button>
@@ -284,7 +282,7 @@ export function SupplierCatalogList({
           ))}
         </div>
       ) : (
-        <div className="rounded-xl border border-dashed border-brand-border p-8 text-center text-[13px] text-brand-gray">
+        <div className="rounded-xl border border-dashed border-border p-8 text-center text-[13px] text-secondary-foreground">
           {t.admin.products.noProductsFiltered}
         </div>
       )}

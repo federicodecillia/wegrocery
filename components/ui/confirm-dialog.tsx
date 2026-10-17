@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import * as Dialog from "@radix-ui/react-dialog";
+import { useEffect, useRef, useState } from "react";
+import { Dialog } from "@base-ui/react/dialog";
 import { Button } from "@/components/ui/button";
 import { t } from "@/lib/i18n";
 import { useSwipeDown } from "@/lib/ui/use-swipe";
@@ -19,6 +19,15 @@ type Request = ConfirmOptions & {
 };
 
 let listener: ((req: Request) => void) | null = null;
+
+// The confirm's backdrop and window carry this attribute: a Sheet under it
+// ignores the Esc and the taps that belong to the confirm.
+const CONFIRM_ATTR = "data-confirm-dialog";
+
+/** Whether `node` is part of the open confirm (its window or its backdrop). */
+export function isInConfirmDialog(node: unknown): boolean {
+  return node instanceof Element && node.closest(`[${CONFIRM_ATTR}]`) !== null;
+}
 
 export function confirm(options: ConfirmOptions): Promise<boolean> {
   return new Promise<boolean>((resolve) => {
@@ -63,6 +72,11 @@ export function ConfirmDialogProvider() {
   }
 
   const open = request !== null;
+  // A destructive request starts on Cancel (Enter must not delete), any other
+  // on Confirm.
+  const cancelRef = useRef<HTMLButtonElement>(null);
+  const confirmRef = useRef<HTMLButtonElement>(null);
+  const attr = { [CONFIRM_ATTR]: "" };
 
   return (
     <Dialog.Root
@@ -72,44 +86,34 @@ export function ConfirmDialogProvider() {
       }}
     >
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-[150] bg-black/30 backdrop-blur-[4px] data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0" />
+        <Dialog.Backdrop {...attr} className="fixed inset-0 z-[150] bg-black/30 backdrop-blur-[4px]" />
         {/* A sheet from the bottom on phones (buttons stacked near the thumb,
             drag down = Annulla), a small centred window from sm. */}
-        <Dialog.Content
+        <Dialog.Popup
+          {...attr}
           ref={swipeTarget}
-          aria-describedby={undefined}
+          initialFocus={request?.danger === true ? cancelRef : confirmRef}
           {...swipeHandlers}
-          className="fixed inset-x-0 bottom-0 z-[151] touch-none rounded-t-3xl border border-brand-border bg-surface px-6 pt-2 pb-[calc(1.5rem+env(safe-area-inset-bottom))] text-center shadow-[0_8px_32px_rgba(45,43,41,0.15)] sm:inset-x-auto sm:bottom-auto sm:left-1/2 sm:top-1/2 sm:w-[90%] sm:max-w-[340px] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:touch-auto sm:rounded-3xl sm:p-8 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0"
+          className="fixed inset-x-0 bottom-0 z-[151] touch-none rounded-t-3xl border border-border bg-card px-6 pt-2 pb-[calc(1.5rem+env(safe-area-inset-bottom))] text-center shadow-[0_8px_32px_rgba(45,43,41,0.15)] sm:inset-x-auto sm:bottom-auto sm:left-1/2 sm:top-1/2 sm:w-[90%] sm:max-w-[340px] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:touch-auto sm:rounded-3xl sm:p-8"
         >
           <div aria-hidden className="mx-auto mb-4 h-1 w-10 rounded-full bg-tint/15 sm:hidden" />
-          <Dialog.Title className="mb-3 text-lg font-bold text-brand-near-black">
+          <Dialog.Title className="mb-3 text-lg font-bold text-foreground">
             {request?.title}
           </Dialog.Title>
           {request?.message && (
-            <Dialog.Description className="mb-5 text-[15px] text-brand-gray">
+            <Dialog.Description className="mb-5 text-[15px] text-secondary-foreground">
               {request.message}
             </Dialog.Description>
           )}
           <div className="flex flex-col-reverse gap-3 sm:flex-row">
-            <Button
-              variant="outline"
-              block
-              onClick={() => close(false)}
-              // A destructive request starts on Cancel: Enter must not delete.
-              autoFocus={request?.danger === true}
-            >
+            <Button ref={cancelRef} variant="outline" block onClick={() => close(false)}>
               {request?.cancelLabel ?? t.common.cancel}
             </Button>
-            <Button
-              variant={request?.danger ? "danger" : "neutral"}
-              block
-              onClick={() => close(true)}
-              autoFocus={request?.danger !== true}
-            >
+            <Button ref={confirmRef} variant={request?.danger ? "destructive" : "default"} block onClick={() => close(true)}>
               {request?.confirmLabel ?? t.common.confirm}
             </Button>
           </div>
-        </Dialog.Content>
+        </Dialog.Popup>
       </Dialog.Portal>
     </Dialog.Root>
   );

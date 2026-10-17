@@ -7,9 +7,18 @@ export { MIN_SECRET_LENGTH };
 // installations (a fleet console): an HMAC-SHA256, keyed with this deploy's
 // INSTANCE_STATS_SECRET, of "<unix seconds>.<METHOD>.<path>". The timestamp
 // bounds a replay to MAX_SKEW_SECONDS. Pure: the route passes the clock.
+// The scheme is the FlyLabs Kit module `console` 1.0 (Playbook 7.10).
 
-export const TIMESTAMP_HEADER = "x-wegrocery-timestamp";
-export const SIGNATURE_HEADER = "x-wegrocery-signature";
+// Two pairs of headers carry the same signature. x-flylabs-* is the FlyLabs
+// Console's (the kit's contract: the answer is the kit envelope);
+// x-wegrocery-* is the WeGrocery Console's before the kit, answered with the
+// shape it reads, so a console not yet updated keeps working.
+export type StatsContract = "flylabs" | "wegrocery";
+
+export const HEADER_SCHEMES: readonly { contract: StatsContract; timestamp: string; signature: string }[] = [
+  { contract: "flylabs", timestamp: "x-flylabs-timestamp", signature: "x-flylabs-signature" },
+  { contract: "wegrocery", timestamp: "x-wegrocery-timestamp", signature: "x-wegrocery-signature" },
+];
 export const MAX_SKEW_SECONDS = 300;
 
 export function signingPayload(timestamp: string, method: string, path: string): string {
@@ -40,4 +49,19 @@ export function verifyRequest(input: VerifyInput): boolean {
   if (!input.signature || !/^[0-9a-f]{64}$/.test(input.signature)) return false;
   const expected = Buffer.from(signRequest(secret, input.timestamp, input.method, input.path), "hex");
   return timingSafeEqual(expected, Buffer.from(input.signature, "hex"));
+}
+
+// The contract of the first header pair that carries a valid signature, or
+// null: the route answers 404 to null, whatever the reason.
+export function verifiedContract(
+  headers: { get(name: string): string | null },
+  base: Omit<VerifyInput, "timestamp" | "signature">,
+): StatsContract | null {
+  for (const scheme of HEADER_SCHEMES) {
+    const timestamp = headers.get(scheme.timestamp);
+    const signature = headers.get(scheme.signature);
+    if (timestamp === null && signature === null) continue;
+    if (verifyRequest({ ...base, timestamp, signature })) return scheme.contract;
+  }
+  return null;
 }

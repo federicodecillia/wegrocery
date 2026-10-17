@@ -8,18 +8,18 @@ export async function GuideContact() {
   const brand = await getBrand();
   const sameAddress = brand.techEmail.trim().toLowerCase() === brand.supportEmail.trim().toLowerCase();
   return (
-    <div className="mt-6 rounded-card border border-brand-border bg-surface p-6 text-center shadow-card">
+    <div className="mt-6 rounded-card border border-border bg-card p-6 text-center shadow-card">
       <div className="mb-2.5 flex justify-center">
         <EmptyIcon name="mail" />
       </div>
-      <div className="mb-1.5 text-[15px] font-bold text-brand-near-black">{t.guide.contactHeading}</div>
-      <p className="mb-4 text-[14px] text-brand-gray">{t.guide.contactIntro(brand.appName)}</p>
+      <div className="mb-1.5 text-[15px] font-bold text-foreground">{t.guide.contactHeading}</div>
+      <p className="mb-4 text-[14px] text-secondary-foreground">{t.guide.contactIntro(brand.appName)}</p>
       {/* Each button says what it is for, the address under it; one button
           when the group uses a single address for both. */}
       <div className="flex flex-col gap-3">
         <a
           href={`mailto:${brand.supportEmail}`}
-          className="inline-flex min-h-11 flex-col items-center justify-center rounded-full bg-primary px-5.5 py-2.5 text-on-primary no-underline transition-transform active:scale-95"
+          className="inline-flex min-h-11 flex-col items-center justify-center rounded-full bg-primary px-5.5 py-2.5 text-primary-foreground no-underline transition-transform active:scale-95"
         >
           <span className="text-sm font-bold">{t.guide.contactGroup}</span>
           <span className="text-label">{brand.supportEmail}</span>
@@ -27,10 +27,10 @@ export async function GuideContact() {
         {sameAddress ? null : (
           <a
             href={`mailto:${brand.techEmail}`}
-            className="inline-flex min-h-11 flex-col items-center justify-center rounded-full border border-brand-border bg-surface px-5.5 py-2.5 text-brand-near-black no-underline transition-transform active:scale-95"
+            className="inline-flex min-h-11 flex-col items-center justify-center rounded-full border border-border bg-card px-5.5 py-2.5 text-foreground no-underline transition-transform active:scale-95"
           >
             <span className="text-sm font-bold">{t.guide.contactTech}</span>
-            <span className="text-label text-brand-gray">{brand.techEmail}</span>
+            <span className="text-label text-secondary-foreground">{brand.techEmail}</span>
           </a>
         )}
       </div>

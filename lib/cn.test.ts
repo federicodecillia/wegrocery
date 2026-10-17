@@ -4,7 +4,7 @@ import { cn } from "./utils";
 describe("cn", () => {
   it("keeps the theme's text sizes next to a text colour", () => {
     expect(cn("text-label", "text-accent-text")).toBe("text-label text-accent-text");
-    expect(cn("text-title", "text-brand-near-black")).toBe("text-title text-brand-near-black");
+    expect(cn("text-title", "text-foreground")).toBe("text-title text-foreground");
   });
 
   it("still lets a later size win", () => {

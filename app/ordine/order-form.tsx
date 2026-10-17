@@ -1,8 +1,10 @@
 "use client";
 
+import { RotateCcw } from "lucide-react";
 import { EmptyIcon } from "@/components/ui-icon";
 import { Badge } from "@/components/ui/badge";
-import { buttonClass } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { buttonVariants } from "@/components/ui/button";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "@/components/ui/toast";
@@ -22,6 +24,7 @@ import { ORDER_SEARCH_MIN_PRODUCTS, filterOrderProducts } from "@/lib/order-filt
 import { CycleNotes } from "@/components/cycle-notes";
 import { HelpLink } from "@/components/guide/help-link";
 import { formatDeadline } from "@/lib/i18n/deadline";
+import { Input } from "@/components/ui/input";
 
 type Product = {
   productId: string;
@@ -523,16 +526,16 @@ export function OrderForm({
       <div className="mb-1">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <h1 className="text-title font-black text-brand-near-black">
+            <h1 className="text-title font-black text-foreground">
               {t.order.yourOrder}
             </h1>
             <HelpLink href="/guida/ordinare" />
           </div>
-          <Badge tone="accent" dot>
+          <Badge variant="accent" dot>
             {t.cycle.open}
           </Badge>
         </div>
-        <p className="tabular-nums text-label text-brand-gray mt-0.75">
+        <p className="tabular-nums text-label text-secondary-foreground mt-0.75">
           {cycleTitle}
           {supplierName ? ` · ${supplierName}` : ""}
           {orderCloseAt ? ` · ${t.cycle.closes(formatDeadline(orderCloseAt))}` : ""}
@@ -543,9 +546,9 @@ export function OrderForm({
 
       {/* Unconfirmed edits found on arrival (order_drafts). */}
       {isEditing && showDraftBanner && (
-        <div className="mt-3 rounded-card border border-primary-mid bg-primary-soft py-3 px-3.5">
-          <p className="text-[14px] font-bold text-brand-near-black">{t.order.draftBannerTitle}</p>
-          <p className="mt-1 text-[12px] leading-[1.45] text-brand-near-black">{t.order.draftBannerBody}</p>
+        <div className="mt-3 rounded-card border border-primary-mid bg-primary-bg py-3 px-3.5">
+          <p className="text-[14px] font-bold text-foreground">{t.order.draftBannerTitle}</p>
+          <p className="mt-1 text-[12px] leading-[1.45] text-foreground">{t.order.draftBannerBody}</p>
           {resumedDraft !== null && resumedDraft.dropped > 0 && (
             <p className="mt-1 text-[12px] leading-[1.45] text-primary-text">
               {t.order.draftDropped(resumedDraft.dropped)}
@@ -570,8 +573,8 @@ export function OrderForm({
       {products.length === 0 && (
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <EmptyIcon name="box" />
-          <h2 className="text-[18px] font-bold text-brand-near-black">{t.order.emptyCatalog}</h2>
-          <p className="mt-2 text-[14px] text-brand-gray">{t.order.emptyCatalogHint}</p>
+          <h2 className="text-[18px] font-bold text-foreground">{t.order.emptyCatalog}</h2>
+          <p className="mt-2 text-[14px] text-secondary-foreground">{t.order.emptyCatalogHint}</p>
         </div>
       )}
 
@@ -625,7 +628,7 @@ export function OrderForm({
           }}
           className={
             draftKey !== savedKey
-              ? buttonClass({ variant: "outline", size: "sm" }, "mt-3")
+              ? cn(buttonVariants({ variant: "outline", size: "sm" }), "mt-3")
               : "mt-3 inline-flex min-h-11 items-center gap-1 text-[14px] font-semibold text-accent-text"
           }
         >
@@ -640,12 +643,9 @@ export function OrderForm({
           type="button"
           onClick={handlePrefillFromLast}
           disabled={isPending}
-          className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-full border border-accent/30 bg-accent-soft px-4 py-2 text-[12px] font-semibold text-accent-text disabled:opacity-50"
+          className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-full border border-accent/30 bg-accent-bg px-4 py-2 text-[12px] font-semibold text-accent-text disabled:opacity-50"
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M3 12a9 9 0 1 0 3-6.7" />
-            <path d="M3 4v4h4" />
-          </svg>
+          <RotateCcw aria-hidden className="size-3.5" strokeWidth={2.5} />
           {t.order.reproposeLastOrder}
         </button>
       )}
@@ -656,14 +656,14 @@ export function OrderForm({
           <label htmlFor="order-search" className="sr-only">
             {t.order.searchLabel}
           </label>
-          <input
+          <Input
             id="order-search"
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t.order.searchPlaceholder}
             autoComplete="off"
-            className="min-h-11 w-full rounded-full border border-brand-border bg-surface px-4 text-[14px] text-brand-near-black placeholder:text-muted"
+            className="min-h-11 rounded-full px-4"
           />
         </div>
       )}
@@ -680,14 +680,14 @@ export function OrderForm({
       )}
 
       {isEditing && filtering && groups.length === 0 && (
-        <p className="py-8 text-center text-[14px] text-brand-gray">{onlyCart && query.trim() === "" ? t.order.cartEmpty : t.order.noResults}</p>
+        <p className="py-8 text-center text-[14px] text-secondary-foreground">{onlyCart && query.trim() === "" ? t.order.cartEmpty : t.order.noResults}</p>
       )}
 
       {/* Product list */}
       {isEditing && groups.map(({ category, products: prods }) => (
         <section key={category} id={categoryAnchor(category)} data-category={category} className="scroll-mt-16">
           {category && (
-            <h2 className="pt-4 pb-2 font-mono text-label font-normal uppercase tracking-[0.10em] text-muted">
+            <h2 className="pt-4 pb-2 font-mono text-label font-normal uppercase tracking-[0.10em] text-muted-foreground">
               {category === "Altro" ? t.order.otherCategory : category}
             </h2>
           )}
@@ -697,7 +697,7 @@ export function OrderForm({
             return (
               <div
                 key={p.productId}
-                className="flex items-center justify-between border-b border-brand-border py-3 last:border-none"
+                className="flex items-center justify-between border-b border-border py-3 last:border-none"
               >
                 <div className="mr-3 flex min-w-0 flex-1 items-start gap-2">
                   {anyEmoji && (
@@ -706,20 +706,20 @@ export function OrderForm({
                     </span>
                   )}
                   <div className="min-w-0 flex-1">
-                    <div className="text-[14px] font-medium text-brand-near-black">{p.name}</div>
+                    <div className="text-[14px] font-medium text-foreground">{p.name}</div>
                     <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                      {meta && <span className="text-[13px] text-brand-gray">{meta}</span>}
+                      {meta && <span className="text-[13px] text-secondary-foreground">{meta}</span>}
                       <span className="text-[14px] font-semibold tabular-nums text-primary-text">
                         {formatEur(parseFloat(p.unitPrice))}
                       </span>
                       {p.pricePerKg && (
-                        <span className="text-[13px] tabular-nums text-muted">
+                        <span className="text-[13px] tabular-nums text-muted-foreground">
                           ({formatEur(parseFloat(p.pricePerKg))}/kg)
                         </span>
                       )}
                     </div>
                     {p.notes && (
-                      <p className="mt-0.5 text-[13px] leading-[1.4] text-muted">{p.notes}</p>
+                      <p className="mt-0.5 text-[13px] leading-[1.4] text-muted-foreground">{p.notes}</p>
                     )}
                   </div>
                 </div>
@@ -728,7 +728,7 @@ export function OrderForm({
                     and screen-reader focus stays on the button just pressed. */}
                 <div
                   className={`flex flex-shrink-0 items-center rounded-full p-0.5 ${
-                    qty === 0 ? "bg-tint/[0.06]" : "bg-primary-soft"
+                    qty === 0 ? "bg-tint/[0.06]" : "bg-primary-bg"
                   }`}
                 >
                   {qty > 0 && (
@@ -742,7 +742,7 @@ export function OrderForm({
                         if (qty === 1) plus?.focus();
                       }}
                       aria-label={t.order.lessNamed(p.name)}
-                      className="pressable hit-44 flex size-(--control-h) items-center justify-center rounded-full text-[18px] font-light text-brand-gray"
+                      className="pressable hit-44 flex size-(--control-h) items-center justify-center rounded-full text-[18px] font-light text-secondary-foreground"
                     >
                       −
                     </button>
@@ -751,7 +751,7 @@ export function OrderForm({
                     <span
                       key="qty"
                       aria-hidden="true"
-                      className="min-w-[22px] text-center tabular-nums text-[13px] font-bold text-brand-near-black"
+                      className="min-w-[22px] text-center tabular-nums text-[13px] font-bold text-foreground"
                     >
                       {qty}
                     </span>
@@ -763,7 +763,7 @@ export function OrderForm({
                     onClick={() => changeQty(p.productId, 1)}
                     aria-label={qty === 0 ? t.order.addNamed(p.name) : t.order.moreNamed(p.name)}
                     className={`pressable hit-44 flex size-(--control-h) items-center justify-center rounded-full text-[18px] font-light ${
-                      qty === 0 ? "text-brand-gray" : "bg-primary text-on-primary"
+                      qty === 0 ? "text-secondary-foreground" : "bg-primary text-primary-foreground"
                     }`}
                   >
                     +
@@ -781,15 +781,15 @@ export function OrderForm({
 
       {sideCart && (
         <aside aria-labelledby="cart-title" className="hidden lg:sticky lg:top-4 lg:block">
-          <div className="rounded-card border border-brand-border bg-surface p-4 shadow-card">
-            <h2 id="cart-title" className="text-[15px] font-bold text-brand-near-black">
+          <div className="rounded-card border border-border bg-card p-4 shadow-card">
+            <h2 id="cart-title" className="text-[15px] font-bold text-foreground">
               {t.order.cartTitle}
-              {cartIds.size > 0 && <span className="ml-1.5 font-normal text-brand-gray">({cartIds.size})</span>}
+              {cartIds.size > 0 && <span className="ml-1.5 font-normal text-secondary-foreground">({cartIds.size})</span>}
             </h2>
             {cartIds.size === 0 ? (
-              <p className="mt-2 text-[13px] leading-[1.45] text-brand-gray">{t.order.cartPanelEmpty}</p>
+              <p className="mt-2 text-[13px] leading-[1.45] text-secondary-foreground">{t.order.cartPanelEmpty}</p>
             ) : (
-              <ul className="mt-2 max-h-[45vh] divide-y divide-brand-border overflow-y-auto">
+              <ul className="mt-2 max-h-[45vh] divide-y divide-border overflow-y-auto">
                 {products
                   .filter((p) => (draft[p.productId] ?? 0) > 0)
                   .map((p) => {
@@ -797,19 +797,19 @@ export function OrderForm({
                     return (
                       <li key={p.productId} className="flex items-center gap-2 py-2">
                         <span className="min-w-0 flex-1">
-                          <span className="block truncate text-[13px] font-medium text-brand-near-black">{p.name}</span>
-                          <span className="block text-label tabular-nums text-brand-gray">
+                          <span className="block truncate text-[13px] font-medium text-foreground">{p.name}</span>
+                          <span className="block text-label tabular-nums text-secondary-foreground">
                             {qty} × {formatEur(parseFloat(p.unitPrice))}
                           </span>
                         </span>
-                        <span className="shrink-0 text-[13px] font-semibold tabular-nums text-brand-near-black">
+                        <span className="shrink-0 text-[13px] font-semibold tabular-nums text-foreground">
                           {formatEur(parseFloat(p.unitPrice) * qty)}
                         </span>
                         <button
                           type="button"
                           onClick={() => changeQty(p.productId, -1)}
                           aria-label={t.order.lessNamed(p.name)}
-                          className="pressable flex size-(--control-h) shrink-0 items-center justify-center rounded-full bg-tint/[0.06] text-[16px] text-brand-gray hover:bg-tint/[0.1]"
+                          className="pressable flex size-(--control-h) shrink-0 items-center justify-center rounded-full bg-tint/[0.06] text-[16px] text-secondary-foreground hover:bg-tint/[0.1]"
                         >
                           −
                         </button>

@@ -8,12 +8,11 @@ import { t } from "@/lib/i18n";
 import { formatDate, formatDateTime } from "@/lib/i18n/format";
 import { BANK_REFERENCE_MAX, fillBankReference } from "@/lib/payments/bank-reference";
 import type { PaymentSettingsInput, StripeKeyState } from "@/lib/payments/settings";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
-const card = "rounded-xl border border-brand-border bg-surface p-4";
-const inputCls =
-  "w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black";
-const labelCls = "mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray";
-const helpCls = "mt-1 text-label leading-snug text-brand-gray";
+const card = "rounded-xl border border-border bg-card p-4";
+const helpCls = "mt-1 text-label leading-snug text-secondary-foreground";
 
 // The template as a member would read it, on a sample order closed today.
 function referencePreview(template: string): string {
@@ -65,21 +64,21 @@ export function PaymentSettingsForm({
   return (
     <form onSubmit={handleSubmit} noValidate className="space-y-4">
       {savedAt === null && (
-        <p className="rounded-lg border border-primary/40 bg-primary-soft px-3 py-2 text-[12px] text-brand-near-black">
+        <p className="rounded-lg border border-primary/40 bg-primary-bg px-3 py-2 text-[12px] text-foreground">
           {s.defaultsNotice}
         </p>
       )}
 
       {showLimits && (
         <section className={card}>
-          <h3 className="text-[13px] font-bold text-brand-near-black">{s.limitsTitle}</h3>
-          <p className="mb-3 mt-1 text-[12px] text-brand-gray">{s.limitsHint}</p>
+          <h3 className="text-[13px] font-bold text-foreground">{s.limitsTitle}</h3>
+          <p className="mb-3 mt-1 text-[12px] text-secondary-foreground">{s.limitsHint}</p>
           <div className="grid grid-cols-2 gap-3">
             <div className="min-w-0">
-              <label htmlFor="settings-overdraft" className={labelCls}>
+              <Label htmlFor="settings-overdraft">
                 {s.overdraftLabel}
-              </label>
-              <input
+              </Label>
+              <Input
                 id="settings-overdraft"
                 type="text"
                 inputMode="decimal"
@@ -87,15 +86,14 @@ export function PaymentSettingsForm({
                 value={values.maxOverdraft}
                 onChange={(e) => update("maxOverdraft", e.target.value)}
                 placeholder={s.noLimit}
-                className={inputCls}
               />
               <p className={helpCls}>{s.overdraftHelp}</p>
             </div>
             <div className="min-w-0">
-              <label htmlFor="settings-max-balance" className={labelCls}>
+              <Label htmlFor="settings-max-balance">
                 {s.maxBalanceLabel}
-              </label>
-              <input
+              </Label>
+              <Input
                 id="settings-max-balance"
                 type="text"
                 inputMode="decimal"
@@ -103,7 +101,6 @@ export function PaymentSettingsForm({
                 value={values.maxBalance}
                 onChange={(e) => update("maxBalance", e.target.value)}
                 placeholder={s.noLimit}
-                className={inputCls}
               />
               <p className={helpCls}>{s.maxBalanceHelp}</p>
             </div>
@@ -114,8 +111,8 @@ export function PaymentSettingsForm({
       <section className={card}>
         <label className="flex items-start justify-between gap-3">
           <span>
-            <span className="block text-[13px] font-bold text-brand-near-black">{s.bankTitle}</span>
-            <span className="mt-1 block text-[12px] text-brand-gray">{s.bankHint}</span>
+            <span className="block text-[13px] font-bold text-foreground">{s.bankTitle}</span>
+            <span className="mt-1 block text-[12px] text-secondary-foreground">{s.bankHint}</span>
           </span>
           <input
             type="checkbox"
@@ -126,23 +123,22 @@ export function PaymentSettingsForm({
         </label>
         <div className="mt-3 space-y-3">
           <div>
-            <label htmlFor="settings-bank-holder" className={labelCls}>
+            <Label htmlFor="settings-bank-holder">
               {s.bankHolderLabel}
-            </label>
-            <input
+            </Label>
+            <Input
               id="settings-bank-holder"
               type="text"
               autoComplete="off"
               value={values.bankHolder}
               onChange={(e) => update("bankHolder", e.target.value)}
-              className={inputCls}
             />
           </div>
           <div>
-            <label htmlFor="settings-bank-iban" className={labelCls}>
+            <Label htmlFor="settings-bank-iban">
               {s.bankIbanLabel}
-            </label>
-            <input
+            </Label>
+            <Input
               id="settings-bank-iban"
               type="text"
               autoComplete="off"
@@ -150,14 +146,14 @@ export function PaymentSettingsForm({
               spellCheck={false}
               value={values.bankIban}
               onChange={(e) => update("bankIban", e.target.value)}
-              className={`${inputCls} tabular-nums`}
+              className="tabular-nums"
             />
           </div>
           <div>
-            <label htmlFor="settings-bank-reference" className={labelCls}>
+            <Label htmlFor="settings-bank-reference">
               {s.bankReferenceLabel}
-            </label>
-            <input
+            </Label>
+            <Input
               id="settings-bank-reference"
               type="text"
               autoComplete="off"
@@ -166,20 +162,19 @@ export function PaymentSettingsForm({
               onChange={(e) => update("bankReferenceTemplate", e.target.value)}
               placeholder={t.topup.bankOrderReferenceDefault}
               aria-describedby="settings-bank-reference-help"
-              className={inputCls}
             />
             <p id="settings-bank-reference-help" className={helpCls}>
               {s.bankReferenceHelp}
             </p>
-            <p className="mt-1 break-words text-[12px] font-medium text-brand-near-black">
+            <p className="mt-1 break-words text-[12px] font-medium text-foreground">
               {s.bankReferencePreview(referencePreview(values.bankReferenceTemplate))}
             </p>
           </div>
           <div>
-            <label htmlFor="settings-bank-receipt" className={labelCls}>
+            <Label htmlFor="settings-bank-receipt">
               {s.bankReceiptLabel}
-            </label>
-            <input
+            </Label>
+            <Input
               id="settings-bank-receipt"
               type="email"
               autoComplete="off"
@@ -187,7 +182,6 @@ export function PaymentSettingsForm({
               value={values.bankReceiptEmail}
               onChange={(e) => update("bankReceiptEmail", e.target.value)}
               aria-describedby="settings-bank-receipt-help"
-              className={inputCls}
             />
             <p id="settings-bank-receipt-help" className={helpCls}>
               {s.bankReceiptHelp}
@@ -199,15 +193,15 @@ export function PaymentSettingsForm({
       <section className={card}>
         <label className="flex items-start justify-between gap-3">
           <span>
-            <span className="flex items-center gap-2 text-[13px] font-bold text-brand-near-black">
+            <span className="flex items-center gap-2 text-[13px] font-bold text-foreground">
               {s.onlineTitle}
               {stripeKey.usable && !stripeKey.livemode && (
-                <span className="rounded-full bg-primary-soft px-2 py-0.5 tabular-nums text-label font-semibold text-primary-text">
+                <span className="rounded-full bg-primary-bg px-2 py-0.5 tabular-nums text-label font-semibold text-primary-text">
                   {s.testMode}
                 </span>
               )}
             </span>
-            <span className="mt-1 block text-[12px] text-brand-gray">{s.onlineHint}</span>
+            <span className="mt-1 block text-[12px] text-secondary-foreground">{s.onlineHint}</span>
           </span>
           <input
             type="checkbox"
@@ -218,7 +212,7 @@ export function PaymentSettingsForm({
           />
         </label>
         {!stripeKey.usable && (
-          <p className="mt-2 rounded-lg bg-danger-soft px-3 py-2 text-[12px] text-danger-text">
+          <p className="mt-2 rounded-lg bg-danger-bg px-3 py-2 text-[12px] text-destructive">
             {s.stripeUnavailable[stripeKey.reason]}
           </p>
         )}
@@ -227,12 +221,12 @@ export function PaymentSettingsForm({
       <button
         type="submit"
         disabled={isPending}
-        className="w-full rounded-xl bg-accent py-2.5 text-[13px] font-bold text-on-accent disabled:opacity-60"
+        className="w-full rounded-xl bg-accent py-2.5 text-[13px] font-bold text-accent-foreground disabled:opacity-60"
       >
         {isPending ? t.admin.common.saving : t.admin.common.save}
       </button>
       {savedAt && (
-        <p className="text-center tabular-nums text-label text-muted">
+        <p className="text-center tabular-nums text-label text-muted-foreground">
           {s.lastSaved(
             formatDateTime(savedAt, { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" }),
           )}

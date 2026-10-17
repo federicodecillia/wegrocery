@@ -154,8 +154,8 @@ export default async function HomePage({
                     href={`/ordine?cycleId=${cycle.cycleId}`}
                     className={`mb-2.5 flex items-center justify-between rounded-card border px-4 py-2.5 text-[14px] font-semibold ${
                       payStatus.kind === "paid"
-                        ? "border-accent/25 bg-accent-soft text-accent-text"
-                        : "border-primary-mid bg-primary-soft text-primary-text"
+                        ? "border-accent/25 bg-accent-bg text-accent-text"
+                        : "border-primary-mid bg-primary-bg text-primary-text"
                     }`}
                   >
                     <span>
@@ -172,14 +172,14 @@ export default async function HomePage({
                 )}
 
                 {myLines.length > 0 ? (
-                  <div className="overflow-hidden rounded-card border border-brand-border bg-surface shadow-card">
-                    <div className="flex items-center justify-between border-b border-brand-border px-4 py-3.5">
-                      <span className="font-mono text-label uppercase tracking-[0.1em] text-brand-gray">
+                  <div className="overflow-hidden rounded-card border border-border bg-card shadow-card">
+                    <div className="flex items-center justify-between border-b border-border px-4 py-3.5">
+                      <span className="font-mono text-label uppercase tracking-[0.1em] text-secondary-foreground">
                         {t.home.yourOrder}
                       </span>
                       <Link
                         href={`/ordine?cycleId=${cycle.cycleId}`}
-                        className="rounded-full border border-brand-border px-3.25 py-1.25 font-mono text-label font-bold uppercase tracking-widest text-brand-near-black"
+                        className="rounded-full border border-border px-3.25 py-1.25 font-mono text-label font-bold uppercase tracking-widest text-foreground"
                       >
                         {t.home.editButton}
                       </Link>
@@ -190,30 +190,30 @@ export default async function HomePage({
                       return (
                         <div
                           key={line.orderLineId}
-                          className="flex items-center justify-between border-b border-brand-border px-4 py-2.75 last:border-none"
+                          className="flex items-center justify-between border-b border-border px-4 py-2.75 last:border-none"
                         >
                           <div className="flex items-start gap-2">
                             <span aria-hidden="true" className="mt-0.25 w-[18px] shrink-0 text-[18px] leading-none">
                               {memberProductEmoji(p?.emoji, p?.name ?? "")}
                             </span>
                             <div>
-                              <div className="text-[14px] font-medium text-brand-near-black">
+                              <div className="text-[14px] font-medium text-foreground">
                                 {p?.name ?? "?"}
                               </div>
                               {meta && (
-                                <div className="mt-0.25 tabular-nums text-label text-brand-gray">{meta}</div>
+                                <div className="mt-0.25 tabular-nums text-label text-secondary-foreground">{meta}</div>
                               )}
                             </div>
                           </div>
-                          <div className="tabular-nums text-[13px] font-semibold text-brand-near-black">
+                          <div className="tabular-nums text-[13px] font-semibold text-foreground">
                             ×{line.quantity} · {formatEur(parseFloat(line.lineTotal))}
                           </div>
                         </div>
                       );
                     })}
-                    <div className="flex items-center justify-between border-t border-brand-border bg-tint/[0.03] px-4 py-3">
-                      <span className="text-[14px] font-extrabold text-brand-near-black">{t.home.totalLabel}</span>
-                      <span className="tabular-nums text-[13px] font-bold text-brand-near-black">
+                    <div className="flex items-center justify-between border-t border-border bg-tint/[0.03] px-4 py-3">
+                      <span className="text-[14px] font-extrabold text-foreground">{t.home.totalLabel}</span>
+                      <span className="tabular-nums text-[13px] font-bold text-foreground">
                         {formatEur(orderTotal)}
                       </span>
                     </div>
@@ -232,13 +232,13 @@ export default async function HomePage({
       <div
         className={`mb-3.5 rounded-card pt-5 px-5.5 pb-5.5 ${
           isNegative
-            ? "border-[1.5px] border-danger-text/30 bg-danger-soft"
-            : "border-[1.5px] border-primary-mid bg-primary-soft"
+            ? "border-[1.5px] border-destructive/30 bg-danger-bg"
+            : "border-[1.5px] border-primary-mid bg-primary-bg"
         }`}
       >
         <div
           className={`mb-2.5 font-mono text-label font-semibold uppercase tracking-[0.13em] ${
-            isNegative ? "text-danger-text" : "text-primary-text"
+            isNegative ? "text-destructive" : "text-primary-text"
           }`}
         >
           {isNegative ? t.home.balanceToTopUp : t.home.balanceTitle}
@@ -251,8 +251,8 @@ export default async function HomePage({
         <div className="@container mb-4 flex items-baseline gap-1.5">
           {/* Smaller on phones, where the cycle card above needs the room. */}
           <span
-            className={`whitespace-nowrap text-[length:min(52px,var(--fit))] font-black leading-none tracking-[-0.045em] sm:text-[length:min(70px,var(--fit))] ${
-              isNegative ? "text-danger-text" : "text-brand-near-black"
+            className={`whitespace-nowrap text-[length:min(52px,var(--fit))] font-black tabular-nums leading-none tracking-[-0.045em] sm:text-[length:min(70px,var(--fit))] ${
+              isNegative ? "text-destructive" : "text-foreground"
             }`}
             style={{ "--fit": `calc(100cqi / ${(0.61 * balanceText.length).toFixed(2)})` } as React.CSSProperties}
           >
@@ -261,20 +261,20 @@ export default async function HomePage({
         </div>
         <div
           className={`flex overflow-hidden rounded-xl ${
-            isNegative ? "border border-danger-text/30" : "border border-primary-mid"
+            isNegative ? "border border-destructive/30" : "border border-primary-mid"
           }`}
         >
-          <div className="flex-1 bg-surface/60 py-2.25 px-3.25">
+          <div className="flex-1 bg-card/60 py-2.25 px-3.25">
             <div className="mb-0.75 font-mono text-label uppercase tracking-[0.07em] text-primary-text">
               {t.home.thisOrder}
             </div>
-            <div className="tabular-nums text-[13px] font-bold text-brand-near-black">
+            <div className="tabular-nums text-[13px] font-bold text-foreground">
               {formatEur(globalOrderTotal)}
             </div>
           </div>
           <div
-            className={`flex-1 bg-surface/35 py-2.25 px-3.25 ${
-              isNegative ? "border-l border-danger-text/30" : "border-l border-primary-mid"
+            className={`flex-1 bg-card/35 py-2.25 px-3.25 ${
+              isNegative ? "border-l border-destructive/30" : "border-l border-primary-mid"
             }`}
           >
             <div className="mb-0.75 font-mono text-label uppercase tracking-[0.07em] text-primary-text">
@@ -282,7 +282,7 @@ export default async function HomePage({
             </div>
             <div
               className={`tabular-nums text-[13px] font-bold ${
-                afterBalance < 0 ? "text-danger-text" : "text-brand-near-black"
+                afterBalance < 0 ? "text-destructive" : "text-foreground"
               }`}
             >
               {formatSignedMoney(afterBalance)}
@@ -290,13 +290,13 @@ export default async function HomePage({
           </div>
         </div>
         {cycleDataList.some((d) => d.feeCents > 0) && (
-          <p className="mt-1.5 text-label text-muted">{t.home.feeIncluded}</p>
+          <p className="mt-1.5 text-label text-muted-foreground">{t.home.feeIncluded}</p>
         )}
         {isNegative ? (
           <div className="mt-3">
             <Link
               href="/ricarica"
-              className="flex w-full items-center justify-center rounded-full bg-danger px-4 py-2.5 text-[14px] font-bold text-on-danger"
+              className="flex w-full items-center justify-center rounded-full bg-danger px-4 py-2.5 text-[14px] font-bold text-danger-foreground"
             >
               {t.home.rechargeButton}
             </Link>
@@ -328,14 +328,14 @@ export default async function HomePage({
   const noOpenBlock = (
     <>
       {cycleDataList.length === 0 && (
-        <div className="mb-3.5 flex items-center justify-between rounded-card border border-brand-border bg-surface p-4.5 shadow-card">
+        <div className="mb-3.5 flex items-center justify-between rounded-card border border-border bg-card p-4.5 shadow-card">
           <div>
             <div className="text-[15px] font-bold">{t.home.noOpenOrders}</div>
-            <div className="tabular-nums text-label text-muted">
+            <div className="tabular-nums text-label text-muted-foreground">
               {t.home.noOpenOrdersHint}
             </div>
           </div>
-          <span className="rounded-full bg-tint/[0.06] px-2.5 py-1 tabular-nums text-label text-brand-gray">
+          <span className="rounded-full bg-tint/[0.06] px-2.5 py-1 tabular-nums text-label text-secondary-foreground">
             {t.home.closed}
           </span>
         </div>
@@ -349,7 +349,7 @@ export default async function HomePage({
       {recentMovements.length > 0 && (
         <div className="mt-1">
           <div className="mb-2.5 flex items-center justify-between">
-            <span className="font-mono text-label uppercase tracking-[0.1em] text-brand-gray">
+            <span className="font-mono text-label uppercase tracking-[0.1em] text-secondary-foreground">
               {t.home.recentMovements}
             </span>
             <Link

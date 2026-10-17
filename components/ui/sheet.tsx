@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, type ReactNode } from "react";
-import * as Dialog from "@radix-ui/react-dialog";
+import { Dialog } from "@base-ui/react/dialog";
+import { X } from "lucide-react";
+import { isInConfirmDialog } from "@/components/ui/confirm-dialog";
 import { t } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { useSwipeDown } from "@/lib/ui/use-swipe";
@@ -29,11 +31,12 @@ export interface SheetProps {
 /**
  * The one dialog shape of the app: a sheet rising from the bottom on phones
  * (with a handle, actions near the thumb) and a centred window from `sm` up.
- * Radix traps focus inside and gives it back to the opening control on close.
+ * Base UI Dialog (Playbook 2.7) traps focus inside and gives it back to the
+ * opening control on close.
  */
 export function Sheet({ open, onRequestClose, title, subtitle, children, footer, size = "md", className, swipeToClose = true }: SheetProps) {
   const { target: swipeTarget, handlers: swipeHandlers } = useSwipeDown<HTMLDivElement>(onRequestClose, swipeToClose);
-  // Radix gives focus back only when `open` turns false; most callers unmount
+  // Base UI gives focus back when `open` turns false; most callers unmount
   // the sheet instead, so the opener is remembered and refocused here too.
   useEffect(() => {
     if (!open) return;
@@ -46,56 +49,57 @@ export function Sheet({ open, onRequestClose, title, subtitle, children, footer,
   }, [open]);
 
   return (
-    <Dialog.Root open={open} onOpenChange={(next) => !next && onRequestClose()}>
+    <Dialog.Root
+      open={open}
+      onOpenChange={(next, details) => {
+        if (next) return;
+        // A confirm asked from this sheet ("close without saving?") sits in
+        // its own tree: its Esc and its taps are not this sheet's way out.
+        const target = details.event?.target;
+        if (isInConfirmDialog(target) || isInConfirmDialog(document.activeElement)) return;
+        // The caller decides: a sheet holding unsaved work asks first.
+        onRequestClose();
+      }}
+    >
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/40" />
-        <Dialog.Content
+        <Dialog.Backdrop className="fixed inset-0 z-50 bg-black/40" />
+        <Dialog.Popup
           ref={swipeTarget}
-          // The subtitle is the description; without one there is none.
-          {...(subtitle ? {} : { "aria-describedby": undefined })}
           className={cn(
-            "fixed inset-x-0 bottom-0 z-50 mx-auto flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-2xl bg-brand-warm-white shadow-2xl",
+            "fixed inset-x-0 bottom-0 z-50 mx-auto flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-2xl bg-background shadow-2xl",
             "sm:inset-y-0 sm:my-auto sm:h-fit sm:max-h-[88dvh] sm:rounded-2xl",
             { sm: "max-w-[420px]", md: "max-w-[640px]", lg: "max-w-[820px]" }[size],
             className,
           )}
-          // Radix would close on its own; the caller decides instead.
-          onEscapeKeyDown={(e) => {
-            e.preventDefault();
-            onRequestClose();
-          }}
-          onPointerDownOutside={(e) => {
-            e.preventDefault();
-            onRequestClose();
-          }}
         >
           {/* The drag zone: handle and header. */}
           <div {...swipeHandlers} className={cn("shrink-0", swipeToClose && "touch-none sm:touch-auto")}>
             <div aria-hidden className="mx-auto mt-2 h-1 w-10 shrink-0 rounded-full bg-tint/15 sm:hidden" />
-            <header className="flex items-start justify-between gap-3 border-b border-brand-border px-5 pt-2 pb-4 sm:pt-4">
+            <header className="flex items-start justify-between gap-3 border-b border-border px-5 pt-2 pb-4 sm:pt-4">
               <div className="min-w-0">
-                <Dialog.Title className="text-[16px] font-bold text-brand-near-black">{title}</Dialog.Title>
+                {/* The subtitle is the description; without one there is none. */}
+                <Dialog.Title className="text-[16px] font-bold text-foreground">{title}</Dialog.Title>
                 {subtitle && (
-                  <Dialog.Description className="mt-0.5 text-[13px] text-brand-gray">{subtitle}</Dialog.Description>
+                  <Dialog.Description className="mt-0.5 text-[13px] text-secondary-foreground">{subtitle}</Dialog.Description>
                 )}
               </div>
               <button
                 type="button"
                 onClick={onRequestClose}
                 aria-label={t.common.close}
-                className="-mr-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-brand-gray hover:bg-tint/5"
+                className="-mr-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-secondary-foreground hover:bg-tint/5"
               >
-                <span aria-hidden>✕</span>
+                <X aria-hidden className="size-5" />
               </button>
             </header>
           </div>
           <div className="flex-1 overflow-y-auto px-4 py-4">{children}</div>
           {footer && (
-            <footer className="border-t border-brand-border bg-surface px-5 pt-3.5 pb-[calc(0.875rem+env(safe-area-inset-bottom))]">
+            <footer className="border-t border-border bg-card px-5 pt-3.5 pb-[calc(0.875rem+env(safe-area-inset-bottom))]">
               {footer}
             </footer>
           )}
-        </Dialog.Content>
+        </Dialog.Popup>
       </Dialog.Portal>
     </Dialog.Root>
   );

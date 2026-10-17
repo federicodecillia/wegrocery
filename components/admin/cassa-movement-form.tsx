@@ -16,10 +16,9 @@ import {
 } from "@/lib/ledger";
 import { formatDate } from "@/lib/utils";
 import { MemberCombobox, type PickerMember } from "./member-combobox";
-
-const inputCls =
-  "min-h-11 w-full rounded-lg border border-brand-border px-3 py-2 text-[14px] text-brand-near-black";
-const labelCls = "mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray";
+import { Input } from "@/components/ui/input";
+import { Label, labelClass } from "@/components/ui/label";
+import { NativeSelect } from "@/components/ui/native-select";
 
 function todayInput(): string {
   return utcToZonedLocalInput(new Date()).slice(0, 10);
@@ -31,9 +30,9 @@ function Field({ label, children }: { label: string; children: (id: string) => R
   const id = useId();
   return (
     <div className="min-w-0">
-      <label htmlFor={id} className={labelCls}>
+      <Label htmlFor={id}>
         {label}
-      </label>
+      </Label>
       {children(id)}
     </div>
   );
@@ -49,18 +48,18 @@ function MethodSelect({
   id: string;
 }) {
   return (
-    <select
+    <NativeSelect
       id={id}
       value={value}
       onChange={(e) => onChange(e.target.value as ManualPaymentMethod)}
-      className={`${inputCls} bg-surface`}
+      className="min-h-11"
     >
       {MANUAL_PAYMENT_METHODS.map((m) => (
         <option key={m} value={m}>
           {t.admin.treasury.methods[m]}
         </option>
       ))}
-    </select>
+    </NativeSelect>
   );
 }
 
@@ -94,24 +93,24 @@ function Recap({
 
   return (
     <div>
-      <p ref={headingRef} tabIndex={-1} className="mb-3 text-[13px] font-bold text-brand-near-black">
+      <p ref={headingRef} tabIndex={-1} className="mb-3 text-[13px] font-bold text-foreground">
         {title}
       </p>
-      <dl className="divide-y divide-brand-border rounded-lg border border-brand-border">
+      <dl className="divide-y divide-border rounded-lg border border-border">
         {lines.map((line) => (
           <div key={line.label} className="flex items-baseline justify-between gap-3 px-3 py-2">
-            <dt className="shrink-0 text-label font-semibold uppercase tracking-wide text-brand-gray">{line.label}</dt>
-            <dd className="min-w-0 break-words text-right text-[13px] text-brand-near-black">{line.value}</dd>
+            <dt className="shrink-0 text-label font-semibold uppercase tracking-wide text-secondary-foreground">{line.label}</dt>
+            <dd className="min-w-0 break-words text-right text-[13px] text-foreground">{line.value}</dd>
           </div>
         ))}
       </dl>
       {review.warning && (
-        <p role="alert" className="mt-3 rounded-lg border border-primary/40 bg-primary-soft px-3 py-2 text-[12px] text-brand-near-black">
+        <p role="alert" className="mt-3 rounded-lg border border-primary/40 bg-primary-bg px-3 py-2 text-[12px] text-foreground">
           {review.warning}
         </p>
       )}
       {review.error && (
-        <p role="alert" className="mt-3 rounded-lg border border-danger-text/30 bg-danger-soft px-3 py-2 text-[12px] text-danger-text">
+        <p role="alert" className="mt-3 rounded-lg border border-destructive/30 bg-danger-bg px-3 py-2 text-[12px] text-destructive">
           {review.error}
         </p>
       )}
@@ -120,7 +119,7 @@ function Recap({
           type="button"
           onClick={onBack}
           disabled={isPending}
-          className="min-h-12 rounded-xl border border-brand-border py-2 text-[13px] font-semibold text-brand-near-black disabled:opacity-60"
+          className="min-h-12 rounded-xl border border-border py-2 text-[13px] font-semibold text-foreground disabled:opacity-60"
         >
           {t.admin.treasury.backToEdit}
         </button>
@@ -128,7 +127,7 @@ function Recap({
           type="button"
           onClick={() => onConfirm(review.warning !== null)}
           disabled={isPending}
-          className="min-h-12 rounded-xl bg-accent py-2 text-[13px] font-bold text-on-accent disabled:opacity-60"
+          className="min-h-12 rounded-xl bg-accent py-2 text-[13px] font-bold text-accent-foreground disabled:opacity-60"
         >
           {isPending
             ? t.admin.treasury.registeringTopup
@@ -181,7 +180,7 @@ function FoldableCard({
 }) {
   const panelId = useId();
   return (
-    <div className="rounded-xl border border-brand-border bg-surface p-4">
+    <div className="rounded-xl border border-border bg-card p-4">
       <button
         type="button"
         onClick={onToggle}
@@ -190,10 +189,10 @@ function FoldableCard({
         className="flex min-h-11 w-full items-center justify-between gap-3 text-left"
       >
         <span>
-          <span className="block text-[13px] font-bold text-brand-near-black">{title}</span>
-          <span className="block text-label text-brand-gray">{hint}</span>
+          <span className="block text-[13px] font-bold text-foreground">{title}</span>
+          <span className="block text-label text-secondary-foreground">{hint}</span>
         </span>
-        <span aria-hidden className="text-label text-muted">
+        <span aria-hidden className="text-label text-muted-foreground">
           {open ? "▲" : "▼"}
         </span>
       </button>
@@ -292,7 +291,7 @@ export function TopupForm({ members }: { members: PickerMember[] }) {
           <div className="grid grid-cols-2 gap-3">
             <Field label={t.admin.treasury.amountLabel}>
               {(id) => (
-                <input
+                <Input
                   id={id}
                   type="text"
                   inputMode="decimal"
@@ -300,18 +299,18 @@ export function TopupForm({ members }: { members: PickerMember[] }) {
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   placeholder={t.admin.treasury.amountPlaceholder}
-                  className={inputCls}
+                  className="min-h-11"
                 />
               )}
             </Field>
             <Field label={t.admin.treasury.dateLabel}>
               {(id) => (
-                <input
+                <Input
                   id={id}
                   type="date"
                   value={entryDate}
                   onChange={(e) => setEntryDate(e.target.value)}
-                  className={inputCls}
+                  className="min-h-11"
                 />
               )}
             </Field>
@@ -322,7 +321,7 @@ export function TopupForm({ members }: { members: PickerMember[] }) {
             </Field>
             <Field label={t.admin.treasury.externalRefLabel}>
               {(id) => (
-                <input
+                <Input
                   id={id}
                   type="text"
                   autoComplete="off"
@@ -331,30 +330,30 @@ export function TopupForm({ members }: { members: PickerMember[] }) {
                   value={externalRef}
                   onChange={(e) => setExternalRef(e.target.value)}
                   placeholder={t.admin.treasury.externalRefPlaceholder}
-                  className={inputCls}
+                  className="min-h-11"
                 />
               )}
             </Field>
           </div>
           <Field label={t.admin.treasury.noteLabel}>
             {(id) => (
-              <input
+              <Input
                 id={id}
                 type="text"
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 placeholder={t.admin.treasury.notePlaceholder}
-                className={inputCls}
+                className="min-h-11"
               />
             )}
           </Field>
         </div>
         {formError && (
-          <p role="alert" className="mt-3 text-[12px] text-danger-text">
+          <p role="alert" className="mt-3 text-[12px] text-destructive">
             {formError}
           </p>
         )}
-        <button type="submit" className="mt-4 min-h-12 w-full rounded-xl bg-accent py-2 text-[13px] font-bold text-on-accent">
+        <button type="submit" className="mt-4 min-h-12 w-full rounded-xl bg-accent py-2 text-[13px] font-bold text-accent-foreground">
           {t.admin.treasury.review}
         </button>
       </form>
@@ -462,15 +461,15 @@ export function OutgoingMovementForm({ members }: { members: PickerMember[] }) {
     body = (
       <form onSubmit={handleReview} noValidate className="space-y-3">
         <fieldset>
-          <legend className={labelCls}>{t.admin.treasury.kindLabel}</legend>
+          <legend className={labelClass}>{t.admin.treasury.kindLabel}</legend>
           <div className="grid grid-cols-3 gap-2">
             {OUTGOING_LEDGER_TYPES.map((k) => (
               <label
                 key={k}
                 className={`flex min-h-11 cursor-pointer items-center justify-center rounded-lg border px-1 text-center text-[12px] font-semibold ${
                   kind === k
-                    ? "border-accent bg-accent-soft text-accent-text"
-                    : "border-brand-border text-brand-near-black"
+                    ? "border-accent bg-accent-bg text-accent-text"
+                    : "border-border text-foreground"
                 }`}
               >
                 <input
@@ -485,7 +484,7 @@ export function OutgoingMovementForm({ members }: { members: PickerMember[] }) {
               </label>
             ))}
           </div>
-          <p className="mt-1 text-label text-brand-gray">{t.admin.treasury.kindHints[kind]}</p>
+          <p className="mt-1 text-label text-secondary-foreground">{t.admin.treasury.kindHints[kind]}</p>
         </fieldset>
         <MemberCombobox
           members={members}
@@ -497,7 +496,7 @@ export function OutgoingMovementForm({ members }: { members: PickerMember[] }) {
           <Field label={t.admin.treasury.amountLabel}>
             {(id) => (
               <>
-                <input
+                <Input
                   id={id}
                   type="text"
                   inputMode="decimal"
@@ -505,7 +504,7 @@ export function OutgoingMovementForm({ members }: { members: PickerMember[] }) {
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   placeholder={t.admin.treasury.amountPlaceholder}
-                  className={inputCls}
+                  className="min-h-11"
                 />
                 {isPayout && member && member.balance > 0 && (
                   <button
@@ -521,12 +520,12 @@ export function OutgoingMovementForm({ members }: { members: PickerMember[] }) {
           </Field>
           <Field label={t.admin.treasury.dateLabel}>
             {(id) => (
-              <input
+              <Input
                 id={id}
                 type="date"
                 value={entryDate}
                 onChange={(e) => setEntryDate(e.target.value)}
-                className={inputCls}
+                className="min-h-11"
               />
             )}
           </Field>
@@ -538,7 +537,7 @@ export function OutgoingMovementForm({ members }: { members: PickerMember[] }) {
             </Field>
             <Field label={t.admin.treasury.externalRefLabel}>
               {(id) => (
-                <input
+                <Input
                   id={id}
                   type="text"
                   autoComplete="off"
@@ -547,7 +546,7 @@ export function OutgoingMovementForm({ members }: { members: PickerMember[] }) {
                   value={externalRef}
                   onChange={(e) => setExternalRef(e.target.value)}
                   placeholder={t.admin.treasury.externalRefPlaceholder}
-                  className={inputCls}
+                  className="min-h-11"
                 />
               )}
             </Field>
@@ -555,22 +554,22 @@ export function OutgoingMovementForm({ members }: { members: PickerMember[] }) {
         )}
         <Field label={t.admin.treasury.reasonLabel}>
           {(id) => (
-            <input
+            <Input
               id={id}
               type="text"
               value={note}
               onChange={(e) => setNote(e.target.value)}
               placeholder={t.admin.treasury.reasonPlaceholder}
-              className={inputCls}
+              className="min-h-11"
             />
           )}
         </Field>
         {formError && (
-          <p role="alert" className="text-[12px] text-danger-text">
+          <p role="alert" className="text-[12px] text-destructive">
             {formError}
           </p>
         )}
-        <button type="submit" className="min-h-12 w-full rounded-xl bg-inverse py-2 text-[13px] font-bold text-on-inverse">
+        <button type="submit" className="min-h-12 w-full rounded-xl bg-inverse py-2 text-[13px] font-bold text-inverse-foreground">
           {t.admin.treasury.review}
         </button>
       </form>

@@ -95,7 +95,7 @@ export function StoricoTabs({ orderHistory, movements, balance, bankRefs }: Prop
 
   return (
     <>
-      <h1 className="mb-3 text-title font-black text-brand-near-black">{t.nav.history}</h1>
+      <h1 className="mb-3 text-title font-black text-foreground">{t.nav.history}</h1>
       {/* Segmented tabs */}
       <div role="tablist" aria-label={t.nav.history} className="mb-5 flex rounded-xl bg-tint/[0.07] p-1 lg:max-w-[420px]">
         {TABS.map((tabKey) => (
@@ -111,8 +111,8 @@ export function StoricoTabs({ orderHistory, movements, balance, bankRefs }: Prop
             onKeyDown={onTabKey}
             className={`flex-1 rounded-lg py-2.25 text-[14px] font-semibold transition-all ${
               tab === tabKey
-                ? "bg-surface text-brand-near-black shadow-[0_1px_4px_rgba(45,43,41,0.10)]"
-                : "bg-transparent text-brand-gray"
+                ? "bg-card text-foreground shadow-[0_1px_4px_rgba(45,43,41,0.10)]"
+                : "bg-transparent text-secondary-foreground"
             }`}
           >
             {tabKey === "ordini" ? t.history.orders : t.history.movements}
@@ -127,8 +127,8 @@ export function StoricoTabs({ orderHistory, movements, balance, bankRefs }: Prop
           {orderHistory.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <EmptyIcon name="cart" />
-              <h2 className="text-[16px] font-bold text-brand-near-black">{t.history.noOrders}</h2>
-              <p className="mt-1 text-[14px] text-brand-gray">{t.history.noOrdersHint}</p>
+              <h2 className="text-[16px] font-bold text-foreground">{t.history.noOrders}</h2>
+              <p className="mt-1 text-[14px] text-secondary-foreground">{t.history.noOrdersHint}</p>
             </div>
           ) : (
             orderHistory.map((o) => {
@@ -140,8 +140,8 @@ export function StoricoTabs({ orderHistory, movements, balance, bankRefs }: Prop
                     if (el) cycleRefs.current.set(o.cycleId, el);
                     else cycleRefs.current.delete(o.cycleId);
                   }}
-                  className={`mb-3 overflow-hidden rounded-card border bg-surface shadow-card ${
-                    isShown ? "lg:border-primary-mid lg:bg-primary-soft" : "border-brand-border"
+                  className={`mb-3 overflow-hidden rounded-card border bg-card shadow-card ${
+                    isShown ? "lg:border-primary-mid lg:bg-primary-bg" : "border-border"
                   }`}
                 >
                   <button
@@ -152,10 +152,10 @@ export function StoricoTabs({ orderHistory, movements, balance, bankRefs }: Prop
                     className="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left hover:bg-tint/[0.02]"
                   >
                     <div className="min-w-0 flex-1">
-                      <div className="text-[14px] font-bold tracking-[-0.01em] text-brand-near-black">
+                      <div className="text-[14px] font-bold tracking-[-0.01em] text-foreground">
                         {o.title}
                       </div>
-                      <div className="mt-0.5 tabular-nums text-label text-muted">
+                      <div className="mt-0.5 tabular-nums text-label text-muted-foreground">
                         {formatDate(o.pickupDate)}
                       </div>
                     </div>
@@ -164,12 +164,12 @@ export function StoricoTabs({ orderHistory, movements, balance, bankRefs }: Prop
                           until the close moves the balance. */}
                       <span
                         className={`whitespace-nowrap text-[15px] font-bold tabular-nums ${
-                          o.charged ? "text-brand-near-black" : "text-muted"
+                          o.charged ? "text-foreground" : "text-muted-foreground"
                         }`}
                       >
                         {o.charged ? formatSignedMoney(o.net) : formatEur(o.productsTotal)}
                       </span>
-                      <Badge tone={o.status === "cancelled" ? "danger" : "accent"}>
+                      <Badge variant={o.status === "cancelled" ? "destructive" : "accent"}>
                         {o.status === "open"
                           ? t.history.open
                           : o.status === "cancelled"
@@ -184,9 +184,9 @@ export function StoricoTabs({ orderHistory, movements, balance, bankRefs }: Prop
           )}
           </div>
           {shownCycle && (
-            <section aria-labelledby="cycle-detail-title" className="hidden rounded-card border border-brand-border bg-surface p-4 shadow-card lg:sticky lg:top-4 lg:block">
-              <h2 id="cycle-detail-title" className="text-[15px] font-bold text-brand-near-black">{shownCycle.title}</h2>
-              <p className="mt-0.5 mb-3 tabular-nums text-label text-muted">{formatDate(shownCycle.pickupDate)}</p>
+            <section aria-labelledby="cycle-detail-title" className="hidden rounded-card border border-border bg-card p-4 shadow-card lg:sticky lg:top-4 lg:block">
+              <h2 id="cycle-detail-title" className="text-[15px] font-bold text-foreground">{shownCycle.title}</h2>
+              <p className="mt-0.5 mb-3 tabular-nums text-label text-muted-foreground">{formatDate(shownCycle.pickupDate)}</p>
               <CycleDetail entry={shownCycle} bankRefs={bankRefs} />
             </section>
           )}
@@ -203,11 +203,11 @@ export function StoricoTabs({ orderHistory, movements, balance, bankRefs }: Prop
           {movements.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <EmptyIcon name="wallet" />
-              <h2 className="text-[16px] font-bold text-brand-near-black">{t.history.noMovements}</h2>
-              <p className="mt-1 text-[14px] text-brand-gray">{t.history.noMovementsHint}</p>
+              <h2 className="text-[16px] font-bold text-foreground">{t.history.noMovements}</h2>
+              <p className="mt-1 text-[14px] text-secondary-foreground">{t.history.noMovementsHint}</p>
             </div>
           ) : (
-            <div className="overflow-hidden rounded-card border border-brand-border bg-surface shadow-card">
+            <div className="overflow-hidden rounded-card border border-border bg-card shadow-card">
               {movements.map((e) => (
                 <MovementRow
                   key={e.entryId}
@@ -257,28 +257,28 @@ function CycleDetail({ entry, bankRefs }: { entry: CycleHistoryEntry; bankRefs: 
     <>
       {entry.lines.length > 0 && (
         <>
-          <div className="mb-1.25 tabular-nums text-label text-muted">{t.history.products}</div>
-          <div className="divide-y divide-brand-border rounded-xl border border-brand-border bg-surface">
+          <div className="mb-1.25 tabular-nums text-label text-muted-foreground">{t.history.products}</div>
+          <div className="divide-y divide-border rounded-xl border border-border bg-card">
             {entry.lines.map((l, index) => (
               <div key={`${l.productName}-${index}`} className="flex items-start gap-3 px-3 py-2.5">
                 <span aria-hidden="true" className="w-[18px] shrink-0 text-[18px] leading-none">
                   {memberProductEmoji(l.emoji, l.productName)}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <div className="text-[14px] font-semibold text-brand-near-black">
+                  <div className="text-[14px] font-semibold text-foreground">
                     {l.productName}
-                    {l.variant && <span className="ml-1 font-normal text-brand-gray">{l.variant}</span>}
+                    {l.variant && <span className="ml-1 font-normal text-secondary-foreground">{l.variant}</span>}
                   </div>
-                  <div className="mt-0.5 text-label leading-snug text-brand-gray">
+                  <div className="mt-0.5 text-label leading-snug text-secondary-foreground">
                     {[l.supplierName, l.category].filter(Boolean).join(" · ")}
                   </div>
-                  <div className="mt-0.5 tabular-nums text-label text-muted">
+                  <div className="mt-0.5 tabular-nums text-label text-muted-foreground">
                     {l.quantity} × {formatEur(l.unitPrice)} ={" "}
                     {l.actualLineTotal !== null && l.actualLineTotal !== l.lineTotal ? (
                       // Weighed by the supplier: what the member actually pays.
                       <>
                         <s>{formatEur(l.lineTotal)}</s>{" "}
-                        <span className="font-semibold text-brand-near-black">
+                        <span className="font-semibold text-foreground">
                           {formatEur(l.actualLineTotal)}
                         </span>
                         {l.actualQuantity !== null &&
@@ -298,9 +298,9 @@ function CycleDetail({ entry, bankRefs }: { entry: CycleHistoryEntry; bankRefs: 
       )}
       <CycleTotals entry={entry} />
       {reference && (
-        <section className="mt-4 rounded-xl border border-brand-border bg-brand-warm-white p-3">
-          <h3 className="text-[14px] font-bold text-brand-near-black">{t.topup.bankOrderTitle}</h3>
-          <p className="mt-1 text-[14px] text-brand-gray">{t.topup.bankOrderHint}</p>
+        <section className="mt-4 rounded-xl border border-border bg-background p-3">
+          <h3 className="text-[14px] font-bold text-foreground">{t.topup.bankOrderTitle}</h3>
+          <p className="mt-1 text-[14px] text-secondary-foreground">{t.topup.bankOrderHint}</p>
           <CopyField label={t.topup.bankReference} value={reference} />
           {bankRefs?.receiptEmail && <BankReceipt email={bankRefs.receiptEmail} subject={reference} />}
           <Link href="/ricarica" className="mt-2 inline-block text-[14px] font-semibold text-primary-text">
@@ -318,14 +318,14 @@ function CycleTotals({ entry }: { entry: CycleHistoryEntry }) {
   const perOrder = entry.paymentMode === "per_order";
   if (!entry.charged) {
     return (
-      <div className="mt-2.5 space-y-0.75 tabular-nums text-label text-brand-gray">
+      <div className="mt-2.5 space-y-0.75 tabular-nums text-label text-secondary-foreground">
         {perOrder && entry.paid !== 0 && <TotalRow label={t.history.paid} value={formatSignedMoney(entry.paid)} />}
         <p>{perOrder ? t.history.settledAtClose : t.history.chargedAtClose}</p>
       </div>
     );
   }
   return (
-    <div className="mt-2.5 space-y-0.75 tabular-nums text-label text-brand-gray">
+    <div className="mt-2.5 space-y-0.75 tabular-nums text-label text-secondary-foreground">
       {perOrder && <TotalRow label={t.history.paid} value={formatSignedMoney(entry.paid)} />}
       <TotalRow label={t.history.products} value={formatSignedMoney(-entry.productsTotal)} />
       {entry.shipping !== 0 && (
@@ -340,9 +340,9 @@ function CycleTotals({ entry }: { entry: CycleHistoryEntry }) {
       {perOrder && entry.refunded !== 0 && (
         <TotalRow label={t.history.refunded} value={formatSignedMoney(-entry.refunded)} />
       )}
-      <div className="flex justify-between border-t border-brand-border pt-1.25 text-[12px] font-bold text-brand-near-black">
+      <div className="flex justify-between border-t border-border pt-1.25 text-[12px] font-bold text-foreground">
         <span>{perOrder ? t.history.cycleNetPerOrder : t.history.cycleNet}</span>
-        <span>{formatSignedMoney(entry.net)}</span>
+        <span className="tabular-nums">{formatSignedMoney(entry.net)}</span>
       </div>
     </div>
   );
@@ -352,7 +352,7 @@ function TotalRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between">
       <span>{label}</span>
-      <span>{value}</span>
+      <span className="tabular-nums">{value}</span>
     </div>
   );
 }

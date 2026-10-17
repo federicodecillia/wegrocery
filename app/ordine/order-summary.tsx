@@ -1,5 +1,6 @@
 "use client";
 
+import { Check, Pencil } from "lucide-react";
 import { t } from "@/lib/i18n";
 import { formatSignedMoney } from "@/lib/i18n/format";
 import { formatEur } from "@/lib/utils";
@@ -47,12 +48,10 @@ export function OrderSummary({
 }: Props) {
   return (
     <>
-      <div className="mt-4 overflow-hidden rounded-card border border-accent/25 bg-surface shadow-card">
-        <header className="flex items-center gap-3 border-b border-brand-border bg-accent-soft px-4 py-3.5">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent text-on-accent">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M20 6 9 17l-5-5" />
-            </svg>
+      <div className="mt-4 overflow-hidden rounded-card border border-accent/25 bg-card shadow-card">
+        <header className="flex items-center gap-3 border-b border-border bg-accent-bg px-4 py-3.5">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground">
+            <Check aria-hidden="true" className="size-4.5" strokeWidth={3} />
           </span>
           <div className="min-w-0">
             <div className="text-[15px] font-bold text-accent-text">{t.order.confirmed}</div>
@@ -66,41 +65,41 @@ export function OrderSummary({
           {lines.map((l) => (
             <li
               key={l.productId}
-              className="flex items-center justify-between gap-3 border-b border-brand-border py-2.5 last:border-none"
+              className="flex items-center justify-between gap-3 border-b border-border py-2.5 last:border-none"
             >
               <div className="flex min-w-0 items-start gap-2">
                 <span aria-hidden="true" className="w-[18px] shrink-0 text-[18px] leading-none">{l.emoji}</span>
                 <div className="min-w-0">
-                  <div className="text-[14px] font-medium text-brand-near-black">{l.name}</div>
-                  <div className="mt-0.25 tabular-nums text-label text-brand-gray">
+                  <div className="text-[14px] font-medium text-foreground">{l.name}</div>
+                  <div className="mt-0.25 tabular-nums text-label text-secondary-foreground">
                     {l.quantity} × {formatEur(l.unitPrice)}
                     {l.meta ? ` · ${l.meta}` : ""}
                   </div>
                   {l.notes && (
-                    <div className="mt-0.25 text-label leading-[1.4] text-muted">{l.notes}</div>
+                    <div className="mt-0.25 text-label leading-[1.4] text-muted-foreground">{l.notes}</div>
                   )}
                 </div>
               </div>
-              <span className="shrink-0 tabular-nums text-[12px] font-bold text-brand-near-black">
+              <span className="shrink-0 tabular-nums text-[12px] font-bold text-foreground">
                 {formatEur(l.quantity * l.unitPrice)}
               </span>
             </li>
           ))}
         </ul>
 
-        <footer className="border-t border-brand-border bg-brand-warm-white px-4 py-3">
+        <footer className="border-t border-border bg-background px-4 py-3">
           <div className="flex items-end justify-between">
             <div>
-              <div className="font-mono text-label uppercase tracking-[0.09em] text-muted">
+              <div className="font-mono text-label uppercase tracking-[0.09em] text-muted-foreground">
                 {t.order.totalOrder}
               </div>
-              <div className="mt-0.5 text-title font-black text-brand-near-black">
+              <div className="mt-0.5 text-title font-black tabular-nums text-foreground">
                 {formatEur(payment ? payment.amount.requiredCents / 100 : total)}
               </div>
             </div>
             {payment ? (
               <div className="text-right">
-                <div className="font-mono text-label uppercase tracking-[0.09em] text-muted">
+                <div className="font-mono text-label uppercase tracking-[0.09em] text-muted-foreground">
                   {t.order.pay.alreadyPaid}
                 </div>
                 <div className="mt-0.5 tabular-nums text-[13px] font-bold text-accent-text">
@@ -109,18 +108,18 @@ export function OrderSummary({
               </div>
             ) : (
               <div className="text-right">
-                <div className="font-mono text-label uppercase tracking-[0.09em] text-muted">
+                <div className="font-mono text-label uppercase tracking-[0.09em] text-muted-foreground">
                   {t.order.balanceAfter}
                 </div>
                 <div
                   className={`mt-0.5 tabular-nums text-[13px] font-bold ${
-                    balanceAfter < 0 ? "text-danger-text" : "text-accent-text"
+                    balanceAfter < 0 ? "text-destructive" : "text-accent-text"
                   }`}
                 >
                   {formatSignedMoney(balanceAfter)}
                 </div>
                 {feeEstimateCents > 0 && (
-                  <div className="mt-0.5 text-label text-muted">{t.order.feeEstimate(formatEur(feeEstimateCents / 100))}</div>
+                  <div className="mt-0.5 text-label text-muted-foreground">{t.order.feeEstimate(formatEur(feeEstimateCents / 100))}</div>
                 )}
               </div>
             )}
@@ -129,7 +128,7 @@ export function OrderSummary({
         </footer>
       </div>
 
-      <p className="mt-3 text-center text-[12px] leading-[1.5] text-brand-gray">
+      <p className="mt-3 text-center text-[12px] leading-[1.5] text-secondary-foreground">
         {orderCloseAt
           ? t.order.editableUntil(formatDeadline(orderCloseAt))
           : t.order.editableUntilClose}
@@ -137,13 +136,14 @@ export function OrderSummary({
 
       <div className="mt-3 space-y-2">
         <Button variant="outline" block onClick={onEdit} disabled={isPending}>
-          ✎ {t.order.editOrder}
+          <Pencil aria-hidden className="mr-1.5 size-4" />
+          {t.order.editOrder}
         </Button>
         <button
           type="button"
           onClick={onCancel}
           disabled={isPending}
-          className="w-full rounded-full py-2.5 text-[12px] font-semibold text-danger-text transition-opacity hover:bg-danger-soft disabled:opacity-40"
+          className="w-full rounded-full py-2.5 text-[12px] font-semibold text-destructive transition-opacity hover:bg-danger-bg disabled:opacity-40"
         >
           {t.order.cancelOrder}
         </button>
@@ -162,16 +162,16 @@ function PaymentBreakdown({ amount, paidCents }: { amount: OrderAmount; paidCent
     [t.order.pay.fee, amount.feeCents],
   ];
   return (
-    <div className="mt-3 space-y-0.5 border-t border-brand-border pt-2 text-[12px] text-brand-gray">
+    <div className="mt-3 space-y-0.5 border-t border-border pt-2 text-[12px] text-secondary-foreground">
       {rows
         .filter(([, c]) => c > 0)
         .map(([label, c]) => (
           <div key={label} className="flex justify-between gap-3">
             <span>{label}</span>
-            <span className="tabular-nums text-brand-near-black">{formatEur(c / 100)}</span>
+            <span className="tabular-nums text-foreground">{formatEur(c / 100)}</span>
           </div>
         ))}
-      <p className="pt-1 text-brand-near-black">
+      <p className="pt-1 text-foreground">
         {gap?.kind === "refund"
           ? t.order.pay.refundDifference(formatEur(gap.cents / 100))
           : gap?.kind === "due"

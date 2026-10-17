@@ -8,6 +8,7 @@ import { adminCancelClosedCycle } from "@/lib/actions/admin";
 import { formatMoney } from "@/lib/i18n/format";
 import { toast } from "@/components/ui/toast";
 import { t } from "@/lib/i18n";
+import { Textarea } from "@/components/ui/textarea";
 
 // Entry point for cancelling an already-closed cycle (e.g. the supplier
 // failed to deliver). Only shown for closed cycles — see tab-ciclo.tsx.
@@ -18,7 +19,7 @@ export function CancelCycleButton({ cycleId, cycleTitle }: { cycleId: string; cy
     <>
       <button
         onClick={() => setOpen(true)}
-        className="rounded-lg bg-danger-text/10 px-3 py-1 text-label font-bold text-danger-text hover:bg-danger-text/20"
+        className="rounded-lg bg-destructive/10 px-3 py-1 text-label font-bold text-destructive hover:bg-destructive/20"
       >
         {t.admin.cycleCancel.openButton}
       </button>
@@ -85,37 +86,36 @@ function CancelCycleDialog({
           <Button variant="outline" className="flex-1" onClick={() => void requestClose()} disabled={isPending}>
             {t.admin.common.cancel}
           </Button>
-          <Button variant="danger" className="flex-[2]" onClick={handleConfirm} disabled={isPending || !reason.trim()}>
+          <Button variant="destructive" className="flex-[2]" onClick={handleConfirm} disabled={isPending || !reason.trim()}>
             {isPending ? t.admin.cycleCancel.cancelling : t.admin.cycleCancel.confirmButton}
           </Button>
         </SheetActions>
       }
     >
       <div className="space-y-4">
-        <p className="rounded-lg border border-danger-text/30 bg-danger-soft p-3 text-[13px] text-danger-text">
+        <p className="rounded-lg border border-destructive/30 bg-danger-bg p-3 text-[13px] text-destructive">
           {t.admin.cycleCancel.modalDescription}
         </p>
 
         <div>
-          <label htmlFor="cancel-cycle-reason" className="mb-1 block text-label font-semibold text-brand-gray">
+          <label htmlFor="cancel-cycle-reason" className="mb-1 block text-label font-semibold text-secondary-foreground">
             {t.admin.cycleCancel.reasonLabel}
           </label>
-          <textarea
+          <Textarea
             id="cancel-cycle-reason"
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             placeholder={t.admin.cycleCancel.reasonPlaceholder}
             rows={3}
-            className="w-full rounded-lg border border-brand-border bg-surface px-3 py-2 text-[14px] text-brand-near-black"
           />
         </div>
 
-        <label className="flex min-h-11 items-center gap-3 text-[13px] font-semibold text-brand-near-black">
+        <label className="flex min-h-11 items-center gap-3 text-[13px] font-semibold text-foreground">
           <input
             type="checkbox"
             checked={refundShipping}
             onChange={(e) => setRefundShipping(e.target.checked)}
-            className="h-5 w-5 shrink-0 rounded border-brand-border"
+            className="h-5 w-5 shrink-0 rounded border-border"
           />
           {t.admin.cycleCancel.refundShippingLabel}
         </label>

@@ -4,10 +4,10 @@ import { REQUIRED_STRIPE_EVENTS } from "@/lib/payments/config";
 import { t } from "@/lib/i18n";
 
 const STATUS_CLASSES: Record<ConfigItem["status"], string> = {
-  ok: "bg-accent-soft text-accent-text",
-  missing: "bg-danger-soft text-danger-text",
-  warning: "bg-primary-soft text-primary-text",
-  off: "bg-tint/[0.05] text-muted",
+  ok: "bg-accent-bg text-accent-text",
+  missing: "bg-danger-bg text-destructive",
+  warning: "bg-primary-bg text-primary-text",
+  off: "bg-tint/[0.05] text-muted-foreground",
 };
 
 // Integrations a group can live without: the card lists them apart.
@@ -26,15 +26,15 @@ export function ConfigStatusCard({ items }: { items: ConfigItem[] }) {
   return (
     <Card>
       <CardHeader>
-        <h3 className="text-[13px] font-bold text-brand-near-black">{s.title}</h3>
-        <p className="mt-1 text-[12px] text-brand-gray">{s.intro}</p>
+        <h3 className="text-[13px] font-bold text-foreground">{s.title}</h3>
+        <p className="mt-1 text-[12px] text-secondary-foreground">{s.intro}</p>
       </CardHeader>
       {groups.map((group) => (
         <section key={group.id}>
-          <h4 className="border-t border-brand-border bg-tint/[0.02] px-4 py-2 font-mono text-label uppercase tracking-[0.08em] text-brand-gray">
+          <h4 className="border-t border-border bg-tint/[0.02] px-4 py-2 font-mono text-label uppercase tracking-[0.08em] text-secondary-foreground">
             {s.groups[group.id]}
           </h4>
-          <ul className="divide-y divide-brand-border border-t border-brand-border">
+          <ul className="divide-y divide-border border-t border-border">
             {group.items.map((item) => (
               <ConfigRow key={item.id} item={item} />
             ))}
@@ -54,11 +54,11 @@ function ConfigRow({ item }: { item: ConfigItem }) {
     <li className="px-4 py-3">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <div className="text-[13px] font-semibold text-brand-near-black">
+          <div className="text-[13px] font-semibold text-foreground">
             {s.items[item.id]}
-            {item.required && <span className="ml-1 font-normal text-muted">({s.required})</span>}
+            {item.required && <span className="ml-1 font-normal text-muted-foreground">({s.required})</span>}
           </div>
-          <div className="mt-0.5 break-words tabular-nums text-label text-brand-gray">
+          <div className="mt-0.5 break-words tabular-nums text-label text-secondary-foreground">
             {s.variables} {item.vars.join(", ")}
           </div>
         </div>
@@ -66,11 +66,11 @@ function ConfigRow({ item }: { item: ConfigItem }) {
           {s.status[item.status]}
         </span>
       </div>
-      {item.note && s.notes[item.note] && <p className="mt-1 text-[12px] text-brand-near-black">{s.notes[item.note]}</p>}
+      {item.note && s.notes[item.note] && <p className="mt-1 text-[12px] text-foreground">{s.notes[item.note]}</p>}
       {detail && detail.length > 0 && (
         <>
-          {item.id === "stripe" && <p className="mt-1 text-[12px] text-brand-near-black">{s.notes.stripeEvents}</p>}
-          <ul className="mt-1 list-inside list-disc tabular-nums text-label text-brand-gray">
+          {item.id === "stripe" && <p className="mt-1 text-[12px] text-foreground">{s.notes.stripeEvents}</p>}
+          <ul className="mt-1 list-inside list-disc tabular-nums text-label text-secondary-foreground">
             {detail.map((d) => (
               <li key={d} className="break-words">
                 {d}
@@ -82,10 +82,10 @@ function ConfigRow({ item }: { item: ConfigItem }) {
       {help && (
         <details className="mt-2 text-[12px]">
           <summary className="flex min-h-11 cursor-pointer items-center font-semibold text-primary-text">{s.howTo}</summary>
-          <p className="text-brand-near-black">{help[0]}</p>
-          <p className="mt-1 break-words text-brand-gray">{help[1]}</p>
+          <p className="text-foreground">{help[0]}</p>
+          <p className="mt-1 break-words text-secondary-foreground">{help[1]}</p>
           {item.id === "stripe" && (
-            <ul className="mt-1 list-inside list-disc tabular-nums text-label text-brand-gray">
+            <ul className="mt-1 list-inside list-disc tabular-nums text-label text-secondary-foreground">
               {REQUIRED_STRIPE_EVENTS.map((e) => (
                 <li key={e} className="break-words">
                   {e}

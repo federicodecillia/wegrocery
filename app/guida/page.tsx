@@ -9,7 +9,7 @@ import { GuideContact } from "@/components/guide/guide-contact";
 import { GuideSearch } from "@/components/guide/guide-search";
 import { RichText } from "@/components/guide/rich-text";
 import { getUserRole, requireUserSession } from "@/lib/auth/session";
-import { loadChangelog } from "@/lib/changelog";
+import { loadChangelog, visibleChangelog } from "@/lib/changelog";
 import { guideContent } from "@/lib/guide";
 import { GROUP_INFO_SLUG } from "@/lib/guide/group-info";
 import { buildSearchIndex, groupInfoSearchEntry } from "@/lib/guide/search";
@@ -34,7 +34,8 @@ export default async function GuidaPage() {
   // users can still switch language explicitly.
   const [versions, settings] = await Promise.all([loadChangelog(staticBrand.locale), getPaymentSettings()]);
   const guide = visibleGuide(guideContent, guideContext(settings));
-  const latest = versions.find((v) => v.date !== null) ?? null;
+  // Changes for members only (Playbook 4.6): the latest release that has any.
+  const latest = visibleChangelog(versions, false).find((v) => v.date !== null && v.sections.length > 0) ?? null;
   const topicTitles: Record<string, string> = Object.fromEntries(
     guide.topics.map((topic) => [topic.id, topic.title]),
   );
@@ -46,10 +47,10 @@ export default async function GuidaPage() {
 
   return (
     <AppShell email={session.user.email} name={session.user.fullName} isAdmin={role === "admin"} memberId={session.user.memberId!} personId={session.user.personId}>
-      <h1 className="mb-1 text-title font-black text-brand-near-black">
+      <h1 className="mb-1 text-title font-black text-foreground">
         {t.guide.title}
       </h1>
-      <p className="mb-5 text-[14px] leading-snug text-brand-gray">{t.guide.intro}</p>
+      <p className="mb-5 text-[14px] leading-snug text-secondary-foreground">{t.guide.intro}</p>
 
       <GuideSearch
         index={index}
@@ -59,7 +60,7 @@ export default async function GuidaPage() {
       >
         {settings.groupInfo && <GroupInfoCard text={settings.groupInfo} />}
 
-        <h2 className="mb-3 font-mono text-label uppercase tracking-[0.13em] text-brand-gray">{t.guide.topicsTitle}</h2>
+        <h2 className="mb-3 font-mono text-label uppercase tracking-[0.13em] text-secondary-foreground">{t.guide.topicsTitle}</h2>
         <ul className="mb-6 grid gap-3 sm:grid-cols-2">
           {guide.topics.map((topic) => {
             const count = guide.articles.filter((a) => a.topic === topic.id).length;
@@ -67,15 +68,15 @@ export default async function GuidaPage() {
               <li key={topic.id}>
                 <Link
                   href={`/guida/${topic.id}`}
-                  className="flex h-full gap-3 rounded-card border border-brand-border bg-surface p-4 shadow-card transition-colors hover:border-primary-mid"
+                  className="flex h-full gap-3 rounded-card border border-border bg-card p-4 shadow-card transition-colors hover:border-primary-mid"
                 >
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary-text">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-bg text-primary-text">
                     <UiIcon name={topicIcon(topic.id)} />
                   </span>
                   <span className="min-w-0">
-                    <span className="block text-[15px] font-bold text-brand-near-black">{topic.title}</span>
-                    <span className="mt-0.5 block text-[12px] leading-snug text-brand-gray">{topic.summary}</span>
-                    <span className="mt-1 block tabular-nums text-label text-muted">{t.guide.topicCount(count)}</span>
+                    <span className="block text-[15px] font-bold text-foreground">{topic.title}</span>
+                    <span className="mt-0.5 block text-[12px] leading-snug text-secondary-foreground">{topic.summary}</span>
+                    <span className="mt-1 block tabular-nums text-label text-muted-foreground">{t.guide.topicCount(count)}</span>
                   </span>
                 </Link>
               </li>
@@ -90,21 +91,21 @@ export default async function GuidaPage() {
 
         {/* Novità: teaser of the latest release, linking the changelog */}
         {latest && (
-          <section className="mb-6 overflow-hidden rounded-card border border-primary-mid bg-primary-soft">
+          <section className="mb-6 overflow-hidden rounded-card border border-primary-mid bg-primary-bg">
             <div className="flex items-baseline justify-between gap-2 border-b border-primary-mid/40 px-4.5 py-3">
               <div>
                 <div className="font-mono text-label uppercase tracking-[0.13em] text-primary-text">
                   {t.guide.newsTitle} · v{latest.version}
                 </div>
-                <h2 className="mt-0.5 text-[15px] font-black tracking-[-0.01em] text-brand-near-black">
+                <h2 className="mt-0.5 text-[15px] font-black tracking-[-0.01em] text-foreground">
                   {t.guide.newsSubtitle}
                 </h2>
               </div>
-              {latest.date && <span className="tabular-nums text-label text-brand-gray">{latest.date}</span>}
+              {latest.date && <span className="tabular-nums text-label text-secondary-foreground">{latest.date}</span>}
             </div>
             <div className="space-y-3 px-4.5 py-4">
               {latest.tagline && (
-                <p className="text-[12px] italic leading-[1.45] text-brand-gray">{latest.tagline}</p>
+                <p className="text-[12px] italic leading-[1.45] text-secondary-foreground">{latest.tagline}</p>
               )}
               {latest.sections.slice(0, 2).map((s) => (
                 <div key={s.heading}>
@@ -113,7 +114,7 @@ export default async function GuidaPage() {
                   </div>
                   <ul className="space-y-1.5">
                     {s.items.slice(0, 4).map((item, idx) => (
-                      <li key={idx} className="text-[14px] leading-[1.45] text-brand-near-black">
+                      <li key={idx} className="text-[14px] leading-[1.45] text-foreground">
                         <RichText text={item.text} />
                       </li>
                     ))}

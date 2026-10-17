@@ -1,3 +1,4 @@
+import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
@@ -5,7 +6,7 @@ import type { ReactNode } from "react";
 // underneath, and a chevron when it leads somewhere. At least 44px tall.
 
 export const profileCard =
-  "overflow-hidden rounded-card border border-brand-border bg-surface shadow-card divide-y divide-brand-border";
+  "overflow-hidden rounded-card border border-border bg-card shadow-card divide-y divide-border";
 
 const rowClass = "flex min-h-[52px] items-center gap-3 px-4 py-3";
 
@@ -22,16 +23,14 @@ function Body({ title, detail, badge, chevron }: Omit<RowProps, "href"> & { chev
   return (
     <>
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2 text-[14px] font-bold text-brand-near-black">
+        <div className="flex items-center gap-2 text-[14px] font-bold text-foreground">
           <span className="min-w-0 break-words">{title}</span>
           {badge && <span aria-hidden className="h-2 w-2 shrink-0 rounded-full bg-danger" />}
         </div>
-        {detail != null && <div className="mt-0.5 break-words text-[12px] leading-snug text-brand-gray">{detail}</div>}
+        {detail != null && <div className="mt-0.5 break-words text-[12px] leading-snug text-secondary-foreground">{detail}</div>}
       </div>
       {chevron && (
-        <svg aria-hidden viewBox="0 0 24 24" className="h-4 w-4 shrink-0 text-muted" fill="none" stroke="currentColor" strokeWidth="2.5">
-          <path d="m9 18 6-6-6-6" />
-        </svg>
+        <ChevronRight aria-hidden className="h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={2.5} />
       )}
     </>
   );
@@ -68,7 +67,7 @@ export function SettingsRow({ title, detail, href, badge }: RowProps) {
 export function SettingsSection({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="mb-4.5">
-      <h2 className="mb-1.5 px-1 font-mono text-label font-bold uppercase tracking-widest text-brand-gray">{title}</h2>
+      <h2 className="mb-1.5 px-1 font-mono text-label font-bold uppercase tracking-widest text-secondary-foreground">{title}</h2>
       <div className={profileCard}>{children}</div>
     </section>
   );

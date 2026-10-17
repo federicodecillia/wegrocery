@@ -9,7 +9,7 @@ import {
   getSupplierStats,
 } from "@/lib/db/queries";
 import { formatEur, getProductEmoji } from "@/lib/utils";
-import { Card, CardBody, CardHeader } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { StatsFilters } from "./statistiche-client";
 import { getUsageTotals } from "@/lib/usage/events";
 import { t } from "@/lib/i18n";
@@ -58,17 +58,17 @@ export async function TabStatistiche({ cycleIds, supplierIds, memberIds }: Props
         <StatsFilters {...filterOptions} />
         <UsageCard usage={usage} />
         <Card>
-          <CardBody>
+          <CardContent>
             <div className="py-12 text-center">
               <div className="mb-2 text-4xl">📊</div>
-              <h2 className="text-[15px] font-bold text-brand-near-black">
+              <h2 className="text-[15px] font-bold text-foreground">
                 {hasFilters ? t.admin.stats.noDataFiltered : t.admin.stats.noDataTitle}
               </h2>
-              <p className="mt-1 text-[12px] text-brand-gray">
+              <p className="mt-1 text-[12px] text-secondary-foreground">
                 {hasFilters ? t.admin.stats.noDataFilterHint : t.admin.stats.noDataHint}
               </p>
             </div>
-          </CardBody>
+          </CardContent>
         </Card>
       </div>
     );
@@ -117,7 +117,7 @@ function OverviewCards({
     },
     {
       label: t.admin.stats.overviewTopProduct,
-      value: overview.topProductName ?? "—",
+      value: overview.topProductName ?? "-",
       icon: getProductEmoji(overview.topProductName ?? ""),
       tone: "teal" as const,
       hint: overview.topProductQty > 0 ? t.admin.stats.cyclesCountLabel(overview.topProductQty) : undefined,
@@ -131,21 +131,21 @@ function OverviewCards({
           key={c.label}
           className={`rounded-xl p-3 ${
             c.tone === "orange"
-              ? "border border-primary-mid bg-primary-soft"
-              : "border border-accent/20 bg-accent-soft"
+              ? "border border-primary-mid bg-primary-bg"
+              : "border border-accent/20 bg-accent-bg"
           }`}
         >
           <div className="mb-1 flex items-center justify-between">
-            <span className="font-mono text-label uppercase tracking-wide text-brand-gray">
+            <span className="font-mono text-label uppercase tracking-wide text-secondary-foreground">
               {c.label}
             </span>
             <span className="text-[16px] leading-none">{c.icon}</span>
           </div>
-          <div className="truncate text-[18px] font-black tracking-[-0.02em] text-brand-near-black">
+          <div className="truncate text-[18px] font-black tracking-[-0.02em] text-foreground">
             {c.value}
           </div>
           {c.hint && (
-            <div className="mt-0.5 tabular-nums text-label leading-tight text-muted">
+            <div className="mt-0.5 tabular-nums text-label leading-tight text-muted-foreground">
               {c.hint}
             </div>
           )}
@@ -167,16 +167,16 @@ function ProductRankingsCard({
   return (
     <Card>
       <CardHeader>
-        <h3 className="text-[13px] font-bold text-brand-near-black">
+        <h3 className="text-[13px] font-bold text-foreground">
           {t.admin.stats.topProductsTitle}
         </h3>
-        <p className="mt-0.5 text-label text-brand-gray">
+        <p className="mt-0.5 text-label text-secondary-foreground">
           {t.admin.stats.topProductsSubtitle}
         </p>
       </CardHeader>
-      <CardBody>
+      <CardContent>
         {rankings.length === 0 ? (
-          <p className="py-4 text-center text-[12px] text-brand-gray">
+          <p className="py-4 text-center text-[12px] text-secondary-foreground">
             {t.admin.stats.noProductsOrdered}
           </p>
         ) : (
@@ -188,7 +188,7 @@ function ProductRankingsCard({
                 .join(" · ");
               return (
                 <li key={`${r.name}-${idx}`} className="flex items-center gap-3">
-                  <span className="w-5 shrink-0 text-right tabular-nums text-label text-muted">
+                  <span className="w-5 shrink-0 text-right tabular-nums text-label text-muted-foreground">
                     {idx + 1}
                   </span>
                   <span className="shrink-0 text-[16px] leading-none">
@@ -196,13 +196,13 @@ function ProductRankingsCard({
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-baseline justify-between gap-2">
-                      <span className="truncate text-[12px] font-semibold text-brand-near-black">
+                      <span className="truncate text-[12px] font-semibold text-foreground">
                         {r.name}
                         {meta && (
-                          <span className="ml-1 font-normal text-muted">{meta}</span>
+                          <span className="ml-1 font-normal text-muted-foreground">{meta}</span>
                         )}
                       </span>
-                      <span className="shrink-0 tabular-nums text-label font-bold text-brand-near-black">
+                      <span className="shrink-0 tabular-nums text-label font-bold text-foreground">
                         {r.totalQty}
                       </span>
                     </div>
@@ -212,7 +212,7 @@ function ProductRankingsCard({
                         style={{ width: `${widthPct}%` }}
                       />
                     </div>
-                    <div className="mt-0.5 flex justify-between tabular-nums text-label text-muted">
+                    <div className="mt-0.5 flex justify-between tabular-nums text-label text-muted-foreground">
                       <span>{t.admin.stats.cyclesCountLabel(r.cyclesCount)}</span>
                       <span>{formatEur(r.totalAmount)}</span>
                     </div>
@@ -222,7 +222,7 @@ function ProductRankingsCard({
             })}
           </ul>
         )}
-      </CardBody>
+      </CardContent>
     </Card>
   );
 }
@@ -268,10 +268,10 @@ function RevenueTrendCard({
       <CardHeader>
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h3 className="text-[13px] font-bold text-brand-near-black">
+            <h3 className="text-[13px] font-bold text-foreground">
               {t.admin.stats.trendTitle}
             </h3>
-            <p className="mt-0.5 text-label text-brand-gray">
+            <p className="mt-0.5 text-label text-secondary-foreground">
               {t.admin.stats.trendSubtitle(trend.length)}
             </p>
           </div>
@@ -279,8 +279,8 @@ function RevenueTrendCard({
             <span
               className={`shrink-0 rounded-full px-2 py-0.5 tabular-nums text-label font-bold ${
                 trendDelta >= 0
-                  ? "bg-accent-soft text-accent-text"
-                  : "bg-danger-soft text-danger-text"
+                  ? "bg-accent-bg text-accent-text"
+                  : "bg-danger-bg text-destructive"
               }`}
             >
               {trendDelta >= 0 ? "+" : ""}
@@ -289,7 +289,7 @@ function RevenueTrendCard({
           )}
         </div>
       </CardHeader>
-      <CardBody>
+      <CardContent>
         <svg
           viewBox={`0 0 ${W} ${H}`}
           className="w-full"
@@ -327,31 +327,31 @@ function RevenueTrendCard({
             </circle>
           ))}
         </svg>
-        <div className="mt-2 flex justify-between tabular-nums text-label text-muted">
+        <div className="mt-2 flex justify-between tabular-nums text-label text-muted-foreground">
           <span>{trend[0].title}</span>
           <span>{trend[trend.length - 1].title}</span>
         </div>
         <div className="mt-2 grid grid-cols-3 gap-2 text-center">
           <div>
-            <div className="font-mono text-label uppercase text-muted">{t.admin.stats.trendLast}</div>
-            <div className="tabular-nums text-[12px] font-bold text-brand-near-black">
+            <div className="font-mono text-label uppercase text-muted-foreground">{t.admin.stats.trendLast}</div>
+            <div className="tabular-nums text-[12px] font-bold text-foreground">
               {formatEur(lastPoint.total)}
             </div>
           </div>
           <div>
-            <div className="font-mono text-label uppercase text-muted">{t.admin.stats.trendMax}</div>
-            <div className="tabular-nums text-[12px] font-bold text-brand-near-black">
+            <div className="font-mono text-label uppercase text-muted-foreground">{t.admin.stats.trendMax}</div>
+            <div className="tabular-nums text-[12px] font-bold text-foreground">
               {formatEur(maxVal)}
             </div>
           </div>
           <div>
-            <div className="font-mono text-label uppercase text-muted">{t.admin.stats.trendAvg}</div>
-            <div className="tabular-nums text-[12px] font-bold text-brand-near-black">
+            <div className="font-mono text-label uppercase text-muted-foreground">{t.admin.stats.trendAvg}</div>
+            <div className="tabular-nums text-[12px] font-bold text-foreground">
               {formatEur(trend.reduce((s, p) => s + p.total, 0) / trend.length)}
             </div>
           </div>
         </div>
-      </CardBody>
+      </CardContent>
     </Card>
   );
 }
@@ -362,23 +362,23 @@ function UsageCard({ usage }: { usage: Awaited<ReturnType<typeof getUsageTotals>
   return (
     <Card>
       <CardHeader>
-        <h2 className="text-[13px] font-bold text-brand-near-black">{t.admin.stats.usageTitle}</h2>
+        <h2 className="text-[13px] font-bold text-foreground">{t.admin.stats.usageTitle}</h2>
       </CardHeader>
-      <CardBody>
+      <CardContent>
         {usage.length === 0 ? (
-          <p className="text-[12px] text-brand-gray">{t.admin.stats.usageEmpty}</p>
+          <p className="text-[12px] text-secondary-foreground">{t.admin.stats.usageEmpty}</p>
         ) : (
-          <ul className="divide-y divide-brand-border">
+          <ul className="divide-y divide-border">
             {usage.map((u) => (
               <li key={u.name} className="flex items-center justify-between gap-2 py-1.5 text-[13px]">
-                <span className="text-brand-near-black">{t.admin.stats.usageEvents[u.name] ?? u.name}</span>
-                <span className="font-bold tabular-nums text-brand-near-black">{u.total}</span>
+                <span className="text-foreground">{t.admin.stats.usageEvents[u.name] ?? u.name}</span>
+                <span className="font-bold tabular-nums text-foreground">{u.total}</span>
               </li>
             ))}
           </ul>
         )}
-        <p className="mt-2 text-[12px] text-muted">{t.admin.stats.usageHint}</p>
-      </CardBody>
+        <p className="mt-2 text-[12px] text-muted-foreground">{t.admin.stats.usageHint}</p>
+      </CardContent>
     </Card>
   );
 }
@@ -397,20 +397,20 @@ function SupplierStatsCard({
   return (
     <Card>
       <CardHeader>
-        <h3 className="text-[13px] font-bold text-brand-near-black">{t.admin.stats.supplierStatsTitle}</h3>
-        <p className="mt-0.5 text-label text-brand-gray">{t.admin.stats.supplierStatsSubtitle}</p>
+        <h3 className="text-[13px] font-bold text-foreground">{t.admin.stats.supplierStatsTitle}</h3>
+        <p className="mt-0.5 text-label text-secondary-foreground">{t.admin.stats.supplierStatsSubtitle}</p>
       </CardHeader>
-      <CardBody>
+      <CardContent>
         <ul className="space-y-2">
           {withActivity.map((s) => {
             const widthPct = (s.totalRevenue / maxRevenue) * 100;
             return (
               <li key={s.supplierId}>
                 <div className="flex items-baseline justify-between gap-2">
-                  <span className="truncate text-[12px] font-semibold text-brand-near-black">
+                  <span className="truncate text-[12px] font-semibold text-foreground">
                     {s.name}
                   </span>
-                  <span className="shrink-0 tabular-nums text-label font-bold text-brand-near-black">
+                  <span className="shrink-0 tabular-nums text-label font-bold text-foreground">
                     {formatEur(s.totalRevenue)}
                   </span>
                 </div>
@@ -420,7 +420,7 @@ function SupplierStatsCard({
                     style={{ width: `${widthPct}%` }}
                   />
                 </div>
-                <div className="mt-0.5 flex justify-between tabular-nums text-label text-muted">
+                <div className="mt-0.5 flex justify-between tabular-nums text-label text-muted-foreground">
                   <span>{t.admin.stats.cyclesCountLabel(s.cyclesCount)}</span>
                   {s.topProductName && <span>{t.admin.stats.supplierTopProduct(s.topProductName)}</span>}
                 </div>
@@ -428,7 +428,7 @@ function SupplierStatsCard({
             );
           })}
         </ul>
-      </CardBody>
+      </CardContent>
     </Card>
   );
 }
@@ -450,54 +450,54 @@ function MemberParticipationCard({
   return (
     <Card>
       <CardHeader>
-        <h3 className="text-[13px] font-bold text-brand-near-black">{t.admin.stats.memberParticipationTitle}</h3>
-        <p className="mt-0.5 text-label text-brand-gray">
+        <h3 className="text-[13px] font-bold text-foreground">{t.admin.stats.memberParticipationTitle}</h3>
+        <p className="mt-0.5 text-label text-secondary-foreground">
           {t.admin.stats.memberParticipationSubtitle(members.length)}
         </p>
       </CardHeader>
-      <CardBody>
+      <CardContent>
         <div className="mb-3 grid grid-cols-3 gap-2 text-center">
-          <div className="rounded-lg bg-accent-soft p-2">
+          <div className="rounded-lg bg-accent-bg p-2">
             <div className="font-mono text-label uppercase text-accent-text">{t.admin.stats.participationActive}</div>
-            <div className="text-[18px] font-black text-brand-near-black">{heavy.length}</div>
-            <div className="tabular-nums text-label text-muted">{t.admin.stats.participationActiveHint}</div>
+            <div className="text-[18px] font-black text-foreground">{heavy.length}</div>
+            <div className="tabular-nums text-label text-muted-foreground">{t.admin.stats.participationActiveHint}</div>
           </div>
-          <div className="rounded-lg bg-primary-soft p-2">
+          <div className="rounded-lg bg-primary-bg p-2">
             <div className="font-mono text-label uppercase text-primary-text">{t.admin.stats.participationOccasional}</div>
-            <div className="text-[18px] font-black text-brand-near-black">{occasional.length}</div>
-            <div className="tabular-nums text-label text-muted">{t.admin.stats.participationOccasionalHint}</div>
+            <div className="text-[18px] font-black text-foreground">{occasional.length}</div>
+            <div className="tabular-nums text-label text-muted-foreground">{t.admin.stats.participationOccasionalHint}</div>
           </div>
           <div className="rounded-lg bg-tint/[0.05] p-2">
-            <div className="font-mono text-label uppercase text-brand-gray">{t.admin.stats.participationDormant}</div>
-            <div className="text-[18px] font-black text-brand-near-black">{dormant.length}</div>
-            <div className="tabular-nums text-label text-muted">{t.admin.stats.participationDormantHint}</div>
+            <div className="font-mono text-label uppercase text-secondary-foreground">{t.admin.stats.participationDormant}</div>
+            <div className="text-[18px] font-black text-foreground">{dormant.length}</div>
+            <div className="tabular-nums text-label text-muted-foreground">{t.admin.stats.participationDormantHint}</div>
           </div>
         </div>
 
         <details className="text-[12px]">
-          <summary className="cursor-pointer font-semibold text-brand-gray hover:text-brand-near-black">
+          <summary className="cursor-pointer font-semibold text-secondary-foreground hover:text-foreground">
             {t.admin.stats.memberDetail}
           </summary>
-          <ul className="mt-2 divide-y divide-brand-border rounded-lg border border-brand-border bg-surface">
+          <ul className="mt-2 divide-y divide-border rounded-lg border border-border bg-card">
             {members.map((m) => (
               <li
                 key={m.memberId}
                 className="flex items-center justify-between gap-2 px-3 py-2"
               >
-                <span className="min-w-0 flex-1 truncate text-[12px] text-brand-near-black">
+                <span className="min-w-0 flex-1 truncate text-[12px] text-foreground">
                   {m.fullName}
                 </span>
-                <span className="shrink-0 tabular-nums text-label text-brand-gray">
+                <span className="shrink-0 tabular-nums text-label text-secondary-foreground">
                   {t.admin.stats.memberCyclesLabel(m.cyclesOrdered)}
                 </span>
-                <span className="shrink-0 tabular-nums text-label font-bold text-brand-near-black">
+                <span className="shrink-0 tabular-nums text-label font-bold text-foreground">
                   {formatEur(m.totalSpent)}
                 </span>
               </li>
             ))}
           </ul>
         </details>
-      </CardBody>
+      </CardContent>
     </Card>
   );
 }

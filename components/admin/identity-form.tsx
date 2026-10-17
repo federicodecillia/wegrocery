@@ -8,6 +8,7 @@ import { THEME_KEYS, type IdentityOverrides, type ThemeKey } from "@/lib/brand/i
 import { brandContrastWarnings, deriveRoleVars, resolvePalette } from "@/lib/brand/roles";
 import type { BrandConfig } from "@/lib/brand/types";
 import { t } from "@/lib/i18n";
+import { Input } from "@/components/ui/input";
 
 // The group's identity as its admins edit it (first-run setup and
 // Impostazioni): "identity" is names, logo and colours, "contacts" the
@@ -25,10 +26,8 @@ type Props = {
   uploadedLogo: boolean;
 };
 
-const input =
-  "mt-1 w-full rounded-xl border border-brand-border px-3 py-2 text-[13px] text-brand-near-black placeholder:text-muted focus:border-primary";
-const label = "block text-[12px] font-bold text-brand-near-black";
-const hint = "mt-1 text-[12px] text-brand-gray";
+const label = "block text-[12px] font-bold text-foreground";
+const hint = "mt-1 text-[12px] text-secondary-foreground";
 
 export function IdentityForm(props: Props) {
   return props.section === "identity" ? <IdentitySection {...props} /> : <ContactsSection {...props} />;
@@ -76,14 +75,14 @@ function Field({
       <label htmlFor={id} className={label}>
         {title}
       </label>
-      <input
+      <Input
         id={id}
         type={type}
         value={value}
         maxLength={maxLength}
         placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
-        className={input}
+        className="mt-1 rounded-xl focus:border-primary"
       />
       {help && <p className={hint}>{help}</p>}
     </div>
@@ -118,8 +117,8 @@ function IdentitySection({ defaults, current, logoUrl, uploadedLogo }: Props) {
   }
 
   return (
-    <section className="rounded-xl border border-brand-border bg-surface p-4">
-      <h3 className="text-[13px] font-bold text-brand-near-black">{s.title}</h3>
+    <section className="rounded-xl border border-border bg-card p-4">
+      <h3 className="text-[13px] font-bold text-foreground">{s.title}</h3>
       <p className={hint}>{s.hint}</p>
 
       <div className="mt-4 grid gap-3 md:grid-cols-2">
@@ -131,12 +130,12 @@ function IdentitySection({ defaults, current, logoUrl, uploadedLogo }: Props) {
 
       <LogoField logoUrl={logoUrl} uploaded={uploadedLogo} shortName={shortName || defaults.shortName} />
 
-      <label className="mt-3 flex min-h-11 items-center gap-2 text-[13px] text-brand-near-black">
+      <label className="mt-3 flex min-h-11 items-center gap-2 text-[13px] text-foreground">
         <input type="checkbox" checked={showName} onChange={(e) => setShowName(e.target.checked)} className="h-4 w-4" />
         {s.headerShowName}
       </label>
 
-      <h4 className="mt-4 text-[12px] font-bold text-brand-near-black">{s.colors}</h4>
+      <h4 className="mt-4 text-[12px] font-bold text-foreground">{s.colors}</h4>
       <p className={hint}>{s.colorsHint}</p>
       <div className="mt-2 grid gap-3 sm:grid-cols-2">
         {THEME_KEYS.map((k) => (
@@ -151,18 +150,18 @@ function IdentitySection({ defaults, current, logoUrl, uploadedLogo }: Props) {
         ))}
       </div>
 
-      <div className="mt-4 rounded-xl border border-brand-border p-3" style={vars as React.CSSProperties}>
-        <p className="font-mono text-label uppercase tracking-[0.1em] text-brand-gray">{s.preview}</p>
-        <div className="mt-2 flex flex-wrap items-center gap-3 rounded-lg bg-brand-frame p-3">
-          <span className="rounded-full bg-primary px-4 py-2 text-[13px] font-bold text-on-primary">{s.previewButton}</span>
-          <span className="rounded-lg border border-primary-mid bg-primary-soft px-3 py-2 text-[13px] font-bold text-primary-text">
+      <div className="mt-4 rounded-xl border border-border p-3" style={vars as React.CSSProperties}>
+        <p className="font-mono text-label uppercase tracking-[0.1em] text-secondary-foreground">{s.preview}</p>
+        <div className="mt-2 flex flex-wrap items-center gap-3 rounded-lg bg-frame p-3">
+          <span className="rounded-full bg-primary px-4 py-2 text-[13px] font-bold text-primary-foreground">{s.previewButton}</span>
+          <span className="rounded-lg border border-primary-mid bg-primary-bg px-3 py-2 text-[13px] font-bold text-primary-text">
             {s.previewBalance} 12,50 €
           </span>
-          <span className="rounded-full bg-accent px-3 py-1 text-[12px] font-bold text-on-accent">{appName || defaults.shortName}</span>
+          <span className="rounded-full bg-accent px-3 py-1 text-[12px] font-bold text-accent-foreground">{appName || defaults.shortName}</span>
         </div>
       </div>
       {warnings.length > 0 && (
-        <div className="mt-3 rounded-lg bg-danger-soft p-3 text-[12px] text-danger-text">
+        <div className="mt-3 rounded-lg bg-danger-bg p-3 text-[12px] text-destructive">
           <p className="font-bold">{s.contrastWarnings}</p>
           <ul className="mt-1 list-disc pl-4">
             {warnings.map((w) => (
@@ -176,7 +175,7 @@ function IdentitySection({ defaults, current, logoUrl, uploadedLogo }: Props) {
         type="button"
         onClick={handleSave}
         disabled={isPending}
-        className="mt-4 rounded-xl bg-inverse px-4 py-2 text-[13px] font-bold text-on-inverse disabled:opacity-60"
+        className="mt-4 rounded-xl bg-inverse px-4 py-2 text-[13px] font-bold text-inverse-foreground disabled:opacity-60"
       >
         {isPending ? t.admin.common.saving : s.save}
       </button>
@@ -211,16 +210,16 @@ function ColorField({
           aria-label={title}
           value={pickerValue}
           onChange={(e) => onChange(e.target.value)}
-          className="h-10 w-12 shrink-0 cursor-pointer rounded-lg border border-brand-border bg-surface p-1"
+          className="h-10 w-12 shrink-0 cursor-pointer rounded-lg border border-border bg-card p-1"
         />
-        <input
+        <Input
           id={id}
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value.trim())}
           placeholder={fallback ?? s.colorDefault}
           maxLength={7}
-          className="w-full rounded-xl border border-brand-border px-3 py-2 tabular-nums text-[13px] text-brand-near-black placeholder:text-muted focus:border-primary"
+          className="rounded-xl tabular-nums focus:border-primary"
         />
       </div>
     </div>
@@ -265,7 +264,7 @@ function LogoField({ logoUrl, uploaded, shortName }: { logoUrl: string; uploaded
     <div className="mt-4">
       <p className={label}>{s.logo}</p>
       <div className="mt-2 flex flex-wrap items-center gap-3">
-        <span className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-xl border border-brand-border bg-surface">
+        <span className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-xl border border-border bg-card">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={logoUrl} alt={shortName} className="max-h-14 max-w-14 object-contain" />
         </span>
@@ -279,7 +278,7 @@ function LogoField({ logoUrl, uploaded, shortName }: { logoUrl: string; uploaded
         />
         <label
           htmlFor="identity-logo"
-          className="inline-flex min-h-11 cursor-pointer items-center rounded-xl border border-brand-border px-4 py-2 text-[13px] font-bold text-brand-near-black"
+          className="inline-flex min-h-11 cursor-pointer items-center rounded-xl border border-border px-4 py-2 text-[13px] font-bold text-foreground"
         >
           {isPending ? t.admin.common.saving : uploaded ? s.logoReplace : s.logoUpload}
         </label>
@@ -288,7 +287,7 @@ function LogoField({ logoUrl, uploaded, shortName }: { logoUrl: string; uploaded
             type="button"
             onClick={handleRemove}
             disabled={isPending}
-            className="min-h-11 rounded-xl px-3 py-2 text-[13px] font-bold text-danger-text disabled:opacity-60"
+            className="min-h-11 rounded-xl px-3 py-2 text-[13px] font-bold text-destructive disabled:opacity-60"
           >
             {s.logoRemove}
           </button>
@@ -310,8 +309,8 @@ function ContactsSection({ defaults, current }: Props) {
   const [membershipUrl, setMembership] = useState(optional(current.membershipUrl, defaults.membershipUrl));
 
   return (
-    <section className="rounded-xl border border-brand-border bg-surface p-4">
-      <h3 className="text-[13px] font-bold text-brand-near-black">{s.contacts}</h3>
+    <section className="rounded-xl border border-border bg-card p-4">
+      <h3 className="text-[13px] font-bold text-foreground">{s.contacts}</h3>
       <p className={hint}>{s.contactsHint}</p>
       <div className="mt-4 grid gap-3 md:grid-cols-2">
         <Field id="identity-support" type="email" title={s.supportEmail} value={supportEmail} onChange={setSupportEmail} placeholder={defaults.supportEmail} />
@@ -324,7 +323,7 @@ function ContactsSection({ defaults, current }: Props) {
         type="button"
         onClick={() => save({ supportEmail, techEmail, archiveCcEmail, privacyUrl, membershipUrl })}
         disabled={isPending}
-        className="mt-4 rounded-xl bg-inverse px-4 py-2 text-[13px] font-bold text-on-inverse disabled:opacity-60"
+        className="mt-4 rounded-xl bg-inverse px-4 py-2 text-[13px] font-bold text-inverse-foreground disabled:opacity-60"
       >
         {isPending ? t.admin.common.saving : s.save}
       </button>

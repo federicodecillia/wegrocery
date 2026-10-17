@@ -56,7 +56,7 @@ export function InstallRow() {
   return (
     <div className="px-4 py-3">
       <div className="flex min-h-[28px] items-center gap-3">
-        <div className="min-w-0 flex-1 text-[14px] font-bold text-brand-near-black">{t.install.title}</div>
+        <div className="min-w-0 flex-1 text-[14px] font-bold text-foreground">{t.install.title}</div>
         {hint === "prompt" ? (
           <Button type="button" variant="accent" size="sm" onClick={install}>
             {t.install.installButton}
@@ -67,7 +67,7 @@ export function InstallRow() {
           </Button>
         )}
       </div>
-      {hint === "ios" && open && <p className="mt-2 text-[12px] leading-snug text-brand-gray">{t.install.iosBody}</p>}
+      {hint === "ios" && open && <p className="mt-2 text-[12px] leading-snug text-secondary-foreground">{t.install.iosBody}</p>}
     </div>
   );
 }

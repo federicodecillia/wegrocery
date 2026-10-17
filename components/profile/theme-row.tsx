@@ -34,13 +34,13 @@ export function ThemeRow({ initial }: { initial: Theme }) {
   return (
     <fieldset className="px-4 py-3">
       <legend className="sr-only">{t.profile.appearance}</legend>
-      <div aria-hidden className="text-[14px] font-bold text-brand-near-black">
+      <div aria-hidden className="text-[14px] font-bold text-foreground">
         {t.profile.appearance}
       </div>
-      <p className="mt-0.5 text-[12px] leading-snug text-brand-gray">{t.profile.appearanceHint}</p>
+      <p className="mt-0.5 text-[12px] leading-snug text-secondary-foreground">{t.profile.appearanceHint}</p>
       <div className="mt-2 flex flex-wrap gap-x-6">
         {THEMES.map((value) => (
-          <label key={value} className="flex min-h-11 items-center gap-2 text-[14px] text-brand-near-black">
+          <label key={value} className="flex min-h-11 items-center gap-2 text-[14px] text-foreground">
             <input
               type="radio"
               name="theme"

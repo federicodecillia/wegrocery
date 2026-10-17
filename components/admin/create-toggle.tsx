@@ -21,7 +21,7 @@ export function CreateToggle({ label, children }: { label: string; children: Rea
       type="button"
       onClick={() => setOpen(true)}
       aria-expanded={false}
-      className="flex min-h-11 w-full items-center justify-center rounded-xl border border-dashed border-primary-mid bg-primary-soft text-[13px] font-bold text-primary-text"
+      className="flex min-h-11 w-full items-center justify-center rounded-xl border border-dashed border-primary-mid bg-primary-bg text-[13px] font-bold text-primary-text"
     >
       + {label}
     </button>

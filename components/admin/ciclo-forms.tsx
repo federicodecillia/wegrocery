@@ -16,12 +16,16 @@ import {
 } from "@/lib/actions/admin";
 import { formatEur } from "@/lib/utils";
 import { ACCESS_LEVELS, DEFAULT_ACCESS_LEVEL, getAccessLabel, normalizeAccessLevel } from "@/lib/roles";
-import { Card, CardBody } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import type { CatalogProductItem } from "@/lib/db/queries";
 import Link from "next/link";
 import { adminHref } from "@/lib/admin/nav";
 import { CycleReviewCloseButton } from "./cycle-review-modal";
 import { ImportListingWizard } from "./import-listing-wizard";
+import { Input } from "@/components/ui/input";
+import { labelClass } from "@/components/ui/label";
+import { NativeSelect } from "@/components/ui/native-select";
+import { Textarea } from "@/components/ui/textarea";
 
 type Supplier = { supplierId: string; name: string };
 
@@ -92,17 +96,17 @@ export function CloseCycleAction({ cycle, stats }: { cycle: SerializedCycle; sta
 /** Deadline, pickups, shipping and access: the facts of a cycle, read-only. */
 export function CycleFacts({ cycle }: { cycle: SerializedCycle }) {
   return (
-    <div className="space-y-1 text-[13px] text-brand-gray">
+    <div className="space-y-1 text-[13px] text-secondary-foreground">
       {cycle.orderCloseAt && (
         <div>
           {t.admin.cycle.orderCloseAt}:{" "}
-          <span className="font-semibold text-brand-near-black">{formatDeadline(cycle.orderCloseAt)}</span>
+          <span className="font-semibold text-foreground">{formatDeadline(cycle.orderCloseAt)}</span>
         </div>
       )}
       {cycle.pickupDate && (
         <div>
           {cycle.pickup2Date ? t.admin.cycle.pickupFirst : t.admin.cycle.pickupSingle}{" "}
-          <span className="font-semibold text-brand-near-black">
+          <span className="font-semibold text-foreground">
             {formatPickupSlot(cycle.pickupDate, cycle.pickupEndTime ?? null)}
           </span>
         </div>
@@ -110,7 +114,7 @@ export function CycleFacts({ cycle }: { cycle: SerializedCycle }) {
       {cycle.pickup2Date && (
         <div>
           {t.admin.cycle.pickupSecond}{" "}
-          <span className="font-semibold text-brand-near-black">
+          <span className="font-semibold text-foreground">
             {formatPickupSlot(cycle.pickup2Date, cycle.pickup2EndTime ?? null)}
           </span>
         </div>
@@ -118,7 +122,7 @@ export function CycleFacts({ cycle }: { cycle: SerializedCycle }) {
       {cycle.shippingMode === "proportional" && cycle.shippingTotal && parseFloat(cycle.shippingTotal) > 0 && (
         <div>
           {t.admin.cycle.shippingLabel}:{" "}
-          <span className="font-semibold text-brand-near-black">
+          <span className="font-semibold text-foreground">
             {t.admin.cycle.shippingProportionalDisplay(formatMoney(cycle.shippingTotal))}
           </span>
         </div>
@@ -128,14 +132,14 @@ export function CycleFacts({ cycle }: { cycle: SerializedCycle }) {
         parseFloat(cycle.shippingCostPerMember) > 0 && (
           <div>
             {t.admin.cycle.shippingLabel}:{" "}
-            <span className="font-semibold text-brand-near-black">
+            <span className="font-semibold text-foreground">
               {t.admin.cycle.shippingPerMemberDisplay(formatMoney(cycle.shippingCostPerMember))}
             </span>
           </div>
         )}
       <div>
         {t.admin.cycle.accessLabel}:{" "}
-        <span className="font-semibold text-brand-near-black">{getAccessLabel(cycle.accessLevel)}</span>
+        <span className="font-semibold text-foreground">{getAccessLabel(cycle.accessLevel)}</span>
       </div>
     </div>
   );
@@ -146,24 +150,24 @@ export function OpenCycleOverview({ cycle, stats }: { cycle: SerializedCycle; st
   const { perOrderWarning } = closeWarnings(cycle, stats);
   return (
     <Card>
-      <CardBody>
+      <CardContent>
         <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-lg bg-primary-soft px-3 py-2">
-            <div className="text-label text-brand-gray">{t.admin.cycle.ordersCount}</div>
-            <div className="text-[20px] font-bold text-brand-near-black">{stats.orderCount}</div>
+          <div className="rounded-lg bg-primary-bg px-3 py-2">
+            <div className="text-label text-secondary-foreground">{t.admin.cycle.ordersCount}</div>
+            <div className="text-[20px] font-bold text-foreground">{stats.orderCount}</div>
           </div>
-          <div className="rounded-lg bg-accent-soft px-3 py-2">
-            <div className="text-label text-brand-gray">{t.admin.cycle.totalAmount}</div>
-            <div className="text-[20px] font-bold tabular-nums text-brand-near-black">{formatEur(stats.grandTotal)}</div>
+          <div className="rounded-lg bg-accent-bg px-3 py-2">
+            <div className="text-label text-secondary-foreground">{t.admin.cycle.totalAmount}</div>
+            <div className="text-[20px] font-bold tabular-nums text-foreground">{formatEur(stats.grandTotal)}</div>
           </div>
         </div>
         {perOrderWarning && (
-          <div className="mt-3 rounded-lg border border-primary-mid bg-primary-soft p-3 text-[13px] text-brand-near-black">
+          <div className="mt-3 rounded-lg border border-primary-mid bg-primary-bg p-3 text-[13px] text-foreground">
             {perOrderWarning}
           </div>
         )}
         {cycle.isOverdue && (
-          <div className="mt-3 rounded-lg border border-danger-text/30 bg-danger-soft p-3 text-[13px] text-danger-text">
+          <div className="mt-3 rounded-lg border border-destructive/30 bg-danger-bg p-3 text-[13px] text-destructive">
             {t.admin.cycle.overdueWarning}
           </div>
         )}
@@ -173,7 +177,7 @@ export function OpenCycleOverview({ cycle, stats }: { cycle: SerializedCycle; st
         <div className="mt-3">
           <OrdersLink cycleId={cycle.cycleId} />
         </div>
-      </CardBody>
+      </CardContent>
     </Card>
   );
 }
@@ -183,20 +187,20 @@ export function CycleProductsView({ cycle, suppliers }: { cycle: SerializedCycle
   const [importing, setImporting] = useState(false);
   return (
     <Card>
-      <CardBody>
+      <CardContent>
         <div className="flex flex-wrap items-start justify-between gap-3">
-          <p className="max-w-prose text-[13px] text-brand-gray">{t.admin.workspace.productsIntro}</p>
+          <p className="max-w-prose text-[13px] text-secondary-foreground">{t.admin.workspace.productsIntro}</p>
           <button
             onClick={() => setImporting(true)}
-            className="min-h-(--control-h) rounded-xl border border-primary/30 bg-primary-soft px-3 text-[13px] font-bold text-primary-text"
+            className="min-h-(--control-h) rounded-xl border border-primary/30 bg-primary-bg px-3 text-[13px] font-bold text-primary-text"
           >
             {t.admin.cycle.importListing}
           </button>
         </div>
-        <div className="mt-4 border-t border-brand-border pt-4">
+        <div className="mt-4 border-t border-border pt-4">
           <CycleProductPicker cycleId={cycle.cycleId} suppliers={suppliers} />
         </div>
-      </CardBody>
+      </CardContent>
       <ImportListingWizard
         open={importing}
         onClose={() => setImporting(false)}
@@ -215,9 +219,7 @@ function buildDateTime(date: string, time: string): string {
   return `${date}T${time || "00:00"}`;
 }
 
-const inputCls = "rounded-lg border border-brand-border px-2 py-2 text-[13px] text-brand-near-black";
-const labelCls = "mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray";
-const miniLabelCls = "shrink-0 text-label font-medium text-brand-gray";
+const miniLabelCls = "shrink-0 text-label font-medium text-secondary-foreground";
 
 // 15-minute time slots from 06:00 to 22:00. A <select> of these replaces the
 // native <input type="time">: it is unambiguous on mobile and cannot produce an
@@ -237,14 +239,14 @@ const TIME_SLOTS: string[] = (() => {
 function TimeSlotSelect({ name, defValue, ariaLabel }: { name: string; defValue?: string; ariaLabel: string }) {
   const options = defValue && !TIME_SLOTS.includes(defValue) ? [defValue, ...TIME_SLOTS] : TIME_SLOTS;
   return (
-    <select name={name} defaultValue={defValue ?? ""} aria-label={ariaLabel} className={`min-w-0 flex-1 ${inputCls}`}>
-      <option value="">—</option>
+    <NativeSelect name={name} defaultValue={defValue ?? ""} aria-label={ariaLabel} wrapperClassName="min-w-0 flex-1" className="pl-2 pr-8 text-[13px]">
+      <option value="">-</option>
       {options.map((t) => (
         <option key={t} value={t}>
           {t}
         </option>
       ))}
-    </select>
+    </NativeSelect>
   );
 }
 
@@ -266,13 +268,13 @@ function PickupRow({
 }) {
   return (
     <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
-      <span className="w-[46px] shrink-0 text-[12px] font-semibold text-brand-near-black">{label}</span>
-      <input
+      <span className="w-[46px] shrink-0 text-[12px] font-semibold text-foreground">{label}</span>
+      <Input
         name={`${prefix}DateOnly`}
         type="date"
         aria-label={label}
         defaultValue={defDate}
-        className={`w-[140px] shrink-0 ${inputCls}`}
+        className="w-[140px] shrink-0 px-2 text-[13px]"
       />
       <div className="flex min-w-[190px] flex-1 items-center gap-1.5">
         <span className={miniLabelCls}>{t.admin.cycle.timeFrom}</span>
@@ -307,7 +309,7 @@ function PickupSection({
   const [showPickup2, setShowPickup2] = useState(Boolean(defPickup2Date));
   return (
     <div>
-      <p className={labelCls}>{t.admin.cycle.pickupSection}</p>
+      <p className={labelClass}>{t.admin.cycle.pickupSection}</p>
       <div className="space-y-2">
         <PickupRow
           label={t.admin.cycle.pickup1Label}
@@ -328,7 +330,7 @@ function PickupSection({
             <button
               type="button"
               onClick={() => setShowPickup2(false)}
-              className="text-label font-semibold text-brand-gray hover:text-danger-text"
+              className="text-label font-semibold text-secondary-foreground hover:text-destructive"
             >
               {t.admin.cycle.removePickup2}
             </button>
@@ -362,7 +364,7 @@ function ShippingModeFields({
 }) {
   return (
     <div>
-      <p className={labelCls}>{t.admin.cycle.shippingLabel}</p>
+      <p className={labelClass}>{t.admin.cycle.shippingLabel}</p>
       <div className="mb-2 flex rounded-lg bg-tint/[0.05] p-0.5">
         {(
           [
@@ -376,8 +378,8 @@ function ShippingModeFields({
             onClick={() => onModeChange(opt.v)}
             className={`flex-1 rounded-md py-1.5 text-label font-semibold transition-colors ${
               mode === opt.v
-                ? "bg-surface text-brand-near-black shadow-sm"
-                : "bg-transparent text-brand-gray"
+                ? "bg-card text-foreground shadow-sm"
+                : "bg-transparent text-secondary-foreground"
             }`}
           >
             {opt.label}
@@ -386,16 +388,15 @@ function ShippingModeFields({
       </div>
       {mode === "fixed_per_member" ? (
         <div>
-          <input
+          <Input
             name="shippingCostPerMember"
             type="number"
             min="0"
             step="0.01"
             defaultValue={defaultPerMember}
             placeholder="0.00"
-            className={`w-full ${inputCls}`}
           />
-          <p className="mt-1 text-label text-muted">
+          <p className="mt-1 text-label text-muted-foreground">
             {t.admin.cycle.shippingFixedHint}
           </p>
           {/* Hidden so the form data shape stays uniform across modes. */}
@@ -403,16 +404,15 @@ function ShippingModeFields({
         </div>
       ) : (
         <div>
-          <input
+          <Input
             name="shippingTotal"
             type="number"
             min="0"
             step="0.01"
             defaultValue={defaultTotal}
             placeholder="0.00"
-            className={`w-full ${inputCls}`}
           />
-          <p className="mt-1 text-label text-muted">
+          <p className="mt-1 text-label text-muted-foreground">
             {t.admin.cycle.shippingProportionalHint}
           </p>
           <input type="hidden" name="shippingCostPerMember" value="" />
@@ -447,7 +447,7 @@ function HandlingFeeFields({
   ];
   return (
     <div>
-      <p className={labelCls}>{t.admin.cycle.handlingFeeLabel}</p>
+      <p className={labelClass}>{t.admin.cycle.handlingFeeLabel}</p>
       <div className="mb-2 flex rounded-lg bg-tint/[0.05] p-0.5">
         {options.map((opt) => (
           <button
@@ -455,7 +455,7 @@ function HandlingFeeFields({
             type="button"
             onClick={() => setType(opt.v)}
             className={`flex-1 rounded-md py-1.5 text-label font-semibold transition-colors ${
-              type === opt.v ? "bg-surface text-brand-near-black shadow-sm" : "bg-transparent text-brand-gray"
+              type === opt.v ? "bg-card text-foreground shadow-sm" : "bg-transparent text-secondary-foreground"
             }`}
           >
             {opt.label}
@@ -466,7 +466,7 @@ function HandlingFeeFields({
       {type === "none" ? (
         <input type="hidden" name="handlingFeeValue" value="" />
       ) : (
-        <input
+        <Input
           name="handlingFeeValue"
           type="number"
           min="0"
@@ -474,12 +474,11 @@ function HandlingFeeFields({
           step="0.01"
           required
           defaultValue={defaultValue}
-          className={`w-full ${inputCls}`}
         />
       )}
-      <p className="mt-1 text-label text-muted">{t.admin.cycle.handlingFeeHint}</p>
-      {note && <p className="mt-1 text-label text-brand-gray">{note}</p>}
-      {warning && <p className="mt-1 text-label text-danger-text">{warning}</p>}
+      <p className="mt-1 text-label text-muted-foreground">{t.admin.cycle.handlingFeeHint}</p>
+      {note && <p className="mt-1 text-label text-secondary-foreground">{note}</p>}
+      {warning && <p className="mt-1 text-label text-destructive">{warning}</p>}
     </div>
   );
 }
@@ -570,19 +569,18 @@ export function EditCycleForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
       {isClosed && (
-        <div className="rounded-lg border border-primary/30 bg-primary-soft px-3 py-2 text-[12px] leading-snug text-brand-near-black">
+        <div className="rounded-lg border border-primary/30 bg-primary-bg px-3 py-2 text-[12px] leading-snug text-foreground">
           {t.admin.cycle.editClosedBanner}
         </div>
       )}
       <div>
         <label className="block">
-          <span className={labelCls}>{t.admin.cycle.titleLabel}
+          <span className={labelClass}>{t.admin.cycle.titleLabel}
           </span>
-          <input
+          <Input
             name="title"
             required
             defaultValue={cycle.title}
-            className={`w-full ${inputCls}`}
           />
         </label>
       </div>
@@ -590,14 +588,13 @@ export function EditCycleForm({
       {!isClosed && (
         <div>
           <label className="block">
-            <span className={labelCls}>{t.admin.cycle.orderCloseAtLabel}
+            <span className={labelClass}>{t.admin.cycle.orderCloseAtLabel}
             </span>
-            <input
+            <Input
               name="orderCloseAt"
               type="datetime-local"
               required
               defaultValue={closeAtLocal}
-              className={`w-full ${inputCls}`}
             />
           </label>
         </div>
@@ -605,10 +602,10 @@ export function EditCycleForm({
 
       {shippingMode === "manual" ? (
         <div>
-          <p className={labelCls}>{t.admin.cycle.shippingLabel}</p>
-          <div className="rounded-xl border border-primary/30 bg-primary-soft p-3 text-[12px] text-brand-near-black">
+          <p className={labelClass}>{t.admin.cycle.shippingLabel}</p>
+          <div className="rounded-xl border border-primary/30 bg-primary-bg p-3 text-[12px] text-foreground">
             <div className="font-bold text-primary-text">{t.admin.cycle.shippingManualTitle}</div>
-            <p className="mt-1 text-brand-gray">
+            <p className="mt-1 text-secondary-foreground">
               {t.admin.cycle.shippingManualDescription}
             </p>
           </div>
@@ -632,7 +629,6 @@ export function EditCycleForm({
         />
       )}
 
-
       <PickupSection
         defPickup1Date={pickupLocal.slice(0, 10)}
         defPickup1Start={pickupLocal.slice(11, 16)}
@@ -645,12 +641,11 @@ export function EditCycleForm({
       <div className={isClosed ? "" : "grid grid-cols-2 gap-3"}>
         <div>
           <label className="block">
-            <span className={labelCls}>{t.admin.cycle.supplierLabel}
+            <span className={labelClass}>{t.admin.cycle.supplierLabel}
             </span>
-            <select
+            <NativeSelect
               name="supplierId"
               defaultValue={cycle.supplierId ?? ""}
-              className={`w-full ${inputCls}`}
             >
               <option value="">{t.admin.common.noSupplier}</option>
               {suppliers.map((s) => (
@@ -658,43 +653,41 @@ export function EditCycleForm({
                   {s.name}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
           </label>
         </div>
         {!isClosed && (
           <div>
             <label className="block">
-              <span className={labelCls}>{t.admin.cycle.accessLabel}
+              <span className={labelClass}>{t.admin.cycle.accessLabel}
               </span>
-              <select
+              <NativeSelect
                 name="accessLevel"
                 defaultValue={normalizeAccessLevel(cycle.accessLevel) ?? DEFAULT_ACCESS_LEVEL}
-                className={`w-full ${inputCls}`}
               >
                 <AccessLevelOptions />
-              </select>
+              </NativeSelect>
             </label>
-            <p className="mt-1 text-label text-muted">{t.admin.cycle.accessHint}</p>
+            <p className="mt-1 text-label text-muted-foreground">{t.admin.cycle.accessHint}</p>
           </div>
         )}
       </div>
       <div>
         <label className="block">
-          <span className={labelCls}>{t.admin.common.notes}
+          <span className={labelClass}>{t.admin.common.notes}
           </span>
-          <textarea
+          <Textarea
             name="notes"
             rows={2}
             defaultValue={cycle.notes ?? ""}
-            className={`w-full ${inputCls}`}
           />
         </label>
-        <p className="mt-1 text-label text-muted">{t.admin.cycle.notesHint}</p>
+        <p className="mt-1 text-label text-muted-foreground">{t.admin.cycle.notesHint}</p>
       </div>
       <button
         type="submit"
         disabled={isPending}
-        className="w-full rounded-xl bg-primary py-2 text-[13px] font-bold text-on-primary disabled:opacity-60"
+        className="w-full rounded-xl bg-primary py-2 text-[13px] font-bold text-primary-foreground disabled:opacity-60"
       >
         {isPending ? t.admin.common.saving : t.admin.common.saveChanges}
       </button>
@@ -717,7 +710,7 @@ function PaymentModeFields({
   ];
   return (
     <div>
-      <p className={labelCls}>{t.admin.cycle.paymentModeLabel}</p>
+      <p className={labelClass}>{t.admin.cycle.paymentModeLabel}</p>
       <div className="mb-2 flex rounded-lg bg-tint/[0.05] p-0.5">
         {options.map((opt) => (
           <button
@@ -726,14 +719,14 @@ function PaymentModeFields({
             aria-pressed={mode === opt.v}
             onClick={() => onModeChange(opt.v)}
             className={`flex-1 rounded-md py-1.5 text-label font-semibold transition-colors ${
-              mode === opt.v ? "bg-surface text-brand-near-black shadow-sm" : "bg-transparent text-brand-gray"
+              mode === opt.v ? "bg-card text-foreground shadow-sm" : "bg-transparent text-secondary-foreground"
             }`}
           >
             {opt.label}
           </button>
         ))}
       </div>
-      <p className="text-label text-muted">
+      <p className="text-label text-muted-foreground">
         {mode === "per_order" ? t.admin.cycle.paymentModeCardHint : t.admin.cycle.paymentModeWalletHint}
       </p>
     </div>
@@ -812,31 +805,29 @@ export function CreateCycleForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-xl border border-brand-border bg-surface p-4">
-      <p className="mb-3 text-[13px] font-bold text-brand-near-black">{t.admin.cycle.createTitle}</p>
+    <form onSubmit={handleSubmit} className="rounded-xl border border-border bg-card p-4">
+      <p className="mb-3 text-[13px] font-bold text-foreground">{t.admin.cycle.createTitle}</p>
       <div className="space-y-3">
         <div>
           <label className="block">
-            <span className={labelCls}>{t.admin.cycle.titleLabel}
+            <span className={labelClass}>{t.admin.cycle.titleLabel}
             </span>
-            <input
+            <Input
               name="title"
               required
               placeholder={t.admin.cycle.titlePlaceholder}
-              className={`w-full ${inputCls}`}
             />
           </label>
         </div>
 
         <div>
           <label className="block">
-            <span className={labelCls}>{t.admin.cycle.orderCloseAtLabel}
+            <span className={labelClass}>{t.admin.cycle.orderCloseAtLabel}
             </span>
-            <input
+            <Input
               name="orderCloseAt"
               type="datetime-local"
               required
-              className={`w-full ${inputCls}`}
             />
           </label>
         </div>
@@ -868,57 +859,56 @@ export function CreateCycleForm({
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="block">
-              <span className={labelCls}>{t.admin.cycle.supplierLabel}
+              <span className={labelClass}>{t.admin.cycle.supplierLabel}
               </span>
-              <select name="supplierId" required defaultValue="" className={`w-full ${inputCls}`}>
+              <NativeSelect name="supplierId" required defaultValue="">
                 <option value="" disabled>{t.admin.common.selectPlaceholder}</option>
                 {suppliers.map((s) => (
                   <option key={s.supplierId} value={s.supplierId}>
                     {s.name}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             </label>
           </div>
           <div>
             <label className="block">
-              <span className={labelCls}>{t.admin.cycle.accessLabel}
+              <span className={labelClass}>{t.admin.cycle.accessLabel}
               </span>
-              <select name="accessLevel" defaultValue={DEFAULT_ACCESS_LEVEL} className={`w-full ${inputCls}`}>
+              <NativeSelect name="accessLevel" defaultValue={DEFAULT_ACCESS_LEVEL}>
                 <AccessLevelOptions />
-              </select>
+              </NativeSelect>
             </label>
-            <p className="mt-1 text-label text-muted">{t.admin.cycle.accessHint}</p>
+            <p className="mt-1 text-label text-muted-foreground">{t.admin.cycle.accessHint}</p>
           </div>
         </div>
         <div>
           <label className="block">
-            <span className={labelCls}>{t.admin.common.notes}
+            <span className={labelClass}>{t.admin.common.notes}
             </span>
-            <textarea
+            <Textarea
               name="notes"
               rows={2}
-              className={`w-full ${inputCls}`}
             />
           </label>
-          <p className="mt-1 text-label text-muted">{t.admin.cycle.notesHint}</p>
+          <p className="mt-1 text-label text-muted-foreground">{t.admin.cycle.notesHint}</p>
         </div>
       </div>
       {suppliers.length === 0 && (
-        <p className="mt-2 text-label text-danger-text">{t.admin.products.noSupplierAvailable}</p>
+        <p className="mt-2 text-label text-destructive">{t.admin.products.noSupplierAvailable}</p>
       )}
       <div className="mt-4 flex gap-2">
         <button
           type="submit"
           disabled={isPending}
-          className="flex-1 rounded-xl bg-primary py-2 text-[13px] font-bold text-on-primary disabled:opacity-60"
+          className="flex-1 rounded-xl bg-primary py-2 text-[13px] font-bold text-primary-foreground disabled:opacity-60"
         >
           {isPending ? t.admin.cycle.creating : t.admin.cycle.createSubmit}
         </button>
         <button
           type="button"
           onClick={() => setOpen(false)}
-          className="rounded-xl border border-brand-border px-4 py-2 text-[13px] font-semibold text-brand-gray"
+          className="rounded-xl border border-border px-4 py-2 text-[13px] font-semibold text-secondary-foreground"
         >
           {t.admin.common.cancel}
         </button>
@@ -1009,23 +999,23 @@ export function CycleProductPicker({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h4 className="text-[13px] font-bold text-brand-near-black">{t.admin.products.cycleProductsTitle}</h4>
-        <div className="text-label text-brand-gray">{t.admin.products.cycleProductsCount(currentProducts.length)}</div>
+        <h4 className="text-[13px] font-bold text-foreground">{t.admin.products.cycleProductsTitle}</h4>
+        <div className="text-label text-secondary-foreground">{t.admin.products.cycleProductsCount(currentProducts.length)}</div>
       </div>
 
       {currentProducts.length > 0 ? (
         <div className="space-y-4">
           {Array.from(new Set(currentProducts.map(p => p.supplierName || "Altro"))).map(sName => (
             <div key={sName} className="space-y-1">
-              <div className="px-1 text-label font-bold uppercase tracking-wider text-muted">
+              <div className="px-1 text-label font-bold uppercase tracking-wider text-muted-foreground">
                 {sName}
               </div>
-              <div className="divide-y divide-brand-border rounded-lg border border-brand-border bg-surface overflow-hidden shadow-sm">
+              <div className="divide-y divide-border rounded-lg border border-border bg-card overflow-hidden shadow-sm">
                 {currentProducts.filter(p => (p.supplierName || "Altro") === sName).map((p) => (
-                  <div key={p.productId} className="flex items-center justify-between p-2.5 hover:bg-brand-warm-white/30">
+                  <div key={p.productId} className="flex items-center justify-between p-2.5 hover:bg-background/30">
                     <div className="min-w-0 flex-1">
-                      <div className="truncate text-[12px] font-medium text-brand-near-black">{p.name}</div>
-                      <div className="flex items-center gap-2 text-label text-brand-gray">
+                      <div className="truncate text-[12px] font-medium text-foreground">{p.name}</div>
+                      <div className="flex items-center gap-2 text-label text-secondary-foreground">
                         <span>{p.variant} {p.format && `(${p.format})`}</span>
                         <span className="tabular-nums font-bold text-primary-text">
                           {formatEur(parseFloat(p.unitPrice))}
@@ -1034,7 +1024,7 @@ export function CycleProductPicker({
                     </div>
                     <button
                       onClick={() => handleRemove(p.productId)}
-                      className="ml-2 min-h-(--control-h) rounded-lg bg-danger-soft px-2 py-1 text-label font-bold text-danger-text hover:bg-danger-text/15"
+                      className="ml-2 min-h-(--control-h) rounded-lg bg-danger-bg px-2 py-1 text-label font-bold text-destructive hover:bg-destructive/15"
                     >
                       {t.admin.products.removeFromCycle}
                     </button>
@@ -1045,17 +1035,17 @@ export function CycleProductPicker({
           ))}
         </div>
       ) : (
-        <div className="rounded-lg border border-dashed border-brand-border py-4 text-center text-[12px] text-brand-gray">
+        <div className="rounded-lg border border-dashed border-border py-4 text-center text-[12px] text-secondary-foreground">
           {t.admin.products.noCycleProducts}
         </div>
       )}
 
-      <div className="mt-6 border-t border-brand-border pt-4">
-        <h4 className="mb-3 text-[13px] font-bold text-brand-near-black">{t.admin.products.addFromCatalog}</h4>
-        <select
+      <div className="mt-6 border-t border-border pt-4">
+        <h4 className="mb-3 text-[13px] font-bold text-foreground">{t.admin.products.addFromCatalog}</h4>
+        <NativeSelect
           value={selectedSupplierId}
           onChange={(e) => setSelectedSupplierId(e.target.value)}
-          className="mb-4 w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black"
+          wrapperClassName="mb-4"
         >
           <option value="">{t.admin.products.selectSupplierOption}</option>
           {suppliers.map((s) => (
@@ -1063,19 +1053,19 @@ export function CycleProductPicker({
               {s.name}
             </option>
           ))}
-        </select>
+        </NativeSelect>
 
         {selectedSupplierId && (
           <div className="space-y-2">
             {loading ? (
-              <div className="text-center py-4 text-brand-gray text-[12px]">{t.admin.products.loadingCatalog}</div>
+              <div className="text-center py-4 text-secondary-foreground text-[12px]">{t.admin.products.loadingCatalog}</div>
             ) : catalog.length > 0 ? (
-              <div className="max-h-[300px] overflow-y-auto divide-y divide-brand-border rounded-lg border border-brand-border bg-brand-warm-white">
+              <div className="max-h-[300px] overflow-y-auto divide-y divide-border rounded-lg border border-border bg-background">
                 {catalog.filter(cp => !currentProducts.some(p => p.name === cp.name && p.variant === cp.variant && p.format === cp.format)).map((cp) => (
-                  <div key={cp.catalogProductId} className="flex items-center justify-between p-2.5 hover:bg-brand-warm-white/50">
+                  <div key={cp.catalogProductId} className="flex items-center justify-between p-2.5 hover:bg-background/50">
                     <div className="min-w-0 flex-1">
-                      <div className="truncate text-[12px] font-medium text-brand-near-black">{cp.name}</div>
-                      <div className="flex items-center gap-2 text-label text-brand-gray">
+                      <div className="truncate text-[12px] font-medium text-foreground">{cp.name}</div>
+                      <div className="flex items-center gap-2 text-label text-secondary-foreground">
                         <span>{cp.variant} {cp.format && `(${cp.format})`}</span>
                         <span className="tabular-nums font-bold text-primary-text">
                           {formatEur(parseFloat(cp.unitPrice))}
@@ -1084,7 +1074,7 @@ export function CycleProductPicker({
                     </div>
                     <button
                       onClick={() => handleAdd(cp.catalogProductId)}
-                      className="ml-2 rounded-lg bg-accent px-3 py-1 text-label font-bold text-on-accent"
+                      className="ml-2 rounded-lg bg-accent px-3 py-1 text-label font-bold text-accent-foreground"
                     >
                       {t.admin.products.addButton}
                     </button>
@@ -1092,7 +1082,7 @@ export function CycleProductPicker({
                 ))}
               </div>
             ) : (
-              <div className="text-center py-4 text-brand-gray text-[12px]">{t.admin.products.noSupplierCatalog}</div>
+              <div className="text-center py-4 text-secondary-foreground text-[12px]">{t.admin.products.noSupplierCatalog}</div>
             )}
           </div>
         )}
@@ -1123,7 +1113,7 @@ export function EditCycleButton({
         onClick={() => setOpen(true)}
         className={
           className ??
-          "min-h-(--control-h) rounded-xl border border-brand-border bg-surface px-3 text-[13px] font-semibold text-brand-near-black hover:bg-tint/[0.03]"
+          "min-h-(--control-h) rounded-xl border border-border bg-card px-3 text-[13px] font-semibold text-foreground hover:bg-tint/[0.03]"
         }
       >
         {isClosed ? t.admin.cycle.editClosedButton : t.admin.common.edit}

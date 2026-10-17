@@ -7,7 +7,7 @@ export function BackLink({ href, children, className }: { href: string; children
     <Link
       href={href}
       className={cn(
-        "-ml-1 inline-flex min-h-11 items-center gap-1 rounded-full px-1 label-caps font-bold text-brand-gray hover:text-brand-near-black",
+        "-ml-1 inline-flex min-h-11 items-center gap-1 rounded-full px-1 label-caps font-bold text-secondary-foreground hover:text-foreground",
         className,
       )}
     >

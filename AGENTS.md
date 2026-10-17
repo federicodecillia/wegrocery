@@ -18,21 +18,21 @@ copy, tests, migrations and operations. Intended deviations are listed below wit
 deviation that is not listed instead of deciding alone. A solution that fits every app goes to
 flylabs-kit as a PR.
 
-Intended deviations (as of 2026-10-14):
-- 2.10 The group's own colours instead of the FlyLabs palette: WeGrocery is white-label, so this stays.
+Kit version and modules in use: `flylabs-kit.json` (Playbook 9.7). Every Monday `.github/workflows/kit-sync.yml` compares the app with the latest kit and keeps the issue "FlyLabs Kit: allineamento" open while something is missing (it needs the `FLYLABS_KIT_TOKEN` secret, read-only on flylabs-kit; this public repo gets the brief report). Whoever aligns the app updates `flylabs-kit.json` in the same PR.
+
+Intended deviations (as of 2026-10-17):
+- 2.10 The group's own colours instead of the FlyLabs palette: WeGrocery is white-label, so this stays. For the same reason `accent` is the group's second colour (with `accent-foreground`, `accent-text`, `accent-bg`), not shadcn's grey hover fill.
 - 3.3 Repository docs in English: the repo is public and a portfolio piece, so this stays.
-- 7.1 `/api/health` returns `db` as `true | false` and `version` from `package.json`: aligned with Stellar when the FlyLabs Console arrives.
 
 Found in the review of 2026-10-14 (each line, its reason and its timing are in
 [`docs/2026-10-14-flylabs-playbook-alignment.md`](./docs/2026-10-14-flylabs-playbook-alignment.md)):
 - 1.4 The app can connect with a role without schema privileges (`scripts/create-app-role.mjs`, `DATABASE_MIGRATION_URL` for the owner's address, `docs/upgrading.md`), tested end to end. Production, demo, staging and dev run on `app_rw` since 2026-10-14; the example-brand installation still connects as the owner because its `DATABASE_URL` is managed by the Neon integration on Vercel and it migrates during the build. A group installed from the console gets `app_rw` at installation (`console/lib/provisioning/app-role.ts`, the same statements as `scripts/db-migrate-lib.mjs`, compared by a test); one installed with the Deploy button starts as the owner (`docs/self-hosting.md`). With both addresses set, `db-migrate` takes write access to `_migrations` away from the app's role (a role created before the ledger gets it through the default privileges); CI builds the empty database that way.
-- 2.1, 2.7 Geist and Geist Mono instead of Geist, Inter and JetBrains Mono; own components on Radix Dialog and hand-drawn icons instead of shadcn on Base UI and lucide: the app predates the FlyLabs style, which arrives at stage 1.
-- 3.4 Em dashes remain in the changelog version headings (and as the empty-value placeholder in tables): the UI and email strings are clean and `lib/i18n/no-em-dash.test.ts` keeps them so; the heading switches at stage 1.
+- 2.7 Done for the components: `Sheet` and `ConfirmDialog` are on Base UI Dialog, `Button` is shadcn's Button on Base UI (`buttonVariants`, variants `default`, `brand`, `accent`, `destructive`, `outline`, `ghost`), `Card` (`CardHeader`, `CardContent`, `CardFooter`), `Badge` (`badgeVariants`, variants `default`, `brand`, `accent`, `destructive`) and the Sonner `Toaster` (`components/ui/sonner.tsx`) follow shadcn, and the interface icons are lucide (the movement icons in `components/movement-icon.tsx` and the Statistiche chart stay hand-drawn, as the rule allows). The fields are shadcn too: `Input` (on Base UI Input), `Textarea`, `NativeSelect` (a real `<select>` with a lucide chevron) and `Label` (the uppercase caption; `labelClass` for a caption on a `<span>` or `<legend>`), all with their borders on `input`. What stays custom: checkboxes, radios and switches (native inputs with `accent-*`), file and colour inputs, the filter chips, and the hand-drawn domain icons above.
 - 4.4 Welcome card: the steps shown follow the settings; the ones the member's own rows already show as done (top-up or payment, an order, saved preferences, a family) carry "Già fatto" (`getWelcomeFacts`, `welcomeDone`), and the step they stopped at is `members.welcome_step` (migration 0036). The "Riprendi" bar on other pages still uses `sessionStorage`, per tab, on purpose.
 - 5.1 Integration tests run on a throwaway Neon branch that needs `NEON_API_KEY` (skipped on forks), not on a plain Postgres: the Neon HTTP driver needs Neon's proxy. This stays.
 - 6.3 and 9.5 Claude runs releases end to end, production migrations included, after a green manual backup and with Federico's explicit ok for each production operation, instead of handing him commands: Federico's choice (2026-10-07). This stays.
 - 6.5 A weekly job (`.github/workflows/restore-test.yml`) restores the latest dump into a throwaway Neon branch, counts the main tables and runs the money invariants on it. It is skipped until Federico sets `RESTORE_TEST_NEON_API_KEY` (a Neon key scoped to the restore project; CI's `NEON_API_KEY` is scoped to the CI project) and the variable `RESTORE_TEST_NEON_PROJECT_ID` (a project of the same organisation).
-- 7.6 Done for notification emails (idempotency key, one-click unsubscribe, see "Email compliance"). The branded HTML template (7.7) waits for the kit registry. Sign-in emails and the supplier and family emails carry no unsubscribe on purpose.
+- 7.6 Done for notification emails (idempotency key, one-click unsubscribe, see "Email compliance"). Sign-in emails and the supplier and family emails carry no unsubscribe on purpose.
 - 7.8 Done: `usage_events` (migration 0037) counts a fixed list of events per day, no member id, no text, nothing in the demo (`lib/usage/events.ts`, shown in Admin → Statistiche); Vercel Analytics and Speed Insights are gone.
 - 7.10 The Console (`console/`) redirects to its password login instead of answering 404: a 404 would hide the only way in. This stays.
 - 8.1 No versioned legal documents in the app: each group owns its privacy notice (`brand.privacyUrl`) as data controller. This stays for groups; FlyLabs-hosted terms are decided with hosting model A.
@@ -66,7 +66,7 @@ Never read `.env*` files other than `.env.example` (Playbook 8.3).
 │   ├── notification-bell.tsx   # Bell icon with red unread badge
 │   ├── home/cycle-countdown.tsx
 │   ├── admin/                  # Admin tab components (one per tab)
-│   └── ui/                     # Button, Card, ConfirmDialog, Toast
+│   └── ui/                     # Button, Card, Sheet and ConfirmDialog (Base UI Dialog), Toast
 ├── lib/
 │   ├── db/
 │   │   ├── schema.ts           # Drizzle tables: members, order_cycles, products, orders, order_drafts,
@@ -93,7 +93,7 @@ Never read `.env*` files other than `.env.example` (Playbook 8.3).
 ├── drizzle/                    # SQL migrations (0000–0035)
 ├── console/                    # WeGrocery Console: separate Next.js app (own package.json, registry DB, Vercel project with
 │                               #   Root Directory `console`) for the operator's fleet; excluded from the root tsc/eslint/vitest; see console/README.md
-└── public/logo.png
+└── public/logo.png, public/mail/logo.png (email logo, 3x)
 ```
 
 ## Development Commands
@@ -112,23 +112,23 @@ npm test             # Unit tests (pure, no database)
 npm run test:int     # Integration tests on a test database (see below)
 ```
 
-**Integration tests** (`*.int.test.ts`, `vitest.int.config.ts`): the real queries against Postgres, for what unit tests cannot show (guarded writes, concurrent events, migrations). They run only with `INT_TEST_DATABASE_URL` set, or with `INT_TEST_USE_DATABASE_URL=1` when the `DATABASE_URL` in the environment is already a test database (e.g. `INT_TEST_USE_DATABASE_URL=1 node --env-file=.env.demo.local node_modules/vitest/vitest.mjs run -c vitest.int.config.ts`); otherwise they are skipped. Never point them at production. Each test builds its rows with `makeScope()` (`test/int/fixtures.ts`): one fake member per run, ids prefixed `int_`, removed in `afterAll`. The setup drops `RESEND_API_KEY` and `STRIPE_SECRET_KEY` from the environment, so a test can neither send an email nor call Stripe. In CI the `integration` job creates a throwaway Neon branch, applies the pending migrations and runs the suite; it needs the `NEON_API_KEY` secret and the `NEON_PROJECT_ID` variable and is skipped without them (forks). `NEON_PROJECT_ID` must be a project with fake data only (the demo), never production: the repository is public, so the job masks the branch's connection string before any step can print it. Once the project has a restricted role (`app_rw`) next to the owner, `neonctl connection-string` needs the owner named: the workflows pass `--role-name "${NEON_OWNER_ROLE:-neondb_owner}"` (set the `NEON_OWNER_ROLE` variable if the project's owner has another name).
+**Integration tests** (`*.integration.test.ts`, `vitest.int.config.ts`): the real queries against Postgres, for what unit tests cannot show (guarded writes, concurrent events, migrations). They run only with `INT_TEST_DATABASE_URL` set, or with `INT_TEST_USE_DATABASE_URL=1` when the `DATABASE_URL` in the environment is already a test database (e.g. `INT_TEST_USE_DATABASE_URL=1 node --env-file=.env.demo.local node_modules/vitest/vitest.mjs run -c vitest.int.config.ts`); otherwise they are skipped. Never point them at production. Each test builds its rows with `makeScope()` (`test/int/fixtures.ts`): one fake member per run, ids prefixed `int_`, removed in `afterAll`. The setup drops `RESEND_API_KEY` and `STRIPE_SECRET_KEY` from the environment, so a test can neither send an email nor call Stripe. In CI the `integration` job creates a throwaway Neon branch, applies the pending migrations and runs the suite; it needs the `NEON_API_KEY` secret and the `NEON_PROJECT_ID` variable and is skipped without them (forks). `NEON_PROJECT_ID` must be a project with fake data only (the demo), never production: the repository is public, so the job masks the branch's connection string before any step can print it. Once the project has a restricted role (`app_rw`) next to the owner, `neonctl connection-string` needs the owner named: the workflows pass `--role-name "${NEON_OWNER_ROLE:-neondb_owner}"` (set the `NEON_OWNER_ROLE` variable if the project's owner has another name).
 
-**Configuration status**: `configStatus` (`lib/config-status.ts`, pure) lists what a deploy has set up, by variable name and state, never a value: the card in admin → Impostazioni and `npm run doctor` show it. A new migration goes in `lib/migrations.ts` too (a test compares it with `drizzle/`); a new environment variable gets an item there, a line in `.env.example` and a row in `docs/upgrading.md`. `MIGRATE_ON_BUILD=true` makes `npm run build` apply pending migrations first, on production builds (and builds outside Vercel) only. **New installations**: `docs/self-hosting.md` (Deploy to Vercel button, keep it in sync with the variables a deploy needs); `BOOTSTRAP_ADMIN_EMAIL` makes its address the first admin while no active admin exists (`lib/auth/admission.ts`). CI applies every migration to an empty database and runs `test/int/fresh-install.int.test.ts` there: a migration must work from `0000` too.
+**Configuration status**: `configStatus` (`lib/config-status.ts`, pure) lists what a deploy has set up, by variable name and state, never a value: the card in admin → Impostazioni and `npm run doctor` show it. A new migration goes in `lib/migrations.ts` too (a test compares it with `drizzle/`); a new environment variable gets an item there, a line in `.env.example` and a row in `docs/upgrading.md`. `MIGRATE_ON_BUILD=true` makes `npm run build` apply pending migrations first, on production builds (and builds outside Vercel) only. **New installations**: `docs/self-hosting.md` (Deploy to Vercel button, keep it in sync with the variables a deploy needs); `BOOTSTRAP_ADMIN_EMAIL` makes its address the first admin while no active admin exists (`lib/auth/admission.ts`). CI applies every migration to an empty database and runs `test/int/fresh-install.integration.test.ts` there: a migration must work from `0000` too.
 
 **Runtime identity** (migration 0034, table `group_identity`, one row `id = 1`): name, short name, contacts, URLs, colours and logo can be changed by an admin (admin → Impostazioni, or the first-run wizard at `/admin/avvio`). Server code reads `await getBrand()` (`lib/brand/get-brand.ts`: `NEXT_PUBLIC_BRAND_JSON` merged with the DB overrides, rules in `lib/brand/identity.ts`), never the static `brand` import, for anything a group can change; locale, currency and time zone stay build-time (`brand` is fine for those, and in client components). The logo is stored base64 (PNG/JPEG/WebP checked by magic bytes, 512 KB max, no SVG) and served by `app/brand/[file]`; PWA icons and the manifest follow it. Installs that already had members got a completed row, so the wizard shows only on new installs.
 
-**Instance stats** (`/api/instance-stats`, `lib/instance-stats/`): with `INSTANCE_STATS_SECRET` (32+ chars) set, a GET signed with HMAC-SHA256 of `<ts>.GET./api/instance-stats` (`x-wegrocery-timestamp`, `x-wegrocery-signature`, 5-minute window) returns anonymous counts (members, cycles, orders in 30 days, DB size, config states, pending migrations, version); anything else is a 404. No amounts and no personal data, ever. The `console/` app is the caller.
+**Instance stats** (`/api/instance-stats`, `lib/instance-stats/`, FlyLabs Kit module `console`): with `INSTANCE_STATS_SECRET` (32+ chars) set, a GET signed with HMAC-SHA256 of `<ts>.GET./api/instance-stats` (5-minute window) returns anonymous counts (members, cycles, orders in 30 days, DB size, config states, pending migrations, version); anything else is a 404. Signed with `x-flylabs-timestamp` / `x-flylabs-signature` it answers the kit's envelope (`app: "wegrocery"`, `counts` by name, plus `lastClosedAt`, `paymentMode`, `setupCompleted`; `lib/instance-stats/envelope.ts`); signed with the older `x-wegrocery-*` pair, the shape consoles read before the kit. No amounts and no personal data, ever. The `console/` app is the caller: it sends both pairs and reads both shapes.
 
 **Append-only ledger** (since `drizzle/0023_ledger_append_only.sql`): a trigger refuses every UPDATE and DELETE on `ledger_entries`, except setting `reversed_by` once. A correction is `reverseEntry` / `reverseEntrySql` (`lib/ledger-reversal.ts`): a `reversal` row with the opposite amount (`reverses` → the original, which gets `reversed_by`), plus, for an edit, a replacement of the same type (`replaces` → the original, same entry date, no bank reference). Cassa "edit" and "delete", the shipping recompute of a closed cycle and the supplier-sheet import all work this way. **Any filter by type must use `liveLedger`** (`lib/db/ledger-live.ts`: not reversed, not a reversal), or a corrected movement counts twice; plain sums (balances, a cycle's net) are the same either way. Movement lists show live rows only, a replacement with "corrected on <date>". The one-charge-per-member-and-cycle index counts live rows only. Maintenance that must delete rows sets `wegrocery.ledger_maintenance = on` in its own transaction (the integration tests' cleanup); the demo's TRUNCATE does not fire the trigger.
 
-**Money invariants**: `lib/invariants.ts` lists read-only checks that must return no rows (refunded cents match the refunds, every accepted refund is debited, every paid payment credited once, every closed-cycle order charged...). The nightly backup workflow runs them on production (`scripts/check-invariants.mts`, job `invariants`, independent of the dump so a failed backup never skips it); a failure fails the run and the `notify` job opens (or comments on) a GitHub issue. Run them on any database with `node --env-file=<env> node_modules/tsx/dist/cli.mjs scripts/check-invariants.mts`. A new money rule gets a check there and a case in `lib/invariants.int.test.ts`.
+**Money invariants**: `lib/invariants.ts` lists read-only checks that must return no rows (refunded cents match the refunds, every accepted refund is debited, every paid payment credited once, every closed-cycle order charged...). The nightly backup workflow runs them on production (`scripts/check-invariants.mts`, job `invariants`, independent of the dump so a failed backup never skips it); a failure fails the run and the `notify` job opens (or comments on) a GitHub issue. Run them on any database with `node --env-file=<env> node_modules/tsx/dist/cli.mjs scripts/check-invariants.mts`. A new money rule gets a check there and a case in `lib/invariants.integration.test.ts`.
 
 **Nightly UI check**: `.github/workflows/ui-check.yml` runs `scripts/ui-check.mjs` after the demo reset: the main member and admin pages at 390, 820 and 1280 px against the demo (`vars.UI_CHECK_URL`, else the public demo on the upstream repository; a `DEMO_MODE` deploy only, it signs in through the demo buttons). It fails on axe problems of serious or critical impact (axe runs on the whole page height, so the sticky bottom bar does not count the row behind it as an obscured target), horizontal scrolling and four keyboard paths (order stepper, focus back after a sheet, visible focus outline, Esc on the cycle-close review), and the `notify` job opens (or comments on) one issue. Labels are matched in English and Italian. Locally: install `playwright` and `@axe-core/playwright` next to a copy of the script and run it with `UI_CHECK_URL=http://localhost:3000` (`CHROMIUM_PATH` for a preinstalled browser).
 
 **Releases**: open the `staging` → `main` PR with `?template=release.md` (`.github/PULL_REQUEST_TEMPLATE/release.md`): upgrade notes, migration before the merge, smoke test on `/api/health`, rollback. The merge to `main` tags `vX.Y.Z` and publishes the GitHub release by itself (`.github/workflows/release.yml`, notes from that version's `CHANGELOG.md` entry, upstream repository only). An installation whose Git deploys Vercel blocks sets the `VERCEL_DEPLOY_HOOK` repository secret: `.github/workflows/deploy-hook.yml` then calls the hook on every push to `main`. To redeploy production without a code change (a new variable, a rotated key), run `.github/workflows/deploy-production.yml` from the Actions tab: it calls the `VERCEL_PRODUCTION_DEPLOY_HOOK` hook once, never on push, and fails when the secret is missing.
 
-**Health and errors**: `/api/health` (public) returns `{ ok, version, db }`, 503 when the database does not answer. Unexpected errors go through `reportError` (`lib/observability.ts`): always the server log, Sentry too when `SENTRY_DSN` is set, or `NEXT_PUBLIC_SENTRY_DSN` as Vercel's Sentry integration sets it (server only, errors only; data collection is off, console breadcrumbs are dropped and `beforeSend` cuts the query parameters a driver error quotes; initialized in `instrumentation.ts`, which hands the client to `reportError` through `globalThis`, since each route is a separate server bundle with its own copy of the module). Use it instead of a bare `console.error` for errors someone should look at.
+**Health and errors**: `/api/health` (public, `lib/health.ts` from the FlyLabs Kit module `console`) returns `{ ok, version, db }`, 503 when the database does not answer within 3 seconds. Unexpected errors go through `reportError` (`lib/observability.ts`): always the server log, Sentry too when `SENTRY_DSN` is set, or `NEXT_PUBLIC_SENTRY_DSN` as Vercel's Sentry integration sets it (server only, errors only; data collection is off, console breadcrumbs are dropped and `beforeSend` cuts the query parameters a driver error quotes; initialized in `instrumentation.ts`, which hands the client to `reportError` through `globalThis`, since each route is a separate server bundle with its own copy of the module). Use it instead of a bare `console.error` for errors someone should look at.
 
 **Stripe on staging**: `scripts/stripe-staging-check.mjs` runs real sandbox refunds against the staging deploy; it refuses live keys and any database other than `STAGING_DB_HOST`. The events the webhook endpoint must subscribe to are `REQUIRED_STRIPE_EVENTS` (`lib/payments/config.ts`).
 
@@ -176,7 +176,7 @@ When handling an advisory:
   (re-add it if a future release lags behind a `libvips` fix).
 - **Confirm the fix landed** by comparing each alert's `first_patched_version`
   against the resolved tree, not by trusting the bump.
-- **`better-auth` is pinned to an exact version on purpose** and sits in Dependabot's `ignore` list: sign-in upgrades are a deliberate decision, tested with `lib/auth/config.int.test.ts`.
+- **`better-auth` is pinned to an exact version on purpose** and sits in Dependabot's `ignore` list: sign-in upgrades are a deliberate decision, tested with `lib/auth/config.integration.test.ts`.
 - If an alert is genuinely unreachable and has no safe fix, dismiss it with
   `not_used` and open a tracking issue naming the condition to revisit it.
 
@@ -269,6 +269,13 @@ bug fix, etc.) you must update **both** changelog files:
    - `### Security` / `### Sicurezza` — vulnerability fixes
 5. Write entries from the **user's** perspective, not the developer's.
    Explain what changes for the member or admin, not which file was edited.
+   A bullet that only matters to whoever hosts, runs or develops the app
+   (environment variables, database and migrations, CI, dependencies,
+   monitoring, scripts, refactors) starts with `[tech]` in `CHANGELOG.md` and
+   `[tecnico]` in `CHANGELOG.it.md`, on the same bullet in both (Playbook 4.6,
+   `lib/changelog.test.ts` compares the two shapes, tags included). `/changelog`
+   hides those bullets until "Show technical details" (`?tech=1`), and the
+   Guide's teaser skips them; the GitHub release notes keep them.
 6. House style, enforced by eye (the `/changelog` page renders it):
    - One **italic tagline** on its own line under the version heading, saying
      what the release is about. The parser reads it; `**bold**` is not a tagline.
@@ -280,9 +287,12 @@ bug fix, etc.) you must update **both** changelog files:
      env vars are fine, longer implementation detail belongs in the PR.
 
 When cutting a release, move the `[Unreleased]` block to a new
-`## [x.y.z] — YYYY-MM-DD` heading in both files (Italian dates are written out:
-`20 luglio 2026`), add the matching link reference at the bottom, and bump
-`package.json`. Verify the two files still parse in parallel before merging.
+`## [x.y.z] - YYYY-MM-DD` heading in both files, with a plain hyphen (Italian
+dates are written out: `20 luglio 2026`), add the matching link reference at
+the bottom, and bump `package.json`. Verify the two files still parse in
+parallel before merging. No em dash in a heading or in a new entry (Playbook
+3.4): `lib/i18n/no-em-dash.test.ts` checks the headings and everything above
+the first released version; an empty value in a table is a plain `-`.
 
 ## Architecture
 
@@ -309,7 +319,7 @@ User interaction → Server Action ("use server") → auth check → DB mutation
 - HTTP: only the endpoints in `lib/auth/public-endpoints.ts` answer (email link request and verify, sign-in with the code; Google's two where configured; demo and dev where enabled); everything else is a 404. Hosts accepted and used in links (`lib/auth/hosts.ts`): `APP_BASE_URL`, Vercel's production URL, a preview's own URLs, localhost under `next dev`.
 - `proxy.ts` (Next.js 16's renamed middleware, Node runtime) only checks that the session cookie exists (no database); pages and actions check the session: `requireUserSession()` (redirect to `/login`), `requireAdmin()` / `requireActiveMember()` (`lib/auth/session.ts`, the only Server Action guards; `ActionError` otherwise). The admin page applies `checkAccess` (`lib/auth/access.ts`) and redirects non-admins home.
 - Denials land on `/login?error=<code>`; the login page explains each code and links `brand.supportEmail` and `brand.privacyUrl`.
-- `better-auth` is pinned to an exact version; upgrades run `lib/auth/config.int.test.ts` first.
+- `better-auth` is pinned to an exact version; upgrades run `lib/auth/config.integration.test.ts` first.
 - Abuse limits: 3 link requests a minute per IP (Better Auth, keyed on `x-vercel-forwarded-for`: outside Vercel every request shares one bucket), plus caps on the emails one address receives (`lib/auth/email-caps.ts`: 5 links an hour, 1 explanation a day, 50 explanations a day overall). The decision and the send run after the response (`defer: after`), so a member's request takes as long as a stranger's.
 - A Google identity whose address Google has not verified is refused, member or not (`lib/auth/identity.ts`). Changing a member's email or alias, or deleting the member, deletes the sign-in identities (and sessions) of the addresses they no longer have.
 - Known limits, not handled yet: a link forwarded by its requester signs the receiver into the requester's account (the confirmation page does not show the address); `auth_rate_limits` and unclicked `auth_verifications` rows are not purged; the token sits in the confirmation page's URL until used.
@@ -521,6 +531,7 @@ All four emit `order_adjusted` or `order_corrected` notifications and `audit_log
 - Env vars: `RESEND_API_KEY`, `MAIL_FROM`. Without them the button toasts the missing-config error and the rest of the app keeps working.
 - Modules: `lib/email/resend.ts` (thin SDK wrapper, lazy env read), `lib/email/templates.ts` (Italian body), `lib/csv/distinta-builder.ts` (round-trip `.xlsx` distinta — products × members matrix with formulas, hidden `_meta` for re-import), `lib/csv/distinta-parser.ts` (reads the supplier-filled file, returns a diff preview). `lib/csv/supplier-export.ts` is kept as a legacy per-product CSV but no longer the default attachment.
 - Resend SDK detail: the `content` field on attachments base64-decodes strings — always pass a `Buffer`.
+- **Branded HTML** (Playbook 7.7, FlyLabs Kit module `email`): `sendMail` and `sendMailBatch` add to every message the HTML of its own text (`lib/email/layout.ts`: escaped, linked, on a card in the default WeGrocery light colours, then the WeGrocery logo `public/mail/logo.png` and "By FlyLabs.ai"). Templates write text only; `lib/email/layout.test.ts` compares the colours with `app/globals.css` and `lib/brand/roles.ts`. `proxy.ts` leaves `mail/` open: mail clients fetch the logo with no session. Without `APP_BASE_URL` (or Vercel's production URL) the logo becomes the name in text.
 - **Notification emails** reuse the same wrapper. `sendMailBatch` (in `resend.ts`) sends up to 100 one-off messages per Resend `batch.send` call (chunked internally) — used for cycle-close and broadcasts to sidestep the 2 req/s limit. `notificationEmail` (in `templates.ts`) wraps a notification's already-localized title/body with a CTA + a manage-preferences link; links need a base URL from `lib/email/base-url.ts` (`APP_BASE_URL`, falling back to `VERCEL_PROJECT_PRODUCTION_URL`; links omitted if neither is set). All notification email is fire-and-forget — a send failure is logged, never rolled back onto the caller's DB work — and `DEMO_MODE` blocks it like every other send.
 - Env var added for notifications: `APP_BASE_URL` (email links). See `.env.example`. `CRON_SECRET` went away with the reminder cron in v1.9.0; the GitHub repo secret and the Vercel env var are leftovers that can be deleted from both dashboards.
 - **Email compliance**: notification emails carry `List-Unsubscribe` and `List-Unsubscribe-Post: List-Unsubscribe=One-Click` (RFC 8058, `lib/email/unsubscribe.ts`): a link `/api/unsubscribe?t=<token>`, HMAC-SHA256 signed with a key derived from `AUTH_SECRET` (rotating it retires old links), that turns off the email channel of that one category for that member (`lib/notifications/unsubscribe-store.ts`). A GET only shows a button; only the POST writes (mail scanners open links). The footer keeps the manage-preferences link. Every send goes with a Resend `Idempotency-Key` (`lib/email/idempotency.ts`): notifications use their own id, other emails the message plus the minute it was asked in, so a double click sends once and a deliberate resend later still goes out. Sign-in emails, the supplier email and family invitations have no unsubscribe header (not optional notices).
@@ -567,10 +578,15 @@ All four emit `order_adjusted` or `order_corrected` notifications and `audit_log
   with `PRODUCTION_DB_HOST` set to the production host (in the local env
   files of whoever migrates) it refuses that host unless `--allow-prod` is
   passed; `MIGRATE_ON_BUILD` passes it itself. Each migration file runs in one
-  transaction with `lock_timeout` 10 s and its `_migrations` record; a new
-  migration has `Apply:` and `Rollback:` lines in its header, a
-  `NNNN_name_down.sql` the runner never applies, and a test (Playbook 5.3, 6.1,
-  6.2; `docs/operating-two-environments.md`).
+  transaction (`sql.transaction` of the Neon driver) with `SET LOCAL
+  lock_timeout = '5s'` and its `_migrations` record, so a file that fails or
+  waits too long for a lock leaves nothing behind and stays pending. Nothing
+  that Postgres refuses in a transaction (any `CONCURRENTLY`, `VACUUM`,
+  database-level commands): the runner refuses such a file before applying
+  anything. A new migration has `Apply:` and `Rollback:` lines in its header,
+  a `NNNN_name_down.sql` the runner never applies, and a test; from 0036 on
+  `scripts/db-migrate-lib.test.ts` checks the rollback file and the header
+  (Playbook 5.3, 6.1, 6.2; `docs/operating-two-environments.md`).
 - **Integration tests against a real DB** (recipe, not wired into CI): create
   a throwaway Neon branch, point the test run at it, delete it after —
   `npx -y neonctl branches create --name test-x --parent production --project-id small-breeze-14972344 --org-id org-gentle-violet-55538692`
@@ -659,33 +675,47 @@ Brand colours come from the brand JSON (`theme`), never from the code.
 `<html>`, and `app/globals.css` maps them to Tailwind 4 `@theme` colours.
 Defaults below are the WeGrocery palette (`DEFAULT_PALETTE`).
 
+Token names are the shadcn ones of Playbook 2.2, plus the roles shadcn lacks.
+The convention: `X-foreground` is the text on an `X` fill, `X-text` is
+coloured text on light surfaces, `X-bg` is a soft background.
+
 | Class suffix | Default | Use |
 |---|---|---|
-| `primary` | #F5A623 | Fills: CTA buttons, active dots, progress. Also borders and rings |
-| `on-primary` | computed | Text on a `bg-primary` fill (near-black or white, whichever reads better) |
+| `background` | #faf8f5 (group) | App background |
+| `frame` | #ddd8d0 (group) | Around the phone card from `sm` |
+| `foreground` | #2d2b29 | Primary text |
+| `card`, `card-foreground` | #ffffff / #2d2b29 | Cards; `popover`, `popover-foreground` are the same colours for sheets and dialogs |
+| `primary` | #F5A623 (group) | Fills: CTA buttons, active dots, progress. Also borders |
+| `primary-foreground` | computed | Text on a `bg-primary` fill (near-black or white, whichever reads better) |
 | `primary-text` | computed (#8E6014) | Primary-coloured **text** and links on light surfaces |
-| `primary-soft` | #FEF3DC | Soft background (balance card) |
+| `primary-bg` | #FEF3DC (group) | Soft background (balance card) |
 | `primary-mid` | primary at 30% | Borders on soft backgrounds |
-| `accent`, `on-accent`, `accent-text`, `accent-soft` | #00A896 … | Same roles for the accent (open-cycle badge, top-ups) |
-| `muted` | computed (#6B6B6B) | Secondary text |
-| `brand-red` / `brand-red-light` | #C53030 / #FEECEC | Negative balance, errors, destructive buttons (white text) |
-| `brand-near-black` | #2d2b29 | Primary text, dark buttons (white text) |
-| `brand-gray` | #58595B | Secondary text |
-| `brand-gray-light` | #ADADAD | Fills and disabled states only |
-| `brand-warm-white` | #faf8f5 | App background |
-| `brand-border` | rgba(88,89,91,0.10) | Borders |
+| `accent`, `accent-foreground`, `accent-text`, `accent-bg` | #00A896 … (group) | Same roles for the group's second colour (open-cycle badge, top-ups). Not shadcn's grey hover `accent`: WeGrocery is white-label (Playbook 2.10) |
+| `muted`, `secondary` | #f3f2f0 | A faint neutral fill |
+| `muted-foreground` | computed (#6B6B6B) | Secondary text |
+| `secondary-foreground` | #58595B | Secondary text, a step darker than `muted-foreground` |
+| `neutral` | #ADADAD | Fills and disabled states only (dots, switch off), never text |
+| `destructive` | #C53030 | Red text: negative balance, errors |
+| `danger`, `danger-foreground`, `danger-bg` | #C53030 / white / #FEECEC | Destructive buttons and badges (fill with white text), soft red background |
+| `warning`, `warning-foreground`, `warning-bg` | #B45309 / white / #fef5ea | Warning fill (toasts) with its text; warning text in light |
+| `success`, `success-bg` | #2b7a3d / #e9f6ec | Success text and its soft background |
+| `inverse`, `inverse-foreground` | #2d2b29 / white | Dark buttons and toasts (light in the dark theme) |
+| `tint` | black (white in dark) | Faint fills over a card, with an opacity (`bg-tint/[0.04]`) |
+| `border` | rgba(88,89,91,0.10) | Borders |
+| `input` | computed (3:1) | Field borders (Playbook 2.4, WCAG 1.4.11): `Input`, `Textarea`, `NativeSelect` |
+| `ring` | = `primary-text` | The focus outline |
 
 Rules (enforced by `lib/brand/design-guard.test.ts`):
 - Every text/background pair reaches WCAG AA (4.5:1). Computed tokens
   guarantee it for any palette; `brandContrastWarnings()` logs at startup
   when a palette cannot.
-- Never `text-white` on `bg-primary` / `bg-accent`: use `text-on-primary` /
-  `text-on-accent`. Keep the fill and its text colour on the same line.
+- Never `text-white` on `bg-primary` / `bg-accent`: use `text-primary-foreground` /
+  `text-accent-foreground`. Keep the fill and its text colour on the same line.
 - Coloured text is `text-primary-text` / `text-accent-text`, not `text-primary`
   (that is the fill colour; fine only on a dark background).
 - No opacity modifier on a text token (`text-accent-text/80`): it undoes the
   computed contrast. Tints of a fill behind its own text go up to `/20`.
-- Never `text-brand-gray-light`: use `text-muted`.
+- Never `text-neutral`: use `text-muted-foreground`. The old WeGrocery names (`surface`, `muted` as text, `brand-*`, `on-*`, `*-soft`, `danger-text`) are refused.
 - No palette names (`orange`, `teal`) and no hard-coded brand hex.
 - Spacing (padding, margin, gap) uses the Tailwind scale (`p-4.5` is 18px), never `p-[18px]`: `design-guard.test.ts` refuses the pixel form.
 - No text under 12px: `text-label` (12px) is the smallest size. On phones
@@ -693,14 +723,16 @@ Rules (enforced by `lib/brand/design-guard.test.ts`):
   zooms the page on smaller fields), so do not size fields below that.
 
 Key patterns:
-- **Saldo hero card**: primary-soft (positive) or red-light (negative), 70px balance amount
+- **Saldo hero card**: `primary-bg` (positive) or `danger-bg` (negative), 70px balance amount
 - **Pill steppers** in order form: zero-state (single + btn) vs has-qty state (−/qty/+)
 - **Installable app (PWA)**: `app/manifest.ts` (public: `proxy.ts` lets `manifest.webmanifest` and `.png` through) lists icons drawn at build time from `brand.logoUrl` by `app/icons/[file]/route.tsx` (sizes in `lib/pwa/icons.ts`; a logo that cannot be loaded becomes a letter, never a failed build). `components/install-prompt.tsx` sits last on Home, phones only (`lib/pwa/install-hint.ts`); no service worker.
 - **Navigation**: items from `nav-items.ts`, filtered by `visibleNavItems` (members 4, admins 5 with Admin). `BottomNav` (with the header: logo, bell, avatar) on a phone, below `md`; from `md` `SideNav` replaces both: a rail (88 px, icon over label) on a tablet, a sidebar (248 px, icon beside label) from `lg`, with the logo on top and Notifiche and Profilo at the bottom. From `lg` the admin sections hang under Admin in the sidebar and the admin pill bar (`AdminNav`) hides; its views row stays (Playbook 2.8). An item's `also` paths keep it current on pages without an item (Ricarica → Home); the bell and the avatar carry `aria-current` on Notifiche and on Profilo/Famiglia
 - **Notification bell**: in the phone header and at the bottom of the rail or sidebar, red badge with count, links to `/notifiche`
 - **Gestures** (`lib/ui/use-swipe.ts`, Pointer Events, no library): drag down on a `Sheet`'s handle or header closes it on phones (`swipeToClose={false}` on the cycle-close review), a confirm's drag is "Annulla"; off with reduced motion, never from the left edge. `components/app-refresh.tsx` refreshes the page after 5 minutes in the background and shows the offline line; tapping the current bottom-bar item scrolls up and refreshes. Neither ever runs on `/ordine` (`lib/ui/refresh.ts`)
-- Shell: on a phone a card `max-w-[480px]`, centred on `bg-brand-frame` from `sm`; from `md` no card, the side navigation plus the content filling the screen. Inside, `<AppShell layout="reading">` (the default) keeps a 640 px column (Guida, Profilo, Notifiche, Changelog, Ricarica); `layout="wide"` goes up to 1120 px (Home's two columns, Admin). Main's padding is `px-5` on a phone, `px-8` from `md`: full-bleed bars (`category-bar.tsx`, `order-totals.tsx`) use the matching negative margin. Widths live in `shell-width.ts`, mirrored by `ShellSkeleton`
-- Member pages: reading text is 14px, prices and notification bodies included (Inter, `tabular-nums`); titles (h1 to h3) are Geist; JetBrains Mono is only for uppercase labels, the one-time code field and code-like values (IBAN, addresses: `break-all`), kept by `design-guard.test.ts` (Playbook 2.1)
+- Shell: on a phone a card `max-w-[480px]`, centred on `bg-frame` from `sm`; from `md` no card, the side navigation plus the content filling the screen. Inside, `<AppShell layout="reading">` (the default) keeps a 640 px column (Guida, Profilo, Notifiche, Changelog, Ricarica); `layout="wide"` goes up to 1120 px (Home's two columns, Admin). Main's padding is `px-5` on a phone, `px-8` from `md`: full-bleed bars (`category-bar.tsx`, `order-totals.tsx`) use the matching negative margin. Widths live in `shell-width.ts`, mirrored by `ShellSkeleton`
+- Member pages: reading text is 14px, prices and notification bodies included (Inter, `tabular-nums`); titles (h1 to h3) are Geist; JetBrains Mono is only for uppercase labels of at most four words at 12px or more (`text-label`, `label-caps`); totals, prices, the one-time code and code-like values (IBAN, addresses: `break-all`) are Inter with `tabular-nums`. Fonts load with `next/font` in `app/layout.tsx`; `design-guard.test.ts` checks the fonts, the mono uses and the word count of the mono labels in both languages (Playbook 2.1)
+- **Icons**: interface icons come from `lucide-react` (`NavIcon`, `UiIcon`, close `X`, more `Ellipsis`, edit `Pencil`), always `aria-hidden` with a label on the button; `design-guard.test.ts` refuses inline `<svg>` outside `movement-icon.tsx` and the Statistiche chart, `@radix-ui`, and ✕ / ⋯ / ✎ as icons. Dialogs are `Sheet` and `ConfirmDialog` on Base UI (`@base-ui/react/dialog`): a Sheet ignores the Esc and taps that belong to a confirm opened over it (`isInConfirmDialog`)
+- **Fields**: text-like inputs, textareas and selects are `Input`, `Textarea` and `NativeSelect` from `components/ui/` (shared `fieldBase` in `input.tsx`: `border-input` on `bg-card`, 14px, `min-h-(--control-h)`, `disabled:` and `aria-invalid:` on tokens), with `Label` for the caption. A field with its own look (a 44 px table cell, a compact 12px popover search, a round search with an icon) adds classes through `className`; a `NativeSelect` takes its layout (margin, `flex-1`) on `wrapperClassName`. `design-guard.test.ts` refuses raw `<input>` (other than checkbox, radio, file, hidden, colour, range), `<textarea>` and `<select>` outside `components/ui/`
 - Small header controls (bell, avatar, "?") keep their look and get a 44 px touch area with the `hit-44` utility
 - The header holds the bell and the Profile avatar (initials, `lib/profile/summary.ts`); the email, sign-out and personal settings are on `/profilo`, whose rows hide what the deploy has not switched on
 

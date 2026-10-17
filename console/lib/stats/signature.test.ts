@@ -12,8 +12,10 @@ describe("stats signature", () => {
     expect(statsSignature(SECRET, 1_700_000_000)).toBe(EXPECTED);
   });
 
-  it("builds the two headers, timestamp in whole seconds", () => {
+  it("builds the kit's headers and the older pair, timestamp in whole seconds", () => {
     expect(signedStatsHeaders(SECRET, 1_700_000_000.9)).toEqual({
+      "x-flylabs-timestamp": "1700000000",
+      "x-flylabs-signature": EXPECTED,
       "x-wegrocery-timestamp": "1700000000",
       "x-wegrocery-signature": EXPECTED,
     });

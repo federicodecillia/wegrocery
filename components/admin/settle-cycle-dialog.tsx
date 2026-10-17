@@ -11,11 +11,11 @@ import { t } from "@/lib/i18n";
 import type { SettlementStatus } from "@/lib/payments/settlement-store";
 
 const STATUS_CLASSES: Record<SettlementStatus, string> = {
-  to_settle: "bg-primary-soft text-primary-text",
-  refunds_pending: "bg-tint/[0.06] text-brand-gray",
-  settled: "bg-accent-soft text-accent-text",
-  needs_update: "bg-danger-soft text-danger-text",
-  refund_failed: "bg-danger-soft text-danger-text",
+  to_settle: "bg-primary-bg text-primary-text",
+  refunds_pending: "bg-tint/[0.06] text-secondary-foreground",
+  settled: "bg-accent-bg text-accent-text",
+  needs_update: "bg-danger-bg text-destructive",
+  refund_failed: "bg-danger-bg text-destructive",
 };
 
 // "Chiudi i conti" of a pay-per-order cycle, closed or cancelled: a preview of
@@ -95,28 +95,28 @@ export function SettleCycleButton({
         }
       >
         {rows === null ? (
-          <p className="py-6 text-center text-[13px] text-brand-gray">{s.loading}</p>
+          <p className="py-6 text-center text-[13px] text-secondary-foreground">{s.loading}</p>
         ) : rows.length === 0 ? (
-          <p className="py-6 text-center text-[13px] text-brand-gray">{s.empty}</p>
+          <p className="py-6 text-center text-[13px] text-secondary-foreground">{s.empty}</p>
         ) : (
-          <ul className="divide-y divide-brand-border">
+          <ul className="divide-y divide-border">
             {rows.map((r) => (
               <li key={r.memberId} className="flex items-start justify-between gap-3 py-2 text-[13px]">
                 <div className="min-w-0">
-                  <div className="truncate font-medium text-brand-near-black">{r.fullName}</div>
-                  <div className="tabular-nums text-label text-muted">{s.net(formatMoney(r.netCents / 100))}</div>
+                  <div className="truncate font-medium text-foreground">{r.fullName}</div>
+                  <div className="tabular-nums text-label text-muted-foreground">{s.net(formatMoney(r.netCents / 100))}</div>
                 </div>
-                <div className="shrink-0 text-right text-[13px] text-brand-near-black">
+                <div className="shrink-0 text-right text-[13px] text-foreground">
                   {s.action[r.action](formatMoney(r.amountCents / 100))}
                   {r.excessCents > 0 && (
-                    <div className="text-danger-text">{s.excess(formatMoney(r.excessCents / 100))}</div>
+                    <div className="text-destructive">{s.excess(formatMoney(r.excessCents / 100))}</div>
                   )}
                 </div>
               </li>
             ))}
           </ul>
         )}
-        {excess > 0 && <p className="mt-2 text-[13px] text-danger-text">{s.excessHint}</p>}
+        {excess > 0 && <p className="mt-2 text-[13px] text-destructive">{s.excessHint}</p>}
       </Sheet>
     </>
   );

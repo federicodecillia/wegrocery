@@ -30,7 +30,7 @@ function paymentStatusLabel(status: string | null): string {
   const labels = t.history.paymentStatuses;
   return status !== null && Object.prototype.hasOwnProperty.call(labels, status)
     ? labels[status as PaymentStatus]
-    : "—";
+    : "-";
 }
 
 function recorderLabel(recorder: MovementRecorder): string {
@@ -129,18 +129,18 @@ function MovementDetailBody({ entry, onShowCycle }: { entry: MovementDetail; onS
     <>
       <p
         className={`tabular-nums text-[26px] font-black tracking-[-0.03em] ${
-          incoming ? "text-accent-text" : "text-danger-text"
+          incoming ? "text-accent-text" : "text-destructive"
         }`}
       >
         {formatSignedMoney(entry.amount)}
       </p>
-      <dl className="mt-4 divide-y divide-brand-border rounded-xl border border-brand-border bg-surface">
+      <dl className="mt-4 divide-y divide-border rounded-xl border border-border bg-card">
         {detailRows(entry, onShowCycle).map((row) => (
           <div key={row.label} className="flex items-baseline justify-between gap-3 px-3 py-2">
-            <dt className="shrink-0 text-label font-semibold uppercase tracking-wide text-brand-gray">
+            <dt className="shrink-0 text-label font-semibold uppercase tracking-wide text-secondary-foreground">
               {row.label}
             </dt>
-            <dd className="min-w-0 break-words text-right text-[14px] text-brand-near-black">{row.value}</dd>
+            <dd className="min-w-0 break-words text-right text-[14px] text-foreground">{row.value}</dd>
           </div>
         ))}
       </dl>
@@ -160,8 +160,8 @@ export function MovementDetailPanel({
 }) {
   const incoming = parseFloat(entry.amount) >= 0;
   return (
-    <section aria-labelledby="movement-detail-title" className="rounded-card border border-brand-border bg-brand-warm-white p-4 shadow-card">
-      <h2 id="movement-detail-title" className="mb-3 flex items-center gap-3 text-[15px] font-bold text-brand-near-black">
+    <section aria-labelledby="movement-detail-title" className="rounded-card border border-border bg-background p-4 shadow-card">
+      <h2 id="movement-detail-title" className="mb-3 flex items-center gap-3 text-[15px] font-bold text-foreground">
         <MovementIcon kind={movementKind(entry)} incoming={incoming} />
         {movementLabel(entry, t.history)}
       </h2>

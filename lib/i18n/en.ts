@@ -2198,4 +2198,16 @@ ${input.orgName}
       columnNotes: "Notes",
     },
   },
+  changelog: {
+    title: "What's new",
+    subtitle: "Changes to the app, most recent first.",
+    showTechnical: "Show technical details",
+    hideTechnical: "Hide technical details",
+    technicalBadge: "Technical",
+    onlyTechnical: "Only technical improvements in this version.",
+    hiddenTechnical: (n: number) => (n === 1 ? "Plus 1 technical detail." : `Plus ${n} technical details.`),
+    unreleased: "Upcoming",
+    older: "Earlier versions",
+    backToGuide: "Back to the guide",
+  },
 };

@@ -1,0 +1,73 @@
+# FlyLabs Kit: weekly check that this app is aligned with the latest kit (Playbook 9.7).
+# Copy to .github/workflows/kit-sync.yml. Needs the FLYLABS_KIT_TOKEN secret: a fine-grained
+# token with read-only "Contents" on flylabs-ai/flylabs-kit. Without it the job only warns.
+name: FlyLabs Kit
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: flylabs-kit
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    env:
+      KIT_TOKEN: ${{ secrets.FLYLABS_KIT_TOKEN }}
+      GH_TOKEN: ${{ github.token }}
+      ISSUE_TITLE: "FlyLabs Kit: allineamento"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Missing token
+        if: env.KIT_TOKEN == ''
+        run: echo "::warning::FLYLABS_KIT_TOKEN missing, the FlyLabs Kit check is skipped."
+
+      - uses: actions/checkout@v4
+        if: env.KIT_TOKEN != ''
+        with:
+          repository: flylabs-ai/flylabs-kit
+          token: ${{ env.KIT_TOKEN }}
+          path: .flylabs-kit
+
+      - uses: actions/setup-node@v4
+        if: env.KIT_TOKEN != ''
+        with:
+          node-version: 24
+
+      - name: Compare with the kit
+        if: env.KIT_TOKEN != ''
+        id: check
+        run: |
+          # Public repos get the brief report: the kit's changelog stays private.
+          brief=""
+          if [ "$(gh repo view "$GITHUB_REPOSITORY" --json visibility --jq .visibility)" != "PRIVATE" ]; then brief="--brief"; fi
+          set +e
+          node .flylabs-kit/scripts/kit-check.mjs --app . --kit .flylabs-kit $brief > "$RUNNER_TEMP/kit-report.md"
+          code=$?
+          set -e
+          cat "$RUNNER_TEMP/kit-report.md" >> "$GITHUB_STEP_SUMMARY"
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          if [ "$code" -ge 2 ]; then exit "$code"; fi
+
+      - name: Open, update or close the issue
+        if: env.KIT_TOKEN != ''
+        run: |
+          num=$(gh issue list --state open --label flylabs-kit --json number --jq '.[0].number // empty')
+          if [ "${{ steps.check.outputs.code }}" = "1" ]; then
+            gh label create flylabs-kit --color 2563EB --description "Allineamento a FlyLabs Kit" --force
+            if [ -n "$num" ]; then
+              gh issue edit "$num" --body-file "$RUNNER_TEMP/kit-report.md"
+            else
+              gh issue create --title "$ISSUE_TITLE" --label flylabs-kit --body-file "$RUNNER_TEMP/kit-report.md"
+            fi
+          elif [ -n "$num" ]; then
+            gh issue close "$num" --comment "$(cat "$RUNNER_TEMP/kit-report.md")"
+          fi

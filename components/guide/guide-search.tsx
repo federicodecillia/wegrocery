@@ -1,11 +1,13 @@
 "use client";
 
+import { Search, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { flushSync } from "react-dom";
 import { t } from "@/lib/i18n";
 import { recordGuideSearchMiss } from "@/lib/actions/guide";
 import { searchGuide, type GuideSearchEntry } from "@/lib/guide/search";
 import { missQuery } from "@/lib/guide/search-misses";
+import { Input } from "@/components/ui/input";
 
 type Props = {
   index: GuideSearchEntry[];
@@ -45,22 +47,8 @@ export function GuideSearch({ index, synonyms, stopwords, topicTitles, children 
         <label htmlFor="guide-search" className="sr-only">
           {t.guide.searchLabel}
         </label>
-        <svg
-          aria-hidden
-          width="18"
-          height="18"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted"
-        >
-          <circle cx="11" cy="11" r="7" />
-          <path d="m20 20-3.5-3.5" />
-        </svg>
-        <input
+        <Search aria-hidden className="pointer-events-none absolute left-4 top-1/2 size-4.5 -translate-y-1/2 text-muted-foreground" />
+        <Input
           id="guide-search"
           type="search"
           value={query}
@@ -68,34 +56,34 @@ export function GuideSearch({ index, synonyms, stopwords, topicTitles, children 
           placeholder={t.guide.searchPlaceholder}
           autoComplete="off"
           enterKeyHint="search"
-          className="w-full rounded-full border border-brand-border bg-surface py-3 pl-11 pr-11 text-[14px] text-brand-near-black shadow-card placeholder:text-muted focus:border-primary [&::-webkit-search-cancel-button]:hidden"
+          className="rounded-full py-3 pl-11 pr-11 shadow-card focus:border-primary [&::-webkit-search-cancel-button]:hidden"
         />
         {searching && (
           <button
             type="button"
             onClick={() => setQuery("")}
             aria-label={t.guide.searchClear}
-            className="absolute right-3 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full text-muted hover:bg-brand-warm-white"
+            className="absolute right-3 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground hover:bg-background"
           >
-            ✕
+            <X aria-hidden className="size-4" />
           </button>
         )}
       </div>
 
       {searching ? (
         <section aria-live="polite">
-          <p className="mb-3 font-mono text-label uppercase tracking-[0.13em] text-brand-gray">
+          <p className="mb-3 font-mono text-label uppercase tracking-[0.13em] text-secondary-foreground">
             {results.length > 0 ? t.guide.searchResults(results.length) : null}
           </p>
           {results.length === 0 ? (
-            <p className="rounded-card border border-brand-border bg-surface p-4.5 text-[14px] leading-[1.5] text-brand-gray">
+            <p className="rounded-card border border-border bg-card p-4.5 text-[14px] leading-[1.5] text-secondary-foreground">
               {t.guide.searchEmpty}
-              <span className="mt-2 block text-[12px] text-muted">{t.guide.searchMissNote}</span>
+              <span className="mt-2 block text-[12px] text-muted-foreground">{t.guide.searchMissNote}</span>
             </p>
           ) : (
-            <ul className="overflow-hidden rounded-card border border-brand-border bg-surface shadow-card">
+            <ul className="overflow-hidden rounded-card border border-border bg-card shadow-card">
               {results.map(({ entry }) => (
-                <li key={entry.slug} className="border-b border-brand-border last:border-b-0">
+                <li key={entry.slug} className="border-b border-border last:border-b-0">
                   {/* A full navigation, not next/link: only a real load sets :target,
                       which highlights the card on the topic page. */}
                   <a
@@ -104,10 +92,10 @@ export function GuideSearch({ index, synonyms, stopwords, topicTitles, children 
                     // the hash: show the index first, so the card exists when
                     // the browser scrolls to it.
                     onClick={entry.href.startsWith("/guida#") ? () => flushSync(() => setQuery("")) : undefined}
-                    className="block px-4 py-3 hover:bg-brand-warm-white"
+                    className="block px-4 py-3 hover:bg-background"
                   >
-                    <span className="block text-[14px] font-semibold text-brand-near-black">{entry.title}</span>
-                    <span className="mt-0.5 block text-[12px] text-brand-gray">{topicTitles[entry.topic]}</span>
+                    <span className="block text-[14px] font-semibold text-foreground">{entry.title}</span>
+                    <span className="mt-0.5 block text-[12px] text-secondary-foreground">{topicTitles[entry.topic]}</span>
                   </a>
                 </li>
               ))}

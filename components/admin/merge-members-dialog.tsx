@@ -8,6 +8,7 @@ import { formatMoney } from "@/lib/i18n/format";
 import { toast } from "@/components/ui/toast";
 import { t } from "@/lib/i18n";
 import { MemberCombobox, type PickerMember } from "./member-combobox";
+import { labelClass } from "@/components/ui/label";
 
 // Admin -> Members -> Merge: one person, two accounts. The admin picks the
 // account that stays; the server shows what will happen (previewMemberMerge)
@@ -102,18 +103,18 @@ export function MergeMembersDialog({
       }
     >
       <div className="space-y-4">
-        <p className="text-[13px] text-brand-gray">{m.intro}</p>
+        <p className="text-[13px] text-secondary-foreground">{m.intro}</p>
 
         {absorbed && (
           <div>
-            <span className="mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray">
+            <span className={labelClass}>
               {m.absorbedLabel}
             </span>
-            <div className="flex items-center justify-between gap-2 rounded-lg border border-brand-border bg-brand-warm-white px-3 py-2">
+            <div className="flex items-center justify-between gap-2 rounded-lg border border-border bg-background px-3 py-2">
               <div className="min-w-0">
-                <div className="truncate text-[13px] font-semibold text-brand-near-black">{absorbed.fullName}</div>
-                <div className="truncate tabular-nums text-label text-brand-gray">{absorbed.email}</div>
-                <div className="tabular-nums text-label text-brand-gray">
+                <div className="truncate text-[13px] font-semibold text-foreground">{absorbed.fullName}</div>
+                <div className="truncate tabular-nums text-label text-secondary-foreground">{absorbed.email}</div>
+                <div className="tabular-nums text-label text-secondary-foreground">
                   {t.admin.treasury.memberBalance(formatMoney(absorbed.balance))}
                 </div>
               </div>
@@ -121,7 +122,7 @@ export function MergeMembersDialog({
                 <button
                   type="button"
                   onClick={swap}
-                  className="min-h-11 shrink-0 rounded-lg border border-brand-border bg-surface px-3 text-[12px] font-semibold text-brand-near-black"
+                  className="min-h-11 shrink-0 rounded-lg border border-border bg-card px-3 text-[12px] font-semibold text-foreground"
                 >
                   ⇅ {m.swap}
                 </button>
@@ -140,10 +141,10 @@ export function MergeMembersDialog({
           label={m.survivorLabel}
         />
 
-        {loading && <p className="text-label text-muted">{m.loading}</p>}
+        {loading && <p className="text-label text-muted-foreground">{m.loading}</p>}
 
         {error && !loading && (
-          <p role="alert" className="rounded-lg border border-danger-text/30 bg-danger-soft p-3 text-[13px] text-danger-text">
+          <p role="alert" className="rounded-lg border border-destructive/30 bg-danger-bg p-3 text-[13px] text-destructive">
             {error}
           </p>
         )}
@@ -152,14 +153,14 @@ export function MergeMembersDialog({
           <>
             {preview.aliasOptions.length > 0 && (
               <fieldset>
-                <legend className="mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray">
+                <legend className={labelClass}>
                   {m.aliasLabel}
                 </legend>
                 <div className="space-y-1">
                   {[...preview.aliasOptions, null].map((option) => (
                     <label
                       key={option ?? "none"}
-                      className="flex min-h-11 items-center gap-2 text-[13px] text-brand-near-black"
+                      className="flex min-h-11 items-center gap-2 text-[13px] text-foreground"
                     >
                       <input
                         type="radio"
@@ -168,21 +169,21 @@ export function MergeMembersDialog({
                         onChange={() => setAlias(option)}
                         className="accent-primary"
                       />
-                      <span className="min-w-0 break-all font-mono">{option ?? m.aliasNone}</span>
+                      <span className="min-w-0 break-all">{option ?? m.aliasNone}</span>
                     </label>
                   ))}
                 </div>
                 {preview.droppedAddresses.map((a) => (
-                  <p key={a} className="mt-1 text-label text-danger-text">
+                  <p key={a} className="mt-1 text-label text-destructive">
                     {m.aliasDropped(a)}
                   </p>
                 ))}
               </fieldset>
             )}
 
-            <div className="rounded-lg border border-brand-border bg-brand-warm-white p-3">
-              <p className="mb-1 text-label font-semibold uppercase tracking-wide text-brand-gray">{m.previewTitle}</p>
-              <ul className="list-disc space-y-1 pl-4 text-[13px] text-brand-near-black">
+            <div className="rounded-lg border border-border bg-background p-3">
+              <p className="mb-1 text-label font-semibold uppercase tracking-wide text-secondary-foreground">{m.previewTitle}</p>
+              <ul className="list-disc space-y-1 pl-4 text-[13px] text-foreground">
                 {preview.movedCycleTitles.length > 0 && <li>{m.previewOrders(preview.movedCycleTitles.join(", "))}</li>}
                 {preview.transfer && <li>{m.previewBalance(preview.transfer)}</li>}
                 {preview.alias && <li className="break-words">{m.previewLogin(preview.alias)}</li>}

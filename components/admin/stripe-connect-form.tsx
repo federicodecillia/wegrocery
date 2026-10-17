@@ -6,9 +6,10 @@ import { confirm } from "@/components/ui/confirm-dialog";
 import { toast } from "@/components/ui/toast";
 import { adminConnectStripe, adminDisconnectStripe } from "@/lib/actions/admin-stripe";
 import { t } from "@/lib/i18n";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
-const labelCls = "mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray";
-const helpCls = "mt-1 text-label leading-snug text-brand-gray";
+const helpCls = "mt-1 text-label leading-snug text-secondary-foreground";
 
 // The key field of the Stripe card (stripe-connection-card.tsx), and the
 // disconnect button once connected. The key goes to the server action and is
@@ -67,11 +68,11 @@ export function StripeConnectForm({
   return (
     <div className="mt-3">
       <form onSubmit={handleSubmit}>
-        <label htmlFor="stripe-key" className={labelCls}>
+        <Label htmlFor="stripe-key">
           {label}
-        </label>
+        </Label>
         <div className="flex flex-col gap-2 sm:flex-row">
-          <input
+          <Input
             id="stripe-key"
             name="key"
             type="password"
@@ -83,12 +84,12 @@ export function StripeConnectForm({
             required
             aria-describedby="stripe-key-help"
             aria-invalid={error ? true : undefined}
-            className="min-h-11 w-full min-w-0 flex-1 rounded-lg border border-brand-border px-3 py-2 tabular-nums text-[13px] text-brand-near-black"
+            className="min-h-11 min-w-0 flex-1 tabular-nums"
           />
           <button
             type="submit"
             disabled={isPending}
-            className="min-h-11 shrink-0 rounded-xl bg-accent px-4 py-2 text-[13px] font-bold text-on-accent disabled:opacity-60"
+            className="min-h-11 shrink-0 rounded-xl bg-accent px-4 py-2 text-[13px] font-bold text-accent-foreground disabled:opacity-60"
           >
             {isPending && running === "connect" ? s.connecting : mode === "connect" ? s.connect : s.reconnect}
           </button>
@@ -98,7 +99,7 @@ export function StripeConnectForm({
         </p>
       </form>
       {error && (
-        <p role="alert" className="mt-2 rounded-lg bg-danger-soft px-3 py-2 text-[12px] text-danger-text">
+        <p role="alert" className="mt-2 rounded-lg bg-danger-bg px-3 py-2 text-[12px] text-destructive">
           {error}
         </p>
       )}
@@ -107,7 +108,7 @@ export function StripeConnectForm({
           type="button"
           onClick={handleDisconnect}
           disabled={isPending}
-          className="mt-3 min-h-11 rounded-xl border border-brand-border px-4 py-2 text-[13px] font-bold text-danger-text disabled:opacity-60"
+          className="mt-3 min-h-11 rounded-xl border border-border px-4 py-2 text-[13px] font-bold text-destructive disabled:opacity-60"
         >
           {isPending && running === "disconnect" ? s.disconnecting : s.disconnect}
         </button>

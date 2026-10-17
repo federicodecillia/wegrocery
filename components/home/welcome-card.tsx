@@ -1,5 +1,6 @@
 "use client";
 
+import { X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useSyncExternalStore, useTransition } from "react";
@@ -109,9 +110,9 @@ export function WelcomeCard({
     return (
       <section
         aria-label={t.welcome.title(appName)}
-        className="mb-3.5 flex items-center justify-between gap-2 rounded-card border border-primary-mid bg-surface py-1 pl-4 pr-1 shadow-card"
+        className="mb-3.5 flex items-center justify-between gap-2 rounded-card border border-primary-mid bg-card py-1 pl-4 pr-1 shadow-card"
       >
-        <span className="min-w-0 truncate text-[14px] font-semibold text-brand-near-black">
+        <span className="min-w-0 truncate text-[14px] font-semibold text-foreground">
           <span aria-hidden>👋 </span>
           {t.welcome.title(appName)}
         </span>
@@ -128,9 +129,9 @@ export function WelcomeCard({
             type="button"
             onClick={close}
             aria-label={t.welcome.close}
-            className="min-h-11 min-w-11 rounded-full text-muted hover:text-brand-near-black"
+            className="flex min-h-11 min-w-11 items-center justify-center rounded-full text-muted-foreground hover:text-foreground"
           >
-            ✕
+            <X aria-hidden className="size-4" />
           </button>
         </span>
       </section>
@@ -140,35 +141,35 @@ export function WelcomeCard({
   return (
     <section
       aria-label={t.welcome.title(appName)}
-      className="mb-3.5 rounded-card border-[1.5px] border-primary-mid bg-surface py-4.5 px-5 shadow-card"
+      className="mb-3.5 rounded-card border-[1.5px] border-primary-mid bg-card py-4.5 px-5 shadow-card"
     >
       <div className="mb-3 flex items-start justify-between gap-3">
-        <span className="font-mono text-label font-semibold uppercase tracking-[0.13em] text-primary-text">
+        <span className="text-label font-bold uppercase tracking-[0.08em] text-primary-text">
           {t.welcome.title(appName)}
         </span>
         <button
           type="button"
           onClick={close}
-          className="shrink-0 font-mono text-label font-bold uppercase tracking-widest text-muted hover:text-brand-near-black"
+          className="shrink-0 font-mono text-label font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground"
         >
           {t.welcome.skip}
         </button>
       </div>
 
       <div aria-live="polite">
-        <h2 className="flex items-center gap-2 text-[17px] font-black tracking-[-0.01em] text-brand-near-black">
+        <h2 className="flex items-center gap-2 text-[17px] font-black tracking-[-0.01em] text-foreground">
           <span aria-hidden className="text-[22px] leading-none">
             {text.emoji}
           </span>
           {text.title}
           {done.includes(step) && (
-            <span className="ml-1 rounded-full bg-accent-soft px-2 py-0.5 text-label font-semibold text-accent-text">
+            <span className="ml-1 rounded-full bg-accent-bg px-2 py-0.5 text-label font-semibold text-accent-text">
               <span aria-hidden>✓ </span>
               {t.welcome.stepDone}
             </span>
           )}
         </h2>
-        <p className="mt-2 text-[14px] leading-[1.5] text-brand-near-black">
+        <p className="mt-2 text-[14px] leading-[1.5] text-foreground">
           <Bold text={body} />
         </p>
         <Link
@@ -189,7 +190,7 @@ export function WelcomeCard({
             <span
               key={s}
               aria-hidden
-              className={`h-[7px] rounded-full transition-all ${i === current ? "w-[18px] bg-primary" : done.includes(s) ? "w-[7px] bg-accent" : "w-[7px] bg-brand-gray-light"}`}
+              className={`h-[7px] rounded-full transition-all ${i === current ? "w-[18px] bg-primary" : done.includes(s) ? "w-[7px] bg-accent" : "w-[7px] bg-neutral"}`}
             />
           ))}
           <span className="sr-only">

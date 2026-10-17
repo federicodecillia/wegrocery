@@ -22,14 +22,14 @@ export function PendingRefundsNotice({ count }: { count: number }) {
   }
 
   return (
-    <div className="rounded-xl border border-danger-text/30 bg-danger-soft p-4">
-      <p className="text-[13px] font-bold text-danger-text">{t.admin.treasury.pendingRefundsTitle(count)}</p>
-      <p className="mt-1 text-[12px] text-brand-near-black">{t.admin.treasury.pendingRefundsHint}</p>
+    <div className="rounded-xl border border-destructive/30 bg-danger-bg p-4">
+      <p className="text-[13px] font-bold text-destructive">{t.admin.treasury.pendingRefundsTitle(count)}</p>
+      <p className="mt-1 text-[12px] text-foreground">{t.admin.treasury.pendingRefundsHint}</p>
       <button
         type="button"
         onClick={retry}
         disabled={isPending}
-        className="mt-3 rounded-full bg-danger px-4 py-2 text-[13px] font-bold text-on-danger disabled:opacity-40"
+        className="mt-3 rounded-full bg-danger px-4 py-2 text-[13px] font-bold text-danger-foreground disabled:opacity-40"
       >
         {isPending ? t.admin.treasury.pendingRefundsRetrying : t.admin.treasury.pendingRefundsRetry}
       </button>

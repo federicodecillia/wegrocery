@@ -4,7 +4,7 @@ import { admitEmail, memberForNewSession } from "./admission";
 
 // BOOTSTRAP_ADMIN_EMAIL on a group that already has an admin: the variable is
 // ignored and the address is a stranger like any other. The first sign-in on
-// an empty database is covered by test/int/fresh-install.int.test.ts.
+// an empty database is covered by test/int/fresh-install.integration.test.ts.
 describeDb("first admin from BOOTSTRAP_ADMIN_EMAIL, once the group has an admin", () => {
   const scope = makeScope("boot");
   const address = `${scope.prefix}.first@example.invalid`;

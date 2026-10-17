@@ -71,23 +71,23 @@ export function CycleTodo({
   }
 
   return (
-    <section aria-labelledby="todo-title" className="mb-4 rounded-2xl border border-brand-border bg-surface p-3 lg:p-4">
-      <h2 id="todo-title" className="px-1 text-label font-bold uppercase tracking-wide text-muted">
+    <section aria-labelledby="todo-title" className="mb-4 rounded-2xl border border-border bg-card p-3 lg:p-4">
+      <h2 id="todo-title" className="px-1 text-label font-bold uppercase tracking-wide text-muted-foreground">
         {d.title}
       </h2>
       {shown.length === 0 ? (
-        <p className="px-1 pt-2 text-[13px] text-brand-gray">{d.nothing}</p>
+        <p className="px-1 pt-2 text-[13px] text-secondary-foreground">{d.nothing}</p>
       ) : (
         <ul className="mt-2 space-y-2 lg:grid lg:grid-cols-3 lg:gap-3 lg:space-y-0">
           {shown.map(({ task, step }, i) => (
             <li
               key={task.cycleId}
               className={`${i >= SHOWN_SMALL ? "hidden lg:flex" : "flex"} flex-col rounded-xl border p-3 ${
-                step === "overdue" ? "border-danger-text/40 bg-danger-soft" : "border-brand-border bg-brand-warm-white"
+                step === "overdue" ? "border-destructive/40 bg-danger-bg" : "border-border bg-background"
               }`}
             >
-              <span className="truncate text-label font-semibold text-brand-gray">{task.title}</span>
-              <span className={`mt-0.5 text-[13px] ${step === "overdue" ? "font-bold text-danger-text" : "text-brand-near-black"}`}>
+              <span className="truncate text-label font-semibold text-secondary-foreground">{task.title}</span>
+              <span className={`mt-0.5 text-[13px] ${step === "overdue" ? "font-bold text-destructive" : "text-foreground"}`}>
                 {detail(task, step)}
               </span>
               <span className="mt-2 flex flex-wrap items-center gap-2 lg:mt-auto lg:pt-2">
@@ -95,8 +95,8 @@ export function CycleTodo({
                   href={adminHref("ciclo", VIEW[step], { cycle: task.cycleId })}
                   className={`flex min-h-11 flex-1 items-center justify-center rounded-xl px-3 text-center text-[13px] font-bold ${
                     step === "overdue"
-                      ? "bg-danger text-on-danger"
-                      : "bg-primary text-on-primary"
+                      ? "bg-danger text-danger-foreground"
+                      : "bg-primary text-primary-foreground"
                   }`}
                 >
                   {cta(step)}
@@ -106,7 +106,7 @@ export function CycleTodo({
                     type="button"
                     onClick={() => markDone(task.cycleId, step)}
                     title={d.markHint}
-                    className="min-h-11 rounded-xl border border-brand-border bg-surface px-3 text-[13px] font-semibold text-brand-near-black"
+                    className="min-h-11 rounded-xl border border-border bg-card px-3 text-[13px] font-semibold text-foreground"
                   >
                     {step === "to_send" ? d.markSent : d.markDelivered}
                   </button>
@@ -117,9 +117,9 @@ export function CycleTodo({
         </ul>
       )}
       {visible.length > SHOWN_SMALL && (
-        <p className="px-1 pt-2 text-label text-muted lg:hidden">{d.more(visible.length - SHOWN_SMALL)}</p>
+        <p className="px-1 pt-2 text-label text-muted-foreground lg:hidden">{d.more(visible.length - SHOWN_SMALL)}</p>
       )}
-      {visible.length > SHOWN && <p className="hidden px-1 pt-2 text-label text-muted lg:block">{d.more(visible.length - SHOWN)}</p>}
+      {visible.length > SHOWN && <p className="hidden px-1 pt-2 text-label text-muted-foreground lg:block">{d.more(visible.length - SHOWN)}</p>}
       {(refunds > 0 || duplicates > 0) && (
         <p className="flex flex-wrap gap-x-4 gap-y-1 px-1 pt-2 text-[13px]">
           {refunds > 0 && (

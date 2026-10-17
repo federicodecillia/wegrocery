@@ -28,26 +28,39 @@ function tokens(theme: BrandTheme, mode: "light" | "dark"): Record<string, strin
   return mode === "light" ? { ...lightStatic, ...deriveRoleVars(theme) } : { ...lightStatic, ...deriveDarkRoleVars(theme) };
 }
 
-/** Text token, surface token (or hex), minimum. */
-function textPairs(t: Record<string, string>): [string, string, string][] {
-  const surfaces = ["--background", "--surface"];
+/** Text token, surface token, label. The Playbook 2.2 pairs (as in the kit's
+ * `tema` module) plus the app's own coloured surfaces. */
+function textPairs(mode: "light" | "dark"): [string, string, string][] {
+  const surfaces = ["--background", "--card", "--popover"];
+  const soft = ["--primary-bg", "--accent-bg", "--danger-bg"];
   const out: [string, string, string][] = [];
   const add = (fg: string, bgs: string[]) => bgs.forEach((bg) => out.push([fg, bg, `${fg} on ${bg}`]));
-  add("--foreground", [...surfaces, "--primary-soft", "--accent-soft", "--danger-soft"]);
-  add("--near-blk", [...surfaces, "--primary-soft", "--accent-soft"]);
-  add("--gray", [...surfaces, "--primary-soft", "--accent-soft", "--danger-soft"]);
-  add("--muted", [...surfaces, "--primary-soft", "--accent-soft", "--danger-soft"]);
-  add("--primary-text", [...surfaces, "--primary-soft"]);
-  add("--accent-text", [...surfaces, "--accent-soft"]);
-  add("--danger-text", [...surfaces, "--danger-soft"]);
-  out.push(["--on-primary", "--primary", "text on the primary fill"]);
-  out.push(["--on-accent", "--accent", "text on the accent fill"]);
-  out.push(["--on-danger", "--danger", "text on the danger fill"]);
-  out.push(["--on-inverse", "--inverse", "text on the inverse fill"]);
-  out.push(["--on-warning", "--warning", "text on the warning fill"]);
-  void t;
+  add("--foreground", [...surfaces, "--muted", ...soft]);
+  add("--card-foreground", ["--card"]);
+  add("--popover-foreground", ["--popover"]);
+  add("--secondary-foreground", [...surfaces, "--secondary", ...soft]);
+  add("--muted-foreground", [...surfaces, "--muted", ...soft]);
+  add("--primary-text", [...surfaces, "--primary-bg"]);
+  add("--accent-text", [...surfaces, "--accent-bg"]);
+  add("--destructive", [...surfaces, "--danger-bg"]);
+  add("--success", [...surfaces, "--success-bg"]);
+  // Warning is a fill in the dark theme (white text on it); text only in light.
+  if (mode === "light") add("--warning", [...surfaces, "--warning-bg"]);
+  out.push(["--primary-foreground", "--primary", "text on the primary fill"]);
+  out.push(["--accent-foreground", "--accent", "text on the accent fill"]);
+  out.push(["--danger-foreground", "--danger", "text on the danger fill"]);
+  out.push(["--inverse-foreground", "--inverse", "text on the inverse fill"]);
+  out.push(["--warning-foreground", "--warning", "text on the warning fill"]);
   return out;
 }
+
+/** Control borders and the focus ring on the surfaces they sit on: 3:1. */
+const NON_TEXT_PAIRS: [string, string][] = [
+  ["--input", "--background"],
+  ["--input", "--card"],
+  ["--ring", "--background"],
+  ["--ring", "--card"],
+];
 
 function lightOk(theme: BrandTheme): boolean {
   return brandContrastWarnings(theme).length === 0;
@@ -59,7 +72,7 @@ describe("theme contrast", () => {
       if (mode === "light" && !lightOk(theme)) continue; // known to warn: the admin is told in Impostazioni
       it(`${mode} theme, ${name}: text pairs reach 4.5:1`, () => {
         const t = tokens(theme, mode);
-        for (const [fg, bg, label] of textPairs(t)) {
+        for (const [fg, bg, label] of textPairs(mode)) {
           expect(t[fg], `${fg} defined`).toBeDefined();
           expect(t[bg], `${bg} defined`).toBeDefined();
           expect(contrastRatio(t[fg], t[bg]), label).toBeGreaterThanOrEqual(4.5);
@@ -69,22 +82,23 @@ describe("theme contrast", () => {
       it(`${mode} theme, ${name}: coloured text stays readable on a tint of its own fill`, () => {
         const t = tokens(theme, mode);
         for (const role of ["primary", "accent"] as const) {
-          for (const base of [t["--background"], t["--surface"]]) {
+          for (const base of [t["--background"], t["--card"]]) {
             const tint = mixHex(t[`--${role}`], base, 0.2);
             expect(contrastRatio(t[`--${role}-text`], tint), `${role} text on its tint over ${base}`).toBeGreaterThanOrEqual(4.5);
           }
         }
       });
 
-      it(`${mode} theme, ${name}: the focus ring and the fills reach 3:1 on the surfaces`, () => {
+      it(`${mode} theme, ${name}: control borders, the focus ring and the fills reach 3:1 on the surfaces`, () => {
         const t = tokens(theme, mode);
-        for (const bg of [t["--background"], t["--surface"]]) {
-          expect(contrastRatio(t["--primary-text"], bg), "focus ring over " + bg).toBeGreaterThanOrEqual(3);
+        for (const [fg, bg] of NON_TEXT_PAIRS) {
+          expect(t[fg], `${fg} defined`).toBeDefined();
+          expect(contrastRatio(t[fg], t[bg]), `${fg} on ${bg}`).toBeGreaterThanOrEqual(3);
         }
         if (mode === "dark") {
           // In light, the group's own fill is the group's choice (and warned about in Impostazioni).
           for (const role of ["primary", "accent"]) {
-            expect(contrastRatio(t[`--${role}`], t["--surface"]), `${role} fill on the surface`).toBeGreaterThanOrEqual(3);
+            expect(contrastRatio(t[`--${role}`], t["--card"]), `${role} fill on the surface`).toBeGreaterThanOrEqual(3);
           }
         }
       });
@@ -95,7 +109,7 @@ describe("theme contrast", () => {
     const light = Object.keys({ ...lightStatic, ...deriveRoleVars({}) });
     const dark = new Set(Object.keys(deriveDarkRoleVars({})));
     // Same on both sides: fills and the warning colour.
-    const shared = new Set(["--danger", "--on-danger", "--warning", "--on-warning"]);
+    const shared = new Set(["--danger", "--danger-foreground", "--warning", "--warning-foreground"]);
     expect(light.filter((k) => !dark.has(k) && !shared.has(k) && k !== "--nav-h")).toEqual([]);
   });
 
