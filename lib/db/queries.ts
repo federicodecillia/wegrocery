@@ -2,6 +2,7 @@ import { and, asc, desc, eq, inArray, isNotNull, isNull, or, sql } from "drizzle
 import { getDb } from "./client";
 import { liveLedger } from "./ledger-live";
 import type { WelcomeFacts } from "@/lib/guide/welcome";
+import type { AdminWelcomeFacts } from "@/lib/admin/welcome";
 import {
   ledgerEntries,
   familyInvites,
@@ -61,6 +62,21 @@ export async function getWelcomeFacts(memberId: string, personId: string): Promi
   `);
   const row = rows[0];
   return { money: row?.money === true, ordered: row?.ordered === true, preferences: row?.preferences === true, family: row?.family === true };
+}
+
+// What the admin welcome card ticks (lib/admin/welcome.ts): the group's own
+// rows, read only while the card shows.
+export async function getAdminWelcomeFacts(): Promise<AdminWelcomeFacts> {
+  const db = getDb();
+  const { rows } = await db.execute<{ cycle: boolean; closed: boolean; topup: boolean; members: boolean }>(sql`
+    SELECT
+      EXISTS (SELECT 1 FROM order_cycles) AS cycle,
+      EXISTS (SELECT 1 FROM order_cycles WHERE status = 'closed') AS closed,
+      EXISTS (SELECT 1 FROM ledger_entries WHERE type = 'topup' AND reversed_by IS NULL) AS topup,
+      EXISTS (SELECT 1 FROM members WHERE role <> 'admin' AND active) AS members
+  `);
+  const row = rows[0];
+  return { cycle: row?.cycle === true, closed: row?.closed === true, topup: row?.topup === true, members: row?.members === true };
 }
 
 export async function getMemberById(memberId: string) {

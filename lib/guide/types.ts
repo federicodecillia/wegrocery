@@ -11,6 +11,9 @@ export type GuideCondition = {
   families?: boolean;
   onlineTopup?: boolean;
   bankTransfer?: boolean;
+  // Cycles can be paid by card: a pay-per-order group, or a wallet group with
+  // a usable Stripe key (lib/payments/cycle-mode.ts).
+  cards?: boolean;
 };
 
 // The deploy's side of the conditions, read from the payment settings.
@@ -19,6 +22,7 @@ export type GuideContext = {
   families: boolean;
   onlineTopup: boolean;
   bankTransfer: boolean;
+  cards: boolean;
 };
 
 export type GuideTopic = {
@@ -74,11 +78,13 @@ export function guideContext(settings: {
   familiesEnabled: boolean;
   onlineTopupAvailable: boolean;
   bankTransfer: unknown;
+  stripeKey: { usable: boolean };
 }): GuideContext {
   return {
     mode: settings.mode,
     families: settings.familiesEnabled,
     onlineTopup: settings.onlineTopupAvailable,
     bankTransfer: settings.bankTransfer !== null,
+    cards: settings.mode === "per_order" || settings.stripeKey.usable,
   };
 }

@@ -22,6 +22,12 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
+## [Unreleased]
+
+### Added
+- 🧭 **A guide for admins.** Admins now find an "Admin guide" in How it works and under Admin (⋯ on a phone, the side menu on a computer): 39 step-by-step cards on opening and closing a cycle, the supplier sheet, the treasury, the catalogue, members and settings, with search. Members do not see it: the pages answer "not found" and its words never reach their phone.
+- 👋 **A welcome for admins.** The first time in Admin, a short step-by-step card walks through the work (what needs doing, opening and closing a cycle, the treasury, members, the guide) and ticks what the group has done already. "Skip" or "Got it" closes it; the admin guide shows it again. Every Admin section has a "How it works" link to the right guide card. New column `members.admin_welcome_dismissed_at` (migration 0039, additive only).
+
 ## [1.32.0] - 2026-10-17
 
 *Groups can keep card-paid cycles switched off until they decide to use them.*

@@ -6,7 +6,7 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { NavIcon } from "@/components/nav-icon";
 import { isItemActive, isNotificationsPath, isProfilePath, visibleNavItems } from "@/components/nav-items";
-import { ADMIN_MORE, ADMIN_PRIMARY, adminHref, resolveAdminRoute } from "@/lib/admin/nav";
+import { ADMIN_GUIDE_HREF, ADMIN_MORE, ADMIN_PRIMARY, adminHref, resolveAdminRoute } from "@/lib/admin/nav";
 import { t } from "@/lib/i18n";
 import { initials } from "@/lib/profile/summary";
 
@@ -74,6 +74,14 @@ export function SideNav({ isAdmin, unreadCount, name, email, appName, logoUrl, s
                         </Link>
                       </li>
                     ))}
+                    <li>
+                      <Link
+                        href={ADMIN_GUIDE_HREF}
+                        className="flex min-h-(--control-h) items-center rounded-xl px-3 text-[14px] text-secondary-foreground hover:text-foreground"
+                      >
+                        {t.admin.nav.guide}
+                      </Link>
+                    </li>
                   </ul>
                 )}
               </li>

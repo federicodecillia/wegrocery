@@ -14,13 +14,14 @@ type Props = {
   synonyms: string[][];
   stopwords: string[];
   topicTitles: Record<string, string>;
+  placeholder?: string;
   // The guide's index (topics, news, contacts), shown while nothing is typed.
   children: ReactNode;
 };
 
 // The search box of /guida: results replace the topic list as the member
 // types, and each result opens its card on the topic page.
-export function GuideSearch({ index, synonyms, stopwords, topicTitles, children }: Props) {
+export function GuideSearch({ index, synonyms, stopwords, topicTitles, placeholder = t.guide.searchPlaceholder, children }: Props) {
   const [query, setQuery] = useState("");
   const results = useMemo(
     () => searchGuide(index, query, { synonyms, stopwords }),
@@ -53,7 +54,7 @@ export function GuideSearch({ index, synonyms, stopwords, topicTitles, children 
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder={t.guide.searchPlaceholder}
+          placeholder={placeholder}
           autoComplete="off"
           enterKeyHint="search"
           className="rounded-full py-3 pl-11 pr-11 shadow-card focus:border-primary [&::-webkit-search-cancel-button]:hidden"

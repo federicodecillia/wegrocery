@@ -49,7 +49,7 @@ Never read `.env*` files other than `.env.example` (Playbook 8.3).
 │   ├── storico/page.tsx        # Order history + ledger movements tabs
 │   ├── notifiche/page.tsx      # Notification list with mark-as-read
 │   ├── profilo/page.tsx        # Profile (header avatar): name, emails, card, family, notifications, money, app, sign-out (privacy stays in the footer)
-│   ├── guida/page.tsx          # Guide index: "Il nostro gruppo" (admin text), search, topics, news; cards in guida/[topic] (content in lib/guide)
+│   ├── guida/page.tsx          # Guide index: "Il nostro gruppo" (admin text), search, topics, news; cards in guida/[topic] (content in lib/guide); admin guide in guida/admin (lib/guide/admin, server only: adminGuideFor checks the role, 404 for members)
 │   ├── admin/page.tsx          # Admin: Ciclo ("Da fare ora" on top, lib/admin/cycle-phase.ts; workspace: cycle list + Panoramica/Prodotti/Ordini/Fornitore/Conti, components/admin/cycle-workspace.tsx, lib/admin/cycle-views.ts) · Cassa · Soci · Catalogo (Prodotti, Fornitori) · ⋯ Statistiche, Impostazioni (lib/admin/nav.ts; old ?tab= links resolve)
 │   ├── admin/avvio/page.tsx    # First-run setup wizard (lib/admin/setup-steps.ts), offered by a banner while group_identity.setup_completed_at is null
 │   ├── brand/[file]/route.ts   # Uploaded logo (/brand/logo-<ms>.<ext>), public, immutable cache
@@ -90,7 +90,7 @@ Never read `.env*` files other than `.env.example` (Playbook 8.3).
 │                               #   access.ts: pure checkAccess/sessionClaims (no imports, used by proxy.ts)
 ├── proxy.ts                     # Redirect unauthenticated to /login (Next.js 16's middleware)
 ├── auth.ts                     # Better Auth instance, auth() (session + member), signOut()
-├── drizzle/                    # SQL migrations (0000–0035)
+├── drizzle/                    # SQL migrations (0000–0039)
 ├── console/                    # WeGrocery Console: separate Next.js app (own package.json, registry DB, Vercel project with
 │                               #   Root Directory `console`) for the operator's fleet; excluded from the root tsc/eslint/vitest; see console/README.md
 └── public/logo.png, public/mail/logo.png (email logo, 3x)
