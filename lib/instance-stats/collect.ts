@@ -3,11 +3,14 @@ import { getConfigStatus } from "@/lib/config-status-server";
 import { getDb } from "@/lib/db/client";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
 import packageJson from "@/package.json";
+import type { ConfigItemStatus } from "./stats";
 
 // What /api/instance-stats tells a fleet console about this installation:
 // counts and states only. No name, address, amount or balance of anyone, no
-// variable value: the same rule as the configuration status card.
-export type InstanceStats = {
+// variable value: the same rule as the configuration status card. This is the
+// shape the WeGrocery Console read before the FlyLabs Kit; toFlyLabsStats
+// (envelope.ts) turns it into the kit's envelope.
+export type WeGroceryInstanceStats = {
   version: string;
   generatedAt: string;
   // The first migration applied to this database: when the installation was set up.
@@ -19,14 +22,14 @@ export type InstanceStats = {
   databaseBytes: number | null;
   paymentMode: string;
   // Configuration status, item by item: { id, status }, plus pending migrations.
-  config: { id: string; status: string }[];
+  config: { id: string; status: ConfigItemStatus }[];
   pendingMigrations: string[];
   setupCompleted: boolean;
 };
 
 const iso = (v: unknown) => (v == null ? null : new Date(v as string).toISOString());
 
-export async function collectInstanceStats(now: Date): Promise<InstanceStats> {
+export async function collectInstanceStats(now: Date): Promise<WeGroceryInstanceStats> {
   const db = getDb();
   const [counts, config, payments] = await Promise.all([
     db.execute<{

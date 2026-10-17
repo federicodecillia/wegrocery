@@ -97,11 +97,15 @@ On each installation (production, demo, …):
 
 - `GET /api/health` (public): `{ ok, version, db }`, 503 when the database
   is down.
-- `GET /api/instance-stats`: signed with `x-wegrocery-timestamp` (unix
-  seconds) and `x-wegrocery-signature` = lowercase hex HMAC-SHA256, keyed with
-  the instance's `INSTANCE_STATS_SECRET`, of `${timestamp}.GET./api/instance-stats`
-  (300 s clock skew). Implemented in `lib/stats/signature.ts`, checked against
-  a vector computed with `openssl`.
+- `GET /api/instance-stats` (the FlyLabs Kit module `console`): signed with
+  `x-flylabs-timestamp` (unix seconds) and `x-flylabs-signature` = lowercase
+  hex HMAC-SHA256, keyed with the instance's `INSTANCE_STATS_SECRET`, of
+  `${timestamp}.GET./api/instance-stats` (300 s clock skew). The same pair goes
+  out as `x-wegrocery-*` for instances from before the kit (1.30 and older).
+  Implemented in `lib/stats/signature.ts`, checked against a vector computed
+  with `openssl`. `parseStats` (`lib/stats/types.ts`) reads the kit's envelope
+  (`app`, `counts` by name, plus WeGrocery's `lastClosedAt`, `paymentMode`,
+  `setupCompleted`) and the older shape alike, into the shape snapshots store.
 
 ## The provisioning wizard
 
