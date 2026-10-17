@@ -25,6 +25,9 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ## [Non rilasciato]
 
+### Aggiunte
+- ✉️ **Email più curate.** Ogni email dell'app (accesso, notifiche, ordine al fornitore) ora arriva su una scheda pulita nei colori dell'app, con link da toccare e il logo di WeGrocery in fondo; le app di posta che mostrano solo il testo ricevono le stesse parole di prima.
+
 ### Modificato
 - 📰 **Le novità parlano ai soci.** La pagina mostra le modifiche che si notano nell'app; quelle per chi la gestisce (server, database, aggiornamenti) stanno dietro "Mostra dettagli tecnici", segnate "Tecnico".
 

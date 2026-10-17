@@ -24,6 +24,9 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ## [Unreleased]
 
+### Added
+- ✉️ **Emails with a proper look.** Every email from the app (sign-in, notifications, the supplier order) now arrives on a clean card in the app's colours, with links you can tap and the WeGrocery logo at the bottom; mail apps that show only text get the same words as before.
+
 ### Changed
 - 📰 **What's new speaks to members.** The page shows the changes you notice in the app; the ones for whoever runs it (servers, database, updates) sit behind "Show technical details", marked "Technical".
 

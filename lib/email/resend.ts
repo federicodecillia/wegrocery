@@ -1,6 +1,8 @@
 import { Resend } from "resend";
 import { t } from "@/lib/i18n";
+import { getAppBaseUrl } from "./base-url";
 import { emailIdempotencyKey, minuteBucket } from "./idempotency";
+import { emailHtml } from "./layout";
 import { outboundEnvFromProcess, resolveOutbound, resolveOutboundBatch } from "./outbound-policy";
 
 type Attachment = {
@@ -21,11 +23,9 @@ type SendMailOpts = {
   // archive address.
   replyTo?: string;
   subject: string;
+  // The message as the template wrote it. The HTML part is always derived
+  // from it here (lib/email/layout.ts, Playbook 7.7), so the two never drift.
   text: string;
-  // Optional HTML alternative. When present, the message is sent as a
-  // text/html multipart instead of text-only — some spam filters penalize
-  // plain-text emails carrying an attachment.
-  html?: string;
   attachments?: Attachment[];
   // Extra headers (List-Unsubscribe and its Post companion).
   headers?: Record<string, string>;
@@ -34,6 +34,13 @@ type SendMailOpts = {
   // click sends once and a deliberate resend a minute later still goes out.
   idempotencyKey?: string;
 };
+
+// The branded HTML part every email carries next to its text (Playbook 7.7):
+// the text on a card in the app's light colours, the WeGrocery logo and "By
+// FlyLabs.ai". Without a base URL the logo becomes the name in text.
+function brandedHtml(text: string, subject: string): string {
+  return emailHtml(text, { subject, baseUrl: getAppBaseUrl() ?? "" });
+}
 
 // Returns the configured default sender (MAIL_FROM) so the client can
 // pre-fill the Mittente field of the supplier-email dialog.
@@ -75,7 +82,7 @@ export async function sendMail(
       ...(opts.replyTo ? { replyTo: opts.replyTo } : {}),
       subject: target.subject,
       text: opts.text,
-      ...(opts.html ? { html: opts.html } : {}),
+      html: brandedHtml(opts.text, target.subject),
       ...(opts.attachments ? { attachments: opts.attachments } : {}),
       ...(opts.headers ? { headers: opts.headers } : {}),
       },
@@ -135,6 +142,7 @@ export async function sendMailBatch(
           to: [it.to],
           subject: it.subject,
           text: it.text,
+          html: brandedHtml(it.text, it.subject),
           ...(it.headers ? { headers: it.headers } : {}),
         })),
         {

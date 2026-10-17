@@ -126,3 +126,26 @@ describe("sendMailBatch outbound policy wiring", () => {
     expect(batchSend).not.toHaveBeenCalled();
   });
 });
+
+describe("branded HTML part (Playbook 7.7)", () => {
+  it("adds the HTML layout of the same text to every message, single and batch", async () => {
+    process.env.VERCEL_ENV = "production";
+    const savedBase = process.env.APP_BASE_URL;
+    process.env.APP_BASE_URL = "https://gas.example.org/";
+    try {
+      await sendMail({ ...mail, text: "Ciclo <chiuso>\n\nApri https://gas.example.org/storico." });
+      const html = ((send.mock.calls[0] as unknown[])[0] as { html: string }).html;
+      expect(html).toContain("Ciclo &lt;chiuso&gt;");
+      expect(html).toContain('<a href="https://gas.example.org/storico"');
+      expect(html).toContain('src="https://gas.example.org/mail/logo.png"');
+      expect(html).toContain("FlyLabs.ai");
+
+      await sendMailBatch([{ to: "a@example.org", subject: "S", text: "corpo" }]);
+      const items = (batchSend.mock.calls[0] as unknown[])[0] as { text: string; html: string }[];
+      expect(items[0].html).toContain("corpo");
+    } finally {
+      if (savedBase === undefined) delete process.env.APP_BASE_URL;
+      else process.env.APP_BASE_URL = savedBase;
+    }
+  });
+});
