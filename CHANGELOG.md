@@ -28,6 +28,7 @@ A bullet that only matters to whoever hosts, runs or develops the app
 - ✉️ **Emails with a proper look.** Every email from the app (sign-in, notifications, the supplier order) now arrives on a clean card in the app's colours, with links you can tap and the WeGrocery logo at the bottom; mail apps that show only text get the same words as before.
 
 ### Changed
+- 🔤 **Codes and amounts in the reading font.** The IBAN, the sign-in code and the email addresses in Soci and Cassa now use the same font as the text, and totals and balances line their figures up; the welcome card's title is no longer in the narrow label font.
 - 📰 **What's new speaks to members.** The page shows the changes you notice in the app; the ones for whoever runs it (servers, database, updates) sit behind "Show technical details", marked "Technical".
 - [tech] 📊 **Instance stats speak the FlyLabs Console's language.** `/api/instance-stats` also accepts the `x-flylabs-*` signature and then answers the FlyLabs Kit envelope (`app`, `counts`); the WeGrocery Console sends both and reads both shapes, so older installations keep working. `/api/health` gives up on a database that hangs after 3 seconds.
 - [tech] 🎨 **Colour tokens with the FlyLabs names.** The CSS colour roles now use the shadcn names of the FlyLabs Playbook (`card`, `muted-foreground`, `primary-foreground`, `destructive`, `danger-bg`...), plus `input`, `ring`, `success` and `warning-bg`; the group's own colours and both themes look the same as before, and the contrast test covers the new names.

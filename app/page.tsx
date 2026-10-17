@@ -251,7 +251,7 @@ export default async function HomePage({
         <div className="@container mb-4 flex items-baseline gap-1.5">
           {/* Smaller on phones, where the cycle card above needs the room. */}
           <span
-            className={`whitespace-nowrap text-[length:min(52px,var(--fit))] font-black leading-none tracking-[-0.045em] sm:text-[length:min(70px,var(--fit))] ${
+            className={`whitespace-nowrap text-[length:min(52px,var(--fit))] font-black tabular-nums leading-none tracking-[-0.045em] sm:text-[length:min(70px,var(--fit))] ${
               isNegative ? "text-destructive" : "text-foreground"
             }`}
             style={{ "--fit": `calc(100cqi / ${(0.61 * balanceText.length).toFixed(2)})` } as React.CSSProperties}

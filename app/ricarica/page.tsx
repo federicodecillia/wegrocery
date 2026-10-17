@@ -183,7 +183,7 @@ export default async function RicaricaPage({
                 </p>
               )}
               <CopyField label={t.topup.bankHolder} value={bank.holder} />
-              <CopyField label={t.topup.bankIban} value={compactIban(bank.iban)} display={formatIban(bank.iban)} mono />
+              <CopyField label={t.topup.bankIban} value={compactIban(bank.iban)} display={formatIban(bank.iban)} code />
               {referenceOrders.length > 0 && (
                 <>
                   <h3 className="mt-4 text-[14px] font-bold text-foreground">{t.topup.bankOrdersTitle}</h3>

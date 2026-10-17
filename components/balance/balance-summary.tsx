@@ -18,7 +18,7 @@ export function BalanceSummary({ label, balance, className = "mb-4" }: { label: 
         {label}
       </div>
       <span
-        className={`whitespace-nowrap text-[36px] font-black tracking-[-0.04em] ${
+        className={`whitespace-nowrap text-[36px] font-black tabular-nums tracking-[-0.04em] ${
           negative ? "text-destructive" : "text-foreground"
         }`}
       >

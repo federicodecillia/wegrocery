@@ -117,7 +117,7 @@ export function LoginForm({ googleEnabled, next }: { googleEnabled: boolean; nex
             maxLength={7}
             required
             placeholder="123456"
-            className="w-full rounded-lg border border-border px-3 py-2 text-center font-mono text-lg tracking-[0.3em] text-foreground"
+            className="w-full rounded-lg border border-border px-3 py-2 text-center text-lg tabular-nums tracking-[0.3em] text-foreground"
           />
           <Button type="submit" variant="brand" block disabled={busy}>
             {status === "verifying" ? t.login.codeVerifying : t.login.codeButton}

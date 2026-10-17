@@ -143,7 +143,7 @@ export function WelcomeCard({
       className="mb-3.5 rounded-card border-[1.5px] border-primary-mid bg-card py-4.5 px-5 shadow-card"
     >
       <div className="mb-3 flex items-start justify-between gap-3">
-        <span className="font-mono text-label font-semibold uppercase tracking-[0.13em] text-primary-text">
+        <span className="text-label font-bold uppercase tracking-[0.08em] text-primary-text">
           {t.welcome.title(appName)}
         </span>
         <button

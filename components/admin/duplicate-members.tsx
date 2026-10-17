@@ -44,7 +44,7 @@ export function DuplicateMembers({
         <span className="break-words text-[13px] font-medium text-foreground">{m.fullName}</span>
         <span className="text-label text-muted-foreground">{getRoleLabel(m.role)}</span>
       </div>
-      <div className="break-all font-mono text-label text-secondary-foreground">
+      <div className="break-all text-label text-secondary-foreground">
         {m.email}
         {m.aliasEmail ? ` · ${m.aliasEmail}` : ""}
       </div>

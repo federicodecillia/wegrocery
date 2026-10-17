@@ -63,7 +63,7 @@ export function CassaSummaryCards({
         <span className="text-[14px] leading-none">💰</span>
       </div>
       <div
-        className={`text-[18px] font-black tracking-[-0.02em] ${
+        className={`text-[18px] font-black tabular-nums tracking-[-0.02em] ${
           totalBalance >= 0 ? "text-foreground" : "text-destructive"
         }`}
       >
@@ -84,7 +84,7 @@ export function CassaSummaryCards({
         <span className="text-[14px] leading-none">📊</span>
       </div>
       <div
-        className={`text-[18px] font-black tracking-[-0.02em] ${
+        className={`text-[18px] font-black tabular-nums tracking-[-0.02em] ${
           avgBalance >= 0 ? "text-foreground" : "text-destructive"
         }`}
       >
@@ -296,7 +296,7 @@ export function LedgerEntryRow({ entry }: { entry: LedgerEntry }) {
           {entry.correctedAt && ` · ${t.ledger.correctedOn(formatDate(entry.correctedAt))}`}
         </div>
         {note && <p className="mt-1 text-[13px] text-secondary-foreground">{note}</p>}
-        {details && <p className="mt-0.5 break-all font-mono text-label text-muted-foreground">{details}</p>}
+        {details && <p className="mt-0.5 break-all text-label text-muted-foreground">{details}</p>}
         {isEditable && (
           <div className="mt-2 flex gap-2">
             <Button

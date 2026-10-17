@@ -94,7 +94,7 @@ export function OrderSummary({
               <div className="font-mono text-label uppercase tracking-[0.09em] text-muted-foreground">
                 {t.order.totalOrder}
               </div>
-              <div className="mt-0.5 text-title font-black text-foreground">
+              <div className="mt-0.5 text-title font-black tabular-nums text-foreground">
                 {formatEur(payment ? payment.amount.requiredCents / 100 : total)}
               </div>
             </div>

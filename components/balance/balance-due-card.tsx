@@ -14,7 +14,7 @@ export function BalanceDueCard({ cents, canPay }: { cents: number; canPay: boole
         <div className="mb-1.5 font-mono text-label font-semibold uppercase tracking-[0.13em] text-destructive">
           {t.balance.dueLabel}
         </div>
-        <div className="mb-1.5 text-[32px] font-black leading-none tracking-[-0.04em] text-destructive">{amount}</div>
+        <div className="mb-1.5 text-[32px] font-black leading-none tabular-nums tracking-[-0.04em] text-destructive">{amount}</div>
         <p className="mb-3 text-[14px] text-foreground">{t.balance.dueHint}</p>
         {canPay ? <PayBalanceButton amountLabel={amount} /> : <p className="text-[14px] text-secondary-foreground">{t.order.pay.unavailable}</p>}
       </div>
@@ -26,7 +26,7 @@ export function BalanceDueCard({ cents, canPay }: { cents: number; canPay: boole
         <div className="mb-1.5 font-mono text-label font-semibold uppercase tracking-[0.13em] text-primary-text">
           {t.balance.creditLabel}
         </div>
-        <div className="mb-1.5 text-[32px] font-black leading-none tracking-[-0.04em] text-foreground">
+        <div className="mb-1.5 text-[32px] font-black leading-none tabular-nums tracking-[-0.04em] text-foreground">
           {formatMoney(cents / 100)}
         </div>
         <p className="text-[14px] text-foreground">{t.balance.creditHint}</p>

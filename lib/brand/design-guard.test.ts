@@ -2,6 +2,8 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, it, expect } from "vitest";
 import { contrastRatio } from "./contrast";
+import { it as itStrings } from "@/lib/i18n/it";
+import { en as enStrings } from "@/lib/i18n/en";
 
 function sources(dir: string): string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((e) =>
@@ -21,6 +23,11 @@ const hits = (re: RegExp) =>
       .split("\n")
       .flatMap((l, i) => (re.test(l) ? [`${f}:${i + 1}`] : [])),
   );
+
+function lineAt(hit: string): string {
+  const [f, n] = hit.split(":");
+  return readFileSync(f, "utf8").split("\n")[Number(n) - 1];
+}
 
 // Keeps the UI on role tokens (see "Design System" in AGENTS.md): a class
 // listed here fails WCAG AA or hard-codes one group's palette.
@@ -77,16 +84,45 @@ describe("design guard", () => {
     expect(hits(/bg-black\/(\[0\.\d+\]|[0-9]|1[0-5])(?![\w-])/)).toEqual([]);
   });
 
-  it("keeps mono for uppercase labels and code-like values (Playbook 2.1)", () => {
-    // Amounts and captions are Inter with tabular-nums. Mono stays for
-    // uppercase labels, the one-time code field and values such as an IBAN or
-    // an address (break-all).
-    const lone = hits(/(?<![\w-])font-mono(?![\w-])/).filter((h) => {
-      const [f, n] = h.split(":");
-      const line = readFileSync(f, "utf8").split("\n")[Number(n) - 1];
-      return !/uppercase|tracking-\[0\.3em\]|break-all|\$\{mono/.test(line);
+  it("loads Geist for titles, Inter for text and JetBrains Mono for labels with next/font (Playbook 2.1)", () => {
+    const layout = readFileSync("app/layout.tsx", "utf8");
+    expect(layout).toMatch(/import \{ Geist, Inter, JetBrains_Mono \} from "next\/font\/google"/);
+    expect(layout).not.toMatch(/Geist_Mono/);
+    const css = readFileSync("app/globals.css", "utf8");
+    expect(css).toMatch(/--font-sans: var\(--font-inter\)/);
+    expect(css).toMatch(/--font-mono: var\(--font-jetbrains-mono\)/);
+    expect(css).toMatch(/h1,\s*h2,\s*h3 \{\s*font-family: var\(--font-display\)/);
+  });
+
+  it("keeps mono for uppercase labels only, at 12px or more (Playbook 2.1)", () => {
+    // Amounts, prices, codes and addresses are Inter (tabular-nums for
+    // figures, break-all for an IBAN or an address).
+    const mono = /(?<![\w-])(font-mono|label-caps)(?![\w-])/;
+    const offenders = hits(mono).filter((h) => {
+      const line = lineAt(h);
+      return !/uppercase|label-caps/.test(line) || !/text-label|label-caps|text-\[1[2-9]px\]/.test(line);
     });
-    expect(lone).toEqual([]);
+    expect(offenders).toEqual([]);
+  });
+
+  it("keeps the mono labels to at most 4 words, in both languages (Playbook 2.1)", () => {
+    // Checks the strings a mono label shows when the line (or the next two)
+    // names them as t.<key>; labels built from data (a category, a date) are
+    // short by construction.
+    const long: string[] = [];
+    for (const h of hits(/(?<![\w-])(font-mono|label-caps)(?![\w-])/)) {
+      const [f, n] = h.split(":");
+      const window = readFileSync(f, "utf8").split("\n").slice(Number(n) - 1, Number(n) + 2).join(" ");
+      for (const m of window.matchAll(/\bt\.([\w.]+)/g)) {
+        for (const [lang, dict] of [["it", itStrings], ["en", enStrings]] as const) {
+          let v: unknown = dict;
+          for (const k of m[1].split(".")) v = (v as Record<string, unknown> | undefined)?.[k];
+          if (typeof v === "function") v = (v as (...a: unknown[]) => unknown)("WeGrocery", 12);
+          if (typeof v === "string" && v.trim().split(/\s+/).length > 4) long.push(`${h} ${lang} t.${m[1]}: ${v}`);
+        }
+      }
+    }
+    expect(long).toEqual([]);
   });
 
   it("sizes compact controls with --control-h (40 px, 44 px on touch), not fixed 32 to 40 px (Playbook 2.6)", () => {

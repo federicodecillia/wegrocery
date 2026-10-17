@@ -342,7 +342,7 @@ function CycleTotals({ entry }: { entry: CycleHistoryEntry }) {
       )}
       <div className="flex justify-between border-t border-border pt-1.25 text-[12px] font-bold text-foreground">
         <span>{perOrder ? t.history.cycleNetPerOrder : t.history.cycleNet}</span>
-        <span>{formatSignedMoney(entry.net)}</span>
+        <span className="tabular-nums">{formatSignedMoney(entry.net)}</span>
       </div>
     </div>
   );
@@ -352,7 +352,7 @@ function TotalRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between">
       <span>{label}</span>
-      <span>{value}</span>
+      <span className="tabular-nums">{value}</span>
     </div>
   );
 }

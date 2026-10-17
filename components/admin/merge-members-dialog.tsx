@@ -168,7 +168,7 @@ export function MergeMembersDialog({
                         onChange={() => setAlias(option)}
                         className="accent-primary"
                       />
-                      <span className="min-w-0 break-all font-mono">{option ?? m.aliasNone}</span>
+                      <span className="min-w-0 break-all">{option ?? m.aliasNone}</span>
                     </label>
                   ))}
                 </div>
