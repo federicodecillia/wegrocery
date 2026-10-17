@@ -22,7 +22,9 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
-## [Unreleased]
+## [1.31.0] - 2026-10-17
+
+*The FlyLabs look: clearer form fields, nicer emails, one set of icons and a What's new page written for members.*
 
 ### Added
 - ✉️ **Emails with a proper look.** Every email from the app (sign-in, notifications, the supplier order) now arrives on a clean card in the app's colours, with links you can tap and the WeGrocery logo at the bottom; mail apps that show only text get the same words as before.
@@ -672,6 +674,7 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
+[1.31.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.31.0
 [1.30.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.30.1
 [1.30.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.30.0
 [1.29.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.29.0
