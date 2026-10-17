@@ -16,7 +16,7 @@ export function NotificationBell({ unreadCount }: NotificationBellProps) {
       href="/notifiche"
       aria-current={current ? "page" : undefined}
       className={`hit-44 flex size-(--control-h) items-center justify-center rounded-full transition-colors ${
-        current ? "bg-primary-soft text-primary-text" : "text-brand-gray hover:text-brand-near-black"
+        current ? "bg-primary-bg text-primary-text" : "text-secondary-foreground hover:text-foreground"
       }`}
       aria-label={unreadCount > 0 ? t.notifications.unreadCountLabel(unreadCount) : t.notifications.title}
     >
@@ -25,7 +25,7 @@ export function NotificationBell({ unreadCount }: NotificationBellProps) {
         <path d="M13.73 21a2 2 0 0 1-3.46 0" />
       </svg>
       {unreadCount > 0 && (
-        <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-danger px-0.75 tabular-nums text-label font-bold leading-none text-on-danger">
+        <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-danger px-0.75 tabular-nums text-label font-bold leading-none text-danger-foreground">
           {unreadCount > 9 ? "9+" : unreadCount}
         </span>
       )}

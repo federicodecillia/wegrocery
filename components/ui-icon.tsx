@@ -102,7 +102,7 @@ export function topicIcon(id: string): UiIconName {
 /** A big icon in a soft circle, on top of an empty state ("no orders yet"). */
 export function EmptyIcon({ name }: { name: UiIconName }) {
   return (
-    <span className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary-soft text-primary-text">
+    <span className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary-bg text-primary-text">
       <UiIcon name={name} className="h-7 w-7" />
     </span>
   );

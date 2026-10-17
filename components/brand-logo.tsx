@@ -12,7 +12,7 @@ export function BrandLogo({ src, alt, shortName, size = 56 }: { src: string; alt
       <span
         {...(alt ? { role: "img", "aria-label": alt } : { "aria-hidden": true })}
         style={{ width: size, height: size, fontSize: size * 0.55 }}
-        className="flex items-center justify-center rounded-2xl bg-primary-soft font-black text-primary-text"
+        className="flex items-center justify-center rounded-2xl bg-primary-bg font-black text-primary-text"
       >
         {fallbackInitial(shortName)}
       </span>

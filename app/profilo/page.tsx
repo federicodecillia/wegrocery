@@ -79,13 +79,13 @@ export default async function ProfilePage() {
       <div className="mb-5 flex items-center gap-4">
         <div
           aria-hidden
-          className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary text-[20px] font-black tracking-tight text-on-primary"
+          className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary text-[20px] font-black tracking-tight text-primary-foreground"
         >
           {initials(name, session.user.email)}
         </div>
         <div className="min-w-0">
-          <h1 className="break-words text-title font-black text-brand-near-black">{name || t.profile.title}</h1>
-          <p className="break-all text-[14px] text-brand-gray">{session.user.email}</p>
+          <h1 className="break-words text-title font-black text-foreground">{name || t.profile.title}</h1>
+          <p className="break-all text-[14px] text-secondary-foreground">{session.user.email}</p>
           {/* The role says something only when it is not the default one. */}
           {(() => {
             const parts = [
@@ -93,7 +93,7 @@ export default async function ProfilePage() {
               inFamily && account ? t.profile.sharedAccount(account.fullName) : null,
             ].filter(Boolean);
             return parts.length > 0 ? (
-              <p className="mt-0.5 text-[13px] text-brand-gray">{parts.join(" · ")}</p>
+              <p className="mt-0.5 text-[13px] text-secondary-foreground">{parts.join(" · ")}</p>
             ) : null;
           })()}
         </div>
@@ -183,7 +183,7 @@ export default async function ProfilePage() {
           redirect("/login");
         }}
       />
-      <p className="mt-3 text-center text-label text-muted">{t.profile.version(packageJson.version)}</p>
+      <p className="mt-3 text-center text-label text-muted-foreground">{t.profile.version(packageJson.version)}</p>
     </AppShell>
   );
 }

@@ -73,7 +73,7 @@ export function CategoryBar({
   return (
     <nav
       aria-label={t.order.categoriesAria}
-      className="sticky top-0 z-[5] -mx-5 mt-3 md:-mx-8 border-b border-brand-border bg-brand-warm-white"
+      className="sticky top-0 z-[5] -mx-5 mt-3 md:-mx-8 border-b border-border bg-background"
     >
       <ul ref={row} className="flex gap-2 overflow-x-auto px-5 py-2 md:px-8 [scrollbar-width:none]">
         {cartCount > 0 && (
@@ -82,7 +82,7 @@ export function CategoryBar({
               type="button"
               aria-pressed={onlyCart}
               onClick={onToggleCart}
-              className={`${chip} ${onlyCart ? "border-primary bg-primary text-on-primary" : "border-primary-mid bg-primary-soft text-primary-text"}`}
+              className={`${chip} ${onlyCart ? "border-primary bg-primary text-primary-foreground" : "border-primary-mid bg-primary-bg text-primary-text"}`}
             >
               {t.order.inCart(cartCount)}
             </button>
@@ -96,7 +96,7 @@ export function CategoryBar({
                 onClick={(e) => jump(c, e.timeStamp)}
                 aria-current={active === c ? "true" : undefined}
                 className={`${chip} ${
-                  active === c ? "border-inverse bg-inverse text-on-inverse" : "border-brand-border bg-surface text-brand-gray"
+                  active === c ? "border-inverse bg-inverse text-inverse-foreground" : "border-border bg-card text-secondary-foreground"
                 }`}
               >
                 {labelOf(c)}

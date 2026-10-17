@@ -17,7 +17,7 @@ export function NextPickupCard({ pickup }: { pickup: NextPickup }) {
   const timeRange = pickup.pickupEndTime ? `${startTime}–${pickup.pickupEndTime}` : startTime;
 
   return (
-    <div className="mb-3.5 rounded-card border border-accent/20 bg-accent-soft py-3.5 px-4">
+    <div className="mb-3.5 rounded-card border border-accent/20 bg-accent-bg py-3.5 px-4">
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0 flex-1">
           <div className="mb-0.75 flex items-center gap-1.5 font-mono text-label uppercase tracking-[0.13em] text-accent-text">
@@ -27,14 +27,14 @@ export function NextPickupCard({ pickup }: { pickup: NextPickup }) {
             </svg>
             {pickup.isSecondPickup ? t.cycle.secondPickup : t.cycle.nextPickup}
           </div>
-          <div className="text-[15px] font-bold tracking-[-0.01em] text-brand-near-black">
+          <div className="text-[15px] font-bold tracking-[-0.01em] text-foreground">
             {dayLabel}
           </div>
-          <div className="mt-0.5 tabular-nums text-[12px] font-semibold text-brand-near-black/80">
+          <div className="mt-0.5 tabular-nums text-[12px] font-semibold text-foreground/80">
             {timeRange}
           </div>
           {(pickup.cycleTitle || pickup.supplierName) && (
-            <div className="mt-0.5 truncate text-label text-brand-gray">
+            <div className="mt-0.5 truncate text-label text-secondary-foreground">
               {[pickup.cycleTitle, pickup.supplierName].filter(Boolean).join(" · ")}
             </div>
           )}

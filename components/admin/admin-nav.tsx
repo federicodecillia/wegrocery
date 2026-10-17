@@ -8,7 +8,7 @@ import { ADMIN_MORE, ADMIN_PRIMARY, ADMIN_VIEWS, adminHref, resolveAdminRoute } 
 
 function tabClass(active: boolean): string {
   return `flex min-h-(--control-h) items-center justify-center rounded-full px-2 text-center text-[13px] font-semibold transition-colors ${
-    active ? "bg-surface text-brand-near-black shadow-sm" : "text-brand-gray hover:text-brand-near-black"
+    active ? "bg-card text-foreground shadow-sm" : "text-secondary-foreground hover:text-foreground"
   }`;
 }
 
@@ -84,14 +84,14 @@ export function AdminNav() {
             <span aria-hidden className="text-[16px] leading-none">⋯</span>
             {inMore && <span className="sr-only">{ADMIN_MORE.find((s) => s.id === section)?.label}</span>}
           </summary>
-          <ul className="absolute right-0 z-30 mt-2 min-w-[180px] overflow-hidden rounded-xl border border-brand-border bg-surface py-1 shadow-md">
+          <ul className="absolute right-0 z-30 mt-2 min-w-[180px] overflow-hidden rounded-xl border border-border bg-card py-1 shadow-md">
             {ADMIN_MORE.map((s) => (
               <li key={s.id}>
                 <Link
                   href={adminHref(s.id)}
                   aria-current={section === s.id ? "page" : undefined}
                   className={`flex min-h-11 items-center px-4 text-[14px] ${
-                    section === s.id ? "font-bold text-primary-text" : "text-brand-near-black hover:bg-tint/[0.03]"
+                    section === s.id ? "font-bold text-primary-text" : "text-foreground hover:bg-tint/[0.03]"
                   }`}
                 >
                   {s.label}
@@ -103,14 +103,14 @@ export function AdminNav() {
       </nav>
 
       {views && (
-        <nav aria-label={t.admin.nav.views} className="flex gap-4 border-b border-brand-border px-1">
+        <nav aria-label={t.admin.nav.views} className="flex gap-4 border-b border-border px-1">
           {views.map((v) => (
             <Link
               key={v.id}
               href={adminHref(section, v.id)}
               aria-current={view === v.id ? "page" : undefined}
               className={`-mb-px flex min-h-11 items-center border-b-2 text-[14px] font-semibold ${
-                view === v.id ? "border-primary text-brand-near-black" : "border-transparent text-brand-gray hover:text-brand-near-black"
+                view === v.id ? "border-primary text-foreground" : "border-transparent text-secondary-foreground hover:text-foreground"
               }`}
             >
               {v.label}

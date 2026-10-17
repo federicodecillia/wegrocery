@@ -18,7 +18,7 @@ export function CancelCycleButton({ cycleId, cycleTitle }: { cycleId: string; cy
     <>
       <button
         onClick={() => setOpen(true)}
-        className="rounded-lg bg-danger-text/10 px-3 py-1 text-label font-bold text-danger-text hover:bg-danger-text/20"
+        className="rounded-lg bg-destructive/10 px-3 py-1 text-label font-bold text-destructive hover:bg-destructive/20"
       >
         {t.admin.cycleCancel.openButton}
       </button>
@@ -92,12 +92,12 @@ function CancelCycleDialog({
       }
     >
       <div className="space-y-4">
-        <p className="rounded-lg border border-danger-text/30 bg-danger-soft p-3 text-[13px] text-danger-text">
+        <p className="rounded-lg border border-destructive/30 bg-danger-bg p-3 text-[13px] text-destructive">
           {t.admin.cycleCancel.modalDescription}
         </p>
 
         <div>
-          <label htmlFor="cancel-cycle-reason" className="mb-1 block text-label font-semibold text-brand-gray">
+          <label htmlFor="cancel-cycle-reason" className="mb-1 block text-label font-semibold text-secondary-foreground">
             {t.admin.cycleCancel.reasonLabel}
           </label>
           <textarea
@@ -106,16 +106,16 @@ function CancelCycleDialog({
             onChange={(e) => setReason(e.target.value)}
             placeholder={t.admin.cycleCancel.reasonPlaceholder}
             rows={3}
-            className="w-full rounded-lg border border-brand-border bg-surface px-3 py-2 text-[14px] text-brand-near-black"
+            className="w-full rounded-lg border border-border bg-card px-3 py-2 text-[14px] text-foreground"
           />
         </div>
 
-        <label className="flex min-h-11 items-center gap-3 text-[13px] font-semibold text-brand-near-black">
+        <label className="flex min-h-11 items-center gap-3 text-[13px] font-semibold text-foreground">
           <input
             type="checkbox"
             checked={refundShipping}
             onChange={(e) => setRefundShipping(e.target.checked)}
-            className="h-5 w-5 shrink-0 rounded border-brand-border"
+            className="h-5 w-5 shrink-0 rounded border-border"
           />
           {t.admin.cycleCancel.refundShippingLabel}
         </label>

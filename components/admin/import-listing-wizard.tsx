@@ -181,10 +181,10 @@ export function ImportListingWizard({ open, onClose, cycleId, cycleTitle }: Prop
       subtitle={`${cycleTitle ? `${cycleTitle} · ` : ""}${t.admin.cycle.importListing} · ${t.admin.importWizard.stepIndicator(step, 3)}`}
       footer={
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="text-label text-brand-gray">
+          <div className="text-label text-secondary-foreground">
             {step === 1 && filename && t.admin.importWizard.fileInfo(filename)}
             {step === 2 && !requiredMapped && (
-              <span className="text-danger-text">{t.admin.importWizard.requiredMissingWarning}</span>
+              <span className="text-destructive">{t.admin.importWizard.requiredMissingWarning}</span>
             )}
             {step === 3 && (
               <>{t.admin.importWizard.selectedCount(selectedIndexes.size, sheet?.rows.length ?? 0)}</>
@@ -222,7 +222,7 @@ export function ImportListingWizard({ open, onClose, cycleId, cycleTitle }: Prop
         </div>
       }
     >
-      <p className="mb-4 text-[13px] leading-snug text-brand-gray">
+      <p className="mb-4 text-[13px] leading-snug text-secondary-foreground">
         {step === 1 && t.admin.importWizard.step1Description}
         {step === 2 && t.admin.importWizard.step2Description}
         {step === 3 && t.admin.importWizard.step3Description}
@@ -298,7 +298,7 @@ function Step1Upload({
 }) {
   return (
     <div className="space-y-5">
-      <label className="block rounded-xl border-2 border-dashed border-brand-border bg-surface p-6 text-center">
+      <label className="block rounded-xl border-2 border-dashed border-border bg-card p-6 text-center">
         <input
           type="file"
           accept=".xlsx,.xls,.csv"
@@ -308,17 +308,17 @@ function Step1Upload({
             if (f) onFile(f);
           }}
         />
-        <div className="text-[13px] font-semibold text-brand-near-black">
+        <div className="text-[13px] font-semibold text-foreground">
           {pending ? t.admin.importWizard.readingFile : filename ? t.admin.importWizard.fileSelected(filename) : t.admin.importWizard.fileDropLabel}
         </div>
-        <div className="mt-1 text-label text-brand-gray">
+        <div className="mt-1 text-label text-secondary-foreground">
           {t.admin.importWizard.fileDropHint}
         </div>
       </label>
 
       {inspection && inspection.inspection.sheets.length > 1 && (
         <div>
-          <div className="mb-1 text-label font-semibold uppercase tracking-wider text-brand-gray">
+          <div className="mb-1 text-label font-semibold uppercase tracking-wider text-secondary-foreground">
             {t.admin.importWizard.sheetLabel}
           </div>
           <div className="flex flex-wrap gap-2">
@@ -328,8 +328,8 @@ function Step1Upload({
                 onClick={() => setSheetIdx(i)}
                 className={`rounded-full border px-3 py-1 text-[12px] ${
                   i === sheetIdx
-                    ? "border-primary bg-primary-soft text-brand-near-black"
-                    : "border-brand-border bg-surface text-brand-gray"
+                    ? "border-primary bg-primary-bg text-foreground"
+                    : "border-border bg-card text-secondary-foreground"
                 }`}
               >
                 {s.sheetName} ({s.rows.length})
@@ -341,7 +341,7 @@ function Step1Upload({
 
       {inspection && (
         <div>
-          <div className="mb-1 text-label font-semibold uppercase tracking-wider text-brand-gray">
+          <div className="mb-1 text-label font-semibold uppercase tracking-wider text-secondary-foreground">
             {t.admin.importWizard.supplierLabel}
           </div>
           <div className="flex gap-2">
@@ -349,8 +349,8 @@ function Step1Upload({
               onClick={() => setSupplierMode("existing")}
               className={`flex-1 rounded-lg border px-3 py-2 text-[12px] ${
                 supplierMode === "existing"
-                  ? "border-primary bg-primary-soft"
-                  : "border-brand-border bg-surface"
+                  ? "border-primary bg-primary-bg"
+                  : "border-border bg-card"
               }`}
             >
               {t.admin.importWizard.supplierExisting}
@@ -359,8 +359,8 @@ function Step1Upload({
               onClick={() => setSupplierMode("new")}
               className={`flex-1 rounded-lg border px-3 py-2 text-[12px] ${
                 supplierMode === "new"
-                  ? "border-primary bg-primary-soft"
-                  : "border-brand-border bg-surface"
+                  ? "border-primary bg-primary-bg"
+                  : "border-border bg-card"
               }`}
             >
               {t.admin.importWizard.supplierNew}
@@ -370,7 +370,7 @@ function Step1Upload({
             <select
               value={existingSupplierId}
               onChange={(e) => setExistingSupplierId(e.target.value)}
-              className="mt-2 w-full rounded-lg border border-brand-border bg-surface px-3 py-2 text-[13px]"
+              className="mt-2 w-full rounded-lg border border-border bg-card px-3 py-2 text-[13px]"
             >
               <option value="">{t.admin.importWizard.supplierSelectPlaceholder}</option>
               {inspection.suppliers.map((s) => (
@@ -385,11 +385,11 @@ function Step1Upload({
               value={newSupplierName}
               onChange={(e) => setNewSupplierName(e.target.value)}
               placeholder={t.admin.importWizard.supplierNewPlaceholder}
-              className="mt-2 w-full rounded-lg border border-brand-border bg-surface px-3 py-2 text-[13px]"
+              className="mt-2 w-full rounded-lg border border-border bg-card px-3 py-2 text-[13px]"
             />
           )}
           {inspection.inspection.supplierHints.length > 0 && supplierMode === "existing" && (
-            <div className="mt-2 text-label text-brand-gray">
+            <div className="mt-2 text-label text-secondary-foreground">
               {t.admin.importWizard.supplierSuggestedHint(inspection.inspection.supplierHints[0].text)}
               {inspection.suggestedSupplierId === "" || !inspection.suggestedSupplierId
                 ? t.admin.importWizard.supplierNoMatch
@@ -401,7 +401,7 @@ function Step1Upload({
 
       {inspection && (
         <div>
-          <div className="mb-1 text-label font-semibold uppercase tracking-wider text-brand-gray">
+          <div className="mb-1 text-label font-semibold uppercase tracking-wider text-secondary-foreground">
             {t.admin.importWizard.previewLabel(inspection.inspection.sheets[sheetIdx]?.rows.length ?? 0)}
           </div>
           <PreviewTable
@@ -434,10 +434,10 @@ function Step2Mapping({
           const required = REQUIRED_FIELDS.includes(field);
           const value = mapping[field];
           return (
-            <label key={field} className="flex items-center gap-2 rounded-lg border border-brand-border bg-surface px-3 py-2 text-[12px]">
-              <span className="w-24 shrink-0 font-semibold text-brand-near-black">
+            <label key={field} className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-[12px]">
+              <span className="w-24 shrink-0 font-semibold text-foreground">
                 {TARGET_LABEL[field]}
-                {required && <span className="text-danger-text"> *</span>}
+                {required && <span className="text-destructive"> *</span>}
               </span>
               <select
                 value={value === undefined ? "" : String(value)}
@@ -448,7 +448,7 @@ function Step2Mapping({
                   else next[field] = Number(v);
                   setMapping(next);
                 }}
-                className="flex-1 rounded border border-brand-border bg-surface px-2 py-1 text-[12px]"
+                className="flex-1 rounded border border-border bg-card px-2 py-1 text-[12px]"
               >
                 <option value="">(ignora)</option>
                 {sheet.columns.map((c, i) => (
@@ -462,7 +462,7 @@ function Step2Mapping({
         })}
       </div>
       <div>
-        <div className="mb-1 text-label font-semibold uppercase tracking-wider text-brand-gray">
+        <div className="mb-1 text-label font-semibold uppercase tracking-wider text-secondary-foreground">
           {t.admin.importWizard.step2PreviewLabel}
         </div>
         <PreviewTable columns={sheet.columns} rows={sheet.rows.slice(0, 5)} highlightMap={mapping} />
@@ -531,7 +531,7 @@ function Step3Review({
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap items-center gap-3 rounded-lg bg-primary-soft px-3 py-2 text-[12px]">
+      <div className="flex flex-wrap items-center gap-3 rounded-lg bg-primary-bg px-3 py-2 text-[12px]">
         <label className="flex items-center gap-2">
           <input
             type="checkbox"
@@ -551,15 +551,15 @@ function Step3Review({
           </label>
         )}
         {unmatchedEmojiCount > 0 && (
-          <span className="ml-auto text-danger-text">
+          <span className="ml-auto text-destructive">
             {t.admin.importWizard.unmatchedEmojis(unmatchedEmojiCount)}
           </span>
         )}
       </div>
 
-      <div className="overflow-x-auto rounded-lg border border-brand-border bg-surface">
+      <div className="overflow-x-auto rounded-lg border border-border bg-card">
         <table className="w-full text-[12px]">
-          <thead className="border-b border-brand-border bg-brand-warm-white">
+          <thead className="border-b border-border bg-background">
             <tr>
               <th className="p-2 text-left">
                 <input
@@ -594,7 +594,7 @@ function Step3Review({
               const nameGuess = name ? guessProductCategory(name) : null;
               const guessedCategory = nameGuess || fileCategory || fileCategoryRaw;
               return (
-                <tr key={i} className={`border-b border-brand-border ${selected ? "" : "opacity-40"}`}>
+                <tr key={i} className={`border-b border-border ${selected ? "" : "opacity-40"}`}>
                   <td className="p-2 align-middle">
                     <input type="checkbox" checked={selected} onChange={() => toggle(i)} />
                   </td>
@@ -605,24 +605,24 @@ function Step3Review({
                       onChange={(v) => setEmojiOverrides({ ...emojiOverrides, [i]: v })}
                     />
                     {!override && !auto && (
-                      <div className="text-label text-danger-text">{t.admin.importWizard.emojiNotAuto}</div>
+                      <div className="text-label text-destructive">{t.admin.importWizard.emojiNotAuto}</div>
                     )}
                   </td>
-                  <td className="p-2 align-middle font-semibold">{name || <em className="text-danger-text">{t.admin.importWizard.emptyName}</em>}</td>
-                  <td className="p-2 align-middle text-brand-gray">{cell(i, "variant")}</td>
-                  <td className="p-2 align-middle text-brand-gray">
+                  <td className="p-2 align-middle font-semibold">{name || <em className="text-destructive">{t.admin.importWizard.emptyName}</em>}</td>
+                  <td className="p-2 align-middle text-secondary-foreground">{cell(i, "variant")}</td>
+                  <td className="p-2 align-middle text-secondary-foreground">
                     {guessedCategory ? (
                       <span>
                         {guessedCategory}
                         {nameGuess && <span className="ml-1 text-label text-primary-text">{t.admin.importWizard.autoCategory}</span>}
                       </span>
                     ) : (
-                      <span className="text-muted">—</span>
+                      <span className="text-muted-foreground">—</span>
                     )}
                   </td>
-                  <td className="p-2 align-middle text-brand-gray">{cell(i, "format")}</td>
+                  <td className="p-2 align-middle text-secondary-foreground">{cell(i, "format")}</td>
                   <td className="p-2 text-right align-middle tabular-nums">{cell(i, "unitPrice")}</td>
-                  <td className="p-2 text-right align-middle tabular-nums text-brand-gray">{cell(i, "pricePerKg")}</td>
+                  <td className="p-2 text-right align-middle tabular-nums text-secondary-foreground">{cell(i, "pricePerKg")}</td>
                 </tr>
               );
             })}
@@ -655,18 +655,18 @@ function PreviewTable({
     return m;
   }, [highlightMap]);
 
-  if (!columns.length) return <div className="text-label text-brand-gray">{t.admin.importWizard.noColumnsDetected}</div>;
+  if (!columns.length) return <div className="text-label text-secondary-foreground">{t.admin.importWizard.noColumnsDetected}</div>;
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-brand-border bg-surface">
+    <div className="overflow-x-auto rounded-lg border border-border bg-card">
       <table className="w-full text-label">
-        <thead className="border-b border-brand-border bg-brand-warm-white">
+        <thead className="border-b border-border bg-background">
           <tr>
             {columns.map((c, i) => {
               const hi = highlights.get(i);
               return (
                 <th key={i} className="p-2 text-left">
-                  <div className="font-semibold text-brand-near-black">{c || t.admin.importWizard.columnPlaceholder(i + 1)}</div>
+                  <div className="font-semibold text-foreground">{c || t.admin.importWizard.columnPlaceholder(i + 1)}</div>
                   {hi && (
                     <div className="font-mono text-label uppercase text-primary-text">
                       → {TARGET_LABEL[hi as TargetField]}
@@ -679,9 +679,9 @@ function PreviewTable({
         </thead>
         <tbody>
           {rows.map((r, i) => (
-            <tr key={i} className="border-b border-brand-border">
+            <tr key={i} className="border-b border-border">
               {columns.map((_, ci) => (
-                <td key={ci} className="p-2 text-brand-gray">
+                <td key={ci} className="p-2 text-secondary-foreground">
                   {r[ci] ?? ""}
                 </td>
               ))}

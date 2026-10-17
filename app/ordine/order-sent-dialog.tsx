@@ -40,7 +40,7 @@ export function OrderSentDialog({
       }
     >
       <div className="text-center">
-        <span className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-accent-soft text-accent-text">
+        <span className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-accent-bg text-accent-text">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M20 6 9 17l-5-5" />
           </svg>
@@ -48,13 +48,13 @@ export function OrderSentDialog({
         <p className="tabular-nums text-[12px] font-semibold text-accent-text">
           {t.order.confirmedSummary(itemCount, formatEur(total))}
         </p>
-        <p className="mt-3 text-[14px] leading-[1.5] text-brand-gray">{t.order.sentBody}</p>
+        <p className="mt-3 text-[14px] leading-[1.5] text-secondary-foreground">{t.order.sentBody}</p>
         {balanceWarning && (
-          <p className="mt-3 rounded-xl bg-primary-soft px-3 py-2 text-[12px] leading-[1.45] text-primary-text">
+          <p className="mt-3 rounded-xl bg-primary-bg px-3 py-2 text-[12px] leading-[1.45] text-primary-text">
             {balanceWarning}
           </p>
         )}
-        <p className="mt-3 text-label leading-[1.45] text-muted">
+        <p className="mt-3 text-label leading-[1.45] text-muted-foreground">
           {orderCloseAt ? t.order.editableUntil(formatDeadline(orderCloseAt)) : t.order.editableUntilClose}
         </p>
       </div>

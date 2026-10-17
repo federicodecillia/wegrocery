@@ -84,7 +84,7 @@ export default async function RootLayout({
         <style dangerouslySetInnerHTML={{ __html: roleVarsCss(b.theme) }} />
         <link rel="apple-touch-icon" sizes="180x180" href={iconPath(APPLE_TOUCH_ICON)} />
       </head>
-      <body className="text-brand-near-black flex min-h-full flex-col">
+      <body className="text-foreground flex min-h-full flex-col">
         {children}
         <Toaster />
         <ConfirmDialogProvider />

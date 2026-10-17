@@ -35,11 +35,11 @@ export default async function FamilyPage() {
         <BackLink href="/profilo">{t.profile.title}</BackLink>
       </div>
       <div className="mb-1 flex items-center gap-2">
-        <h1 className="text-title font-black text-brand-near-black">{t.family.title}</h1>
+        <h1 className="text-title font-black text-foreground">{t.family.title}</h1>
         {/* The guide's Family topic exists only while families are on. */}
         {settings.familiesEnabled && <HelpLink href="/guida/famiglia" />}
       </div>
-      <p className="mb-5 text-[14px] leading-snug text-brand-gray">{t.family.intro}</p>
+      <p className="mb-5 text-[14px] leading-snug text-secondary-foreground">{t.family.intro}</p>
 
       <FamilyPanel
         enabled={settings.familiesEnabled}

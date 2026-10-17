@@ -67,7 +67,7 @@ export function CycleReviewCloseButton(props: Props) {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="rounded-xl bg-primary px-4 py-2 text-[12px] font-bold text-on-primary"
+        className="rounded-xl bg-primary px-4 py-2 text-[12px] font-bold text-primary-foreground"
       >
         {t.admin.cycleReview.openButton}
       </button>
@@ -257,14 +257,14 @@ function CycleReviewModal({
           {rows && rows.length > 0 && mode !== "distinta" && (
             <div className="mb-3 flex items-end justify-between">
               <div>
-                <div className="font-mono text-label uppercase tracking-wide text-muted">
+                <div className="font-mono text-label uppercase tracking-wide text-muted-foreground">
                   {t.admin.cycleReview.ordersTotalLabel}
                 </div>
-                <div className="tabular-nums text-[15px] font-bold text-brand-near-black">{formatEur(newGrandTotal)}</div>
+                <div className="tabular-nums text-[15px] font-bold text-foreground">{formatEur(newGrandTotal)}</div>
               </div>
               {Math.abs(totalDelta) > 0.005 && (
                 <div className="text-right">
-                  <div className="font-mono text-label uppercase tracking-wide text-muted">
+                  <div className="font-mono text-label uppercase tracking-wide text-muted-foreground">
                     {t.admin.cycleReview.variationLabel}
                   </div>
                   <div
@@ -288,21 +288,21 @@ function CycleReviewModal({
       }
     >
       <div className="space-y-3">
-        <p className="text-[14px] text-brand-near-black">{t.admin.cycleReview.summary(memberCount)}</p>
+        <p className="text-[14px] text-foreground">{t.admin.cycleReview.summary(memberCount)}</p>
         {warning && (
-          <div className="whitespace-pre-line rounded-lg border border-primary-mid bg-primary-soft p-3 text-[13px] text-brand-near-black">
+          <div className="whitespace-pre-line rounded-lg border border-primary-mid bg-primary-bg p-3 text-[13px] text-foreground">
             {warning}
           </div>
         )}
 
         {loading ? (
-          <div className="py-10 text-center text-[13px] text-brand-gray">{t.admin.cycleReview.loadingProducts}</div>
+          <div className="py-10 text-center text-[13px] text-secondary-foreground">{t.admin.cycleReview.loadingProducts}</div>
         ) : loadFailed || !rows ? (
-          <div role="alert" className="rounded-lg border border-danger-text/30 bg-danger-soft p-3 text-[13px] text-danger-text">
+          <div role="alert" className="rounded-lg border border-destructive/30 bg-danger-bg p-3 text-[13px] text-destructive">
             {t.admin.cycleReview.loadFailed}
           </div>
         ) : rows.length === 0 ? (
-          <div className="py-10 text-center text-[13px] text-brand-gray">{t.admin.cycleReview.noProducts}</div>
+          <div className="py-10 text-center text-[13px] text-secondary-foreground">{t.admin.cycleReview.noProducts}</div>
         ) : (
           <>
             <div className="flex flex-wrap items-center gap-2">
@@ -310,7 +310,7 @@ function CycleReviewModal({
                 type="button"
                 onClick={() => toggleMode("prices")}
                 aria-expanded={adjusting}
-                className="min-h-11 rounded-xl border border-brand-border bg-surface px-4 text-[13px] font-semibold text-brand-near-black"
+                className="min-h-11 rounded-xl border border-border bg-card px-4 text-[13px] font-semibold text-foreground"
               >
                 {adjusting ? t.admin.cycleReview.adjustToggleHide : t.admin.cycleReview.adjustToggle}
               </button>
@@ -318,14 +318,14 @@ function CycleReviewModal({
                 type="button"
                 onClick={() => toggleMode("distinta")}
                 aria-expanded={mode === "distinta"}
-                className="min-h-11 rounded-xl border border-brand-border bg-surface px-4 text-[13px] font-semibold text-brand-near-black"
+                className="min-h-11 rounded-xl border border-border bg-card px-4 text-[13px] font-semibold text-foreground"
               >
                 {mode === "distinta" ? t.admin.cycleReview.distintaToggleHide : t.admin.cycleReview.distintaToggle}
               </button>
             </div>
             {mode === "distinta" && (
               <div className="space-y-3">
-                <p className="text-[13px] text-brand-gray">
+                <p className="text-[13px] text-secondary-foreground">
                   {t.admin.cycleReview.distintaDescription}
                   {perOrder && <> {t.admin.cycleReview.perOrderDistintaNote}</>}
                 </p>
@@ -335,10 +335,10 @@ function CycleReviewModal({
                   accept={DISTINTA_ACCEPT}
                   onChange={onDistintaFile}
                   disabled={isPending}
-                  className="block w-full cursor-pointer rounded-xl border border-dashed border-primary/40 bg-surface px-3 py-2 text-[12px] file:mr-3 file:rounded-lg file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-label file:font-bold file:text-on-primary"
+                  className="block w-full cursor-pointer rounded-xl border border-dashed border-primary/40 bg-card px-3 py-2 text-[12px] file:mr-3 file:rounded-lg file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-label file:font-bold file:text-primary-foreground"
                 />
                 {previewing && (
-                  <p role="status" className="text-[13px] text-brand-gray">
+                  <p role="status" className="text-[13px] text-secondary-foreground">
                     {t.admin.supplierActions.previewing}
                   </p>
                 )}
@@ -346,7 +346,7 @@ function CycleReviewModal({
               </div>
             )}
             {adjusting && (
-              <p className="text-[13px] text-brand-gray">
+              <p className="text-[13px] text-secondary-foreground">
                 {t.admin.cycleReview.adjustDescription}
                 {perOrder && <> {t.admin.cycleReview.perOrderAdjustNote}</>}
               </p>
@@ -392,7 +392,7 @@ function ReviewRow({
 
   return (
     <li
-      className={`rounded-lg border bg-surface px-3 py-2.5 ${changed ? "border-primary-mid" : "border-brand-border"} ${
+      className={`rounded-lg border bg-card px-3 py-2.5 ${changed ? "border-primary-mid" : "border-border"} ${
         r.totalQty === 0 ? "border-dashed" : ""
       }`}
     >
@@ -401,22 +401,22 @@ function ReviewRow({
           {r.emoji || getProductEmoji(r.name)}
         </span>
         <div className="min-w-0 flex-1">
-          <div className="text-[14px] font-semibold text-brand-near-black">{r.name}</div>
-          {meta && <div className="text-label text-brand-gray">{meta}</div>}
-          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-brand-gray">
+          <div className="text-[14px] font-semibold text-foreground">{r.name}</div>
+          {meta && <div className="text-label text-secondary-foreground">{meta}</div>}
+          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-secondary-foreground">
             <span>
               {t.admin.cycleReview.orderedLabel}{" "}
-              <span className="tabular-nums font-bold text-brand-near-black">{r.totalQty}</span>
+              <span className="tabular-nums font-bold text-foreground">{r.totalQty}</span>
             </span>
             <span>
               {t.admin.cycleReview.currentTotalLabel}{" "}
-              <span className="tabular-nums font-bold text-brand-near-black">{formatEur(r.totalAmount)}</span>
+              <span className="tabular-nums font-bold text-foreground">{formatEur(r.totalAmount)}</span>
             </span>
           </div>
         </div>
         {adjusting && (
           <div className="shrink-0 text-right">
-            <label htmlFor={inputId} className="block text-label text-muted">
+            <label htmlFor={inputId} className="block text-label text-muted-foreground">
               {t.admin.cycleReview.finalPriceLabel}
             </label>
             <input
@@ -428,7 +428,7 @@ function ReviewRow({
               value={value}
               onChange={(e) => onChange(e.target.value)}
               aria-label={t.admin.cycleReview.finalPriceAria(r.name)}
-              className="mt-0.5 h-11 w-[96px] rounded-lg border border-brand-border px-2 text-right text-[14px] text-brand-near-black focus:border-primary-text"
+              className="mt-0.5 h-11 w-[96px] rounded-lg border border-border px-2 text-right text-[14px] text-foreground focus:border-primary-text"
             />
             {changed && (
               <div className={`mt-1 text-label font-semibold ${delta >= 0 ? "text-primary-text" : "text-accent-text"}`}>

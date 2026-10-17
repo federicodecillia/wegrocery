@@ -110,20 +110,20 @@ export function CycleOrdersByMember({
   return (
     <div>
       {editable && (
-        <div className="border-b border-brand-border px-4 py-3">
+        <div className="border-b border-border px-4 py-3">
           <Button variant="brand" className="w-full sm:w-auto" onClick={() => setEditTarget({ kind: "create" })}>
             {c.addOrder}
           </Button>
         </div>
       )}
       {loading ? (
-        <div className="py-10 text-center text-[13px] text-brand-gray">{c.loading}</div>
+        <div className="py-10 text-center text-[13px] text-secondary-foreground">{c.loading}</div>
       ) : memberRows.length === 0 ? (
-        <div className="py-10 text-center text-[13px] text-brand-gray">{c.noOrders}</div>
+        <div className="py-10 text-center text-[13px] text-secondary-foreground">{c.noOrders}</div>
       ) : (
         <>
           <div className="space-y-2 px-4 pt-3">
-            <p className="text-label text-brand-gray">{editable ? c.rectifyHint : c.openCycleHint}</p>
+            <p className="text-label text-secondary-foreground">{editable ? c.rectifyHint : c.openCycleHint}</p>
             {memberRows.length >= MEMBER_SEARCH_MIN && (
               <>
                 <label className="sr-only" htmlFor={`orders-search-${cycleId}`}>
@@ -135,12 +135,12 @@ export function CycleOrdersByMember({
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder={c.searchMember}
-                  className="min-h-(--control-h) w-full rounded-xl border border-brand-border bg-surface px-3 text-[13px] placeholder:text-muted"
+                  className="min-h-(--control-h) w-full rounded-xl border border-border bg-card px-3 text-[13px] placeholder:text-muted-foreground"
                 />
               </>
             )}
           </div>
-          <ul className="mt-2 divide-y divide-brand-border">
+          <ul className="mt-2 divide-y divide-border">
             {shown.map(({ memberId, memberName, lines, shipping: memberShipping, handling: memberHandling }) => {
               const productsTotal = lines.reduce((s, l) => s + effectiveTotal(l), 0);
               const total = closedCycleMemberTotal({
@@ -160,15 +160,15 @@ export function CycleOrdersByMember({
                       className="flex min-h-12 min-w-0 flex-1 items-center justify-between gap-2 py-2 text-left"
                     >
                       <span className="min-w-0">
-                        <span className="block truncate text-[13px] font-semibold text-brand-near-black">{memberName}</span>
-                        <span className="block text-label text-muted">
+                        <span className="block truncate text-[13px] font-semibold text-foreground">{memberName}</span>
+                        <span className="block text-label text-muted-foreground">
                           {c.linesCount(lines.length)}
                           {adjusted ? ` · ${c.adjustedBadge}` : ""}
                         </span>
                       </span>
                       <span className="flex shrink-0 items-center gap-2">
-                        <span className=" text-[13px] font-bold tabular-nums text-brand-near-black">{formatEur(total)}</span>
-                        <span aria-hidden className="text-muted">
+                        <span className=" text-[13px] font-bold tabular-nums text-foreground">{formatEur(total)}</span>
+                        <span aria-hidden className="text-muted-foreground">
                           {open ? "▴" : "▾"}
                         </span>
                       </span>
@@ -199,7 +199,7 @@ export function CycleOrdersByMember({
               );
             })}
           </ul>
-          {shown.length === 0 && <p className="py-6 text-center text-[13px] text-brand-gray">{c.noMemberMatch}</p>}
+          {shown.length === 0 && <p className="py-6 text-center text-[13px] text-secondary-foreground">{c.noMemberMatch}</p>}
         </>
       )}
 
@@ -221,17 +221,17 @@ const MEMBER_SEARCH_MIN = 12;
 
 function ExtraRow({ emoji, label, hint, amount }: { emoji: string; label: string; hint?: string; amount: number }) {
   return (
-    <div className="flex items-start justify-between gap-3 rounded-lg px-1.5 py-1 text-[12px] text-brand-near-black">
+    <div className="flex items-start justify-between gap-3 rounded-lg px-1.5 py-1 text-[12px] text-foreground">
       <div className="flex min-w-0 flex-1 gap-2">
         <span aria-hidden className="shrink-0 text-[16px]">
           {emoji}
         </span>
         <div className="min-w-0">
           <div className="font-medium">{label}</div>
-          {hint && <div className="text-label text-brand-gray">{hint}</div>}
+          {hint && <div className="text-label text-secondary-foreground">{hint}</div>}
         </div>
       </div>
-      <span className="shrink-0 tabular-nums text-label font-bold text-brand-near-black">{formatEur(amount)}</span>
+      <span className="shrink-0 tabular-nums text-label font-bold text-foreground">{formatEur(amount)}</span>
     </div>
   );
 }
@@ -267,7 +267,7 @@ function OrderLineRow({
       <RowTag
         type={editable ? "button" : undefined}
         onClick={editable ? () => setEditing(true) : undefined}
-        className={`group flex w-full items-start justify-between gap-2 rounded-lg px-1.5 py-1 text-left text-[12px] text-brand-near-black ${
+        className={`group flex w-full items-start justify-between gap-2 rounded-lg px-1.5 py-1 text-left text-[12px] text-foreground ${
           editable ? "hover:bg-primary/5" : ""
         }`}
         title={editable ? t.admin.closedCycleDetails.rectifyTitle : undefined}
@@ -276,24 +276,24 @@ function OrderLineRow({
           <span className="shrink-0 text-[16px]">{line.emoji || getProductEmoji(line.productName)}</span>
           <div className="min-w-0">
             <div className="truncate font-medium">
-              {line.productName} {line.variant && <span className="text-brand-gray">({line.variant})</span>}
+              {line.productName} {line.variant && <span className="text-secondary-foreground">({line.variant})</span>}
               {adjusted && (
                 <span className="ml-1 rounded-full bg-primary/15 px-1.5 py-px text-label font-bold uppercase tracking-wide text-primary-text">
                   {t.admin.closedCycleDetails.adjustedBadge}
                 </span>
               )}
             </div>
-            <div className="truncate text-label text-brand-gray">
+            <div className="truncate text-label text-secondary-foreground">
               {[line.supplierName ?? line.productSupplier, line.category, line.format].filter(Boolean).join(" · ")}
             </div>
           </div>
         </div>
-        <span className="shrink-0 text-right tabular-nums text-label text-brand-gray">
+        <span className="shrink-0 text-right tabular-nums text-label text-secondary-foreground">
           {adjusted ? (
             <>
               {/* Original (struck): same `qty × unit_price = total` format
                   as non-rectified rows so the two are visually consistent. */}
-              <span className="block text-muted line-through">
+              <span className="block text-muted-foreground line-through">
                 {line.quantity}
                 {unitSuffix} × {formatEur(parseFloat(line.unitPrice))} = {formatEur(orderedTotal)}
               </span>
@@ -313,7 +313,7 @@ function OrderLineRow({
                 const showBreakdown = effQty > 0;
                 const effUnit = showBreakdown ? effective / effQty : null;
                 return (
-                  <span className="block font-bold text-brand-near-black">
+                  <span className="block font-bold text-foreground">
                     {qtyLabel}
                     {unitSuffix}
                     {effUnit != null && (
@@ -333,7 +333,7 @@ function OrderLineRow({
                 {unitSuffix} × {formatEur(parseFloat(line.unitPrice))} = {formatEur(orderedTotal)}
               </span>
               {pricePerKg != null && (
-                <span className="block text-muted">
+                <span className="block text-muted-foreground">
                   {formatEur(pricePerKg)}/kg
                 </span>
               )}
@@ -343,7 +343,7 @@ function OrderLineRow({
         {editable && (
           <span
             aria-hidden
-            className="shrink-0 self-center text-[12px] text-muted group-hover:text-primary-text"
+            className="shrink-0 self-center text-[12px] text-muted-foreground group-hover:text-primary-text"
           >
             ✎
           </span>
@@ -418,16 +418,16 @@ function OrderLineEditForm({
   const unitSuffix = unit ? ` ${unit}` : "";
 
   return (
-    <div className="space-y-2 rounded-lg border border-primary/30 bg-primary-soft px-2.5 py-2">
-      <div className="flex items-center gap-2 text-label text-brand-near-black">
+    <div className="space-y-2 rounded-lg border border-primary/30 bg-primary-bg px-2.5 py-2">
+      <div className="flex items-center gap-2 text-label text-foreground">
         <span className="text-[14px]">{line.emoji || getProductEmoji(line.productName)}</span>
         <span className="font-bold">{line.productName}</span>
-        <span className="tabular-nums text-brand-gray">
+        <span className="tabular-nums text-secondary-foreground">
           {t.admin.closedCycleDetails.orderedLabel} {line.quantity}{unitSuffix} = {formatEur(parseFloat(line.lineTotal))}
         </span>
       </div>
       <div className="grid grid-cols-2 gap-2">
-        <label className="flex flex-col gap-0.5 text-label font-semibold uppercase tracking-wide text-brand-gray">
+        <label className="flex flex-col gap-0.5 text-label font-semibold uppercase tracking-wide text-secondary-foreground">
           {t.admin.closedCycleDetails.qtyReceived(unit)}
           <input
             type="text"
@@ -435,10 +435,10 @@ function OrderLineEditForm({
             value={qty}
             onChange={(e) => onQtyChange(e.target.value)}
             disabled={isPending}
-            className="min-h-11 rounded-md border border-brand-border bg-surface px-2 py-1.5 text-[14px] tabular-nums text-brand-near-black"
+            className="min-h-11 rounded-md border border-border bg-card px-2 py-1.5 text-[14px] tabular-nums text-foreground"
           />
         </label>
-        <label className="flex flex-col gap-0.5 text-label font-semibold uppercase tracking-wide text-brand-gray">
+        <label className="flex flex-col gap-0.5 text-label font-semibold uppercase tracking-wide text-secondary-foreground">
           {t.admin.closedCycleDetails.totalEur}
           <input
             type="text"
@@ -449,7 +449,7 @@ function OrderLineEditForm({
               setTotalTouched(true);
             }}
             disabled={isPending}
-            className="min-h-11 rounded-md border border-brand-border bg-surface px-2 py-1.5 text-[14px] tabular-nums text-brand-near-black"
+            className="min-h-11 rounded-md border border-border bg-card px-2 py-1.5 text-[14px] tabular-nums text-foreground"
           />
         </label>
       </div>
@@ -458,7 +458,7 @@ function OrderLineEditForm({
           type="button"
           onClick={handleSave}
           disabled={isPending}
-          className="min-h-(--control-h) flex-1 rounded-md bg-primary px-3 py-1.5 text-[13px] font-bold text-on-primary disabled:opacity-60"
+          className="min-h-(--control-h) flex-1 rounded-md bg-primary px-3 py-1.5 text-[13px] font-bold text-primary-foreground disabled:opacity-60"
         >
           {isPending ? t.admin.common.saving : t.admin.common.save}
         </button>
@@ -466,7 +466,7 @@ function OrderLineEditForm({
           type="button"
           onClick={onCancel}
           disabled={isPending}
-          className="min-h-(--control-h) rounded-md border border-brand-border bg-surface px-3 py-1.5 text-[13px] font-bold text-brand-gray"
+          className="min-h-(--control-h) rounded-md border border-border bg-card px-3 py-1.5 text-[13px] font-bold text-secondary-foreground"
         >
           {t.admin.common.cancel}
         </button>

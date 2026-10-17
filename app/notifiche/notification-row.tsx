@@ -32,17 +32,17 @@ export function NotificationRow({
       <span aria-hidden className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${unread ? "bg-primary" : "bg-transparent"}`} />
       <span className="min-w-0 flex-1">
         <span className="flex items-start justify-between gap-2">
-          <span className={`text-[14px] leading-snug ${unread ? "font-bold text-brand-near-black" : "font-medium text-brand-gray"}`}>
+          <span className={`text-[14px] leading-snug ${unread ? "font-bold text-foreground" : "font-medium text-secondary-foreground"}`}>
             {title}
           </span>
           {unread && (
-            <span className="shrink-0 rounded-full bg-primary-soft px-2 py-0.25 text-label font-bold text-primary-text">
+            <span className="shrink-0 rounded-full bg-primary-bg px-2 py-0.25 text-label font-bold text-primary-text">
               {t.notifications.newBadge}
             </span>
           )}
         </span>
-        <span className="mt-0.75 block text-[14px] leading-snug text-brand-gray">{body}</span>
-        <span className="mt-1.25 block text-label tabular-nums text-muted">{time}</span>
+        <span className="mt-0.75 block text-[14px] leading-snug text-secondary-foreground">{body}</span>
+        <span className="mt-1.25 block text-label tabular-nums text-muted-foreground">{time}</span>
       </span>
     </Link>
   );

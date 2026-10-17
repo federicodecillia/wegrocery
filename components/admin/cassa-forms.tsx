@@ -55,42 +55,42 @@ export function CassaSummaryCards({
   }
 
   const total = (
-    <div className="rounded-xl border border-accent/20 bg-accent-soft p-3">
+    <div className="rounded-xl border border-accent/20 bg-accent-bg p-3">
       <div className="mb-0.5 flex items-center justify-between">
-        <span className="font-mono text-label uppercase tracking-wide text-brand-gray">
+        <span className="font-mono text-label uppercase tracking-wide text-secondary-foreground">
           {t.admin.treasury.totalBalance}
         </span>
         <span className="text-[14px] leading-none">💰</span>
       </div>
       <div
         className={`text-[18px] font-black tracking-[-0.02em] ${
-          totalBalance >= 0 ? "text-brand-near-black" : "text-danger-text"
+          totalBalance >= 0 ? "text-foreground" : "text-destructive"
         }`}
       >
         {formatEur(totalBalance)}
       </div>
-      <div className="mt-0.5 tabular-nums text-label text-muted">
+      <div className="mt-0.5 tabular-nums text-label text-muted-foreground">
         {t.admin.treasury.activeMembersHint}
       </div>
     </div>
   );
 
   const avg = (
-    <div className="rounded-xl border border-brand-border bg-surface p-3">
+    <div className="rounded-xl border border-border bg-card p-3">
       <div className="mb-0.5 flex items-center justify-between">
-        <span className="font-mono text-label uppercase tracking-wide text-brand-gray">
+        <span className="font-mono text-label uppercase tracking-wide text-secondary-foreground">
           {t.admin.treasury.avgBalance}
         </span>
         <span className="text-[14px] leading-none">📊</span>
       </div>
       <div
         className={`text-[18px] font-black tracking-[-0.02em] ${
-          avgBalance >= 0 ? "text-brand-near-black" : "text-danger-text"
+          avgBalance >= 0 ? "text-foreground" : "text-destructive"
         }`}
       >
         {formatEur(avgBalance)}
       </div>
-      <div className="mt-0.5 tabular-nums text-label text-muted">
+      <div className="mt-0.5 tabular-nums text-label text-muted-foreground">
         {t.admin.treasury.perActiveMember}
       </div>
     </div>
@@ -104,22 +104,22 @@ export function CassaSummaryCards({
       aria-pressed={isActive}
       className={`text-left rounded-xl border p-3 transition-transform active:scale-[0.98] ${
         isActive
-          ? "border-danger-text bg-danger-soft ring-2 ring-danger-text/40"
+          ? "border-destructive bg-danger-bg ring-2 ring-destructive/40"
           : negativeCount > 0
-            ? "border-danger-text/30 bg-danger-soft"
-            : "border-brand-border bg-surface"
+            ? "border-destructive/30 bg-danger-bg"
+            : "border-border bg-card"
       }`}
     >
       <div className="mb-0.5 flex items-center justify-between">
-        <span className="font-mono text-label uppercase tracking-wide text-brand-gray">
+        <span className="font-mono text-label uppercase tracking-wide text-secondary-foreground">
           {t.admin.treasury.negativeBalance}
         </span>
         <span className="text-[14px] leading-none">💸</span>
       </div>
-      <div className="text-[18px] font-black tracking-[-0.02em] text-brand-near-black">
+      <div className="text-[18px] font-black tracking-[-0.02em] text-foreground">
         {negativeCount}
       </div>
-      <div className="mt-0.5 tabular-nums text-label text-muted">
+      <div className="mt-0.5 tabular-nums text-label text-muted-foreground">
         {isActive ? t.admin.treasury.filterActive : t.admin.treasury.filterHint}
       </div>
     </button>
@@ -133,20 +133,20 @@ export function CassaSummaryCards({
       aria-pressed={aboveMaxActive}
       className={`text-left rounded-xl border p-3 transition-transform active:scale-[0.98] ${
         aboveMaxActive
-          ? "border-primary bg-primary-soft ring-2 ring-primary/40"
+          ? "border-primary bg-primary-bg ring-2 ring-primary/40"
           : aboveMaxCount > 0
-            ? "border-primary/30 bg-primary-soft"
-            : "border-brand-border bg-surface"
+            ? "border-primary/30 bg-primary-bg"
+            : "border-border bg-card"
       }`}
     >
       <div className="mb-0.5 flex items-center justify-between">
-        <span className="font-mono text-label uppercase tracking-wide text-brand-gray">
+        <span className="font-mono text-label uppercase tracking-wide text-secondary-foreground">
           {t.admin.treasury.aboveMaxBalance}
         </span>
         <span className="text-[14px] leading-none">📈</span>
       </div>
-      <div className="text-[18px] font-black tracking-[-0.02em] text-brand-near-black">{aboveMaxCount}</div>
-      <div className="mt-0.5 tabular-nums text-label text-muted">
+      <div className="text-[18px] font-black tracking-[-0.02em] text-foreground">{aboveMaxCount}</div>
+      <div className="mt-0.5 tabular-nums text-label text-muted-foreground">
         {aboveMaxActive ? t.admin.treasury.filterActive : t.admin.treasury.filterHint}
       </div>
     </button>
@@ -237,9 +237,9 @@ export function LedgerEntryRow({ entry }: { entry: LedgerEntry }) {
 
   if (editing && isEditable) {
     return (
-      <div className="space-y-2 bg-primary-soft px-4 py-3">
-        <div className="text-[13px] font-medium text-brand-near-black">
-          {title} <span className="tabular-nums text-label font-normal text-muted">· {kindLabel}</span>
+      <div className="space-y-2 bg-primary-bg px-4 py-3">
+        <div className="text-[13px] font-medium text-foreground">
+          {title} <span className="tabular-nums text-label font-normal text-muted-foreground">· {kindLabel}</span>
         </div>
         <div className="flex gap-2">
           <input
@@ -250,7 +250,7 @@ export function LedgerEntryRow({ entry }: { entry: LedgerEntry }) {
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             aria-label={t.admin.treasury.amountLabel}
-            className="min-h-11 w-28 shrink-0 rounded-lg border border-brand-border bg-surface px-2 py-1 tabular-nums text-[14px]"
+            className="min-h-11 w-28 shrink-0 rounded-lg border border-border bg-card px-2 py-1 tabular-nums text-[14px]"
           />
           <input
             type="text"
@@ -259,7 +259,7 @@ export function LedgerEntryRow({ entry }: { entry: LedgerEntry }) {
             onChange={(e) => setDraftNote(e.target.value)}
             // An outgoing movement's causale is required (the member sees it).
             placeholder={isOutgoingLedgerType(entry.type) ? t.admin.treasury.reasonLabel : t.admin.treasury.noteLabel}
-            className="min-h-11 min-w-0 flex-1 rounded-lg border border-brand-border bg-surface px-2 py-1 text-[14px]"
+            className="min-h-11 min-w-0 flex-1 rounded-lg border border-border bg-card px-2 py-1 text-[14px]"
           />
         </div>
         <div className="flex justify-end gap-2">
@@ -282,21 +282,21 @@ export function LedgerEntryRow({ entry }: { entry: LedgerEntry }) {
       <MovementIcon kind={movementKind(movement)} incoming={amountNum >= 0} />
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline justify-between gap-3">
-          <span className="min-w-0 text-[14px] font-medium text-brand-near-black">{title}</span>
+          <span className="min-w-0 text-[14px] font-medium text-foreground">{title}</span>
           <span
             className={`shrink-0 whitespace-nowrap text-[14px] font-bold tabular-nums ${
-              amountNum >= 0 ? "text-accent-text" : "text-danger-text"
+              amountNum >= 0 ? "text-accent-text" : "text-destructive"
             }`}
           >
             {formatSignedMoney(entry.amount)}
           </span>
         </div>
-        <div className="mt-0.5 tabular-nums text-label text-muted">
+        <div className="mt-0.5 tabular-nums text-label text-muted-foreground">
           {kindLabel} · {entry.entryDate ? formatDate(entry.entryDate) : "—"}
           {entry.correctedAt && ` · ${t.ledger.correctedOn(formatDate(entry.correctedAt))}`}
         </div>
-        {note && <p className="mt-1 text-[13px] text-brand-gray">{note}</p>}
-        {details && <p className="mt-0.5 break-all font-mono text-label text-muted">{details}</p>}
+        {note && <p className="mt-1 text-[13px] text-secondary-foreground">{note}</p>}
+        {details && <p className="mt-0.5 break-all font-mono text-label text-muted-foreground">{details}</p>}
         {isEditable && (
           <div className="mt-2 flex gap-2">
             <Button
@@ -311,7 +311,7 @@ export function LedgerEntryRow({ entry }: { entry: LedgerEntry }) {
             <Button
               size="sm"
               variant="ghost"
-              className="min-h-11 px-4 text-danger-text hover:bg-danger-soft"
+              className="min-h-11 px-4 text-destructive hover:bg-danger-bg"
               onClick={handleDelete}
               disabled={isPending}
               aria-label={t.admin.treasury.deleteEntryAria}
@@ -368,10 +368,10 @@ export function CassaInlineList({
 
   function renderEntries(entries: LedgerEntryItem[]) {
     if (entries.length === 0) {
-      return <p className="px-4 py-3 text-center text-[12px] text-brand-gray">{t.admin.treasury.noMovements}</p>;
+      return <p className="px-4 py-3 text-center text-[12px] text-secondary-foreground">{t.admin.treasury.noMovements}</p>;
     }
     return (
-      <div className="divide-y divide-brand-border">
+      <div className="divide-y divide-border">
         {entries.map((entry) => (
           <LedgerEntryRow key={entry.entryId} entry={entry} />
         ))}
@@ -381,7 +381,7 @@ export function CassaInlineList({
 
   function renderBalance(balance: number) {
     return (
-      <span className={`tabular-nums text-[13px] font-bold ${balance >= 0 ? "text-accent-text" : "text-danger-text"}`}>
+      <span className={`tabular-nums text-[13px] font-bold ${balance >= 0 ? "text-accent-text" : "text-destructive"}`}>
         {balance >= 0 ? "+" : ""}
         {formatMoney(Math.abs(balance))}
       </span>
@@ -400,19 +400,19 @@ export function CassaInlineList({
           className="flex min-h-14 w-full items-center justify-between px-4 py-2.5 text-left"
         >
           <div className="min-w-0 flex-1">
-            <div className="text-[13px] font-medium text-brand-near-black">{m.fullName}</div>
-            <div className="tabular-nums text-label text-muted">
+            <div className="text-[13px] font-medium text-foreground">{m.fullName}</div>
+            <div className="tabular-nums text-label text-muted-foreground">
               {t.admin.treasury.movementsCount(entries.length)}
               {m.active ? "" : ` ${t.admin.treasury.inactiveHint}`}
             </div>
           </div>
           <div className="flex items-center gap-2">
             {renderBalance(m.balance)}
-            <span aria-hidden className="text-label text-muted">{wide ? (isExpanded ? "▲" : "▼") : "›"}</span>
+            <span aria-hidden className="text-label text-muted-foreground">{wide ? (isExpanded ? "▲" : "▼") : "›"}</span>
           </div>
         </button>
 
-        {isExpanded && <div className="border-t border-brand-border bg-tint/[0.01]">{renderEntries(entries)}</div>}
+        {isExpanded && <div className="border-t border-border bg-tint/[0.01]">{renderEntries(entries)}</div>}
       </div>
     );
   }
@@ -421,32 +421,32 @@ export function CassaInlineList({
     if (list.length === 0) return null;
     return (
       <div>
-        <p className="border-b border-brand-border bg-tint/[0.02] px-4 py-1.5 font-mono text-label uppercase tracking-wider text-muted">
+        <p className="border-b border-border bg-tint/[0.02] px-4 py-1.5 font-mono text-label uppercase tracking-wider text-muted-foreground">
           {label} ({list.length})
         </p>
-        <div className="divide-y divide-brand-border">{list.map(renderRow)}</div>
+        <div className="divide-y divide-border">{list.map(renderRow)}</div>
       </div>
     );
   }
 
   return (
     <div>
-      <div className="border-b border-brand-border px-4 py-2">
+      <div className="border-b border-border px-4 py-2">
         <input
           type="search"
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
           placeholder={t.admin.treasury.searchMember}
           aria-label={t.admin.treasury.searchMember}
-          className="min-h-11 w-full rounded-lg border border-brand-border px-3 py-1.5 text-[14px] text-brand-near-black placeholder:text-muted"
+          className="min-h-11 w-full rounded-lg border border-border px-3 py-1.5 text-[14px] text-foreground placeholder:text-muted-foreground"
         />
       </div>
-      <div className="divide-y divide-brand-border">
+      <div className="divide-y divide-border">
         {renderGroup(t.roles.admin, inGroup("admin"))}
         {renderGroup(t.roles.attivi, inGroup("attivi"))}
         {renderGroup(t.roles.utenti, inGroup("utenti"))}
         {filtered.length === 0 && (
-          <p className="px-4 py-6 text-center text-[12px] text-brand-gray">
+          <p className="px-4 py-6 text-center text-[12px] text-secondary-foreground">
             {t.admin.treasury.noMemberFound}
           </p>
         )}

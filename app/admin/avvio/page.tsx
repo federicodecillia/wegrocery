@@ -32,9 +32,9 @@ export default async function SetupPage({ searchParams }: { searchParams: Promis
 
   return (
     <AppShell email={session.user.email} name={session.user.fullName} isAdmin memberId={session.user.memberId!} personId={session.user.personId}>
-      <p className="font-mono text-label uppercase tracking-[0.1em] text-brand-gray">{s.stepOf(index + 1, SETUP_STEPS.length)}</p>
-      <h1 className="mt-1 text-title font-black text-brand-near-black">{s.steps[step]}</h1>
-      {index === 0 && <p className="mt-2 text-[14px] text-brand-gray">{s.intro}</p>}
+      <p className="font-mono text-label uppercase tracking-[0.1em] text-secondary-foreground">{s.stepOf(index + 1, SETUP_STEPS.length)}</p>
+      <h1 className="mt-1 text-title font-black text-foreground">{s.steps[step]}</h1>
+      {index === 0 && <p className="mt-2 text-[14px] text-secondary-foreground">{s.intro}</p>}
 
       <nav aria-label={s.pageTitle} className="mt-4">
         <ol className="flex flex-wrap gap-2">
@@ -44,7 +44,7 @@ export default async function SetupPage({ searchParams }: { searchParams: Promis
                 href={setupHref(id)}
                 aria-current={i === index ? "step" : undefined}
                 className={`inline-flex min-h-11 items-center rounded-full border px-3 py-1 text-[12px] font-bold ${
-                  i === index ? "border-primary bg-primary text-on-primary" : "border-brand-border bg-surface text-brand-near-black"
+                  i === index ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-foreground"
                 }`}
               >
                 {i + 1}. {s.steps[id]}
@@ -60,14 +60,14 @@ export default async function SetupPage({ searchParams }: { searchParams: Promis
 
       <div className="mt-6 flex items-center justify-between gap-3 pb-6">
         {prev ? (
-          <Link href={setupHref(prev)} className="inline-flex min-h-11 items-center rounded-full border border-brand-border bg-surface px-5 py-2 text-[14px] font-bold text-brand-near-black">
+          <Link href={setupHref(prev)} className="inline-flex min-h-11 items-center rounded-full border border-border bg-card px-5 py-2 text-[14px] font-bold text-foreground">
             {s.back}
           </Link>
         ) : (
           <span />
         )}
         {next && (
-          <Link href={setupHref(next)} className="inline-flex min-h-11 items-center rounded-full bg-inverse px-5 py-2 text-[14px] font-bold text-on-inverse">
+          <Link href={setupHref(next)} className="inline-flex min-h-11 items-center rounded-full bg-inverse px-5 py-2 text-[14px] font-bold text-inverse-foreground">
             {s.next}
           </Link>
         )}

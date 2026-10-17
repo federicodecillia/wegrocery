@@ -33,8 +33,8 @@ export function NameEditor({ name }: { name: string }) {
     return (
       <div className="flex min-h-[52px] items-center gap-3 px-4 py-3">
         <div className="min-w-0 flex-1">
-          <div className="text-[14px] font-bold text-brand-near-black">{t.profile.name}</div>
-          <div className="mt-0.5 break-words text-[12px] leading-snug text-brand-gray">{name}</div>
+          <div className="text-[14px] font-bold text-foreground">{t.profile.name}</div>
+          <div className="mt-0.5 break-words text-[12px] leading-snug text-secondary-foreground">{name}</div>
         </div>
         <Button
           type="button"
@@ -53,10 +53,10 @@ export function NameEditor({ name }: { name: string }) {
 
   return (
     <form onSubmit={save} className="px-4 py-3">
-      <label htmlFor="profile-name" className="text-[14px] font-bold text-brand-near-black">
+      <label htmlFor="profile-name" className="text-[14px] font-bold text-foreground">
         {t.profile.name}
       </label>
-      <p className="mt-0.5 text-[12px] leading-snug text-brand-gray">{t.profile.nameHint}</p>
+      <p className="mt-0.5 text-[12px] leading-snug text-secondary-foreground">{t.profile.nameHint}</p>
       <input
         id="profile-name"
         value={value}
@@ -65,7 +65,7 @@ export function NameEditor({ name }: { name: string }) {
         autoComplete="name"
         autoFocus
         required
-        className="mt-2 w-full rounded-xl border border-brand-border bg-surface px-3 py-2 text-[14px] text-brand-near-black focus:border-primary"
+        className="mt-2 w-full rounded-xl border border-border bg-card px-3 py-2 text-[14px] text-foreground focus:border-primary"
       />
       <div className="mt-3 flex gap-2">
         <Button type="submit" variant="brand" size="sm" disabled={isPending || value.trim().length === 0}>

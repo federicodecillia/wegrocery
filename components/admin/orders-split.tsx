@@ -23,7 +23,7 @@ export function OrdersSplit({ byMember, byProduct }: { byMember: ReactNode; byPr
             aria-pressed={side === opt.id}
             onClick={() => setSide(opt.id)}
             className={`min-h-(--control-h) flex-1 rounded-full text-[13px] font-semibold ${
-              side === opt.id ? "bg-surface text-brand-near-black shadow-sm" : "text-brand-gray"
+              side === opt.id ? "bg-card text-foreground shadow-sm" : "text-secondary-foreground"
             }`}
           >
             {opt.label}

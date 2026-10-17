@@ -28,8 +28,8 @@ export function WelcomeResume() {
   }
 
   return (
-    <div className="mb-4 flex items-center justify-between gap-3 rounded-card border border-primary-mid bg-primary-soft px-4 py-2.5">
-      <span className="text-[13px] font-semibold text-brand-near-black">
+    <div className="mb-4 flex items-center justify-between gap-3 rounded-card border border-primary-mid bg-primary-bg px-4 py-2.5">
+      <span className="text-[13px] font-semibold text-foreground">
         <span aria-hidden>👋 </span>
         {t.welcome.resume}
       </span>
@@ -37,7 +37,7 @@ export function WelcomeResume() {
         <Link href={`/?${WELCOME_QUERY}=1`} className="text-[13px] font-bold text-primary-text hover:underline">
           {t.welcome.resumeLink(stored.n, stored.total)}
         </Link>
-        <button type="button" onClick={close} aria-label={t.welcome.close} className="text-muted hover:text-brand-near-black">
+        <button type="button" onClick={close} aria-label={t.welcome.close} className="text-muted-foreground hover:text-foreground">
           ✕
         </button>
       </span>

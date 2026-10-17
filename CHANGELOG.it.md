@@ -31,6 +31,7 @@ dettagli tecnici", la release su GitHub la tiene.
 ### Modificato
 - 📰 **Le novità parlano ai soci.** La pagina mostra le modifiche che si notano nell'app; quelle per chi la gestisce (server, database, aggiornamenti) stanno dietro "Mostra dettagli tecnici", segnate "Tecnico".
 - [tecnico] 📊 **Le statistiche delle installazioni parlano la lingua della Console FlyLabs.** `/api/instance-stats` accetta anche la firma `x-flylabs-*` e allora risponde con la forma del FlyLabs Kit (`app`, `counts`); la Console WeGrocery manda entrambe e legge entrambe le forme, così le installazioni più vecchie continuano a funzionare. `/api/health` rinuncia dopo 3 secondi a un database che non risponde.
+- [tecnico] 🎨 **Token dei colori con i nomi FlyLabs.** I ruoli dei colori nel CSS usano ora i nomi shadcn del Playbook FlyLabs (`card`, `muted-foreground`, `primary-foreground`, `destructive`, `danger-bg`...), più `input`, `ring`, `success` e `warning-bg`; i colori del gruppo e i due temi restano come prima, e il test di contrasto copre i nuovi nomi.
 
 ## [1.30.1] — 17 ottobre 2026
 

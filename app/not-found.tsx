@@ -7,12 +7,12 @@ export default function NotFound() {
       className="flex min-h-dvh flex-col items-center justify-center p-6 text-center"
       style={{ background: "var(--frame)" }}
     >
-      <div className="w-full max-w-[320px] rounded-card border border-brand-border bg-surface p-6">
-        <p className="tabular-nums text-[40px] font-bold text-muted">404</p>
-        <p className="mt-1 text-[15px] font-semibold text-brand-near-black">{t.common.pageNotFound}</p>
+      <div className="w-full max-w-[320px] rounded-card border border-border bg-card p-6">
+        <p className="tabular-nums text-[40px] font-bold text-muted-foreground">404</p>
+        <p className="mt-1 text-[15px] font-semibold text-foreground">{t.common.pageNotFound}</p>
         <Link
           href="/"
-          className="mt-4 block w-full rounded-xl bg-primary py-2.5 text-[13px] font-bold text-on-primary"
+          className="mt-4 block w-full rounded-xl bg-primary py-2.5 text-[13px] font-bold text-primary-foreground"
         >
           {t.common.backToHome}
         </Link>

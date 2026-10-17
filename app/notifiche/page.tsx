@@ -25,7 +25,7 @@ export default async function NotifichePage() {
     <AppShell email={session.user.email} name={session.user.fullName} isAdmin={role === "admin"} memberId={memberId} personId={session.user.personId}>
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2">
-          <h1 className="text-title font-black text-brand-near-black">
+          <h1 className="text-title font-black text-foreground">
             {t.notifications.title}
           </h1>
           <HelpLink href="/guida/notifiche" />
@@ -40,7 +40,7 @@ export default async function NotifichePage() {
             >
               <button
                 type="submit"
-                className="min-h-11 whitespace-nowrap rounded-full border border-brand-border px-3.25 py-1.25 font-mono text-label font-bold uppercase tracking-widest text-brand-near-black"
+                className="min-h-11 whitespace-nowrap rounded-full border border-border px-3.25 py-1.25 font-mono text-label font-bold uppercase tracking-widest text-foreground"
               >
                 {t.notifications.markAllRead}
               </button>
@@ -50,7 +50,7 @@ export default async function NotifichePage() {
             href="/profilo/notifiche"
             aria-label={t.notifications.settings.link}
             title={t.notifications.settings.link}
-            className="flex h-11 w-11 items-center justify-center rounded-full border border-brand-border text-brand-gray"
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-border text-secondary-foreground"
           >
             <svg
               width="16"
@@ -73,8 +73,8 @@ export default async function NotifichePage() {
       {notifications.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <span className="mb-4 text-4xl">🔔</span>
-          <p className="text-[15px] font-bold text-brand-near-black">{t.notifications.noNotifications}</p>
-          <p className="mt-1 text-[14px] text-brand-gray">
+          <p className="text-[15px] font-bold text-foreground">{t.notifications.noNotifications}</p>
+          <p className="mt-1 text-[14px] text-secondary-foreground">
             {t.notifications.noNotificationsHint}
           </p>
         </div>
@@ -82,12 +82,12 @@ export default async function NotifichePage() {
         <div className="space-y-4">
           {groupByDay(notifications, new Date()).map((g) => (
             <section key={g.key} aria-labelledby={`day-${g.key}`}>
-              <h2 id={`day-${g.key}`} className="mb-2 px-1 text-[13px] font-semibold text-brand-gray first-letter:uppercase">
+              <h2 id={`day-${g.key}`} className="mb-2 px-1 text-[13px] font-semibold text-secondary-foreground first-letter:uppercase">
                 {g.label}
               </h2>
-              <ul className="overflow-hidden rounded-card border border-brand-border bg-surface shadow-card">
+              <ul className="overflow-hidden rounded-card border border-border bg-card shadow-card">
                 {g.items.map((n) => (
-                  <li key={n.notificationId} className="border-b border-brand-border last:border-none">
+                  <li key={n.notificationId} className="border-b border-border last:border-none">
                     <NotificationRow
                       id={n.notificationId}
                       href={n.href ?? "/storico"}

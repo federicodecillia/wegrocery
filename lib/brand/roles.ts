@@ -13,9 +13,12 @@ export const DEFAULT_PALETTE: Palette = {
 };
 
 const FOREGROUND = "#2d2b29"; // --foreground in globals.css
-const SURFACE = "#ffffff"; // cards are bg-surface
-const DANGER_SOFT = "#feecec"; // --danger-soft in globals.css
-const MUTED = "#6b6b6b"; // secondary text, darkened further if a soft fill needs it
+const SURFACE = "#ffffff"; // --card in globals.css
+const DANGER_BG = "#feecec"; // --danger-bg in globals.css
+const MUTED_BG = "#f3f2f0"; // --muted (and --secondary) in globals.css
+const MUTED = "#6b6b6b"; // --muted-foreground, darkened further if a soft fill needs it
+const INPUT = "#8a8886"; // --input: control borders, darkened until 3:1 on the page and cards
+const NON_TEXT = 3; // control borders, the focus ring, icons (WCAG 1.4.11)
 const AA = 4.5;
 const TINT = 0.2; // strongest tint of a fill used behind its own text (bg-primary/20)
 
@@ -37,7 +40,8 @@ function mutedSurfaces(p: Palette): [string, string][] {
     ["primaryLight", p.primaryLight],
     ["accentLight", p.accentLight],
     ["cards", SURFACE],
-    ["danger background", DANGER_SOFT],
+    ["muted fill", MUTED_BG],
+    ["danger background", DANGER_BG],
   ];
 }
 
@@ -55,18 +59,20 @@ export function resolvePalette(theme: BrandTheme): Palette {
 /** CSS custom properties set on <html>; the only source of brand colours. */
 export function deriveRoleVars(theme: BrandTheme): Record<string, string> {
   const p = resolvePalette(theme);
+  const primaryText = darkenToContrast(p.primary, colours(textSurfaces(p, "primary")), AA);
   return {
     "--primary": p.primary,
-    "--primary-soft": p.primaryLight,
-    "--on-primary": pickOn(p.primary, FOREGROUND),
-    "--primary-text": darkenToContrast(p.primary, colours(textSurfaces(p, "primary")), AA),
+    "--primary-bg": p.primaryLight,
+    "--primary-foreground": pickOn(p.primary, FOREGROUND),
+    "--primary-text": primaryText,
+    "--ring": primaryText,
     "--accent": p.accent,
-    "--accent-soft": p.accentLight,
-    "--on-accent": pickOn(p.accent, FOREGROUND),
+    "--accent-bg": p.accentLight,
+    "--accent-foreground": pickOn(p.accent, FOREGROUND),
     "--accent-text": darkenToContrast(p.accent, colours(textSurfaces(p, "accent")), AA),
-    "--muted": darkenToContrast(MUTED, colours(mutedSurfaces(p)), AA),
+    "--muted-foreground": darkenToContrast(MUTED, colours(mutedSurfaces(p)), AA),
+    "--input": darkenToContrast(INPUT, [p.background, SURFACE], NON_TEXT),
     "--background": p.background,
-    "--warm-wh": p.background,
     "--frame": p.frame,
   };
 }
@@ -78,13 +84,18 @@ export function deriveRoleVars(theme: BrandTheme): Record<string, string> {
 export const DARK = {
   background: "#161514",
   frame: "#0e0d0d",
-  surface: "#201e1c",
+  card: "#201e1c",
   foreground: "#f1eee9",
-  gray: "#b9b6b0",
-  grayLight: "#6a6762", // fills and disabled states only
-  dangerText: "#ff9a9a",
-  dangerSoft: "#3b1d1d",
-  muted: "#a29f99",
+  mutedBg: "#2b2927",
+  secondaryForeground: "#b9b6b0",
+  neutral: "#6a6762", // fills and disabled states only
+  destructive: "#ff9a9a",
+  dangerBg: "#3b1d1d",
+  warningBg: "#3a2a17",
+  success: "#7fd18b",
+  successBg: "#1b3221",
+  mutedForeground: "#a29f99",
+  input: "#7a7772",
   border: "rgba(255, 255, 255, 0.14)",
 } as const;
 
@@ -98,40 +109,53 @@ const FILL_MIN = 3; // a fill against the surface it sits on (WCAG 1.4.11)
  */
 export function deriveDarkRoleVars(theme: BrandTheme): Record<string, string> {
   const p = resolvePalette(theme);
-  const surfaces = [DARK.background, DARK.surface];
+  const surfaces = [DARK.background, DARK.card];
   const primary = lightenToContrast(p.primary, surfaces, FILL_MIN);
   const accent = lightenToContrast(p.accent, surfaces, FILL_MIN);
-  const primarySoft = mixHex(primary, DARK.surface, DARK_TINT_SOFT);
-  const accentSoft = mixHex(accent, DARK.surface, DARK_TINT_SOFT);
+  const primaryBg = mixHex(primary, DARK.card, DARK_TINT_SOFT);
+  const accentBg = mixHex(accent, DARK.card, DARK_TINT_SOFT);
   const textOn = (fill: string, soft: string) => [
     ...surfaces,
     soft,
     mixHex(fill, DARK.background, TINT),
-    mixHex(fill, DARK.surface, TINT),
+    mixHex(fill, DARK.card, TINT),
   ];
+  const primaryText = lightenToContrast(primary, textOn(primary, primaryBg), AA);
   return {
     "--primary": primary,
-    "--primary-soft": primarySoft,
-    "--on-primary": pickOn(primary, DARK.surface),
-    "--primary-text": lightenToContrast(primary, textOn(primary, primarySoft), AA),
+    "--primary-bg": primaryBg,
+    "--primary-foreground": pickOn(primary, DARK.card),
+    "--primary-text": primaryText,
+    "--ring": primaryText,
     "--accent": accent,
-    "--accent-soft": accentSoft,
-    "--on-accent": pickOn(accent, DARK.surface),
-    "--accent-text": lightenToContrast(accent, textOn(accent, accentSoft), AA),
-    "--muted": lightenToContrast(DARK.muted, [...surfaces, primarySoft, accentSoft, DARK.dangerSoft], AA),
+    "--accent-bg": accentBg,
+    "--accent-foreground": pickOn(accent, DARK.card),
+    "--accent-text": lightenToContrast(accent, textOn(accent, accentBg), AA),
+    "--muted-foreground": lightenToContrast(
+      DARK.mutedForeground,
+      [...surfaces, primaryBg, accentBg, DARK.mutedBg, DARK.dangerBg],
+      AA,
+    ),
+    "--input": lightenToContrast(DARK.input, surfaces, NON_TEXT),
     "--background": DARK.background,
-    "--warm-wh": DARK.background,
     "--frame": DARK.frame,
-    "--surface": DARK.surface,
+    "--card": DARK.card,
+    "--card-foreground": DARK.foreground,
+    "--popover": DARK.card,
+    "--popover-foreground": DARK.foreground,
     "--foreground": DARK.foreground,
-    "--near-blk": DARK.foreground,
-    "--gray": DARK.gray,
-    "--gray-l": DARK.grayLight,
+    "--muted": DARK.mutedBg,
+    "--secondary": DARK.mutedBg,
+    "--secondary-foreground": DARK.secondaryForeground,
+    "--neutral": DARK.neutral,
     "--border": DARK.border,
-    "--danger-text": DARK.dangerText,
-    "--danger-soft": DARK.dangerSoft,
+    "--destructive": DARK.destructive,
+    "--danger-bg": DARK.dangerBg,
+    "--warning-bg": DARK.warningBg,
+    "--success": DARK.success,
+    "--success-bg": DARK.successBg,
     "--inverse": DARK.foreground,
-    "--on-inverse": DARK.surface,
+    "--inverse-foreground": DARK.card,
     "--tint": "#ffffff",
   };
 }
@@ -169,7 +193,7 @@ export function brandContrastWarnings(theme: BrandTheme): string[] {
   }
   const v = deriveRoleVars(theme);
   for (const role of ["primary", "accent"] as const) {
-    const ratio = contrastRatio(v[`--on-${role}`], v[`--${role}`]);
+    const ratio = contrastRatio(v[`--${role}-foreground`], v[`--${role}`]);
     if (ratio < AA) {
       warnings.push(`${role} ${v[`--${role}`]}: text on it reaches only ${ratio.toFixed(2)}:1 (needs ${AA}:1)`);
     }
@@ -179,7 +203,7 @@ export function brandContrastWarnings(theme: BrandTheme): string[] {
   const checks: [string, [string, string][]][] = [
     ["--primary-text", textSurfaces(p, "primary")],
     ["--accent-text", textSurfaces(p, "accent")],
-    ["--muted", mutedSurfaces(p)],
+    ["--muted-foreground", mutedSurfaces(p)],
   ];
   for (const [token, surfaces] of checks) {
     for (const [name, colour] of surfaces) {

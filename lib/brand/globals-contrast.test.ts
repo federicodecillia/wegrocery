@@ -10,10 +10,18 @@ const v = (name: string) => new RegExp(`${name}:\\s*(#[0-9a-f]{3,6});`, "i").exe
 // against the default page background and against white cards.
 describe("globals.css constants", () => {
   it("danger text reads on its backgrounds, and the danger fill carries its text", () => {
-    for (const bg of [v("--danger-soft"), DEFAULT_PALETTE.background, v("--surface")]) {
-      expect(contrastRatio(v("--danger-text"), bg)).toBeGreaterThanOrEqual(4.5);
+    for (const bg of [v("--danger-bg"), DEFAULT_PALETTE.background, v("--card")]) {
+      expect(contrastRatio(v("--destructive"), bg)).toBeGreaterThanOrEqual(4.5);
     }
-    expect(contrastRatio(v("--on-danger"), v("--danger"))).toBeGreaterThanOrEqual(4.5);
+    expect(contrastRatio(v("--danger-foreground"), v("--danger"))).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("warning and success text read on the cards and on their own soft fills", () => {
+    for (const role of ["warning", "success"]) {
+      for (const bg of [v(`--${role}-bg`), DEFAULT_PALETTE.background, v("--card")]) {
+        expect(contrastRatio(v(`--${role}`), bg), `${role} on ${bg}`).toBeGreaterThanOrEqual(4.5);
+      }
+    }
   });
 
   it("defines no brand colour: those come from lib/brand/roles.ts", () => {

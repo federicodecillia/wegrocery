@@ -17,7 +17,7 @@ export function BottomNav({ isAdmin }: BottomNavProps) {
   const items = visibleNavItems(isAdmin);
 
   return (
-    <nav className="sticky bottom-0 z-20 border-t border-brand-border bg-brand-warm-white pb-[env(safe-area-inset-bottom)] md:hidden">
+    <nav className="sticky bottom-0 z-20 border-t border-border bg-background pb-[env(safe-area-inset-bottom)] md:hidden">
       <ul className={`grid h-nav-h ${items.length === 5 ? "grid-cols-5" : "grid-cols-4"}`}>
         {items.map((item) => {
           const active = isItemActive(pathname, item);
@@ -35,7 +35,7 @@ export function BottomNav({ isAdmin }: BottomNavProps) {
                   router.refresh();
                 }}
                 className={`flex h-full flex-col items-center justify-center gap-1 text-label font-medium tracking-[0.02em] ${
-                  active ? "text-primary-text" : "text-brand-gray"
+                  active ? "text-primary-text" : "text-secondary-foreground"
                 }`}
               >
                 <NavIcon name={item.icon} />

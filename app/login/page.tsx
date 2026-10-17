@@ -44,19 +44,19 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-[480px] flex-col items-center justify-center p-6">
-      <div className="w-full overflow-hidden rounded-card border border-brand-border bg-surface shadow-card">
+      <div className="w-full overflow-hidden rounded-card border border-border bg-card shadow-card">
         {/* The demo notice is the card's top edge, as wide as the card. */}
         <DemoBanner />
         <div className="p-6">
         <div className="mb-4 flex justify-center">
           <BrandLogo src={brand.logoUrl} alt="" shortName={brand.shortName} />
         </div>
-        <h1 className="text-center text-title font-black text-brand-near-black">{brand.appName}</h1>
-        <p className="mt-2 text-center text-sm text-brand-gray">
+        <h1 className="text-center text-title font-black text-foreground">{brand.appName}</h1>
+        <p className="mt-2 text-center text-sm text-secondary-foreground">
           {isDemo ? t.login.demoMessage : t.login.continueMessage}
         </p>
         {deniedMessage ? (
-          <div role="alert" className="mt-3 space-y-1 rounded-xl border border-danger-text/30 bg-danger-soft p-3 text-sm text-danger-text">
+          <div role="alert" className="mt-3 space-y-1 rounded-xl border border-destructive/30 bg-danger-bg p-3 text-sm text-destructive">
             <p>{deniedMessage}</p>
             {error === "MembershipInactive" && brand.membershipUrl ? (
               <p>
@@ -84,7 +84,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           href={brand.privacyUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-brand-gray mt-4 text-xs underline"
+          className="text-secondary-foreground mt-4 text-xs underline"
         >
           {t.login.privacyLink}
         </a>

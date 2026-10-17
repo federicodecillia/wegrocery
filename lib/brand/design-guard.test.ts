@@ -14,6 +14,7 @@ function sources(dir: string): string[] {
 }
 
 const files = ["app", "components"].flatMap(sources);
+const libFiles = sources("lib");
 const hits = (re: RegExp) =>
   files.flatMap((f) =>
     readFileSync(f, "utf8")
@@ -29,7 +30,27 @@ describe("design guard", () => {
   });
 
   it("never uses the fill-only grey as text", () => {
-    expect(hits(/text-brand-gray-light/)).toEqual([]);
+    expect(hits(/(?<![\w-])text-neutral(?![\w-])/)).toEqual([]);
+  });
+
+  it("uses the Playbook 2.2 token names, not the old WeGrocery ones", () => {
+    // Renamed in 2026-10: surface -> card, muted (text) -> muted-foreground,
+    // brand-near-black -> foreground, brand-warm-white -> background,
+    // brand-gray -> secondary-foreground, brand-gray-light -> neutral,
+    // brand-border -> border, brand-frame -> frame, *-soft -> *-bg,
+    // on-X -> X-foreground, danger-text -> destructive.
+    const old = new RegExp(
+      String.raw`(?<![\w-])(?:[\w-]+:)*(?:bg|text|border(?:-[trblxyse])?|ring(?:-offset)?|fill|stroke|from|to|via|outline|divide|decoration|caret|shadow)-` +
+        String.raw`(?:brand-[a-z-]+|surface|muted|primary-soft|accent-soft|danger-soft|danger-text|on-(?:primary|accent|danger|warning|inverse))(?![\w-])`,
+    );
+    const inLib = libFiles.flatMap((f) =>
+      readFileSync(f, "utf8")
+        .split("\n")
+        .flatMap((l, i) => (old.test(l) ? [`${f}:${i + 1}`] : [])),
+    );
+    expect([...hits(old), ...inLib]).toEqual([]);
+    const css = readFileSync("app/globals.css", "utf8");
+    expect(css).not.toMatch(/--(?:color-)?(?:brand-|surface|near-blk|warm-wh|gray|on-|danger-text|danger-soft|primary-soft|accent-soft)/);
   });
 
   it("never puts white text on a brand fill", () => {
@@ -48,12 +69,11 @@ describe("design guard", () => {
   });
 
   it("paints surfaces and fills with tokens, never white or black (the dark theme swaps them)", () => {
-    // bg-surface, bg-inverse + text-on-inverse, bg-danger + text-on-danger,
+    // bg-card, bg-inverse + text-inverse-foreground, bg-danger + text-danger-foreground,
     // bg-tint for faint fills. Overlays behind a sheet stay bg-black/30..40.
     expect(hits(/(?<![\w-])(?:[a-z-]+:)*bg-white(?![\w-])/)).toEqual([]);
     expect(hits(/(?<![\w-])(?:[a-z-]+:)*text-white(?![\w-])/)).toEqual([]);
-    expect(hits(/(?<![\w-])(?:[a-z-]+:)*bg-brand-near-black(?![\w-])/)).toEqual([]);
-    expect(hits(/brand-red/)).toEqual([]);
+    expect(hits(/(?<![\w-])(?:[a-z-]+:)*bg-foreground(?![\w-])/)).toEqual([]);
     expect(hits(/bg-black\/(\[0\.\d+\]|[0-9]|1[0-5])(?![\w-])/)).toEqual([]);
   });
 
@@ -77,7 +97,7 @@ describe("design guard", () => {
   });
 
   it("draws cards with a border and no shadow (Playbook 2.9)", () => {
-    expect(hits(/border border-brand-border bg-surface (p-[46] )?shadow-sm/)).toEqual([]);
+    expect(hits(/border border-border bg-card (p-[46] )?shadow-sm/)).toEqual([]);
   });
 
   it("spaces with the Tailwind scale, not hand-written pixels (Playbook 2.1 spacing)", () => {

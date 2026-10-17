@@ -134,22 +134,22 @@ export function EmojiPicker({ name, value, onChange }: Props) {
               width: Math.min(POPOVER_WIDTH, window.innerWidth - VIEWPORT_MARGIN * 2),
               maxHeight: coords.maxHeight,
             }}
-            className="z-[80] flex flex-col overflow-hidden rounded-xl border border-brand-border bg-surface shadow-lg"
+            className="z-[80] flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-lg"
           >
-            <div className="border-b border-brand-border p-2">
+            <div className="border-b border-border p-2">
               <input
                 ref={searchRef}
                 type="text"
                 placeholder={t.common.emojiSearchPlaceholder}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                className="w-full rounded-md border border-brand-border px-2.5 py-1.5 text-[12px] text-brand-near-black placeholder:text-muted"
+                className="w-full rounded-md border border-border px-2.5 py-1.5 text-[12px] text-foreground placeholder:text-muted-foreground"
               />
             </div>
 
             <div className="min-h-0 flex-1 overflow-y-auto p-2">
               {filtered.length === 0 ? (
-                <div className="px-2 py-6 text-center text-[12px] text-brand-gray">
+                <div className="px-2 py-6 text-center text-[12px] text-secondary-foreground">
                   {t.common.noEmojiFound(query)}
                 </div>
               ) : (
@@ -163,8 +163,8 @@ export function EmojiPicker({ name, value, onChange }: Props) {
                         onClick={() => pick(e.char)}
                         title={e.name}
                         aria-label={e.name}
-                        className={`flex h-8 w-8 items-center justify-center rounded-md text-xl leading-none transition hover:bg-accent-soft ${
-                          isSelected ? "bg-accent-soft ring-2 ring-accent" : ""
+                        className={`flex h-8 w-8 items-center justify-center rounded-md text-xl leading-none transition hover:bg-accent-bg ${
+                          isSelected ? "bg-accent-bg ring-2 ring-accent" : ""
                         }`}
                       >
                         {e.char}
@@ -175,12 +175,12 @@ export function EmojiPicker({ name, value, onChange }: Props) {
               )}
             </div>
 
-            <div className="flex items-center justify-between border-t border-brand-border bg-brand-warm-white px-3 py-2 text-label text-brand-gray">
+            <div className="flex items-center justify-between border-t border-border bg-background px-3 py-2 text-label text-secondary-foreground">
               <span>{t.common.emojiCountOf(filtered.length, EMOJI_CATALOG.length)}</span>
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="font-semibold text-brand-near-black hover:underline"
+                className="font-semibold text-foreground hover:underline"
               >
                 {t.common.close}
               </button>
@@ -202,7 +202,7 @@ export function EmojiPicker({ name, value, onChange }: Props) {
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="dialog"
         aria-expanded={open}
-        className="flex h-[38px] w-full items-center justify-center rounded-lg border border-brand-border bg-surface text-2xl leading-none transition hover:border-accent/60"
+        className="flex h-[38px] w-full items-center justify-center rounded-lg border border-border bg-card text-2xl leading-none transition hover:border-accent/60"
       >
         {current}
       </button>

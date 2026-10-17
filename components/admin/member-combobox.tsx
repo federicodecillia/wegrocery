@@ -24,7 +24,7 @@ function BalanceText({ balance }: { balance: number }) {
   return (
     <span
       className={`shrink-0 whitespace-nowrap tabular-nums text-label font-bold ${
-        balance >= 0 ? "text-accent-text" : "text-danger-text"
+        balance >= 0 ? "text-accent-text" : "text-destructive"
       }`}
     >
       {t.admin.treasury.memberBalance(formatMoney(balance))}
@@ -105,21 +105,21 @@ export function MemberCombobox({ members, value, onChange, label }: Props) {
   if (value) {
     return (
       <div>
-        <span id={`${baseId}-label`} className="mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray">
+        <span id={`${baseId}-label`} className="mb-1 block text-label font-semibold uppercase tracking-wide text-secondary-foreground">
           {label}
         </span>
         <div
           aria-labelledby={`${baseId}-label`}
-          className="flex items-center justify-between gap-2 rounded-lg border border-accent/40 bg-accent-soft px-3 py-2"
+          className="flex items-center justify-between gap-2 rounded-lg border border-accent/40 bg-accent-bg px-3 py-2"
         >
           <div className="min-w-0">
-            <div className="truncate text-[13px] font-semibold text-brand-near-black">
+            <div className="truncate text-[13px] font-semibold text-foreground">
               {value.fullName}
               {!value.active && (
-                <span className="ml-1 font-normal text-brand-gray">{t.admin.treasury.inactiveHint}</span>
+                <span className="ml-1 font-normal text-secondary-foreground">{t.admin.treasury.inactiveHint}</span>
               )}
             </div>
-            <div className="truncate tabular-nums text-label text-brand-gray">{value.email}</div>
+            <div className="truncate tabular-nums text-label text-secondary-foreground">{value.email}</div>
             <BalanceText balance={value.balance} />
           </div>
           <button
@@ -131,7 +131,7 @@ export function MemberCombobox({ members, value, onChange, label }: Props) {
               pendingFocus.current = "input";
             }}
             aria-label={t.admin.treasury.memberChangeLabel(value.fullName)}
-            className="min-h-[36px] shrink-0 rounded-lg border border-brand-border bg-surface px-3 text-[12px] font-semibold text-brand-near-black"
+            className="min-h-[36px] shrink-0 rounded-lg border border-border bg-card px-3 text-[12px] font-semibold text-foreground"
           >
             {t.admin.treasury.memberChange}
           </button>
@@ -142,7 +142,7 @@ export function MemberCombobox({ members, value, onChange, label }: Props) {
 
   return (
     <div className="relative">
-      <label htmlFor={inputId} className="mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray">
+      <label htmlFor={inputId} className="mb-1 block text-label font-semibold uppercase tracking-wide text-secondary-foreground">
         {label}
       </label>
       <input
@@ -170,13 +170,13 @@ export function MemberCombobox({ members, value, onChange, label }: Props) {
         onClick={() => setOpen(true)}
         onBlur={() => setOpen(false)}
         onKeyDown={handleKeyDown}
-        className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black placeholder:text-muted"
+        className="w-full rounded-lg border border-border px-3 py-2 text-[13px] text-foreground placeholder:text-muted-foreground"
       />
       <p className="sr-only" aria-live="polite">
         {open ? t.admin.treasury.memberResults(matches.length) : ""}
       </p>
       {open && (
-        <div className="absolute left-0 right-0 z-30 mt-1 overflow-hidden rounded-lg border border-brand-border bg-surface shadow-lg">
+        <div className="absolute left-0 right-0 z-30 mt-1 overflow-hidden rounded-lg border border-border bg-card shadow-lg">
           <ul id={listId} role="listbox" aria-label={label} className="max-h-64 overflow-y-auto overscroll-contain">
             {matches.map((m, i) => (
               <li
@@ -191,22 +191,22 @@ export function MemberCombobox({ members, value, onChange, label }: Props) {
                   if (i !== activeIndex) setActive(i);
                 }}
                 className={`flex min-h-[44px] cursor-pointer items-center justify-between gap-2 px-3 py-2 ${
-                  i === activeIndex ? "bg-accent-soft" : ""
+                  i === activeIndex ? "bg-accent-bg" : ""
                 }`}
               >
                 <div className="min-w-0">
-                  <div className="truncate text-[13px] text-brand-near-black">
+                  <div className="truncate text-[13px] text-foreground">
                     {m.fullName}
-                    {!m.active && <span className="ml-1 text-brand-gray">{t.admin.treasury.inactiveHint}</span>}
+                    {!m.active && <span className="ml-1 text-secondary-foreground">{t.admin.treasury.inactiveHint}</span>}
                   </div>
-                  <div className="truncate tabular-nums text-label text-brand-gray">{m.email}</div>
+                  <div className="truncate tabular-nums text-label text-secondary-foreground">{m.email}</div>
                 </div>
                 <BalanceText balance={m.balance} />
               </li>
             ))}
           </ul>
           {matches.length === 0 && (
-            <p className="px-3 py-3 text-center text-[12px] text-brand-gray">{t.admin.treasury.noMemberFound}</p>
+            <p className="px-3 py-3 text-center text-[12px] text-secondary-foreground">{t.admin.treasury.noMemberFound}</p>
           )}
         </div>
       )}

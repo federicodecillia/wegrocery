@@ -27,20 +27,20 @@ export function SearchMissesCard({ misses }: { misses: { query: string; count: n
   }
 
   return (
-    <section className="rounded-xl border border-brand-border bg-surface p-4">
-      <h3 className="text-[13px] font-bold text-brand-near-black">{s.title}</h3>
-      <p className="mt-1 text-[12px] text-brand-gray">{s.hint(MISS_RETENTION_DAYS)}</p>
+    <section className="rounded-xl border border-border bg-card p-4">
+      <h3 className="text-[13px] font-bold text-foreground">{s.title}</h3>
+      <p className="mt-1 text-[12px] text-secondary-foreground">{s.hint(MISS_RETENTION_DAYS)}</p>
       {misses.length === 0 ? (
-        <p className="mt-3 text-[12px] text-muted">{s.empty}</p>
+        <p className="mt-3 text-[12px] text-muted-foreground">{s.empty}</p>
       ) : (
         <>
           <ul className="mt-3 flex flex-wrap gap-2">
             {misses.map((m) => (
               <li
                 key={m.query}
-                className="rounded-full border border-brand-border bg-brand-warm-white px-3 py-1 text-[13px] text-brand-near-black"
+                className="rounded-full border border-border bg-background px-3 py-1 text-[13px] text-foreground"
               >
-                {m.query} <span className="tabular-nums text-label text-muted">{s.times(m.count)}</span>
+                {m.query} <span className="tabular-nums text-label text-muted-foreground">{s.times(m.count)}</span>
               </li>
             ))}
           </ul>
@@ -48,7 +48,7 @@ export function SearchMissesCard({ misses }: { misses: { query: string; count: n
             type="button"
             onClick={handleClear}
             disabled={isPending}
-            className="mt-3 rounded-xl border border-brand-border px-4 py-2 text-[13px] font-bold text-brand-near-black disabled:opacity-60"
+            className="mt-3 rounded-xl border border-border px-4 py-2 text-[13px] font-bold text-foreground disabled:opacity-60"
           >
             {s.clear}
           </button>

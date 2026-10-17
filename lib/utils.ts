@@ -7,7 +7,7 @@ import {
 } from "@/lib/i18n/format";
 
 // The theme's own sizes, radii and shadows (app/globals.css): without them
-// twMerge reads `text-label` as a colour and drops it next to `text-muted`.
+// twMerge reads `text-label` as a colour and drops it next to `text-muted-foreground`.
 const twMerge = extendTailwindMerge({
   extend: {
     theme: {

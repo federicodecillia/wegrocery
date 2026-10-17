@@ -9,11 +9,11 @@ export function GuideArticleCard({ article }: { article: GuideArticle }) {
   return (
     <article
       id={article.slug}
-      className="mb-3.5 scroll-mt-24 rounded-card border border-brand-border bg-surface p-4.5 shadow-card target:border-primary target:ring-2 target:ring-primary/20"
+      className="mb-3.5 scroll-mt-24 rounded-card border border-border bg-card p-4.5 shadow-card target:border-primary target:ring-2 target:ring-primary/20"
     >
-      <h2 className="mb-2 text-[16px] font-extrabold tracking-[-0.01em] text-brand-near-black">{article.title}</h2>
+      <h2 className="mb-2 text-[16px] font-extrabold tracking-[-0.01em] text-foreground">{article.title}</h2>
       {article.intro && (
-        <p className="mb-3 text-[14px] leading-[1.5] text-brand-near-black">
+        <p className="mb-3 text-[14px] leading-[1.5] text-foreground">
           <RichText text={article.intro} />
         </p>
       )}
@@ -23,11 +23,11 @@ export function GuideArticleCard({ article }: { article: GuideArticle }) {
             <li key={i} className="flex gap-3">
               <span
                 aria-hidden
-                className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-accent tabular-nums text-label font-bold text-on-accent"
+                className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-accent tabular-nums text-label font-bold text-accent-foreground"
               >
                 {i + 1}
               </span>
-              <p className="mt-0.5 text-[14px] leading-[1.5] text-brand-near-black">
+              <p className="mt-0.5 text-[14px] leading-[1.5] text-foreground">
                 <RichText text={step} />
               </p>
             </li>
@@ -35,7 +35,7 @@ export function GuideArticleCard({ article }: { article: GuideArticle }) {
         </ol>
       )}
       {article.notes?.map((note, i) => (
-        <p key={i} className="mb-3 text-[14px] leading-[1.5] text-brand-gray">
+        <p key={i} className="mb-3 text-[14px] leading-[1.5] text-secondary-foreground">
           <RichText text={note} />
         </p>
       ))}

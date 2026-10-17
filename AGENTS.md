@@ -21,8 +21,7 @@ flylabs-kit as a PR.
 Kit version and modules in use: `flylabs-kit.json` (Playbook 9.7). Every Monday `.github/workflows/kit-sync.yml` compares the app with the latest kit and keeps the issue "FlyLabs Kit: allineamento" open while something is missing (it needs the `FLYLABS_KIT_TOKEN` secret, read-only on flylabs-kit; this public repo gets the brief report). Whoever aligns the app updates `flylabs-kit.json` in the same PR.
 
 Intended deviations (as of 2026-10-17):
-- 2.2 Own token names (`surface`, `muted`, `brand-near-black`, `brand-border`, `on-primary`...) instead of shadcn's: the kit modules are adapted to them (`components/changelog-view.tsx`, `EMAIL_THEME` in `lib/email/layout.ts`); renamed at stage 1.
-- 2.10 The group's own colours instead of the FlyLabs palette: WeGrocery is white-label, so this stays.
+- 2.10 The group's own colours instead of the FlyLabs palette: WeGrocery is white-label, so this stays. For the same reason `accent` is the group's second colour (with `accent-foreground`, `accent-text`, `accent-bg`), not shadcn's grey hover fill.
 - 3.3 Repository docs in English: the repo is public and a portfolio piece, so this stays.
 
 Found in the review of 2026-10-14 (each line, its reason and its timing are in
@@ -669,33 +668,47 @@ Brand colours come from the brand JSON (`theme`), never from the code.
 `<html>`, and `app/globals.css` maps them to Tailwind 4 `@theme` colours.
 Defaults below are the WeGrocery palette (`DEFAULT_PALETTE`).
 
+Token names are the shadcn ones of Playbook 2.2, plus the roles shadcn lacks.
+The convention: `X-foreground` is the text on an `X` fill, `X-text` is
+coloured text on light surfaces, `X-bg` is a soft background.
+
 | Class suffix | Default | Use |
 |---|---|---|
-| `primary` | #F5A623 | Fills: CTA buttons, active dots, progress. Also borders and rings |
-| `on-primary` | computed | Text on a `bg-primary` fill (near-black or white, whichever reads better) |
+| `background` | #faf8f5 (group) | App background |
+| `frame` | #ddd8d0 (group) | Around the phone card from `sm` |
+| `foreground` | #2d2b29 | Primary text |
+| `card`, `card-foreground` | #ffffff / #2d2b29 | Cards; `popover`, `popover-foreground` are the same colours for sheets and dialogs |
+| `primary` | #F5A623 (group) | Fills: CTA buttons, active dots, progress. Also borders |
+| `primary-foreground` | computed | Text on a `bg-primary` fill (near-black or white, whichever reads better) |
 | `primary-text` | computed (#8E6014) | Primary-coloured **text** and links on light surfaces |
-| `primary-soft` | #FEF3DC | Soft background (balance card) |
+| `primary-bg` | #FEF3DC (group) | Soft background (balance card) |
 | `primary-mid` | primary at 30% | Borders on soft backgrounds |
-| `accent`, `on-accent`, `accent-text`, `accent-soft` | #00A896 … | Same roles for the accent (open-cycle badge, top-ups) |
-| `muted` | computed (#6B6B6B) | Secondary text |
-| `brand-red` / `brand-red-light` | #C53030 / #FEECEC | Negative balance, errors, destructive buttons (white text) |
-| `brand-near-black` | #2d2b29 | Primary text, dark buttons (white text) |
-| `brand-gray` | #58595B | Secondary text |
-| `brand-gray-light` | #ADADAD | Fills and disabled states only |
-| `brand-warm-white` | #faf8f5 | App background |
-| `brand-border` | rgba(88,89,91,0.10) | Borders |
+| `accent`, `accent-foreground`, `accent-text`, `accent-bg` | #00A896 … (group) | Same roles for the group's second colour (open-cycle badge, top-ups). Not shadcn's grey hover `accent`: WeGrocery is white-label (Playbook 2.10) |
+| `muted`, `secondary` | #f3f2f0 | A faint neutral fill |
+| `muted-foreground` | computed (#6B6B6B) | Secondary text |
+| `secondary-foreground` | #58595B | Secondary text, a step darker than `muted-foreground` |
+| `neutral` | #ADADAD | Fills and disabled states only (dots, switch off), never text |
+| `destructive` | #C53030 | Red text: negative balance, errors |
+| `danger`, `danger-foreground`, `danger-bg` | #C53030 / white / #FEECEC | Destructive buttons and badges (fill with white text), soft red background |
+| `warning`, `warning-foreground`, `warning-bg` | #B45309 / white / #fef5ea | Warning fill (toasts) with its text; warning text in light |
+| `success`, `success-bg` | #2b7a3d / #e9f6ec | Success text and its soft background |
+| `inverse`, `inverse-foreground` | #2d2b29 / white | Dark buttons and toasts (light in the dark theme) |
+| `tint` | black (white in dark) | Faint fills over a card, with an opacity (`bg-tint/[0.04]`) |
+| `border` | rgba(88,89,91,0.10) | Borders |
+| `input` | computed (3:1) | Control borders (Playbook 2.4), ready for the Base UI fields |
+| `ring` | = `primary-text` | The focus outline |
 
 Rules (enforced by `lib/brand/design-guard.test.ts`):
 - Every text/background pair reaches WCAG AA (4.5:1). Computed tokens
   guarantee it for any palette; `brandContrastWarnings()` logs at startup
   when a palette cannot.
-- Never `text-white` on `bg-primary` / `bg-accent`: use `text-on-primary` /
-  `text-on-accent`. Keep the fill and its text colour on the same line.
+- Never `text-white` on `bg-primary` / `bg-accent`: use `text-primary-foreground` /
+  `text-accent-foreground`. Keep the fill and its text colour on the same line.
 - Coloured text is `text-primary-text` / `text-accent-text`, not `text-primary`
   (that is the fill colour; fine only on a dark background).
 - No opacity modifier on a text token (`text-accent-text/80`): it undoes the
   computed contrast. Tints of a fill behind its own text go up to `/20`.
-- Never `text-brand-gray-light`: use `text-muted`.
+- Never `text-neutral`: use `text-muted-foreground`. The old WeGrocery names (`surface`, `muted` as text, `brand-*`, `on-*`, `*-soft`, `danger-text`) are refused.
 - No palette names (`orange`, `teal`) and no hard-coded brand hex.
 - Spacing (padding, margin, gap) uses the Tailwind scale (`p-4.5` is 18px), never `p-[18px]`: `design-guard.test.ts` refuses the pixel form.
 - No text under 12px: `text-label` (12px) is the smallest size. On phones
@@ -703,13 +716,13 @@ Rules (enforced by `lib/brand/design-guard.test.ts`):
   zooms the page on smaller fields), so do not size fields below that.
 
 Key patterns:
-- **Saldo hero card**: primary-soft (positive) or red-light (negative), 70px balance amount
+- **Saldo hero card**: `primary-bg` (positive) or `danger-bg` (negative), 70px balance amount
 - **Pill steppers** in order form: zero-state (single + btn) vs has-qty state (−/qty/+)
 - **Installable app (PWA)**: `app/manifest.ts` (public: `proxy.ts` lets `manifest.webmanifest` and `.png` through) lists icons drawn at build time from `brand.logoUrl` by `app/icons/[file]/route.tsx` (sizes in `lib/pwa/icons.ts`; a logo that cannot be loaded becomes a letter, never a failed build). `components/install-prompt.tsx` sits last on Home, phones only (`lib/pwa/install-hint.ts`); no service worker.
 - **Navigation**: items from `nav-items.ts`, filtered by `visibleNavItems` (members 4, admins 5 with Admin). `BottomNav` (with the header: logo, bell, avatar) on a phone, below `md`; from `md` `SideNav` replaces both: a rail (88 px, icon over label) on a tablet, a sidebar (248 px, icon beside label) from `lg`, with the logo on top and Notifiche and Profilo at the bottom. From `lg` the admin sections hang under Admin in the sidebar and the admin pill bar (`AdminNav`) hides; its views row stays (Playbook 2.8). An item's `also` paths keep it current on pages without an item (Ricarica → Home); the bell and the avatar carry `aria-current` on Notifiche and on Profilo/Famiglia
 - **Notification bell**: in the phone header and at the bottom of the rail or sidebar, red badge with count, links to `/notifiche`
 - **Gestures** (`lib/ui/use-swipe.ts`, Pointer Events, no library): drag down on a `Sheet`'s handle or header closes it on phones (`swipeToClose={false}` on the cycle-close review), a confirm's drag is "Annulla"; off with reduced motion, never from the left edge. `components/app-refresh.tsx` refreshes the page after 5 minutes in the background and shows the offline line; tapping the current bottom-bar item scrolls up and refreshes. Neither ever runs on `/ordine` (`lib/ui/refresh.ts`)
-- Shell: on a phone a card `max-w-[480px]`, centred on `bg-brand-frame` from `sm`; from `md` no card, the side navigation plus the content filling the screen. Inside, `<AppShell layout="reading">` (the default) keeps a 640 px column (Guida, Profilo, Notifiche, Changelog, Ricarica); `layout="wide"` goes up to 1120 px (Home's two columns, Admin). Main's padding is `px-5` on a phone, `px-8` from `md`: full-bleed bars (`category-bar.tsx`, `order-totals.tsx`) use the matching negative margin. Widths live in `shell-width.ts`, mirrored by `ShellSkeleton`
+- Shell: on a phone a card `max-w-[480px]`, centred on `bg-frame` from `sm`; from `md` no card, the side navigation plus the content filling the screen. Inside, `<AppShell layout="reading">` (the default) keeps a 640 px column (Guida, Profilo, Notifiche, Changelog, Ricarica); `layout="wide"` goes up to 1120 px (Home's two columns, Admin). Main's padding is `px-5` on a phone, `px-8` from `md`: full-bleed bars (`category-bar.tsx`, `order-totals.tsx`) use the matching negative margin. Widths live in `shell-width.ts`, mirrored by `ShellSkeleton`
 - Member pages: reading text is 14px, prices and notification bodies included (Inter, `tabular-nums`); titles (h1 to h3) are Geist; JetBrains Mono is only for uppercase labels, the one-time code field and code-like values (IBAN, addresses: `break-all`), kept by `design-guard.test.ts` (Playbook 2.1)
 - Small header controls (bell, avatar, "?") keep their look and get a 44 px touch area with the `hit-44` utility
 - The header holds the bell and the Profile avatar (initials, `lib/profile/summary.ts`); the email, sign-out and personal settings are on `/profilo`, whose rows hide what the deploy has not switched on

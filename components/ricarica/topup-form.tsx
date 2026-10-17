@@ -24,8 +24,8 @@ function toCents(amount: string): number {
 function presetClass(selected: boolean): string {
   return `rounded-xl border py-2.5 tabular-nums text-[15px] font-bold ${
     selected
-      ? "border-primary bg-primary-soft text-brand-near-black"
-      : "border-brand-border bg-surface text-brand-near-black"
+      ? "border-primary bg-primary-bg text-foreground"
+      : "border-border bg-card text-foreground"
   }`;
 }
 
@@ -79,7 +79,7 @@ export function TopupForm({ presets, minCents, maxCents }: Props) {
           ))}
         </div>
       )}
-      <label className="mb-1 block font-mono text-label uppercase tracking-[0.1em] text-brand-gray" htmlFor="topup-amount">
+      <label className="mb-1 block font-mono text-label uppercase tracking-[0.1em] text-secondary-foreground" htmlFor="topup-amount">
         {t.topup.otherAmount}
       </label>
       <input
@@ -88,16 +88,16 @@ export function TopupForm({ presets, minCents, maxCents }: Props) {
         inputMode="decimal"
         value={amount}
         onChange={(e) => setAmount(e.target.value)}
-        className="mb-1 w-full rounded-xl border border-brand-border px-3 py-2.5 tabular-nums text-[15px]"
+        className="mb-1 w-full rounded-xl border border-border px-3 py-2.5 tabular-nums text-[15px]"
       />
-      <p className="mb-4 text-[12px] text-brand-gray">
+      <p className="mb-4 text-[12px] text-secondary-foreground">
         {t.topup.amountRange(formatMoney(minCents / 100), formatMoney(maxCents / 100))}
       </p>
       <button
         type="button"
         onClick={handlePay}
         disabled={isPending || !valid}
-        className="w-full rounded-full bg-primary px-4 py-3 text-[14px] font-bold text-on-primary disabled:opacity-60"
+        className="w-full rounded-full bg-primary px-4 py-3 text-[14px] font-bold text-primary-foreground disabled:opacity-60"
       >
         {isPending ? t.topup.redirecting : valid ? t.topup.payButton(formatMoney(cents / 100)) : t.topup.payButtonNoAmount}
       </button>

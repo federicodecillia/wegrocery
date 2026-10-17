@@ -27,8 +27,8 @@ type Props = {
   balance: string | null;
 };
 
-const card = "mb-3.5 overflow-hidden rounded-card border border-brand-border bg-surface shadow-card";
-const heading = "px-4 pt-3.5 font-mono text-label font-bold uppercase tracking-widest text-brand-gray";
+const card = "mb-3.5 overflow-hidden rounded-card border border-border bg-card shadow-card";
+const heading = "px-4 pt-3.5 font-mono text-label font-bold uppercase tracking-widest text-secondary-foreground";
 
 export function FamilyPanel({ enabled, personId, isOwner, people, sent, received, balance }: Props) {
   const router = useRouter();
@@ -79,7 +79,7 @@ export function FamilyPanel({ enabled, personId, isOwner, people, sent, received
   }
 
   if (!enabled && !inFamily) {
-    return <p className="text-[14px] leading-snug text-brand-gray">{t.family.disabled}</p>;
+    return <p className="text-[14px] leading-snug text-secondary-foreground">{t.family.disabled}</p>;
   }
 
   return (
@@ -88,9 +88,9 @@ export function FamilyPanel({ enabled, personId, isOwner, people, sent, received
         <div className={card}>
           <div className={heading}>{t.family.received}</div>
           {received.map((i) => (
-            <div key={i.inviteId} className="border-b border-brand-border px-4 py-3.5 last:border-b-0">
-              <div className="text-[14px] font-bold text-brand-near-black">{t.family.invitedBy(i.accountName)}</div>
-              <div className="mt-0.75 text-[12px] text-brand-gray">{t.family.expires(i.expires)}</div>
+            <div key={i.inviteId} className="border-b border-border px-4 py-3.5 last:border-b-0">
+              <div className="text-[14px] font-bold text-foreground">{t.family.invitedBy(i.accountName)}</div>
+              <div className="mt-0.75 text-[12px] text-secondary-foreground">{t.family.expires(i.expires)}</div>
               <div className="mt-3 flex gap-2">
                 <Button size="sm" variant="accent" disabled={isPending} onClick={() => accept(i.inviteId, i.accountName)}>
                   {t.family.accept}
@@ -114,14 +114,14 @@ export function FamilyPanel({ enabled, personId, isOwner, people, sent, received
         {people.map((p) => (
           <div
             key={p.memberId}
-            className="flex items-center gap-3 border-b border-brand-border px-4 py-3.5 last:border-b-0"
+            className="flex items-center gap-3 border-b border-border px-4 py-3.5 last:border-b-0"
           >
             <div className="min-w-0 flex-1">
-              <div className="text-[14px] font-bold text-brand-near-black">
+              <div className="text-[14px] font-bold text-foreground">
                 {p.fullName}
-                {p.memberId === personId && <span className="font-normal text-muted"> ({t.family.you})</span>}
+                {p.memberId === personId && <span className="font-normal text-muted-foreground"> ({t.family.you})</span>}
               </div>
-              <div className="mt-0.75 break-all text-[12px] text-brand-gray">{p.email}</div>
+              <div className="mt-0.75 break-all text-[12px] text-secondary-foreground">{p.email}</div>
             </div>
             {isOwner && p.memberId !== personId && (
               <Button size="sm" variant="outline" disabled={isPending} onClick={() => remove(p.memberId, p.fullName)}>
@@ -130,7 +130,7 @@ export function FamilyPanel({ enabled, personId, isOwner, people, sent, received
             )}
           </div>
         ))}
-        {!inFamily && <p className="px-4 pb-3.5 text-[12px] text-brand-gray">{t.family.alone}</p>}
+        {!inFamily && <p className="px-4 pb-3.5 text-[12px] text-secondary-foreground">{t.family.alone}</p>}
       </div>
 
       {sent.length > 0 && (
@@ -139,11 +139,11 @@ export function FamilyPanel({ enabled, personId, isOwner, people, sent, received
           {sent.map((i) => (
             <div
               key={i.inviteId}
-              className="flex items-center gap-3 border-b border-brand-border px-4 py-3.5 last:border-b-0"
+              className="flex items-center gap-3 border-b border-border px-4 py-3.5 last:border-b-0"
             >
               <div className="min-w-0 flex-1">
-                <div className="text-[14px] font-bold text-brand-near-black">{i.name}</div>
-                <div className="mt-0.75 break-all text-[12px] text-brand-gray">{i.email}</div>
+                <div className="text-[14px] font-bold text-foreground">{i.name}</div>
+                <div className="mt-0.75 break-all text-[12px] text-secondary-foreground">{i.email}</div>
               </div>
               <Button
                 size="sm"
@@ -166,9 +166,9 @@ export function FamilyPanel({ enabled, personId, isOwner, people, sent, received
             if (email.trim()) run(() => inviteToFamily(email), () => setEmail(""));
           }}
         >
-          <div className="text-[14px] font-bold text-brand-near-black">{t.family.inviteTitle}</div>
-          <p className="mt-0.75 text-[12px] leading-snug text-brand-gray">{t.family.inviteHint}</p>
-          <label className="mt-3 block text-[12px] font-bold text-brand-near-black" htmlFor="family-email">
+          <div className="text-[14px] font-bold text-foreground">{t.family.inviteTitle}</div>
+          <p className="mt-0.75 text-[12px] leading-snug text-secondary-foreground">{t.family.inviteHint}</p>
+          <label className="mt-3 block text-[12px] font-bold text-foreground" htmlFor="family-email">
             {t.family.emailLabel}
           </label>
           <div className="mt-1 flex gap-2">
@@ -179,7 +179,7 @@ export function FamilyPanel({ enabled, personId, isOwner, people, sent, received
               autoComplete="off"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="min-w-0 flex-1 rounded-full border border-brand-border px-4 py-2 text-[14px]"
+              className="min-w-0 flex-1 rounded-full border border-border px-4 py-2 text-[14px]"
             />
             <Button type="submit" size="sm" variant="brand" disabled={isPending || !email.trim()}>
               {t.family.send}

@@ -10,26 +10,26 @@ export function BalanceDueCard({ cents, canPay }: { cents: number; canPay: boole
   if (cents <= -SETTLEMENT_MIN_DUE_CENTS) {
     const amount = formatMoney(-cents / 100);
     return (
-      <div className="mb-3.5 rounded-card border-[1.5px] border-danger-text/30 bg-danger-soft p-4">
-        <div className="mb-1.5 font-mono text-label font-semibold uppercase tracking-[0.13em] text-danger-text">
+      <div className="mb-3.5 rounded-card border-[1.5px] border-destructive/30 bg-danger-bg p-4">
+        <div className="mb-1.5 font-mono text-label font-semibold uppercase tracking-[0.13em] text-destructive">
           {t.balance.dueLabel}
         </div>
-        <div className="mb-1.5 text-[32px] font-black leading-none tracking-[-0.04em] text-danger-text">{amount}</div>
-        <p className="mb-3 text-[14px] text-brand-near-black">{t.balance.dueHint}</p>
-        {canPay ? <PayBalanceButton amountLabel={amount} /> : <p className="text-[14px] text-brand-gray">{t.order.pay.unavailable}</p>}
+        <div className="mb-1.5 text-[32px] font-black leading-none tracking-[-0.04em] text-destructive">{amount}</div>
+        <p className="mb-3 text-[14px] text-foreground">{t.balance.dueHint}</p>
+        {canPay ? <PayBalanceButton amountLabel={amount} /> : <p className="text-[14px] text-secondary-foreground">{t.order.pay.unavailable}</p>}
       </div>
     );
   }
   if (cents > 0) {
     return (
-      <div className="mb-3.5 rounded-card border-[1.5px] border-primary-mid bg-primary-soft p-4">
+      <div className="mb-3.5 rounded-card border-[1.5px] border-primary-mid bg-primary-bg p-4">
         <div className="mb-1.5 font-mono text-label font-semibold uppercase tracking-[0.13em] text-primary-text">
           {t.balance.creditLabel}
         </div>
-        <div className="mb-1.5 text-[32px] font-black leading-none tracking-[-0.04em] text-brand-near-black">
+        <div className="mb-1.5 text-[32px] font-black leading-none tracking-[-0.04em] text-foreground">
           {formatMoney(cents / 100)}
         </div>
-        <p className="text-[14px] text-brand-near-black">{t.balance.creditHint}</p>
+        <p className="text-[14px] text-foreground">{t.balance.creditHint}</p>
       </div>
     );
   }
