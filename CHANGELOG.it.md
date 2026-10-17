@@ -23,7 +23,9 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
-## [Non rilasciato]
+## [1.31.0] - 17 ottobre 2026
+
+*Lo stile FlyLabs: campi dei moduli più chiari, email più curate, un solo set di icone e una pagina delle novità scritta per i soci.*
 
 ### Aggiunte
 - ✉️ **Email più curate.** Ogni email dell'app (accesso, notifiche, ordine al fornitore) ora arriva su una scheda pulita nei colori dell'app, con link da toccare e il logo di WeGrocery in fondo; le app di posta che mostrano solo il testo ricevono le stesse parole di prima.
@@ -674,6 +676,7 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
+[1.31.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.31.0
 [1.30.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.30.1
 [1.30.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.30.0
 [1.29.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.29.0
