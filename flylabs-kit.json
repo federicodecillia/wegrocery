@@ -1,0 +1,13 @@
+{
+  "app": "wegrocery",
+  "kit": "0.11",
+  "modules": {
+    "changelog": "1.0",
+    "console": "1.0",
+    "email": "1.0",
+    "guida": "1.0"
+  },
+  "notAdopted": {
+    "tema": "Tema e test di contrasto propri (lib/theme.ts, lib/brand/theme-contrast.test.ts), equivalenti al modulo."
+  }
+}
