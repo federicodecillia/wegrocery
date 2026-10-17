@@ -16,7 +16,7 @@ import { getPaymentSettings } from "@/lib/payments/get-settings";
 import { getSettlementStatus } from "@/lib/payments/settlement-store";
 import { DEFAULT_HANDLING_FEE } from "@/lib/payments/order-payment";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardBody } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { t } from "@/lib/i18n";
 import { formatDate } from "@/lib/i18n/format";
 import { formatDeadline } from "@/lib/i18n/deadline";
@@ -237,10 +237,10 @@ async function SelectedCycle({
       <header className="mb-3 flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="mb-1 flex flex-wrap gap-1.5">
-            <Badge tone={isOpen ? "accent" : c.status === "cancelled" ? "danger" : "neutral"} dot={isOpen}>
+            <Badge variant={isOpen ? "accent" : c.status === "cancelled" ? "destructive" : "default"} dot={isOpen}>
               {isOpen ? t.admin.cycle.openBadge : c.status === "cancelled" ? t.admin.cycle.cancelledBadge : t.admin.cycle.closedBadge}
             </Badge>
-            {perOrder && <Badge tone="brand">💳 {t.admin.cycle.cardBadge}</Badge>}
+            {perOrder && <Badge variant="brand">💳 {t.admin.cycle.cardBadge}</Badge>}
           </div>
           <h2 id="cycle-title" className="text-[18px] font-black text-foreground">
             {c.title}
@@ -275,12 +275,12 @@ async function SelectedCycle({
           <OpenCycleOverview cycle={cycle} stats={stats} />
         ) : (
           <Card>
-            <CardBody>
+            <CardContent>
               <CycleFacts cycle={cycle} />
               <div className="mt-3">
                 <OrdersLink cycleId={c.cycleId} />
               </div>
-            </CardBody>
+            </CardContent>
           </Card>
         ))}
 
@@ -296,9 +296,9 @@ async function SelectedCycle({
           </div>
         ) : (
           <Card>
-            <CardBody>
+            <CardContent>
               <p className="max-w-prose text-[13px] text-secondary-foreground">{w.noSupplier}</p>
-            </CardBody>
+            </CardContent>
           </Card>
         ))}
 

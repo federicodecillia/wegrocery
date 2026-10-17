@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
-import { Toaster } from "@/components/providers/toaster";
+import { Toaster } from "@/components/ui/sonner";
 import { ConfirmDialogProvider } from "@/components/ui/confirm-dialog";
 import { cookies } from "next/headers";
 import { brand, resolvePalette, roleVarsCss } from "@/lib/brand";

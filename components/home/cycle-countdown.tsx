@@ -56,7 +56,7 @@ export function CycleCountdown({ cycleId, title, orderCloseAt, orderOpenAt, pick
     <div className="mb-3.5 rounded-card border border-border bg-card p-4.5 shadow-card">
       <div className="flex items-start justify-between gap-3">
         <h2 className="text-[17px] font-extrabold leading-snug tracking-[-0.02em] text-foreground">{title}</h2>
-        <Badge tone="accent" dot>
+        <Badge variant="accent" dot>
           {t.cycle.open}
         </Badge>
       </div>

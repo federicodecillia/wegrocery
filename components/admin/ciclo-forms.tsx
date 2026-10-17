@@ -16,7 +16,7 @@ import {
 } from "@/lib/actions/admin";
 import { formatEur } from "@/lib/utils";
 import { ACCESS_LEVELS, DEFAULT_ACCESS_LEVEL, getAccessLabel, normalizeAccessLevel } from "@/lib/roles";
-import { Card, CardBody } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import type { CatalogProductItem } from "@/lib/db/queries";
 import Link from "next/link";
 import { adminHref } from "@/lib/admin/nav";
@@ -146,7 +146,7 @@ export function OpenCycleOverview({ cycle, stats }: { cycle: SerializedCycle; st
   const { perOrderWarning } = closeWarnings(cycle, stats);
   return (
     <Card>
-      <CardBody>
+      <CardContent>
         <div className="grid grid-cols-2 gap-3">
           <div className="rounded-lg bg-primary-bg px-3 py-2">
             <div className="text-label text-secondary-foreground">{t.admin.cycle.ordersCount}</div>
@@ -173,7 +173,7 @@ export function OpenCycleOverview({ cycle, stats }: { cycle: SerializedCycle; st
         <div className="mt-3">
           <OrdersLink cycleId={cycle.cycleId} />
         </div>
-      </CardBody>
+      </CardContent>
     </Card>
   );
 }
@@ -183,7 +183,7 @@ export function CycleProductsView({ cycle, suppliers }: { cycle: SerializedCycle
   const [importing, setImporting] = useState(false);
   return (
     <Card>
-      <CardBody>
+      <CardContent>
         <div className="flex flex-wrap items-start justify-between gap-3">
           <p className="max-w-prose text-[13px] text-secondary-foreground">{t.admin.workspace.productsIntro}</p>
           <button
@@ -196,7 +196,7 @@ export function CycleProductsView({ cycle, suppliers }: { cycle: SerializedCycle
         <div className="mt-4 border-t border-border pt-4">
           <CycleProductPicker cycleId={cycle.cycleId} suppliers={suppliers} />
         </div>
-      </CardBody>
+      </CardContent>
       <ImportListingWizard
         open={importing}
         onClose={() => setImporting(false)}
