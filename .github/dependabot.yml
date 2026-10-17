@@ -44,7 +44,7 @@ updates:
     ignore:
       # better-auth is pinned to an exact version (package.json): sign-in is
       # the most sensitive dependency, so upgrades are a deliberate decision
-      # (run lib/auth/config.int.test.ts first). Security advisories still
+      # (run lib/auth/config.integration.test.ts first). Security advisories still
       # reach us through Dependabot alerts.
       - dependency-name: better-auth
       # The majors below are already triaged and tracked: Next 16 in #110, the

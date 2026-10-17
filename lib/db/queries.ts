@@ -847,7 +847,7 @@ export async function getAdminCycleSummary(cycleId: string): Promise<CycleSummar
         .where(eq(members.memberId, mid));
       memberMap.set(mid, {
         memberId: mid,
-        fullName: m?.fullName ?? "—",
+        fullName: m?.fullName ?? "-",
         productsTotal: 0,
         shipping: 0,
         total: 0,

@@ -180,7 +180,7 @@ export function EditClosedOrderModal({ cycleId, cycleTitle, mode, onClose, onSav
                 }`}
               >
                 {Math.abs(delta) < 0.005
-                  ? "—"
+                  ? "-"
                   : `${delta > 0 ? "+" : "−"}${formatEur(Math.abs(delta))}`}
               </div>
             </div>

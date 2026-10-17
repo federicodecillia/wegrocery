@@ -292,7 +292,7 @@ export function LedgerEntryRow({ entry }: { entry: LedgerEntry }) {
           </span>
         </div>
         <div className="mt-0.5 tabular-nums text-label text-muted-foreground">
-          {kindLabel} · {entry.entryDate ? formatDate(entry.entryDate) : "—"}
+          {kindLabel} · {entry.entryDate ? formatDate(entry.entryDate) : "-"}
           {entry.correctedAt && ` · ${t.ledger.correctedOn(formatDate(entry.correctedAt))}`}
         </div>
         {note && <p className="mt-1 text-[13px] text-secondary-foreground">{note}</p>}

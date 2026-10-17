@@ -617,7 +617,7 @@ function Step3Review({
                         {nameGuess && <span className="ml-1 text-label text-primary-text">{t.admin.importWizard.autoCategory}</span>}
                       </span>
                     ) : (
-                      <span className="text-muted-foreground">—</span>
+                      <span className="text-muted-foreground">-</span>
                     )}
                   </td>
                   <td className="p-2 align-middle text-secondary-foreground">{cell(i, "format")}</td>

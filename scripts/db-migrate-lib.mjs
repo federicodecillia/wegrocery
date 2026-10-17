@@ -58,8 +58,38 @@ export function roleUrl(ownerUrl, role, password) {
   return u.toString();
 }
 
-/** Seconds a migration may wait for a lock before it gives up. */
-export const LOCK_TIMEOUT = "10s";
+/**
+ * How long a migration may wait for a lock before it gives up (Playbook 6.2):
+ * the file then rolls back whole and can be run again, instead of queueing
+ * the app's queries behind it.
+ */
+export const LOCK_TIMEOUT = "5s";
+
+/**
+ * The first statement of a migration that cannot run inside a transaction,
+ * or null. The runner wraps each file in one transaction (one HTTP request
+ * of the Neon driver), where Postgres refuses CREATE INDEX, DROP INDEX,
+ * REINDEX and DETACH PARTITION with CONCURRENTLY, VACUUM, ALTER SYSTEM,
+ * REINDEX of a whole database, and creating or dropping a database, a
+ * tablespace or a subscription. Every CONCURRENTLY is refused, as the
+ * Playbook says, even the REFRESH MATERIALIZED VIEW that would work. The
+ * runner refuses such a file before applying anything: write a plain CREATE
+ * INDEX instead, or a step run by hand. `ALTER TYPE ... ADD VALUE` is allowed
+ * in a transaction, but the new value cannot be used before the file
+ * commits: put its use in the next file.
+ */
+export function nonTransactionalStatement(statements) {
+  const refused = [
+    /\bCONCURRENTLY\b/i,
+    /^(VACUUM|ALTER\s+SYSTEM)\b/i,
+    /^(CREATE|DROP)\s+(DATABASE|TABLESPACE|SUBSCRIPTION)\b/i,
+    /^REINDEX\s+(\([^)]*\)\s*)?(SYSTEM|DATABASE)\b/i,
+  ];
+  return statements.find((st) => refused.some((re) => re.test(st.trim()))) ?? null;
+}
+
+/** First migration number that must ship with a `_down.sql` and an Apply/Rollback header. */
+export const ROLLBACK_REQUIRED_FROM = 36;
 
 /**
  * Playbook 1.4: the statements that give the app a role with data access only

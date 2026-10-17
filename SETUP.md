@@ -67,7 +67,7 @@ Google sign-in, if you set it up, needs the redirect URI
 npx tsc --noEmit && npm run lint && npx vitest run   # what CI runs on every PR
 ```
 
-Integration tests (`*.int.test.ts`) run the real queries on a database with
+Integration tests (`*.integration.test.ts`) run the real queries on a database with
 fake data only, never a real group's:
 
 ```bash
@@ -75,7 +75,7 @@ INT_TEST_USE_DATABASE_URL=1 node --env-file=.env.demo.local node_modules/vitest/
 ```
 
 CI also applies every migration to an empty database and runs
-`test/int/fresh-install.int.test.ts` there: a new installation's first day.
+`test/int/fresh-install.integration.test.ts` there: a new installation's first day.
 
 ## Conventions
 

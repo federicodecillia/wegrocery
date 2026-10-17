@@ -30,7 +30,7 @@ function paymentStatusLabel(status: string | null): string {
   const labels = t.history.paymentStatuses;
   return status !== null && Object.prototype.hasOwnProperty.call(labels, status)
     ? labels[status as PaymentStatus]
-    : "—";
+    : "-";
 }
 
 function recorderLabel(recorder: MovementRecorder): string {

@@ -5,12 +5,12 @@ All notable changes to the WeGrocery app are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project loosely follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html):
 
-- **Major** — breaking changes that require user re-onboarding
-- **Minor** — new features, no breaking changes
-- **Patch** — bug fixes, UI polish, documentation
+- **Major**: breaking changes that require user re-onboarding
+- **Minor**: new features, no breaking changes
+- **Patch**: bug fixes, UI polish, documentation
 
 Writing entries: one italic tagline under the version heading, then one bullet
-per coherent change — a topical emoji, a **bold headline**, and at most two
+per coherent change: a topical emoji, a **bold headline**, and at most two
 lines saying what the user now sees. Implementation detail belongs in the PR.
 A bullet that only matters to whoever hosts, runs or develops the app
 (variables, database, CI, dependencies, monitoring) starts with `[tech]`
@@ -34,15 +34,18 @@ A bullet that only matters to whoever hosts, runs or develops the app
 - [tech] 📊 **Instance stats speak the FlyLabs Console's language.** `/api/instance-stats` also accepts the `x-flylabs-*` signature and then answers the FlyLabs Kit envelope (`app`, `counts`); the WeGrocery Console sends both and reads both shapes, so older installations keep working. `/api/health` gives up on a database that hangs after 3 seconds.
 - [tech] 🎨 **Colour tokens with the FlyLabs names.** The CSS colour roles now use the shadcn names of the FlyLabs Playbook (`card`, `muted-foreground`, `primary-foreground`, `destructive`, `danger-bg`...), plus `input`, `ring`, `success` and `warning-bg`; the group's own colours and both themes look the same as before, and the contrast test covers the new names.
 - [tech] 🧩 **Dialogs on Base UI.** `Sheet` and `ConfirmDialog` move from Radix to Base UI Dialog (`@base-ui/react`) and the interface icons to `lucide-react`; swipe to close, Esc and focus return work as before, and the design guard refuses Radix and hand-drawn interface icons.
+- [tech] 🧪 **Integration tests carry the FlyLabs suffix.** They are now named `*.integration.test.ts` (FlyLabs Playbook 5.2); `npm test` still leaves them out and `npm run test:int` and CI still run them.
+- [tech] 🗄️ **Migrations give up sooner on a busy table.** Each migration file waits at most 5 seconds for a lock (it was 10) and then rolls back whole; a file with a statement Postgres cannot run in a transaction (`CREATE INDEX CONCURRENTLY`, `VACUUM`) is refused before anything runs, and from 0036 on a test wants every migration's `_down.sql`.
+- ✏️ **No more long dashes.** A missing value in tables and lists is now shown as a plain "-", and the version titles on the What's new page use the same short dash.
 
-## [1.30.1] — 2026-10-17
+## [1.30.1] - 2026-10-17
 
 *Maintenance: nothing new for members to learn.*
 
 ### Changed
 - [tech] 🔍 **The nightly accessibility check looks at the whole page.** The automatic check that verifies every night that the app is comfortable for everyone now scans the full page, with no more false alarms on rows hidden behind the phone's bottom bar.
 
-## [1.30.0] — 2026-10-15
+## [1.30.0] - 2026-10-15
 
 *The menu moves to the side on tablets and computers, and the order goes to the supplier before the close.*
 
@@ -52,7 +55,7 @@ A bullet that only matters to whoever hosts, runs or develops the app
 ### Changed
 - 🧭 **Menu on the side on tablets and computers.** On a tablet the menu is a column on the left, on a computer a side menu with the admin sections under Admin; the app uses the whole screen. Nothing changes on phones.
 
-## [1.29.0] — 2026-10-15
+## [1.29.0] - 2026-10-15
 
 *The supplier sheet can be uploaded while closing the cycle.*
 
@@ -65,7 +68,7 @@ A bullet that only matters to whoever hosts, runs or develops the app
 ### Changed
 - [tech] 🔐 **New groups start with a restricted database role.** A group installed from the WeGrocery Console now connects with a role that can read and write data but never change the database's structure, as Porta Moneta already does.
 
-## [1.28.0] — 2026-10-14
+## [1.28.0] - 2026-10-14
 
 *The app gets a dark theme, and the database and build checks get safer.*
 
@@ -83,7 +86,7 @@ A bullet that only matters to whoever hosts, runs or develops the app
 ### Fixed
 - [tech] 🐞 **Error reports reach Sentry.** Errors the app catches and reports itself (payments, sign-in emails, the instance stats) were only written to the server log; they now reach Sentry too, tagged with where they happened, and without the server log lines that could quote query values.
 
-## [1.27.0] — 2026-10-12
+## [1.27.0] - 2026-10-12
 
 *Each new group sets itself up from the app: name, logo, colours and Stripe, with every technical setting explained.*
 
@@ -98,7 +101,7 @@ A bullet that only matters to whoever hosts, runs or develops the app
 ### Fixed
 - 🧾 **Supplier sheet upload says why there is nothing to apply.** Instead of two empty lists, the preview tells how many products and members it recognized and that every amount already matches, or that nothing in the file could be matched. A CSV saved by Excel on Windows now keeps accented names.
 
-## [1.26.0] — 2026-10-09
+## [1.26.0] - 2026-10-09
 
 *A cleaner app on every screen, card payment for a single cycle, and the bank transfer reference filled in for you.*
 
@@ -134,7 +137,7 @@ A bullet that only matters to whoever hosts, runs or develops the app
 - 🎨 **The same look everywhere.** The balance has the same sign and format on Home, History and Top up, and adjustment notifications no longer say "€ EUR". Recent movements on Home look like those in History and open them, the guide and empty pages use the app's own icons instead of emoji, and cards share one corner shape.
 - 🛒 **Order and History on a computer.** On a computer the Order page keeps your cart on the right (products picked, total, balance after and "Confirm"), next to the catalogue. History shows the list on the left and the selected order or movement on the right; the Orders and Movements tabs are in the address, so a link opens the right one.
 
-## [1.25.0] — 2026-10-07
+## [1.25.0] - 2026-10-07
 
 *A welcome for newcomers, and the group's own page in the guide.*
 
@@ -146,7 +149,7 @@ A bullet that only matters to whoever hosts, runs or develops the app
 ### Fixed
 - 📱 **Order total on iPhone, for good.** In the installed app the order total could still show the old amount under the new one after adding a product; the total and the balance now redraw on every change.
 
-## [1.24.0] — 2026-10-06
+## [1.24.0] - 2026-10-06
 
 *Your settings in one place, and a guide you can search.*
 
@@ -157,7 +160,7 @@ A bullet that only matters to whoever hosts, runs or develops the app
 - 🧭 **Tidier header.** The email and the Logout button made way for the Profile circle; notification preferences and Family moved inside the Profile (old links still work).
 - 📖 **A guide you can search.** The Guide now has a search box and topics, with step-by-step cards that open the right page of the app. A "?" next to the title of Order, Top up, Family and Notifications opens the right card. It only covers what your group has switched on, and the answers are up to date with the latest features.
 
-## [1.23.0] — 2026-10-06
+## [1.23.0] - 2026-10-06
 
 *Families share one account, and duplicate accounts point themselves out.*
 
@@ -173,7 +176,7 @@ A bullet that only matters to whoever hosts, runs or develops the app
 - 🛒 **No more lost cart edits across devices.** If the cart was changed from another device (say the phone, while the computer was open), saving from the stale page no longer overwrites it: the page shows the latest cart and says so.
 - 📱 **Readable order total on iPhone.** Adding a product could leave the old total drawn over the new one, and the balance after the order stuck on the previous value.
 
-## [1.22.0] — 2026-10-04
+## [1.22.0] - 2026-10-04
 
 *One person, one account: duplicates can now be merged.*
 
@@ -183,7 +186,7 @@ A bullet that only matters to whoever hosts, runs or develops the app
 ### Fixed
 - 🗑️ **Deleting a member who never ordered works again.** Admin → Members could not delete an account that had received a notification (almost every new account gets the open-cycle one) and showed a database error; now the account and its notifications go.
 
-## [1.21.1] — 2026-10-04
+## [1.21.1] - 2026-10-04
 
 *Notes that members can read, and a member list that fits on a phone.*
 
@@ -191,7 +194,7 @@ A bullet that only matters to whoever hosts, runs or develops the app
 - 📝 **Notes reach the members.** The notes an admin writes on a cycle now appear on Home and at the top of the order page, and each product's notes under its name in the order form and the recap. Before, only admins saw them.
 - 📱 **Member list readable on phones.** In Admin → Members the email addresses no longer run under the buttons: the list shows name, last sign-in and actions, the addresses are in the edit form, and on narrow screens the buttons sit below the name.
 
-## [1.21.0] — 2026-10-03
+## [1.21.0] - 2026-10-03
 
 *Sign in with a code from the email, and the app on your phone's home screen.*
 
@@ -202,7 +205,7 @@ A bullet that only matters to whoever hosts, runs or develops the app
 ### Fixed
 - 🧩 **The app description is reachable again.** It sat behind the sign-in: a browser asking for it without the session (always, on the sign-in page) got the sign-in page instead, so the app did not install properly.
 
-## [1.20.0] — 2026-10-01
+## [1.20.0] - 2026-10-01
 
 *Notification settings that say what they cover, a Cassa that names every movement, and Next.js 16 underneath.*
 
@@ -217,7 +220,7 @@ A bullet that only matters to whoever hosts, runs or develops the app
 - 👥 **Closed-cycle details list every charged member.** A member charged shipping or the order preparation fee but left with no order line now appears in the list, so the members shown add up to the total.
 - 💬 **Clearer credit message.** The balance card now says the difference you paid is your credit; two admin messages also state the fee cap in euros in English.
 
-## [1.19.0] — 2026-10-01
+## [1.19.0] - 2026-10-01
 
 *Install it for your own group in half an hour, and an order preparation fee that is a real, checked charge.*
 
@@ -232,7 +235,7 @@ A bullet that only matters to whoever hosts, runs or develops the app
 - [tech] 🧭 **Configuration status spots brand mistakes.** A brand field the app does not know (a typo) or a brand that does not parse shows up, with the reason, in Settings and in `npm run doctor`.
 - [tech] 🏗️ **Migrations at build on production only.** With `MIGRATE_ON_BUILD=true` preview builds no longer migrate: only production builds (and builds outside Vercel) do.
 
-## [1.18.0] — 2026-10-01
+## [1.18.0] - 2026-10-01
 
 *Pay each order by card, settle accounts after the cycle, and a ledger that never rewrites history.*
 
@@ -246,7 +249,7 @@ A bullet that only matters to whoever hosts, runs or develops the app
 ### Changed
 - 🧾 **Corrections never rewrite history.** Editing or deleting a movement in Treasury, recomputing shipping on a closed cycle or importing the supplier's sheet now cancel the movement with a reversal and, when needed, add the corrected one; members see one movement marked "corrected on". Upgrade note: apply `drizzle/0023_ledger_append_only.sql` right before deploying (it makes the database refuse changes to past movements).
 
-## [1.17.0] — 2026-09-30
+## [1.17.0] - 2026-09-30
 
 *Sign in with an email link, and the groundwork for paying each order.*
 
@@ -259,7 +262,7 @@ A bullet that only matters to whoever hosts, runs or develops the app
 ### Changed
 - 🔕 **No email by default when a cycle opens.** New members get the "cycle open" notice in the app only and can turn the email on in their preferences; members who already chose keep their choice.
 
-## [1.16.1] — 2026-09-30
+## [1.16.1] - 2026-09-30
 
 *A desktop layout, and the groundwork to watch the app's health.*
 
@@ -271,7 +274,7 @@ A bullet that only matters to whoever hosts, runs or develops the app
 - 🔤 **Slightly larger reading text.** Descriptions and lists in the member pages go from 13 to 14 px.
 - ✉️ **Your email, out of the way.** On a phone it no longer takes a line under the logo: you find it on the Notifications page.
 
-## [1.16.0] — 2026-09-30
+## [1.16.0] - 2026-09-30
 
 *Text you can read, in any group's colours.*
 
@@ -283,7 +286,7 @@ A bullet that only matters to whoever hosts, runs or develops the app
 ### Fixed
 - 💶 **Balance on one line.** On Home the balance no longer wraps after the sign in English formats.
 
-## [1.15.0] — 2026-09-30
+## [1.15.0] - 2026-09-30
 
 *Card refunds you can follow.*
 
@@ -293,14 +296,14 @@ A bullet that only matters to whoever hosts, runs or develops the app
 ### Changed
 - 💳 **Card refunds recorded one by one.** Every refund of an online top-up is recorded once, as soon as Stripe accepts it, even when it arrives in more than one step (migration `0020`).
 
-## [1.14.1] — 2026-09-30
+## [1.14.1] - 2026-09-30
 
 *Tidier amounts in Settings.*
 
 ### Fixed
 - ⚙️ **Maximum balance with cents.** Settings shows a saved amount like 35,20 € with both cent digits, instead of 35,2.
 
-## [1.14.0] — 2026-09-29
+## [1.14.0] - 2026-09-29
 
 *Payment settings in the app, and orders that wait for you.*
 
@@ -313,7 +316,7 @@ A bullet that only matters to whoever hosts, runs or develops the app
 - 💶 **Top-ups respect the maximum balance.** Online top-ups offer only what fits, the bank details say how much you can still top up, and a member in debt gets the exact amount to pay it off as the first option.
 - 🏦 **Treasury flags balances above the maximum.** A top-up recorded in Treasury is never refused, but the admin is told when it takes the balance past the maximum, and a new filter lists those members.
 
-## [1.13.0] — 2026-09-29
+## [1.13.0] - 2026-09-29
 
 *A fuller Cassa, and a history that adds up to the balance.*
 
@@ -332,14 +335,14 @@ A bullet that only matters to whoever hosts, runs or develops the app
 - 📧 **Emails and aliases are no longer shared between members.** Saving a member with an email or secondary email another member already uses, in any casing, is refused with that member's name (migration `0017`).
 - ⚠️ **Readable error messages.** In production, expected refusals (cycle closed, missing field, order changed meanwhile) now show their own text instead of a generic error, and the order page reloads by itself when the cycle has closed.
 
-## [1.12.2] — 2026-09-29
+## [1.12.2] - 2026-09-29
 
 *Smaller online top-ups.*
 
 ### Changed
 - 💶 **Online top-ups from 0,50 €**, the smallest amount Stripe accepts (was 20 €).
 
-## [1.12.1] — 2026-09-28
+## [1.12.1] - 2026-09-28
 
 *Clearer top-up details.*
 
@@ -347,7 +350,7 @@ A bullet that only matters to whoever hosts, runs or develops the app
 - 🏦 **IBAN in groups of four** on the Top up page, easier to check by eye; the copy button still copies it without spaces.
 - 📖 **Guide and FAQ point to the Top up page** for bank transfers and online payment.
 
-## [1.12.0] — 2026-09-28
+## [1.12.0] - 2026-09-28
 
 *Top up your balance online.*
 
@@ -358,7 +361,7 @@ A bullet that only matters to whoever hosts, runs or develops the app
 ### Changed
 - 🔒 **Online payments stay tied to Stripe.** In Cassa, top-ups and refunds that came from an online payment can no longer be edited or deleted: the money moved on Stripe, so the fix is a refund there or a separate correction.
 
-## [1.11.0] — 2026-09-28
+## [1.11.0] - 2026-09-28
 
 *Open to every card-holding member, with safer money flows.*
 
@@ -385,7 +388,7 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
-## [1.10.3] — 2026-09-06
+## [1.10.3] - 2026-09-06
 
 *Same product, same shelf.*
 
@@ -395,7 +398,7 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
-## [1.10.2] — 2026-08-30
+## [1.10.2] - 2026-08-30
 
 *Fewer vegetables getting lost in "Other".*
 
@@ -405,7 +408,7 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
-## [1.10.1] — 2026-08-27
+## [1.10.1] - 2026-08-27
 
 *Making sure the supplier's inbox actually sees it.*
 
@@ -414,7 +417,7 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
-## [1.10.0] — 2026-08-27
+## [1.10.0] - 2026-08-27
 
 *A way back when a cycle goes wrong after it's already closed.*
 
@@ -423,7 +426,7 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
-## [1.9.0] — 2026-08-07
+## [1.9.0] - 2026-08-07
 
 *One notification fewer, and one moving part fewer behind it.*
 
@@ -433,7 +436,7 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
-## [1.8.1] — 2026-07-28
+## [1.8.1] - 2026-07-28
 
 *Security patches for the login layer and the image pipeline.*
 
@@ -445,7 +448,7 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
-## [1.8.0] — 2026-07-20
+## [1.8.0] - 2026-07-20
 
 *Confirming an order now says so, and you can change your mind until the cycle closes.*
 
@@ -470,7 +473,7 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
-## [1.7.0] — 2026-07-10
+## [1.7.0] - 2026-07-10
 
 *Notification preferences with an email channel, and a guided import of the supplier's own price list.*
 
@@ -496,7 +499,7 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
-## [1.6.0] — 2026-05-21
+## [1.6.0] - 2026-05-21
 
 *Supplier sheets that make the round trip, per-line rectifications, and real analytics.*
 
@@ -528,7 +531,7 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
-## [1.5.0] — 2026-05-17
+## [1.5.0] - 2026-05-17
 
 *Fix a member's order after the cycle has closed.*
 
@@ -539,7 +542,7 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
-## [1.4.5] — 2026-05-17
+## [1.4.5] - 2026-05-17
 
 *One mobile fix.*
 
@@ -548,7 +551,7 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
-## [1.4.4] — 2026-05-17
+## [1.4.4] - 2026-05-17
 
 *One cosmetic fix.*
 
@@ -557,7 +560,7 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
-## [1.4.3] — 2026-05-17
+## [1.4.3] - 2026-05-17
 
 *A simpler, better-explained product form.*
 
@@ -572,7 +575,7 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
-## [1.4.2] — 2026-05-17
+## [1.4.2] - 2026-05-17
 
 *Pick an emoji, and start from the real balances.*
 
@@ -584,7 +587,7 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
-## [1.4.1] — 2026-05-14
+## [1.4.1] - 2026-05-14
 
 *The changelog moves into the app.*
 
@@ -598,7 +601,7 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
-## [1.4.0] — 2026-05-14
+## [1.4.0] - 2026-05-14
 
 *Numbers for the admin.*
 
@@ -610,7 +613,7 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
-## [1.3.0] — 2026-05-10
+## [1.3.0] - 2026-05-10
 
 *Repeat your last order in one tap.*
 
@@ -623,7 +626,7 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
-## [1.2.0] — 2026-05-10
+## [1.2.0] - 2026-05-10
 
 *Shipping splits and weight-based price adjustments.*
 
@@ -637,7 +640,7 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
-## [1.1.0] — 2026-05-10
+## [1.1.0] - 2026-05-10
 
 *Hardening the cycle-close path.*
 
@@ -652,7 +655,7 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
-## [1.0.0] — 2026-05-05
+## [1.0.0] - 2026-05-05
 
 *First production release of the Next.js rewrite.*
 
