@@ -24,6 +24,8 @@ export type PaymentSettingsRow = {
   onlinePaymentsEnabled: boolean;
   // Optional: rows read before migration 0029 have no such column.
   familiesEnabled?: boolean;
+  // Optional: rows read before migration 0038 have no such column.
+  cardCyclesEnabled?: boolean;
   // Optional: rows read before migration 0030 have no such column.
   groupInfo?: string | null;
   // Optional: rows read before migration 0033 have no such columns.
@@ -57,6 +59,8 @@ export type PaymentSettings = {
   onlinePaymentsEnabled: boolean;
   // Members may invite each other into one account (lib/members/family.ts).
   familiesEnabled: boolean;
+  // A wallet group may offer single cycles paid by card (lib/payments/cycle-mode.ts).
+  cardCyclesEnabled: boolean;
   // "Il nostro gruppo" at the top of the guide (lib/guide/group-info.ts); null = none.
   groupInfo: string | null;
   // What members get: the bank details when that channel is on, online
@@ -89,6 +93,7 @@ export function resolvePaymentSettings(
         bankReceiptEmail: row.bankReceiptEmail ?? null,
         onlinePaymentsEnabled: row.onlinePaymentsEnabled,
         familiesEnabled: row.familiesEnabled ?? false,
+        cardCyclesEnabled: row.cardCyclesEnabled ?? true,
         groupInfo: row.groupInfo ?? null,
         savedAt: row.updatedAt,
       }
@@ -103,6 +108,7 @@ export function resolvePaymentSettings(
         bankReceiptEmail: null,
         onlinePaymentsEnabled: true,
         familiesEnabled: false,
+        cardCyclesEnabled: true,
         groupInfo: null,
         savedAt: null,
       };

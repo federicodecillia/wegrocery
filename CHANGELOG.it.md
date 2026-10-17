@@ -23,6 +23,12 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
+## [Non rilasciato]
+
+### Aggiunte
+- 💳 **I cicli con carta si possono spegnere.** In Impostazioni, "Cicli pagati con carta" decide se gli admin possono scegliere Carta quando creano un ciclo; da spento Carta resta visibile ma in grigio, con il link per attivarla. I cicli con carta già creati, le ricariche online e i rimborsi non cambiano.
+- [tecnico] 🗄️ **Migrazione `0038_card_cycles_switch.sql`.** Aggiunge `app_settings.card_cycles_enabled` (acceso di default, quindi nulla cambia finché un gruppo non lo spegne); da applicare prima del deploy, rollback in `0038_card_cycles_switch_down.sql`.
+
 ## [1.31.0] - 17 ottobre 2026
 
 *Lo stile FlyLabs: campi dei moduli più chiari, email più curate, un solo set di icone e una pagina delle novità scritta per i soci.*
