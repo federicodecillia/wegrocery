@@ -21,6 +21,13 @@ stanno nella PR.
 
 ## [Non rilasciato]
 
+## [1.30.1] — 17 ottobre 2026
+
+*Manutenzione: nessuna novità da imparare per i soci.*
+
+### Modificato
+- 🔍 **Il controllo notturno dell'accessibilità guarda tutta la pagina.** Il controllo automatico che ogni notte verifica che l'app sia comoda da usare per tutti ora esamina la pagina intera, senza più falsi allarmi sulle righe nascoste dietro la barra in basso del telefono.
+
 ## [1.30.0] — 15 ottobre 2026
 
 *Il menu passa di lato su tablet e computer, e l'ordine al fornitore parte anche prima della chiusura.*
@@ -645,6 +652,7 @@ stanno nella PR.
 
 ---
 
+[1.30.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.30.1
 [1.30.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.30.0
 [1.29.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.29.0
 [1.28.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.28.0
