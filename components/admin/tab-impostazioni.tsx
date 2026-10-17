@@ -3,11 +3,12 @@ import { getDb } from "@/lib/db/client";
 import { getGuideSearchMisses } from "@/lib/db/queries";
 import { formatAmountInput } from "@/lib/i18n/format";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
-import { cardCyclesSelectable } from "@/lib/payments/cycle-mode";
+import { cardCyclesAvailable, cardCyclesSelectable } from "@/lib/payments/cycle-mode";
 import { modeChangeBlockers, readModeChangeState } from "@/lib/payments/mode-change";
 import { getConfigStatus } from "@/lib/config-status-server";
 import { getBrand, getGroupIdentity } from "@/lib/brand/get-brand";
 import { IdentityForm } from "./identity-form";
+import { CardCyclesCard } from "./card-cycles-card";
 import { ConfigStatusCard } from "./config-status-card";
 import { FamiliesCard } from "./families-card";
 import { GroupInfoCard } from "./group-info-card";
@@ -27,6 +28,12 @@ function toInput(euros: number | null): string {
 export async function PaymentSettingsSection() {
   const [settings, modeState] = await Promise.all([getPaymentSettings(), readModeChangeState(getDb())]);
   const savedAt = settings.savedAt?.toISOString() ?? null;
+  const cardContext = {
+    groupMode: settings.mode,
+    stripeUsable: settings.stripeKey.usable,
+    currency: brand.currency,
+    cardCyclesEnabled: settings.cardCyclesEnabled,
+  };
   const blockers = modeChangeBlockers({
     target: settings.mode === "wallet" ? "per_order" : "wallet",
     currency: brand.currency,
@@ -40,12 +47,9 @@ export async function PaymentSettingsSection() {
         mode={settings.mode}
         state={modeState}
         blockers={blockers}
-        cardCycles={cardCyclesSelectable({
-          groupMode: settings.mode,
-          stripeUsable: settings.stripeKey.usable,
-          currency: brand.currency,
-        })}
+        cardCycles={cardCyclesSelectable(cardContext)}
       />
+      {cardCyclesAvailable(cardContext) && <CardCyclesCard enabled={settings.cardCyclesEnabled} />}
       <PaymentSettingsForm
         // A save remounts the form with the values as stored (IBAN compacted).
         key={savedAt ?? "defaults"}

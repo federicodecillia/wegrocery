@@ -65,7 +65,7 @@ import {
 import { selectCycleAccessMembers } from "@/lib/notifications/reminder";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
 import { resolveCycleFee, type HandlingFee } from "@/lib/payments/order-payment";
-import { resolveNewCycleMode } from "@/lib/payments/cycle-mode";
+import { cardCyclesAvailable, resolveNewCycleMode } from "@/lib/payments/cycle-mode";
 import { reverseEntry, reverseEntrySql } from "@/lib/ledger-reversal";
 import { liveLedger } from "@/lib/db/ledger-live";
 import { retryRequestedRefunds } from "@/lib/payments/refund-request";
@@ -164,12 +164,18 @@ export async function adminCreateCycle(data: CreateCycleInput): Promise<{error?:
     // The cycle keeps its payment mode for its whole life, with its handling
     // fee: the group's mode, or a card cycle in a wallet group.
     const settings = await getPaymentSettings();
-    const chosen = resolveNewCycleMode(data.paymentMode, {
+    const cardContext = {
       groupMode: settings.mode,
       stripeUsable: settings.stripeKey.usable,
       currency: brand.currency,
-    });
-    if ("error" in chosen) return { error: t.errors.cyclePaymentModeUnavailable };
+      cardCyclesEnabled: settings.cardCyclesEnabled,
+    };
+    const chosen = resolveNewCycleMode(data.paymentMode, cardContext);
+    if ("error" in chosen) {
+      // Switched off in Impostazioni: say so, the key and the mode are fine.
+      const switchedOff = chosen.error === "card_unavailable" && cardCyclesAvailable(cardContext);
+      return { error: switchedOff ? t.errors.cardCyclesOff : t.errors.cyclePaymentModeUnavailable };
+    }
     const paymentMode = chosen.mode;
     const fee = resolveCycleFee(
       paymentMode,
