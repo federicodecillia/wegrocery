@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { cardCyclesSelectable, resolveNewCycleMode } from "./cycle-mode";
+import { cardCyclesAvailable, cardCyclesSelectable, resolveNewCycleMode } from "./cycle-mode";
 
-const wallet = { groupMode: "wallet" as const, stripeUsable: true, currency: "EUR" };
+const wallet = { groupMode: "wallet" as const, stripeUsable: true, currency: "EUR", cardCyclesEnabled: true };
 const perOrder = { ...wallet, groupMode: "per_order" as const };
 
 describe("the payment mode of a new cycle", () => {
@@ -21,6 +21,19 @@ describe("the payment mode of a new cycle", () => {
       expect(cardCyclesSelectable(ctx)).toBe(false);
       expect(resolveNewCycleMode("per_order", ctx)).toEqual({ error: "card_unavailable" });
     }
+  });
+
+  it("refuses a card cycle when the group switched card cycles off", () => {
+    const off = { ...wallet, cardCyclesEnabled: false };
+    expect(cardCyclesAvailable(off)).toBe(true);
+    expect(cardCyclesSelectable(off)).toBe(false);
+    expect(resolveNewCycleMode("per_order", off)).toEqual({ error: "card_unavailable" });
+    expect(resolveNewCycleMode("wallet", off)).toEqual({ mode: "wallet" });
+    expect(resolveNewCycleMode(undefined, off)).toEqual({ mode: "wallet" });
+  });
+
+  it("keeps every cycle of a pay-per-order group on the card, whatever the switch", () => {
+    expect(resolveNewCycleMode("per_order", { ...perOrder, cardCyclesEnabled: false })).toEqual({ mode: "per_order" });
   });
 
   it("keeps every cycle of a pay-per-order group on the card", () => {

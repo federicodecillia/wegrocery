@@ -408,6 +408,8 @@ export const appSettings = pgTable(
     onlinePaymentsEnabled: boolean("online_payments_enabled").notNull(),
     // Members may invite each other into one account (drizzle/0029_families.sql).
     familiesEnabled: boolean("families_enabled").notNull().default(false),
+    // Carta offered in "Nuovo ciclo" of a wallet group (drizzle/0038_card_cycles_switch.sql).
+    cardCyclesEnabled: boolean("card_cycles_enabled").notNull().default(true),
     // "Il nostro gruppo", shown at the top of the guide (drizzle/0030_group_info.sql).
     groupInfo: text("group_info"),
     // Bank transfer reference per order and receipt address (drizzle/0033_bank_reference.sql).

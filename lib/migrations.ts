@@ -40,5 +40,6 @@ export const MIGRATIONS = [
   "0035_stripe_connection.sql",
   "0036_welcome_step.sql",
   "0037_usage_events.sql",
+  "0038_card_cycles_switch.sql",
   "0039_admin_welcome.sql",
 ] as const;

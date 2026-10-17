@@ -126,7 +126,10 @@ export const adminGuideIt: GuideContent = {
         "**Borsellino**: l'ordine si scala dal saldo del socio alla chiusura del ciclo.",
         "**Carta**: ogni socio paga il suo ordine con la carta quando lo conferma. A costi definitivi **Chiudi i conti** rimborsa o chiede la differenza.",
       ],
-      notes: ["La modalità predefinita dei nuovi cicli si sceglie in **Impostazioni**, **Modalità di pagamento**."],
+      notes: [
+        "La modalità predefinita dei nuovi cicli si sceglie in **Impostazioni**, **Modalità di pagamento**.",
+        "Se **Carta** è in grigio, i cicli con carta sono spenti per il gruppo: si accendono da **Impostazioni**, **Cicli pagati con carta**.",
+      ],
       when: { mode: "wallet", cards: true },
       keywords: ["carta", "borsellino", "stripe", "metodo"],
     },

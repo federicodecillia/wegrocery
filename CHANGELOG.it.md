@@ -29,6 +29,14 @@ dettagli tecnici", la release su GitHub la tiene.
 - 🧭 **Una guida per gli admin.** Gli admin trovano ora la "Guida per gli admin" in Come funziona e in Admin (⋯ sul telefono, il menu a sinistra sul computer): 39 schede passo passo su come aprire e chiudere un ciclo, la distinta, la cassa, il catalogo, i soci e le impostazioni, con la ricerca. I soci non la vedono: le pagine rispondono "non trovata" e le sue parole non arrivano mai sul loro telefono.
 - 👋 **Un benvenuto per chi fa l'admin.** La prima volta in Admin un riquadro a passi spiega il lavoro (cosa c'è da fare, aprire e chiudere un ciclo, la cassa, i soci, la guida) e spunta quello che il gruppo ha già fatto. Si chiude con "Salta" o "Ho capito" e si rivede dalla guida admin. In ogni sezione di Admin "Come si fa?" apre la scheda giusta della guida. Nuova colonna `members.admin_welcome_dismissed_at` (migrazione 0039, solo aggiunta).
 
+## [1.32.0] - 17 ottobre 2026
+
+*I gruppi possono tenere spenti i cicli pagati con carta finché non decidono di usarli.*
+
+### Aggiunte
+- 💳 **I cicli con carta si possono spegnere.** In Impostazioni, "Cicli pagati con carta" decide se gli admin possono scegliere Carta quando creano un ciclo; da spento Carta resta visibile ma in grigio, con il link per attivarla. I cicli con carta già creati, le ricariche online e i rimborsi non cambiano.
+- [tecnico] 🗄️ **Migrazione `0038_card_cycles_switch.sql`.** Aggiunge `app_settings.card_cycles_enabled` (acceso di default, quindi nulla cambia finché un gruppo non lo spegne); da applicare prima del deploy, rollback in `0038_card_cycles_switch_down.sql`.
+
 ## [1.31.0] - 17 ottobre 2026
 
 *Lo stile FlyLabs: campi dei moduli più chiari, email più curate, un solo set di icone e una pagina delle novità scritta per i soci.*
@@ -682,6 +690,7 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
+[1.32.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.32.0
 [1.31.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.31.0
 [1.30.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.30.1
 [1.30.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.30.0

@@ -124,7 +124,10 @@ export const adminGuideEn: GuideContent = {
         "**Wallet**: the order is taken from the member's balance when the cycle closes.",
         "**Card**: each member pays their order by card when confirming it. Once costs are final, **Settle accounts** refunds or asks for the difference.",
       ],
-      notes: ["The default for new cycles is chosen in **Settings**, **Payment mode**."],
+      notes: [
+        "The default for new cycles is chosen in **Settings**, **Payment mode**.",
+        "If **Card** is greyed out, card cycles are switched off for the group: switch them on in **Settings**, **Cycles paid by card**.",
+      ],
       when: { mode: "wallet", cards: true },
       keywords: ["card", "wallet", "stripe", "method"],
     },

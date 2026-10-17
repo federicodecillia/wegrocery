@@ -177,6 +177,50 @@ export async function adminSetFamiliesEnabled(enabled: boolean): Promise<{ error
   }
 }
 
+// Impostazioni -> Cicli pagati con carta: whether "Nuovo ciclo" offers Carta
+// in a wallet group (lib/payments/cycle-mode.ts). Card cycles already created
+// go on as before; online top-ups and refunds do not depend on it.
+export async function adminSetCardCyclesEnabled(enabled: boolean): Promise<{ error?: string }> {
+  try {
+    const admin = await requireAdmin();
+    const before = await getPaymentSettings();
+    if (before.cardCyclesEnabled === enabled) return {};
+    const db = getDb();
+    const now = new Date();
+    // No row yet: the defaults the group runs on are stored with the switch.
+    const current = {
+      minBalance: before.minBalance === null ? null : before.minBalance.toFixed(2),
+      maxBalance: before.maxBalance === null ? null : before.maxBalance.toFixed(2),
+      bankTransferEnabled: before.bankTransferEnabled,
+      bankHolder: before.bankHolder,
+      bankIban: before.bankIban,
+      onlinePaymentsEnabled: before.onlinePaymentsEnabled,
+    };
+    await db.batch([
+      db
+        .insert(appSettings)
+        .values({ id: 1, ...current, cardCyclesEnabled: enabled, updatedAt: now, updatedBy: admin.email })
+        .onConflictDoUpdate({
+          target: appSettings.id,
+          set: { cardCyclesEnabled: enabled, updatedAt: now, updatedBy: admin.email },
+        }),
+      db.insert(auditLog).values({
+        auditId: crypto.randomUUID(),
+        userEmail: admin.email,
+        action: "set_card_cycles_enabled",
+        entityType: "app_settings",
+        entityId: "1",
+        payloadJson: JSON.stringify({ before: before.cardCyclesEnabled, after: enabled }),
+        createdAt: now,
+      }),
+    ]);
+    revalidatePath("/admin");
+    return {};
+  } catch (e) {
+    return { error: actionErrorMessage(e, t.errors.genericError, "adminSetCardCyclesEnabled") };
+  }
+}
+
 // Impostazioni -> Il nostro gruppo: the group's own text at the top of the
 // guide (lib/guide/group-info.ts). An empty text removes the card.
 export async function adminUpdateGroupInfo(raw: string): Promise<{ error?: string }> {

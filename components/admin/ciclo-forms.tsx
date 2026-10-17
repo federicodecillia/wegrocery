@@ -696,17 +696,20 @@ export function EditCycleForm({
 }
 
 // Wallet or card, for a new cycle of a wallet group. Same look as the
-// shipping and fee toggles.
+// shipping and fee toggles. With card cycles switched off in Impostazioni the
+// card option stays in sight, greyed out, with the way to switch it on.
 function PaymentModeFields({
   mode,
   onModeChange,
+  cardDisabled = false,
 }: {
   mode: "wallet" | "per_order";
   onModeChange: (mode: "wallet" | "per_order") => void;
+  cardDisabled?: boolean;
 }) {
   const options = [
-    { v: "wallet" as const, label: t.admin.cycle.paymentModeWallet },
-    { v: "per_order" as const, label: t.admin.cycle.paymentModeCard },
+    { v: "wallet" as const, label: t.admin.cycle.paymentModeWallet, disabled: false },
+    { v: "per_order" as const, label: t.admin.cycle.paymentModeCard, disabled: cardDisabled },
   ];
   return (
     <div>
@@ -717,8 +720,10 @@ function PaymentModeFields({
             key={opt.v}
             type="button"
             aria-pressed={mode === opt.v}
+            disabled={opt.disabled}
+            aria-describedby={opt.disabled ? "payment-mode-card-off" : undefined}
             onClick={() => onModeChange(opt.v)}
-            className={`flex-1 rounded-md py-1.5 text-label font-semibold transition-colors ${
+            className={`flex-1 rounded-md py-1.5 text-label font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
               mode === opt.v ? "bg-card text-foreground shadow-sm" : "bg-transparent text-secondary-foreground"
             }`}
           >
@@ -729,6 +734,15 @@ function PaymentModeFields({
       <p className="text-label text-muted-foreground">
         {mode === "per_order" ? t.admin.cycle.paymentModeCardHint : t.admin.cycle.paymentModeWalletHint}
       </p>
+      {cardDisabled && (
+        <p id="payment-mode-card-off" className="mt-1 text-label text-muted-foreground">
+          {t.admin.cycle.paymentModeCardOff}{" "}
+          {/* A full load: a client navigation does not scroll to the card, which renders below the fold. */}
+          <a href={`${adminHref("impostazioni")}#cicli-carta`} className="font-semibold text-foreground underline underline-offset-2">
+            {t.admin.cycle.paymentModeCardOffLink}
+          </a>
+        </p>
+      )}
     </div>
   );
 }
@@ -739,6 +753,7 @@ export function CreateCycleForm({
   suppliers,
   paymentMode: groupMode,
   cardSelectable,
+  cardSwitchedOff = false,
   walletFee,
   cardFee,
   defaultOpen = false,
@@ -748,6 +763,8 @@ export function CreateCycleForm({
   paymentMode: "wallet" | "per_order";
   /** A wallet group may pay this cycle by card (lib/payments/cycle-mode.ts). */
   cardSelectable: boolean;
+  /** Card cycles would be possible but the group switched them off in Impostazioni: shown greyed out. */
+  cardSwitchedOff?: boolean;
   /** The fee a new cycle of each mode starts from; null = none. */
   walletFee: { type: "percent" | "fixed"; value: string } | null;
   cardFee: { type: "percent" | "fixed"; value: string } | null;
@@ -839,7 +856,9 @@ export function CreateCycleForm({
           defaultTotal=""
         />
 
-        {cardSelectable && <PaymentModeFields mode={paymentMode} onModeChange={setPaymentMode} />}
+        {(cardSelectable || cardSwitchedOff) && (
+          <PaymentModeFields mode={paymentMode} onModeChange={setPaymentMode} cardDisabled={!cardSelectable} />
+        )}
 
         <HandlingFeeFields
           // A new mode starts from its own last fee.
