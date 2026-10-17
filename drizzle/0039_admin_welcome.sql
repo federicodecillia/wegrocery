@@ -9,7 +9,7 @@
 -- Apply:    node scripts/db-migrate.mjs (APPLY BEFORE DEPLOYING the code that
 --           ships with it: that code selects the new column). Additive, safe
 --           for the code already running. Idempotent.
--- Rollback: drizzle/0038_admin_welcome_down.sql (drops the column; every admin
+-- Rollback: drizzle/0039_admin_welcome_down.sql (drops the column; every admin
 --           then sees the card again).
 
 ALTER TABLE members ADD COLUMN IF NOT EXISTS admin_welcome_dismissed_at timestamptz;

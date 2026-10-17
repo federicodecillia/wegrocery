@@ -52,7 +52,7 @@ export const members = pgTable(
     // The step the person left the welcome card on (drizzle/0036_welcome_step.sql).
     welcomeStep: text("welcome_step"),
     // When the person closed the welcome card at the top of Admin
-    // (drizzle/0038_admin_welcome.sql); NULL = the card shows to an admin.
+    // (drizzle/0039_admin_welcome.sql); NULL = the card shows to an admin.
     adminWelcomeDismissedAt: timestamp("admin_welcome_dismissed_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
