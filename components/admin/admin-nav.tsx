@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { t } from "@/lib/i18n";
-import { ADMIN_MORE, ADMIN_PRIMARY, ADMIN_VIEWS, adminHref, resolveAdminRoute } from "@/lib/admin/nav";
+import { ADMIN_GUIDE_HREF, ADMIN_MORE, ADMIN_PRIMARY, ADMIN_VIEWS, adminHref, resolveAdminRoute } from "@/lib/admin/nav";
 
 function tabClass(active: boolean): string {
   return `flex min-h-(--control-h) items-center justify-center rounded-full px-2 text-center text-[13px] font-semibold transition-colors ${
@@ -14,8 +14,8 @@ function tabClass(active: boolean): string {
 }
 
 // The admin bar: Ciclo · Cassa · Soci · Catalogo, then ⋯ (Statistiche,
-// Impostazioni) on a phone, all in line from lg. A section with views shows
-// them as a second, lighter row.
+// Impostazioni, the admin guide) on a phone, all in line from lg. A section
+// with views shows them as a second, lighter row.
 export function AdminNav() {
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -99,6 +99,11 @@ export function AdminNav() {
                 </Link>
               </li>
             ))}
+            <li className="border-t border-border">
+              <Link href={ADMIN_GUIDE_HREF} className="flex min-h-11 items-center px-4 text-[14px] text-foreground hover:bg-tint/[0.03]">
+                {t.admin.nav.guide}
+              </Link>
+            </li>
           </ul>
         </details>
       </nav>

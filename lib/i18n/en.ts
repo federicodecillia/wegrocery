@@ -557,6 +557,12 @@ export const en: Strings = {
     contactGroup: "Write to the group",
     contactTech: "Technical problems",
     contactHeading: "Do you have other questions?",
+    adminTitle: "Admin guide",
+    adminIntro: "The steps for whoever runs the group: cycles, suppliers, treasury and members. Only admins see it.",
+    adminCardBody: "Opening and closing a cycle, the order sheet, the treasury, members: the steps for whoever runs the group. Members do not see it.",
+    adminSearchPlaceholder: "e.g. close the cycle, order sheet, top-up",
+    adminTopicLabel: (topic: string) => `Admin · ${topic}`,
+    backToAdminGuide: "Admin guide",
     contactIntro: (appName: string) =>
       `Write to us or talk to whoever manages the treasury at pickup. For technical issues, contact ${appName}'s IT team.`,
   },
@@ -658,6 +664,7 @@ export const en: Strings = {
       catalogSuppliers: "Suppliers",
       sections: "Admin sections",
       views: "Views",
+      guide: "Admin guide",
     },
     settlement: {
       openButton: "Settle accounts",

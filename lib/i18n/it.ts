@@ -557,6 +557,12 @@ export const it = {
     contactGroup: "Scrivi al gruppo",
     contactTech: "Problemi tecnici",
     contactHeading: "Hai altre domande?",
+    adminTitle: "Guida per gli admin",
+    adminIntro: "I passi per chi gestisce il gruppo: cicli, fornitori, cassa e soci. La vedono solo gli admin.",
+    adminCardBody: "Aprire e chiudere un ciclo, la distinta, la cassa, i soci: i passi per chi gestisce il gruppo. I soci non la vedono.",
+    adminSearchPlaceholder: "Es. chiudere il ciclo, distinta, ricarica",
+    adminTopicLabel: (topic: string) => `Admin · ${topic}`,
+    backToAdminGuide: "Guida per gli admin",
     contactIntro: (appName: string) =>
       `Scrivici o parla con chi gestisce la cassa al ritiro. Per problemi tecnici contatta il team IT di ${appName}.`,
   },
@@ -660,6 +666,7 @@ export const it = {
       catalogSuppliers: "Fornitori",
       sections: "Sezioni dell'admin",
       views: "Viste",
+      guide: "Guida admin",
     },
     settlement: {
       openButton: "Chiudi i conti",

@@ -38,7 +38,7 @@ describe.each([
 
   it("explains the fee in the guide, for pay-per-order and for the wallet", () => {
     const feeCards = (mode: "wallet" | "per_order") =>
-      visibleGuide(guide, { mode, families: false, onlineTopup: true, bankTransfer: true }).articles.filter((a) =>
+      visibleGuide(guide, { mode, families: false, onlineTopup: true, bankTransfer: true, cards: true }).articles.filter((a) =>
         FEE.test(a.title),
       );
     expect(feeCards("per_order")).toHaveLength(1);

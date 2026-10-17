@@ -1,18 +1,20 @@
 import Link from "next/link";
-import { UiIcon, topicIcon } from "@/components/ui-icon";
 import { brand as staticBrand } from "@/lib/brand";
 import { getBrand } from "@/lib/brand/get-brand";
 import { t } from "@/lib/i18n";
 import { AppShell } from "@/components/app-shell";
+import { AdminGuideCard } from "@/components/guide/admin-guide-card";
 import { GroupInfoCard } from "@/components/guide/group-info-card";
 import { GuideContact } from "@/components/guide/guide-contact";
 import { GuideSearch } from "@/components/guide/guide-search";
 import { RichText } from "@/components/guide/rich-text";
+import { GuideTopicGrid } from "@/components/guide/topic-grid";
 import { getUserRole, requireUserSession } from "@/lib/auth/session";
 import { loadChangelog, visibleChangelog } from "@/lib/changelog";
 import { guideContent } from "@/lib/guide";
+import { adminGuideFor } from "@/lib/guide/admin";
 import { GROUP_INFO_SLUG } from "@/lib/guide/group-info";
-import { buildSearchIndex, groupInfoSearchEntry } from "@/lib/guide/search";
+import { ADMIN_GUIDE_SECTION, buildSearchIndex, groupInfoSearchEntry } from "@/lib/guide/search";
 import { WELCOME_QUERY } from "@/lib/guide/welcome";
 import { guideContext, visibleGuide } from "@/lib/guide/types";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
@@ -23,7 +25,9 @@ export const metadata: Metadata = { title: t.guide.title };
 // The guide's index: the group's own text ("Il nostro gruppo", written by the
 // admins), search, topics, the latest release and the contacts.
 // Cards live on the topic pages (app/guida/[topic]); only the ones this
-// deploy's settings make relevant are shown or searched.
+// deploy's settings make relevant are shown or searched. An admin also gets
+// the way into the admin guide and its cards in the search; for anyone else
+// adminGuideFor returns null, so not a word of it reaches the page.
 export default async function GuidaPage() {
   const brand = await getBrand();
   const session = await requireUserSession();
@@ -33,7 +37,10 @@ export default async function GuidaPage() {
   // the teaser, in the deploy's locale — same default as /changelog, where
   // users can still switch language explicitly.
   const [versions, settings] = await Promise.all([loadChangelog(staticBrand.locale), getPaymentSettings()]);
-  const guide = visibleGuide(guideContent, guideContext(settings));
+  const ctx = guideContext(settings);
+  const guide = visibleGuide(guideContent, ctx);
+  const adminGuideContent = adminGuideFor(session.user);
+  const adminGuide = adminGuideContent && visibleGuide(adminGuideContent, ctx);
   // Changes for members only (Playbook 4.6): the latest release that has any.
   const latest = visibleChangelog(versions, false).find((v) => v.date !== null && v.sections.length > 0) ?? null;
   const topicTitles: Record<string, string> = Object.fromEntries(
@@ -43,6 +50,12 @@ export default async function GuidaPage() {
   if (settings.groupInfo) {
     index.unshift(groupInfoSearchEntry(t.guide.groupTitle, settings.groupInfo));
     topicTitles[GROUP_INFO_SLUG] = brand.appName;
+  }
+  if (adminGuide) {
+    index.push(...buildSearchIndex(adminGuide.articles, ADMIN_GUIDE_SECTION));
+    for (const topic of adminGuide.topics) {
+      topicTitles[`${ADMIN_GUIDE_SECTION}${topic.id}`] = t.guide.adminTopicLabel(topic.title);
+    }
   }
 
   return (
@@ -54,35 +67,14 @@ export default async function GuidaPage() {
 
       <GuideSearch
         index={index}
-        synonyms={guide.synonyms}
+        synonyms={adminGuide ? [...guide.synonyms, ...adminGuide.synonyms] : guide.synonyms}
         stopwords={guide.stopwords}
         topicTitles={topicTitles}
       >
+        {adminGuide && <AdminGuideCard />}
         {settings.groupInfo && <GroupInfoCard text={settings.groupInfo} />}
 
-        <h2 className="mb-3 font-mono text-label uppercase tracking-[0.13em] text-secondary-foreground">{t.guide.topicsTitle}</h2>
-        <ul className="mb-6 grid gap-3 sm:grid-cols-2">
-          {guide.topics.map((topic) => {
-            const count = guide.articles.filter((a) => a.topic === topic.id).length;
-            return (
-              <li key={topic.id}>
-                <Link
-                  href={`/guida/${topic.id}`}
-                  className="flex h-full gap-3 rounded-card border border-border bg-card p-4 shadow-card transition-colors hover:border-primary-mid"
-                >
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-bg text-primary-text">
-                    <UiIcon name={topicIcon(topic.id)} />
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block text-[15px] font-bold text-foreground">{topic.title}</span>
-                    <span className="mt-0.5 block text-[12px] leading-snug text-secondary-foreground">{topic.summary}</span>
-                    <span className="mt-1 block tabular-nums text-label text-muted-foreground">{t.guide.topicCount(count)}</span>
-                  </span>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+        <GuideTopicGrid guide={guide} />
         <p className="-mt-3 mb-6 text-right">
           <Link href={`/?${WELCOME_QUERY}=1`} className="text-[12px] font-bold text-primary-text hover:underline">
             👋 {t.welcome.reopen}

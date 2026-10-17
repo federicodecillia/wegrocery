@@ -13,6 +13,9 @@ export type CatalogView = "prodotti" | "fornitori";
 
 export type AdminView = CatalogView | CycleView;
 
+// The admin guide's index (app/guida/admin): the ⋯ menu and the sidebar link it.
+export const ADMIN_GUIDE_HREF = "/guida/admin";
+
 /** Sections in the bar on a phone; the rest sit behind ⋯ there and in line from a PC. */
 export const ADMIN_PRIMARY: { id: AdminSection; label: string }[] = [
   { id: "ciclo", label: t.admin.nav.cycle },

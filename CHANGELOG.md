@@ -22,6 +22,11 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
+## [Unreleased]
+
+### Added
+- 🧭 **A guide for admins.** Admins now find an "Admin guide" in How it works and under Admin (⋯ on a phone, the side menu on a computer): 39 step-by-step cards on opening and closing a cycle, the supplier sheet, the treasury, the catalogue, members and settings, with search. Members do not see it: the pages answer "not found" and its words never reach their phone.
+
 ## [1.31.0] - 2026-10-17
 
 *The FlyLabs look: clearer form fields, nicer emails, one set of icons and a What's new page written for members.*
