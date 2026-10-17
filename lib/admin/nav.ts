@@ -37,6 +37,21 @@ export const ADMIN_VIEWS: Partial<Record<AdminSection, { id: CatalogView; label:
   ],
 };
 
+// "Come si fa?" in the admin bar: the admin guide's topic (and card) for the
+// section and view on screen. lib/guide/admin/admin-guide.test.ts checks the
+// cards exist.
+export function adminHelpHref(section: AdminSection, view: AdminView | null): string {
+  const card: Record<AdminSection, string> = {
+    ciclo: view === "fornitore" ? "fornitore" : view === "prodotti" ? "ciclo#prodotti-nel-ciclo" : view === "ordini" ? "ciclo#seguire-ordini" : "ciclo",
+    cassa: "cassa",
+    soci: "soci",
+    catalogo: view === "fornitori" ? "catalogo#aggiungere-fornitore" : "catalogo",
+    statistiche: "impostazioni#ricerche-statistiche",
+    impostazioni: "impostazioni",
+  };
+  return `${ADMIN_GUIDE_HREF}/${card[section]}`;
+}
+
 const SECTIONS = new Set<string>([...ADMIN_PRIMARY, ...ADMIN_MORE].map((s) => s.id));
 
 // The tabs before the new bar, and where each one lives now.

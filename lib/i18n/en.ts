@@ -125,6 +125,49 @@ export const en: Strings = {
     helpBodyGroup:
       "The **Guide** has information about our group, answers to the most common questions and the contacts.",
   },
+  adminWelcome: {
+    title: "Welcome to the Admin area",
+    intro: "You are an admin: this is where you run the group. In a few steps we show you the work of each cycle.",
+    reopen: "See the admin welcome again",
+    steps: {
+      todo: {
+        emoji: "🧭",
+        title: "Start from \"To do now\"",
+        body: "At the top of **Cycle** the app tells you the next step of each cycle: closing it, sending the order to the supplier, recording weights. When in doubt, look there.",
+        link: "Open Cycle",
+      },
+      cycle: {
+        emoji: "🔄",
+        title: "Opening a cycle",
+        body: "With **+ New cycle** you choose the title, the order deadline and the supplier, then add the products. Members get a notification and order until the deadline.",
+        link: "How to open one",
+      },
+      close: {
+        emoji: "📦",
+        title: "Supplier and closing",
+        body: "After the deadline you send the order sheet to the supplier from **Supplier**. The cycle does not close by itself: you close it with **Close cycle…**, also uploading the sheet with real weights and prices.",
+        link: "How to close one",
+      },
+      treasury: {
+        emoji: "💶",
+        title: "The treasury",
+        body: "In **Treasury** you record top-ups paid by bank transfer or cash and see who is below zero. A wrong movement is corrected, never erased: the accounts can always be rebuilt.",
+        link: "Open Treasury",
+      },
+      members: {
+        emoji: "👥",
+        title: "Members",
+        body: "In **Members** you add people and **Invite** sends them the link to sign in. That is also where you choose who is an admin.",
+        link: "Open Members",
+      },
+      guide: {
+        emoji: "📘",
+        title: "The admin guide",
+        body: "Every step, explained calmly: you find it in **How it works** and in the Admin menu. Members do not see it.",
+        link: "Open the admin guide",
+      },
+    },
+  },
   cycle: {
     notOrderedYet: "You have not ordered in this cycle yet.",
     closesLabel: "Closes",
@@ -665,6 +708,7 @@ export const en: Strings = {
       sections: "Admin sections",
       views: "Views",
       guide: "Admin guide",
+      help: "How it works",
     },
     settlement: {
       openButton: "Settle accounts",

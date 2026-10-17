@@ -125,6 +125,49 @@ export const it = {
     helpBodyGroup:
       "Nella **Guida** trovi le informazioni sul nostro gruppo, le risposte alle domande più comuni e i contatti.",
   },
+  adminWelcome: {
+    title: "Benvenuto nell'area Admin",
+    intro: "Sei admin: da qui gestisci il gruppo. In pochi passi ti mostriamo il lavoro di ogni ciclo.",
+    reopen: "Rivedi il benvenuto admin",
+    steps: {
+      todo: {
+        emoji: "🧭",
+        title: "Parti da \"Da fare ora\"",
+        body: "In cima a **Ciclo** l'app ti dice il prossimo passo di ogni ciclo: chiudere, mandare l'ordine al fornitore, registrare i pesi. Se non sai cosa fare, guarda lì.",
+        link: "Apri Ciclo",
+      },
+      cycle: {
+        emoji: "🔄",
+        title: "Aprire un ciclo",
+        body: "Con **+ Nuovo ciclo** scegli titolo, scadenza degli ordini e fornitore, poi metti i prodotti nel ciclo. I soci ricevono l'avviso e ordinano fino alla scadenza.",
+        link: "Come si apre",
+      },
+      close: {
+        emoji: "📦",
+        title: "Fornitore e chiusura",
+        body: "Dopo la scadenza mandi la distinta al fornitore da **Fornitore**. Il ciclo non si chiude da solo: lo chiudi tu con **Chiudi ciclo…**, anche caricando la distinta con pesi e prezzi veri.",
+        link: "Come si chiude",
+      },
+      treasury: {
+        emoji: "💶",
+        title: "La cassa",
+        body: "In **Cassa** registri le ricariche arrivate con bonifico o in contanti e vedi chi è sotto zero. Un movimento sbagliato si corregge, non si cancella: i conti restano sempre ricostruibili.",
+        link: "Apri Cassa",
+      },
+      members: {
+        emoji: "👥",
+        title: "I soci",
+        body: "In **Soci** aggiungi le persone e con **Invita** mandi loro il link per entrare. Lì scegli anche chi è admin.",
+        link: "Apri Soci",
+      },
+      guide: {
+        emoji: "📘",
+        title: "La guida per gli admin",
+        body: "Ogni passo, spiegato con calma: la trovi in **Come funziona** e nel menu di Admin. I soci non la vedono.",
+        link: "Apri la guida admin",
+      },
+    },
+  },
   cycle: {
     notOrderedYet: "Non hai ancora ordinato in questo ciclo.",
     closesLabel: "Chiude",
@@ -667,6 +710,7 @@ export const it = {
       sections: "Sezioni dell'admin",
       views: "Viste",
       guide: "Guida admin",
+      help: "Come si fa?",
     },
     settlement: {
       openButton: "Chiudi i conti",

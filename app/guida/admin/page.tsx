@@ -1,9 +1,11 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { GuideSearch } from "@/components/guide/guide-search";
 import { GuideTopicGrid } from "@/components/guide/topic-grid";
 import { BackLink } from "@/components/ui/back-link";
 import { requireUserSession } from "@/lib/auth/session";
+import { ADMIN_WELCOME_REOPEN_HREF } from "@/lib/admin/welcome";
 import { adminGuideFor } from "@/lib/guide/admin";
 import { ADMIN_GUIDE_SECTION, buildSearchIndex } from "@/lib/guide/search";
 import { guideContext, visibleGuide } from "@/lib/guide/types";
@@ -31,7 +33,14 @@ export default async function AdminGuidePage() {
         <BackLink href="/guida">{t.guide.backToGuide}</BackLink>
       </div>
       <h1 className="mb-1 text-title font-black text-foreground">{t.guide.adminTitle}</h1>
-      <p className="mb-5 text-[14px] leading-snug text-secondary-foreground">{t.guide.adminIntro}</p>
+      <p className="mb-2 text-[14px] leading-snug text-secondary-foreground">{t.guide.adminIntro}</p>
+      <Link
+        href={ADMIN_WELCOME_REOPEN_HREF}
+        className="mb-4 inline-flex min-h-11 items-center text-[14px] font-bold text-primary-text hover:underline"
+      >
+        <span aria-hidden className="mr-1.5">👋</span>
+        {t.adminWelcome.reopen}
+      </Link>
 
       <GuideSearch
         index={buildSearchIndex(guide.articles, ADMIN_GUIDE_SECTION)}
