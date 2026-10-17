@@ -13,6 +13,9 @@ import { Button } from "@/components/ui/button";
 import { confirmDiscard } from "@/components/ui/confirm-dialog";
 import { formatEur, getProductEmoji } from "@/lib/utils";
 import { t } from "@/lib/i18n";
+import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
+import { Label } from "@/components/ui/label";
 
 type Mode =
   | { kind: "edit"; memberId: string; memberName: string }
@@ -211,14 +214,13 @@ export function EditClosedOrderModal({ cycleId, cycleTitle, mode, onClose, onSav
         <>
           {mode.kind === "create" && (
             <div className="mb-4 rounded-xl border border-border bg-card p-3">
-              <label htmlFor="edit-order-member" className="mb-1 block text-label font-semibold uppercase tracking-wide text-secondary-foreground">
+              <Label htmlFor="edit-order-member">
                 {t.admin.editClosedOrder.memberLabel}
-              </label>
-              <select
+              </Label>
+              <NativeSelect
                 id="edit-order-member"
                 value={memberId}
                 onChange={(e) => setMemberId(e.target.value)}
-                className="w-full rounded-lg border border-border bg-card px-3 py-2 text-[13px] text-foreground"
               >
                 <option value="">{t.admin.editClosedOrder.selectMember}</option>
                 {bootstrap.members.map((m) => (
@@ -226,7 +228,7 @@ export function EditClosedOrderModal({ cycleId, cycleTitle, mode, onClose, onSav
                     {m.fullName}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             </div>
           )}
 
@@ -313,16 +315,15 @@ export function EditClosedOrderModal({ cycleId, cycleTitle, mode, onClose, onSav
           )}
 
           <div className="mt-4 rounded-xl border border-border bg-card p-3">
-            <label htmlFor="edit-order-note" className="mb-1 block text-label font-semibold uppercase tracking-wide text-secondary-foreground">
+            <Label htmlFor="edit-order-note">
               {t.admin.editClosedOrder.noteLabel}
-            </label>
-            <input
+            </Label>
+            <Input
               id="edit-order-note"
               type="text"
               value={note}
               onChange={(e) => setNote(e.target.value)}
               placeholder={t.admin.editClosedOrder.notePlaceholder}
-              className="w-full rounded-lg border border-border px-3 py-2 text-[13px] text-foreground"
             />
           </div>
         </>

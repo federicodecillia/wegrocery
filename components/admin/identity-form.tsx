@@ -8,6 +8,7 @@ import { THEME_KEYS, type IdentityOverrides, type ThemeKey } from "@/lib/brand/i
 import { brandContrastWarnings, deriveRoleVars, resolvePalette } from "@/lib/brand/roles";
 import type { BrandConfig } from "@/lib/brand/types";
 import { t } from "@/lib/i18n";
+import { Input } from "@/components/ui/input";
 
 // The group's identity as its admins edit it (first-run setup and
 // Impostazioni): "identity" is names, logo and colours, "contacts" the
@@ -25,8 +26,6 @@ type Props = {
   uploadedLogo: boolean;
 };
 
-const input =
-  "mt-1 w-full rounded-xl border border-border px-3 py-2 text-[13px] text-foreground placeholder:text-muted-foreground focus:border-primary";
 const label = "block text-[12px] font-bold text-foreground";
 const hint = "mt-1 text-[12px] text-secondary-foreground";
 
@@ -76,14 +75,14 @@ function Field({
       <label htmlFor={id} className={label}>
         {title}
       </label>
-      <input
+      <Input
         id={id}
         type={type}
         value={value}
         maxLength={maxLength}
         placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
-        className={input}
+        className="mt-1 rounded-xl focus:border-primary"
       />
       {help && <p className={hint}>{help}</p>}
     </div>
@@ -213,14 +212,14 @@ function ColorField({
           onChange={(e) => onChange(e.target.value)}
           className="h-10 w-12 shrink-0 cursor-pointer rounded-lg border border-border bg-card p-1"
         />
-        <input
+        <Input
           id={id}
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value.trim())}
           placeholder={fallback ?? s.colorDefault}
           maxLength={7}
-          className="w-full rounded-xl border border-border px-3 py-2 tabular-nums text-[13px] text-foreground placeholder:text-muted-foreground focus:border-primary"
+          className="rounded-xl tabular-nums focus:border-primary"
         />
       </div>
     </div>

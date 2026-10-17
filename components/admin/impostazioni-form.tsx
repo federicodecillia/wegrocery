@@ -8,11 +8,10 @@ import { t } from "@/lib/i18n";
 import { formatDate, formatDateTime } from "@/lib/i18n/format";
 import { BANK_REFERENCE_MAX, fillBankReference } from "@/lib/payments/bank-reference";
 import type { PaymentSettingsInput, StripeKeyState } from "@/lib/payments/settings";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 const card = "rounded-xl border border-border bg-card p-4";
-const inputCls =
-  "w-full rounded-lg border border-border px-3 py-2 text-[13px] text-foreground";
-const labelCls = "mb-1 block text-label font-semibold uppercase tracking-wide text-secondary-foreground";
 const helpCls = "mt-1 text-label leading-snug text-secondary-foreground";
 
 // The template as a member would read it, on a sample order closed today.
@@ -76,10 +75,10 @@ export function PaymentSettingsForm({
           <p className="mb-3 mt-1 text-[12px] text-secondary-foreground">{s.limitsHint}</p>
           <div className="grid grid-cols-2 gap-3">
             <div className="min-w-0">
-              <label htmlFor="settings-overdraft" className={labelCls}>
+              <Label htmlFor="settings-overdraft">
                 {s.overdraftLabel}
-              </label>
-              <input
+              </Label>
+              <Input
                 id="settings-overdraft"
                 type="text"
                 inputMode="decimal"
@@ -87,15 +86,14 @@ export function PaymentSettingsForm({
                 value={values.maxOverdraft}
                 onChange={(e) => update("maxOverdraft", e.target.value)}
                 placeholder={s.noLimit}
-                className={inputCls}
               />
               <p className={helpCls}>{s.overdraftHelp}</p>
             </div>
             <div className="min-w-0">
-              <label htmlFor="settings-max-balance" className={labelCls}>
+              <Label htmlFor="settings-max-balance">
                 {s.maxBalanceLabel}
-              </label>
-              <input
+              </Label>
+              <Input
                 id="settings-max-balance"
                 type="text"
                 inputMode="decimal"
@@ -103,7 +101,6 @@ export function PaymentSettingsForm({
                 value={values.maxBalance}
                 onChange={(e) => update("maxBalance", e.target.value)}
                 placeholder={s.noLimit}
-                className={inputCls}
               />
               <p className={helpCls}>{s.maxBalanceHelp}</p>
             </div>
@@ -126,23 +123,22 @@ export function PaymentSettingsForm({
         </label>
         <div className="mt-3 space-y-3">
           <div>
-            <label htmlFor="settings-bank-holder" className={labelCls}>
+            <Label htmlFor="settings-bank-holder">
               {s.bankHolderLabel}
-            </label>
-            <input
+            </Label>
+            <Input
               id="settings-bank-holder"
               type="text"
               autoComplete="off"
               value={values.bankHolder}
               onChange={(e) => update("bankHolder", e.target.value)}
-              className={inputCls}
             />
           </div>
           <div>
-            <label htmlFor="settings-bank-iban" className={labelCls}>
+            <Label htmlFor="settings-bank-iban">
               {s.bankIbanLabel}
-            </label>
-            <input
+            </Label>
+            <Input
               id="settings-bank-iban"
               type="text"
               autoComplete="off"
@@ -150,14 +146,14 @@ export function PaymentSettingsForm({
               spellCheck={false}
               value={values.bankIban}
               onChange={(e) => update("bankIban", e.target.value)}
-              className={`${inputCls} tabular-nums`}
+              className="tabular-nums"
             />
           </div>
           <div>
-            <label htmlFor="settings-bank-reference" className={labelCls}>
+            <Label htmlFor="settings-bank-reference">
               {s.bankReferenceLabel}
-            </label>
-            <input
+            </Label>
+            <Input
               id="settings-bank-reference"
               type="text"
               autoComplete="off"
@@ -166,7 +162,6 @@ export function PaymentSettingsForm({
               onChange={(e) => update("bankReferenceTemplate", e.target.value)}
               placeholder={t.topup.bankOrderReferenceDefault}
               aria-describedby="settings-bank-reference-help"
-              className={inputCls}
             />
             <p id="settings-bank-reference-help" className={helpCls}>
               {s.bankReferenceHelp}
@@ -176,10 +171,10 @@ export function PaymentSettingsForm({
             </p>
           </div>
           <div>
-            <label htmlFor="settings-bank-receipt" className={labelCls}>
+            <Label htmlFor="settings-bank-receipt">
               {s.bankReceiptLabel}
-            </label>
-            <input
+            </Label>
+            <Input
               id="settings-bank-receipt"
               type="email"
               autoComplete="off"
@@ -187,7 +182,6 @@ export function PaymentSettingsForm({
               value={values.bankReceiptEmail}
               onChange={(e) => update("bankReceiptEmail", e.target.value)}
               aria-describedby="settings-bank-receipt-help"
-              className={inputCls}
             />
             <p id="settings-bank-receipt-help" className={helpCls}>
               {s.bankReceiptHelp}

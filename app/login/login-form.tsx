@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { t } from "@/lib/i18n";
+import { Input } from "@/components/ui/input";
 
 type Status =
   | "idle"
@@ -108,7 +109,7 @@ export function LoginForm({ googleEnabled, next }: { googleEnabled: boolean; nex
           <label htmlFor="code" className="block text-sm font-medium text-foreground">
             {t.login.codeLabel}
           </label>
-          <input
+          <Input
             id="code"
             name="code"
             type="text"
@@ -117,7 +118,7 @@ export function LoginForm({ googleEnabled, next }: { googleEnabled: boolean; nex
             maxLength={7}
             required
             placeholder="123456"
-            className="w-full rounded-lg border border-border px-3 py-2 text-center text-lg tabular-nums tracking-[0.3em] text-foreground"
+            className="text-center text-lg tabular-nums tracking-[0.3em]"
           />
           <Button type="submit" variant="brand" block disabled={busy}>
             {status === "verifying" ? t.login.codeVerifying : t.login.codeButton}
@@ -134,14 +135,14 @@ export function LoginForm({ googleEnabled, next }: { googleEnabled: boolean; nex
           <label htmlFor="email" className="block text-sm font-medium text-foreground">
             {t.login.emailLabel}
           </label>
-          <input
+          <Input
             id="email"
             name="email"
             type="email"
             autoComplete="email"
             required
             placeholder={t.login.emailPlaceholder}
-            className="w-full rounded-lg border border-border px-3 py-2 text-sm text-foreground"
+            className="text-sm"
           />
           <Button type="submit" variant="brand" block disabled={busy}>
             {status === "sending" ? t.login.sending : t.login.sendLink}

@@ -7,6 +7,7 @@ import { t } from "@/lib/i18n";
 import { formatDate } from "@/lib/i18n/format";
 import { adminHref } from "@/lib/admin/nav";
 import { filterCycles, groupCycles, type CycleFilter, type CycleGroup, type CycleView } from "@/lib/admin/cycle-views";
+import { Input } from "@/components/ui/input";
 
 export type SettleState = "to_settle" | "needs_update" | "refund_failed";
 
@@ -69,7 +70,7 @@ export function CycleList({
       <label className="sr-only" htmlFor="cycle-search">
         {w.search}
       </label>
-      <input
+      <Input
         id="cycle-search"
         type="search"
         value={query}
@@ -78,7 +79,7 @@ export function CycleList({
           setShown(PAGE);
         }}
         placeholder={w.search}
-        className="min-h-(--control-h) w-full rounded-xl border border-border bg-card px-3 text-[13px] placeholder:text-muted-foreground"
+        className="rounded-xl"
       />
       <div role="group" aria-label={w.listTitle} className="mt-2 flex flex-wrap gap-1">
         {(Object.keys(w.filters) as CycleFilter[]).map((f) => (

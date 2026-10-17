@@ -16,10 +16,9 @@ import {
 } from "@/lib/ledger";
 import { formatDate } from "@/lib/utils";
 import { MemberCombobox, type PickerMember } from "./member-combobox";
-
-const inputCls =
-  "min-h-11 w-full rounded-lg border border-border px-3 py-2 text-[14px] text-foreground";
-const labelCls = "mb-1 block text-label font-semibold uppercase tracking-wide text-secondary-foreground";
+import { Input } from "@/components/ui/input";
+import { Label, labelClass } from "@/components/ui/label";
+import { NativeSelect } from "@/components/ui/native-select";
 
 function todayInput(): string {
   return utcToZonedLocalInput(new Date()).slice(0, 10);
@@ -31,9 +30,9 @@ function Field({ label, children }: { label: string; children: (id: string) => R
   const id = useId();
   return (
     <div className="min-w-0">
-      <label htmlFor={id} className={labelCls}>
+      <Label htmlFor={id}>
         {label}
-      </label>
+      </Label>
       {children(id)}
     </div>
   );
@@ -49,18 +48,18 @@ function MethodSelect({
   id: string;
 }) {
   return (
-    <select
+    <NativeSelect
       id={id}
       value={value}
       onChange={(e) => onChange(e.target.value as ManualPaymentMethod)}
-      className={`${inputCls} bg-card`}
+      className="min-h-11"
     >
       {MANUAL_PAYMENT_METHODS.map((m) => (
         <option key={m} value={m}>
           {t.admin.treasury.methods[m]}
         </option>
       ))}
-    </select>
+    </NativeSelect>
   );
 }
 
@@ -292,7 +291,7 @@ export function TopupForm({ members }: { members: PickerMember[] }) {
           <div className="grid grid-cols-2 gap-3">
             <Field label={t.admin.treasury.amountLabel}>
               {(id) => (
-                <input
+                <Input
                   id={id}
                   type="text"
                   inputMode="decimal"
@@ -300,18 +299,18 @@ export function TopupForm({ members }: { members: PickerMember[] }) {
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   placeholder={t.admin.treasury.amountPlaceholder}
-                  className={inputCls}
+                  className="min-h-11"
                 />
               )}
             </Field>
             <Field label={t.admin.treasury.dateLabel}>
               {(id) => (
-                <input
+                <Input
                   id={id}
                   type="date"
                   value={entryDate}
                   onChange={(e) => setEntryDate(e.target.value)}
-                  className={inputCls}
+                  className="min-h-11"
                 />
               )}
             </Field>
@@ -322,7 +321,7 @@ export function TopupForm({ members }: { members: PickerMember[] }) {
             </Field>
             <Field label={t.admin.treasury.externalRefLabel}>
               {(id) => (
-                <input
+                <Input
                   id={id}
                   type="text"
                   autoComplete="off"
@@ -331,20 +330,20 @@ export function TopupForm({ members }: { members: PickerMember[] }) {
                   value={externalRef}
                   onChange={(e) => setExternalRef(e.target.value)}
                   placeholder={t.admin.treasury.externalRefPlaceholder}
-                  className={inputCls}
+                  className="min-h-11"
                 />
               )}
             </Field>
           </div>
           <Field label={t.admin.treasury.noteLabel}>
             {(id) => (
-              <input
+              <Input
                 id={id}
                 type="text"
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 placeholder={t.admin.treasury.notePlaceholder}
-                className={inputCls}
+                className="min-h-11"
               />
             )}
           </Field>
@@ -462,7 +461,7 @@ export function OutgoingMovementForm({ members }: { members: PickerMember[] }) {
     body = (
       <form onSubmit={handleReview} noValidate className="space-y-3">
         <fieldset>
-          <legend className={labelCls}>{t.admin.treasury.kindLabel}</legend>
+          <legend className={labelClass}>{t.admin.treasury.kindLabel}</legend>
           <div className="grid grid-cols-3 gap-2">
             {OUTGOING_LEDGER_TYPES.map((k) => (
               <label
@@ -497,7 +496,7 @@ export function OutgoingMovementForm({ members }: { members: PickerMember[] }) {
           <Field label={t.admin.treasury.amountLabel}>
             {(id) => (
               <>
-                <input
+                <Input
                   id={id}
                   type="text"
                   inputMode="decimal"
@@ -505,7 +504,7 @@ export function OutgoingMovementForm({ members }: { members: PickerMember[] }) {
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   placeholder={t.admin.treasury.amountPlaceholder}
-                  className={inputCls}
+                  className="min-h-11"
                 />
                 {isPayout && member && member.balance > 0 && (
                   <button
@@ -521,12 +520,12 @@ export function OutgoingMovementForm({ members }: { members: PickerMember[] }) {
           </Field>
           <Field label={t.admin.treasury.dateLabel}>
             {(id) => (
-              <input
+              <Input
                 id={id}
                 type="date"
                 value={entryDate}
                 onChange={(e) => setEntryDate(e.target.value)}
-                className={inputCls}
+                className="min-h-11"
               />
             )}
           </Field>
@@ -538,7 +537,7 @@ export function OutgoingMovementForm({ members }: { members: PickerMember[] }) {
             </Field>
             <Field label={t.admin.treasury.externalRefLabel}>
               {(id) => (
-                <input
+                <Input
                   id={id}
                   type="text"
                   autoComplete="off"
@@ -547,7 +546,7 @@ export function OutgoingMovementForm({ members }: { members: PickerMember[] }) {
                   value={externalRef}
                   onChange={(e) => setExternalRef(e.target.value)}
                   placeholder={t.admin.treasury.externalRefPlaceholder}
-                  className={inputCls}
+                  className="min-h-11"
                 />
               )}
             </Field>
@@ -555,13 +554,13 @@ export function OutgoingMovementForm({ members }: { members: PickerMember[] }) {
         )}
         <Field label={t.admin.treasury.reasonLabel}>
           {(id) => (
-            <input
+            <Input
               id={id}
               type="text"
               value={note}
               onChange={(e) => setNote(e.target.value)}
               placeholder={t.admin.treasury.reasonPlaceholder}
-              className={inputCls}
+              className="min-h-11"
             />
           )}
         </Field>

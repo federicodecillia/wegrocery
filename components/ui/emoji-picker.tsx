@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { EMOJI_CATALOG, searchEmoji } from "@/lib/emoji-catalog";
 import { t } from "@/lib/i18n";
+import { Input } from "./input";
 
 type Props = {
   /** Form field name — used by FormData on the parent form. */
@@ -137,13 +138,13 @@ export function EmojiPicker({ name, value, onChange }: Props) {
             className="z-[80] flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-lg"
           >
             <div className="border-b border-border p-2">
-              <input
+              <Input
                 ref={searchRef}
                 type="text"
                 placeholder={t.common.emojiSearchPlaceholder}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                className="w-full rounded-md border border-border px-2.5 py-1.5 text-[12px] text-foreground placeholder:text-muted-foreground"
+                className="min-h-0 rounded-md px-2.5 py-1.5 text-[12px]"
               />
             </div>
 
@@ -202,7 +203,7 @@ export function EmojiPicker({ name, value, onChange }: Props) {
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="dialog"
         aria-expanded={open}
-        className="flex h-[38px] w-full items-center justify-center rounded-lg border border-border bg-card text-2xl leading-none transition hover:border-accent/60"
+        className="flex h-(--control-h) w-full items-center justify-center rounded-lg border border-input bg-card text-2xl leading-none transition hover:border-accent/60"
       >
         {current}
       </button>

@@ -20,6 +20,8 @@ import {
 } from "@/lib/csv/header-heuristics";
 import { getProductEmojiOrNull, guessProductCategory, isGenericCategoryLabel } from "@/lib/utils";
 import { t } from "@/lib/i18n";
+import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
 
 type Props = {
   open: boolean;
@@ -365,10 +367,10 @@ function Step1Upload({
             </button>
           </div>
           {supplierMode === "existing" ? (
-            <select
+            <NativeSelect
               value={existingSupplierId}
               onChange={(e) => setExistingSupplierId(e.target.value)}
-              className="mt-2 w-full rounded-lg border border-border bg-card px-3 py-2 text-[13px]"
+              wrapperClassName="mt-2"
             >
               <option value="">{t.admin.importWizard.supplierSelectPlaceholder}</option>
               {inspection.suppliers.map((s) => (
@@ -376,14 +378,14 @@ function Step1Upload({
                   {s.name}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
           ) : (
-            <input
+            <Input
               type="text"
               value={newSupplierName}
               onChange={(e) => setNewSupplierName(e.target.value)}
               placeholder={t.admin.importWizard.supplierNewPlaceholder}
-              className="mt-2 w-full rounded-lg border border-border bg-card px-3 py-2 text-[13px]"
+              className="mt-2"
             />
           )}
           {inspection.inspection.supplierHints.length > 0 && supplierMode === "existing" && (
@@ -437,7 +439,7 @@ function Step2Mapping({
                 {TARGET_LABEL[field]}
                 {required && <span className="text-destructive"> *</span>}
               </span>
-              <select
+              <NativeSelect
                 value={value === undefined ? "" : String(value)}
                 onChange={(e) => {
                   const v = e.target.value;
@@ -446,7 +448,8 @@ function Step2Mapping({
                   else next[field] = Number(v);
                   setMapping(next);
                 }}
-                className="flex-1 rounded border border-border bg-card px-2 py-1 text-[12px]"
+                wrapperClassName="flex-1"
+                className="rounded py-1 pl-2 text-[12px]"
               >
                 <option value="">(ignora)</option>
                 {sheet.columns.map((c, i) => (
@@ -454,7 +457,7 @@ function Step2Mapping({
                     {c || t.admin.importWizard.columnPlaceholder(i + 1)}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             </label>
           );
         })}

@@ -23,6 +23,7 @@ import { isAboveMaxBalance } from "@/lib/payments/settings";
 import { useWide } from "@/lib/ui/use-wide";
 import { Button } from "@/components/ui/button";
 import { Sheet } from "@/components/ui/sheet";
+import { Input } from "@/components/ui/input";
 
 // ── Summary Cards ─────────────────────────────────────────────────────────────
 
@@ -242,7 +243,7 @@ export function LedgerEntryRow({ entry }: { entry: LedgerEntry }) {
           {title} <span className="tabular-nums text-label font-normal text-muted-foreground">· {kindLabel}</span>
         </div>
         <div className="flex gap-2">
-          <input
+          <Input
             type="number"
             min="0.01"
             step="0.01"
@@ -250,16 +251,16 @@ export function LedgerEntryRow({ entry }: { entry: LedgerEntry }) {
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             aria-label={t.admin.treasury.amountLabel}
-            className="min-h-11 w-28 shrink-0 rounded-lg border border-border bg-card px-2 py-1 tabular-nums text-[14px]"
+            className="min-h-11 w-28 shrink-0 px-2 py-1 tabular-nums"
           />
-          <input
+          <Input
             type="text"
             aria-label={isOutgoingLedgerType(entry.type) ? t.admin.treasury.reasonLabel : t.admin.treasury.noteLabel}
             value={draftNote}
             onChange={(e) => setDraftNote(e.target.value)}
             // An outgoing movement's causale is required (the member sees it).
             placeholder={isOutgoingLedgerType(entry.type) ? t.admin.treasury.reasonLabel : t.admin.treasury.noteLabel}
-            className="min-h-11 min-w-0 flex-1 rounded-lg border border-border bg-card px-2 py-1 text-[14px]"
+            className="min-h-11 min-w-0 flex-1 px-2 py-1"
           />
         </div>
         <div className="flex justify-end gap-2">
@@ -432,13 +433,13 @@ export function CassaInlineList({
   return (
     <div>
       <div className="border-b border-border px-4 py-2">
-        <input
+        <Input
           type="search"
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
           placeholder={t.admin.treasury.searchMember}
           aria-label={t.admin.treasury.searchMember}
-          className="min-h-11 w-full rounded-lg border border-border px-3 py-1.5 text-[14px] text-foreground placeholder:text-muted-foreground"
+          className="min-h-11 py-1.5"
         />
       </div>
       <div className="divide-y divide-border">
