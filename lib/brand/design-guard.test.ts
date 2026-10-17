@@ -188,6 +188,20 @@ describe("design guard", () => {
     expect(offenders).toEqual([]);
   });
 
+  it("builds dialogs on Base UI and draws interface icons with lucide (Playbook 2.7)", () => {
+    expect(hits(/@radix-ui\//)).toEqual([]);
+    const pkg = JSON.parse(readFileSync("package.json", "utf8")) as { dependencies: Record<string, string> };
+    expect(Object.keys(pkg.dependencies)).toEqual(expect.arrayContaining(["@base-ui/react", "lucide-react"]));
+    expect(Object.keys(pkg.dependencies).filter((d) => d.startsWith("@radix-ui/"))).toEqual([]);
+    // Hand-drawn SVG stays for domain icons (movements) and the charts.
+    const drawn = files.filter(
+      (f) => /<svg[\s>]/.test(readFileSync(f, "utf8")) && !/components\/(movement-icon|admin\/tab-statistiche)\.tsx$/.test(f),
+    );
+    expect(drawn).toEqual([]);
+    // Close, more and edit are lucide icons, not text glyphs.
+    expect(hits(/<span aria-hidden>[✕⋯✎]<\/span>|^\s*[✕⋯✎]( \{|$)/u)).toEqual([]);
+  });
+
   it("names every button that shows only a glyph (✕, ✎, +...)", () => {
     expect(files.flatMap((f) => glyphOnlyButtons(f, readFileSync(f, "utf8")))).toEqual([]);
   });

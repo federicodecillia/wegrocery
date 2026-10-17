@@ -1,5 +1,6 @@
 "use client";
 
+import { X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useSyncExternalStore, useTransition } from "react";
@@ -128,9 +129,9 @@ export function WelcomeCard({
             type="button"
             onClick={close}
             aria-label={t.welcome.close}
-            className="min-h-11 min-w-11 rounded-full text-muted-foreground hover:text-foreground"
+            className="flex min-h-11 min-w-11 items-center justify-center rounded-full text-muted-foreground hover:text-foreground"
           >
-            ✕
+            <X aria-hidden className="size-4" />
           </button>
         </span>
       </section>

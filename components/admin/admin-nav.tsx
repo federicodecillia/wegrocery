@@ -1,5 +1,6 @@
 "use client";
 
+import { Ellipsis } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useRef } from "react";
@@ -81,7 +82,7 @@ export function AdminNav() {
             aria-label={t.admin.nav.moreAria}
             className={`list-none [&::-webkit-details-marker]:hidden cursor-pointer min-w-11 ${tabClass(inMore)}`}
           >
-            <span aria-hidden className="text-[16px] leading-none">⋯</span>
+            <Ellipsis aria-hidden className="size-4" />
             {inMore && <span className="sr-only">{ADMIN_MORE.find((s) => s.id === section)?.label}</span>}
           </summary>
           <ul className="absolute right-0 z-30 mt-2 min-w-[180px] overflow-hidden rounded-xl border border-border bg-card py-1 shadow-md">

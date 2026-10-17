@@ -1,5 +1,6 @@
 "use client";
 
+import { X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { t } from "@/lib/i18n";
 import { canonicalizeCategory, normalizeCategory } from "@/lib/utils";
@@ -179,7 +180,7 @@ export function CategorySelect({ name, value, extra = [], placeholder = t.common
                   aria-label={t.common.cancel}
                   className="flex h-9 w-9 items-center justify-center rounded-md text-label text-secondary-foreground"
                 >
-                  <span aria-hidden>✕</span>
+<X aria-hidden className="size-4" />
                 </button>
               </div>
             ) : (

@@ -1,5 +1,6 @@
 "use client";
 
+import { X } from "lucide-react";
 import { confirm } from "@/components/ui/confirm-dialog";
 import { useMemo, useState, useTransition } from "react";
 import { toast } from "@/components/ui/toast";
@@ -507,8 +508,9 @@ export function EditCycleProductForm({
     <form onSubmit={handleSubmit} className="my-2 rounded-lg border border-border bg-background p-3 shadow-sm">
       <div className="mb-2 flex items-center justify-between">
         <p className="text-[12px] font-bold text-foreground">{t.admin.products.editCatalogProduct}</p>
-        <button type="button" onClick={onClose} className="text-label text-secondary-foreground">
-          ✕ {t.admin.common.cancel}
+        <button type="button" onClick={onClose} className="inline-flex items-center gap-1 text-label text-secondary-foreground">
+          <X aria-hidden className="size-3.5" />
+          {t.admin.common.cancel}
         </button>
       </div>
 

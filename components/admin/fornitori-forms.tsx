@@ -1,5 +1,6 @@
 "use client";
 
+import { X } from "lucide-react";
 import { confirm } from "@/components/ui/confirm-dialog";
 import { useState, useTransition } from "react";
 import { toast } from "@/components/ui/toast";
@@ -85,8 +86,9 @@ export function FornitoriForm({
           {isEdit ? t.admin.suppliers.editSupplier(supplier.name) : t.admin.suppliers.addSupplier}
         </p>
         {close && (
-          <button type="button" onClick={close} className="text-label text-secondary-foreground">
-            ✕ {t.admin.common.cancel}
+          <button type="button" onClick={close} className="inline-flex items-center gap-1 text-label text-secondary-foreground">
+            <X aria-hidden className="size-3.5" />
+            {t.admin.common.cancel}
           </button>
         )}
       </div>
@@ -302,7 +304,7 @@ export function FornitoriList({
                           aria-label={t.admin.suppliers.deleteAria(s.name)}
                           className="flex h-9 w-9 items-center justify-center rounded-full border border-destructive/30 text-label font-semibold text-destructive"
                         >
-                          <span aria-hidden>✕</span>
+<X aria-hidden className="size-4" />
                         </button>
                       )}
                     </div>

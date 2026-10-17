@@ -1,5 +1,6 @@
 "use client";
 
+import { X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useSyncExternalStore, useTransition } from "react";
@@ -38,7 +39,7 @@ export function WelcomeResume() {
           {t.welcome.resumeLink(stored.n, stored.total)}
         </Link>
         <button type="button" onClick={close} aria-label={t.welcome.close} className="text-muted-foreground hover:text-foreground">
-          ✕
+          <X aria-hidden className="size-4" />
         </button>
       </span>
     </div>

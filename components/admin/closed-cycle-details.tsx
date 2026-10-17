@@ -1,5 +1,6 @@
 "use client";
 
+import { Pencil } from "lucide-react";
 import { deliveredActuals, deliveredTotalFromQuantity } from "@/lib/closed-order-preview";
 import { useCallback, useEffect, useState, useTransition } from "react";
 import { adminGetCycleOrderDetails } from "@/lib/actions/admin-cycles";
@@ -345,7 +346,7 @@ function OrderLineRow({
             aria-hidden
             className="shrink-0 self-center text-[12px] text-muted-foreground group-hover:text-primary-text"
           >
-            ✎
+            <Pencil className="size-3.5" />
           </span>
         )}
       </RowTag>

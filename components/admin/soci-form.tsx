@@ -1,5 +1,6 @@
 "use client";
 
+import { Ellipsis, X } from "lucide-react";
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { toast } from "@/components/ui/toast";
@@ -99,8 +100,9 @@ export function SociForm({
           {isEdit ? t.admin.members.editMember(member.fullName) : t.admin.members.addMember}
         </p>
         {close && (
-          <button type="button" onClick={close} className="text-label text-secondary-foreground">
-            ✕ {t.admin.common.cancel}
+          <button type="button" onClick={close} className="inline-flex items-center gap-1 text-label text-secondary-foreground">
+            <X aria-hidden className="size-3.5" />
+            {t.admin.common.cancel}
           </button>
         )}
       </div>
@@ -395,7 +397,7 @@ export function SociList({
                       aria-label={t.admin.members.deleteAria(m.fullName)}
                       className="flex h-9 w-9 items-center justify-center rounded-full border border-destructive/30 text-label font-semibold text-destructive disabled:opacity-40"
                     >
-                      <span aria-hidden>✕</span>
+<X aria-hidden className="size-4" />
                     </button>
                   </div>
                   <button
@@ -404,7 +406,7 @@ export function SociList({
                     aria-haspopup="dialog"
                     className="hit-44 flex size-(--control-h) items-center justify-center rounded-full border border-border text-[16px] leading-none text-foreground lg:hidden"
                   >
-                    <span aria-hidden>⋯</span>
+<Ellipsis aria-hidden className="size-4" />
                   </button>
                 </div>
               </div>

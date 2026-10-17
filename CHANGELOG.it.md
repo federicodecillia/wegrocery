@@ -29,10 +29,12 @@ dettagli tecnici", la release su GitHub la tiene.
 - ✉️ **Email più curate.** Ogni email dell'app (accesso, notifiche, ordine al fornitore) ora arriva su una scheda pulita nei colori dell'app, con link da toccare e il logo di WeGrocery in fondo; le app di posta che mostrano solo il testo ricevono le stesse parole di prima.
 
 ### Modificato
+- ✨ **Icone più pulite, finestre più stabili.** La navigazione, gli argomenti della guida e i pulsanti per chiudere, modificare e "altro" usano un unico set di icone; dopo una conferma data da tastiera il cursore torna sul pulsante premuto invece che all'inizio della pagina.
 - 🔤 **Codici e importi nel carattere del testo.** L'IBAN, il codice di accesso e gli indirizzi email in Soci e Cassa usano ora lo stesso carattere del testo, e totali e saldi hanno le cifre allineate; il titolo della scheda di benvenuto non è più nel carattere stretto delle etichette.
 - 📰 **Le novità parlano ai soci.** La pagina mostra le modifiche che si notano nell'app; quelle per chi la gestisce (server, database, aggiornamenti) stanno dietro "Mostra dettagli tecnici", segnate "Tecnico".
 - [tecnico] 📊 **Le statistiche delle installazioni parlano la lingua della Console FlyLabs.** `/api/instance-stats` accetta anche la firma `x-flylabs-*` e allora risponde con la forma del FlyLabs Kit (`app`, `counts`); la Console WeGrocery manda entrambe e legge entrambe le forme, così le installazioni più vecchie continuano a funzionare. `/api/health` rinuncia dopo 3 secondi a un database che non risponde.
 - [tecnico] 🎨 **Token dei colori con i nomi FlyLabs.** I ruoli dei colori nel CSS usano ora i nomi shadcn del Playbook FlyLabs (`card`, `muted-foreground`, `primary-foreground`, `destructive`, `danger-bg`...), più `input`, `ring`, `success` e `warning-bg`; i colori del gruppo e i due temi restano come prima, e il test di contrasto copre i nuovi nomi.
+- [tecnico] 🧩 **Finestre su Base UI.** `Sheet` e `ConfirmDialog` passano da Radix a Base UI Dialog (`@base-ui/react`) e le icone dell'interfaccia a `lucide-react`; trascinare per chiudere, Esc e il ritorno del cursore funzionano come prima, e il controllo di stile rifiuta Radix e le icone d'interfaccia disegnate a mano.
 
 ## [1.30.1] — 17 ottobre 2026
 

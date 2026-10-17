@@ -1,3 +1,4 @@
+import { Calendar } from "lucide-react";
 import { t } from "@/lib/i18n";
 import { formatTime, formatDate } from "@/lib/i18n/format";
 import type { NextPickup } from "@/lib/db/queries";
@@ -21,10 +22,7 @@ export function NextPickupCard({ pickup }: { pickup: NextPickup }) {
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0 flex-1">
           <div className="mb-0.75 flex items-center gap-1.5 font-mono text-label uppercase tracking-[0.13em] text-accent-text">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="4" width="18" height="18" rx="2" />
-              <path d="M16 2v4M8 2v4M3 10h18" />
-            </svg>
+            <Calendar aria-hidden className="size-2.75" strokeWidth={2.5} />
             {pickup.isSecondPickup ? t.cycle.secondPickup : t.cycle.nextPickup}
           </div>
           <div className="text-[15px] font-bold tracking-[-0.01em] text-foreground">

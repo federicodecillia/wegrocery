@@ -1,5 +1,6 @@
 "use client";
 
+import { Check, Pencil } from "lucide-react";
 import { t } from "@/lib/i18n";
 import { formatSignedMoney } from "@/lib/i18n/format";
 import { formatEur } from "@/lib/utils";
@@ -50,9 +51,7 @@ export function OrderSummary({
       <div className="mt-4 overflow-hidden rounded-card border border-accent/25 bg-card shadow-card">
         <header className="flex items-center gap-3 border-b border-border bg-accent-bg px-4 py-3.5">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M20 6 9 17l-5-5" />
-            </svg>
+            <Check aria-hidden="true" className="size-4.5" strokeWidth={3} />
           </span>
           <div className="min-w-0">
             <div className="text-[15px] font-bold text-accent-text">{t.order.confirmed}</div>
@@ -137,7 +136,8 @@ export function OrderSummary({
 
       <div className="mt-3 space-y-2">
         <Button variant="outline" block onClick={onEdit} disabled={isPending}>
-          ✎ {t.order.editOrder}
+          <Pencil aria-hidden className="mr-1.5 size-4" />
+          {t.order.editOrder}
         </Button>
         <button
           type="button"

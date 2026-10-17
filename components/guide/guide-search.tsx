@@ -1,5 +1,6 @@
 "use client";
 
+import { Search, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { flushSync } from "react-dom";
 import { t } from "@/lib/i18n";
@@ -45,21 +46,7 @@ export function GuideSearch({ index, synonyms, stopwords, topicTitles, children 
         <label htmlFor="guide-search" className="sr-only">
           {t.guide.searchLabel}
         </label>
-        <svg
-          aria-hidden
-          width="18"
-          height="18"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground"
-        >
-          <circle cx="11" cy="11" r="7" />
-          <path d="m20 20-3.5-3.5" />
-        </svg>
+        <Search aria-hidden className="pointer-events-none absolute left-4 top-1/2 size-4.5 -translate-y-1/2 text-muted-foreground" />
         <input
           id="guide-search"
           type="search"
@@ -77,7 +64,7 @@ export function GuideSearch({ index, synonyms, stopwords, topicTitles, children 
             aria-label={t.guide.searchClear}
             className="absolute right-3 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground hover:bg-background"
           >
-            ✕
+            <X aria-hidden className="size-4" />
           </button>
         )}
       </div>

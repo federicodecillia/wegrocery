@@ -1,3 +1,4 @@
+import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
@@ -29,9 +30,7 @@ function Body({ title, detail, badge, chevron }: Omit<RowProps, "href"> & { chev
         {detail != null && <div className="mt-0.5 break-words text-[12px] leading-snug text-secondary-foreground">{detail}</div>}
       </div>
       {chevron && (
-        <svg aria-hidden viewBox="0 0 24 24" className="h-4 w-4 shrink-0 text-muted-foreground" fill="none" stroke="currentColor" strokeWidth="2.5">
-          <path d="m9 18 6-6-6-6" />
-        </svg>
+        <ChevronRight aria-hidden className="h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={2.5} />
       )}
     </>
   );

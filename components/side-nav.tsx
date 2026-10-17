@@ -1,5 +1,6 @@
 "use client";
 
+import { Bell } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
@@ -18,15 +19,6 @@ type SideNavProps = {
   logoUrl: string;
   showName: boolean;
 };
-
-function BellIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
-      <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-    </svg>
-  );
-}
 
 // Tablet and PC navigation, replacing BottomNav and the header from md:
 // a rail (icon over label) on a tablet, a sidebar (icon beside label) from
@@ -98,7 +90,7 @@ export function SideNav({ isAdmin, unreadCount, name, email, appName, logoUrl, s
           className={`relative ${itemClass(bellCurrent)}`}
         >
           <span className="relative">
-            <BellIcon />
+            <Bell aria-hidden className="h-5 w-5" />
             {unreadCount > 0 && (
               <span className="absolute -right-2 -top-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-danger px-0.75 tabular-nums text-label font-bold leading-none text-danger-foreground">
                 {unreadCount > 9 ? "9+" : unreadCount}
