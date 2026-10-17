@@ -23,7 +23,9 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
-## [Non rilasciato]
+## [1.32.0] - 17 ottobre 2026
+
+*I gruppi possono tenere spenti i cicli pagati con carta finché non decidono di usarli.*
 
 ### Aggiunte
 - 💳 **I cicli con carta si possono spegnere.** In Impostazioni, "Cicli pagati con carta" decide se gli admin possono scegliere Carta quando creano un ciclo; da spento Carta resta visibile ma in grigio, con il link per attivarla. I cicli con carta già creati, le ricariche online e i rimborsi non cambiano.
@@ -682,6 +684,7 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
+[1.32.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.32.0
 [1.31.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.31.0
 [1.30.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.30.1
 [1.30.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.30.0

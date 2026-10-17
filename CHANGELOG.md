@@ -22,7 +22,9 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
-## [Unreleased]
+## [1.32.0] - 2026-10-17
+
+*Groups can keep card-paid cycles switched off until they decide to use them.*
 
 ### Added
 - 💳 **Card cycles can be switched off.** In Settings, "Cycles paid by card" decides whether admins can choose Card when creating a cycle; when it is off, Card stays visible but greyed out, with a link to switch it on. Card cycles already created, online top-ups and refunds do not change.
@@ -680,6 +682,7 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
+[1.32.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.32.0
 [1.31.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.31.0
 [1.30.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.30.1
 [1.30.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.30.0

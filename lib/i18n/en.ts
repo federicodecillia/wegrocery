@@ -2033,6 +2033,7 @@ export const en: Strings = {
     invalidAccessLevel: "Invalid access level",
     handlingFeeLocked: "The cycle is already closed: the order preparation fee can no longer change.",
     handlingFeeInvalid: "Invalid order preparation fee: a number with at most two decimals, up to 25% or €10",
+    cardCyclesOff: "Cycles paid by card are switched off for the group: switch them on in Settings > Cycles paid by card.",
     cyclePaymentModeUnavailable: "Card payment is not available for this cycle: it needs Stripe set up and the group in wallet mode.",
     cycleNotOpen: "The cycle is no longer open",
     orderChangedElsewhere: "The cart was changed in the meantime, from another device: here is the latest version.",
