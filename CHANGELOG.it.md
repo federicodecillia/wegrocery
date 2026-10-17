@@ -31,6 +31,7 @@ dettagli tecnici", la release su GitHub la tiene.
 ### Modificato
 - 📰 **Le novità parlano ai soci.** La pagina mostra le modifiche che si notano nell'app; quelle per chi la gestisce (server, database, aggiornamenti) stanno dietro "Mostra dettagli tecnici", segnate "Tecnico".
 - [tecnico] 📊 **Le statistiche delle installazioni parlano la lingua della Console FlyLabs.** `/api/instance-stats` accetta anche la firma `x-flylabs-*` e allora risponde con la forma del FlyLabs Kit (`app`, `counts`); la Console WeGrocery manda entrambe e legge entrambe le forme, così le installazioni più vecchie continuano a funzionare. `/api/health` rinuncia dopo 3 secondi a un database che non risponde.
+- [tecnico] 🧪 **I test di integrazione hanno il suffisso FlyLabs.** Ora si chiamano `*.integration.test.ts` (Playbook FlyLabs 5.2); `npm test` continua a escluderli, `npm run test:int` e la CI continuano a eseguirli.
 
 ## [1.30.1] — 17 ottobre 2026
 

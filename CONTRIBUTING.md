@@ -66,7 +66,7 @@ runs in production with real members and real money.
    replacement (`lib/ledger-reversal.ts`); any filter by entry type goes
    through `liveLedger` (`lib/db/ledger-live.ts`). A new money rule gets a
    read-only check in `lib/invariants.ts` and a case in
-   `lib/invariants.int.test.ts`; those checks run every night on production.
+   `lib/invariants.integration.test.ts`; those checks run every night on production.
 3. **No secrets or personal data, anywhere.** The repository and its CI logs
    are public. Never commit `.env*` files, connection strings, API keys, or
    real names, emails or balances, and do not paste them into issues, PRs or
@@ -117,7 +117,7 @@ Never point a development environment at a real group's database.
    - Pure logic gets a unit test next to the source (`*.test.ts`, Vitest,
      no database). Unit tests import `.ts` files only.
    - Queries, guarded writes and migrations get an integration test
-     (`*.int.test.ts`) when a unit test cannot show the behaviour; build rows
+     (`*.integration.test.ts`) when a unit test cannot show the behaviour; build rows
      with `makeScope()` from `test/int/fixtures.ts`.
    - UI changes: check them in the browser, on a phone width (375 px) as well
      as a desktop one, and include screenshots in the PR.

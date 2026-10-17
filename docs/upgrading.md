@@ -64,7 +64,7 @@ from your machine or CI instead and leave the variable off.
 Way back: put the owner's address in `DATABASE_URL` again and redeploy; then
 revoke the role (`appRoleRevokeStatements` in `scripts/db-migrate-lib.mjs` lists
 the statements; on Neon the owner cannot `DROP OWNED BY`, so privileges are
-revoked one by one before `DROP ROLE`). `test/int/app-role.int.test.ts` checks
+revoked one by one before `DROP ROLE`). `test/int/app-role.integration.test.ts` checks
 the role end to end, and the whole integration suite passes with it.
 
 ## Per version
