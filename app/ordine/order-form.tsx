@@ -3,7 +3,8 @@
 import { RotateCcw } from "lucide-react";
 import { EmptyIcon } from "@/components/ui-icon";
 import { Badge } from "@/components/ui/badge";
-import { buttonClass } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { buttonVariants } from "@/components/ui/button";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "@/components/ui/toast";
@@ -626,7 +627,7 @@ export function OrderForm({
           }}
           className={
             draftKey !== savedKey
-              ? buttonClass({ variant: "outline", size: "sm" }, "mt-3")
+              ? cn(buttonVariants({ variant: "outline", size: "sm" }), "mt-3")
               : "mt-3 inline-flex min-h-11 items-center gap-1 text-[14px] font-semibold text-accent-text"
           }
         >
