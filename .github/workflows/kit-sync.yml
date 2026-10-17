@@ -37,7 +37,7 @@ jobs:
           token: ${{ env.KIT_TOKEN }}
           path: .flylabs-kit
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         if: env.KIT_TOKEN != ''
         with:
           node-version: 24
