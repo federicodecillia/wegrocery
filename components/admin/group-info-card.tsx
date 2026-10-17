@@ -6,6 +6,7 @@ import { toast } from "@/components/ui/toast";
 import { adminUpdateGroupInfo } from "@/lib/actions/admin-settings";
 import { GROUP_INFO_MAX, GROUP_INFO_SLUG, normalizeGroupInfo } from "@/lib/guide/group-info";
 import { t } from "@/lib/i18n";
+import { Textarea } from "@/components/ui/textarea";
 
 // Impostazioni: "Il nostro gruppo", the group's own text at the top of the
 // members' guide (/guida).
@@ -36,13 +37,13 @@ export function GroupInfoCard({ initial }: { initial: string | null }) {
       <label htmlFor="group-info" className="sr-only">
         {s.title}
       </label>
-      <textarea
+      <Textarea
         id="group-info"
         value={value}
         onChange={(e) => setValue(e.target.value)}
         rows={8}
         placeholder={s.placeholder}
-        className="mt-3 w-full rounded-xl border border-border px-3 py-2 text-[13px] leading-[1.5] text-foreground placeholder:text-muted-foreground focus:border-primary"
+        className="mt-3 rounded-xl leading-[1.5] focus:border-primary"
       />
       <div className="mt-1 flex items-start justify-between gap-3">
         <p className="text-[12px] text-secondary-foreground">{value.trim() ? s.format : s.empty}</p>

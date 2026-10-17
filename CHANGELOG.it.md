@@ -40,6 +40,8 @@ dettagli tecnici", la release su GitHub la tiene.
 - ✏️ **Niente più trattini lunghi.** Un valore mancante nelle tabelle e negli elenchi ora compare come un semplice "-", e anche i titoli di versione nella pagina delle novità usano il trattino corto.
 - [tecnico] 🔘 **Pulsanti su shadcn e Base UI.** `Button` è ora il Button di shadcn su Base UI con `class-variance-authority` (`buttonVariants` sostituisce `buttonClass`; `neutral` diventa `default`, `danger` diventa `destructive`); i pulsanti hanno lo stesso aspetto e comportamento di prima.
 - [tecnico] 🗂️ **Card, Badge e Toaster nella forma di shadcn.** `CardBody` diventa `CardContent`, `Badge` prende `variant` (`default`, `brand`, `accent`, `destructive`) al posto di `tone`, e il Toaster passa in `components/ui/sonner.tsx`; schede, etichette e avvisi hanno lo stesso aspetto.
+- 📝 **Campi dei moduli più chiari.** I bordi dei campi sono più scuri, così le caselle in cui scrivi si vedono meglio, e gli elenchi a scelta mostrano la stessa freccia ovunque.
+- [tecnico] 🧾 **Campi su shadcn.** `Input` (su Base UI Input), `Textarea`, `NativeSelect` e `Label` in `components/ui/` sostituiscono gli `inputCls` e `labelCls` dei singoli moduli; i bordi dei campi passano da `border` al token `input` a 3:1, e il design guard rifiuta input di testo, textarea e select grezzi.
 
 ## [1.30.1] - 17 ottobre 2026
 

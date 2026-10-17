@@ -23,6 +23,7 @@ import {
 } from "@/components/admin/distinta-preview";
 import { t } from "@/lib/i18n";
 import { formatMoney } from "@/lib/i18n/format";
+import { Input } from "@/components/ui/input";
 
 type ProductRow = {
   productId: string;
@@ -419,7 +420,7 @@ function ReviewRow({
             <label htmlFor={inputId} className="block text-label text-muted-foreground">
               {t.admin.cycleReview.finalPriceLabel}
             </label>
-            <input
+            <Input
               id={inputId}
               type="number"
               step="0.01"
@@ -428,7 +429,7 @@ function ReviewRow({
               value={value}
               onChange={(e) => onChange(e.target.value)}
               aria-label={t.admin.cycleReview.finalPriceAria(r.name)}
-              className="mt-0.5 h-11 w-[96px] rounded-lg border border-border px-2 text-right text-[14px] text-foreground focus:border-primary-text"
+              className="mt-0.5 h-11 w-[96px] px-2 text-right focus:border-primary-text"
             />
             {changed && (
               <div className={`mt-1 text-label font-semibold ${delta >= 0 ? "text-primary-text" : "text-accent-text"}`}>

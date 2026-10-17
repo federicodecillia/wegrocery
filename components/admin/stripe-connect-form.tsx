@@ -6,8 +6,9 @@ import { confirm } from "@/components/ui/confirm-dialog";
 import { toast } from "@/components/ui/toast";
 import { adminConnectStripe, adminDisconnectStripe } from "@/lib/actions/admin-stripe";
 import { t } from "@/lib/i18n";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
-const labelCls = "mb-1 block text-label font-semibold uppercase tracking-wide text-secondary-foreground";
 const helpCls = "mt-1 text-label leading-snug text-secondary-foreground";
 
 // The key field of the Stripe card (stripe-connection-card.tsx), and the
@@ -67,11 +68,11 @@ export function StripeConnectForm({
   return (
     <div className="mt-3">
       <form onSubmit={handleSubmit}>
-        <label htmlFor="stripe-key" className={labelCls}>
+        <Label htmlFor="stripe-key">
           {label}
-        </label>
+        </Label>
         <div className="flex flex-col gap-2 sm:flex-row">
-          <input
+          <Input
             id="stripe-key"
             name="key"
             type="password"
@@ -83,7 +84,7 @@ export function StripeConnectForm({
             required
             aria-describedby="stripe-key-help"
             aria-invalid={error ? true : undefined}
-            className="min-h-11 w-full min-w-0 flex-1 rounded-lg border border-border px-3 py-2 tabular-nums text-[13px] text-foreground"
+            className="min-h-11 min-w-0 flex-1 tabular-nums"
           />
           <button
             type="submit"

@@ -6,6 +6,7 @@ import { startOnlineTopup } from "@/lib/actions/topup";
 import { t } from "@/lib/i18n";
 import { formatDecimalInput, formatMoney } from "@/lib/i18n/format";
 import type { TopupPreset } from "@/lib/payments/config";
+import { Input } from "@/components/ui/input";
 
 type Props = { presets: TopupPreset[]; minCents: number; maxCents: number };
 
@@ -82,13 +83,13 @@ export function TopupForm({ presets, minCents, maxCents }: Props) {
       <label className="mb-1 block font-mono text-label uppercase tracking-[0.1em] text-secondary-foreground" htmlFor="topup-amount">
         {t.topup.otherAmount}
       </label>
-      <input
+      <Input
         id="topup-amount"
         type="text"
         inputMode="decimal"
         value={amount}
         onChange={(e) => setAmount(e.target.value)}
-        className="mb-1 w-full rounded-xl border border-border px-3 py-2.5 tabular-nums text-[15px]"
+        className="mb-1 rounded-xl py-2.5 tabular-nums text-[15px]"
       />
       <p className="mb-4 text-[12px] text-secondary-foreground">
         {t.topup.amountRange(formatMoney(minCents / 100), formatMoney(maxCents / 100))}

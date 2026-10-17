@@ -14,6 +14,9 @@ import {
 import { adminHref } from "@/lib/admin/nav";
 import { t } from "@/lib/i18n";
 import { useCloseCreate } from "./create-toggle";
+import { Input } from "@/components/ui/input";
+import { labelClass } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 type Supplier = {
   supplierId: string;
@@ -72,10 +75,6 @@ export function FornitoriForm({
     });
   }
 
-  const inputCls =
-    "w-full rounded-lg border border-border px-3 py-2 text-[13px] text-foreground";
-  const labelCls = "mb-1 block text-label font-semibold uppercase tracking-wide text-secondary-foreground";
-
   return (
     <form
       onSubmit={handleSubmit}
@@ -97,78 +96,72 @@ export function FornitoriForm({
         <div className="grid grid-cols-2 gap-3">
           <div className="col-span-2">
             <label className="block">
-              <span className={labelCls}>{t.admin.suppliers.nameLabel}
+              <span className={labelClass}>{t.admin.suppliers.nameLabel}
               </span>
-              <input name="name" required defaultValue={supplier?.name} className={inputCls} />
+              <Input name="name" required defaultValue={supplier?.name} />
             </label>
           </div>
           <div>
             <label className="block">
-              <span className={labelCls}>{t.admin.suppliers.categoryLabel}
+              <span className={labelClass}>{t.admin.suppliers.categoryLabel}
               </span>
-              <input
+              <Input
                 name="macroCategory"
                 placeholder={t.admin.suppliers.categoryPlaceholder}
                 defaultValue={supplier?.macroCategory ?? ""}
-                className={inputCls}
               />
             </label>
           </div>
           <div>
             <label className="block">
-              <span className={labelCls}>{t.admin.suppliers.contactLabel}
+              <span className={labelClass}>{t.admin.suppliers.contactLabel}
               </span>
-              <input
+              <Input
                 name="contactName"
                 defaultValue={supplier?.contactName ?? ""}
-                className={inputCls}
               />
             </label>
           </div>
           <div>
             <label className="block">
-              <span className={labelCls}>{t.admin.suppliers.phoneLabel}
+              <span className={labelClass}>{t.admin.suppliers.phoneLabel}
               </span>
-              <input
+              <Input
                 name="phone"
                 type="tel"
                 defaultValue={supplier?.phone ?? ""}
-                className={inputCls}
               />
             </label>
           </div>
           <div>
             <label className="block">
-              <span className={labelCls}>{t.admin.suppliers.emailLabel}
+              <span className={labelClass}>{t.admin.suppliers.emailLabel}
               </span>
-              <input
+              <Input
                 name="email"
                 type="email"
                 defaultValue={supplier?.email ?? ""}
-                className={inputCls}
               />
             </label>
           </div>
           <div className="col-span-2">
             <label className="block">
-              <span className={labelCls}>{t.admin.suppliers.addressLabel}
+              <span className={labelClass}>{t.admin.suppliers.addressLabel}
               </span>
-              <input
+              <Input
                 name="address"
                 defaultValue={supplier?.address ?? ""}
-                className={inputCls}
               />
             </label>
           </div>
           <div className="col-span-2">
             <label className="block">
-              <span className={labelCls}>{t.admin.suppliers.notesLabel}
+              <span className={labelClass}>{t.admin.suppliers.notesLabel}
               </span>
-              <textarea
+              <Textarea
                 name="notes"
                 rows={2}
                 defaultValue={supplier?.notes ?? ""}
-                className={inputCls}
               />
             </label>
           </div>
@@ -343,12 +336,12 @@ export function FornitoriList({
   return (
     <div>
       <div className="mb-4">
-        <input
+        <Input
           type="text"
           placeholder={t.admin.suppliers.searchPlaceholder}
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
-          className="w-full rounded-xl border border-border px-4 py-2.5 text-[13px] text-foreground"
+          className="rounded-xl px-4 py-2.5"
         />
       </div>
       {renderGroup(t.admin.suppliers.groupActive, active)}

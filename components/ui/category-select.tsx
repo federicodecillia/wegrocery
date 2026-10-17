@@ -4,6 +4,7 @@ import { X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { t } from "@/lib/i18n";
 import { canonicalizeCategory, normalizeCategory } from "@/lib/utils";
+import { Input } from "./input";
 
 /**
  * Built-in suggestions, ordered by typical GAS-shopping prevalence.
@@ -106,7 +107,7 @@ export function CategorySelect({ name, value, extra = [], placeholder = t.common
   }
 
   const triggerCls =
-    "flex w-full items-center justify-between rounded-lg border border-border bg-card px-3 py-2 text-left text-[13px] text-foreground";
+    "flex min-h-(--control-h) w-full items-center justify-between rounded-lg border border-input bg-card px-3 py-2 text-left text-[14px] text-foreground";
 
   return (
     <div ref={rootRef} className="relative">
@@ -150,7 +151,7 @@ export function CategorySelect({ name, value, extra = [], placeholder = t.common
           <div className="border-t border-border bg-background">
             {adding ? (
               <div className="flex items-center gap-1 p-2">
-                <input
+                <Input
                   ref={newInputRef}
                   type="text"
                   value={newCat}
@@ -162,7 +163,7 @@ export function CategorySelect({ name, value, extra = [], placeholder = t.common
                     }
                   }}
                   placeholder={t.common.newCategoryPlaceholder}
-                  className="flex-1 rounded-md border border-border bg-card px-2 py-1 text-[12px]"
+                  className="min-h-0 flex-1 rounded-md px-2 py-1 text-[12px]"
                 />
                 <button
                   type="button"

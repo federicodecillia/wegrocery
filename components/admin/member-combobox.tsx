@@ -4,6 +4,8 @@ import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { t } from "@/lib/i18n";
 import { formatMoney } from "@/lib/i18n/format";
 import { filterMembers } from "./member-search";
+import { Input } from "@/components/ui/input";
+import { Label, labelClass } from "@/components/ui/label";
 
 export type PickerMember = {
   memberId: string;
@@ -105,7 +107,7 @@ export function MemberCombobox({ members, value, onChange, label }: Props) {
   if (value) {
     return (
       <div>
-        <span id={`${baseId}-label`} className="mb-1 block text-label font-semibold uppercase tracking-wide text-secondary-foreground">
+        <span id={`${baseId}-label`} className={labelClass}>
           {label}
         </span>
         <div
@@ -142,10 +144,10 @@ export function MemberCombobox({ members, value, onChange, label }: Props) {
 
   return (
     <div className="relative">
-      <label htmlFor={inputId} className="mb-1 block text-label font-semibold uppercase tracking-wide text-secondary-foreground">
+      <Label htmlFor={inputId}>
         {label}
-      </label>
-      <input
+      </Label>
+      <Input
         ref={inputRef}
         id={inputId}
         type="text"
@@ -170,7 +172,6 @@ export function MemberCombobox({ members, value, onChange, label }: Props) {
         onClick={() => setOpen(true)}
         onBlur={() => setOpen(false)}
         onKeyDown={handleKeyDown}
-        className="w-full rounded-lg border border-border px-3 py-2 text-[13px] text-foreground placeholder:text-muted-foreground"
       />
       <p className="sr-only" aria-live="polite">
         {open ? t.admin.treasury.memberResults(matches.length) : ""}

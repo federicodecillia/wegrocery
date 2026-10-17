@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { t } from "@/lib/i18n";
+import { Input } from "@/components/ui/input";
 
 type FilterCycle = { cycleId: string; title: string };
 type FilterSupplier = { supplierId: string; name: string };
@@ -161,13 +162,13 @@ function MultiSelect({
       {open && (
         <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-[280px] overflow-hidden rounded-xl border border-border bg-card shadow-lg">
           <div className="border-b border-border p-2">
-            <input
+            <Input
               type="search"
               autoFocus
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t.admin.stats.searchFilter(label.toLowerCase())}
-              className="w-full rounded-lg border border-border px-2 py-1 text-[12px]"
+              className="px-2 py-1 text-[12px]"
             />
             {selected.length > 0 && (
               <button

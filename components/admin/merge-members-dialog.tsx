@@ -8,6 +8,7 @@ import { formatMoney } from "@/lib/i18n/format";
 import { toast } from "@/components/ui/toast";
 import { t } from "@/lib/i18n";
 import { MemberCombobox, type PickerMember } from "./member-combobox";
+import { labelClass } from "@/components/ui/label";
 
 // Admin -> Members -> Merge: one person, two accounts. The admin picks the
 // account that stays; the server shows what will happen (previewMemberMerge)
@@ -106,7 +107,7 @@ export function MergeMembersDialog({
 
         {absorbed && (
           <div>
-            <span className="mb-1 block text-label font-semibold uppercase tracking-wide text-secondary-foreground">
+            <span className={labelClass}>
               {m.absorbedLabel}
             </span>
             <div className="flex items-center justify-between gap-2 rounded-lg border border-border bg-background px-3 py-2">
@@ -152,7 +153,7 @@ export function MergeMembersDialog({
           <>
             {preview.aliasOptions.length > 0 && (
               <fieldset>
-                <legend className="mb-1 block text-label font-semibold uppercase tracking-wide text-secondary-foreground">
+                <legend className={labelClass}>
                   {m.aliasLabel}
                 </legend>
                 <div className="space-y-1">

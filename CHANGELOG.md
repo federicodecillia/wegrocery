@@ -39,6 +39,8 @@ A bullet that only matters to whoever hosts, runs or develops the app
 - ✏️ **No more long dashes.** A missing value in tables and lists is now shown as a plain "-", and the version titles on the What's new page use the same short dash.
 - [tech] 🔘 **Buttons on shadcn and Base UI.** `Button` is now shadcn's Button on Base UI with `class-variance-authority` (`buttonVariants` replaces `buttonClass`; `neutral` becomes `default`, `danger` becomes `destructive`); buttons look and behave as before.
 - [tech] 🗂️ **Card, Badge and Toaster in the shadcn shape.** `CardBody` becomes `CardContent`, `Badge` takes `variant` (`default`, `brand`, `accent`, `destructive`) instead of `tone`, and the Toaster moves to `components/ui/sonner.tsx`; cards, badges and notices look the same.
+- 📝 **Clearer form fields.** Field borders are now darker, so the boxes you type in are easier to see, and lists to choose from show the same arrow everywhere.
+- [tech] 🧾 **Fields on shadcn.** `Input` (on Base UI Input), `Textarea`, `NativeSelect` and `Label` in `components/ui/` replace the forms' own `inputCls` and `labelCls`; field borders move from `border` to the 3:1 `input` token, and the design guard refuses raw text inputs, textareas and selects.
 
 ## [1.30.1] - 2026-10-17
 

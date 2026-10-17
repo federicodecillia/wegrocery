@@ -202,6 +202,17 @@ describe("design guard", () => {
     expect(hits(/<span aria-hidden>[✕⋯✎]<\/span>|^\s*[✕⋯✎]( \{|$)/u)).toEqual([]);
   });
 
+  it("draws text fields with Input, Textarea and NativeSelect (Playbook 2.7)", () => {
+    // The components carry the `input` border (3:1 on the page and cards,
+    // WCAG 1.4.11). Checkboxes, radios, files, colours, ranges and hidden
+    // inputs stay native; a raw field that truly needs to stay raw says why
+    // on the line above with "design-guard: raw field".
+    const offenders = files
+      .filter((f) => !f.includes("components/ui/"))
+      .flatMap((f) => rawFields(f, readFileSync(f, "utf8")));
+    expect(offenders).toEqual([]);
+  });
+
   it("names every button that shows only a glyph (✕, ✎, +...)", () => {
     expect(files.flatMap((f) => glyphOnlyButtons(f, readFileSync(f, "utf8")))).toEqual([]);
   });
@@ -231,6 +242,33 @@ function glyphOnlyButtons(file: string, src: string): string[] {
       out.push(`${file}:${src.slice(0, i).split("\n").length}`);
     }
     i = close;
+  }
+  return out;
+}
+
+const NATIVE_INPUT_TYPES = /^(checkbox|radio|file|hidden|color|range)$/;
+
+// Raw <input> (text-like), <textarea> and <select> elements, comments left out.
+function rawFields(file: string, src: string): string[] {
+  // A comment opens after a space, a brace or a line start: "image/*" and
+  // "https://" are not comments.
+  const code = src
+    .replace(/(?<=^|[{\s])\/\*[\s\S]*?\*\//gm, (c) => c.replace(/[^\n]/g, " "))
+    .replace(/(?<=^|\s)\/\/[^\n]*/gm, "");
+  const lines = src.split("\n");
+  const out: string[] = [];
+  for (const m of code.matchAll(/<(input|textarea|select)(?=[\s/>])/g)) {
+    const line = code.slice(0, m.index).split("\n").length;
+    if (/design-guard: raw field/.test(lines[line - 2] ?? "")) continue;
+    if (m[1] === "input") {
+      // The opening tag ends at the first ">" that is not an arrow's.
+      let end = m.index;
+      do end = code.indexOf(">", end + 1);
+      while (end !== -1 && code[end - 1] === "=");
+      const type = code.slice(m.index, end).match(/\stype="([^"]*)"/)?.[1];
+      if (type && NATIVE_INPUT_TYPES.test(type)) continue;
+    }
+    out.push(`${file}:${line} <${m[1]}>`);
   }
   return out;
 }

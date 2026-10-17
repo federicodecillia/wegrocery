@@ -8,6 +8,8 @@ import { formatEur, getProductEmoji } from "@/lib/utils";
 import { toast } from "@/components/ui/toast";
 import { CatalogCsvActions, CatalogProductForm, GuidedImportButton } from "./prodotti-forms";
 import { t } from "@/lib/i18n";
+import { NativeSelect } from "@/components/ui/native-select";
+import { labelClass } from "@/components/ui/label";
 
 type SupplierWithCatalog = {
   supplier: {
@@ -107,13 +109,12 @@ export function SupplierCatalogList({
           <div className="mt-2 space-y-3">
             <p className="text-label text-secondary-foreground">{t.admin.products.otherFormatsHint}</p>
             <label className="block">
-              <span className="mb-1 block text-label font-semibold uppercase tracking-wide text-secondary-foreground">
+              <span className={labelClass}>
                 {t.admin.products.uploadSupplierLabel}
               </span>
-              <select
+              <NativeSelect
                 value={uploadSupplierId}
                 onChange={(e) => setUploadSupplierId(e.target.value)}
-                className="w-full rounded-lg border border-border px-3 py-2 text-[13px] text-foreground"
               >
                 {suppliers.length === 0 ? (
                   <option value="">{t.admin.products.noSupplierAvailable}</option>
@@ -124,7 +125,7 @@ export function SupplierCatalogList({
                     </option>
                   ))
                 )}
-              </select>
+              </NativeSelect>
             </label>
             <CatalogCsvActions supplierId={uploadSupplierId} />
           </div>
@@ -150,13 +151,12 @@ export function SupplierCatalogList({
 
         <div className="grid gap-3">
           <label className="block">
-            <span className="mb-1 block text-label font-semibold uppercase tracking-wide text-secondary-foreground">
+            <span className={labelClass}>
               {t.admin.products.supplierFilter}
             </span>
-            <select
+            <NativeSelect
               value={supplierFilter}
               onChange={(e) => setSupplierFilter(e.target.value)}
-              className="w-full rounded-lg border border-border px-3 py-2 text-[13px] text-foreground"
             >
               <option value={ALL}>{t.admin.products.allSuppliers}</option>
               {suppliers.map((supplier) => (
@@ -164,18 +164,17 @@ export function SupplierCatalogList({
                   {supplier.name}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
           </label>
 
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="block">
-              <span className="mb-1 block text-label font-semibold uppercase tracking-wide text-secondary-foreground">
+              <span className={labelClass}>
                 {t.admin.products.categoryFilter}
               </span>
-              <select
+              <NativeSelect
                 value={categoryFilter}
                 onChange={(e) => setCategoryFilter(e.target.value)}
-                className="w-full rounded-lg border border-border px-3 py-2 text-[13px] text-foreground"
               >
                 <option value={ALL}>{t.admin.products.allCategories}</option>
                 {categories.map((category) => (
@@ -183,21 +182,20 @@ export function SupplierCatalogList({
                     {category}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             </label>
 
             <label className="block">
-              <span className="mb-1 block text-label font-semibold uppercase tracking-wide text-secondary-foreground">
+              <span className={labelClass}>
                 {t.admin.products.groupBy}
               </span>
-              <select
+              <NativeSelect
                 value={groupBy}
                 onChange={(e) => setGroupBy(e.target.value as GroupBy)}
-                className="w-full rounded-lg border border-border px-3 py-2 text-[13px] text-foreground"
               >
                 <option value="category">{t.admin.products.groupByCategory}</option>
                 <option value="supplier">{t.admin.products.groupBySupplier}</option>
-              </select>
+              </NativeSelect>
             </label>
           </div>
         </div>

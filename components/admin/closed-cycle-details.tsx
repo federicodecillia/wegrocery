@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { EditClosedOrderModal } from "./edit-closed-order-modal";
 import { t } from "@/lib/i18n";
 import { closedCycleMemberRows, closedCycleMemberTotal } from "@/lib/closed-cycle-totals";
+import { Input } from "@/components/ui/input";
 
 type OrderDetail = {
   orderLineId: string;
@@ -130,13 +131,13 @@ export function CycleOrdersByMember({
                 <label className="sr-only" htmlFor={`orders-search-${cycleId}`}>
                   {c.searchMember}
                 </label>
-                <input
+                <Input
                   id={`orders-search-${cycleId}`}
                   type="search"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder={c.searchMember}
-                  className="min-h-(--control-h) w-full rounded-xl border border-border bg-card px-3 text-[13px] placeholder:text-muted-foreground"
+                  className="rounded-xl"
                 />
               </>
             )}
@@ -430,18 +431,18 @@ function OrderLineEditForm({
       <div className="grid grid-cols-2 gap-2">
         <label className="flex flex-col gap-0.5 text-label font-semibold uppercase tracking-wide text-secondary-foreground">
           {t.admin.closedCycleDetails.qtyReceived(unit)}
-          <input
+          <Input
             type="text"
             inputMode="decimal"
             value={qty}
             onChange={(e) => onQtyChange(e.target.value)}
             disabled={isPending}
-            className="min-h-11 rounded-md border border-border bg-card px-2 py-1.5 text-[14px] tabular-nums text-foreground"
+            className="min-h-11 rounded-md px-2 py-1.5 tabular-nums"
           />
         </label>
         <label className="flex flex-col gap-0.5 text-label font-semibold uppercase tracking-wide text-secondary-foreground">
           {t.admin.closedCycleDetails.totalEur}
-          <input
+          <Input
             type="text"
             inputMode="decimal"
             value={total}
@@ -450,7 +451,7 @@ function OrderLineEditForm({
               setTotalTouched(true);
             }}
             disabled={isPending}
-            className="min-h-11 rounded-md border border-border bg-card px-2 py-1.5 text-[14px] tabular-nums text-foreground"
+            className="min-h-11 rounded-md px-2 py-1.5 tabular-nums"
           />
         </label>
       </div>

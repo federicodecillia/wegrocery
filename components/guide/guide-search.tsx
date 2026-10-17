@@ -7,6 +7,7 @@ import { t } from "@/lib/i18n";
 import { recordGuideSearchMiss } from "@/lib/actions/guide";
 import { searchGuide, type GuideSearchEntry } from "@/lib/guide/search";
 import { missQuery } from "@/lib/guide/search-misses";
+import { Input } from "@/components/ui/input";
 
 type Props = {
   index: GuideSearchEntry[];
@@ -47,7 +48,7 @@ export function GuideSearch({ index, synonyms, stopwords, topicTitles, children 
           {t.guide.searchLabel}
         </label>
         <Search aria-hidden className="pointer-events-none absolute left-4 top-1/2 size-4.5 -translate-y-1/2 text-muted-foreground" />
-        <input
+        <Input
           id="guide-search"
           type="search"
           value={query}
@@ -55,7 +56,7 @@ export function GuideSearch({ index, synonyms, stopwords, topicTitles, children 
           placeholder={t.guide.searchPlaceholder}
           autoComplete="off"
           enterKeyHint="search"
-          className="w-full rounded-full border border-border bg-card py-3 pl-11 pr-11 text-[14px] text-foreground shadow-card placeholder:text-muted-foreground focus:border-primary [&::-webkit-search-cancel-button]:hidden"
+          className="rounded-full py-3 pl-11 pr-11 shadow-card focus:border-primary [&::-webkit-search-cancel-button]:hidden"
         />
         {searching && (
           <button

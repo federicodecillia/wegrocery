@@ -13,6 +13,9 @@ import type { DistintaImportPreview } from "@/lib/csv/distinta-parser";
 import { DISTINTA_ACCEPT, DistintaPreviewPanel, readFileAsBase64 } from "@/components/admin/distinta-preview";
 import { toast } from "@/components/ui/toast";
 import { t } from "@/lib/i18n";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 // Admin → Ciclo → Fornitore: every supplier action on a closed cycle (steps 1
 // and 2 also on an open cycle past its order deadline), as three
@@ -162,9 +165,6 @@ export function SupplierSteps({ cycleId, cycleOpen = false }: { cycleId: string;
     });
   }
 
-  const labelCls = "block text-label font-semibold uppercase tracking-wide text-secondary-foreground";
-  const inputCls =
-    "w-full rounded-lg border border-border bg-card min-h-11 px-3 py-2 text-[14px] tabular-nums text-foreground disabled:bg-background";
   const sa = t.admin.supplierActions;
 
   return (
@@ -185,51 +185,51 @@ export function SupplierSteps({ cycleId, cycleOpen = false }: { cycleId: string;
         ) : (
           <div className="space-y-2.5">
             <div>
-              <label htmlFor="sup-mail-to" className={labelCls}>{t.admin.supplierActions.recipientLabel}</label>
-              <input
+              <Label htmlFor="sup-mail-to">{t.admin.supplierActions.recipientLabel}</Label>
+              <Input
                 id="sup-mail-to"
                 type="email"
                 value={to}
                 onChange={(e) => setTo(e.target.value)}
                 disabled={sending}
-                className={inputCls}
+                className="min-h-11"
               />
             </div>
             <div>
-              <label htmlFor="sup-mail-from" className={labelCls}>{t.admin.supplierActions.senderLabel}</label>
-              <input
+              <Label htmlFor="sup-mail-from">{t.admin.supplierActions.senderLabel}</Label>
+              <Input
                 id="sup-mail-from"
                 type="email"
                 value={from}
                 onChange={(e) => setFrom(e.target.value)}
                 disabled={sending}
                 placeholder={t.admin.supplierActions.senderPlaceholder}
-                className={inputCls}
+                className="min-h-11"
               />
               <p className="mt-0.5 text-label text-muted-foreground">
                 {t.admin.supplierActions.senderHint}
               </p>
             </div>
             <div>
-              <label htmlFor="sup-mail-cc" className={labelCls}>{t.admin.supplierActions.ccLabel}</label>
-              <textarea
+              <Label htmlFor="sup-mail-cc">{t.admin.supplierActions.ccLabel}</Label>
+              <Textarea
                 id="sup-mail-cc"
                 value={cc}
                 onChange={(e) => setCc(e.target.value)}
                 disabled={sending}
                 rows={2}
-                className={`${inputCls} resize-none`}
+                className="resize-none"
               />
             </div>
             <div>
-              <label htmlFor="sup-mail-subject" className={labelCls}>{t.admin.supplierActions.subjectLabel}</label>
-              <input
+              <Label htmlFor="sup-mail-subject">{t.admin.supplierActions.subjectLabel}</Label>
+              <Input
                 id="sup-mail-subject"
                 type="text"
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
                 disabled={sending}
-                className={inputCls}
+                className="min-h-11"
               />
             </div>
             <button

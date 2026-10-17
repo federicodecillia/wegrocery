@@ -16,6 +16,8 @@ import { formatEur, getProductEmoji, normalizeCategory } from "@/lib/utils";
 import type { CatalogProductItem } from "@/lib/db/queries";
 import { ImportListingWizard } from "./import-listing-wizard";
 import { t } from "@/lib/i18n";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 // Help copy shared by every product form (catalog + cycle edit). Centralising
 // it keeps the wording consistent across the admin UI.
@@ -92,10 +94,6 @@ export function CatalogProductForm({
     });
   }
 
-  const inputCls =
-    "w-full rounded-lg border border-border px-3 py-2 text-[13px] text-foreground";
-  const labelCls = "mb-1 block text-label font-semibold uppercase tracking-wide text-secondary-foreground";
-
   return (
     <form onSubmit={handleSubmit} className="mb-4 rounded-xl border border-border bg-card p-4">
       <div className="mb-4 flex items-center justify-between">
@@ -110,24 +108,23 @@ export function CatalogProductForm({
       <div className="grid grid-cols-2 gap-3">
         <div className="col-span-2 flex items-end gap-3">
           <div className="flex-1">
-            <label className={labelCls}>
+            <Label>
               {t.admin.products.nameLabel}<FieldHelp text={HELP.nome} />
-            </label>
-            <input
+            </Label>
+            <Input
               name="name"
               required
               defaultValue={product?.name}
               placeholder={t.admin.products.namePlaceholder}
-              className={inputCls}
               onChange={(e) => {
                 if (!emojiTouched) setCurrentEmoji(getProductEmoji(e.target.value));
               }}
             />
           </div>
           <div className="w-[64px]">
-            <label className={labelCls}>
+            <Label>
               {t.admin.products.iconLabel}<FieldHelp text={HELP.icona} />
-            </label>
+            </Label>
             <EmojiPicker
               name="emoji"
               value={currentEmoji}
@@ -139,59 +136,55 @@ export function CatalogProductForm({
           </div>
         </div>
         <div className="col-span-2">
-          <label className={labelCls}>
+          <Label>
             {t.admin.products.variantLabel}<FieldHelp text={HELP.varieta} />
-          </label>
-          <input
+          </Label>
+          <Input
             name="variant"
             defaultValue={product?.variant ?? ""}
             placeholder={t.admin.products.variantPlaceholder}
-            className={inputCls}
           />
         </div>
         <div>
-          <label className={labelCls}>
+          <Label>
             {t.admin.products.formatLabel}<FieldHelp text={HELP.formato} />
-          </label>
-          <input
+          </Label>
+          <Input
             name="format"
             placeholder={t.admin.products.formatPlaceholder}
             defaultValue={product?.format ?? ""}
-            className={inputCls}
           />
         </div>
         <div>
-          <label className={labelCls}>
+          <Label>
             {t.admin.products.priceLabel}<FieldHelp text={HELP.prezzo} />
-          </label>
-          <input
+          </Label>
+          <Input
             name="unitPrice"
             type="number"
             step="0.01"
             required
             defaultValue={product?.unitPrice}
             placeholder={t.admin.products.pricePlaceholder}
-            className={inputCls}
           />
         </div>
         <div className="col-span-2">
-          <label className={labelCls}>
+          <Label>
             {t.admin.products.priceKgLabel} <span className="ml-1 text-muted-foreground normal-case">{t.admin.products.priceKgOptional}</span>
             <FieldHelp text={HELP.prezzoKg} />
-          </label>
-          <input
+          </Label>
+          <Input
             name="pricePerKg"
             type="number"
             step="0.01"
             defaultValue={product?.pricePerKg ?? ""}
             placeholder={t.admin.products.priceKgPlaceholder}
-            className={inputCls}
           />
         </div>
         <div className="col-span-2">
-          <label className={labelCls}>
+          <Label>
             {t.admin.products.categoryFilter}<FieldHelp text={HELP.categoria} />
-          </label>
+          </Label>
           <CategorySelect
             name="category"
             value={product?.category ?? ""}
@@ -199,14 +192,13 @@ export function CatalogProductForm({
           />
         </div>
         <div className="col-span-2">
-          <label className={labelCls}>
+          <Label>
             {t.admin.products.notesLabel}<FieldHelp text={HELP.note} />
-          </label>
-          <input
+          </Label>
+          <Input
             name="notes"
             defaultValue={product?.notes ?? ""}
             placeholder={t.admin.products.notesCatalogPlaceholder}
-            className={inputCls}
           />
         </div>
       </div>
@@ -221,9 +213,6 @@ export function CatalogProductForm({
     </form>
   );
 }
-
-
-
 
 // ── CSV Import/Export ────────────────────────────────────────────────────────
 
@@ -500,10 +489,6 @@ export function EditCycleProductForm({
     });
   }
 
-  const inputCls =
-    "w-full rounded-lg border border-border px-3 py-2 text-[13px] text-foreground";
-  const labelCls = "mb-1 block text-label font-semibold uppercase tracking-wide text-secondary-foreground";
-
   return (
     <form onSubmit={handleSubmit} className="my-2 rounded-lg border border-border bg-background p-3 shadow-sm">
       <div className="mb-2 flex items-center justify-between">
@@ -516,32 +501,31 @@ export function EditCycleProductForm({
 
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <div className="col-span-2 sm:col-span-4">
-          <label className={labelCls}>
+          <Label>
             {t.admin.products.nameLabel}<FieldHelp text={HELP.nome} />
-          </label>
-          <input name="name" required defaultValue={product.name} className={inputCls} />
+          </Label>
+          <Input name="name" required defaultValue={product.name} />
         </div>
         <div className="col-span-2 sm:col-span-2">
-          <label className={labelCls}>
+          <Label>
             {t.admin.products.variantLabel}<FieldHelp text={HELP.varieta} />
-          </label>
-          <input name="variant" defaultValue={product.variant ?? ""} className={inputCls} />
+          </Label>
+          <Input name="variant" defaultValue={product.variant ?? ""} />
         </div>
         <div className="col-span-2 sm:col-span-2">
-          <label className={labelCls}>
+          <Label>
             {t.admin.products.formatLabel}<FieldHelp text={HELP.formato} />
-          </label>
-          <input
+          </Label>
+          <Input
             name="format"
             placeholder={t.admin.products.formatPlaceholder}
             defaultValue={product.format ?? ""}
-            className={inputCls}
           />
         </div>
         <div className="col-span-2 sm:col-span-2">
-          <label className={labelCls}>
+          <Label>
             {t.admin.products.categoryFilter}<FieldHelp text={HELP.categoria} />
-          </label>
+          </Label>
           <CategorySelect
             name="category"
             value={product.category ?? ""}
@@ -549,36 +533,34 @@ export function EditCycleProductForm({
           />
         </div>
         <div className="col-span-1 sm:col-span-1">
-          <label className={labelCls}>
+          <Label>
             {t.admin.products.priceLabel}<FieldHelp text={HELP.prezzo} />
-          </label>
-          <input
+          </Label>
+          <Input
             name="unitPrice"
             type="number"
             step="0.01"
             required
             defaultValue={product.unitPrice}
-            className={inputCls}
           />
         </div>
         <div className="col-span-1 sm:col-span-1">
-          <label className={labelCls}>
+          <Label>
             {t.admin.products.priceKgLabel}<FieldHelp text={HELP.prezzoKg} />
-          </label>
-          <input
+          </Label>
+          <Input
             name="pricePerKg"
             type="number"
             step="0.01"
             defaultValue={product.pricePerKg ?? ""}
             placeholder={t.admin.products.priceKgOptional}
-            className={inputCls}
           />
         </div>
         <div className="col-span-2 sm:col-span-4">
-          <label className={labelCls}>
+          <Label>
             {t.admin.products.notesLabel}<FieldHelp text={HELP.note} />
-          </label>
-          <input name="notes" defaultValue={product.notes ?? ""} className={inputCls} />
+          </Label>
+          <Input name="notes" defaultValue={product.notes ?? ""} />
         </div>
       </div>
 

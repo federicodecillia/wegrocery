@@ -8,6 +8,7 @@ import { adminCancelClosedCycle } from "@/lib/actions/admin";
 import { formatMoney } from "@/lib/i18n/format";
 import { toast } from "@/components/ui/toast";
 import { t } from "@/lib/i18n";
+import { Textarea } from "@/components/ui/textarea";
 
 // Entry point for cancelling an already-closed cycle (e.g. the supplier
 // failed to deliver). Only shown for closed cycles — see tab-ciclo.tsx.
@@ -100,13 +101,12 @@ function CancelCycleDialog({
           <label htmlFor="cancel-cycle-reason" className="mb-1 block text-label font-semibold text-secondary-foreground">
             {t.admin.cycleCancel.reasonLabel}
           </label>
-          <textarea
+          <Textarea
             id="cancel-cycle-reason"
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             placeholder={t.admin.cycleCancel.reasonPlaceholder}
             rows={3}
-            className="w-full rounded-lg border border-border bg-card px-3 py-2 text-[14px] text-foreground"
           />
         </div>
 

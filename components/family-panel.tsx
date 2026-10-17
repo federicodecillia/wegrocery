@@ -14,6 +14,7 @@ import {
   removeFromFamily,
 } from "@/lib/actions/family";
 import { t } from "@/lib/i18n";
+import { Input } from "@/components/ui/input";
 
 type Props = {
   enabled: boolean;
@@ -172,14 +173,14 @@ export function FamilyPanel({ enabled, personId, isOwner, people, sent, received
             {t.family.emailLabel}
           </label>
           <div className="mt-1 flex gap-2">
-            <input
+            <Input
               id="family-email"
               type="email"
               required
               autoComplete="off"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="min-w-0 flex-1 rounded-full border border-border px-4 py-2 text-[14px]"
+              className="min-w-0 flex-1 rounded-full px-4"
             />
             <Button type="submit" size="sm" variant="brand" disabled={isPending || !email.trim()}>
               {t.family.send}

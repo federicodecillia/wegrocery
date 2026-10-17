@@ -24,6 +24,7 @@ import { ORDER_SEARCH_MIN_PRODUCTS, filterOrderProducts } from "@/lib/order-filt
 import { CycleNotes } from "@/components/cycle-notes";
 import { HelpLink } from "@/components/guide/help-link";
 import { formatDeadline } from "@/lib/i18n/deadline";
+import { Input } from "@/components/ui/input";
 
 type Product = {
   productId: string;
@@ -655,14 +656,14 @@ export function OrderForm({
           <label htmlFor="order-search" className="sr-only">
             {t.order.searchLabel}
           </label>
-          <input
+          <Input
             id="order-search"
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t.order.searchPlaceholder}
             autoComplete="off"
-            className="min-h-11 w-full rounded-full border border-border bg-card px-4 text-[14px] text-foreground placeholder:text-muted-foreground"
+            className="min-h-11 rounded-full px-4"
           />
         </div>
       )}

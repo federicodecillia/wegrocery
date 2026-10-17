@@ -16,6 +16,8 @@ import type { DuplicatePair } from "@/lib/members/duplicates";
 import { DuplicateMembers } from "./duplicate-members";
 import { MergeMembersDialog } from "./merge-members-dialog";
 import { Sheet } from "@/components/ui/sheet";
+import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
 
 type Member = {
   memberId: string;
@@ -112,11 +114,10 @@ export function SociForm({
             <span className="block mb-1 text-label font-semibold uppercase tracking-wide text-secondary-foreground">
               {t.admin.members.nameLabel}
             </span>
-            <input
+            <Input
               name="fullName"
               required
               defaultValue={member?.fullName}
-              className="w-full rounded-lg border border-border px-3 py-2 text-[13px] text-foreground"
             />
           </label>
         </div>
@@ -125,12 +126,11 @@ export function SociForm({
             <span className="block mb-1 text-label font-semibold uppercase tracking-wide text-secondary-foreground">
               {t.admin.members.emailLabel}
             </span>
-            <input
+            <Input
               name="email"
               type="email"
               required
               defaultValue={member?.email}
-              className="w-full rounded-lg border border-border px-3 py-2 text-[13px] text-foreground"
             />
           </label>
         </div>
@@ -140,12 +140,11 @@ export function SociForm({
               {t.admin.members.aliasEmailLabel}
               <span className="ml-1 font-normal normal-case text-muted-foreground">{t.admin.members.aliasEmailHint}</span>
             </span>
-            <input
+            <Input
               name="aliasEmail"
               type="email"
               defaultValue={member?.aliasEmail ?? ""}
               placeholder={t.admin.members.aliasEmailPlaceholder}
-              className="w-full rounded-lg border border-border px-3 py-2 text-[13px] text-foreground"
             />
           </label>
         </div>
@@ -155,17 +154,16 @@ export function SociForm({
               <span className="block mb-1 text-label font-semibold uppercase tracking-wide text-secondary-foreground">
                 {t.admin.members.roleLabel}
               </span>
-              <select
+              <NativeSelect
                 name="role"
                 defaultValue={normalizeRole(member?.role) ?? DEFAULT_ROLE}
-                className="w-full rounded-lg border border-border px-3 py-2 text-[13px] text-foreground"
               >
                 {ROLES.map((r) => (
                   <option key={r} value={r}>
                     {t.roles[r]}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             </label>
           </div>
           <div>
@@ -173,14 +171,13 @@ export function SociForm({
               <span className="block mb-1 text-label font-semibold uppercase tracking-wide text-secondary-foreground">
                 {t.admin.members.statusLabel}
               </span>
-              <select
+              <NativeSelect
                 name="active"
                 defaultValue={String(member?.active ?? true)}
-                className="w-full rounded-lg border border-border px-3 py-2 text-[13px] text-foreground"
               >
                 <option value="true">{t.admin.members.statusActive}</option>
                 <option value="false">{t.admin.members.statusInactive}</option>
-              </select>
+              </NativeSelect>
             </label>
           </div>
         </div>
@@ -420,12 +417,12 @@ export function SociList({
   return (
     <div>
       <div className="mb-4">
-        <input
+        <Input
           type="search"
           placeholder={t.admin.members.searchPlaceholder}
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
-          className="w-full rounded-xl border border-border bg-card px-4 py-2.5 text-[13px] text-foreground placeholder:text-muted-foreground"
+          className="rounded-xl px-4 py-2.5"
         />
       </div>
       <DuplicateMembers
