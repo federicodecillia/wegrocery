@@ -269,6 +269,13 @@ bug fix, etc.) you must update **both** changelog files:
    - `### Security` / `### Sicurezza` — vulnerability fixes
 5. Write entries from the **user's** perspective, not the developer's.
    Explain what changes for the member or admin, not which file was edited.
+   A bullet that only matters to whoever hosts, runs or develops the app
+   (environment variables, database and migrations, CI, dependencies,
+   monitoring, scripts, refactors) starts with `[tech]` in `CHANGELOG.md` and
+   `[tecnico]` in `CHANGELOG.it.md`, on the same bullet in both (Playbook 4.6,
+   `lib/changelog.test.ts` compares the two shapes, tags included). `/changelog`
+   hides those bullets until "Show technical details" (`?tech=1`), and the
+   Guide's teaser skips them; the GitHub release notes keep them.
 6. House style, enforced by eye (the `/changelog` page renders it):
    - One **italic tagline** on its own line under the version heading, saying
      what the release is about. The parser reads it; `**bold**` is not a tagline.

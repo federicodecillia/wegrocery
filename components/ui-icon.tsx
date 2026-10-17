@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 // contact card): stroke SVGs in the same style as nav-icon.tsx and
 // movement-icon.tsx, so they look the same on every system. Emoji stay for
 // content an admin chose (products, categories, the changelog).
-export type UiIconName = "compass" | "basket" | "wallet" | "users" | "bell" | "user" | "mail" | "box" | "cart" | "book";
+export type UiIconName = "compass" | "basket" | "wallet" | "users" | "bell" | "user" | "mail" | "box" | "cart" | "book" | "wrench";
 
 const PATHS: Record<UiIconName, ReactNode> = {
   compass: (
@@ -72,6 +72,9 @@ const PATHS: Record<UiIconName, ReactNode> = {
       <path d="M4 5a2 2 0 0 1 2-2h14v16H6a2 2 0 0 0-2 2V5z" />
       <path d="M4 19a2 2 0 0 1 2-2h14" />
     </>
+  ),
+  wrench: (
+    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
   ),
 };
 
