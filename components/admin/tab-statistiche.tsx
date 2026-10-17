@@ -117,7 +117,7 @@ function OverviewCards({
     },
     {
       label: t.admin.stats.overviewTopProduct,
-      value: overview.topProductName ?? "—",
+      value: overview.topProductName ?? "-",
       icon: getProductEmoji(overview.topProductName ?? ""),
       tone: "teal" as const,
       hint: overview.topProductQty > 0 ? t.admin.stats.cyclesCountLabel(overview.topProductQty) : undefined,

@@ -1,7 +1,7 @@
 name: CI
 
 # Typecheck, lint and unit tests on every PR to main or staging: pure checks,
-# no secrets, no database. The integration job runs the *.int.test.ts suite on
+# no secrets, no database. The integration job runs the *.integration.test.ts suite on
 # a throwaway Neon branch, then applies every migration to an empty database
 # there (a new installation); it needs NEON_API_KEY (secret) and
 # NEON_PROJECT_ID (variable); without them, e.g. on a fork, it is skipped.
@@ -151,7 +151,7 @@ jobs:
 
       - name: First-day tests on the empty database
         if: steps.neon.outputs.available == 'true'
-        run: INT_TEST_DATABASE_URL="$FRESH_APP_URL" INT_TEST_FRESH=1 INT_TEST_FRESH_RESTRICTED=1 npx vitest run -c vitest.int.config.ts test/int/fresh-install.int.test.ts
+        run: INT_TEST_DATABASE_URL="$FRESH_APP_URL" INT_TEST_FRESH=1 INT_TEST_FRESH_RESTRICTED=1 npx vitest run -c vitest.int.config.ts test/int/fresh-install.integration.test.ts
 
       - name: Money invariants on the new installation
         if: steps.neon.outputs.available == 'true'

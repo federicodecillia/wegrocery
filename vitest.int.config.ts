@@ -1,7 +1,7 @@
 import { defineConfig } from "vitest/config";
 import path from "path";
 
-// Integration tests (*.int.test.ts): the real queries against a throwaway
+// Integration tests (*.integration.test.ts): the real queries against a throwaway
 // Postgres. `npm run test:int`; see test/int/setup.ts for the database rules.
 export default defineConfig({
   resolve: {
@@ -11,7 +11,7 @@ export default defineConfig({
   },
   test: {
     environment: "node",
-    include: ["**/*.int.test.ts"],
+    include: ["**/*.integration.test.ts"],
     exclude: ["node_modules/**", ".next/**", "console/**"],
     setupFiles: ["./test/int/setup.ts"],
     // One database for every file: run them one after the other.

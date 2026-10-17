@@ -5,12 +5,12 @@ Tutte le modifiche importanti all'app WeGrocery sono elencate qui.
 Il formato segue [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 e il versionamento è basato su [Semantic Versioning](https://semver.org/spec/v2.0.0.html):
 
-- **Major** — modifiche grosse che richiedono ai soci di reimparare qualcosa
-- **Minor** — funzionalità nuove, nessuna rottura
-- **Patch** — correzioni di bug, piccoli miglioramenti UI, documentazione
+- **Major**: modifiche grosse che richiedono ai soci di reimparare qualcosa
+- **Minor**: funzionalità nuove, nessuna rottura
+- **Patch**: correzioni di bug, piccoli miglioramenti UI, documentazione
 
 Come si scrivono le voci: una tagline in corsivo sotto il titolo di versione,
-poi un punto per ogni modifica coerente — un'emoji a tema, un **titolo in
+poi un punto per ogni modifica coerente: un'emoji a tema, un **titolo in
 grassetto** e al massimo due righe su cosa vede l'utente. I dettagli tecnici
 stanno nella PR.
 Una voce che conta solo per chi ospita, gestisce o sviluppa l'app (variabili,
@@ -31,15 +31,18 @@ dettagli tecnici", la release su GitHub la tiene.
 ### Modificato
 - 📰 **Le novità parlano ai soci.** La pagina mostra le modifiche che si notano nell'app; quelle per chi la gestisce (server, database, aggiornamenti) stanno dietro "Mostra dettagli tecnici", segnate "Tecnico".
 - [tecnico] 📊 **Le statistiche delle installazioni parlano la lingua della Console FlyLabs.** `/api/instance-stats` accetta anche la firma `x-flylabs-*` e allora risponde con la forma del FlyLabs Kit (`app`, `counts`); la Console WeGrocery manda entrambe e legge entrambe le forme, così le installazioni più vecchie continuano a funzionare. `/api/health` rinuncia dopo 3 secondi a un database che non risponde.
+- [tecnico] 🧪 **I test di integrazione hanno il suffisso FlyLabs.** Ora si chiamano `*.integration.test.ts` (Playbook FlyLabs 5.2); `npm test` continua a escluderli, `npm run test:int` e la CI continuano a eseguirli.
+- [tecnico] 🗄️ **Le migrazioni rinunciano prima su una tabella occupata.** Ogni file di migrazione aspetta un lock al massimo 5 secondi (erano 10) e poi torna indietro per intero; un file con un'istruzione che Postgres non esegue in una transazione (`CREATE INDEX CONCURRENTLY`, `VACUUM`) viene rifiutato prima di eseguire qualsiasi cosa, e dalla 0036 in poi un test vuole il `_down.sql` di ogni migrazione.
+- ✏️ **Niente più trattini lunghi.** Un valore mancante nelle tabelle e negli elenchi ora compare come un semplice "-", e anche i titoli di versione nella pagina delle novità usano il trattino corto.
 
-## [1.30.1] — 17 ottobre 2026
+## [1.30.1] - 17 ottobre 2026
 
 *Manutenzione: nessuna novità da imparare per i soci.*
 
 ### Modificato
 - [tecnico] 🔍 **Il controllo notturno dell'accessibilità guarda tutta la pagina.** Il controllo automatico che ogni notte verifica che l'app sia comoda da usare per tutti ora esamina la pagina intera, senza più falsi allarmi sulle righe nascoste dietro la barra in basso del telefono.
 
-## [1.30.0] — 15 ottobre 2026
+## [1.30.0] - 15 ottobre 2026
 
 *Il menu passa di lato su tablet e computer, e l'ordine al fornitore parte anche prima della chiusura.*
 
@@ -49,7 +52,7 @@ dettagli tecnici", la release su GitHub la tiene.
 ### Modificato
 - 🧭 **Menu di lato su tablet e computer.** Sul tablet il menu è una colonna a sinistra, sul computer un menu laterale con le sezioni admin sotto Admin; l'app usa tutto lo schermo. Sul telefono non cambia nulla.
 
-## [1.29.0] — 15 ottobre 2026
+## [1.29.0] - 15 ottobre 2026
 
 *La distinta del fornitore si carica anche mentre chiudi il ciclo.*
 
@@ -62,7 +65,7 @@ dettagli tecnici", la release su GitHub la tiene.
 ### Modificato
 - [tecnico] 🔐 **I gruppi nuovi partono con un ruolo database limitato.** Un gruppo installato dalla Console WeGrocery ora si collega con un ruolo che legge e scrive i dati ma non può mai cambiare la struttura del database, come fa già Porta Moneta.
 
-## [1.28.0] — 14 ottobre 2026
+## [1.28.0] - 14 ottobre 2026
 
 *L'app ha un tema scuro, e gli aggiornamenti del database sono più sicuri.*
 
@@ -80,7 +83,7 @@ dettagli tecnici", la release su GitHub la tiene.
 ### Risolto
 - [tecnico] 🐞 **Le segnalazioni di errore arrivano a chi mantiene l'app.** Alcuni errori (pagamenti, email di accesso) restavano solo nei registri del server e nessuno veniva avvisato: ora arrivano anche al servizio che li raccoglie, senza dati dei soci.
 
-## [1.27.0] — 12 ottobre 2026
+## [1.27.0] - 12 ottobre 2026
 
 *Ogni nuovo gruppo si configura dall'app: nome, logo, colori e Stripe, con ogni impostazione tecnica spiegata.*
 
@@ -95,7 +98,7 @@ dettagli tecnici", la release su GitHub la tiene.
 ### Risolto
 - 🧾 **Il caricamento della distinta dice perché non c'è niente da applicare.** Al posto di due elenchi vuoti, l'anteprima dice quanti prodotti e soci ha riconosciuto e che gli importi sono già uguali, oppure che nel file non ha trovato niente da confrontare. Un CSV salvato da Excel su Windows non perde più gli accenti nei nomi.
 
-## [1.26.0] — 9 ottobre 2026
+## [1.26.0] - 9 ottobre 2026
 
 *Un'app più ordinata su ogni schermo, il pagamento con carta per un singolo ciclo e la causale del bonifico già compilata.*
 
@@ -131,7 +134,7 @@ dettagli tecnici", la release su GitHub la tiene.
 - 🎨 **Lo stesso aspetto ovunque.** Il saldo ha lo stesso segno e formato in Home, Storico e Ricarica, e gli avvisi di rettifica non scrivono più "€ EUR". Gli ultimi movimenti in Home sono uguali a quelli dello Storico e lo aprono, la guida e le pagine vuote usano le icone dell'app al posto delle emoji, e le schede hanno tutte gli stessi angoli.
 - 🛒 **Ordine e Storico da computer.** Da computer la pagina Ordine tiene il carrello a destra (prodotti scelti, totale, saldo dopo e "Conferma"), accanto al catalogo. Lo Storico mostra l'elenco a sinistra e l'ordine o il movimento scelto a destra; le schede Ordini e Movimenti sono nell'indirizzo, così un link apre quella giusta.
 
-## [1.25.0] — 7 ottobre 2026
+## [1.25.0] - 7 ottobre 2026
 
 *Un benvenuto per chi arriva, e la pagina del gruppo nella guida.*
 
@@ -143,7 +146,7 @@ dettagli tecnici", la release su GitHub la tiene.
 ### Risolto
 - 📱 **Totale dell'ordine su iPhone, stavolta davvero.** Nell'app installata il totale poteva ancora mostrare la cifra vecchia sotto quella nuova; ora totale e saldo si ridisegnano a ogni modifica.
 
-## [1.24.0] — 6 ottobre 2026
+## [1.24.0] - 6 ottobre 2026
 
 *Le tue impostazioni in un posto solo, e una guida in cui cercare.*
 
@@ -154,7 +157,7 @@ dettagli tecnici", la release su GitHub la tiene.
 - 🧭 **Intestazione più pulita.** Email e pulsante Logout lasciano il posto al cerchio del Profilo; le preferenze delle notifiche e la Famiglia ora stanno dentro il Profilo (i vecchi link funzionano ancora).
 - 📖 **Una guida in cui cercare.** La Guida ora ha la ricerca e gli argomenti, con schede passo passo che aprono la pagina giusta dell'app. Il "?" accanto al titolo di Ordine, Ricarica, Famiglia e Notifiche apre la scheda giusta. Parla solo di ciò che il tuo gruppo usa, e le risposte sono aggiornate alle ultime novità.
 
-## [1.23.0] — 6 ottobre 2026
+## [1.23.0] - 6 ottobre 2026
 
 *Ordini in famiglia, e un carrello che non perde le modifiche.*
 
@@ -170,7 +173,7 @@ dettagli tecnici", la release su GitHub la tiene.
 - 🛒 **Il carrello non perde più le modifiche.** Se lo cambi dal telefono e poi salvi dal computer, l'app ti mostra il carrello aggiornato invece di sovrascriverlo.
 - 📱 **Totale dell'ordine leggibile su iPhone.** Aggiungendo un prodotto, il totale e il saldo dopo l'ordine ora si aggiornano correttamente.
 
-## [1.22.0] — 4 ottobre 2026
+## [1.22.0] - 4 ottobre 2026
 
 *Una persona, un account: i doppioni ora si possono unire.*
 
@@ -180,7 +183,7 @@ dettagli tecnici", la release su GitHub la tiene.
 ### Risolto
 - 🗑️ **Si può di nuovo eliminare un socio che non ha mai ordinato.** In Admin → Soci l'eliminazione falliva con un errore del database se l'account aveva ricevuto una notifica (quasi tutti i nuovi ricevono quella del ciclo aperto); ora l'account si elimina insieme alle sue notifiche.
 
-## [1.21.1] — 4 ottobre 2026
+## [1.21.1] - 4 ottobre 2026
 
 *Note che i soci possono leggere, e un elenco soci che sta in un telefono.*
 
@@ -188,7 +191,7 @@ dettagli tecnici", la release su GitHub la tiene.
 - 📝 **Le note arrivano ai soci.** Le note che l'admin scrive su un ciclo ora compaiono in Home e in cima alla pagina Ordine, quelle di ogni prodotto sotto il nome nel modulo d'ordine e nel riepilogo. Prima le vedevano solo gli admin.
 - 📱 **Elenco soci leggibile da telefono.** In Admin → Soci gli indirizzi email non finiscono più sotto i pulsanti: l'elenco mostra nome, ultimo accesso e azioni, gli indirizzi sono nel modulo di modifica, e sugli schermi stretti i pulsanti stanno sotto il nome.
 
-## [1.21.0] — 3 ottobre 2026
+## [1.21.0] - 3 ottobre 2026
 
 *Entrare con il codice dell'email, e l'app sulla schermata Home del telefono.*
 
@@ -199,7 +202,7 @@ dettagli tecnici", la release su GitHub la tiene.
 ### Risolto
 - 🧩 **La descrizione dell'app torna raggiungibile.** Stava dietro l'accesso: un browser che la chiedeva senza sessione (sempre, dalla pagina di accesso) riceveva la pagina di login, quindi l'app non si installava bene.
 
-## [1.20.0] — 1 ottobre 2026
+## [1.20.0] - 1 ottobre 2026
 
 *Notifiche che dicono cosa coprono, una Cassa che dà un nome a ogni movimento e Next.js 16 sotto il cofano.*
 
@@ -215,7 +218,7 @@ dettagli tecnici", la release su GitHub la tiene.
 - 👥 **I dettagli del ciclo chiuso elencano ogni socio addebitato.** Un socio con spedizione o spese di preparazione ma senza più righe d'ordine ora compare nell'elenco, così i soci mostrati tornano con il totale.
 - 💬 **Messaggio sul credito più chiaro.** La scheda dei saldi dice ora che la differenza pagata è un tuo credito; in inglese due messaggi dell'admin indicano anche il tetto delle spese in euro.
 
-## [1.19.0] — 1 ottobre 2026
+## [1.19.0] - 1 ottobre 2026
 
 *Installarla per il proprio gruppo in mezz'ora, e spese di preparazione che diventano un addebito vero e controllato.*
 
@@ -230,7 +233,7 @@ dettagli tecnici", la release su GitHub la tiene.
 - [tecnico] 🧭 **Lo Stato della configurazione trova gli errori del brand.** Un campo che l'app non conosce (un errore di battitura) o un brand che non si legge compaiono, con il motivo, in Impostazioni e in `npm run doctor`.
 - [tecnico] 🏗️ **Migrazioni al build solo in produzione.** Con `MIGRATE_ON_BUILD=true` i build di anteprima non migrano più: lo fanno solo quelli di produzione (e quelli fuori da Vercel).
 
-## [1.18.0] — 1 ottobre 2026
+## [1.18.0] - 1 ottobre 2026
 
 *Pagare ogni ordine con la carta, chiudere i conti a fine ciclo, e un registro che non riscrive mai la storia.*
 
@@ -244,7 +247,7 @@ dettagli tecnici", la release su GitHub la tiene.
 ### Modificato
 - 🧾 **Le correzioni non riscrivono la storia.** Modificare o eliminare un movimento in Cassa, ricalcolare la spedizione di un ciclo chiuso o importare la distinta del fornitore ora annullano il movimento con uno storno e, se serve, aggiungono quello corretto; i soci vedono un solo movimento con "corretto il". Nota di aggiornamento: applicare `drizzle/0023_ledger_append_only.sql` subito prima del deploy (il database rifiuta da quel momento le modifiche ai movimenti passati).
 
-## [1.17.0] — 30 settembre 2026
+## [1.17.0] - 30 settembre 2026
 
 *Accesso con un link via email, e le basi per pagare ogni ordine.*
 
@@ -257,7 +260,7 @@ dettagli tecnici", la release su GitHub la tiene.
 ### Modificato
 - 🔕 **Niente email predefinita all'apertura del ciclo.** Chi non ha scelto riceve l'avviso "ciclo aperto" solo nell'app e può accendere l'email nelle preferenze; chi aveva già scelto mantiene la sua scelta.
 
-## [1.16.1] — 30 settembre 2026
+## [1.16.1] - 30 settembre 2026
 
 *Un layout da computer, e le basi per tenere d'occhio la salute dell'app.*
 
@@ -269,7 +272,7 @@ dettagli tecnici", la release su GitHub la tiene.
 - 🔤 **Testi di lettura un po' più grandi.** Descrizioni ed elenchi nelle pagine dei soci passano da 13 a 14 px.
 - ✉️ **La tua email, senza ingombro.** Da telefono non occupa più una riga sotto il logo: la trovi nella pagina Notifiche.
 
-## [1.16.0] — 30 settembre 2026
+## [1.16.0] - 30 settembre 2026
 
 *Testi che si leggono, con i colori di qualsiasi gruppo.*
 
@@ -281,7 +284,7 @@ dettagli tecnici", la release su GitHub la tiene.
 ### Risolto
 - 💶 **Saldo su una riga.** In Home il saldo non va più a capo dopo il segno nei formati inglesi.
 
-## [1.15.0] — 30 settembre 2026
+## [1.15.0] - 30 settembre 2026
 
 *Rimborsi sulla carta che puoi seguire.*
 
@@ -291,14 +294,14 @@ dettagli tecnici", la release su GitHub la tiene.
 ### Modificato
 - 💳 **Rimborsi sulla carta registrati uno per uno.** Ogni rimborso di una ricarica online viene registrato una volta sola, appena Stripe lo accetta, anche quando arriva in più passaggi (migrazione `0020`).
 
-## [1.14.1] — 30 settembre 2026
+## [1.14.1] - 30 settembre 2026
 
 *Importi più ordinati nelle Impostazioni.*
 
 ### Risolto
 - ⚙️ **Saldo massimo con i centesimi.** Le Impostazioni mostrano un importo salvato come 35,20 € con entrambe le cifre dei centesimi, non più 35,2.
 
-## [1.14.0] — 29 settembre 2026
+## [1.14.0] - 29 settembre 2026
 
 *Le impostazioni dei pagamenti in app, e l'ordine che ti aspetta.*
 
@@ -311,7 +314,7 @@ dettagli tecnici", la release su GitHub la tiene.
 - 💶 **Le ricariche rispettano il saldo massimo.** La ricarica online propone solo quanto ci sta, il bonifico dice quanto puoi ancora ricaricare, e chi ha un debito trova come prima scelta l'importo esatto per saldarlo.
 - 🏦 **La Cassa segnala i saldi sopra il massimo.** Una ricarica registrata in Cassa non viene mai rifiutata, ma l'admin viene avvisato se porta il saldo oltre il massimo, e un nuovo filtro elenca quei soci.
 
-## [1.13.0] — 29 settembre 2026
+## [1.13.0] - 29 settembre 2026
 
 *Una Cassa più completa, e uno storico che torna con il saldo.*
 
@@ -330,14 +333,14 @@ dettagli tecnici", la release su GitHub la tiene.
 - 📧 **Email e alias non si ripetono più tra soci.** Salvare un socio con un'email o un'email secondaria già usata da un altro, anche con maiuscole diverse, viene rifiutato indicando chi la usa (migrazione `0017`).
 - ⚠️ **Messaggi d'errore leggibili.** In produzione i rifiuti previsti (ciclo chiuso, campo mancante, ordine cambiato nel frattempo) mostrano il loro testo invece di un errore generico, e la pagina dell'ordine si ricarica da sola se il ciclo si è chiuso.
 
-## [1.12.2] — 29 settembre 2026
+## [1.12.2] - 29 settembre 2026
 
 *Ricariche online più piccole.*
 
 ### Modificato
 - 💶 **Ricariche online da 0,50 €**, l'importo minimo accettato da Stripe (prima 20 €).
 
-## [1.12.1] — 28 settembre 2026
+## [1.12.1] - 28 settembre 2026
 
 *Dati per la ricarica più chiari.*
 
@@ -345,7 +348,7 @@ dettagli tecnici", la release su GitHub la tiene.
 - 🏦 **IBAN a gruppi di quattro** nella pagina Ricarica, più facile da ricontrollare a occhio; il pulsante Copia lo copia comunque senza spazi.
 - 📖 **Guida e FAQ rimandano alla pagina Ricarica** per il bonifico e il pagamento online.
 
-## [1.12.0] — 28 settembre 2026
+## [1.12.0] - 28 settembre 2026
 
 *Ricarica il saldo online.*
 
@@ -356,7 +359,7 @@ dettagli tecnici", la release su GitHub la tiene.
 ### Modificato
 - 🔒 **I pagamenti online restano legati a Stripe.** In Cassa le ricariche e i rimborsi arrivati da un pagamento online non si possono più modificare o eliminare: i soldi si sono mossi su Stripe, quindi si corregge con un rimborso lì o con una rettifica separata.
 
-## [1.11.0] — 28 settembre 2026
+## [1.11.0] - 28 settembre 2026
 
 *Aperta a tutti i soci con tessera attiva, con flussi di denaro più sicuri.*
 
@@ -383,7 +386,7 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
-## [1.10.3] — 6 settembre 2026
+## [1.10.3] - 6 settembre 2026
 
 *Stesso prodotto, stesso scaffale.*
 
@@ -393,7 +396,7 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
-## [1.10.2] — 30 agosto 2026
+## [1.10.2] - 30 agosto 2026
 
 *Meno verdure perse dentro "Altro".*
 
@@ -403,7 +406,7 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
-## [1.10.1] — 27 agosto 2026
+## [1.10.1] - 27 agosto 2026
 
 *Fare in modo che la casella del fornitore la veda davvero.*
 
@@ -412,7 +415,7 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
-## [1.10.0] — 27 agosto 2026
+## [1.10.0] - 27 agosto 2026
 
 *Una via d'uscita quando un ciclo va storto dopo che è già stato chiuso.*
 
@@ -421,7 +424,7 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
-## [1.9.0] — 7 agosto 2026
+## [1.9.0] - 7 agosto 2026
 
 *Una notifica in meno, e un ingranaggio in meno dietro le quinte.*
 
@@ -431,7 +434,7 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
-## [1.8.1] — 28 luglio 2026
+## [1.8.1] - 28 luglio 2026
 
 *Aggiornamenti di sicurezza per il login e per la gestione delle immagini.*
 
@@ -443,7 +446,7 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
-## [1.8.0] — 20 luglio 2026
+## [1.8.0] - 20 luglio 2026
 
 *Confermare un ordine ora si vede, e puoi ripensarci fino alla chiusura del ciclo.*
 
@@ -468,7 +471,7 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
-## [1.7.0] — 10 luglio 2026
+## [1.7.0] - 10 luglio 2026
 
 *Preferenze notifiche con canale email, e import guidato del listino del fornitore.*
 
@@ -494,7 +497,7 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
-## [1.6.0] — 21 maggio 2026
+## [1.6.0] - 21 maggio 2026
 
 *Distinte fornitore che fanno andata e ritorno, rettifiche riga per riga e statistiche vere.*
 
@@ -526,7 +529,7 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
-## [1.5.0] — 17 maggio 2026
+## [1.5.0] - 17 maggio 2026
 
 *Sistemare l'ordine di un socio dopo la chiusura del ciclo.*
 
@@ -537,7 +540,7 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
-## [1.4.5] — 17 maggio 2026
+## [1.4.5] - 17 maggio 2026
 
 *Una correzione mobile.*
 
@@ -546,7 +549,7 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
-## [1.4.4] — 17 maggio 2026
+## [1.4.4] - 17 maggio 2026
 
 *Una correzione estetica.*
 
@@ -555,7 +558,7 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
-## [1.4.3] — 17 maggio 2026
+## [1.4.3] - 17 maggio 2026
 
 *Un form prodotto più semplice e più spiegato.*
 
@@ -570,7 +573,7 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
-## [1.4.2] — 17 maggio 2026
+## [1.4.2] - 17 maggio 2026
 
 *Scegli un'emoji, e parti dai saldi veri.*
 
@@ -582,7 +585,7 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
-## [1.4.1] — 14 maggio 2026
+## [1.4.1] - 14 maggio 2026
 
 *Il changelog entra nell'app.*
 
@@ -596,7 +599,7 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
-## [1.4.0] — 14 maggio 2026
+## [1.4.0] - 14 maggio 2026
 
 *Numeri per l'admin.*
 
@@ -608,7 +611,7 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
-## [1.3.0] — 10 maggio 2026
+## [1.3.0] - 10 maggio 2026
 
 *Riproponi l'ultimo ordine con un tocco.*
 
@@ -621,7 +624,7 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
-## [1.2.0] — 10 maggio 2026
+## [1.2.0] - 10 maggio 2026
 
 *Riparto della spedizione e rettifiche a peso.*
 
@@ -635,7 +638,7 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
-## [1.1.0] — 10 maggio 2026
+## [1.1.0] - 10 maggio 2026
 
 *Irrobustita la chiusura del ciclo.*
 
@@ -650,7 +653,7 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
-## [1.0.0] — 5 maggio 2026
+## [1.0.0] - 5 maggio 2026
 
 *Primo rilascio in produzione della riscrittura Next.js.*
 

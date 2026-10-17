@@ -119,7 +119,7 @@ export function parseOds(buffer: Buffer): OdsWorkbook {
   });
   const contentU8 = files["content.xml"];
   if (!contentU8) {
-    throw new Error("content.xml not found — not a valid .ods file");
+    throw new Error("content.xml not found: not a valid .ods file");
   }
   const xml = strFromU8(contentU8);
 
