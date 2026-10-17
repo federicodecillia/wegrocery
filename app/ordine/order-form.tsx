@@ -530,7 +530,7 @@ export function OrderForm({
             </h1>
             <HelpLink href="/guida/ordinare" />
           </div>
-          <Badge tone="accent" dot>
+          <Badge variant="accent" dot>
             {t.cycle.open}
           </Badge>
         </div>

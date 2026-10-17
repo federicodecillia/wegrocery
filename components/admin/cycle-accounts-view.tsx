@@ -3,7 +3,7 @@ import { getCycleLedgerRows } from "@/lib/db/queries";
 import { summarizeCycleMoney } from "@/lib/admin/cycle-money";
 import { adminHref } from "@/lib/admin/nav";
 import { movementKindLabel, movementText } from "@/lib/movement-label";
-import { Card, CardBody, CardHeader } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { t } from "@/lib/i18n";
 import { formatDate, formatMoney } from "@/lib/i18n/format";
 import type { SettlementStatus } from "@/lib/payments/settlement-store";
@@ -38,11 +38,11 @@ export async function CycleAccountsView({
       <div className="space-y-4">
         {settlement && (
           <Card className="border-primary-mid">
-            <CardBody>
+            <CardContent>
               <h3 className="text-[14px] font-bold text-foreground">{a.settleTitle}</h3>
               <p className="mt-1 mb-3 max-w-prose text-[13px] text-secondary-foreground">{w.accountsIntro}</p>
               <SettleCycleButton cycleId={cycle.cycleId} cycleTitle={cycle.title} settledAt={settledAt} status={settlement} />
-            </CardBody>
+            </CardContent>
           </Card>
         )}
 
@@ -66,18 +66,18 @@ export async function CycleAccountsView({
                   </li>
                 ))}
               </ul>
-              <CardBody className="border-t border-border py-2.5">
+              <CardContent className="border-t border-border py-2.5">
                 <div className="flex justify-between text-[13px] font-bold text-foreground">
                   <span>{a.net}</span>
                   <span className=" tabular-nums">{signed(money.netCents)}</span>
                 </div>
-              </CardBody>
+              </CardContent>
             </>
           )}
         </Card>
 
         <Card>
-          <CardBody>
+          <CardContent>
             <h3 className="text-[13px] font-bold text-foreground">{a.shippingTitle}</h3>
             <p className="mt-1 text-[13px] text-foreground">{shippingText(cycle) ?? a.shippingNone}</p>
             {cycle.status === "closed" && (
@@ -85,7 +85,7 @@ export async function CycleAccountsView({
                 {cycle.shippingMode === "manual" ? t.admin.cycle.shippingManualDescription : a.shippingEditHint}
               </p>
             )}
-          </CardBody>
+          </CardContent>
         </Card>
       </div>
 
@@ -120,7 +120,7 @@ export async function CycleAccountsView({
 
         {cycle.status === "closed" && (
           <Card>
-            <CardBody>
+            <CardContent>
               <h3 className="text-[13px] font-bold text-foreground">{a.howTitle}</h3>
               <ul className="mt-2 space-y-2 text-[13px] text-secondary-foreground">
                 <li>{a.howPrices}</li>
@@ -137,17 +137,17 @@ export async function CycleAccountsView({
                   </Link>
                 </li>
               </ul>
-            </CardBody>
+            </CardContent>
           </Card>
         )}
 
         {cycle.status === "closed" && (
           <Card className="border-destructive/30">
-            <CardBody>
+            <CardContent>
               <h3 className="text-[14px] font-bold text-destructive">{w.dangerZone}</h3>
               <p className="mt-1 mb-3 max-w-prose text-[13px] text-secondary-foreground">{w.cancelIntro}</p>
               <CancelCycleButton cycleId={cycle.cycleId} cycleTitle={cycle.title} />
-            </CardBody>
+            </CardContent>
           </Card>
         )}
       </div>

@@ -1,6 +1,6 @@
 import { getAdminCycleSummary } from "@/lib/db/queries";
 import { formatEur, getProductEmoji } from "@/lib/utils";
-import { Card, CardBody, CardHeader } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { t } from "@/lib/i18n";
 import { CsvExportButton } from "./ordini-client";
 import { CycleOrdersByMember } from "./closed-cycle-details";
@@ -63,12 +63,12 @@ export async function CycleOrdersView({
           ))}
         </ul>
       )}
-      <CardBody className="border-t border-border py-2.5">
+      <CardContent className="border-t border-border py-2.5">
         <div className="flex justify-between text-[13px] font-bold text-foreground">
           <span>{o.totalProducts}</span>
           <span className=" tabular-nums">{formatEur(summary.productsTotal)}</span>
         </div>
-      </CardBody>
+      </CardContent>
     </Card>
   );
 

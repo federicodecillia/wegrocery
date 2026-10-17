@@ -38,6 +38,7 @@ A bullet that only matters to whoever hosts, runs or develops the app
 - [tech] 🗄️ **Migrations give up sooner on a busy table.** Each migration file waits at most 5 seconds for a lock (it was 10) and then rolls back whole; a file with a statement Postgres cannot run in a transaction (`CREATE INDEX CONCURRENTLY`, `VACUUM`) is refused before anything runs, and from 0036 on a test wants every migration's `_down.sql`.
 - ✏️ **No more long dashes.** A missing value in tables and lists is now shown as a plain "-", and the version titles on the What's new page use the same short dash.
 - [tech] 🔘 **Buttons on shadcn and Base UI.** `Button` is now shadcn's Button on Base UI with `class-variance-authority` (`buttonVariants` replaces `buttonClass`; `neutral` becomes `default`, `danger` becomes `destructive`); buttons look and behave as before.
+- [tech] 🗂️ **Card, Badge and Toaster in the shadcn shape.** `CardBody` becomes `CardContent`, `Badge` takes `variant` (`default`, `brand`, `accent`, `destructive`) instead of `tone`, and the Toaster moves to `components/ui/sonner.tsx`; cards, badges and notices look the same.
 
 ## [1.30.1] - 2026-10-17
 

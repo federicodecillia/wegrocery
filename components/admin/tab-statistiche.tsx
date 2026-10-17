@@ -9,7 +9,7 @@ import {
   getSupplierStats,
 } from "@/lib/db/queries";
 import { formatEur, getProductEmoji } from "@/lib/utils";
-import { Card, CardBody, CardHeader } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { StatsFilters } from "./statistiche-client";
 import { getUsageTotals } from "@/lib/usage/events";
 import { t } from "@/lib/i18n";
@@ -58,7 +58,7 @@ export async function TabStatistiche({ cycleIds, supplierIds, memberIds }: Props
         <StatsFilters {...filterOptions} />
         <UsageCard usage={usage} />
         <Card>
-          <CardBody>
+          <CardContent>
             <div className="py-12 text-center">
               <div className="mb-2 text-4xl">📊</div>
               <h2 className="text-[15px] font-bold text-foreground">
@@ -68,7 +68,7 @@ export async function TabStatistiche({ cycleIds, supplierIds, memberIds }: Props
                 {hasFilters ? t.admin.stats.noDataFilterHint : t.admin.stats.noDataHint}
               </p>
             </div>
-          </CardBody>
+          </CardContent>
         </Card>
       </div>
     );
@@ -174,7 +174,7 @@ function ProductRankingsCard({
           {t.admin.stats.topProductsSubtitle}
         </p>
       </CardHeader>
-      <CardBody>
+      <CardContent>
         {rankings.length === 0 ? (
           <p className="py-4 text-center text-[12px] text-secondary-foreground">
             {t.admin.stats.noProductsOrdered}
@@ -222,7 +222,7 @@ function ProductRankingsCard({
             })}
           </ul>
         )}
-      </CardBody>
+      </CardContent>
     </Card>
   );
 }
@@ -289,7 +289,7 @@ function RevenueTrendCard({
           )}
         </div>
       </CardHeader>
-      <CardBody>
+      <CardContent>
         <svg
           viewBox={`0 0 ${W} ${H}`}
           className="w-full"
@@ -351,7 +351,7 @@ function RevenueTrendCard({
             </div>
           </div>
         </div>
-      </CardBody>
+      </CardContent>
     </Card>
   );
 }
@@ -364,7 +364,7 @@ function UsageCard({ usage }: { usage: Awaited<ReturnType<typeof getUsageTotals>
       <CardHeader>
         <h2 className="text-[13px] font-bold text-foreground">{t.admin.stats.usageTitle}</h2>
       </CardHeader>
-      <CardBody>
+      <CardContent>
         {usage.length === 0 ? (
           <p className="text-[12px] text-secondary-foreground">{t.admin.stats.usageEmpty}</p>
         ) : (
@@ -378,7 +378,7 @@ function UsageCard({ usage }: { usage: Awaited<ReturnType<typeof getUsageTotals>
           </ul>
         )}
         <p className="mt-2 text-[12px] text-muted-foreground">{t.admin.stats.usageHint}</p>
-      </CardBody>
+      </CardContent>
     </Card>
   );
 }
@@ -400,7 +400,7 @@ function SupplierStatsCard({
         <h3 className="text-[13px] font-bold text-foreground">{t.admin.stats.supplierStatsTitle}</h3>
         <p className="mt-0.5 text-label text-secondary-foreground">{t.admin.stats.supplierStatsSubtitle}</p>
       </CardHeader>
-      <CardBody>
+      <CardContent>
         <ul className="space-y-2">
           {withActivity.map((s) => {
             const widthPct = (s.totalRevenue / maxRevenue) * 100;
@@ -428,7 +428,7 @@ function SupplierStatsCard({
             );
           })}
         </ul>
-      </CardBody>
+      </CardContent>
     </Card>
   );
 }
@@ -455,7 +455,7 @@ function MemberParticipationCard({
           {t.admin.stats.memberParticipationSubtitle(members.length)}
         </p>
       </CardHeader>
-      <CardBody>
+      <CardContent>
         <div className="mb-3 grid grid-cols-3 gap-2 text-center">
           <div className="rounded-lg bg-accent-bg p-2">
             <div className="font-mono text-label uppercase text-accent-text">{t.admin.stats.participationActive}</div>
@@ -497,7 +497,7 @@ function MemberParticipationCard({
             ))}
           </ul>
         </details>
-      </CardBody>
+      </CardContent>
     </Card>
   );
 }

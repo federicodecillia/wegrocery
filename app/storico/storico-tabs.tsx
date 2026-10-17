@@ -169,7 +169,7 @@ export function StoricoTabs({ orderHistory, movements, balance, bankRefs }: Prop
                       >
                         {o.charged ? formatSignedMoney(o.net) : formatEur(o.productsTotal)}
                       </span>
-                      <Badge tone={o.status === "cancelled" ? "danger" : "accent"}>
+                      <Badge variant={o.status === "cancelled" ? "destructive" : "accent"}>
                         {o.status === "open"
                           ? t.history.open
                           : o.status === "cancelled"

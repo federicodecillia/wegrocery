@@ -3,6 +3,9 @@
 import { Toaster as SonnerToaster } from "sonner";
 import { t } from "@/lib/i18n";
 
+// shadcn's Sonner Toaster (Playbook 2.7), styled on the app's tokens: a
+// dark pill, the warning and danger fills for warnings and errors.
+
 export function Toaster() {
   return (
     <SonnerToaster
