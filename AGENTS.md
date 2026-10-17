@@ -579,10 +579,15 @@ All four emit `order_adjusted` or `order_corrected` notifications and `audit_log
   with `PRODUCTION_DB_HOST` set to the production host (in the local env
   files of whoever migrates) it refuses that host unless `--allow-prod` is
   passed; `MIGRATE_ON_BUILD` passes it itself. Each migration file runs in one
-  transaction with `lock_timeout` 10 s and its `_migrations` record; a new
-  migration has `Apply:` and `Rollback:` lines in its header, a
-  `NNNN_name_down.sql` the runner never applies, and a test (Playbook 5.3, 6.1,
-  6.2; `docs/operating-two-environments.md`).
+  transaction (`sql.transaction` of the Neon driver) with `SET LOCAL
+  lock_timeout = '5s'` and its `_migrations` record, so a file that fails or
+  waits too long for a lock leaves nothing behind and stays pending. Nothing
+  that Postgres refuses in a transaction (any `CONCURRENTLY`, `VACUUM`,
+  database-level commands): the runner refuses such a file before applying
+  anything. A new migration has `Apply:` and `Rollback:` lines in its header,
+  a `NNNN_name_down.sql` the runner never applies, and a test; from 0036 on
+  `scripts/db-migrate-lib.test.ts` checks the rollback file and the header
+  (Playbook 5.3, 6.1, 6.2; `docs/operating-two-environments.md`).
 - **Integration tests against a real DB** (recipe, not wired into CI): create
   a throwaway Neon branch, point the test run at it, delete it after —
   `npx -y neonctl branches create --name test-x --parent production --project-id small-breeze-14972344 --org-id org-gentle-violet-55538692`

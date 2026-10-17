@@ -142,8 +142,10 @@ DATABASE_URL="…production…" node scripts/db-migrate.mjs --allow-prod
 node --env-file=.env.demo.local scripts/db-migrate.mjs
 ```
 
-Each file runs in one transaction with a 10 s lock timeout, together with its
-`_migrations` record: a failure leaves the database as it was. A new migration
+Each file runs in one transaction with a 5 s lock timeout, together with its
+`_migrations` record: a failure leaves the database as it was. A statement
+that cannot run in a transaction (`CREATE INDEX CONCURRENTLY`, `VACUUM`) is
+refused before anything is applied: use a plain `CREATE INDEX`. A new migration
 starts with a header saying what it does, the exact command (`Apply:`) and how
 to undo it (`Rollback:`), and comes with `NNNN_name_down.sql`, the rollback as
 SQL. The runner never applies a `_down.sql`; run it by hand, on `dev` first,

@@ -31,6 +31,7 @@ A bullet that only matters to whoever hosts, runs or develops the app
 - 📰 **What's new speaks to members.** The page shows the changes you notice in the app; the ones for whoever runs it (servers, database, updates) sit behind "Show technical details", marked "Technical".
 - [tech] 📊 **Instance stats speak the FlyLabs Console's language.** `/api/instance-stats` also accepts the `x-flylabs-*` signature and then answers the FlyLabs Kit envelope (`app`, `counts`); the WeGrocery Console sends both and reads both shapes, so older installations keep working. `/api/health` gives up on a database that hangs after 3 seconds.
 - [tech] 🧪 **Integration tests carry the FlyLabs suffix.** They are now named `*.integration.test.ts` (FlyLabs Playbook 5.2); `npm test` still leaves them out and `npm run test:int` and CI still run them.
+- [tech] 🗄️ **Migrations give up sooner on a busy table.** Each migration file waits at most 5 seconds for a lock (it was 10) and then rolls back whole; a file with a statement Postgres cannot run in a transaction (`CREATE INDEX CONCURRENTLY`, `VACUUM`) is refused before anything runs, and from 0036 on a test wants every migration's `_down.sql`.
 - ✏️ **No more long dashes.** A missing value in tables and lists is now shown as a plain "-", and the version titles on the What's new page use the same short dash.
 
 ## [1.30.1] - 2026-10-17

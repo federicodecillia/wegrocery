@@ -32,6 +32,7 @@ dettagli tecnici", la release su GitHub la tiene.
 - 📰 **Le novità parlano ai soci.** La pagina mostra le modifiche che si notano nell'app; quelle per chi la gestisce (server, database, aggiornamenti) stanno dietro "Mostra dettagli tecnici", segnate "Tecnico".
 - [tecnico] 📊 **Le statistiche delle installazioni parlano la lingua della Console FlyLabs.** `/api/instance-stats` accetta anche la firma `x-flylabs-*` e allora risponde con la forma del FlyLabs Kit (`app`, `counts`); la Console WeGrocery manda entrambe e legge entrambe le forme, così le installazioni più vecchie continuano a funzionare. `/api/health` rinuncia dopo 3 secondi a un database che non risponde.
 - [tecnico] 🧪 **I test di integrazione hanno il suffisso FlyLabs.** Ora si chiamano `*.integration.test.ts` (Playbook FlyLabs 5.2); `npm test` continua a escluderli, `npm run test:int` e la CI continuano a eseguirli.
+- [tecnico] 🗄️ **Le migrazioni rinunciano prima su una tabella occupata.** Ogni file di migrazione aspetta un lock al massimo 5 secondi (erano 10) e poi torna indietro per intero; un file con un'istruzione che Postgres non esegue in una transazione (`CREATE INDEX CONCURRENTLY`, `VACUUM`) viene rifiutato prima di eseguire qualsiasi cosa, e dalla 0036 in poi un test vuole il `_down.sql` di ogni migrazione.
 - ✏️ **Niente più trattini lunghi.** Un valore mancante nelle tabelle e negli elenchi ora compare come un semplice "-", e anche i titoli di versione nella pagina delle novità usano il trattino corto.
 
 ## [1.30.1] - 17 ottobre 2026
