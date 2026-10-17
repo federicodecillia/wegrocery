@@ -6,9 +6,9 @@ export function CycleNotes({ notes, className = "" }: { notes: string | null | u
   const text = notes?.trim();
   if (!text) return null;
   return (
-    <div className={`rounded-card border border-brand-border bg-surface py-3 px-3.5 ${className}`}>
-      <div className="font-mono text-label uppercase tracking-[0.1em] text-muted">{t.order.cycleNotes}</div>
-      <p className="mt-1 whitespace-pre-line break-words text-[14px] leading-[1.45] text-brand-near-black">{text}</p>
+    <div className={`rounded-card border border-border bg-card py-3 px-3.5 ${className}`}>
+      <div className="font-mono text-label uppercase tracking-[0.1em] text-muted-foreground">{t.order.cycleNotes}</div>
+      <p className="mt-1 whitespace-pre-line break-words text-[14px] leading-[1.45] text-foreground">{text}</p>
     </div>
   );
 }

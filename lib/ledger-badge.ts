@@ -8,10 +8,10 @@ import { type LedgerMovement, type MovementKind, movementKind } from "@/lib/move
 
 type TreasuryLabels = Strings["admin"]["treasury"];
 
-const badgeTeal = "bg-accent-soft text-accent-text";
-const badgeRed = "bg-danger-soft text-danger-text";
-const badgeOrange = "bg-primary-soft text-brand-near-black";
-const badgeGray = "bg-tint/[0.05] text-brand-gray";
+const badgeTeal = "bg-accent-bg text-accent-text";
+const badgeRed = "bg-danger-bg text-destructive";
+const badgeOrange = "bg-primary-bg text-foreground";
+const badgeGray = "bg-tint/[0.05] text-secondary-foreground";
 
 export function ledgerBadge(entry: LedgerMovement, tr: TreasuryLabels): { label: string; className: string } {
   const byKind: Record<MovementKind, { label: string; className: string }> = {

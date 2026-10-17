@@ -17,22 +17,22 @@ type Props = {
 export function CycleChooser({ cycles }: Props) {
   return (
     <>
-      <h1 className="text-title font-black text-brand-near-black">
+      <h1 className="text-title font-black text-foreground">
         {t.order.chooseCycle}
       </h1>
-      <p className="mt-0.75 text-[14px] text-brand-gray">{t.order.chooseCycleHint}</p>
+      <p className="mt-0.75 text-[14px] text-secondary-foreground">{t.order.chooseCycleHint}</p>
       <div className="mt-4 space-y-3">
         {cycles.map((c) => (
           <Link
             key={c.cycleId}
             href={`/ordine?cycleId=${c.cycleId}`}
-            className="flex items-center justify-between gap-3 rounded-card border border-brand-border bg-surface p-4.5 shadow-card"
+            className="flex items-center justify-between gap-3 rounded-card border border-border bg-card p-4.5 shadow-card"
           >
             <div className="min-w-0">
-              <div className="text-[15px] font-bold tracking-[-0.01em] text-brand-near-black">
+              <div className="text-[15px] font-bold tracking-[-0.01em] text-foreground">
                 {c.title}
               </div>
-              <div className="mt-0.75 tabular-nums text-label text-brand-gray">
+              <div className="mt-0.75 tabular-nums text-label text-secondary-foreground">
                 {[c.supplierName, c.orderCloseAt ? t.cycle.closes(formatDeadline(c.orderCloseAt)) : null]
                   .filter(Boolean)
                   .join(" · ")}

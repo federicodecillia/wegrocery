@@ -46,7 +46,7 @@ export function CsvExportButton({ cycleId }: { cycleId: string }) {
     <button
       onClick={handleExport}
       disabled={isPending}
-      className="min-h-(--control-h) rounded-xl border border-brand-border bg-surface px-4 text-[13px] font-semibold text-brand-near-black disabled:opacity-60"
+      className="min-h-(--control-h) rounded-xl border border-border bg-card px-4 text-[13px] font-semibold text-foreground disabled:opacity-60"
     >
       {isPending ? t.admin.orders.generatingExcel : t.admin.orders.downloadExcel}
     </button>

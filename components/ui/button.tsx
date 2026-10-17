@@ -22,12 +22,12 @@ const base =
   "pressable inline-flex items-center justify-center rounded-full font-sans font-bold tracking-tight select-none transition-[opacity,transform] duration-150 disabled:opacity-40 disabled:cursor-not-allowed";
 
 const variants: Record<ButtonVariant, string> = {
-  neutral: "bg-inverse text-on-inverse",
-  brand: "bg-primary text-on-primary",
-  accent: "bg-accent text-on-accent",
-  danger: "bg-danger text-on-danger",
-  outline: "bg-transparent border border-brand-border text-brand-near-black",
-  ghost: "bg-transparent text-brand-near-black hover:bg-tint/[0.04]",
+  neutral: "bg-inverse text-inverse-foreground",
+  brand: "bg-primary text-primary-foreground",
+  accent: "bg-accent text-accent-foreground",
+  danger: "bg-danger text-danger-foreground",
+  outline: "bg-transparent border border-border text-foreground",
+  ghost: "bg-transparent text-foreground hover:bg-tint/[0.04]",
 };
 
 const sizes: Record<ButtonSize, string> = {

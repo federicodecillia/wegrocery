@@ -5,7 +5,7 @@ import { t } from "@/lib/i18n";
 export function BankReceipt({ email, subject }: { email: string; subject?: string }) {
   const href = `mailto:${email}${subject ? `?subject=${encodeURIComponent(subject)}` : ""}`;
   return (
-    <p className="mt-3 text-[14px] text-brand-gray">
+    <p className="mt-3 text-[14px] text-secondary-foreground">
       {t.topup.bankReceipt}{" "}
       <a href={href} className="break-words font-semibold text-primary-text underline underline-offset-2">
         {email}

@@ -15,8 +15,8 @@ export function ProfileAvatar({ name, email }: { name?: string | null; email: st
       aria-current={current ? "page" : undefined}
       aria-label={t.profile.title}
       title={t.profile.title}
-      className={`hit-44 flex size-(--control-h) shrink-0 items-center justify-center rounded-full bg-primary text-[12px] font-black tracking-tight text-on-primary transition-opacity hover:opacity-90 ${
-        current ? "ring-2 ring-primary-text ring-offset-2 ring-offset-brand-warm-white" : ""
+      className={`hit-44 flex size-(--control-h) shrink-0 items-center justify-center rounded-full bg-primary text-[12px] font-black tracking-tight text-primary-foreground transition-opacity hover:opacity-90 ${
+        current ? "ring-2 ring-primary-text ring-offset-2 ring-offset-background" : ""
       }`}
     >
       {initials(name, email)}

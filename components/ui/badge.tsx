@@ -4,10 +4,10 @@ import { cn } from "@/lib/utils";
 export type BadgeTone = "accent" | "brand" | "danger" | "neutral";
 
 const tones: Record<BadgeTone, string> = {
-  accent: "border-accent/20 bg-accent-soft text-accent-text",
-  brand: "border-primary-mid bg-primary-soft text-primary-text",
-  danger: "border-danger-text/20 bg-danger-soft text-danger-text",
-  neutral: "border-brand-border bg-tint/[0.04] text-brand-gray",
+  accent: "border-accent/20 bg-accent-bg text-accent-text",
+  brand: "border-primary-mid bg-primary-bg text-primary-text",
+  danger: "border-destructive/20 bg-danger-bg text-destructive",
+  neutral: "border-border bg-tint/[0.04] text-secondary-foreground",
 };
 
 /** A status, not a control: never clickable (a filter or a link is a Chip or a button). */

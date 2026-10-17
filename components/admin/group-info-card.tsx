@@ -30,9 +30,9 @@ export function GroupInfoCard({ initial }: { initial: string | null }) {
   }
 
   return (
-    <section className="rounded-xl border border-brand-border bg-surface p-4">
-      <h3 className="text-[13px] font-bold text-brand-near-black">{s.title}</h3>
-      <p className="mt-1 text-[12px] text-brand-gray">{s.hint}</p>
+    <section className="rounded-xl border border-border bg-card p-4">
+      <h3 className="text-[13px] font-bold text-foreground">{s.title}</h3>
+      <p className="mt-1 text-[12px] text-secondary-foreground">{s.hint}</p>
       <label htmlFor="group-info" className="sr-only">
         {s.title}
       </label>
@@ -42,11 +42,11 @@ export function GroupInfoCard({ initial }: { initial: string | null }) {
         onChange={(e) => setValue(e.target.value)}
         rows={8}
         placeholder={s.placeholder}
-        className="mt-3 w-full rounded-xl border border-brand-border px-3 py-2 text-[13px] leading-[1.5] text-brand-near-black placeholder:text-muted focus:border-primary"
+        className="mt-3 w-full rounded-xl border border-border px-3 py-2 text-[13px] leading-[1.5] text-foreground placeholder:text-muted-foreground focus:border-primary"
       />
       <div className="mt-1 flex items-start justify-between gap-3">
-        <p className="text-[12px] text-brand-gray">{value.trim() ? s.format : s.empty}</p>
-        <span className={`shrink-0 tabular-nums text-label ${tooLong ? "font-bold text-danger-text" : "text-muted"}`}>
+        <p className="text-[12px] text-secondary-foreground">{value.trim() ? s.format : s.empty}</p>
+        <span className={`shrink-0 tabular-nums text-label ${tooLong ? "font-bold text-destructive" : "text-muted-foreground"}`}>
           {s.count(value.length, GROUP_INFO_MAX)}
         </span>
       </div>
@@ -55,7 +55,7 @@ export function GroupInfoCard({ initial }: { initial: string | null }) {
           type="button"
           onClick={handleSave}
           disabled={isPending || unchanged || tooLong}
-          className="rounded-xl bg-inverse px-4 py-2 text-[13px] font-bold text-on-inverse disabled:opacity-60"
+          className="rounded-xl bg-inverse px-4 py-2 text-[13px] font-bold text-inverse-foreground disabled:opacity-60"
         >
           {isPending ? t.admin.common.saving : s.save}
         </button>

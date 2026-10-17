@@ -19,15 +19,15 @@ export default function Error({
       className="flex min-h-dvh flex-col items-center justify-center p-6 text-center"
       style={{ background: "var(--frame)" }}
     >
-      <div className="w-full max-w-[320px] rounded-card border border-brand-border bg-surface p-6">
-        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-danger-soft text-2xl">
+      <div className="w-full max-w-[320px] rounded-card border border-border bg-card p-6">
+        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-danger-bg text-2xl">
           ⚠
         </div>
-        <p className="text-[15px] font-semibold text-brand-near-black">{t.common.somethingWentWrong}</p>
-        <p className="mt-1 text-[13px] text-brand-gray">{error.message || t.common.unexpectedError}</p>
+        <p className="text-[15px] font-semibold text-foreground">{t.common.somethingWentWrong}</p>
+        <p className="mt-1 text-[13px] text-secondary-foreground">{error.message || t.common.unexpectedError}</p>
         <button
           onClick={reset}
-          className="mt-4 w-full rounded-xl bg-primary py-2.5 text-[13px] font-bold text-on-primary"
+          className="mt-4 w-full rounded-xl bg-primary py-2.5 text-[13px] font-bold text-primary-foreground"
         >
           {t.common.retry}
         </button>

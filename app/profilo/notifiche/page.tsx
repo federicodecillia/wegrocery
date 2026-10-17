@@ -24,12 +24,12 @@ export default async function NotificationSettingsPage() {
         <BackLink href="/profilo">{t.profile.title}</BackLink>
       </div>
       <div className="mb-1 flex items-center gap-2">
-        <h1 className="text-title font-black text-brand-near-black">
+        <h1 className="text-title font-black text-foreground">
           {t.notifications.settings.title}
         </h1>
         <HelpLink href="/guida/notifiche#preferenze-notifiche" />
       </div>
-      <p className="mb-5 text-[14px] leading-snug text-brand-gray">
+      <p className="mb-5 text-[14px] leading-snug text-secondary-foreground">
         {t.notifications.settings.intro}
       </p>
 

@@ -59,8 +59,8 @@ export default async function OrdinePage({
       <AppShell email={session.user.email} name={session.user.fullName} isAdmin={role === "admin"} memberId={memberId} personId={session.user.personId}>
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <EmptyIcon name="cart" />
-          <h2 className="text-[18px] font-bold text-brand-near-black">{t.order.noOpenOrders}</h2>
-          <p className="mt-2 text-[14px] text-brand-gray">
+          <h2 className="text-[18px] font-bold text-foreground">{t.order.noOpenOrders}</h2>
+          <p className="mt-2 text-[14px] text-secondary-foreground">
             {t.order.noOpenOrdersHint}
           </p>
         </div>
@@ -112,10 +112,10 @@ export default async function OrdinePage({
         <div
           className={`mb-4 rounded-card border py-3 px-3.5 text-[14px] ${
             notice.tone === "ok"
-              ? "border-accent bg-accent-soft text-brand-near-black"
+              ? "border-accent bg-accent-bg text-foreground"
               : notice.tone === "error"
-                ? "border-danger-text/30 bg-danger-soft text-danger-text"
-                : "border-primary-mid bg-primary-soft text-brand-near-black"
+                ? "border-destructive/30 bg-danger-bg text-destructive"
+                : "border-primary-mid bg-primary-bg text-foreground"
           }`}
         >
           {notice.text}
@@ -130,8 +130,8 @@ export default async function OrdinePage({
               href={`/ordine?cycleId=${c.cycleId}`}
               className={`shrink-0 rounded-full px-4 py-1.5 text-[12px] font-bold transition-colors ${
                 c.cycleId === openCycle!.cycleId
-                  ? "bg-accent text-on-accent shadow-sm"
-                  : "bg-surface text-brand-gray border border-brand-border hover:bg-brand-warm-white"
+                  ? "bg-accent text-accent-foreground shadow-sm"
+                  : "bg-card text-secondary-foreground border border-border hover:bg-background"
               }`}
             >
               {c.title}

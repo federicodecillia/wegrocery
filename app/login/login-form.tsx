@@ -105,7 +105,7 @@ export function LoginForm({ googleEnabled, next }: { googleEnabled: boolean; nex
           reuse the email <input> for the code, typed address included. */}
       {sentTo ? (
         <form key="code" className="space-y-2" onSubmit={onCode}>
-          <label htmlFor="code" className="block text-sm font-medium text-brand-near-black">
+          <label htmlFor="code" className="block text-sm font-medium text-foreground">
             {t.login.codeLabel}
           </label>
           <input
@@ -117,12 +117,12 @@ export function LoginForm({ googleEnabled, next }: { googleEnabled: boolean; nex
             maxLength={7}
             required
             placeholder="123456"
-            className="w-full rounded-lg border border-brand-border px-3 py-2 text-center font-mono text-lg tracking-[0.3em] text-brand-near-black"
+            className="w-full rounded-lg border border-border px-3 py-2 text-center text-lg tabular-nums tracking-[0.3em] text-foreground"
           />
           <Button type="submit" variant="brand" block disabled={busy}>
             {status === "verifying" ? t.login.codeVerifying : t.login.codeButton}
           </Button>
-          <p className="text-center text-sm text-muted">
+          <p className="text-center text-sm text-muted-foreground">
             {sentTo} ·{" "}
             <button type="button" onClick={onChangeEmail} className="text-primary-text underline">
               {t.login.changeEmail}
@@ -131,7 +131,7 @@ export function LoginForm({ googleEnabled, next }: { googleEnabled: boolean; nex
         </form>
       ) : (
         <form key="email" className="space-y-2" onSubmit={onSubmit}>
-          <label htmlFor="email" className="block text-sm font-medium text-brand-near-black">
+          <label htmlFor="email" className="block text-sm font-medium text-foreground">
             {t.login.emailLabel}
           </label>
           <input
@@ -141,7 +141,7 @@ export function LoginForm({ googleEnabled, next }: { googleEnabled: boolean; nex
             autoComplete="email"
             required
             placeholder={t.login.emailPlaceholder}
-            className="w-full rounded-lg border border-brand-border px-3 py-2 text-sm text-brand-near-black"
+            className="w-full rounded-lg border border-border px-3 py-2 text-sm text-foreground"
           />
           <Button type="submit" variant="brand" block disabled={busy}>
             {status === "sending" ? t.login.sending : t.login.sendLink}
@@ -150,14 +150,14 @@ export function LoginForm({ googleEnabled, next }: { googleEnabled: boolean; nex
       )}
       {googleEnabled && (
         <>
-          <p className="text-center text-xs text-muted">{t.login.or}</p>
+          <p className="text-center text-xs text-muted-foreground">{t.login.or}</p>
           <Button type="button" variant="outline" block onClick={onGoogle} disabled={busy}>
             {status === "google" ? t.login.googleRedirecting : t.login.googleLogin}
           </Button>
         </>
       )}
       {notice && (
-        <p role="status" className="rounded-md border border-brand-border bg-brand-warm-white p-2 text-sm text-brand-near-black">
+        <p role="status" className="rounded-md border border-border bg-background p-2 text-sm text-foreground">
           {notice}
         </p>
       )}

@@ -5,12 +5,12 @@ import { brandContrastWarnings, deriveRoleVars, resolvePalette } from "./roles";
 describe("brand roles", () => {
   it("default palette: every generated text/background pair reaches 4.5", () => {
     const v = deriveRoleVars({});
-    expect(contrastRatio(v["--on-primary"], v["--primary"])).toBeGreaterThanOrEqual(4.5);
-    expect(contrastRatio(v["--on-accent"], v["--accent"])).toBeGreaterThanOrEqual(4.5);
-    for (const bg of [v["--background"], v["--primary-soft"], "#ffffff"]) {
+    expect(contrastRatio(v["--primary-foreground"], v["--primary"])).toBeGreaterThanOrEqual(4.5);
+    expect(contrastRatio(v["--accent-foreground"], v["--accent"])).toBeGreaterThanOrEqual(4.5);
+    for (const bg of [v["--background"], v["--primary-bg"], "#ffffff"]) {
       expect(contrastRatio(v["--primary-text"], bg)).toBeGreaterThanOrEqual(4.5);
     }
-    for (const bg of [v["--background"], v["--accent-soft"], "#ffffff"]) {
+    for (const bg of [v["--background"], v["--accent-bg"], "#ffffff"]) {
       expect(contrastRatio(v["--accent-text"], bg)).toBeGreaterThanOrEqual(4.5);
     }
     expect(brandContrastWarnings({})).toEqual([]);
@@ -19,7 +19,7 @@ describe("brand roles", () => {
   it("keeps the brand fills untouched", () => {
     const v = deriveRoleVars({ primary: "#1d4ed8" });
     expect(v["--primary"]).toBe("#1d4ed8");
-    expect(v["--on-primary"]).toBe("#ffffff");
+    expect(v["--primary-foreground"]).toBe("#ffffff");
   });
 
   it("falls back to the default for a non-hex colour and says so", () => {
@@ -38,8 +38,8 @@ describe("brand roles", () => {
   it("muted text reads on every light surface of any palette", () => {
     for (const theme of [{}, { primaryLight: "#dbeafe", accentLight: "#ede9fe" }]) {
       const v = deriveRoleVars(theme);
-      for (const bg of [v["--background"], v["--primary-soft"], v["--accent-soft"], "#ffffff", "#feecec"]) {
-        expect(contrastRatio(v["--muted"], bg)).toBeGreaterThanOrEqual(4.5);
+      for (const bg of [v["--background"], v["--primary-bg"], v["--accent-bg"], "#ffffff", "#f3f2f0", "#feecec"]) {
+        expect(contrastRatio(v["--muted-foreground"], bg)).toBeGreaterThanOrEqual(4.5);
       }
     }
   });
@@ -63,9 +63,9 @@ describe("brand roles", () => {
     expect(brandContrastWarnings({ background: "#111111" }).length).toBeGreaterThan(1);
   });
 
-  it("maps background to both surface variables", () => {
+  it("maps the group background to --background, and the ring to the primary text", () => {
     const v = deriveRoleVars({ background: "#ffffff" });
     expect(v["--background"]).toBe("#ffffff");
-    expect(v["--warm-wh"]).toBe("#ffffff");
+    expect(v["--ring"]).toBe(v["--primary-text"]);
   });
 });

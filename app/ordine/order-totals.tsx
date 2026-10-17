@@ -62,7 +62,7 @@ export function OrderTotals({ orderTotal, payAmount, afterBalance, walletFeeCent
 
   const breakdown = (
     <>
-    <dl className="space-y-1 text-[14px] text-brand-gray">
+    <dl className="space-y-1 text-[14px] text-secondary-foreground">
       {(payAmount
         ? [
             [t.order.pay.products, payAmount.productsCents],
@@ -79,19 +79,19 @@ export function OrderTotals({ orderTotal, payAmount, afterBalance, walletFeeCent
         .map(([label, c]) => (
           <div key={label as string} className="flex justify-between gap-3">
             <dt>{label}</dt>
-            <dd className="tabular-nums text-brand-near-black">
+            <dd className="tabular-nums text-foreground">
               {(c as number) < 0 ? `−${formatEur(-(c as number) / 100)}` : formatEur((c as number) / 100)}
             </dd>
           </div>
         ))}
-      <div className="flex justify-between gap-3 border-t border-brand-border pt-1 font-bold text-brand-near-black">
+      <div className="flex justify-between gap-3 border-t border-border pt-1 font-bold text-foreground">
         <dt>{payAmount ? t.order.pay.toPay : t.order.balanceAfter}</dt>
         <dd className="tabular-nums">
           {payAmount ? formatEur(payAmount.chargeCents / 100) : formatSignedMoney(afterBalance)}
         </dd>
       </div>
     </dl>
-    <p className="mt-3 text-[13px] leading-[1.45] text-muted">
+    <p className="mt-3 text-[13px] leading-[1.45] text-muted-foreground">
       {payAmount
         ? payAmount.outcome === "pay" && payAmount.chargeCents > payAmount.requiredCents - payAmount.coveredCents
           ? t.order.pay.minimumNote(formatEur(ORDER_PAYMENT_MIN_CENTS / 100))
@@ -103,13 +103,13 @@ export function OrderTotals({ orderTotal, payAmount, afterBalance, walletFeeCent
 
   if (variant === "panel") {
     return (
-      <div className="mt-3 border-t border-brand-border pt-3">
+      <div className="mt-3 border-t border-border pt-3">
         <div className="flex items-baseline justify-between gap-2">
-          <span className="text-[13px] text-brand-gray">{t.order.total}</span>
-          <span className="text-[20px] font-black tabular-nums tracking-[-0.02em] text-brand-near-black">{formatEur(shown)}</span>
+          <span className="text-[13px] text-secondary-foreground">{t.order.total}</span>
+          <span className="text-[20px] font-black tabular-nums tracking-[-0.02em] text-foreground">{formatEur(shown)}</span>
         </div>
         {hasOrder && <div className="mt-2">{breakdown}</div>}
-        {error && <p className="mt-2 text-[13px] leading-[1.4] text-danger-text">{error}</p>}
+        {error && <p className="mt-2 text-[13px] leading-[1.4] text-destructive">{error}</p>}
         <Button variant={hasOrder ? "brand" : "danger"} onClick={onConfirm} disabled={isPending} className="mt-3 min-h-12 w-full px-5">
           {label}
         </Button>
@@ -119,31 +119,31 @@ export function OrderTotals({ orderTotal, payAmount, afterBalance, walletFeeCent
 
   return (
     <div className="sticky z-10 -mx-5 mt-4 -mb-[calc(var(--spacing-nav-h)+1rem)] bottom-[calc(var(--spacing-nav-h)+env(safe-area-inset-bottom))] md:-mx-8 md:-mb-6 md:bottom-0 lg:hidden [transform:translateZ(0)]">
-      <div className="border-t border-brand-border bg-brand-warm-white px-5 py-2.5 md:px-8">
+      <div className="border-t border-border bg-background px-5 py-2.5 md:px-8">
         {error && (
-          <p className="mb-2 text-[13px] leading-[1.4] text-danger-text">{error}</p>
+          <p className="mb-2 text-[13px] leading-[1.4] text-destructive">{error}</p>
         )}
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
             <div className="flex items-baseline gap-2">
-              <span className="text-[13px] text-brand-gray">{t.order.total}</span>
-              <span key={shown} className="text-[20px] font-black tabular-nums tracking-[-0.02em] text-brand-near-black">
+              <span className="text-[13px] text-secondary-foreground">{t.order.total}</span>
+              <span key={shown} className="text-[20px] font-black tabular-nums tracking-[-0.02em] text-foreground">
                 {formatEur(shown)}
               </span>
             </div>
             <div className="flex flex-wrap items-baseline gap-x-2 text-[13px]">
               {payAmount ? (
-                <span key={payAmount.chargeCents} className="text-brand-gray">
+                <span key={payAmount.chargeCents} className="text-secondary-foreground">
                   {payAmount.chargeCents > 0
                     ? `${t.order.pay.toPay} ${formatEur(payAmount.chargeCents / 100)}`
                     : t.order.pay.nothingToPay}
                 </span>
               ) : (
-                <span className="text-brand-gray">
+                <span className="text-secondary-foreground">
                   {t.order.balanceAfter}{" "}
                   <span
                     key={afterBalance}
-                    className={`font-semibold tabular-nums ${afterBalance < 0 ? "text-danger-text" : "text-accent-text"}`}
+                    className={`font-semibold tabular-nums ${afterBalance < 0 ? "text-destructive" : "text-accent-text"}`}
                   >
                     {formatSignedMoney(afterBalance)}
                   </span>

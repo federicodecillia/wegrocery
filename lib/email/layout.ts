@@ -10,9 +10,9 @@
 export const APP_NAME = "WeGrocery";
 
 // WeGrocery's light theme: a mail client reads no stylesheet and no CSS
-// variables, so the values are copied here. WeGrocery names its tokens its own
-// way (Playbook 2.2 deviation): card is --surface, muted-foreground is --muted,
-// and the brand roles (background, primary-text, muted) come from
+// variables, so the values are copied here. The token names are the
+// Playbook 2.2 ones; the brand roles (background, primary-text,
+// muted-foreground) come from
 // lib/brand/roles.ts for the default WeGrocery palette, since app/layout.tsx
 // sets them per group. border is --border (a translucent grey) over the card.
 // lib/email/layout.test.ts checks they match.

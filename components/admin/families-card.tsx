@@ -26,17 +26,17 @@ export function FamiliesCard({ enabled }: { enabled: boolean }) {
   }
 
   return (
-    <section className="rounded-xl border border-brand-border bg-surface p-4">
-      <h3 className="text-[13px] font-bold text-brand-near-black">
+    <section className="rounded-xl border border-border bg-card p-4">
+      <h3 className="text-[13px] font-bold text-foreground">
         {s.title}: {enabled ? s.on : s.off}
       </h3>
-      <p className="mt-1 text-[12px] text-brand-gray">{s.hint}</p>
-      {enabled && <p className="mt-1 text-[12px] text-brand-gray">{s.offNote}</p>}
+      <p className="mt-1 text-[12px] text-secondary-foreground">{s.hint}</p>
+      {enabled && <p className="mt-1 text-[12px] text-secondary-foreground">{s.offNote}</p>}
       <button
         type="button"
         onClick={handleToggle}
         disabled={isPending}
-        className="mt-3 rounded-xl border border-brand-border px-4 py-2 text-[13px] font-bold text-brand-near-black disabled:opacity-60"
+        className="mt-3 rounded-xl border border-border px-4 py-2 text-[13px] font-bold text-foreground disabled:opacity-60"
       >
         {isPending ? t.admin.common.saving : enabled ? s.disable : s.enable}
       </button>

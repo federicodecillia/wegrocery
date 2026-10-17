@@ -40,7 +40,7 @@ export function FieldHelp({ text }: { text: string }) {
         onMouseEnter={() => setOpen(true)}
         aria-label={t.common.showHelp}
         aria-expanded={open}
-        className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full border border-brand-border bg-surface text-label font-bold leading-none text-brand-gray hover:border-accent hover:text-accent-text"
+        className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full border border-border bg-card text-label font-bold leading-none text-secondary-foreground hover:border-accent hover:text-accent-text"
       >
         ?
       </button>
@@ -48,7 +48,7 @@ export function FieldHelp({ text }: { text: string }) {
         <span
           role="tooltip"
           onMouseLeave={() => setOpen(false)}
-          className="absolute left-1/2 top-full z-50 mt-1.5 w-[220px] -translate-x-1/2 rounded-md border border-brand-border bg-surface px-2.5 py-1.5 text-label leading-snug font-normal normal-case tracking-normal text-brand-near-black shadow-lg"
+          className="absolute left-1/2 top-full z-50 mt-1.5 w-[220px] -translate-x-1/2 rounded-md border border-border bg-card px-2.5 py-1.5 text-label leading-snug font-normal normal-case tracking-normal text-foreground shadow-lg"
         >
           {text}
         </span>

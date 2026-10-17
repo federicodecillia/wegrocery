@@ -33,7 +33,7 @@ const STATUS: Record<string, string> = {
 
 const DOT: Record<string, string> = {
   open: "bg-accent",
-  closed: "bg-brand-gray-light",
+  closed: "bg-neutral",
   cancelled: "bg-danger",
 };
 
@@ -62,7 +62,7 @@ export function CycleList({
       <Link
         href={adminHref("ciclo", null, { new: "1" })}
         onClick={onNavigate}
-        className="mb-3 flex min-h-(--control-h) items-center justify-center rounded-xl border border-dashed border-primary-mid bg-primary-soft text-[13px] font-bold text-primary-text"
+        className="mb-3 flex min-h-(--control-h) items-center justify-center rounded-xl border border-dashed border-primary-mid bg-primary-bg text-[13px] font-bold text-primary-text"
       >
         {w.newCycle}
       </Link>
@@ -78,7 +78,7 @@ export function CycleList({
           setShown(PAGE);
         }}
         placeholder={w.search}
-        className="min-h-(--control-h) w-full rounded-xl border border-brand-border bg-surface px-3 text-[13px] placeholder:text-muted"
+        className="min-h-(--control-h) w-full rounded-xl border border-border bg-card px-3 text-[13px] placeholder:text-muted-foreground"
       />
       <div role="group" aria-label={w.listTitle} className="mt-2 flex flex-wrap gap-1">
         {(Object.keys(w.filters) as CycleFilter[]).map((f) => (
@@ -91,7 +91,7 @@ export function CycleList({
               setShown(PAGE);
             }}
             className={`min-h-(--control-h) rounded-full px-2.5 text-label font-semibold ${
-              filter === f ? "bg-inverse text-on-inverse" : "bg-tint/[0.05] text-brand-gray"
+              filter === f ? "bg-inverse text-inverse-foreground" : "bg-tint/[0.05] text-secondary-foreground"
             }`}
           >
             {w.filters[f]}
@@ -99,7 +99,7 @@ export function CycleList({
         ))}
       </div>
       {list.length === 0 ? (
-        <p className="py-6 text-center text-[13px] text-brand-gray">{w.noMatch}</p>
+        <p className="py-6 text-center text-[13px] text-secondary-foreground">{w.noMatch}</p>
       ) : (
         groupCycles(list.slice(0, shown)).map(({ group, cycles: items }) => (
           <CycleGroupSection key={group} group={group} cycles={items} selectedId={selectedId} view={view} onNavigate={onNavigate} />
@@ -109,7 +109,7 @@ export function CycleList({
         <button
           type="button"
           onClick={() => setShown((n) => n + PAGE)}
-          className="mt-2 min-h-(--control-h) w-full rounded-xl border border-brand-border text-[13px] font-semibold text-brand-near-black"
+          className="mt-2 min-h-(--control-h) w-full rounded-xl border border-border text-[13px] font-semibold text-foreground"
         >
           {w.showMore} ({list.length - shown})
         </button>
@@ -139,11 +139,11 @@ function CycleGroupSection({
     <section aria-labelledby={`${idPrefix}-${group}`} className="mt-3 first:mt-0">
       <h3
         id={`${idPrefix}-${group}`}
-        className={`px-2 text-label font-bold uppercase tracking-wide ${group === "toSettle" ? "text-primary-text" : "text-muted"}`}
+        className={`px-2 text-label font-bold uppercase tracking-wide ${group === "toSettle" ? "text-primary-text" : "text-muted-foreground"}`}
       >
         {w.groups[group]} ({cycles.length})
       </h3>
-      <ul className="mt-1 divide-y divide-brand-border">
+      <ul className="mt-1 divide-y divide-border">
         {cycles.map((c) => {
           const current = c.cycleId === selectedId;
           const state = STATUS[c.status] ?? c.status;
@@ -154,16 +154,16 @@ function CycleGroupSection({
                 onClick={onNavigate}
                 aria-current={current ? "page" : undefined}
                 className={`flex min-h-11 items-center gap-2 rounded-lg px-2 py-2 ${
-                  current ? "bg-primary-soft" : "hover:bg-tint/[0.03]"
+                  current ? "bg-primary-bg" : "hover:bg-tint/[0.03]"
                 }`}
               >
                 <span aria-hidden className={`h-2 w-2 shrink-0 rounded-full ${c.toSettle ? "bg-primary" : (DOT[c.status] ?? DOT.closed)}`} />
                 <span className="min-w-0 flex-1">
-                  <span className={`block truncate text-[13px] ${current ? "font-bold" : "font-medium"} text-brand-near-black`}>
+                  <span className={`block truncate text-[13px] ${current ? "font-bold" : "font-medium"} text-foreground`}>
                     {c.perOrder && <span aria-hidden>💳 </span>}
                     {c.title}
                   </span>
-                  <span className="block text-label text-muted">
+                  <span className="block text-label text-muted-foreground">
                     {c.settle ? `${state} · ${w.settleHints[c.settle]}` : state}
                     {c.date ? ` · ${formatDate(c.date, { day: "numeric", month: "short", year: "numeric" })}` : ""}
                   </span>
@@ -193,7 +193,7 @@ export function CycleShortlist({
   const groups = groupCycles(cycles).filter((g) => g.group !== "others");
   if (groups.length === 0) return null;
   return (
-    <div className="mb-3 rounded-xl border border-brand-border bg-surface p-2 lg:hidden">
+    <div className="mb-3 rounded-xl border border-border bg-card p-2 lg:hidden">
       {groups.map(({ group, cycles: items }) => (
         <CycleGroupSection key={group} group={group} cycles={items} selectedId={selectedId} view={view} idPrefix="shortlist" />
       ))}
@@ -217,12 +217,12 @@ export function CyclePicker({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="mb-3 flex min-h-11 w-full items-center justify-between gap-2 rounded-xl border border-brand-border bg-surface px-3 text-left text-[13px] font-semibold text-brand-near-black lg:hidden"
+        className="mb-3 flex min-h-11 w-full items-center justify-between gap-2 rounded-xl border border-border bg-card px-3 text-left text-[13px] font-semibold text-foreground lg:hidden"
       >
         <span>
           {t.admin.workspace.allCycles} ({cycles.length})
         </span>
-        <span aria-hidden className="text-brand-gray">
+        <span aria-hidden className="text-secondary-foreground">
           ▾
         </span>
       </button>

@@ -42,7 +42,7 @@ export function NotificationPreferencesForm({ initial }: Props) {
   }
 
   return (
-    <div className="overflow-hidden rounded-card border border-brand-border bg-surface shadow-card">
+    <div className="overflow-hidden rounded-card border border-border bg-card shadow-card">
       {NOTIFICATION_CATEGORIES.map((category, i) => {
         const cfg = t.notifications.settings.categories[category];
         const p = prefs[category];
@@ -50,12 +50,12 @@ export function NotificationPreferencesForm({ initial }: Props) {
           <div
             key={category}
             className={`flex items-start gap-3 px-4 py-3.5 ${
-              i < NOTIFICATION_CATEGORIES.length - 1 ? "border-b border-brand-border" : ""
+              i < NOTIFICATION_CATEGORIES.length - 1 ? "border-b border-border" : ""
             }`}
           >
             <div className="min-w-0 flex-1">
-              <div className="text-[14px] font-bold text-brand-near-black">{cfg.label}</div>
-              <div className="mt-0.75 text-[12px] leading-snug text-brand-gray">{cfg.hint}</div>
+              <div className="text-[14px] font-bold text-foreground">{cfg.label}</div>
+              <div className="mt-0.75 text-[12px] leading-snug text-secondary-foreground">{cfg.hint}</div>
             </div>
             <div className="flex shrink-0 gap-1">
               <ChannelToggle
@@ -91,7 +91,7 @@ function ChannelToggle({
 }) {
   return (
     <label className="flex w-[52px] cursor-pointer flex-col items-center gap-1 py-1">
-      <span className="font-mono text-label font-bold uppercase tracking-wider text-muted">
+      <span className="font-mono text-label font-bold uppercase tracking-wider text-muted-foreground">
         {label}
       </span>
       <input

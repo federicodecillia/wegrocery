@@ -7,8 +7,8 @@ import { APP_NAME, EMAIL_THEME, FLYLABS_URL, LOGO_HEIGHT, LOGO_PATH, LOGO_WIDTH,
 const WEB = join(import.meta.dirname, "..", "..");
 
 describe("EMAIL_THEME", () => {
-  // WeGrocery's token names (Playbook 2.2 deviation): the fixed colours live in
-  // app/globals.css, the brand roles in lib/brand/roles.ts.
+  // The fixed colours live in app/globals.css, the brand roles in
+  // lib/brand/roles.ts (computed per group).
   const css = readFileSync(join(WEB, "app", "globals.css"), "utf8");
   const root = css.slice(css.indexOf(":root {"));
   const token = (name: string) => root.match(new RegExp(`--${name}:\\s*([^;]+);`, "i"))?.[1].trim();
@@ -24,11 +24,11 @@ describe("EMAIL_THEME", () => {
   it("is the light theme of app/globals.css and the default brand palette", () => {
     expect(EMAIL_THEME).toEqual({
       background: roles["--background"],
-      card: token("surface"),
+      card: token("card"),
       foreground: token("foreground"),
-      mutedForeground: roles["--muted"],
+      mutedForeground: roles["--muted-foreground"],
       primaryText: roles["--primary-text"],
-      border: over(token("border")!, token("surface")!),
+      border: over(token("border")!, token("card")!),
     });
   });
 

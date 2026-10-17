@@ -33,19 +33,19 @@ export default async function GuideTopicPage({ params }: { params: Promise<{ top
       <div className="mb-4">
         <BackLink href="/guida">{t.guide.backToGuide}</BackLink>
       </div>
-      <h1 className="mb-1 flex items-center gap-2 text-title font-black text-brand-near-black">
+      <h1 className="mb-1 flex items-center gap-2 text-title font-black text-foreground">
         <span className="text-primary-text">
           <UiIcon name={topicIcon(topic.id)} className="h-6 w-6" />
         </span>
         {topic.title}
       </h1>
-      <p className="mb-5 text-[14px] leading-snug text-brand-gray">{topic.summary}</p>
+      <p className="mb-5 text-[14px] leading-snug text-secondary-foreground">{topic.summary}</p>
 
       {articles.map((article) => (
         <GuideArticleCard key={article.slug} article={article} />
       ))}
 
-      <h2 className="mb-3 mt-6 font-mono text-label uppercase tracking-[0.13em] text-brand-gray">{t.guide.otherTopics}</h2>
+      <h2 className="mb-3 mt-6 font-mono text-label uppercase tracking-[0.13em] text-secondary-foreground">{t.guide.otherTopics}</h2>
       <div className="flex flex-wrap gap-2">
         {guide.topics
           .filter((x) => x.id !== topic.id)
@@ -53,7 +53,7 @@ export default async function GuideTopicPage({ params }: { params: Promise<{ top
             <Link
               key={x.id}
               href={`/guida/${x.id}`}
-              className="inline-flex items-center gap-1 rounded-full border border-brand-border bg-surface px-3 py-1.5 text-[12px] font-bold text-brand-near-black hover:border-primary-mid"
+              className="inline-flex items-center gap-1 rounded-full border border-border bg-card px-3 py-1.5 text-[12px] font-bold text-foreground hover:border-primary-mid"
             >
               <UiIcon name={topicIcon(x.id)} className="h-4 w-4 text-primary-text" />
               {x.title}

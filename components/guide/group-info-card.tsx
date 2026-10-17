@@ -24,15 +24,15 @@ export function GroupInfoCard({ text }: { text: string }) {
   return (
     <section
       id={GROUP_INFO_SLUG}
-      className="mb-6 scroll-mt-24 rounded-card border border-accent bg-accent-soft p-4.5 target:ring-2 target:ring-accent/20"
+      className="mb-6 scroll-mt-24 rounded-card border border-accent bg-accent-bg p-4.5 target:ring-2 target:ring-accent/20"
     >
-      <h2 className="mb-2 flex items-center gap-2 text-[16px] font-extrabold tracking-[-0.01em] text-brand-near-black">
+      <h2 className="mb-2 flex items-center gap-2 text-[16px] font-extrabold tracking-[-0.01em] text-foreground">
         <span aria-hidden>🏠</span>
         {t.guide.groupTitle}
       </h2>
       <div className="space-y-3">
         {parseGroupInfo(text).map((lines, i) => (
-          <p key={i} className="text-[14px] leading-[1.5] text-brand-near-black">
+          <p key={i} className="text-[14px] leading-[1.5] text-foreground">
             {lines.map((segments, j) => (
               <Fragment key={j}>
                 {j > 0 && <br />}

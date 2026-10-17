@@ -1,5 +1,6 @@
 "use client";
 
+import { Ellipsis, X } from "lucide-react";
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { toast } from "@/components/ui/toast";
@@ -93,34 +94,35 @@ export function SociForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-xl border border-brand-border bg-surface p-4">
+    <form onSubmit={handleSubmit} className="rounded-xl border border-border bg-card p-4">
       <div className="mb-3 flex items-center justify-between">
-        <p className="text-[13px] font-bold text-brand-near-black">
+        <p className="text-[13px] font-bold text-foreground">
           {isEdit ? t.admin.members.editMember(member.fullName) : t.admin.members.addMember}
         </p>
         {close && (
-          <button type="button" onClick={close} className="text-label text-brand-gray">
-            ✕ {t.admin.common.cancel}
+          <button type="button" onClick={close} className="inline-flex items-center gap-1 text-label text-secondary-foreground">
+            <X aria-hidden className="size-3.5" />
+            {t.admin.common.cancel}
           </button>
         )}
       </div>
       <div className="space-y-3">
         <div>
           <label className="block">
-            <span className="block mb-1 text-label font-semibold uppercase tracking-wide text-brand-gray">
+            <span className="block mb-1 text-label font-semibold uppercase tracking-wide text-secondary-foreground">
               {t.admin.members.nameLabel}
             </span>
             <input
               name="fullName"
               required
               defaultValue={member?.fullName}
-              className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black"
+              className="w-full rounded-lg border border-border px-3 py-2 text-[13px] text-foreground"
             />
           </label>
         </div>
         <div>
           <label className="block">
-            <span className="block mb-1 text-label font-semibold uppercase tracking-wide text-brand-gray">
+            <span className="block mb-1 text-label font-semibold uppercase tracking-wide text-secondary-foreground">
               {t.admin.members.emailLabel}
             </span>
             <input
@@ -128,35 +130,35 @@ export function SociForm({
               type="email"
               required
               defaultValue={member?.email}
-              className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black"
+              className="w-full rounded-lg border border-border px-3 py-2 text-[13px] text-foreground"
             />
           </label>
         </div>
         <div>
           <label className="block">
-            <span className="block mb-1 text-label font-semibold uppercase tracking-wide text-brand-gray">
+            <span className="block mb-1 text-label font-semibold uppercase tracking-wide text-secondary-foreground">
               {t.admin.members.aliasEmailLabel}
-              <span className="ml-1 font-normal normal-case text-muted">{t.admin.members.aliasEmailHint}</span>
+              <span className="ml-1 font-normal normal-case text-muted-foreground">{t.admin.members.aliasEmailHint}</span>
             </span>
             <input
               name="aliasEmail"
               type="email"
               defaultValue={member?.aliasEmail ?? ""}
               placeholder={t.admin.members.aliasEmailPlaceholder}
-              className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black"
+              className="w-full rounded-lg border border-border px-3 py-2 text-[13px] text-foreground"
             />
           </label>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="block">
-              <span className="block mb-1 text-label font-semibold uppercase tracking-wide text-brand-gray">
+              <span className="block mb-1 text-label font-semibold uppercase tracking-wide text-secondary-foreground">
                 {t.admin.members.roleLabel}
               </span>
               <select
                 name="role"
                 defaultValue={normalizeRole(member?.role) ?? DEFAULT_ROLE}
-                className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black"
+                className="w-full rounded-lg border border-border px-3 py-2 text-[13px] text-foreground"
               >
                 {ROLES.map((r) => (
                   <option key={r} value={r}>
@@ -168,13 +170,13 @@ export function SociForm({
           </div>
           <div>
             <label className="block">
-              <span className="block mb-1 text-label font-semibold uppercase tracking-wide text-brand-gray">
+              <span className="block mb-1 text-label font-semibold uppercase tracking-wide text-secondary-foreground">
                 {t.admin.members.statusLabel}
               </span>
               <select
                 name="active"
                 defaultValue={String(member?.active ?? true)}
-                className="w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black"
+                className="w-full rounded-lg border border-border px-3 py-2 text-[13px] text-foreground"
               >
                 <option value="true">{t.admin.members.statusActive}</option>
                 <option value="false">{t.admin.members.statusInactive}</option>
@@ -183,7 +185,7 @@ export function SociForm({
           </div>
         </div>
         {offlineOption && (
-          <label className="flex items-start gap-2 text-[13px] text-brand-near-black">
+          <label className="flex items-start gap-2 text-[13px] text-foreground">
             <input
               name="paysOffline"
               type="checkbox"
@@ -192,7 +194,7 @@ export function SociForm({
             />
             <span>
               <span className="font-semibold">{t.admin.members.paysOfflineLabel}</span>
-              <span className="block text-label text-muted">{t.admin.members.paysOfflineHint}</span>
+              <span className="block text-label text-muted-foreground">{t.admin.members.paysOfflineHint}</span>
             </span>
           </label>
         )}
@@ -200,7 +202,7 @@ export function SociForm({
       <button
         type="submit"
         disabled={isPending}
-        className="mt-4 w-full rounded-xl bg-primary py-2 text-[13px] font-bold text-on-primary disabled:opacity-60"
+        className="mt-4 w-full rounded-xl bg-primary py-2 text-[13px] font-bold text-primary-foreground disabled:opacity-60"
       >
         {isPending ? t.admin.common.saving : isEdit ? t.admin.members.submitEdit : t.admin.members.submitAdd}
       </button>
@@ -301,10 +303,10 @@ export function SociList({
     if (list.length === 0) return null;
     return (
       <div className="mb-4">
-        <p className="mb-1 px-1 font-mono text-label uppercase tracking-wider text-muted">
+        <p className="mb-1 px-1 font-mono text-label uppercase tracking-wider text-muted-foreground">
           {label} ({list.length})
         </p>
-        <div className="divide-y divide-brand-border rounded-xl border border-brand-border bg-surface">
+        <div className="divide-y divide-border rounded-xl border border-border bg-card">
           {list.map((m) =>
             editingId === m.memberId ? (
               <div key={m.memberId} className="p-4">
@@ -327,26 +329,26 @@ export function SociList({
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                    <span className="break-words text-[14px] font-medium text-brand-near-black">{m.fullName}</span>
+                    <span className="break-words text-[14px] font-medium text-foreground">{m.fullName}</span>
                     <span className={`whitespace-nowrap rounded-full px-2 py-0.5 text-label font-semibold ${roleColor}`}>
                       {getRoleLabel(m.role)}
                     </span>
                     {!m.active && (
-                      <span className="rounded-full bg-danger-soft px-1.5 py-0.5 text-label font-bold text-danger-text">
+                      <span className="rounded-full bg-danger-bg px-1.5 py-0.5 text-label font-bold text-destructive">
                         {t.admin.members.inactiveBadge}
                       </span>
                     )}
                     {offlineOption && m.paysOffline && (
-                      <span className="rounded-full bg-primary-soft px-1.5 py-0.5 text-label font-bold text-primary-text">
+                      <span className="rounded-full bg-primary-bg px-1.5 py-0.5 text-label font-bold text-primary-text">
                         {t.admin.members.paysOfflineBadge}
                       </span>
                     )}
                   </div>
-                  <div className="mt-0.5 text-label text-muted">
+                  <div className="mt-0.5 text-label text-muted-foreground">
                     {m.lastLoginAt ? t.admin.members.lastLogin(formatDate(m.lastLoginAt)) : t.admin.members.neverLoggedIn}
                   </div>
                   {m.mergedIntoName && (
-                    <div className="mt-0.5 text-label text-brand-gray">{t.admin.members.merge.mergedBadge(m.mergedIntoName)}</div>
+                    <div className="mt-0.5 text-label text-secondary-foreground">{t.admin.members.merge.mergedBadge(m.mergedIntoName)}</div>
                   )}
                   {(m.householdOfName || m.familyNames) && (
                     <div className="mt-0.5 text-label font-medium text-accent-text">
@@ -358,11 +360,11 @@ export function SociList({
                   <Link
                     href={adminHref("soci", null, { member: m.memberId })}
                     aria-label={t.admin.members.ordersAria(m.fullName)}
-                    className="hit-44 inline-flex min-h-(--control-h) whitespace-nowrap rounded-full border border-brand-border px-3 py-1.5 text-label font-semibold items-center text-brand-near-black"
+                    className="hit-44 inline-flex min-h-(--control-h) whitespace-nowrap rounded-full border border-border px-3 py-1.5 text-label font-semibold items-center text-foreground"
                   >
                     {t.admin.members.ordersLink}
                   </Link>
-                  <button onClick={() => setEditingId(m.memberId)} className="hit-44 min-h-(--control-h) whitespace-nowrap rounded-full border border-brand-border px-3 py-1.5 text-label font-semibold text-brand-near-black">
+                  <button onClick={() => setEditingId(m.memberId)} className="hit-44 min-h-(--control-h) whitespace-nowrap rounded-full border border-border px-3 py-1.5 text-label font-semibold text-foreground">
                     {t.admin.common.edit}
                   </button>
                   <div className="hidden items-center gap-2 lg:flex">
@@ -370,7 +372,7 @@ export function SociList({
                       <button
                         onClick={() => handleInvite(m)}
                         disabled={inviting}
-                        className="min-h-(--control-h) whitespace-nowrap rounded-full border border-brand-border px-3 py-1.5 text-label font-semibold text-accent-text disabled:opacity-40"
+                        className="min-h-(--control-h) whitespace-nowrap rounded-full border border-border px-3 py-1.5 text-label font-semibold text-accent-text disabled:opacity-40"
                       >
                         {t.admin.members.invite}
                       </button>
@@ -379,13 +381,13 @@ export function SociList({
                       <button
                         onClick={() => handleUnlink(m)}
                         disabled={unlinking}
-                        className="min-h-(--control-h) whitespace-nowrap rounded-full border border-brand-border px-3 py-1.5 text-label font-semibold text-brand-gray disabled:opacity-40"
+                        className="min-h-(--control-h) whitespace-nowrap rounded-full border border-border px-3 py-1.5 text-label font-semibold text-secondary-foreground disabled:opacity-40"
                       >
                         {t.admin.members.familyUnlink}
                       </button>
                     )}
                     {canMerge(m) && (
-                      <button onClick={() => requestMerge({ absorbedId: m.memberId })} className="min-h-(--control-h) whitespace-nowrap rounded-full border border-brand-border px-3 py-1.5 text-label font-semibold text-brand-gray">
+                      <button onClick={() => requestMerge({ absorbedId: m.memberId })} className="min-h-(--control-h) whitespace-nowrap rounded-full border border-border px-3 py-1.5 text-label font-semibold text-secondary-foreground">
                         {t.admin.members.merge.button}
                       </button>
                     )}
@@ -393,18 +395,18 @@ export function SociList({
                       onClick={() => handleDelete(m)}
                       disabled={deletingId}
                       aria-label={t.admin.members.deleteAria(m.fullName)}
-                      className="flex h-9 w-9 items-center justify-center rounded-full border border-danger-text/30 text-label font-semibold text-danger-text disabled:opacity-40"
+                      className="flex h-9 w-9 items-center justify-center rounded-full border border-destructive/30 text-label font-semibold text-destructive disabled:opacity-40"
                     >
-                      <span aria-hidden>✕</span>
+<X aria-hidden className="size-4" />
                     </button>
                   </div>
                   <button
                     onClick={() => setActionsFor(m)}
                     aria-label={t.admin.members.moreAria(m.fullName)}
                     aria-haspopup="dialog"
-                    className="hit-44 flex size-(--control-h) items-center justify-center rounded-full border border-brand-border text-[16px] leading-none text-brand-near-black lg:hidden"
+                    className="hit-44 flex size-(--control-h) items-center justify-center rounded-full border border-border text-[16px] leading-none text-foreground lg:hidden"
                   >
-                    <span aria-hidden>⋯</span>
+<Ellipsis aria-hidden className="size-4" />
                   </button>
                 </div>
               </div>
@@ -423,7 +425,7 @@ export function SociList({
           placeholder={t.admin.members.searchPlaceholder}
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
-          className="w-full rounded-xl border border-brand-border bg-surface px-4 py-2.5 text-[13px] text-brand-near-black placeholder:text-muted"
+          className="w-full rounded-xl border border-border bg-card px-4 py-2.5 text-[13px] text-foreground placeholder:text-muted-foreground"
         />
       </div>
       <DuplicateMembers
@@ -431,11 +433,11 @@ export function SociList({
         members={members}
         onMerge={(p) => requestMerge({ absorbedId: p.absorbedId, survivorId: p.survivorId })}
       />
-      {renderGroup(t.roles.admin, inGroup("admin"), "bg-primary-soft text-primary-text")}
-      {renderGroup(t.roles.attivi, inGroup("attivi"), "bg-accent-soft text-accent-text")}
-      {renderGroup(t.roles.utenti, inGroup("utenti"), "bg-tint/[0.05] text-brand-gray")}
+      {renderGroup(t.roles.admin, inGroup("admin"), "bg-primary-bg text-primary-text")}
+      {renderGroup(t.roles.attivi, inGroup("attivi"), "bg-accent-bg text-accent-text")}
+      {renderGroup(t.roles.utenti, inGroup("utenti"), "bg-tint/[0.05] text-secondary-foreground")}
       {visible.length === 0 && (
-        <div className="py-6 text-center text-[12px] text-brand-gray">{t.admin.common.noResults}</div>
+        <div className="py-6 text-center text-[12px] text-secondary-foreground">{t.admin.common.noResults}</div>
       )}
       <Sheet
         open={actionsFor !== null}
@@ -445,7 +447,7 @@ export function SociList({
         subtitle={actionsFor ? getRoleLabel(actionsFor.role) : undefined}
       >
         {actionsFor && (
-          <div className="divide-y divide-brand-border pb-[env(safe-area-inset-bottom)]">
+          <div className="divide-y divide-border pb-[env(safe-area-inset-bottom)]">
             {actionsFor.active && (
               <SheetAction onClick={() => runAction(() => handleInvite(actionsFor))} className="text-accent-text">
                 {t.admin.members.invite}
@@ -459,7 +461,7 @@ export function SociList({
                 {t.admin.members.merge.button}
               </SheetAction>
             )}
-            <SheetAction onClick={() => runAction(() => handleDelete(actionsFor))} className="text-danger-text">
+            <SheetAction onClick={() => runAction(() => handleDelete(actionsFor))} className="text-destructive">
               {t.admin.members.deleteAction}
             </SheetAction>
           </div>
@@ -481,7 +483,7 @@ export function SociList({
   );
 }
 
-function SheetAction({ onClick, className = "text-brand-near-black", children }: { onClick: () => void; className?: string; children: React.ReactNode }) {
+function SheetAction({ onClick, className = "text-foreground", children }: { onClick: () => void; className?: string; children: React.ReactNode }) {
   return (
     <button type="button" onClick={onClick} className={`flex min-h-12 w-full items-center px-1 text-left text-[15px] font-semibold ${className}`}>
       {children}

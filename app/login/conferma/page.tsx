@@ -18,23 +18,23 @@ export default async function ConfirmSignInPage({
   const callbackURL = safeCallbackPath(next);
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-[480px] flex-col items-center justify-center p-6">
-      <div className="w-full rounded-lg border border-brand-border bg-surface p-6">
+      <div className="w-full rounded-lg border border-border bg-card p-6">
         <h1 className="text-xl font-semibold">{brand.appName}</h1>
         {token ? (
           <form action="/api/auth/magic-link/verify" method="get" className="mt-4 space-y-3">
-            <p className="text-sm text-brand-gray">{t.login.confirmMessage}</p>
+            <p className="text-sm text-secondary-foreground">{t.login.confirmMessage}</p>
             <input type="hidden" name="token" value={token} />
             <input type="hidden" name="callbackURL" value={callbackURL} />
             <input type="hidden" name="errorCallbackURL" value="/login?error=LinkInvalid" />
             <button
               type="submit"
-              className="w-full rounded-full bg-primary px-4 py-3 text-sm font-bold text-on-primary"
+              className="w-full rounded-full bg-primary px-4 py-3 text-sm font-bold text-primary-foreground"
             >
               {t.login.confirmButton}
             </button>
           </form>
         ) : (
-          <p className="mt-4 text-sm text-brand-gray">{t.login.linkInvalid}</p>
+          <p className="mt-4 text-sm text-secondary-foreground">{t.login.linkInvalid}</p>
         )}
       </div>
     </main>

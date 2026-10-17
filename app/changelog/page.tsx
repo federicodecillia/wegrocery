@@ -30,7 +30,7 @@ export default async function ChangelogPage({ searchParams }: { searchParams: Se
     >
       <ChangelogView versions={versions} lang={lang} showTechnical={readShowTechnical(tech)} />
 
-      <div className="mt-8 text-center text-label text-muted">
+      <div className="mt-8 text-center text-label text-muted-foreground">
         <Link href="/guida" className="text-accent-text underline-offset-2 hover:underline">
           ← {t.backToGuide}
         </Link>

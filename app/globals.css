@@ -1,27 +1,38 @@
 @import "tailwindcss";
 
 :root {
-  /* Brand colours (--primary, --accent, --background, --frame and the text
-     colours derived from them) are set on <html> by app/layout.tsx from
-     lib/brand/roles.ts. Only colours that no brand changes live here. */
+  /* Role tokens with the shadcn names (FlyLabs Playbook 2.2). The group's
+     colours (--primary, --accent, --background, --frame) and the tokens
+     computed from them (--primary-foreground, --primary-text, --muted-foreground,
+     --input, --ring...) are set on <html> by app/layout.tsx from
+     lib/brand/roles.ts, light and dark. Only colours no group changes live here;
+     roles.ts sets their dark values. */
   --foreground: #2d2b29;
-  --gray: #58595b;
-  --gray-l: #adadad; /* fills and disabled states only: too light for text */
-  --near-blk: #2d2b29;
-  /* Danger: a fill with its text, red text, and a soft background. */
+  --card: #ffffff;
+  --card-foreground: #2d2b29;
+  --popover: #ffffff;
+  --popover-foreground: #2d2b29;
+  /* A faint neutral fill (shadcn muted and secondary) with its text. */
+  --muted: #f3f2f0;
+  --secondary: #f3f2f0;
+  --secondary-foreground: #58595b; /* secondary text, darker than muted-foreground */
+  --neutral: #adadad; /* fills and disabled states only: too light for text */
+  /* Danger: a fill with its text, red text (destructive), and a soft background. */
   --danger: #c53030;
-  --on-danger: #ffffff;
-  --danger-text: #c53030;
-  --danger-soft: #feecec;
-  --warning: #b45309; /* warning fills with white text (AA, checked in design-guard) */
-  --on-warning: #ffffff;
+  --danger-foreground: #ffffff;
+  --destructive: #c53030;
+  --danger-bg: #feecec;
+  --warning: #b45309; /* warning fills with white text, and warning text (AA, checked in the tests) */
+  --warning-foreground: #ffffff;
+  --warning-bg: #fef5ea;
+  --success: #2b7a3d;
+  --success-bg: #e9f6ec;
   --border: rgba(88, 89, 91, 0.1);
-  /* Cards and sheets sit on --surface; --inverse is the dark button and toast
-     fill (light in the dark theme) with --on-inverse text; --tint is the
-     colour of the faint fills over a surface (black in light, white in dark). */
-  --surface: #ffffff;
+  /* --inverse is the dark button and toast fill (light in the dark theme)
+     with --inverse-foreground text; --tint is the colour of the faint fills
+     over a card (black in light, white in dark). */
   --inverse: #2d2b29;
-  --on-inverse: #ffffff;
+  --inverse-foreground: #ffffff;
   --tint: #000000;
   --nav-h: 82px;
   /* Height of a compact control: 40 px with a mouse, 44 px on touch. */
@@ -37,32 +48,40 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-brand-frame: var(--frame);
+  --color-frame: var(--frame);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
-  --color-primary-soft: var(--primary-soft);
-  --color-primary-mid: color-mix(in srgb, var(--primary) 30%, transparent);
-  --color-on-primary: var(--on-primary);
+  --color-primary-foreground: var(--primary-foreground);
   --color-primary-text: var(--primary-text);
-  --color-accent: var(--accent);
-  --color-accent-soft: var(--accent-soft);
-  --color-on-accent: var(--on-accent);
-  --color-accent-text: var(--accent-text);
+  --color-primary-bg: var(--primary-bg);
+  --color-primary-mid: color-mix(in srgb, var(--primary) 30%, transparent);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
-  --color-brand-gray: var(--gray);
-  --color-brand-gray-light: var(--gray-l);
-  --color-brand-near-black: var(--near-blk);
-  --color-brand-warm-white: var(--warm-wh);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent-text: var(--accent-text);
+  --color-accent-bg: var(--accent-bg);
+  --color-neutral: var(--neutral);
+  --color-destructive: var(--destructive);
   --color-danger: var(--danger);
-  --color-on-danger: var(--on-danger);
-  --color-danger-text: var(--danger-text);
-  --color-danger-soft: var(--danger-soft);
-  --color-on-warning: var(--on-warning);
-  --color-surface: var(--surface);
-  --color-inverse: var(--inverse);
-  --color-on-inverse: var(--on-inverse);
-  --color-tint: var(--tint);
+  --color-danger-foreground: var(--danger-foreground);
+  --color-danger-bg: var(--danger-bg);
   --color-warning: var(--warning);
-  --color-brand-border: var(--border);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-warning-bg: var(--warning-bg);
+  --color-success: var(--success);
+  --color-success-bg: var(--success-bg);
+  --color-inverse: var(--inverse);
+  --color-inverse-foreground: var(--inverse-foreground);
+  --color-tint: var(--tint);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
   --spacing-nav-h: var(--nav-h);
   /* Smallest text in the app: labels, badges, captions. Nothing goes under it. */
   --text-label: 0.75rem;
@@ -96,12 +115,12 @@ body {
   }
 }
 
-/* One focus outline for every brand: primary-text is computed for 4.5:1 on
-   the light surfaces, well past the 3:1 a focus indicator needs. Unlayered on
+/* One focus outline for every brand: --ring is --primary-text, computed for
+   4.5:1 on the surfaces, well past the 3:1 a focus indicator needs. Unlayered on
    purpose, so no utility (a stray focus:outline-none) can hide it. Browsers
    show it for keyboard focus, and on fields for any focus. */
 :focus-visible {
-  outline: 2px solid var(--primary-text);
+  outline: 2px solid var(--ring);
   outline-offset: 2px;
 }
 /* Programmatic focus targets (a heading or <main> after a jump) stay plain. */

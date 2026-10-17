@@ -31,7 +31,7 @@ export async function AppShell({ children, email, name, isAdmin, memberId, perso
   const unreadCount = await getUnreadNotificationCount(notificationOwners(memberId, personId));
 
   return (
-    <div className="min-h-screen bg-brand-frame sm:p-6 md:flex md:bg-brand-warm-white md:p-0">
+    <div className="min-h-screen bg-frame sm:p-6 md:flex md:bg-background md:p-0">
       {/* From md the rail (tablet) or sidebar (PC) replaces the header and the bottom bar. */}
       <Suspense>
         <SideNav
@@ -50,17 +50,17 @@ export async function AppShell({ children, email, name, isAdmin, memberId, perso
       {/* overflow-clip (not hidden): hidden would create a scroll container
           and break position:sticky for BottomNav and the order footer. */}
       <div
-        className={`mx-auto flex min-h-screen w-full flex-col bg-brand-warm-white sm:min-h-[calc(100vh-3rem)] sm:overflow-clip sm:rounded-xl sm:border sm:border-brand-border sm:shadow-sm md:min-h-screen md:min-w-0 md:flex-1 md:rounded-none md:border-0 md:shadow-none ${SHELL_WIDTH}`}
+        className={`mx-auto flex min-h-screen w-full flex-col bg-background sm:min-h-[calc(100vh-3rem)] sm:overflow-clip sm:rounded-xl sm:border sm:border-border sm:shadow-sm md:min-h-screen md:min-w-0 md:flex-1 md:rounded-none md:border-0 md:shadow-none ${SHELL_WIDTH}`}
       >
         {/* First stop for keyboard users: past the header and the nav. */}
         <a
           href="#main"
-          className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[200] focus:rounded-full focus:bg-inverse focus:px-4 focus:py-2 focus:text-sm focus:font-bold focus:text-on-inverse"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[200] focus:rounded-full focus:bg-inverse focus:px-4 focus:py-2 focus:text-sm focus:font-bold focus:text-inverse-foreground"
         >
           {t.common.skipToContent}
         </a>
         <DemoBanner />
-        <header className="border-b border-brand-border px-5 py-4 md:hidden">
+        <header className="border-b border-border px-5 py-4 md:hidden">
           {/* One row: logo, then (from lg) the menu, then the bell and the avatar. */}
           <div className="flex items-center justify-between gap-3 lg:gap-6">
             {/* A long app name wraps instead of pushing the avatar off the card. */}
@@ -68,7 +68,7 @@ export async function AppShell({ children, email, name, isAdmin, memberId, perso
               <Link href="/" aria-label={t.nav.home} className="inline-flex min-h-11 items-center gap-2">
                 <Image src={brand.logoUrl} alt={brand.appName} width={26} height={26} priority className="h-[26px] w-auto shrink-0" />
                 {brand.headerShowName && (
-                  <span className="text-[15px] font-semibold text-brand-near-black">{brand.appName}</span>
+                  <span className="text-[15px] font-semibold text-foreground">{brand.appName}</span>
                 )}
               </Link>
             </div>
@@ -87,7 +87,7 @@ export async function AppShell({ children, email, name, isAdmin, memberId, perso
           {children}
           {brand.privacyUrl ? (
             <p className="mt-8 text-center text-xs">
-              <a href={brand.privacyUrl} target="_blank" rel="noopener noreferrer" className="text-brand-gray underline">
+              <a href={brand.privacyUrl} target="_blank" rel="noopener noreferrer" className="text-secondary-foreground underline">
                 {t.login.privacyLink}
               </a>
             </p>

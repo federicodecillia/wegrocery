@@ -1,5 +1,6 @@
 "use client";
 
+import { X } from "lucide-react";
 import { confirm } from "@/components/ui/confirm-dialog";
 import { useState, useTransition } from "react";
 import { toast } from "@/components/ui/toast";
@@ -72,21 +73,22 @@ export function FornitoriForm({
   }
 
   const inputCls =
-    "w-full rounded-lg border border-brand-border px-3 py-2 text-[13px] text-brand-near-black";
-  const labelCls = "mb-1 block text-label font-semibold uppercase tracking-wide text-brand-gray";
+    "w-full rounded-lg border border-border px-3 py-2 text-[13px] text-foreground";
+  const labelCls = "mb-1 block text-label font-semibold uppercase tracking-wide text-secondary-foreground";
 
   return (
     <form
       onSubmit={handleSubmit}
-      className="rounded-xl border border-brand-border bg-surface p-4"
+      className="rounded-xl border border-border bg-card p-4"
     >
       <div className="mb-3 flex items-center justify-between">
-        <p className="text-[13px] font-bold text-brand-near-black">
+        <p className="text-[13px] font-bold text-foreground">
           {isEdit ? t.admin.suppliers.editSupplier(supplier.name) : t.admin.suppliers.addSupplier}
         </p>
         {close && (
-          <button type="button" onClick={close} className="text-label text-brand-gray">
-            ✕ {t.admin.common.cancel}
+          <button type="button" onClick={close} className="inline-flex items-center gap-1 text-label text-secondary-foreground">
+            <X aria-hidden className="size-3.5" />
+            {t.admin.common.cancel}
           </button>
         )}
       </div>
@@ -176,7 +178,7 @@ export function FornitoriForm({
       <button
         type="submit"
         disabled={isPending}
-        className="mt-4 w-full rounded-xl bg-primary py-2 text-[13px] font-bold text-on-primary disabled:opacity-60"
+        className="mt-4 w-full rounded-xl bg-primary py-2 text-[13px] font-bold text-primary-foreground disabled:opacity-60"
       >
         {isPending ? t.admin.common.saving : isEdit ? t.admin.suppliers.submitEdit : t.admin.suppliers.submitAdd}
       </button>
@@ -240,12 +242,12 @@ export function FornitoriList({
     if (list.length === 0) return null;
     return (
       <div className="mb-4">
-        <p className="mb-1 px-1 font-mono text-label uppercase tracking-wider text-muted">
+        <p className="mb-1 px-1 font-mono text-label uppercase tracking-wider text-muted-foreground">
           {label} ({list.length})
         </p>
-        <div className="overflow-hidden rounded-xl border border-brand-border bg-surface">
+        <div className="overflow-hidden rounded-xl border border-border bg-card">
           {list.map((s) => (
-            <div key={s.supplierId} className="divide-y divide-brand-border">
+            <div key={s.supplierId} className="divide-y divide-border">
               {editingId === s.supplierId ? (
                 <div className="p-4">
                   <FornitoriForm supplier={s} onClose={() => setEditingId(null)} />
@@ -254,26 +256,26 @@ export function FornitoriList({
                 <>
                   {/* Supplier row: the name toggles the details, the actions
                       sit beside it (never inside it: no nested controls). */}
-                  <div className="flex items-center gap-2 border-b border-brand-border pr-4">
+                  <div className="flex items-center gap-2 border-b border-border pr-4">
                     <button
                       type="button"
                       onClick={() => setExpandedId(expandedId === s.supplierId ? null : s.supplierId)}
                       aria-expanded={expandedId === s.supplierId}
                       className="flex min-h-14 min-w-0 flex-1 items-center gap-2 py-3 pl-4 text-left"
                     >
-                      <span aria-hidden className="text-label text-muted">
+                      <span aria-hidden className="text-label text-muted-foreground">
                         {expandedId === s.supplierId ? "▲" : "▼"}
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="flex items-center gap-2">
-                          <span className="text-[13px] font-semibold text-brand-near-black">{s.name}</span>
+                          <span className="text-[13px] font-semibold text-foreground">{s.name}</span>
                           {!s.active && (
-                            <span className="rounded-full bg-tint/[0.05] px-1.5 py-0.5 text-label font-bold text-brand-gray">
+                            <span className="rounded-full bg-tint/[0.05] px-1.5 py-0.5 text-label font-bold text-secondary-foreground">
                               {t.admin.suppliers.archivedBadge}
                             </span>
                           )}
                         </span>
-                        <span className="mt-0.5 block tabular-nums text-label text-muted">
+                        <span className="mt-0.5 block tabular-nums text-label text-muted-foreground">
                           {s.macroCategory && `${s.macroCategory} · `}
                           {s.contactName && `${s.contactName} · `}
                           {t.admin.suppliers.cyclesCount(s.cycleCount)}
@@ -284,14 +286,14 @@ export function FornitoriList({
                       <button
                         type="button"
                         onClick={() => setEditingId(s.supplierId)}
-                        className="min-h-(--control-h) rounded-full border border-brand-border px-3 py-1 text-label font-semibold text-brand-gray"
+                        className="min-h-(--control-h) rounded-full border border-border px-3 py-1 text-label font-semibold text-secondary-foreground"
                       >
                         {t.admin.common.edit}
                       </button>
                       <button
                         type="button"
                         onClick={() => handleArchive(s)}
-                        className="min-h-(--control-h) rounded-full border border-brand-border px-3 py-1 text-label font-semibold text-brand-gray"
+                        className="min-h-(--control-h) rounded-full border border-border px-3 py-1 text-label font-semibold text-secondary-foreground"
                       >
                         {s.active ? t.admin.common.archive : t.admin.common.restore}
                       </button>
@@ -300,9 +302,9 @@ export function FornitoriList({
                           type="button"
                           onClick={() => handleDelete(s)}
                           aria-label={t.admin.suppliers.deleteAria(s.name)}
-                          className="flex h-9 w-9 items-center justify-center rounded-full border border-danger-text/30 text-label font-semibold text-danger-text"
+                          className="flex h-9 w-9 items-center justify-center rounded-full border border-destructive/30 text-label font-semibold text-destructive"
                         >
-                          <span aria-hidden>✕</span>
+<X aria-hidden className="size-4" />
                         </button>
                       )}
                     </div>
@@ -312,11 +314,11 @@ export function FornitoriList({
                   {expandedId === s.supplierId && (
                     <div className="bg-tint/[0.01] px-4 py-3">
                       {(s.phone || s.email || s.address) && (
-                        <div className="mb-3 space-y-0.5 tabular-nums text-label text-brand-gray">
+                        <div className="mb-3 space-y-0.5 tabular-nums text-label text-secondary-foreground">
                           {s.phone && <div>📞 {s.phone}</div>}
                           {s.email && <div>✉ {s.email}</div>}
                           {s.address && <div>📍 {s.address}</div>}
-                          {s.notes && <div className="mt-1 italic text-muted">{s.notes}</div>}
+                          {s.notes && <div className="mt-1 italic text-muted-foreground">{s.notes}</div>}
                         </div>
                       )}
 
@@ -346,13 +348,13 @@ export function FornitoriList({
           placeholder={t.admin.suppliers.searchPlaceholder}
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
-          className="w-full rounded-xl border border-brand-border px-4 py-2.5 text-[13px] text-brand-near-black"
+          className="w-full rounded-xl border border-border px-4 py-2.5 text-[13px] text-foreground"
         />
       </div>
       {renderGroup(t.admin.suppliers.groupActive, active)}
       {renderGroup(t.admin.suppliers.groupArchived, archived)}
       {suppliers.length === 0 && (
-        <div className="rounded-xl border border-dashed border-brand-border p-6 text-center text-[13px] text-brand-gray">
+        <div className="rounded-xl border border-dashed border-border p-6 text-center text-[13px] text-secondary-foreground">
           {t.admin.suppliers.noSuppliers}
         </div>
       )}

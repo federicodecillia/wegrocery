@@ -41,10 +41,10 @@ export function DuplicateMembers({
   const line = (m: PairMember) => (
     <div className="min-w-0">
       <div className="flex flex-wrap items-center gap-x-2">
-        <span className="break-words text-[13px] font-medium text-brand-near-black">{m.fullName}</span>
-        <span className="text-label text-muted">{getRoleLabel(m.role)}</span>
+        <span className="break-words text-[13px] font-medium text-foreground">{m.fullName}</span>
+        <span className="text-label text-muted-foreground">{getRoleLabel(m.role)}</span>
       </div>
-      <div className="break-all font-mono text-label text-brand-gray">
+      <div className="break-all text-label text-secondary-foreground">
         {m.email}
         {m.aliasEmail ? ` · ${m.aliasEmail}` : ""}
       </div>
@@ -52,29 +52,29 @@ export function DuplicateMembers({
   );
 
   return (
-    <div className="mb-4 rounded-xl border border-primary-mid bg-primary-soft p-4">
-      <p className="text-[13px] font-semibold text-brand-near-black">{d.title(rows.length)}</p>
-      <p className="mt-1 text-label text-brand-gray">{d.intro}</p>
+    <div className="mb-4 rounded-xl border border-primary-mid bg-primary-bg p-4">
+      <p className="text-[13px] font-semibold text-foreground">{d.title(rows.length)}</p>
+      <p className="mt-1 text-label text-secondary-foreground">{d.intro}</p>
       <ul className="mt-3 space-y-2">
         {rows.map(({ pair, survivor, absorbed }) => (
           <li
             key={`${pair.survivorId}:${pair.absorbedId}`}
-            className="space-y-2 rounded-lg border border-brand-border bg-surface p-3"
+            className="space-y-2 rounded-lg border border-border bg-card p-3"
           >
             {line(survivor)}
             {line(absorbed)}
-            <p className="text-label text-muted">{d.reasons[pair.reason]}</p>
+            <p className="text-label text-muted-foreground">{d.reasons[pair.reason]}</p>
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => onMerge(pair)}
-                className="min-h-[36px] rounded-full bg-primary px-3 text-label font-bold text-on-primary"
+                className="min-h-[36px] rounded-full bg-primary px-3 text-label font-bold text-primary-foreground"
               >
                 {d.merge}
               </button>
               <button
                 onClick={() => dismiss(pair)}
                 disabled={isPending}
-                className="min-h-[36px] rounded-full border border-brand-border bg-surface px-3 text-label font-semibold text-brand-gray disabled:opacity-40"
+                className="min-h-[36px] rounded-full border border-border bg-card px-3 text-label font-semibold text-secondary-foreground disabled:opacity-40"
               >
                 {d.dismiss}
               </button>
