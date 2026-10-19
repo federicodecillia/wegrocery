@@ -1,10 +1,11 @@
 {
   "app": "wegrocery",
-  "kit": "0.11",
+  "kit": "0.12",
   "modules": {
     "changelog": "1.0",
     "console": "1.0",
-    "email": "1.0",
+    "email": "1.1",
+    "firma": "1.0",
     "guida": "1.0"
   },
   "notAdopted": {

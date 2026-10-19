@@ -34,6 +34,11 @@
   --inverse: #2d2b29;
   --inverse-foreground: #ffffff;
   --tint: #000000;
+  /* The flylabs.ai logo's colours for the "by flylabs.ai" signature
+     (components/by-flylabs.tsx, Playbook 2.11): FlyLabs' own, not the
+     group's, so no brand changes them. The dark pair is in lib/brand/roles.ts. */
+  --flylabs-ai: #343bec;
+  --flylabs-spark: #d99a00;
   --nav-h: 82px;
   /* Height of a compact control: 40 px with a mouse, 44 px on touch. */
   --control-h: 40px;

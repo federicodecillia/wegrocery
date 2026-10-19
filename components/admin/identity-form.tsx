@@ -97,6 +97,7 @@ function IdentitySection({ defaults, current, logoUrl, uploadedLogo }: Props) {
   const [description, setDescription] = useState(current.description ?? "");
   const [orgName, setOrgName] = useState(current.orgName ?? "");
   const [showName, setShowName] = useState(current.headerShowName ?? defaults.headerShowName);
+  const [signature, setSignature] = useState(current.flylabsSignature ?? defaults.flylabsSignature);
   const [theme, setTheme] = useState<Record<ThemeKey, string>>(
     () => Object.fromEntries(THEME_KEYS.map((k) => [k, current.theme?.[k] ?? ""])) as Record<ThemeKey, string>,
   );
@@ -113,7 +114,7 @@ function IdentitySection({ defaults, current, logoUrl, uploadedLogo }: Props) {
   const vars = deriveRoleVars(validTheme);
 
   function handleSave() {
-    save({ appName, shortName, description, orgName, headerShowName: showName, theme });
+    save({ appName, shortName, description, orgName, headerShowName: showName, flylabsSignature: signature, theme });
   }
 
   return (
@@ -134,6 +135,12 @@ function IdentitySection({ defaults, current, logoUrl, uploadedLogo }: Props) {
         <input type="checkbox" checked={showName} onChange={(e) => setShowName(e.target.checked)} className="h-4 w-4" />
         {s.headerShowName}
       </label>
+
+      <label className="mt-1 flex min-h-11 items-center gap-2 text-[13px] text-foreground">
+        <input type="checkbox" checked={signature} onChange={(e) => setSignature(e.target.checked)} aria-describedby="identity-signature-hint" className="h-4 w-4" />
+        {s.flylabsSignature}
+      </label>
+      <p id="identity-signature-hint" className={hint}>{s.flylabsSignatureHint}</p>
 
       <h4 className="mt-4 text-[12px] font-bold text-foreground">{s.colors}</h4>
       <p className={hint}>{s.colorsHint}</p>

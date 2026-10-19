@@ -193,9 +193,10 @@ describe("design guard", () => {
     const pkg = JSON.parse(readFileSync("package.json", "utf8")) as { dependencies: Record<string, string> };
     expect(Object.keys(pkg.dependencies)).toEqual(expect.arrayContaining(["@base-ui/react", "lucide-react"]));
     expect(Object.keys(pkg.dependencies).filter((d) => d.startsWith("@radix-ui/"))).toEqual([]);
-    // Hand-drawn SVG stays for domain icons (movements) and the charts.
+    // Hand-drawn SVG stays for domain icons (movements), the charts and the
+    // "by flylabs.ai" wordmark (FlyLabs Kit module `firma`).
     const drawn = files.filter(
-      (f) => /<svg[\s>]/.test(readFileSync(f, "utf8")) && !/components\/(movement-icon|admin\/tab-statistiche)\.tsx$/.test(f),
+      (f) => /<svg[\s>]/.test(readFileSync(f, "utf8")) && !/components\/(movement-icon|admin\/tab-statistiche|by-flylabs)\.tsx$/.test(f),
     );
     expect(drawn).toEqual([]);
     // Close, more and edit are lucide icons, not text glyphs.

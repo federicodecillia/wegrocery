@@ -45,8 +45,10 @@ export function parseBrandConfig(raw: string | undefined): BrandConfig {
   if (o.archiveCcEmail !== undefined && o.archiveCcEmail !== null && typeof o.archiveCcEmail !== "string") {
     throw new Error("brand.archiveCcEmail must be a string or null");
   }
-  if (o.headerShowName !== undefined && typeof o.headerShowName !== "boolean") {
-    throw new Error("brand.headerShowName must be a boolean");
+  for (const k of ["headerShowName", "flylabsSignature"] as const) {
+    if (o[k] !== undefined && typeof o[k] !== "boolean") {
+      throw new Error(`brand.${k} must be a boolean`);
+    }
   }
   // Rendered as <a href> for logged-out visitors: absolute http(s) only
   // (in-app paths need a session; this also rules out javascript: URLs).

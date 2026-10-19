@@ -45,6 +45,12 @@ describe("parseBrandConfig", () => {
     expect(() => parseBrandConfig(JSON.stringify({ headerShowName: "yes" }))).toThrow(/headerShowName/);
   });
 
+  it("signs \"by flylabs.ai\" by default, and lets a group switch it off", () => {
+    expect(parseBrandConfig(JSON.stringify({ appName: "X" })).flylabsSignature).toBe(true);
+    expect(parseBrandConfig(JSON.stringify({ flylabsSignature: false })).flylabsSignature).toBe(false);
+    expect(() => parseBrandConfig(JSON.stringify({ flylabsSignature: "no" }))).toThrow(/flylabsSignature/);
+  });
+
   it("defaults privacyUrl, membershipUrl and minBalance to null", () => {
     const b = parseBrandConfig(JSON.stringify({ appName: "X" }));
     expect(b.privacyUrl).toBeNull();
