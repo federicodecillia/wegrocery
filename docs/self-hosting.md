@@ -98,6 +98,7 @@ the app is built.
   | `currency` | ISO code, e.g. `"EUR"` |
   | `logoUrl` | The logo: `/logo.png` is WeGrocery's, or the absolute URL of yours (square works best) |
   | `headerShowName` | `false` when the logo already contains the name |
+  | `flylabsSignature` | `false` hides "by flylabs.ai" at the foot of the app, on the sign-in page and in emails (on by default; admins can also switch it in Impostazioni) |
   | `supportEmail`, `techEmail` | Who members and admins write to |
   | `archiveCcEmail` | Copy of every supplier order email, or `null` |
   | `privacyUrl`, `membershipUrl` | Absolute links to the privacy notice and to the membership page, or `null` |

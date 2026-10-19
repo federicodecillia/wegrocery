@@ -12,6 +12,8 @@ import { TabFornitori } from "@/components/admin/tab-fornitori";
 import { TabStatistiche } from "@/components/admin/tab-statistiche";
 import { TabImpostazioni } from "@/components/admin/tab-impostazioni";
 import { SetupBanner } from "@/components/admin/setup/setup-banner";
+import { AdminWelcome } from "@/components/admin/admin-welcome";
+import { ADMIN_WELCOME_QUERY } from "@/lib/admin/welcome";
 import type { Metadata } from "next";
 import { adminTitle, resolveAdminRoute } from "@/lib/admin/nav";
 import type { CycleView } from "@/lib/admin/cycle-views";
@@ -29,6 +31,7 @@ type SearchParams = Promise<{
   supplier?: string;
   balance?: string;
   new?: string;
+  benvenuto?: string;
 }>;
 
 function parseCsvParam(raw: string | undefined): string[] {
@@ -66,6 +69,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Search
     supplier: filterSupplierId,
     balance: balanceParam,
     new: newParam,
+    [ADMIN_WELCOME_QUERY]: welcomeParam,
   } = await searchParams;
   const { section, view } = resolveAdminRoute(tabParam, viewParam, filterMemberId, cycleId);
   const balanceFilter =
@@ -78,6 +82,11 @@ export default async function AdminPage({ searchParams }: { searchParams: Search
         <AdminNav />
       </Suspense>
       <SetupBanner />
+      {section === "ciclo" && !view && !cycleId && newParam !== "1" && (
+        <Suspense fallback={null}>
+          <AdminWelcome personId={session.user.personId ?? session.user.memberId!} reopened={welcomeParam === "1"} />
+        </Suspense>
+      )}
 
       <Suspense
         key={`${section}-${view ?? ""}-${newParam ?? ""}-${cycleId ?? ""}-${filterMemberId ?? ""}-${filterSupplierId ?? ""}-${balanceFilter ?? ""}`}

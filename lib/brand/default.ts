@@ -12,6 +12,7 @@ export const DEFAULT_BRAND: BrandConfig = {
   techEmail: "hello@example.com",
   archiveCcEmail: null,
   headerShowName: true,
+  flylabsSignature: true,
   privacyUrl: null,
   membershipUrl: null,
   minBalance: null,

@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import { getBrand } from "@/lib/brand/get-brand";
 import { t } from "@/lib/i18n";
 import { getAppBaseUrl } from "./base-url";
 import { emailIdempotencyKey, minuteBucket } from "./idempotency";
@@ -36,10 +37,21 @@ type SendMailOpts = {
 };
 
 // The branded HTML part every email carries next to its text (Playbook 7.7):
-// the text on a card in the app's light colours, the WeGrocery logo and "By
-// FlyLabs.ai". Without a base URL the logo becomes the name in text.
-function brandedHtml(text: string, subject: string): string {
-  return emailHtml(text, { subject, baseUrl: getAppBaseUrl() ?? "" });
+// the text on a card in the app's light colours, the WeGrocery logo and "by
+// flylabs.ai" unless the group switched it off (brand.flylabsSignature,
+// Playbook 2.11). Without a base URL the logo becomes the name in text.
+function brandedHtml(text: string, subject: string, signature: boolean): string {
+  return emailHtml(text, { subject, baseUrl: getAppBaseUrl() ?? "", signature });
+}
+
+// Whether the group keeps the signature. A message never waits on it: should
+// the identity not load, the default (on) goes out.
+async function flylabsSignatureOn(): Promise<boolean> {
+  try {
+    return (await getBrand()).flylabsSignature;
+  } catch {
+    return true;
+  }
 }
 
 // Returns the configured default sender (MAIL_FROM) so the client can
@@ -71,6 +83,7 @@ export async function sendMail(
   const from = opts.from?.trim() || process.env.MAIL_FROM;
   if (!apiKey) return { error: "RESEND_API_KEY non configurata" };
   if (!from) return { error: "MAIL_FROM non configurata" };
+  const signature = await flylabsSignatureOn();
 
   try {
     const resend = new Resend(apiKey);
@@ -82,7 +95,7 @@ export async function sendMail(
       ...(opts.replyTo ? { replyTo: opts.replyTo } : {}),
       subject: target.subject,
       text: opts.text,
-      html: brandedHtml(opts.text, target.subject),
+      html: brandedHtml(opts.text, target.subject, signature),
       ...(opts.attachments ? { attachments: opts.attachments } : {}),
       ...(opts.headers ? { headers: opts.headers } : {}),
       },
@@ -131,6 +144,7 @@ export async function sendMailBatch(
   const sender = from?.trim() || process.env.MAIL_FROM;
   if (!apiKey) return { error: "RESEND_API_KEY non configurata" };
   if (!sender) return { error: "MAIL_FROM non configurata" };
+  const signature = await flylabsSignatureOn();
 
   try {
     const resend = new Resend(apiKey);
@@ -142,7 +156,7 @@ export async function sendMailBatch(
           to: [it.to],
           subject: it.subject,
           text: it.text,
-          html: brandedHtml(it.text, it.subject),
+          html: brandedHtml(it.text, it.subject, signature),
           ...(it.headers ? { headers: it.headers } : {}),
         })),
         {

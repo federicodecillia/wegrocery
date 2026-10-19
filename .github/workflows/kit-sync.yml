@@ -24,20 +24,20 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       ISSUE_TITLE: "FlyLabs Kit: allineamento"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Missing token
         if: env.KIT_TOKEN == ''
         run: echo "::warning::FLYLABS_KIT_TOKEN missing, the FlyLabs Kit check is skipped."
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         if: env.KIT_TOKEN != ''
         with:
           repository: flylabs-ai/flylabs-kit
           token: ${{ env.KIT_TOKEN }}
           path: .flylabs-kit
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         if: env.KIT_TOKEN != ''
         with:
           node-version: 24

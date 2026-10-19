@@ -60,7 +60,23 @@ describe("validateIdentityInput", () => {
   it("refuses wrong types", () => {
     expect(validateIdentityInput(null)).toEqual({ error: "invalid" });
     expect(validateIdentityInput({ headerShowName: "yes" })).toEqual({ error: "invalid" });
+    expect(validateIdentityInput({ flylabsSignature: "off" })).toEqual({ error: "invalid" });
     expect(validateIdentityInput({ appName: 3 })).toEqual({ error: "invalid" });
+  });
+});
+
+describe("the \"by flylabs.ai\" signature switch", () => {
+  it("is on by default and an admin can switch it off and back on", () => {
+    expect(mergeIdentity(DEFAULT_BRAND, {}, null).flylabsSignature).toBe(true);
+    const off = validateIdentityInput({ flylabsSignature: false });
+    expect(off).toEqual({ value: { flylabsSignature: false } });
+    const stored = "value" in off ? off.value : {};
+    expect(mergeIdentity(DEFAULT_BRAND, readStoredOverrides(stored), null).flylabsSignature).toBe(false);
+    expect(mergeIdentity(DEFAULT_BRAND, mergeOverrides(stored, { flylabsSignature: true }), null).flylabsSignature).toBe(true);
+  });
+
+  it("keeps a save of another setup step from switching it back on", () => {
+    expect(mergeOverrides({ flylabsSignature: false }, { appName: "A" }).flylabsSignature).toBe(false);
   });
 });
 

@@ -125,6 +125,49 @@ export const en: Strings = {
     helpBodyGroup:
       "The **Guide** has information about our group, answers to the most common questions and the contacts.",
   },
+  adminWelcome: {
+    title: "Welcome to the Admin area",
+    intro: "You are an admin: this is where you run the group. In a few steps we show you the work of each cycle.",
+    reopen: "See the admin welcome again",
+    steps: {
+      todo: {
+        emoji: "🧭",
+        title: "Start from \"To do now\"",
+        body: "At the top of **Cycle** the app tells you the next step of each cycle: closing it, sending the order to the supplier, recording weights. When in doubt, look there.",
+        link: "Open Cycle",
+      },
+      cycle: {
+        emoji: "🔄",
+        title: "Opening a cycle",
+        body: "With **+ New cycle** you choose the title, the order deadline and the supplier, then add the products. Members get a notification and order until the deadline.",
+        link: "How to open one",
+      },
+      close: {
+        emoji: "📦",
+        title: "Supplier and closing",
+        body: "After the deadline you send the order sheet to the supplier from **Supplier**. The cycle does not close by itself: you close it with **Close cycle…**, also uploading the sheet with real weights and prices.",
+        link: "How to close one",
+      },
+      treasury: {
+        emoji: "💶",
+        title: "The treasury",
+        body: "In **Treasury** you record top-ups paid by bank transfer or cash and see who is below zero. A wrong movement is corrected, never erased: the accounts can always be rebuilt.",
+        link: "Open Treasury",
+      },
+      members: {
+        emoji: "👥",
+        title: "Members",
+        body: "In **Members** you add people and **Invite** sends them the link to sign in. That is also where you choose who is an admin.",
+        link: "Open Members",
+      },
+      guide: {
+        emoji: "📘",
+        title: "The admin guide",
+        body: "Every step, explained calmly: you find it in **How it works** and in the Admin menu. Members do not see it.",
+        link: "Open the admin guide",
+      },
+    },
+  },
   cycle: {
     notOrderedYet: "You have not ordered in this cycle yet.",
     closesLabel: "Closes",
@@ -557,6 +600,12 @@ export const en: Strings = {
     contactGroup: "Write to the group",
     contactTech: "Technical problems",
     contactHeading: "Do you have other questions?",
+    adminTitle: "Admin guide",
+    adminIntro: "The steps for whoever runs the group: cycles, suppliers, treasury and members. Only admins see it.",
+    adminCardBody: "Opening and closing a cycle, the order sheet, the treasury, members: the steps for whoever runs the group. Members do not see it.",
+    adminSearchPlaceholder: "e.g. close the cycle, order sheet, top-up",
+    adminTopicLabel: (topic: string) => `Admin · ${topic}`,
+    backToAdminGuide: "Admin guide",
     contactIntro: (appName: string) =>
       `Write to us or talk to whoever manages the treasury at pickup. For technical issues, contact ${appName}'s IT team.`,
   },
@@ -658,6 +707,8 @@ export const en: Strings = {
       catalogSuppliers: "Suppliers",
       sections: "Admin sections",
       views: "Views",
+      guide: "Admin guide",
+      help: "How it works",
     },
     settlement: {
       openButton: "Settle accounts",
@@ -1630,6 +1681,8 @@ export const en: Strings = {
         orgName: "Legal name",
         orgNameHint: "In email signatures and payment descriptions.",
         headerShowName: "Show the name next to the logo",
+        flylabsSignature: "Show the “by flylabs.ai” signature",
+        flylabsSignatureHint: "At the foot of the pages, on the sign-in page and in emails, never at the top. WeGrocery is open source (MIT licence): the signature is on by default and can be switched off.",
         logo: "Logo",
         logoHint: "PNG, JPEG or WebP, at most 512 KB. Square works best.",
         logoUpload: "Upload the logo",

@@ -1,11 +1,11 @@
 "use client";
 
-import { Ellipsis } from "lucide-react";
+import { CircleHelp, Ellipsis } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { t } from "@/lib/i18n";
-import { ADMIN_MORE, ADMIN_PRIMARY, ADMIN_VIEWS, adminHref, resolveAdminRoute } from "@/lib/admin/nav";
+import { ADMIN_GUIDE_HREF, ADMIN_MORE, ADMIN_PRIMARY, ADMIN_VIEWS, adminHelpHref, adminHref, resolveAdminRoute } from "@/lib/admin/nav";
 
 function tabClass(active: boolean): string {
   return `flex min-h-(--control-h) items-center justify-center rounded-full px-2 text-center text-[13px] font-semibold transition-colors ${
@@ -13,9 +13,19 @@ function tabClass(active: boolean): string {
   }`;
 }
 
+// "Come si fa?": the admin guide's card for what is on screen.
+function HelpLink({ href }: { href: string }) {
+  return (
+    <Link href={href} className="ml-auto inline-flex min-h-11 items-center gap-1 text-[13px] font-semibold text-primary-text hover:underline">
+      <CircleHelp aria-hidden className="size-4" />
+      {t.admin.nav.help}
+    </Link>
+  );
+}
+
 // The admin bar: Ciclo · Cassa · Soci · Catalogo, then ⋯ (Statistiche,
-// Impostazioni) on a phone, all in line from lg. A section with views shows
-// them as a second, lighter row.
+// Impostazioni, the admin guide) on a phone, all in line from lg. A section
+// with views shows them as a second, lighter row.
 export function AdminNav() {
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -99,11 +109,16 @@ export function AdminNav() {
                 </Link>
               </li>
             ))}
+            <li className="border-t border-border">
+              <Link href={ADMIN_GUIDE_HREF} className="flex min-h-11 items-center px-4 text-[14px] text-foreground hover:bg-tint/[0.03]">
+                {t.admin.nav.guide}
+              </Link>
+            </li>
           </ul>
         </details>
       </nav>
 
-      {views && (
+      {views ? (
         <nav aria-label={t.admin.nav.views} className="flex gap-4 border-b border-border px-1">
           {views.map((v) => (
             <Link
@@ -117,7 +132,12 @@ export function AdminNav() {
               {v.label}
             </Link>
           ))}
+          <HelpLink href={adminHelpHref(section, view)} />
         </nav>
+      ) : (
+        <div className="flex justify-end">
+          <HelpLink href={adminHelpHref(section, view)} />
+        </div>
       )}
     </div>
   );

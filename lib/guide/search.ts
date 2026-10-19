@@ -6,6 +6,8 @@
 import { GROUP_INFO_SLUG } from "./group-info";
 import type { GuideArticle, GuideContent } from "./types";
 
+export const ADMIN_GUIDE_SECTION = "admin/";
+
 export type GuideSearchEntry = {
   slug: string;
   topic: string;
@@ -28,12 +30,15 @@ export function normalizeText(text: string): string {
     .trim();
 }
 
-export function buildSearchIndex(articles: GuideArticle[]): GuideSearchEntry[] {
+// `section` is the part of /guida the cards live under: "" for the member
+// guide, ADMIN_GUIDE_SECTION for the admin guide (its topics become
+// "admin/ciclo", so they never clash with a member topic).
+export function buildSearchIndex(articles: GuideArticle[], section = ""): GuideSearchEntry[] {
   return articles.map((a) => ({
     slug: a.slug,
-    topic: a.topic,
+    topic: `${section}${a.topic}`,
     title: a.title,
-    href: `/guida/${a.topic}#${a.slug}`,
+    href: `/guida/${section}${a.topic}#${a.slug}`,
     titleText: ` ${normalizeText(a.title)} `,
     keywordText: ` ${normalizeText((a.keywords ?? []).join(" "))} `,
     bodyText: ` ${normalizeText([a.intro ?? "", ...(a.steps ?? []), ...(a.notes ?? [])].join(" "))} `,

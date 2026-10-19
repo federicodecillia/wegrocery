@@ -1,6 +1,6 @@
 {
   "name": "wegrocery",
-  "version": "1.32.0",
+  "version": "1.33.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -16,9 +16,9 @@
     "doctor": "node --env-file-if-exists=.env.local node_modules/tsx/dist/cli.mjs scripts/doctor.mts"
   },
   "dependencies": {
-    "@base-ui/react": "^1.8.0",
+    "@base-ui/react": "^1.9.0",
     "@neondatabase/serverless": "^1.2.0",
-    "@sentry/nextjs": "^11.6.0",
+    "@sentry/nextjs": "^11.8.0",
     "better-auth": "1.7.5",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -26,11 +26,11 @@
     "exceljs": "^4.4.0",
     "fast-xml-parser": "^5.11.2",
     "fflate": "^0.8.3",
-    "lucide-react": "^1.49.0",
-    "next": "^16.4.0",
-    "react": "^19.3.0",
-    "react-dom": "^19.3.0",
-    "resend": "^6.32.1",
+    "lucide-react": "^1.57.0",
+    "next": "^16.4.2",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "resend": "^6.33.0",
     "sonner": "^2.0.8",
     "stripe": "^23.0.0",
     "tailwind-merge": "^3.7.0"
@@ -43,11 +43,11 @@
     "@typescript/native": "npm:typescript@^7.0.2",
     "drizzle-kit": "^0.31.11",
     "eslint": "^9.39.5",
-    "eslint-config-next": "^16.4.0",
+    "eslint-config-next": "^16.4.2",
     "tailwindcss": "^4.1.14",
     "tsx": "^4.23.15",
     "typescript": "npm:@typescript/typescript6@^6.0.2",
-    "vitest": "^5.0.3"
+    "vitest": "^5.0.5"
   },
   "overrides": {
     "esbuild": "^0.28.1",

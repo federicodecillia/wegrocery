@@ -36,6 +36,13 @@ export type BrandConfig = {
    */
   headerShowName: boolean;
   /**
+   * Show the "by flylabs.ai" signature (Playbook 2.11) at the foot of the app,
+   * on the sign-in page and under the logo in emails. On by default; a group
+   * can switch it off (MIT licence), here or in Impostazioni. Never in the header:
+   * the app carries the group's brand.
+   */
+  flylabsSignature: boolean;
+  /**
    * Privacy notice URL, linked from the login page and the app shell; null = no
    * link. Use an absolute URL: every in-app path except /login requires a
    * session (proxy.ts), so a logged-out visitor could not open it.

@@ -7,6 +7,7 @@
   "currency": "EUR",
   "logoUrl": "/logo.png",
   "headerShowName": true,
+  "flylabsSignature": true,
   "supportEmail": "hello@riverside.example",
   "techEmail": "tech@riverside.example",
   "archiveCcEmail": null,

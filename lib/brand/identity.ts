@@ -21,6 +21,7 @@ export type IdentityOverrides = {
   privacyUrl?: string | null;
   membershipUrl?: string | null;
   headerShowName?: boolean;
+  flylabsSignature?: boolean;
   theme?: Partial<Record<ThemeKey, string>>;
 };
 
@@ -55,7 +56,7 @@ function isHttpUrl(v: string): boolean {
 const str = (v: unknown): string | undefined => (typeof v === "string" ? v.trim() : undefined);
 
 // The admin's form, as sent: every field a string ("" = back to the brand
-// JSON's value), headerShowName a boolean, theme an object of strings.
+// JSON's value), headerShowName and flylabsSignature booleans, theme an object of strings.
 // Returns the overrides to store, or the first problem found.
 export function validateIdentityInput(raw: unknown): { value: IdentityOverrides } | { error: IdentityError } {
   if (typeof raw !== "object" || raw === null || Array.isArray(raw)) return { error: "invalid" };
@@ -96,9 +97,10 @@ export function validateIdentityInput(raw: unknown): { value: IdentityOverrides 
     value[key] = v || null;
   }
 
-  if (o.headerShowName !== undefined) {
-    if (typeof o.headerShowName !== "boolean") return { error: "invalid" };
-    value.headerShowName = o.headerShowName;
+  for (const key of ["headerShowName", "flylabsSignature"] as const) {
+    if (o[key] === undefined) continue;
+    if (typeof o[key] !== "boolean") return { error: "invalid" };
+    value[key] = o[key];
   }
 
   if (o.theme !== undefined) {

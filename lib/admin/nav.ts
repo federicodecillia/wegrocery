@@ -13,6 +13,9 @@ export type CatalogView = "prodotti" | "fornitori";
 
 export type AdminView = CatalogView | CycleView;
 
+// The admin guide's index (app/guida/admin): the ⋯ menu and the sidebar link it.
+export const ADMIN_GUIDE_HREF = "/guida/admin";
+
 /** Sections in the bar on a phone; the rest sit behind ⋯ there and in line from a PC. */
 export const ADMIN_PRIMARY: { id: AdminSection; label: string }[] = [
   { id: "ciclo", label: t.admin.nav.cycle },
@@ -33,6 +36,21 @@ export const ADMIN_VIEWS: Partial<Record<AdminSection, { id: CatalogView; label:
     { id: "fornitori", label: t.admin.nav.catalogSuppliers },
   ],
 };
+
+// "Come si fa?" in the admin bar: the admin guide's topic (and card) for the
+// section and view on screen. lib/guide/admin/admin-guide.test.ts checks the
+// cards exist.
+export function adminHelpHref(section: AdminSection, view: AdminView | null): string {
+  const card: Record<AdminSection, string> = {
+    ciclo: view === "fornitore" ? "fornitore" : view === "prodotti" ? "ciclo#prodotti-nel-ciclo" : view === "ordini" ? "ciclo#seguire-ordini" : "ciclo",
+    cassa: "cassa",
+    soci: "soci",
+    catalogo: view === "fornitori" ? "catalogo#aggiungere-fornitore" : "catalogo",
+    statistiche: "impostazioni#ricerche-statistiche",
+    impostazioni: "impostazioni",
+  };
+  return `${ADMIN_GUIDE_HREF}/${card[section]}`;
+}
 
 const SECTIONS = new Set<string>([...ADMIN_PRIMARY, ...ADMIN_MORE].map((s) => s.id));
 

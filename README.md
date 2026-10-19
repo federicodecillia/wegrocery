@@ -1,6 +1,6 @@
 <img src="./public/logo.png" alt="WeGrocery" width="80" align="right" />
 
-# WeGrocery
+# WeGrocery by [flylabs.ai](https://www.flylabs.ai/en)
 
 **Open-source, white-label platform for food co-ops and buying groups.**
 Members place orders inside weekly cycles and track a prepaid ledger balance;

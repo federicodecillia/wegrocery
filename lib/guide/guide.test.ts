@@ -6,8 +6,8 @@ import { guideIt } from "./it";
 import { buildSearchIndex, normalizeText, searchGuide } from "./search";
 import { isVisible, visibleGuide, type GuideContent, type GuideContext } from "./types";
 
-const wallet: GuideContext = { mode: "wallet", families: false, onlineTopup: true, bankTransfer: true };
-const perOrder: GuideContext = { mode: "per_order", families: true, onlineTopup: true, bankTransfer: false };
+const wallet: GuideContext = { mode: "wallet", families: false, onlineTopup: true, bankTransfer: true, cards: true };
+const perOrder: GuideContext = { mode: "per_order", families: true, onlineTopup: true, bankTransfer: false, cards: true };
 
 const slugs = (g: GuideContent) => g.articles.map((a) => a.slug);
 
