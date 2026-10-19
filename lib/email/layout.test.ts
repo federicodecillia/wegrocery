@@ -58,14 +58,25 @@ describe("textToHtml", () => {
 });
 
 describe("emailHtml", () => {
-  it("shows the app's logo linked to the app, then By FlyLabs.ai linked to flylabs.ai", () => {
+  it("shows the app's logo linked to the app, then by flylabs.ai linked to flylabs.ai", () => {
     const html = emailHtml("Testo", { subject: "Oggetto <1>", baseUrl: "https://gas.example.org/" });
     expect(html).toContain('<a href="https://gas.example.org"><img src="https://gas.example.org/mail/logo.png"');
     expect(html).toContain(`alt="${APP_NAME}"`);
     expect(html).toContain(`<a href="${FLYLABS_URL}"`);
-    expect(html).toContain("FlyLabs.ai</span></a>");
+    expect(html).toContain('by <span style="text-decoration:underline">flylabs.ai</span></a>');
+    expect(html).not.toContain("FlyLabs.ai");
     expect(html).toContain("<title>Oggetto &lt;1&gt;</title>");
     expect(html.indexOf("Testo")).toBeLessThan(html.indexOf(LOGO_PATH));
+  });
+
+  it("links flylabs.ai in the emails' language, with no tracking", () => {
+    expect(FLYLABS_URL).toMatch(/^https:\/\/www\.flylabs\.ai\/(it|en)(\/[a-z-]+)?$/);
+  });
+
+  it("leaves the signature out when the group switched it off, keeping the logo", () => {
+    const html = emailHtml("Testo", { subject: "O", baseUrl: "https://gas.example.org", signature: false });
+    expect(html).not.toContain("flylabs.ai");
+    expect(html).toContain(LOGO_PATH);
   });
 
   it("writes the name instead of the logo when there is no base URL", () => {

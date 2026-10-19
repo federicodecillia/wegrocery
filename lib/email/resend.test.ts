@@ -17,6 +17,12 @@ vi.mock("resend", () => ({
   },
 }));
 
+// The group's identity, without a database: the signature switch.
+const brandState = { flylabsSignature: true };
+vi.mock("@/lib/brand/get-brand", () => ({
+  getBrand: async () => ({ flylabsSignature: brandState.flylabsSignature }),
+}));
+
 const { sendMail, sendMailBatch } = await import("./resend");
 const { REDIRECT_BATCH_CAP } = await import("./outbound-policy");
 
@@ -128,6 +134,22 @@ describe("sendMailBatch outbound policy wiring", () => {
 });
 
 describe("branded HTML part (Playbook 7.7)", () => {
+  it("leaves out by flylabs.ai when the group switched the signature off", async () => {
+    process.env.VERCEL_ENV = "production";
+    brandState.flylabsSignature = false;
+    try {
+      await sendMail({ ...mail, text: "corpo" });
+      const html = ((send.mock.calls[0] as unknown[])[0] as { html: string }).html;
+      expect(html).toContain("corpo");
+      expect(html).not.toContain("flylabs.ai");
+      await sendMailBatch([{ to: "a@example.org", subject: "S", text: "corpo" }]);
+      const items = (batchSend.mock.calls[0] as unknown[])[0] as { html: string }[];
+      expect(items[0].html).not.toContain("flylabs.ai");
+    } finally {
+      brandState.flylabsSignature = true;
+    }
+  });
+
   it("adds the HTML layout of the same text to every message, single and batch", async () => {
     process.env.VERCEL_ENV = "production";
     const savedBase = process.env.APP_BASE_URL;
@@ -138,7 +160,7 @@ describe("branded HTML part (Playbook 7.7)", () => {
       expect(html).toContain("Ciclo &lt;chiuso&gt;");
       expect(html).toContain('<a href="https://gas.example.org/storico"');
       expect(html).toContain('src="https://gas.example.org/mail/logo.png"');
-      expect(html).toContain("FlyLabs.ai");
+      expect(html).toContain("flylabs.ai</span></a>");
 
       await sendMailBatch([{ to: "a@example.org", subject: "S", text: "corpo" }]);
       const items = (batchSend.mock.calls[0] as unknown[])[0] as { text: string; html: string }[];

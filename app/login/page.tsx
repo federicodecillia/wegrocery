@@ -7,6 +7,8 @@ import { LoginForm } from "./login-form";
 import { ShortcutButtons } from "./shortcut-buttons";
 import { DemoBanner } from "@/components/demo-banner";
 import { BrandLogo } from "@/components/brand-logo";
+import { ByFlylabs } from "@/components/by-flylabs";
+import { FLYLABS_PRODUCT_SLUG } from "@/lib/brand/flylabs";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: t.login.pageTitle };
@@ -88,6 +90,12 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         >
           {t.login.privacyLink}
         </a>
+      ) : null}
+      {/* "by flylabs.ai" under the card, never above it: the page carries the
+          group's brand (Playbook 2.11). A new tab, so an installed app keeps
+          its sign-in page. */}
+      {brand.flylabsSignature ? (
+        <ByFlylabs locale={brand.locale} productSlug={FLYLABS_PRODUCT_SLUG} height={20} newTab className="mt-3 min-h-11" />
       ) : null}
     </main>
   );

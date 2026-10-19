@@ -97,6 +97,10 @@ export const DARK = {
   mutedForeground: "#a29f99",
   input: "#7a7772",
   border: "rgba(255, 255, 255, 0.14)",
+  // The flylabs.ai logo's dark colours (Playbook 2.11): FlyLabs' own, the
+  // same for every group, like the light pair in globals.css.
+  flylabsAi: "#7a80ff",
+  flylabsSpark: "#ffda47",
 } as const;
 
 const DARK_TINT_SOFT = 0.16; // how much of its colour a soft fill takes
@@ -157,6 +161,8 @@ export function deriveDarkRoleVars(theme: BrandTheme): Record<string, string> {
     "--inverse": DARK.foreground,
     "--inverse-foreground": DARK.card,
     "--tint": "#ffffff",
+    "--flylabs-ai": DARK.flylabsAi,
+    "--flylabs-spark": DARK.flylabsSpark,
   };
 }
 

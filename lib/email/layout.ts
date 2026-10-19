@@ -1,11 +1,16 @@
 // The HTML part of every app email (Playbook 7.7): the plain text the caller
 // wrote, on a card in the light colours of the app, then the app's logo and
-// "By FlyLabs.ai" linked to flylabs.ai. The text part stays as written, for
-// the mail clients that show only that.
+// "by flylabs.ai" linked to the product page on flylabs.ai (Playbook 2.11),
+// unless the group switched the signature off. The text part stays as
+// written, for the mail clients that show only that.
 //
-// FlyLabs Kit registry module `email` 1.0 (from Stellar Reviews), with
-// WeGrocery's name, logo and light theme. lib/email/resend.ts adds it to
-// every message it sends.
+// FlyLabs Kit registry module `email` 1.1 (from Stellar Reviews), with
+// WeGrocery's name, logo and light theme, and the signature switch
+// (brand.flylabsSignature). lib/email/resend.ts adds it to every message it
+// sends.
+
+import { brand } from "@/lib/brand";
+import { flylabsProductUrl } from "@/lib/brand/flylabs";
 
 export const APP_NAME = "WeGrocery";
 
@@ -25,7 +30,9 @@ export const EMAIL_THEME = {
   border: "#eeeeef",
 } as const;
 
-export const FLYLABS_URL = "https://flylabs.ai";
+// The product page on flylabs.ai in the emails' language, no tracking; the
+// home while WeGrocery has none (lib/brand/flylabs.ts).
+export const FLYLABS_URL = flylabsProductUrl(brand.locale);
 // Served from public/mail/, which the middleware (or proxy.ts) must leave
 // open: a mail client fetches it with no session.
 export const LOGO_PATH = "/mail/logo.png";
@@ -73,16 +80,20 @@ export function textToHtml(text: string): string {
     .join("\n");
 }
 
-function footer(baseUrl: string): string {
-  const flylabs = `<a href="${FLYLABS_URL}" style="color:${EMAIL_THEME.mutedForeground};text-decoration:none">By <span style="text-decoration:underline">FlyLabs.ai</span></a>`;
+function footer(baseUrl: string, signature: boolean): string {
+  const flylabs = signature
+    ? `<div style="padding-top:8px;font-family:${FONT};font-size:13px;line-height:20px"><a href="${FLYLABS_URL}" style="color:${EMAIL_THEME.mutedForeground};text-decoration:none">by <span style="text-decoration:underline">flylabs.ai</span></a></div>`
+    : "";
   // Without a base URL there is no address for the logo: the name in text.
-  const brand = baseUrl
+  const logo = baseUrl
     ? `<a href="${baseUrl}"><img src="${baseUrl}${LOGO_PATH}" width="${LOGO_WIDTH}" height="${LOGO_HEIGHT}" alt="${escapeHtml(APP_NAME)}" style="display:block;border:0;width:${LOGO_WIDTH}px;height:${LOGO_HEIGHT}px"></a>`
     : `<span style="font-weight:600;color:${EMAIL_THEME.foreground}">${escapeHtml(APP_NAME)}</span>`;
-  return `<tr><td style="padding:24px 8px 0 8px">${brand}<div style="padding-top:8px;font-family:${FONT};font-size:13px;line-height:20px">${flylabs}</div></td></tr>`;
+  return `<tr><td style="padding:24px 8px 0 8px">${logo}${flylabs}</td></tr>`;
 }
 
-export function emailHtml(text: string, opts: { subject: string; baseUrl: string }): string {
+// `signature`: "by flylabs.ai" under the logo, on unless the group switched
+// it off (brand.flylabsSignature).
+export function emailHtml(text: string, opts: { subject: string; baseUrl: string; signature?: boolean }): string {
   const baseUrl = opts.baseUrl.replace(/\/+$/, "");
   const t = EMAIL_THEME;
   return `<!doctype html>
@@ -100,7 +111,7 @@ export function emailHtml(text: string, opts: { subject: string; baseUrl: string
 <tr><td style="background:${t.card};border:1px solid ${t.border};border-radius:16px;padding:28px 24px;font-family:${FONT};font-size:15px;line-height:24px;color:${t.foreground}">
 ${textToHtml(text)}
 </td></tr>
-${footer(baseUrl)}
+${footer(baseUrl, opts.signature ?? true)}
 </table>
 </td></tr>
 </table>

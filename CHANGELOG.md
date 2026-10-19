@@ -27,6 +27,8 @@ A bullet that only matters to whoever hosts, runs or develops the app
 ### Added
 - 🧭 **A guide for admins.** Admins now find an "Admin guide" in How it works and under Admin (⋯ on a phone, the side menu on a computer): 39 step-by-step cards on opening and closing a cycle, the supplier sheet, the treasury, the catalogue, members and settings, with search. Members do not see it: the pages answer "not found" and its words never reach their phone.
 - 👋 **A welcome for admins.** The first time in Admin, a short step-by-step card walks through the work (what needs doing, opening and closing a cycle, the treasury, members, the guide) and ticks what the group has done already. "Skip" or "Got it" closes it; the admin guide shows it again. Every Admin section has a "How it works" link to the right guide card. New column `members.admin_welcome_dismissed_at` (migration 0039, additive only).
+- ✍️ **"by flylabs.ai" at the foot of the app.** A small "by flylabs.ai", linked to flylabs.ai, now sits at the foot of the pages, under the sign-in card and under the logo in emails, never at the top: the app keeps the group's name and logo. Admins can switch it off in Impostazioni, Name, logo and colours.
+- [tech] 🧩 **FlyLabs Kit 0.12.** Module `firma` 1.0 (`components/by-flylabs.tsx`, tokens `--flylabs-ai` and `--flylabs-spark`, the logo's own colours, not the group's) and `email` 1.1 (lowercase "by flylabs.ai", link to `https://www.flylabs.ai/<locale>`, no UTM). The switch is `brand.flylabsSignature` (on by default) or a `group_identity` override; no migration. README titled "WeGrocery by flylabs.ai".
 
 ## [1.32.0] - 2026-10-17
 

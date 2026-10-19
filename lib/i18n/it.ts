@@ -1685,6 +1685,8 @@ export const it = {
         orgName: "Ragione sociale",
         orgNameHint: "Nelle firme delle email e nelle causali dei pagamenti.",
         headerShowName: "Mostra il nome accanto al logo",
+        flylabsSignature: "Mostra la firma «by flylabs.ai»",
+        flylabsSignatureHint: "In fondo alle pagine, nella pagina di accesso e nelle email, mai in alto. WeGrocery è open source (licenza MIT): la firma è accesa di base e si può spegnere.",
         logo: "Logo",
         logoHint: "PNG, JPEG o WebP, al massimo 512 KB. Quadrato rende meglio.",
         logoUpload: "Carica il logo",
