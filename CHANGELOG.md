@@ -22,7 +22,9 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
-## [Unreleased]
+## [1.33.0] - 2026-10-19
+
+*Admins get their own guide and welcome, and the app is signed "by flylabs.ai" at its foot.*
 
 ### Added
 - 🧭 **A guide for admins.** Admins now find an "Admin guide" in How it works and under Admin (⋯ on a phone, the side menu on a computer): 39 step-by-step cards on opening and closing a cycle, the supplier sheet, the treasury, the catalogue, members and settings, with search. Members do not see it: the pages answer "not found" and its words never reach their phone.
@@ -690,6 +692,7 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
+[1.33.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.33.0
 [1.32.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.32.0
 [1.31.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.31.0
 [1.30.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.30.1

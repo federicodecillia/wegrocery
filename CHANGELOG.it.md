@@ -23,7 +23,9 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
-## [Unreleased]
+## [1.33.0] - 19 ottobre 2026
+
+*Gli admin hanno la loro guida e il loro benvenuto, e in fondo all'app c'è la firma "by flylabs.ai".*
 
 ### Aggiunte
 - 🧭 **Una guida per gli admin.** Gli admin trovano ora la "Guida per gli admin" in Come funziona e in Admin (⋯ sul telefono, il menu a sinistra sul computer): 39 schede passo passo su come aprire e chiudere un ciclo, la distinta, la cassa, il catalogo, i soci e le impostazioni, con la ricerca. I soci non la vedono: le pagine rispondono "non trovata" e le sue parole non arrivano mai sul loro telefono.
@@ -692,6 +694,7 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
+[1.33.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.33.0
 [1.32.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.32.0
 [1.31.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.31.0
 [1.30.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.30.1
