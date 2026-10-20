@@ -23,6 +23,11 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
+## [Unreleased]
+
+### Modificato
+- ✍️ **Un "by flylabs.ai" più discreto.** Non c'è più in fondo a ogni pagina: ora è un piccolo testo accanto alla versione nel Profilo e sotto la pagina di accesso. Nelle email non cambia niente.
+
 ## [1.33.0] - 19 ottobre 2026
 
 *Gli admin hanno la loro guida e il loro benvenuto, e in fondo all'app c'è la firma "by flylabs.ai".*

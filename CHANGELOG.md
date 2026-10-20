@@ -22,6 +22,11 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
+## [Unreleased]
+
+### Changed
+- ✍️ **A quieter "by flylabs.ai".** It no longer sits at the foot of every page: it is now small text next to the version in the Profile and under the sign-in card. Emails do not change.
+
 ## [1.33.0] - 2026-10-19
 
 *Admins get their own guide and welcome, and the app is signed "by flylabs.ai" at its foot.*

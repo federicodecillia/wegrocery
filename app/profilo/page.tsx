@@ -1,4 +1,5 @@
 import { AppShell } from "@/components/app-shell";
+import { ByFlylabs } from "@/components/by-flylabs";
 import { LogoutButton } from "@/components/logout-button";
 import { InstallRow } from "@/components/profile/install-row";
 import { ThemeRow } from "@/components/profile/theme-row";
@@ -9,6 +10,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getUserRole, requireUserSession } from "@/lib/auth/session";
 import { getBrand } from "@/lib/brand/get-brand";
+import { FLYLABS_PRODUCT_SLUG } from "@/lib/brand/flylabs";
 import {
   getFamilyPeople,
   getMemberById,
@@ -183,7 +185,18 @@ export default async function ProfilePage() {
           redirect("/login");
         }}
       />
-      <p className="mt-3 text-center text-label text-muted-foreground">{t.profile.version(packageJson.version)}</p>
+      {/* The only place in the signed-in app with "by flylabs.ai": small, next
+          to the version (Playbook 2.11, kept off the main pages on Federico's
+          call, see AGENTS.md). */}
+      <p className="mt-3 text-center text-label text-muted-foreground">
+        {t.profile.version(packageJson.version)}
+        {brand.flylabsSignature ? (
+          <>
+            {" · "}
+            <ByFlylabs locale={brand.locale} productSlug={FLYLABS_PRODUCT_SLUG} text newTab />
+          </>
+        ) : null}
+      </p>
     </AppShell>
   );
 }

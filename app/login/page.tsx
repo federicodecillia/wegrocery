@@ -91,11 +91,12 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           {t.login.privacyLink}
         </a>
       ) : null}
-      {/* "by flylabs.ai" under the card, never above it: the page carries the
-          group's brand (Playbook 2.11). A new tab, so an installed app keeps
-          its sign-in page. */}
+      {/* "by flylabs.ai" in small plain text under the card, never above it:
+          the page carries the group's brand (Playbook 2.11, kept discreet on
+          Federico's call, see AGENTS.md). A new tab, so an installed app
+          keeps its sign-in page. */}
       {brand.flylabsSignature ? (
-        <ByFlylabs locale={brand.locale} productSlug={FLYLABS_PRODUCT_SLUG} height={20} newTab className="mt-3 min-h-11" />
+        <ByFlylabs locale={brand.locale} productSlug={FLYLABS_PRODUCT_SLUG} text newTab className="mt-2 inline-flex min-h-11 items-center text-label" />
       ) : null}
     </main>
   );
