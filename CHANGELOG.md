@@ -22,7 +22,9 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
-## [Unreleased]
+## [1.34.0] - 2026-10-20
+
+*Admins can add a member's order before closing the cycle, and the "by flylabs.ai" signature steps back.*
 
 ### Added
 - 🛒 **Admins add a member's order before closing the cycle.** In a cycle's Orders, "+ Add order for a member" and "✎ Edit" now work while the cycle is open, after the deadline too: the order is charged at the close like the others, with no correction, and the member gets a notice.
@@ -701,6 +703,7 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
+[1.34.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.34.0
 [1.33.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.33.0
 [1.32.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.32.0
 [1.31.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.31.0

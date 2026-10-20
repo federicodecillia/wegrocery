@@ -23,7 +23,9 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
-## [Unreleased]
+## [1.34.0] - 20 ottobre 2026
+
+*L'admin può aggiungere l'ordine di un socio prima di chiudere il ciclo, e la firma "by flylabs.ai" si fa più discreta.*
 
 ### Aggiunte
 - 🛒 **L'admin aggiunge l'ordine di un socio prima di chiudere il ciclo.** In Ordini di un ciclo, "+ Aggiungi ordine per un socio" e "✎ Modifica" funzionano ora anche con il ciclo aperto, pure dopo la scadenza: l'ordine viene addebitato alla chiusura come gli altri, senza correzioni, e il socio riceve un avviso.
@@ -703,6 +705,7 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
+[1.34.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.34.0
 [1.33.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.33.0
 [1.32.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.32.0
 [1.31.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.31.0
