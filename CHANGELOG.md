@@ -24,7 +24,11 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ## [Unreleased]
 
+### Added
+- 🛒 **Admins add a member's order before closing the cycle.** In a cycle's Orders, "+ Add order for a member" and "✎ Edit" now work while the cycle is open, after the deadline too: the order is charged at the close like the others, with no correction, and the member gets a notice.
+
 ### Changed
+- 🧭 **The right order of the steps after the deadline.** "To do now" now says "Check the orders" and opens Orders; the Overview lists the steps before closing (orders, supplier, close) and the admin guide follows the same order. Closing is the last step, the one that charges members.
 - ✍️ **A quieter "by flylabs.ai".** It no longer sits at the foot of every page: it is now small text next to the version in the Profile and under the sign-in card. Emails do not change.
 
 ## [1.33.0] - 2026-10-19

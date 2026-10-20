@@ -650,9 +650,9 @@ export const it = {
       todo: {
         title: "Da fare ora",
         nothing: "Nessuna azione da fare sui cicli.",
-        overdueCta: "Rivedi e chiudi il ciclo",
+        overdueCta: "Controlla gli ordini",
         overdueDetail: (h: number) =>
-          h < 1 ? "Ordini chiusi da meno di un'ora" : h < 48 ? `Ordini chiusi da ${h} h` : `Ordini chiusi da ${Math.floor(h / 24)} giorni`,
+          `${h < 1 ? "Ordini chiusi da meno di un'ora" : h < 48 ? `Ordini chiusi da ${h} h` : `Ordini chiusi da ${Math.floor(h / 24)} giorni`}: aggiungi chi manca, poi chiudi`,
         openCta: "Vedi gli ordini",
         openDetail: (members: number, h: number | null) =>
           [members === 1 ? "1 socio" : `${members} soci`, h == null ? null : h < 48 ? `chiude tra ${h} h` : `chiude tra ${Math.floor(h / 24)} giorni`]
@@ -902,7 +902,12 @@ export const it = {
       cancelledBadge: "Annullato",
       ordersCount: "Ordini",
       totalAmount: "Totale",
-      overdueWarning: "Notifica admin: la data di chiusura e' passata. Controlla il recap e chiudi il ciclo.",
+      overdueWarning: "La scadenza è passata e i soci non possono più ordinare. Prima di chiudere:",
+      overdueSteps: [
+        "In Ordini controlla gli ordini e aggiungi chi è arrivato tardi.",
+        "In Fornitore manda l'ordine al fornitore.",
+        "Chiudi ciclo: i soci vengono addebitati. Dopo, ogni modifica diventa una correzione.",
+      ],
       orderCloseAt: "Chiusura ordini",
       orderCloseAtLabel: "Chiusura ordini *",
       pickup1Label: "Ritiro 1",
@@ -1479,7 +1484,7 @@ export const it = {
       addOrder: "+ Aggiungi ordine per un socio",
       rectifyTitle: "Clicca per rettificare la quantita ricevuta",
       rectifyHint: "Tocca un prodotto per correggere peso o prezzo effettivo",
-      openCycleHint: "Ciclo ancora aperto: i soci possono cambiare l'ordine. Pesi e correzioni si registrano dopo la chiusura.",
+      openCycleHint: "Ciclo aperto: puoi aggiungere o cambiare l'ordine di un socio, anche dopo la scadenza. Pesi e prezzi veri si registrano dopo la chiusura.",
       rectifyPill: "prezzo/peso",
       editQtyButton: "✎ Modifica",
       adjustedBadge: "rettificato",
@@ -1517,6 +1522,11 @@ export const it = {
       errorLoading: "Errore nel caricamento",
       reduceAria: (name: string) => `Togli uno: ${name}`,
       increaseAria: (name: string) => `Aggiungi uno: ${name}`,
+      openNote: "Il ciclo è aperto: l'ordine viene addebitato alla chiusura, come tutti gli altri. Il socio riceve un avviso.",
+      openNotePlaceholder: 'es. "Ordine arrivato per telefono"',
+      openSaved: "Ordine salvato: verrà addebitato alla chiusura del ciclo",
+      openSupplierSent: "L'ordine al fornitore era già partito: rimandalo o avvisa il fornitore.",
+      openOverCredit: "Attenzione: con questo ordine il socio supera il limite di credito.",
     },
     supplierActions: {
       stepLabel: (n: number) => `Passo ${n}`,
@@ -1963,6 +1973,12 @@ export const it = {
     orderModifiedBody: (sentence: string, balance: string) =>
       `${sentence} Nuovo saldo: ${balance}.`,
     orderModifiedBodyUpdated: (title: string) => `Il tuo ordine in "${title}" è stato aggiornato.`,
+    openOrderAddedBody: (title: string, total: string) =>
+      `Un admin ha inserito il tuo ordine in "${title}": ${total}. Ti viene addebitato alla chiusura del ciclo.`,
+    openOrderChangedBody: (title: string, total: string) =>
+      `Un admin ha modificato il tuo ordine in "${title}": ora è di ${total}. Ti viene addebitato alla chiusura del ciclo.`,
+    openOrderRemovedBody: (title: string) => `Un admin ha tolto il tuo ordine in "${title}".`,
+    openOrderNote: (note: string) => `Motivo: ${note}`,
     orderModifiedShipping: (from: string, to: string) =>
       `La tua quota di spedizione è passata da ${from} a ${to}.`,
     shippingAdjustedTitle: (title: string) => `Spedizione "${title}" aggiornata`,
@@ -2137,6 +2153,8 @@ export const it = {
     correctionError: "Errore nella rettifica",
     closedOrderChanged: "L'ordine è cambiato nel frattempo (o il ciclo non è più chiuso): ricarica e riprova.",
     orderEditOnlyAfterClose: "L'ordine si può modificare in questo modo solo dopo la chiusura del ciclo",
+    openOrderCycleNotOpen: "Il ciclo non è più aperto: ricarica la pagina.",
+    openOrderChanged: "L'ordine è cambiato nel frattempo (o il ciclo è stato chiuso): ricarica e riprova.",
     productNotValidForCycle: "Prodotto non valido per questo ciclo",
     amountMustBePositive: "L'importo deve essere positivo",
     amountInvalid: "Importo non valido",

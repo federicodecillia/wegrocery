@@ -25,7 +25,11 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ## [Unreleased]
 
+### Aggiunte
+- 🛒 **L'admin aggiunge l'ordine di un socio prima di chiudere il ciclo.** In Ordini di un ciclo, "+ Aggiungi ordine per un socio" e "✎ Modifica" funzionano ora anche con il ciclo aperto, pure dopo la scadenza: l'ordine viene addebitato alla chiusura come gli altri, senza correzioni, e il socio riceve un avviso.
+
 ### Modificato
+- 🧭 **L'ordine giusto dei passi dopo la scadenza.** "Da fare ora" ora dice "Controlla gli ordini" e apre Ordini; la Panoramica elenca i passi prima di chiudere (ordini, fornitore, chiusura) e la guida admin segue lo stesso ordine. La chiusura è l'ultimo passo, quello che addebita i soci.
 - ✍️ **Un "by flylabs.ai" più discreto.** Non c'è più in fondo a ogni pagina: ora è un piccolo testo accanto alla versione nel Profilo e sotto la pagina di accesso. Nelle email non cambia niente.
 
 ## [1.33.0] - 19 ottobre 2026

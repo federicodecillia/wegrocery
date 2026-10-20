@@ -41,7 +41,7 @@ export const adminGuideIt: GuideContent = {
       title: "\"Da fare ora\": da dove partire",
       intro: "In cima a **Ciclo** l'app ti dice il prossimo passo di ogni ciclo, il più urgente per primo. Se non sai cosa fare, parti sempre da qui.",
       steps: [
-        "**Rivedi e chiudi il ciclo**: la scadenza degli ordini è passata. Il ciclo non si chiude da solo: lo chiudi tu.",
+        "**Controlla gli ordini**: la scadenza degli ordini è passata. Aggiungi chi manca, manda l'ordine al fornitore e poi chiudi il ciclo: non si chiude da solo.",
         "**Invia l'ordine al fornitore**: il ciclo è chiuso ma la distinta non è ancora partita dall'app.",
         "**Registra i pesi o carica la distinta**: dopo la consegna, se qualcosa è diverso da quanto ordinato.",
         "**Chiudi i conti**: solo per i cicli pagati con carta, a costi definitivi.",
@@ -92,9 +92,9 @@ export const adminGuideIt: GuideContent = {
       steps: [
         "**Apri** il ciclo con la scadenza degli ordini e il fornitore.",
         "**Metti i prodotti** che i soci possono ordinare.",
-        "I soci **ordinano** fino alla scadenza. Tu segui gli ordini in **Ordini**.",
-        "Dopo la scadenza **mandi l'ordine al fornitore** con la distinta.",
-        "**Chiudi il ciclo**: gli ordini diventano definitivi e partono gli addebiti.",
+        "I soci **ordinano** fino alla scadenza. Tu segui gli ordini in **Ordini** e puoi aggiungere o cambiare quello di un socio.",
+        "Dopo la scadenza **controlli gli ordini**, aggiungi chi è arrivato tardi e **mandi l'ordine al fornitore** con la distinta.",
+        "**Chiudi il ciclo**, per ultimo: gli ordini diventano definitivi e partono gli addebiti.",
         "Alla consegna **registri pesi e prezzi veri**, se sono diversi, o carichi la distinta compilata dal fornitore.",
       ],
       notes: ["Ogni passo ha una scheda qui sotto. **Da fare ora** ti ricorda a che punto è ogni ciclo."],
@@ -157,9 +157,10 @@ export const adminGuideIt: GuideContent = {
       steps: [
         "**Panoramica**: quanti soci hanno ordinato, il totale e quanto manca alla scadenza.",
         "**Ordini**: l'ordine di ogni socio e i totali per prodotto. Da qui scarichi anche la distinta in Excel.",
+        "Per inserire l'ordine di un socio usa **+ Aggiungi ordine per un socio**, per cambiarlo **✎ Modifica**. Funziona anche dopo la scadenza, finché non chiudi il ciclo.",
       ],
-      notes: ["Finché il ciclo è aperto sono i soci a cambiare il proprio ordine. Pesi e correzioni si registrano dopo la chiusura."],
-      keywords: ["vedere ordini", "chi ha ordinato", "totale", "riepilogo"],
+      notes: ["Un ordine inserito o cambiato da te viene addebitato alla chiusura, come gli altri, e il socio riceve un avviso. Pesi e prezzi veri si registrano dopo la chiusura."],
+      keywords: ["vedere ordini", "chi ha ordinato", "totale", "riepilogo", "aggiungere ordine", "ordine per un socio", "ordine in ritardo"],
     },
     {
       slug: "modificare-ciclo",
@@ -178,13 +179,14 @@ export const adminGuideIt: GuideContent = {
       slug: "scadenza-passata",
       topic: "ciclo",
       title: "Gli ordini sono scaduti ma il ciclo è ancora aperto",
-      intro: "È normale: alla scadenza i soci non possono più ordinare, ma il ciclo non si chiude da solo. Così hai tempo di mandare l'ordine al fornitore e aspettare la distinta con i costi veri.",
+      intro: "È normale: alla scadenza i soci non possono più ordinare, ma il ciclo non si chiude da solo. Così hai tempo di sistemare gli ordini, mandare l'ordine al fornitore e aspettare la distinta con i costi veri.",
       steps: [
+        "In **Ordini** controlla gli ordini e aggiungi chi è arrivato tardi con **+ Aggiungi ordine per un socio**.",
         "In **Fornitore** scarica la distinta e inviala al fornitore.",
-        "Quando hai pesi e prezzi veri (o se non servono), chiudi il ciclo con **Chiudi ciclo…**.",
+        "Quando hai pesi e prezzi veri (o se non servono), chiudi il ciclo con **Chiudi ciclo…**: è l'ultimo passo, quello che addebita i soci.",
       ],
-      notes: ["In **Da fare ora** il ciclo compare come **Rivedi e chiudi il ciclo** finché non lo chiudi."],
-      keywords: ["scaduto", "non si chiude", "automatico", "in ritardo"],
+      notes: ["In **Da fare ora** il ciclo compare come **Controlla gli ordini** finché non lo chiudi."],
+      keywords: ["scaduto", "non si chiude", "automatico", "in ritardo", "ritardatari", "ordine tardivo"],
     },
     {
       slug: "chiudere-ciclo",
