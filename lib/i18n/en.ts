@@ -1692,7 +1692,7 @@ export const en: Strings = {
         orgNameHint: "In email signatures and payment descriptions.",
         headerShowName: "Show the name next to the logo",
         flylabsSignature: "Show the “by flylabs.ai” signature",
-        flylabsSignatureHint: "At the foot of the pages, on the sign-in page and in emails, never at the top. WeGrocery is open source (MIT licence): the signature is on by default and can be switched off.",
+        flylabsSignatureHint: "Small, next to the version in the Profile, under the sign-in page and in emails. WeGrocery is open source (MIT licence): the signature is on by default and can be switched off.",
         logo: "Logo",
         logoHint: "PNG, JPEG or WebP, at most 512 KB. Square works best.",
         logoUpload: "Upload the logo",
