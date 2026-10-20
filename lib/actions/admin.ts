@@ -17,7 +17,10 @@ import { auditLog, authUsers, ledgerEntries, members, notifications, orderCycles
 import { upsertCycleProducts } from "@/lib/db/cycle-products";
 import { isUniqueViolation } from "@/lib/db/errors";
 import { ActionError, actionErrorMessage } from "@/lib/action-error";
-import { getLastHandlingFee, getMembersByEmails } from "@/lib/db/queries";
+import { getLastHandlingFee, getMemberPendingOrderTotals, getMembersByEmails } from "@/lib/db/queries";
+import { readMemberOrderLines, replaceOpenOrder } from "@/lib/admin/open-order-store";
+import { evaluateCreditLimit } from "@/lib/membership/policy";
+import { getWalletBalance } from "@/lib/payments/balance-due";
 import { findEmailConflict, normalizeEmail } from "@/lib/member-email";
 import type { BatchItem } from "drizzle-orm/batch";
 import { orderLinesSnapshot, planClosedOrderEdit } from "@/lib/closed-order-edit";
@@ -1916,6 +1919,174 @@ export async function adminEditClosedOrder(input: EditClosedOrderInput): Promise
     };
   } catch (e) {
     return { error: actionErrorMessage(e, t.errors.genericError, "adminEditClosedOrder") };
+  }
+}
+
+// ── Open-cycle order editing ─────────────────────────────────────────────────
+//
+// Lets an admin add or change a member's order while the cycle is still open,
+// deadline passed or not: the late order phoned in before the close. Unlike
+// adminEditClosedOrder nothing goes to the ledger: the close charges this
+// order with all the others. The credit limit and the membership card are not
+// enforced (the admin decides), only reported back as a warning.
+
+export type SaveOpenOrderInput = {
+  cycleId: string;
+  memberId: string;
+  // Final desired state of the member's order. Lines with quantity <= 0 are dropped.
+  lines: Array<{ productId: string; quantity: number }>;
+  // Free-form reason, shown to the member in the notification.
+  note?: string;
+};
+
+export type SaveOpenOrderResult =
+  | {
+      oldTotal: number;
+      newTotal: number;
+      // The cycle's order sheet already went to the supplier from the app.
+      supplierSent: boolean;
+      // The member ends up past the credit limit (wallet cycles only).
+      overCreditLimit: boolean;
+    }
+  | { error: string };
+
+export async function adminSaveOpenOrder(input: SaveOpenOrderInput): Promise<SaveOpenOrderResult> {
+  try {
+    const admin = await requireAdmin();
+    const db = getDb();
+    const now = new Date();
+
+    for (const l of input.lines) {
+      if (!Number.isInteger(l.quantity) || l.quantity < 0 || l.quantity > 9999) {
+        return { error: t.errors.invalidQuantity };
+      }
+    }
+
+    const [cycle] = await db
+      .select({ status: orderCycles.status, title: orderCycles.title, paymentMode: orderCycles.paymentMode })
+      .from(orderCycles)
+      .where(eq(orderCycles.cycleId, input.cycleId))
+      .limit(1);
+    if (!cycle) return { error: t.errors.cycleNotFound };
+    if (cycle.status !== "open") return { error: t.errors.openOrderCycleNotOpen };
+
+    const [member] = await db
+      .select({
+        memberId: members.memberId,
+        email: members.email,
+        active: members.active,
+        householdOf: members.householdOf,
+        paysOffline: members.paysOffline,
+      })
+      .from(members)
+      .where(eq(members.memberId, input.memberId))
+      .limit(1);
+    // A person in a family orders on the family's account.
+    if (!member || !member.active || member.householdOf) return { error: t.errors.memberNotFound };
+
+    // Same prices as the member's own save: the cycle's current ones.
+    const wanted = new Map<string, number>();
+    for (const l of input.lines) {
+      if (l.productId && l.quantity > 0) wanted.set(l.productId, (wanted.get(l.productId) ?? 0) + l.quantity);
+    }
+    const cycleProducts = wanted.size
+      ? await db
+          .select({ productId: products.productId, unitPrice: products.unitPrice })
+          .from(products)
+          .where(
+            and(
+              eq(products.cycleId, input.cycleId),
+              eq(products.active, true),
+              inArray(products.productId, [...wanted.keys()]),
+            ),
+          )
+      : [];
+    const priceByProduct = new Map(cycleProducts.map((p) => [p.productId, p.unitPrice]));
+    if ([...wanted.keys()].some((id) => !priceByProduct.has(id))) return { error: t.errors.productNotValidForCycle };
+    const lines = [...wanted].map(([productId, quantity]) => ({
+      productId,
+      quantity,
+      unitPrice: priceByProduct.get(productId)!,
+    }));
+
+    const previous = await readMemberOrderLines(db, input.memberId, input.cycleId);
+    const cents = (v: string) => Math.round(parseFloat(v) * 100);
+    const oldCents = previous.reduce((sum, l) => sum + cents(l.lineTotal), 0);
+    const newCents = lines.reduce((sum, l) => sum + cents(l.unitPrice) * l.quantity, 0);
+
+    const saved = await replaceOpenOrder(db, {
+      memberId: input.memberId,
+      cycleId: input.cycleId,
+      lines,
+      expected: previous,
+    });
+    if (saved === "changed") return { error: t.errors.openOrderChanged };
+
+    let overCreditLimit = false;
+    if (cycle.paymentMode !== "per_order") {
+      const { minBalance } = await getPaymentSettings();
+      if (minBalance !== null) {
+        const pending = await getMemberPendingOrderTotals(input.memberId, input.cycleId);
+        overCreditLimit = !evaluateCreditLimit({
+          balance: await getWalletBalance(db, input.memberId, member.paysOffline),
+          openOrdersOtherCycles: pending.otherOpenCycles,
+          previousOrderTotal: oldCents / 100,
+          newOrderTotal: newCents / 100,
+          minBalance,
+        }).ok;
+      }
+    }
+
+    const [sent] = await db
+      .select({ auditId: auditLog.auditId })
+      .from(auditLog)
+      .where(
+        and(
+          eq(auditLog.entityType, "cycle"),
+          eq(auditLog.entityId, input.cycleId),
+          eq(auditLog.action, "supplier_email_sent"),
+        ),
+      )
+      .limit(1);
+
+    const linesKey = (ls: ReadonlyArray<{ productId: string; quantity: number }>) =>
+      ls.map((l) => `${l.productId}:${l.quantity}`).sort().join(",");
+    if (linesKey(previous) !== linesKey(lines)) {
+      const n = t.notificationsServer;
+      const note = (input.note ?? "").trim();
+      const sentence =
+        lines.length === 0
+          ? n.openOrderRemovedBody(cycle.title)
+          : previous.length === 0
+            ? n.openOrderAddedBody(cycle.title, formatMoney(newCents / 100))
+            : n.openOrderChangedBody(cycle.title, formatMoney(newCents / 100));
+      await dispatchNotification(db, {
+        memberId: input.memberId,
+        memberEmail: member.email,
+        type: "order_corrected",
+        title: n.orderModifiedTitle,
+        body: note ? `${sentence} ${n.openOrderNote(note)}` : sentence,
+        href: "/ordine",
+        createdAt: now,
+      });
+    }
+
+    await writeAudit(db, admin.email, "admin_save_open_order", "order", input.cycleId, {
+      cycleId: input.cycleId,
+      memberId: input.memberId,
+      oldTotal: (oldCents / 100).toFixed(2),
+      newTotal: (newCents / 100).toFixed(2),
+      lineCount: lines.length,
+      note: input.note ?? null,
+    });
+
+    revalidatePath("/admin");
+    revalidatePath("/");
+    revalidatePath("/ordine");
+
+    return { oldTotal: oldCents / 100, newTotal: newCents / 100, supplierSent: Boolean(sent), overCreditLimit };
+  } catch (e) {
+    return { error: actionErrorMessage(e, t.errors.genericError, "adminSaveOpenOrder") };
   }
 }
 

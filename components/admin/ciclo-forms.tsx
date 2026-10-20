@@ -168,7 +168,12 @@ export function OpenCycleOverview({ cycle, stats }: { cycle: SerializedCycle; st
         )}
         {cycle.isOverdue && (
           <div className="mt-3 rounded-lg border border-destructive/30 bg-danger-bg p-3 text-[13px] text-destructive">
-            {t.admin.cycle.overdueWarning}
+            <p className="font-semibold">{t.admin.cycle.overdueWarning}</p>
+            <ol className="mt-1.5 list-decimal space-y-1 pl-5">
+              {t.admin.cycle.overdueSteps.map((step) => (
+                <li key={step}>{step}</li>
+              ))}
+            </ol>
           </div>
         )}
         <div className="mt-3">

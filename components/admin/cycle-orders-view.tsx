@@ -9,15 +9,16 @@ import { OrdersSplit } from "./orders-split";
 // Admin → Ciclo → Ordini: the cycle's orders in one place, "Per socio" and
 // "Per prodotto" (side by side from a PC), with the one "Scarica distinta".
 // Before, the same list lived in the Ordini tab, in the Recap sheet and in the
-// Excel file; a closed cycle's weights and orders are corrected here.
+// Excel file; an admin adds or changes a member's order here (open or closed),
+// and a closed cycle's weights are corrected here.
 export async function CycleOrdersView({
   cycleId,
   cycleTitle,
-  editable,
+  cycleStatus,
 }: {
   cycleId: string;
   cycleTitle: string;
-  editable: boolean;
+  cycleStatus: string;
 }) {
   const summary = await getAdminCycleSummary(cycleId);
   const o = t.admin.orders;
@@ -27,7 +28,7 @@ export async function CycleOrdersView({
       <CardHeader>
         <h3 className="text-[13px] font-bold text-foreground">{o.perMemberTitle}</h3>
       </CardHeader>
-      <CycleOrdersByMember cycleId={cycleId} cycleTitle={cycleTitle} editable={editable} />
+      <CycleOrdersByMember cycleId={cycleId} cycleTitle={cycleTitle} cycleStatus={cycleStatus} />
     </Card>
   );
 

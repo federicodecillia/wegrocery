@@ -23,6 +23,7 @@ Kit version and modules in use: `flylabs-kit.json` (Playbook 9.7). Every Monday 
 Intended deviations (as of 2026-10-17):
 - 2.10 The group's own colours instead of the FlyLabs palette: WeGrocery is white-label, so this stays. For the same reason `accent` is the group's second colour (with `accent-foreground`, `accent-text`, `accent-bg`), not shadcn's grey hover fill.
 - 3.3 Repository docs in English: the repo is public and a portfolio piece, so this stays.
+- 2.11 "by flylabs.ai" in small plain text, only in the Profile (next to the version) and under the login card, not at the foot of every page nor as the drawn wordmark: on every page it read as too branded for a white-label app (Federico, 2026-10-20). Emails keep it under the logo.
 
 Found in the review of 2026-10-14 (each line, its reason and its timing are in
 [`docs/2026-10-14-flylabs-playbook-alignment.md`](./docs/2026-10-14-flylabs-playbook-alignment.md)):
@@ -76,7 +77,7 @@ Never read `.env*` files other than `.env.example` (Playbook 8.3).
 │   ├── actions/
 │   │   ├── admin.ts            # Admin Server Actions: cycles, ledger, topup, members, suppliers,
 │   │   │                       #   adminSendSupplierEmail, adminUpdateOrderLineActuals,
-│   │   │                       #   adminEditClosedOrder
+│   │   │                       #   adminEditClosedOrder, adminSaveOpenOrder
 │   │   ├── admin-cycles.ts     # Cycle-specific actions
 │   │   ├── admin-products.ts   # Product/catalog actions
 │   │   ├── admin-settings.ts   # adminUpdatePaymentSettings (Impostazioni tab)
@@ -118,7 +119,7 @@ npm run test:int     # Integration tests on a test database (see below)
 
 **Runtime identity** (migration 0034, table `group_identity`, one row `id = 1`): name, short name, contacts, URLs, colours and logo can be changed by an admin (admin → Impostazioni, or the first-run wizard at `/admin/avvio`). Server code reads `await getBrand()` (`lib/brand/get-brand.ts`: `NEXT_PUBLIC_BRAND_JSON` merged with the DB overrides, rules in `lib/brand/identity.ts`), never the static `brand` import, for anything a group can change; locale, currency and time zone stay build-time (`brand` is fine for those, and in client components). The logo is stored base64 (PNG/JPEG/WebP checked by magic bytes, 512 KB max, no SVG) and served by `app/brand/[file]`; PWA icons and the manifest follow it. Installs that already had members got a completed row, so the wizard shows only on new installs.
 
-**"by flylabs.ai"** (Playbook 2.11, FlyLabs Kit module `firma` 1.0): `components/by-flylabs.tsx` (with `by-flylabs-paths.ts`, copied from the kit as is) draws the signature at the foot of `AppShell` and under the login card, never in the header: the app carries the group's brand. It links `https://www.flylabs.ai/<locale>` (no UTM) until WeGrocery has a page there: then set `FLYLABS_PRODUCT_SLUG` in `lib/brand/flylabs.ts`, which the emails read too. The colours are the flylabs.ai logo's, the same for every group: `--flylabs-ai` and `--flylabs-spark`, light in `app/globals.css`, dark in `lib/brand/roles.ts` (`DARK`). On by default (MIT licence); `brand.flylabsSignature: false` or the "by flylabs.ai" box in Impostazioni → Nome, logo e colori (a `group_identity` override) switches it off in the app and in the emails.
+**"by flylabs.ai"** (Playbook 2.11, FlyLabs Kit module `firma` 1.0): `components/by-flylabs.tsx` (with `by-flylabs-paths.ts`, copied from the kit as is) draws the signature in small plain text, only next to the version at the foot of the Profile and under the login card, never in the header nor on the main pages: the app carries the group's brand. It links `https://www.flylabs.ai/<locale>` (no UTM) until WeGrocery has a page there: then set `FLYLABS_PRODUCT_SLUG` in `lib/brand/flylabs.ts`, which the emails read too. The colours are the flylabs.ai logo's, the same for every group: `--flylabs-ai` and `--flylabs-spark`, light in `app/globals.css`, dark in `lib/brand/roles.ts` (`DARK`). On by default (MIT licence); `brand.flylabsSignature: false` or the "by flylabs.ai" box in Impostazioni → Nome, logo e colori (a `group_identity` override) switches it off in the app and in the emails.
 
 **Instance stats** (`/api/instance-stats`, `lib/instance-stats/`, FlyLabs Kit module `console`): with `INSTANCE_STATS_SECRET` (32+ chars) set, a GET signed with HMAC-SHA256 of `<ts>.GET./api/instance-stats` (5-minute window) returns anonymous counts (members, cycles, orders in 30 days, DB size, config states, pending migrations, version); anything else is a 404. Signed with `x-flylabs-timestamp` / `x-flylabs-signature` it answers the kit's envelope (`app: "wegrocery"`, `counts` by name, plus `lastClosedAt`, `paymentMode`, `setupCompleted`; `lib/instance-stats/envelope.ts`); signed with the older `x-wegrocery-*` pair, the shape consoles read before the kit. No amounts and no personal data, ever. The `console/` app is the caller: it sends both pairs and reads both shapes.
 
@@ -334,7 +335,7 @@ User interaction → Server Action ("use server") → auth check → DB mutation
   - `topup_received` — admin records a topup (or a Stripe top-up/refund lands)
   - `payout_sent` (category `wallet_topup`), `manual_charge_recorded` and `membership_fee_charged` (category `order_charge`) — admin records an outgoing movement in Cassa
   - `refund_failed` (category `wallet_topup`) — a Stripe refund failed after being accepted: the member and every active admin
-  - `order_corrected` — admin edits a member's order via `adminEditClosedOrder`
+  - `order_corrected` — admin edits a member's order via `adminEditClosedOrder` (closed cycle, with a correction) or `adminSaveOpenOrder` (open cycle, deadline passed or not: only the lines change, the close charges them; `lib/admin/open-order-store.ts`)
   - `order_adjusted` — closed-cycle shipping recompute (only members whose share moved) OR per-line "actual delivered" rectification
   - `cycle_opened` — a cycle is created (always created already-open, so this is the single emit point, in `adminCreateCycle`)
   - `cycle_closing_reminder` — **retired in v1.9.0.** No longer emitted. Rows sent while the feature existed remain in members' inboxes and fall through `categoryForType` to the unknown-type branch: rendered in-app, never emailed. Do not reintroduce the name for something else.

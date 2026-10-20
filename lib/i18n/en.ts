@@ -648,9 +648,9 @@ export const en: Strings = {
       todo: {
         title: "To do now",
         nothing: "Nothing to do on the cycles.",
-        overdueCta: "Review and close the cycle",
+        overdueCta: "Check the orders",
         overdueDetail: (h: number) =>
-          h < 1 ? "Orders closed less than an hour ago" : h < 48 ? `Orders closed ${h} h ago` : `Orders closed ${Math.floor(h / 24)} days ago`,
+          `${h < 1 ? "Orders closed less than an hour ago" : h < 48 ? `Orders closed ${h} h ago` : `Orders closed ${Math.floor(h / 24)} days ago`}: add anyone missing, then close`,
         openCta: "See the orders",
         openDetail: (members: number, h: number | null) =>
           [members === 1 ? "1 member" : `${members} members`, h == null ? null : h < 48 ? `closes in ${h} h` : `closes in ${Math.floor(h / 24)} days`]
@@ -900,7 +900,12 @@ export const en: Strings = {
       cancelledBadge: "Cancelled",
       ordersCount: "Orders",
       totalAmount: "Total",
-      overdueWarning: "Admin alert: order closing date has passed. Check the recap and close the cycle.",
+      overdueWarning: "The deadline has passed and members can no longer order. Before closing:",
+      overdueSteps: [
+        "In Orders check the orders and add anyone who came in late.",
+        "In Supplier send the order to the supplier.",
+        "Close cycle: members are charged. After that, every change becomes a correction.",
+      ],
       orderCloseAt: "Order closing",
       orderCloseAtLabel: "Order closing *",
       pickup1Label: "Pickup 1",
@@ -1475,7 +1480,7 @@ export const en: Strings = {
       addOrder: "+ Add order for a member",
       rectifyTitle: "Click to adjust the quantity received",
       rectifyHint: "Tap a product to correct delivered weight or price",
-      openCycleHint: "The cycle is still open: members can change their order. Weights and corrections are recorded after closing.",
+      openCycleHint: "The cycle is open: you can add or change a member's order, even after the deadline. Real weights and prices are recorded after closing.",
       rectifyPill: "price/weight",
       editQtyButton: "✎ Edit",
       adjustedBadge: "adjusted",
@@ -1513,6 +1518,11 @@ export const en: Strings = {
       errorLoading: "Load error",
       reduceAria: (name: string) => `Remove one: ${name}`,
       increaseAria: (name: string) => `Add one: ${name}`,
+      openNote: "The cycle is open: the order is charged at the close, like all the others. The member gets a notice.",
+      openNotePlaceholder: 'e.g. "Order received by phone"',
+      openSaved: "Order saved: it will be charged when the cycle closes",
+      openSupplierSent: "The order had already gone to the supplier: send it again or tell the supplier.",
+      openOverCredit: "Note: with this order the member goes past the credit limit.",
     },
     supplierActions: {
       stepLabel: (n: number) => `Step ${n}`,
@@ -1682,7 +1692,7 @@ export const en: Strings = {
         orgNameHint: "In email signatures and payment descriptions.",
         headerShowName: "Show the name next to the logo",
         flylabsSignature: "Show the “by flylabs.ai” signature",
-        flylabsSignatureHint: "At the foot of the pages, on the sign-in page and in emails, never at the top. WeGrocery is open source (MIT licence): the signature is on by default and can be switched off.",
+        flylabsSignatureHint: "Small, next to the version in the Profile, under the sign-in page and in emails. WeGrocery is open source (MIT licence): the signature is on by default and can be switched off.",
         logo: "Logo",
         logoHint: "PNG, JPEG or WebP, at most 512 KB. Square works best.",
         logoUpload: "Upload the logo",
@@ -1955,6 +1965,12 @@ export const en: Strings = {
     orderModifiedBody: (sentence: string, balance: string) =>
       `${sentence} New balance: ${balance}.`,
     orderModifiedBodyUpdated: (title: string) => `Your order in "${title}" has been updated.`,
+    openOrderAddedBody: (title: string, total: string) =>
+      `An admin entered your order in "${title}": ${total}. You are charged when the cycle closes.`,
+    openOrderChangedBody: (title: string, total: string) =>
+      `An admin changed your order in "${title}": it is now ${total}. You are charged when the cycle closes.`,
+    openOrderRemovedBody: (title: string) => `An admin removed your order in "${title}".`,
+    openOrderNote: (note: string) => `Reason: ${note}`,
     orderModifiedShipping: (from: string, to: string) =>
       `Your shipping share went from ${from} to ${to}.`,
     shippingAdjustedTitle: (title: string) => `Shipping for "${title}" updated`,
@@ -2128,6 +2144,8 @@ export const en: Strings = {
     correctionError: "Error saving correction",
     closedOrderChanged: "The order changed in the meantime (or the cycle is no longer closed): reload and try again.",
     orderEditOnlyAfterClose: "Orders can only be modified this way after the cycle is closed",
+    openOrderCycleNotOpen: "The cycle is no longer open: reload the page.",
+    openOrderChanged: "The order changed in the meantime (or the cycle was closed): reload and try again.",
     productNotValidForCycle: "Product not valid for this cycle",
     amountMustBePositive: "Amount must be positive",
     amountInvalid: "Invalid amount",

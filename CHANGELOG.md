@@ -22,6 +22,17 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
+## [1.34.0] - 2026-10-20
+
+*Admins can add a member's order before closing the cycle, and the "by flylabs.ai" signature steps back.*
+
+### Added
+- 🛒 **Admins add a member's order before closing the cycle.** In a cycle's Orders, "+ Add order for a member" and "✎ Edit" now work while the cycle is open, after the deadline too: the order is charged at the close like the others, with no correction, and the member gets a notice.
+
+### Changed
+- 🧭 **The right order of the steps after the deadline.** "To do now" now says "Check the orders" and opens Orders; the Overview lists the steps before closing (orders, supplier, close) and the admin guide follows the same order. Closing is the last step, the one that charges members.
+- ✍️ **A quieter "by flylabs.ai".** It no longer sits at the foot of every page: it is now small text next to the version in the Profile and under the sign-in card. Emails do not change.
+
 ## [1.33.0] - 2026-10-19
 
 *Admins get their own guide and welcome, and the app is signed "by flylabs.ai" at its foot.*
@@ -692,6 +703,7 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
+[1.34.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.34.0
 [1.33.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.33.0
 [1.32.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.32.0
 [1.31.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.31.0

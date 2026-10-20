@@ -2,10 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { Suspense, type ReactNode } from "react";
 import { getBrand } from "@/lib/brand/get-brand";
-import { FLYLABS_PRODUCT_SLUG } from "@/lib/brand/flylabs";
 import { t } from "@/lib/i18n";
 import { BottomNav } from "@/components/bottom-nav";
-import { ByFlylabs } from "@/components/by-flylabs";
 import { DemoBanner } from "@/components/demo-banner";
 import { NotificationBell } from "@/components/notification-bell";
 import { ProfileAvatar } from "@/components/profile/profile-avatar";
@@ -87,19 +85,12 @@ export async function AppShell({ children, email, name, isAdmin, memberId, perso
           <WelcomeResume />
           <div className={CONTENT_WIDTH[layout]}>
           {children}
-          {/* The foot of every page: the group's privacy notice and the
-              product's "by flylabs.ai" (Playbook 2.11), never in the header. */}
-          {brand.privacyUrl || brand.flylabsSignature ? (
-            <footer className="mt-8 flex flex-col items-center gap-2 text-xs">
-              {brand.privacyUrl ? (
-                <a href={brand.privacyUrl} target="_blank" rel="noopener noreferrer" className="text-secondary-foreground underline">
-                  {t.login.privacyLink}
-                </a>
-              ) : null}
-              {brand.flylabsSignature ? (
-                <ByFlylabs locale={brand.locale} productSlug={FLYLABS_PRODUCT_SLUG} height={20} newTab className="min-h-11" />
-              ) : null}
-            </footer>
+          {brand.privacyUrl ? (
+            <p className="mt-8 text-center text-xs">
+              <a href={brand.privacyUrl} target="_blank" rel="noopener noreferrer" className="text-secondary-foreground underline">
+                {t.login.privacyLink}
+              </a>
+            </p>
           ) : null}
           </div>
         </main>
