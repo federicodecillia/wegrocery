@@ -31,7 +31,7 @@ function writeDone(done: Set<string>) {
 }
 
 const VIEW: Record<CycleStep, CycleView> = {
-  overdue: "panoramica",
+  overdue: "ordini",
   open: "ordini",
   to_send: "fornitore",
   to_adjust: "ordini",

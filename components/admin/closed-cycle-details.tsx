@@ -47,20 +47,23 @@ type MemberShipping = { memberId: string; memberName: string; amount: number };
 
 /**
  * Admin → Ciclo → Ordini, per socio: every member of the cycle with their
- * lines, shipping and fee. On a closed cycle a tap on a line records the
- * delivered weight or price, "✎ Prodotti" edits the whole order and
- * "+ Aggiungi ordine" adds one; an open cycle is read-only (the server
- * refuses corrections until the close).
+ * lines, shipping and fee. "✎ Modifica" edits a member's whole order and
+ * "+ Aggiungi ordine" adds one, on an open cycle (deadline passed or not: the
+ * close charges it) and on a closed one (a correction in the ledger). Only on
+ * a closed cycle a tap on a line records the delivered weight or price.
  */
 export function CycleOrdersByMember({
   cycleId,
   cycleTitle,
-  editable,
+  cycleStatus,
 }: {
   cycleId: string;
   cycleTitle: string;
-  editable: boolean;
+  cycleStatus: string;
 }) {
+  const cycleOpen = cycleStatus === "open";
+  const editable = cycleStatus === "closed";
+  const canEditOrders = cycleOpen || editable;
   const [loading, setLoading] = useState(true);
   const [orderDetails, setOrderDetails] = useState<OrderDetail[]>([]);
   const [shipping, setShipping] = useState<MemberShipping[]>([]);
@@ -111,7 +114,7 @@ export function CycleOrdersByMember({
 
   return (
     <div>
-      {editable && (
+      {canEditOrders && (
         <div className="border-b border-border px-4 py-3">
           <Button variant="brand" className="w-full sm:w-auto" onClick={() => setEditTarget({ kind: "create" })}>
             {c.addOrder}
@@ -125,7 +128,7 @@ export function CycleOrdersByMember({
       ) : (
         <>
           <div className="space-y-2 px-4 pt-3">
-            <p className="text-label text-secondary-foreground">{editable ? c.rectifyHint : c.openCycleHint}</p>
+            <p className="text-label text-secondary-foreground">{editable ? c.rectifyHint : cycleOpen ? c.openCycleHint : null}</p>
             {memberRows.length >= MEMBER_SEARCH_MIN && (
               <>
                 <label className="sr-only" htmlFor={`orders-search-${cycleId}`}>
@@ -175,7 +178,7 @@ export function CycleOrdersByMember({
                         </span>
                       </span>
                     </button>
-                    {editable && (
+                    {canEditOrders && (
                       <button
                         type="button"
                         onClick={() => setEditTarget({ kind: "edit", memberId, memberName })}
@@ -210,6 +213,7 @@ export function CycleOrdersByMember({
           cycleId={cycleId}
           cycleTitle={cycleTitle}
           mode={editTarget}
+          cycleOpen={cycleOpen}
           onClose={() => setEditTarget(null)}
           onSaved={() => refetch()}
         />

@@ -290,7 +290,7 @@ async function SelectedCycle({
 
       {view === "prodotti" && <CycleProductsView cycle={cycle} suppliers={suppliers} />}
 
-      {view === "ordini" && <CycleOrdersView cycleId={c.cycleId} cycleTitle={c.title} editable={c.status === "closed"} />}
+      {view === "ordini" && <CycleOrdersView cycleId={c.cycleId} cycleTitle={c.title} cycleStatus={c.status} />}
 
       {view === "fornitore" &&
         (c.supplierName ? (

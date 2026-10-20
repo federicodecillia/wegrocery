@@ -6,7 +6,7 @@ import {
   adminGetEditClosedOrderBootstrap,
   type EditClosedOrderBootstrap,
 } from "@/lib/actions/admin-cycles";
-import { adminEditClosedOrder } from "@/lib/actions/admin";
+import { adminEditClosedOrder, adminSaveOpenOrder } from "@/lib/actions/admin";
 import { toast } from "@/components/ui/toast";
 import { Sheet, SheetActions } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -25,18 +25,21 @@ type Props = {
   cycleId: string;
   cycleTitle: string;
   mode: Mode;
+  /** The cycle is still open: the order is replaced and charged at the close, no correction. */
+  cycleOpen?: boolean;
   onClose: () => void;
   /** Optional callback fired after a successful save (parent can refetch). */
   onSaved?: () => void;
 };
 
 /**
- * Full-screen modal that lets an admin add/remove/change products inside a
- * closed cycle order. Mirrors the member-facing /ordine stepper UI for
- * familiarity. On save calls `adminEditClosedOrder`, which writes a single
- * `correction` ledger entry with the delta.
+ * Full-screen modal that lets an admin add/remove/change products in a
+ * member's order. Mirrors the member-facing /ordine stepper UI for
+ * familiarity. On a closed cycle it calls `adminEditClosedOrder`, which writes
+ * a single `correction` ledger entry with the delta; on an open one
+ * `adminSaveOpenOrder`, which only replaces the lines (the close charges them).
  */
-export function EditClosedOrderModal({ cycleId, cycleTitle, mode, onClose, onSaved }: Props) {
+export function EditClosedOrderModal({ cycleId, cycleTitle, mode, cycleOpen = false, onClose, onSaved }: Props) {
   const [loading, setLoading] = useState(true);
   const [bootstrap, setBootstrap] = useState<EditClosedOrderBootstrap | null>(null);
   const [quantities, setQuantities] = useState<Record<string, number>>({});
@@ -107,6 +110,19 @@ export function EditClosedOrderModal({ cycleId, cycleTitle, mode, onClose, onSav
       .map(([productId, quantity]) => ({ productId, quantity }));
     startTransition(async () => {
       try {
+        if (cycleOpen) {
+          const saved = await adminSaveOpenOrder({ cycleId, memberId, lines, note: note.trim() || undefined });
+          if ("error" in saved) {
+            toast.error(saved.error);
+            return;
+          }
+          toast.success(t.admin.editClosedOrder.openSaved);
+          if (saved.supplierSent) toast.warning(t.admin.editClosedOrder.openSupplierSent);
+          if (saved.overCreditLimit) toast.warning(t.admin.editClosedOrder.openOverCredit);
+          onSaved?.();
+          onClose();
+          return;
+        }
         const result = await adminEditClosedOrder({
           cycleId,
           memberId,
@@ -204,10 +220,16 @@ export function EditClosedOrderModal({ cycleId, cycleTitle, mode, onClose, onSav
         </>
       }
     >
-      <p className="text-label leading-snug text-secondary-foreground">{t.admin.editClosedOrder.correctionNote}</p>
-      <p className="mt-2 mb-4 rounded-lg bg-accent/10 px-2.5 py-1.5 text-label leading-snug text-accent-text">
-        {t.admin.editClosedOrder.priceWeightBridge}
-      </p>
+      {cycleOpen ? (
+        <p className="mb-4 text-label leading-snug text-secondary-foreground">{t.admin.editClosedOrder.openNote}</p>
+      ) : (
+        <>
+          <p className="text-label leading-snug text-secondary-foreground">{t.admin.editClosedOrder.correctionNote}</p>
+          <p className="mt-2 mb-4 rounded-lg bg-accent/10 px-2.5 py-1.5 text-label leading-snug text-accent-text">
+            {t.admin.editClosedOrder.priceWeightBridge}
+          </p>
+        </>
+      )}
       {loading || !bootstrap ? (
         <div className="py-20 text-center text-secondary-foreground">{t.admin.common.loading}</div>
       ) : (
@@ -323,7 +345,7 @@ export function EditClosedOrderModal({ cycleId, cycleTitle, mode, onClose, onSav
               type="text"
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder={t.admin.editClosedOrder.notePlaceholder}
+              placeholder={cycleOpen ? t.admin.editClosedOrder.openNotePlaceholder : t.admin.editClosedOrder.notePlaceholder}
             />
           </div>
         </>

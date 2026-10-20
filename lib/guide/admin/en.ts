@@ -39,7 +39,7 @@ export const adminGuideEn: GuideContent = {
       title: "\"To do now\": where to start",
       intro: "At the top of **Cycle** the app tells you the next step of each cycle, the most urgent first. When in doubt, always start here.",
       steps: [
-        "**Review and close the cycle**: the order deadline has passed. The cycle does not close by itself: you close it.",
+        "**Check the orders**: the order deadline has passed. Add anyone missing, send the order to the supplier, then close the cycle: it does not close by itself.",
         "**Send the order to the supplier**: the cycle is closed but the order sheet has not left the app yet.",
         "**Record weights or upload the sheet**: after the delivery, if something differs from what was ordered.",
         "**Settle accounts**: only for cycles paid by card, once costs are final.",
@@ -90,9 +90,9 @@ export const adminGuideEn: GuideContent = {
       steps: [
         "**Open** the cycle with the order deadline and the supplier.",
         "**Add the products** members can order.",
-        "Members **order** until the deadline. You follow the orders in **Orders**.",
-        "After the deadline you **send the order to the supplier** with the order sheet.",
-        "**Close the cycle**: orders become final and members are charged.",
+        "Members **order** until the deadline. You follow the orders in **Orders** and can add or change a member's order.",
+        "After the deadline you **check the orders**, add anyone who came in late and **send the order to the supplier** with the order sheet.",
+        "**Close the cycle**, last: orders become final and members are charged.",
         "On delivery you **record real weights and prices**, if they differ, or upload the sheet the supplier filled in.",
       ],
       notes: ["Each step has a card below. **To do now** reminds you where each cycle stands."],
@@ -155,9 +155,10 @@ export const adminGuideEn: GuideContent = {
       steps: [
         "**Overview**: how many members ordered, the total and the time left before the deadline.",
         "**Orders**: each member's order and the totals per product. You can also download the order sheet in Excel from here.",
+        "To enter a member's order use **+ Add order for a member**, to change it **✎ Edit**. It works after the deadline too, until you close the cycle.",
       ],
-      notes: ["While the cycle is open, members change their own orders. Weights and corrections are recorded after the close."],
-      keywords: ["see orders", "who ordered", "total", "summary"],
+      notes: ["An order you enter or change is charged at the close, like the others, and the member gets a notice. Real weights and prices are recorded after the close."],
+      keywords: ["see orders", "who ordered", "total", "summary", "add order", "order for a member", "late order"],
     },
     {
       slug: "modificare-ciclo",
@@ -176,13 +177,14 @@ export const adminGuideEn: GuideContent = {
       slug: "scadenza-passata",
       topic: "ciclo",
       title: "The order deadline has passed but the cycle is still open",
-      intro: "That is normal: after the deadline members can no longer order, but the cycle does not close by itself. This gives you time to send the order to the supplier and wait for the sheet with the real costs.",
+      intro: "That is normal: after the deadline members can no longer order, but the cycle does not close by itself. This gives you time to sort out the orders, send the order to the supplier and wait for the sheet with the real costs.",
       steps: [
+        "In **Orders** check the orders and add anyone who came in late with **+ Add order for a member**.",
         "In **Supplier** download the order sheet and send it to the supplier.",
-        "When you have real weights and prices (or if you do not need them), close the cycle with **Close cycle…**.",
+        "When you have real weights and prices (or if you do not need them), close the cycle with **Close cycle…**: it is the last step, the one that charges members.",
       ],
-      notes: ["In **To do now** the cycle shows as **Review and close the cycle** until you close it."],
-      keywords: ["expired", "does not close", "automatic", "late"],
+      notes: ["In **To do now** the cycle shows as **Check the orders** until you close it."],
+      keywords: ["expired", "does not close", "automatic", "late", "late order"],
     },
     {
       slug: "chiudere-ciclo",

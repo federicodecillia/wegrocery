@@ -76,7 +76,7 @@ Never read `.env*` files other than `.env.example` (Playbook 8.3).
 │   ├── actions/
 │   │   ├── admin.ts            # Admin Server Actions: cycles, ledger, topup, members, suppliers,
 │   │   │                       #   adminSendSupplierEmail, adminUpdateOrderLineActuals,
-│   │   │                       #   adminEditClosedOrder
+│   │   │                       #   adminEditClosedOrder, adminSaveOpenOrder
 │   │   ├── admin-cycles.ts     # Cycle-specific actions
 │   │   ├── admin-products.ts   # Product/catalog actions
 │   │   ├── admin-settings.ts   # adminUpdatePaymentSettings (Impostazioni tab)
@@ -334,7 +334,7 @@ User interaction → Server Action ("use server") → auth check → DB mutation
   - `topup_received` — admin records a topup (or a Stripe top-up/refund lands)
   - `payout_sent` (category `wallet_topup`), `manual_charge_recorded` and `membership_fee_charged` (category `order_charge`) — admin records an outgoing movement in Cassa
   - `refund_failed` (category `wallet_topup`) — a Stripe refund failed after being accepted: the member and every active admin
-  - `order_corrected` — admin edits a member's order via `adminEditClosedOrder`
+  - `order_corrected` — admin edits a member's order via `adminEditClosedOrder` (closed cycle, with a correction) or `adminSaveOpenOrder` (open cycle, deadline passed or not: only the lines change, the close charges them; `lib/admin/open-order-store.ts`)
   - `order_adjusted` — closed-cycle shipping recompute (only members whose share moved) OR per-line "actual delivered" rectification
   - `cycle_opened` — a cycle is created (always created already-open, so this is the single emit point, in `adminCreateCycle`)
   - `cycle_closing_reminder` — **retired in v1.9.0.** No longer emitted. Rows sent while the feature existed remain in members' inboxes and fall through `categoryForType` to the unknown-type branch: rendered in-app, never emailed. Do not reintroduce the name for something else.
