@@ -22,6 +22,11 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
+## [Unreleased]
+
+### Fixed
+- 🔤 **"by flylabs.ai" readable on the sign-in page.** Under the sign-in card it was too light on the page background; it now uses the same grey as the privacy link.
+
 ## [1.34.0] - 2026-10-20
 
 *Admins can add a member's order before closing the cycle, and the "by flylabs.ai" signature steps back.*
