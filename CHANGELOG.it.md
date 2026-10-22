@@ -23,7 +23,9 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
-## [Unreleased]
+## [1.34.1] - 22 ottobre 2026
+
+*La scritta "by flylabs.ai" sotto la scheda di accesso si legge meglio.*
 
 ### Risolto
 - 🔤 **"by flylabs.ai" leggibile nella pagina di accesso.** Sotto la scheda di accesso era troppo chiaro sullo sfondo della pagina; ora usa lo stesso grigio del link alla privacy.
@@ -710,6 +712,7 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
+[1.34.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.34.1
 [1.34.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.34.0
 [1.33.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.33.0
 [1.32.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.32.0
