@@ -23,6 +23,11 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
+## [Unreleased]
+
+### Risolto
+- 🔤 **"by flylabs.ai" leggibile nella pagina di accesso.** Sotto la scheda di accesso era troppo chiaro sullo sfondo della pagina; ora usa lo stesso grigio del link alla privacy.
+
 ## [1.34.0] - 20 ottobre 2026
 
 *L'admin può aggiungere l'ordine di un socio prima di chiudere il ciclo, e la firma "by flylabs.ai" si fa più discreta.*

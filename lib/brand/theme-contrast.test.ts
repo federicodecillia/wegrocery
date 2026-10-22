@@ -38,7 +38,8 @@ function textPairs(mode: "light" | "dark"): [string, string, string][] {
   add("--foreground", [...surfaces, "--muted", ...soft]);
   add("--card-foreground", ["--card"]);
   add("--popover-foreground", ["--popover"]);
-  add("--secondary-foreground", [...surfaces, "--secondary", ...soft]);
+  // Also on the frame: the text under the login card (privacy link, "by flylabs.ai").
+  add("--secondary-foreground", [...surfaces, "--secondary", ...soft, "--frame"]);
   add("--muted-foreground", [...surfaces, "--muted", ...soft]);
   add("--primary-text", [...surfaces, "--primary-bg"]);
   add("--accent-text", [...surfaces, "--accent-bg"]);
