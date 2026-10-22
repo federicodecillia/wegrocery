@@ -7,6 +7,7 @@ import { getWalletBalance } from "@/lib/payments/balance-due";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
 import { getOrderBankReferences } from "@/lib/payments/order-reference";
 import { movementRecorder } from "@/lib/movement-label";
+import { historyBadge } from "@/lib/cycle-history";
 import type { Metadata } from "next";
 import { t } from "@/lib/i18n";
 
@@ -34,11 +35,13 @@ export default async function StoricoPage() {
   );
   // Without the card cycles not settled yet, like Home.
   const balance = await getWalletBalance(getDb(), memberId, member?.paysOffline ?? false);
+  // Worked out here, so the badge does not depend on the device's clock.
+  const now = new Date();
 
   return (
     <AppShell email={session.user.email} name={session.user.fullName} isAdmin={role === "admin"} memberId={memberId} personId={session.user.personId} layout="wide">
       <StoricoTabs
-        orderHistory={orderHistory}
+        orderHistory={orderHistory.map((o) => ({ ...o, badge: historyBadge(o, now) }))}
         movements={movements.map((e) => ({
           entryId: e.entryId,
           type: e.type,
