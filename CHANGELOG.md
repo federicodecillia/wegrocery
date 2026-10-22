@@ -22,9 +22,9 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
-## [Unreleased]
+## [1.35.0] - 2026-10-22
 
-*WeGrocery now speaks Spanish and French too.*
+*WeGrocery now speaks Spanish and French too, and History says when an order is still to pick up.*
 
 ### Added
 - 🌍 **The app in Spanish and French.** A group can now run WeGrocery in Spanish or French: screens, member and admin guides, emails and the supplier's order sheet. The "What's new" page stays in English for these groups.
@@ -722,6 +722,7 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
+[1.35.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.35.0
 [1.34.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.34.1
 [1.34.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.34.0
 [1.33.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.33.0
