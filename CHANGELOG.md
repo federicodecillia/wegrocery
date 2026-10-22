@@ -22,6 +22,14 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
+## [Unreleased]
+
+*WeGrocery now speaks Spanish and French too.*
+
+### Added
+- 🌍 **The app in Spanish and French.** A group can now run WeGrocery in Spanish or French: screens, member and admin guides, emails and the supplier's order sheet. The "What's new" page stays in English for these groups.
+- [tech] **`brand.locale` accepts `"es"` and `"fr"`.** New language packs `lib/i18n/es.ts` and `fr.ts` and guides in `lib/guide`; dates and amounts use es-ES and fr-FR, decimal inputs a comma.
+
 ## [1.34.1] - 2026-10-22
 
 *The "by flylabs.ai" text under the sign-in card is easier to read.*

@@ -8,7 +8,7 @@ import { describe, expect, it } from "vitest";
 const EM_DASH = "—";
 
 describe("language packs", () => {
-  for (const file of ["it.ts", "en.ts"]) {
+  for (const file of ["it.ts", "en.ts", "es.ts", "fr.ts"]) {
     it(`${file} has no em dash`, () => {
       const lines = readFileSync(join(__dirname, file), "utf8").split("\n");
       const hits = lines.flatMap((l, i) => (l.includes(EM_DASH) ? [`${file}:${i + 1}`] : []));

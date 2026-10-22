@@ -2,6 +2,8 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { guideEn } from "./en";
+import { guideEs } from "./es";
+import { guideFr } from "./fr";
 import { guideIt } from "./it";
 import { buildSearchIndex, normalizeText, searchGuide } from "./search";
 import { isVisible, visibleGuide, type GuideContent, type GuideContext } from "./types";
@@ -17,7 +19,7 @@ function search(content: GuideContent, ctx: GuideContext, query: string): string
 }
 
 describe("guide content", () => {
-  for (const [name, g] of [["it", guideIt], ["en", guideEn]] as const) {
+  for (const [name, g] of [["it", guideIt], ["en", guideEn], ["es", guideEs], ["fr", guideFr]] as const) {
     it(`${name}: slugs are unique and every card has a known topic`, () => {
       expect(new Set(slugs(g)).size).toBe(g.articles.length);
       const topics = new Set(g.topics.map((x) => x.id));
@@ -53,7 +55,7 @@ describe("guide content", () => {
     expect(broken).toEqual([]);
   });
 
-  it("Italian and English have the same cards, conditions, steps and links", () => {
+  it("every language has the same cards, conditions, steps and links", () => {
     const shape = (g: GuideContent) => ({
       topics: g.topics.map((x) => x.id),
       articles: g.articles.map((a) => ({
@@ -67,6 +69,8 @@ describe("guide content", () => {
       })),
     });
     expect(shape(guideEn)).toEqual(shape(guideIt));
+    expect(shape(guideEs)).toEqual(shape(guideIt));
+    expect(shape(guideFr)).toEqual(shape(guideIt));
   });
 });
 

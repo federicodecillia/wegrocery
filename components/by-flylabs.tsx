@@ -5,7 +5,7 @@
 // colours, so no hex lives in the component (Playbook 2.2).
 import { BY_FLYLABS_PATHS, BY_FLYLABS_VIEWBOX } from "./by-flylabs-paths";
 
-export type Locale = "it" | "en";
+export type Locale = "it" | "en" | "es" | "fr";
 
 /** Width / height of the artwork, to size the box without layout shift. */
 export const BY_FLYLABS_RATIO = 6.318;

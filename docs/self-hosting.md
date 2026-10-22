@@ -94,7 +94,7 @@ the app is built.
   |---|---|
   | `appName`, `shortName` | Full name, and the short one for the home screen icon |
   | `description`, `orgName` | Description for search engines; legal name in email signatures |
-  | `locale` | `"en"` or `"it"`: the language of the app and the emails |
+  | `locale` | `"en"`, `"it"`, `"es"` or `"fr"`: the language of the app, the guides and the emails (the in-app changelog is in English for `es` and `fr`) |
   | `currency` | ISO code, e.g. `"EUR"` |
   | `logoUrl` | The logo: `/logo.png` is WeGrocery's, or the absolute URL of yours (square works best) |
   | `headerShowName` | `false` when the logo already contains the name |
