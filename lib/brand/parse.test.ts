@@ -33,8 +33,14 @@ describe("parseBrandConfig", () => {
     expect(() => parseBrandConfig('"hello"')).toThrow(/must be a JSON object/);
   });
 
+  it("accepts every shipped language", () => {
+    for (const locale of ["it", "en", "es", "fr"]) {
+      expect(parseBrandConfig(JSON.stringify({ locale })).locale).toBe(locale);
+    }
+  });
+
   it("throws on invalid locale", () => {
-    expect(() => parseBrandConfig(JSON.stringify({ locale: "fr" }))).toThrow(/locale/);
+    expect(() => parseBrandConfig(JSON.stringify({ locale: "de" }))).toThrow(/locale/);
   });
 
   it("throws on non-string field", () => {

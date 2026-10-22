@@ -16,7 +16,9 @@ export default async function ChangelogPage({ searchParams }: { searchParams: Se
   const role = getUserRole(session);
 
   const { lang: langParam, tech } = await searchParams;
-  const lang: ChangelogLanguage = langParam === "en" || langParam === "it" ? langParam : brand.locale;
+  // The changelogs exist in Italian and English: a Spanish or French deploy reads the English one.
+  const lang: ChangelogLanguage =
+    langParam === "en" || langParam === "it" ? langParam : brand.locale === "it" ? "it" : "en";
   const versions = await loadChangelog(lang);
   const t = (lang === "it" ? it : en).changelog;
 

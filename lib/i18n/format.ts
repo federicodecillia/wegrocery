@@ -1,6 +1,7 @@
 import { brand } from "@/lib/brand";
+import type { Locale } from "@/lib/brand/types";
 
-const LOCALE_TAG: Record<"it" | "en", string> = { it: "it-IT", en: "en-GB" };
+const LOCALE_TAG: Record<Locale, string> = { it: "it-IT", en: "en-GB", es: "es-ES", fr: "fr-FR" };
 const tag = LOCALE_TAG[brand.locale];
 
 const DEFAULT_TIME_ZONE = "Europe/Rome";
@@ -69,11 +70,11 @@ export function formatHandlingFee(fee: { type: "percent" | "fixed"; value: numbe
   return fee.type === "percent" ? `${formatNumber(fee.value, 2)}%` : formatMoney(fee.value);
 }
 
-// Pre-fills for editable numeric <input>s: Italian admins type decimal commas,
-// everyone else gets dots. The parse direction tolerates both separators.
+// Pre-fills for editable numeric <input>s: Italian, Spanish and French admins
+// type decimal commas, English ones get dots. The parse direction tolerates both separators.
 export function formatDecimalInput(value: number | string): string {
   const s = typeof value === "number" ? String(value) : value;
-  return brand.locale === "it" ? s.replace(".", ",") : s;
+  return brand.locale === "en" ? s : s.replace(".", ",");
 }
 
 // A euro amount pre-filled in an editable input: whole euros stay bare ("50"),

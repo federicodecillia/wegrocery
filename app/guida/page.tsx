@@ -35,8 +35,10 @@ export default async function GuidaPage() {
 
   // Pull the most recent released version (skip the [Unreleased] block) for
   // the teaser, in the deploy's locale — same default as /changelog, where
-  // users can still switch language explicitly.
-  const [versions, settings] = await Promise.all([loadChangelog(staticBrand.locale), getPaymentSettings()]);
+  // users can still switch language explicitly. Spanish and French deploys
+  // read the English changelog (there is no es/fr one).
+  const changelogLang = staticBrand.locale === "it" ? "it" : "en";
+  const [versions, settings] = await Promise.all([loadChangelog(changelogLang), getPaymentSettings()]);
   const ctx = guideContext(settings);
   const guide = visibleGuide(guideContent, ctx);
   const adminGuideContent = adminGuideFor(session.user);

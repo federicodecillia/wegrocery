@@ -1,5 +1,5 @@
 import { DEFAULT_BRAND } from "./default";
-import type { BrandConfig, BrandTheme } from "./types";
+import { LOCALES, type BrandConfig, type BrandTheme } from "./types";
 
 const STRING_FIELDS = [
   "appName", "shortName", "description", "orgName",
@@ -39,8 +39,8 @@ export function parseBrandConfig(raw: string | undefined): BrandConfig {
       throw new Error(`brand.${k} must be a string`);
     }
   }
-  if (o.locale !== undefined && o.locale !== "it" && o.locale !== "en") {
-    throw new Error('brand.locale must be "it" or "en"');
+  if (o.locale !== undefined && !(LOCALES as readonly unknown[]).includes(o.locale)) {
+    throw new Error('brand.locale must be "it", "en", "es" or "fr"');
   }
   if (o.archiveCcEmail !== undefined && o.archiveCcEmail !== null && typeof o.archiveCcEmail !== "string") {
     throw new Error("brand.archiveCcEmail must be a string or null");

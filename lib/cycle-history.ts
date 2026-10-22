@@ -7,10 +7,17 @@
 // card (spec "UI per modalità": pagato, costi, rimborsato, netto):
 //   paid - productsTotal - shipping - handling + corrections - refunded === net
 
+import { utcToZonedLocalInput, zonedLocalToUtc } from "@/lib/i18n/zoned-time";
+
 type CycleMeta = {
   cycleId: string;
   cycleTitle: string;
   pickupDate: Date | null;
+  // "HH:mm", when the pickup window has an end.
+  pickupEndTime?: string | null;
+  // The second pickup, when the cycle has one.
+  pickup2Date?: Date | null;
+  pickup2EndTime?: string | null;
   cycleStatus: string;
   cycleCreatedAt: Date;
   // "wallet" when left out.
@@ -64,6 +71,8 @@ export type CycleHistoryEntry = {
   cycleId: string;
   title: string;
   pickupDate: Date | null;
+  // When the last pickup window closes, null while no pickup day is set.
+  pickupEndsAt: Date | null;
   status: string;
   paymentMode: "wallet" | "per_order";
   lines: CycleHistoryLine[];
@@ -88,6 +97,23 @@ export type CycleHistoryEntry = {
 
 function toCents(value: string): number {
   return Math.round(parseFloat(value) * 100);
+}
+
+function latest(a: Date | null, b: Date | null): Date | null {
+  if (!a || !b) return a ?? b;
+  return a.getTime() >= b.getTime() ? a : b;
+}
+
+// The end of a pickup window: its end time on the pickup day, or the end of
+// that day when the window has no end time (both in the group's time zone).
+function pickupEnd(start: Date | null, endTime: string | null): Date | null {
+  if (!start) return null;
+  const day = utcToZonedLocalInput(start).slice(0, 10);
+  const end = endTime ? zonedLocalToUtc(`${day}T${endTime}`) : null;
+  if (end) return latest(start, end);
+  const [y, m, d] = day.split("-").map(Number);
+  const nextDay = new Date(Date.UTC(y, m - 1, d + 1)).toISOString().slice(0, 10);
+  return zonedLocalToUtc(`${nextDay}T00:00`);
 }
 
 function toNumberOrNull(value: string | null): number | null {
@@ -152,6 +178,10 @@ export function buildCycleHistory(
         cycleId: meta.cycleId,
         title: meta.cycleTitle,
         pickupDate: meta.pickupDate,
+        pickupEndsAt: latest(
+          pickupEnd(meta.pickupDate, meta.pickupEndTime ?? null),
+          pickupEnd(meta.pickup2Date ?? null, meta.pickup2EndTime ?? null),
+        ),
         status: meta.cycleStatus,
         paymentMode,
         lines,
@@ -167,4 +197,17 @@ export function buildCycleHistory(
         net: netCents / 100,
       };
     });
+}
+
+// The badge of a cycle in the Orders tab. The app does not record the
+// physical pickup, so a closed cycle reads "to pick up" until its last pickup
+// window closes and "done" after it; with no pickup day set it only says the
+// order is closed.
+export type HistoryBadge = "open" | "cancelled" | "toPickUp" | "done" | "closed";
+
+export function historyBadge(entry: Pick<CycleHistoryEntry, "status" | "pickupEndsAt">, now: Date): HistoryBadge {
+  if (entry.status === "open") return "open";
+  if (entry.status === "cancelled") return "cancelled";
+  if (!entry.pickupEndsAt) return "closed";
+  return now < entry.pickupEndsAt ? "toPickUp" : "done";
 }
