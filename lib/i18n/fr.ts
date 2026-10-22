@@ -179,6 +179,7 @@ export const fr: Strings = {
     closes: (date: string) => `Clôture : ${date}`,
     pickup1: (date: string) => `Retrait 1 : ${date}`,
     pickup2: (date: string) => `Retrait 2 : ${date}`,
+    pickupSingle: (date: string) => `Retrait : ${date}`,
     open: "Ouverte",
     goToOrder: "Commander →",
     hours: "Heures",

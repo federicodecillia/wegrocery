@@ -179,6 +179,7 @@ export const es: Strings = {
     closes: (date: string) => `Cierra: ${date}`,
     pickup1: (date: string) => `Recogida 1: ${date}`,
     pickup2: (date: string) => `Recogida 2: ${date}`,
+    pickupSingle: (date: string) => `Recogida: ${date}`,
     open: "Abierto",
     goToOrder: "Ir al pedido →",
     hours: "Horas",

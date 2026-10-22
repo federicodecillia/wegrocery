@@ -179,6 +179,7 @@ export const it = {
     closes: (date: string) => `Chiude: ${date}`,
     pickup1: (date: string) => `Ritiro 1: ${date}`,
     pickup2: (date: string) => `Ritiro 2: ${date}`,
+    pickupSingle: (date: string) => `Ritiro: ${date}`,
     open: "Aperto",
     goToOrder: "Vai all'ordine →",
     hours: "Ore",
