@@ -23,6 +23,17 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
+## [Non rilasciato]
+
+*WeGrocery ora parla anche spagnolo e francese.*
+
+### Aggiunte
+- 🌍 **L'app in spagnolo e francese.** Un gruppo può ora usare WeGrocery in spagnolo o in francese: schermate, guida dei soci e degli admin, email e distinta per il fornitore. La pagina "Novità" per questi gruppi resta in inglese.
+- [tecnico] **`brand.locale` accetta `"es"` e `"fr"`.** Nuovi pacchetti di lingua `lib/i18n/es.ts` e `fr.ts` e guide in `lib/guide`; date e importi usano es-ES e fr-FR, i campi decimali la virgola.
+
+### Risolto
+- 🔢 **"1 movimento", non "1 movimenti".** In Cassa, un socio con un solo movimento non viene più indicato al plurale.
+
 ## [1.34.1] - 22 ottobre 2026
 
 *La scritta "by flylabs.ai" sotto la scheda di accesso si legge meglio.*

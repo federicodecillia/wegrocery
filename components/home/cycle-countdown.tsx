@@ -66,7 +66,7 @@ export function CycleCountdown({ cycleId, title, orderCloseAt, orderOpenAt, pick
       </p>
       {pickups.map((line, i) => (
         <p key={i} className="mt-0.5 text-[14px] text-secondary-foreground">
-          {pickups.length > 1 ? (i === 0 ? t.cycle.pickup1(line) : t.cycle.pickup2(line)) : `${t.cycle.pickup}: ${line}`}
+          {pickups.length > 1 ? (i === 0 ? t.cycle.pickup1(line) : t.cycle.pickup2(line)) : t.cycle.pickupSingle(line)}
         </p>
       ))}
 

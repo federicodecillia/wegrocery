@@ -5,6 +5,8 @@ import { guideIt } from "../it";
 import { buildSearchIndex, searchGuide, ADMIN_GUIDE_SECTION } from "../search";
 import { visibleGuide, type GuideContent, type GuideContext } from "../types";
 import { adminGuideEn } from "./en";
+import { adminGuideEs } from "./es";
+import { adminGuideFr } from "./fr";
 import { adminGuideFor } from "./index";
 import { adminGuideIt } from "./it";
 
@@ -16,7 +18,12 @@ const perOrder: GuideContext = { mode: "per_order", families: true, onlineTopup:
 const slugs = (g: GuideContent) => g.articles.map((a) => a.slug);
 
 describe("admin guide content", () => {
-  for (const [name, g] of [["it", adminGuideIt], ["en", adminGuideEn]] as const) {
+  for (const [name, g] of [
+    ["it", adminGuideIt],
+    ["en", adminGuideEn],
+    ["es", adminGuideEs],
+    ["fr", adminGuideFr],
+  ] as const) {
     it(`${name}: slugs are unique and every card has a known topic`, () => {
       expect(new Set(slugs(g)).size).toBe(g.articles.length);
       const topics = new Set(g.topics.map((x) => x.id));
@@ -35,7 +42,7 @@ describe("admin guide content", () => {
     });
   }
 
-  it("Italian and English have the same cards, conditions, steps and links", () => {
+  it("every language has the same cards, conditions, steps and links", () => {
     const shape = (g: GuideContent) => ({
       topics: g.topics.map((x) => x.id),
       articles: g.articles.map((a) => ({
@@ -48,7 +55,7 @@ describe("admin guide content", () => {
         link: a.link?.href ?? null,
       })),
     });
-    expect(shape(adminGuideEn)).toEqual(shape(adminGuideIt));
+    for (const g of [adminGuideEn, adminGuideEs, adminGuideFr]) expect(shape(g)).toEqual(shape(adminGuideIt));
   });
 
   it("never shares a slug with the member guide (search results are keyed by slug)", () => {

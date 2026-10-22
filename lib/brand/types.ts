@@ -14,13 +14,17 @@ export type BrandTheme = {
   frame?: string;
 };
 
+/** The languages the app ships in. Picked once per deploy (brand.locale). */
+export const LOCALES = ["it", "en", "es", "fr"] as const;
+export type Locale = (typeof LOCALES)[number];
+
 export type BrandConfig = {
   appName: string;
   shortName: string;
   description: string;
   /** legal/organization name used in email signatures */
   orgName: string;
-  locale: "it" | "en";
+  locale: Locale;
   /** ISO 4217, e.g. "EUR" */
   currency: string;
   /** absolute URL or path under public/ */
