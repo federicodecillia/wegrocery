@@ -23,9 +23,9 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
-## [Non rilasciato]
+## [1.35.0] - 22 ottobre 2026
 
-*WeGrocery ora parla anche spagnolo e francese.*
+*WeGrocery ora parla anche spagnolo e francese, e lo Storico dice quando un ordine è ancora da ritirare.*
 
 ### Aggiunte
 - 🌍 **L'app in spagnolo e francese.** Un gruppo può ora usare WeGrocery in spagnolo o in francese: schermate, guida dei soci e degli admin, email e distinta per il fornitore. La pagina "Novità" per questi gruppi resta in inglese.
@@ -724,6 +724,7 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
+[1.35.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.35.0
 [1.34.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.34.1
 [1.34.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.34.0
 [1.33.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.33.0
