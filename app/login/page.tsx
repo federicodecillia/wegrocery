@@ -94,9 +94,17 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
       {/* "by flylabs.ai" in small plain text under the card, never above it:
           the page carries the group's brand (Playbook 2.11, kept discreet on
           Federico's call, see AGENTS.md). A new tab, so an installed app
-          keeps its sign-in page. */}
+          keeps its sign-in page. It sits on the frame, where muted-foreground
+          is not checked: the secondary text colour, like the privacy link
+          above, keeps it at 4.5:1 (the `!` beats the kit module's own). */}
       {brand.flylabsSignature ? (
-        <ByFlylabs locale={brand.locale} productSlug={FLYLABS_PRODUCT_SLUG} text newTab className="mt-2 inline-flex min-h-11 items-center text-label" />
+        <ByFlylabs
+          locale={brand.locale}
+          productSlug={FLYLABS_PRODUCT_SLUG}
+          text
+          newTab
+          className="mt-2 inline-flex min-h-11 items-center text-label text-secondary-foreground! hover:text-foreground!"
+        />
       ) : null}
     </main>
   );
