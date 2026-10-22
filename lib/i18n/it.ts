@@ -1196,7 +1196,7 @@ export const it = {
       searchMember: "Cerca socio…",
       noMemberFound: "Nessun socio trovato",
       noMovements: "Nessun movimento",
-      movementsCount: (n: number) => `${n} movimenti`,
+      movementsCount: (n: number) => (n === 1 ? "1 movimento" : `${n} movimenti`),
       inactiveHint: "· disabilitato",
       topupBadge: "ricarica",
       chargeBadge: "addebito",

@@ -486,7 +486,7 @@ export const adminGuideFr: GuideContent = {
       title: "Désactiver ou réactiver un membre",
       steps: [
         "Dans **Membres**, touchez le membre.",
-        "Passez l'**État** sur **Désactivé** (ou de nouveau sur **Autorisé**) et enregistrez.",
+        "Passez l'**État** sur **Désactivé** (ou de nouveau sur **Activé**) et enregistrez.",
       ],
       notes: [
         "Un membre désactivé ne peut plus se connecter, mais son historique reste.",

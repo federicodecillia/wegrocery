@@ -1193,7 +1193,7 @@ export const es: Strings = {
       searchMember: "Buscar socio…",
       noMemberFound: "Ningún socio encontrado",
       noMovements: "Sin movimientos",
-      movementsCount: (n: number) => `${n} movimientos`,
+      movementsCount: (n: number) => (n === 1 ? "1 movimiento" : `${n} movimientos`),
       inactiveHint: "· deshabilitado",
       topupBadge: "recarga",
       chargeBadge: "cargo",
