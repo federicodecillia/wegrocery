@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildCycleHistory,
+  historyBadge,
   type CycleHistoryEntry,
   type HistoryLedgerRow,
   type HistoryLineRow,
@@ -214,5 +215,48 @@ describe("buildCycleHistory, pay-per-order cycles", () => {
     const c = cycle("cyc_w");
     const [w] = buildCycleHistory([line(c, "Patate", "8.00")], [ledger(c, "-9.00", "1.00")]);
     expect(w).toMatchObject({ paymentMode: "wallet", paid: 0, refunded: 0, corrections: 0 });
+  });
+});
+
+describe("historyBadge", () => {
+  const at = (iso: string) => new Date(iso);
+  // The default time zone, Europe/Rome: CEST until 25 October 2026, then CET.
+  const entry = (extra: Partial<HistoryLineRow>) =>
+    buildCycleHistory([line(cycle("a"), "Uova", "3.00", extra)], [])[0];
+
+  it("keeps open and cancelled cycles as they are", () => {
+    expect(historyBadge({ status: "open", pickupEndsAt: null }, at("2026-10-22T10:00:00Z"))).toBe("open");
+    expect(historyBadge({ status: "cancelled", pickupEndsAt: null }, at("2026-10-22T10:00:00Z"))).toBe("cancelled");
+  });
+
+  it("shows a closed cycle as to pick up until its pickup window ends", () => {
+    // Saturday 24 October, 18:00 to 20:00 in Rome.
+    const e = entry({ pickupDate: at("2026-10-24T16:00:00Z"), pickupEndTime: "20:00" });
+    expect(historyBadge(e, at("2026-10-22T10:00:00Z"))).toBe("toPickUp");
+    expect(historyBadge(e, at("2026-10-24T17:59:00Z"))).toBe("toPickUp");
+    expect(historyBadge(e, at("2026-10-24T18:00:00Z"))).toBe("done");
+  });
+
+  it("waits for the end of the pickup day when the window has no end time", () => {
+    const e = entry({ pickupDate: at("2026-10-24T16:00:00Z"), pickupEndTime: null });
+    expect(historyBadge(e, at("2026-10-24T21:59:00Z"))).toBe("toPickUp");
+    expect(historyBadge(e, at("2026-10-24T22:00:00Z"))).toBe("done");
+  });
+
+  it("waits for the second pickup window", () => {
+    const e = entry({
+      pickupDate: at("2026-10-24T16:00:00Z"),
+      pickupEndTime: "20:00",
+      pickup2Date: at("2026-10-27T17:00:00Z"),
+      pickup2EndTime: "19:00",
+    });
+    expect(historyBadge(e, at("2026-10-26T10:00:00Z"))).toBe("toPickUp");
+    // 27 October is after the switch to CET: 19:00 in Rome is 18:00 UTC.
+    expect(historyBadge(e, at("2026-10-27T17:59:00Z"))).toBe("toPickUp");
+    expect(historyBadge(e, at("2026-10-27T18:00:00Z"))).toBe("done");
+  });
+
+  it("only says closed when no pickup day is set", () => {
+    expect(historyBadge(entry({ pickupDate: null }), at("2026-10-22T10:00:00Z"))).toBe("closed");
   });
 });

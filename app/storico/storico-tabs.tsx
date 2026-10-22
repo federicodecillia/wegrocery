@@ -7,7 +7,7 @@ import { useSearchParams } from "next/navigation";
 import { t } from "@/lib/i18n";
 import { formatNumber, formatSignedMoney } from "@/lib/i18n/format";
 import { formatDate, formatEur, memberProductEmoji } from "@/lib/utils";
-import type { CycleHistoryEntry } from "@/lib/cycle-history";
+import type { CycleHistoryEntry, HistoryBadge } from "@/lib/cycle-history";
 import { BalanceSummary } from "@/components/balance/balance-summary";
 import { MovementRow } from "@/components/movement-row";
 import { useWide } from "@/lib/ui/use-wide";
@@ -25,7 +25,7 @@ type Tab = "ordini" | "movimenti";
 const TABS: Tab[] = ["ordini", "movimenti"];
 
 type Props = {
-  orderHistory: CycleHistoryEntry[];
+  orderHistory: (CycleHistoryEntry & { badge: HistoryBadge })[];
   movements: LedgerEntry[];
   balance: number;
   // null when the group has the bank transfer off.
@@ -169,12 +169,8 @@ export function StoricoTabs({ orderHistory, movements, balance, bankRefs }: Prop
                       >
                         {o.charged ? formatSignedMoney(o.net) : formatEur(o.productsTotal)}
                       </span>
-                      <Badge variant={o.status === "cancelled" ? "destructive" : "accent"}>
-                        {o.status === "open"
-                          ? t.history.open
-                          : o.status === "cancelled"
-                            ? t.history.cancelled
-                            : t.history.pickedUp}
+                      <Badge variant={o.badge === "cancelled" ? "destructive" : "accent"}>
+                        {t.history[o.badge]}
                       </Badge>
                     </div>
                   </button>
