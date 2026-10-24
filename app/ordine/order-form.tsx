@@ -10,7 +10,8 @@ import { useRouter } from "next/navigation";
 import { toast } from "@/components/ui/toast";
 import { confirm } from "@/components/ui/confirm-dialog";
 import { t } from "@/lib/i18n";
-import { formatEur, memberProductEmoji, normalizeCategory } from "@/lib/utils";
+import { formatEur, memberProductEmoji } from "@/lib/utils";
+import { groupCycleProducts, OTHER_CATEGORY, type ProductOrderMode } from "@/lib/products/cycle-order";
 import type { OrderState, SaveOrderLine, SaveOrderResult } from "@/lib/actions/order";
 import { discardOrderDraft, loadLastOrderForPrefill, saveOrderDraft } from "@/lib/actions/order";
 import type { OrderPaymentResult } from "@/lib/actions/order-payment";
@@ -53,6 +54,8 @@ type Props = {
   // The admin's notes on the cycle, shown above the products.
   cycleNotes: string | null;
   products: Product[];
+  // Alphabetical or the admin's order (lib/products/cycle-order.ts).
+  productOrder: ProductOrderMode;
   existingLines: OrderLine[];
   // Unconfirmed edits found on the server (order_drafts), or null.
   resumedDraft: ResumedDraft | null;
@@ -77,39 +80,11 @@ export type PayPerOrder = {
   cancelAction: (cycleId: string) => Promise<OrderPaymentResult>;
 };
 
-// Normalized (see normalizeCategory): grouping keys are case-insensitive.
-const CAT_ORDER = ["frutta", "verdura", "insalate"];
-
 // Autosave delay of the draft: long enough to batch a run of taps on "+".
 const DRAFT_SAVE_DELAY_MS = 800;
 
 function toLines(quantities: Record<string, number>): SaveOrderLine[] {
   return Object.entries(quantities).map(([productId, quantity]) => ({ productId, quantity }));
-}
-
-function groupByCategory(products: Product[]) {
-  // Group case-insensitively so "Verdura" and "verdura" render as one
-  // section; the first-seen casing becomes the group label.
-  const groups = new Map<string, { label: string; products: Product[] }>();
-  for (const p of products) {
-    const label = p.category?.trim() || "";
-    const key = normalizeCategory(label);
-    const group = groups.get(key);
-    if (group) group.products.push(p);
-    else groups.set(key, { label, products: [p] });
-  }
-  const keys = Array.from(groups.keys()).sort((a, b) => {
-    const ai = CAT_ORDER.indexOf(a) === -1 ? 99 : CAT_ORDER.indexOf(a);
-    const bi = CAT_ORDER.indexOf(b) === -1 ? 99 : CAT_ORDER.indexOf(b);
-    return ai !== bi ? ai - bi : a.localeCompare(b);
-  });
-  // If there are other categorized groups, show "Altro" as a header for
-  // uncategorized products instead of a silent unlabeled section.
-  const hasNamedGroups = keys.some((k) => k !== "");
-  return keys.map((k) => ({
-    category: k === "" && hasNamedGroups ? "Altro" : groups.get(k)!.label,
-    products: groups.get(k)!.products,
-  }));
 }
 
 export function OrderForm({
@@ -119,6 +94,7 @@ export function OrderForm({
   orderCloseAt,
   cycleNotes,
   products,
+  productOrder,
   existingLines,
   resumedDraft,
   serverStateKey,
@@ -496,9 +472,9 @@ export function OrderForm({
   const cartIds = new Set(Object.keys(draft));
   const searchable = products.length > ORDER_SEARCH_MIN_PRODUCTS;
   const filtering = query.trim() !== "" || onlyCart;
-  const groups = groupByCategory(filterOrderProducts(products, query, onlyCart ? cartIds : null));
+  const groups = groupCycleProducts(filterOrderProducts(products, query, onlyCart ? cartIds : null), productOrder);
   // The category chips list every category, not only the ones the filter left.
-  const allGroups = groupByCategory(products);
+  const allGroups = groupCycleProducts(products, productOrder);
   const showBar = isEditing && (allGroups.filter((g) => g.category).length > 1 || cartIds.size > 0);
   // A column for the emoji only when some product has one.
   const anyEmoji = products.some((p) => memberProductEmoji(p.emoji, p.name) !== null);
@@ -675,7 +651,7 @@ export function OrderForm({
           cartCount={cartIds.size}
           onlyCart={onlyCart}
           onToggleCart={() => setOnlyCart((v) => !v)}
-          labelOf={(c) => (c === "Altro" ? t.order.otherCategory : c)}
+          labelOf={(c) => (c === OTHER_CATEGORY ? t.order.otherCategory : c)}
         />
       )}
 
@@ -688,7 +664,7 @@ export function OrderForm({
         <section key={category} id={categoryAnchor(category)} data-category={category} className="scroll-mt-16">
           {category && (
             <h2 className="pt-4 pb-2 font-mono text-label font-normal uppercase tracking-[0.10em] text-muted-foreground">
-              {category === "Altro" ? t.order.otherCategory : category}
+              {category === OTHER_CATEGORY ? t.order.otherCategory : category}
             </h2>
           )}
           {prods.map((p) => {

@@ -1,6 +1,7 @@
 "use client";
 
 import { editedOrderPreview } from "@/lib/closed-order-preview";
+import { groupCycleProducts, OTHER_CATEGORY } from "@/lib/products/cycle-order";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import {
   adminGetEditClosedOrderBootstrap,
@@ -80,17 +81,16 @@ export function EditClosedOrderModal({ cycleId, cycleTitle, mode, cycleOpen = fa
     });
   }
 
-  const grouped = useMemo(() => {
-    if (!bootstrap) return [] as Array<[string, EditClosedOrderBootstrap["products"]]>;
-    const map = new Map<string, EditClosedOrderBootstrap["products"]>();
-    for (const p of bootstrap.products) {
-      const key = p.category?.trim() || "Altro";
-      const arr = map.get(key) ?? [];
-      arr.push(p);
-      map.set(key, arr);
-    }
-    return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0], "it"));
-  }, [bootstrap]);
+  // The same sections, in the same order, as the member's order form.
+  const grouped = useMemo(
+    () =>
+      bootstrap
+        ? groupCycleProducts(bootstrap.products, bootstrap.productOrder).map(
+            (g) => [!g.category || g.category === OTHER_CATEGORY ? t.order.otherCategory : g.category, g.products] as const,
+          )
+        : [],
+    [bootstrap],
+  );
 
   const { newTotal, oldTotal, delta } = useMemo(
     () =>

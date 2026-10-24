@@ -112,6 +112,12 @@ export const orderCycles = pgTable("order_cycles", {
   handlingFeeValue: numeric("handling_fee_value", { precision: 10, scale: 2 }),
   // Last settlement of a pay-per-order cycle (drizzle/0024_settlement.sql).
   settledAt: timestamp("settled_at", { withTimezone: true }),
+  // How members see the products (drizzle/0040_cycle_product_order.sql):
+  // 'alpha' | 'custom' (products.sort_order). Read it through
+  // lib/products/cycle-order.ts.
+  productOrder: text("product_order").notNull().default("alpha"),
+  // Last custom order saved; NULL = never, so 'custom' starts from 'alpha'.
+  productOrderSavedAt: timestamp("product_order_saved_at", { withTimezone: true }),
 });
 
 export const supplierProducts = pgTable("supplier_products", {

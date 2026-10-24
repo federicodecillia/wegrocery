@@ -140,13 +140,31 @@ export const adminGuideEs: GuideContent = {
         "Abre el ciclo y ve a **Productos**.",
         "Toca **Añadir desde el catálogo**, elige el proveedor y selecciona los productos (o **Seleccionar todo**).",
         "Confirma con **Cargar** y el número de productos.",
-        "Para quitar uno, **Quitar** junto al producto.",
+        "Para quitar uno, toca la papelera junto al producto.",
       ],
       notes: [
         "¿Te ha llegado una lista de precios nueva del proveedor? Impórtala con **Importar lista de precios** y marca **Añadir también al ciclo abierto**: entra en el catálogo y en el ciclo de una vez.",
         "Tras el cierre los productos del ciclo ya no pueden cambiar.",
       ],
       keywords: ["añadir productos", "lista de precios", "artículos", "mercancía"],
+    },
+    {
+      slug: "ordine-prodotti",
+      topic: "ciclo",
+      title: "Elegir el orden de los productos",
+      intro: "Por defecto los socios ven los productos por categoría, en orden alfabético. Puedes ponerlos en el orden que prefieras.",
+      steps: [
+        "Abre el ciclo y ve a **Productos**.",
+        "En **Orden para los socios** elige **Personalizado**.",
+        "Mueve los productos con las flechas arriba y abajo, o arrástralos por el asa de la izquierda (en tableta y ordenador). Las flechas junto al nombre de una categoría mueven toda la categoría.",
+        "Cada cambio se guarda solo: los socios ven el nuevo orden enseguida.",
+      ],
+      notes: [
+        "Cada ciclo tiene su orden. **Usar el orden del último ciclo** toma el del ciclo anterior: los productos nuevos van al final de su categoría.",
+        "Con **Alfabético** vuelves al orden por defecto; el orden personalizado queda guardado y vuelve si eliges de nuevo **Personalizado**.",
+        "La hoja de pedido y el archivo para el proveedor siguen en orden alfabético.",
+      ],
+      keywords: ["ordenar productos", "reordenar", "mover productos", "orden alfabético", "arriba", "arrastrar"],
     },
     {
       slug: "seguire-ordini",
