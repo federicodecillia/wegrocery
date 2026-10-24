@@ -463,6 +463,7 @@ export const adminGuideIt: GuideContent = {
         "Controlla le righe e le icone, poi **Importa**.",
       ],
       notes: [
+        "**Prezzo/kg** è facoltativo: se il file non ce l'ha, l'app lo calcola dal peso scritto nel formato o nel nome (per esempio \"cestello da 6 kg\"). Se un €/kg è uguale al prezzo della confezione, l'anteprima lo segnala e propone quello calcolato.",
         "Spunta **Aggiorna il prezzo dei prodotti già in catalogo** se il listino ha prezzi nuovi.",
         "Se il file è già nel modello dell'app, usa **Altri formati**.",
       ],
