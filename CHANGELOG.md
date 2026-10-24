@@ -22,7 +22,9 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
-## [Unreleased]
+## [1.37.0] - 2026-10-24
+
+*Real names for every member, and a reliable price per kg when importing a price list.*
 
 ### Added
 - 🙋 **The app asks members without a real name for one.** Members whose name is the first part of their email (for example those who joined with the email link) are asked "What's your name?" after signing in. In Settings admins choose whether to ask, whether it can be put off or is required; in Members the "names to complete" filter shows who is missing.
