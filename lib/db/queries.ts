@@ -1,6 +1,7 @@
 import { and, asc, desc, eq, inArray, isNotNull, isNull, or, sql } from "drizzle-orm";
 import { getDb } from "./client";
 import { liveLedger } from "./ledger-live";
+import { productDisplayOrder } from "./product-order";
 import type { WelcomeFacts } from "@/lib/guide/welcome";
 import type { AdminWelcomeFacts } from "@/lib/admin/welcome";
 import {
@@ -275,17 +276,9 @@ export async function getCycleProducts(cycleId: string) {
     .select()
     .from(products)
     .where(and(eq(products.cycleId, cycleId), eq(products.active, true)))
-    // Alphabetical by product, then variety, then format/price, so every
-    // "Cicoria" variant sits together instead of scattered in whatever
-    // order rows happened to land in the DB across separate imports.
-    // LOWER(...) keeps it case-insensitive (see the same pattern and
-    // rationale in lib/csv/distinta-builder.ts).
-    .orderBy(
-      sql`lower(${products.name})`,
-      sql`lower(coalesce(${products.variant}, ''))`,
-      sql`lower(coalesce(${products.format}, ''))`,
-      asc(products.unitPrice),
-    );
+    // The members' order inside a category: the cycle's custom order, else
+    // alphabetical (lib/db/product-order.ts).
+    .orderBy(...productDisplayOrder());
 }
 
 export async function getMemberOrderLines(memberId: string, cycleId: string) {
@@ -947,7 +940,7 @@ export async function getCycleProductsForReview(
       products.unitPrice,
       products.sortOrder,
     )
-    .orderBy(asc(products.sortOrder), asc(products.name));
+    .orderBy(...productDisplayOrder());
 
   return rows.map((r) => ({
     productId: r.productId,
@@ -962,7 +955,9 @@ export async function getCycleProductsForReview(
   }));
 }
 
-export async function getAdminCycleProducts(cycleId: string) {
+// In the members' order; `alphabetical` ignores a custom order (the starting
+// point of one).
+export async function getAdminCycleProducts(cycleId: string, alphabetical = false) {
   const db = getDb();
   return db
     .select({
@@ -975,11 +970,13 @@ export async function getAdminCycleProducts(cycleId: string) {
       supplierName: suppliers.name,
       supplierId: products.supplierId,
       sortOrder: products.sortOrder,
+      category: products.category,
+      emoji: products.emoji,
     })
     .from(products)
     .leftJoin(suppliers, eq(products.supplierId, suppliers.supplierId))
     .where(eq(products.cycleId, cycleId))
-    .orderBy(asc(suppliers.name), asc(products.name));
+    .orderBy(...productDisplayOrder(alphabetical));
 }
 
 export type MemberOrderHistory = {

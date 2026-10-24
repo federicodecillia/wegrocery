@@ -2644,16 +2644,6 @@ export async function adminGetCatalogBySupplier(supplierId: string) {
   }
 }
 
-export async function adminGetCycleProducts(cycleId: string) {
-  try {
-    await requireAdmin();
-    const { getAdminCycleProducts } = await import("@/lib/db/queries");
-    return await getAdminCycleProducts(cycleId);
-  } catch (e) {
-    return { error: actionErrorMessage(e, t.errors.genericError, "adminGetCycleProducts") };
-  }
-}
-
 export async function adminGetCycleProductsForReview(cycleId: string) {
   try {
     await requireAdmin();

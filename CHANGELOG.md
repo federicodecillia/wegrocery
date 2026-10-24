@@ -22,6 +22,21 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
+## [1.36.0] - 2026-10-24
+
+*Admins can choose the order of a cycle's products, and the Cycle page is calmer.*
+
+### Added
+- ↕️ **Products in the order you prefer.** In Admin, Cycle, Products you choose between **Alphabetical** (as before) and **Custom**: products and categories move with the arrows or by dragging, and members see them in that order. **Use the last cycle's order** takes it from the previous cycle.
+- 🗑️ **Removing a product from the cycle is quieter.** A bin replaces the red button, red only on hover.
+- [tech] **Migration `0040_cycle_product_order.sql`.** Adds `order_cycles.product_order` (`alpha` by default) and `product_order_saved_at`; apply it before deploying. New dependency `@dnd-kit` for dragging.
+
+### Changed
+- 🎨 **A calmer Admin → Ciclo page.** "+ New cycle" now sits in plain sight at the top on phones and tablets, next to the list of cycles. "To do now" uses white cards with a small "Late" badge instead of red and yellow blocks, so the cycle's main action (Close cycle) is the only coloured button.
+
+### Fixed
+- 🏷️ **"Other" at the bottom.** In alphabetical order the products with no category come after every other category.
+
 ## [1.35.0] - 2026-10-22
 
 *WeGrocery now speaks Spanish and French too, and History says when an order is still to pick up.*

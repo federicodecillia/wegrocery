@@ -71,6 +71,7 @@ the role end to end, and the whole integration suite passes with it.
 
 | Version | Migration | Environment | Stripe webhook events |
 |---|---|---|---|
+| 1.36.0 | `0040_cycle_product_order.sql` (additive: `order_cycles.product_order`, `alpha` by default, and `order_cycles.product_order_saved_at`; apply it before deploying, the code selects the columns; rollback in `0040_cycle_product_order_down.sql`) | none | none |
 | 1.33.0 | `0039_admin_welcome.sql` (additive: `members.admin_welcome_dismissed_at`; apply it before deploying, the code selects the column; rollback in `0039_admin_welcome_down.sql`) | none | none |
 | 1.32.0 | `0038_card_cycles_switch.sql` (additive: `app_settings.card_cycles_enabled`, on by default; apply it before deploying, the code selects the column; rollback in `0038_card_cycles_switch_down.sql`) | none | none |
 | 1.28.0 | `0036_welcome_step.sql` (additive: `members.welcome_step`; apply it before deploying, the code selects the column; rollback in `0036_welcome_step_down.sql`), `0037_usage_events.sql` (additive: table `usage_events`; the app tolerates a missing table, Admin → Statistiche shows it empty; rollback in `0037_usage_events_down.sql`) | `DATABASE_MIGRATION_URL` (optional: the owner's address for `scripts/db-migrate.mjs` while `DATABASE_URL` is a restricted role) | none |

@@ -152,11 +152,11 @@ export function OpenCycleOverview({ cycle, stats }: { cycle: SerializedCycle; st
     <Card>
       <CardContent>
         <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-lg bg-primary-bg px-3 py-2">
+          <div className="rounded-lg border border-border px-3 py-2">
             <div className="text-label text-secondary-foreground">{t.admin.cycle.ordersCount}</div>
             <div className="text-[20px] font-bold text-foreground">{stats.orderCount}</div>
           </div>
-          <div className="rounded-lg bg-accent-bg px-3 py-2">
+          <div className="rounded-lg border border-border px-3 py-2">
             <div className="text-label text-secondary-foreground">{t.admin.cycle.totalAmount}</div>
             <div className="text-[20px] font-bold tabular-nums text-foreground">{formatEur(stats.grandTotal)}</div>
           </div>
@@ -167,9 +167,9 @@ export function OpenCycleOverview({ cycle, stats }: { cycle: SerializedCycle; st
           </div>
         )}
         {cycle.isOverdue && (
-          <div className="mt-3 rounded-lg border border-destructive/30 bg-danger-bg p-3 text-[13px] text-destructive">
+          <div className="mt-3 rounded-lg border border-border border-l-4 border-l-destructive bg-background p-3 text-[13px] text-foreground">
             <p className="font-semibold">{t.admin.cycle.overdueWarning}</p>
-            <ol className="mt-1.5 list-decimal space-y-1 pl-5">
+            <ol className="mt-1.5 list-decimal space-y-1 pl-5 text-secondary-foreground">
               {t.admin.cycle.overdueSteps.map((step) => (
                 <li key={step}>{step}</li>
               ))}
@@ -943,17 +943,23 @@ export function CreateCycleForm({
 
 // ── Cycle Product Picker ──────────────────────────────────────────────────────
 
-import { adminGetCatalogBySupplier, adminGetCycleProducts, adminRemoveProductFromCycle, adminLoadFromCatalog } from "@/lib/actions/admin";
+import { adminGetCatalogBySupplier, adminRemoveProductFromCycle, adminLoadFromCatalog } from "@/lib/actions/admin";
+import {
+  adminCopyProductOrderFromPrevious,
+  adminGetCycleProducts,
+  adminReorderCycleProducts,
+  adminSetCycleProductOrder,
+} from "@/lib/actions/admin-product-order";
+import type { ProductOrderSource } from "@/lib/db/cycle-product-order";
+import type { ProductOrderMode } from "@/lib/products/cycle-order";
+import {
+  ProductOrderSwitch,
+  RemoveButton,
+  SortableProductList,
+  type OrderableProduct,
+} from "./cycle-product-order";
 
-type CycleProduct = {
-  productId: string;
-  name: string;
-  variant: string | null;
-  format: string | null;
-  unitPrice: string;
-  unit: string | null;
-  supplierName: string | null;
-};
+type CycleProduct = OrderableProduct;
 
 export function CycleProductPicker({
   cycleId,
@@ -965,19 +971,27 @@ export function CycleProductPicker({
   const [selectedSupplierId, setSelectedSupplierId] = useState("");
   const [catalog, setCatalog] = useState<CatalogProductItem[]>([]);
   const [currentProducts, setCurrentProducts] = useState<CycleProduct[]>([]);
+  const [productOrder, setProductOrder] = useState<ProductOrderMode>("alpha");
+  const [copySource, setCopySource] = useState<ProductOrderSource | null>(null);
+  // Bumped on every load: the sortable list starts again from the server.
+  const [loadCount, setLoadCount] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [orderPending, startOrderTransition] = useTransition();
   const [, startTransition] = useTransition();
 
   // Load current products in cycle
   const refresh = useCallback(async () => {
     setLoading(true);
     try {
-      const prods = await adminGetCycleProducts(cycleId);
-      if ("error" in prods) {
-        toast.error(prods.error);
+      const data = await adminGetCycleProducts(cycleId);
+      if ("error" in data) {
+        toast.error(data.error);
         return;
       }
-      setCurrentProducts(prods as CycleProduct[]);
+      setCurrentProducts(data.products);
+      setProductOrder(data.productOrder);
+      setCopySource(data.copySource);
+      setLoadCount((n) => n + 1);
       if (selectedSupplierId) {
         const cat = await adminGetCatalogBySupplier(selectedSupplierId);
         if ("error" in cat) {
@@ -1008,6 +1022,34 @@ export function CycleProductPicker({
     });
   }
 
+  function handleOrderMode(mode: ProductOrderMode) {
+    startOrderTransition(async () => {
+      const result = await adminSetCycleProductOrder(cycleId, mode);
+      if (result.error) toast.error(result.error);
+      await refresh();
+    });
+  }
+
+  function handleReorder(productIds: string[]) {
+    startOrderTransition(async () => {
+      const result = await adminReorderCycleProducts(cycleId, productIds);
+      if (result.error) {
+        toast.error(result.error);
+        await refresh();
+      } else toast.success(t.admin.productOrder.saved, { id: "product-order-saved" });
+    });
+  }
+
+  async function handleCopyOrder() {
+    if (!(await confirm({ title: t.admin.productOrder.copyConfirm }))) return;
+    startOrderTransition(async () => {
+      const result = await adminCopyProductOrderFromPrevious(cycleId);
+      if (result.error) toast.error(result.error);
+      else if (result.source) toast.success(t.admin.productOrder.copied(result.source));
+      await refresh();
+    });
+  }
+
   async function handleRemove(productId: string) {
     if (!(await confirm({ title: t.admin.products.removeFromCycleConfirm, danger: true }))) return;
     startTransition(async () => {
@@ -1027,7 +1069,28 @@ export function CycleProductPicker({
         <div className="text-label text-secondary-foreground">{t.admin.products.cycleProductsCount(currentProducts.length)}</div>
       </div>
 
-      {currentProducts.length > 0 ? (
+      {currentProducts.length > 1 && (
+        <div className="space-y-3 rounded-lg bg-tint/[0.03] p-3">
+          <ProductOrderSwitch mode={productOrder} disabled={orderPending} onChange={handleOrderMode} />
+          {copySource && (
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <button
+                type="button"
+                onClick={handleCopyOrder}
+                disabled={orderPending}
+                className="min-h-(--control-h) rounded-full border border-border bg-card px-4 text-[13px] font-semibold text-foreground disabled:opacity-60"
+              >
+                {t.admin.productOrder.copyButton}
+              </button>
+              <span className="text-label text-secondary-foreground">{t.admin.productOrder.copyHint(copySource.title)}</span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {currentProducts.length > 0 && productOrder === "custom" ? (
+        <SortableProductList key={loadCount} products={currentProducts} onSave={handleReorder} onRemove={handleRemove} />
+      ) : currentProducts.length > 0 ? (
         <div className="space-y-4">
           {Array.from(new Set(currentProducts.map(p => p.supplierName || "Altro"))).map(sName => (
             <div key={sName} className="space-y-1">
@@ -1046,12 +1109,7 @@ export function CycleProductPicker({
                         </span>
                       </div>
                     </div>
-                    <button
-                      onClick={() => handleRemove(p.productId)}
-                      className="ml-2 min-h-(--control-h) rounded-lg bg-danger-bg px-2 py-1 text-label font-bold text-destructive hover:bg-destructive/15"
-                    >
-                      {t.admin.products.removeFromCycle}
-                    </button>
+                    <RemoveButton name={p.name} onRemove={() => handleRemove(p.productId)} />
                   </div>
                 ))}
               </div>
@@ -1161,7 +1219,7 @@ export function OrdersLink({ cycleId }: { cycleId: string }) {
   return (
     <Link
       href={adminHref("ciclo", "ordini", { cycle: cycleId })}
-      className="inline-flex min-h-(--control-h) items-center rounded-xl bg-accent/10 px-3 text-[13px] font-bold text-accent-text hover:bg-accent/20"
+      className="inline-flex min-h-(--control-h) items-center text-[13px] font-bold text-primary-text underline-offset-2 hover:underline"
     >
       {t.admin.cycle.recapOrders}
     </Link>

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { t } from "@/lib/i18n";
+import { Badge } from "@/components/ui/badge";
 import { adminHref } from "@/lib/admin/nav";
 import { currentStep, doneKey, type CycleStep, type CycleTask } from "@/lib/admin/cycle-phase";
 import type { CycleView } from "@/lib/admin/cycle-views";
@@ -43,7 +44,9 @@ const VIEW: Record<CycleStep, CycleView> = {
 // in Cassa, possible duplicates in Soci). Replaces the three count tiles,
 // which linked back to this page and never showed an open cycle past its
 // deadline. "Già inviato" / "Consegnato come ordinato" are remembered on this
-// device only: other admins still see the step.
+// device only: other admins still see the step. Calm on purpose: white cards
+// and outline buttons, red only as the "In ritardo" badge, so the cycle's own
+// main action (Chiudi ciclo) stays the one filled button on the page.
 export function CycleTodo({
   tasks,
   refunds,
@@ -82,31 +85,26 @@ export function CycleTodo({
           {shown.map(({ task, step }, i) => (
             <li
               key={task.cycleId}
-              className={`${i >= SHOWN_SMALL ? "hidden lg:flex" : "flex"} flex-col rounded-xl border p-3 ${
-                step === "overdue" ? "border-destructive/40 bg-danger-bg" : "border-border bg-background"
-              }`}
+              className={`${i >= SHOWN_SMALL ? "hidden lg:flex" : "flex"} flex-col rounded-xl border border-border bg-background p-3`}
             >
-              <span className="truncate text-label font-semibold text-secondary-foreground">{task.title}</span>
-              <span className={`mt-0.5 text-[13px] ${step === "overdue" ? "font-bold text-destructive" : "text-foreground"}`}>
-                {detail(task, step)}
+              <span className="flex items-center gap-2">
+                <span className="min-w-0 flex-1 truncate text-label font-semibold text-secondary-foreground">{task.title}</span>
+                {step === "overdue" && <Badge variant="destructive">{d.lateBadge}</Badge>}
               </span>
-              <span className="mt-2 flex flex-wrap items-center gap-2 lg:mt-auto lg:pt-2">
+              <span className="mt-0.5 text-[13px] text-foreground">{detail(task, step)}</span>
+              <span className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 lg:mt-auto lg:pt-2">
                 <Link
                   href={adminHref("ciclo", VIEW[step], { cycle: task.cycleId })}
-                  className={`flex min-h-11 flex-1 items-center justify-center rounded-xl px-3 text-center text-[13px] font-bold ${
-                    step === "overdue"
-                      ? "bg-danger text-danger-foreground"
-                      : "bg-primary text-primary-foreground"
-                  }`}
+                  className="flex min-h-11 items-center rounded-xl border border-border bg-card px-3 text-[13px] font-bold text-foreground hover:bg-tint/[0.04]"
                 >
-                  {cta(step)}
+                  {cta(step)} →
                 </Link>
                 {(step === "to_send" || step === "to_adjust") && (
                   <button
                     type="button"
                     onClick={() => markDone(task.cycleId, step)}
                     title={d.markHint}
-                    className="min-h-11 rounded-xl border border-border bg-card px-3 text-[13px] font-semibold text-foreground"
+                    className="min-h-11 px-1 text-[13px] font-semibold text-secondary-foreground underline-offset-2 hover:underline"
                   >
                     {step === "to_send" ? d.markSent : d.markDelivered}
                   </button>
