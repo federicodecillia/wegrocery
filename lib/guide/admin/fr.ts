@@ -461,6 +461,7 @@ export const adminGuideFr: GuideContent = {
         "Vérifiez les lignes et les icônes, puis **Importer**.",
       ],
       notes: [
+        "**Prix/kg** est facultatif : si le fichier ne l'a pas, l'app le calcule à partir du poids indiqué dans le format ou le nom (par exemple « cagette de 6 kg »). Si un €/kg est égal au prix du colis, l'aperçu le signale et propose celui calculé.",
         "Cochez **Mettre à jour le prix des produits déjà au catalogue** si la liste contient de nouveaux prix.",
         "Si le fichier suit déjà le modèle de l'app, utilisez **Autres formats**.",
       ],
@@ -525,6 +526,21 @@ export const adminGuideFr: GuideContent = {
       ],
       notes: ["Le solde et les commandes des cycles ouverts passent sur le compte conservé. L'historique de l'autre reste, désactivé."],
       keywords: ["doublon", "deux comptes", "fusionner", "double"],
+    },
+    {
+      slug: "nomi-soci",
+      topic: "soci",
+      title: "Membres nommés d'après leur e-mail",
+      intro: "Quelqu'un qui entre avec le lien par e-mail, sans qu'un admin l'ait ajouté, commence avec le début de son adresse comme nom.",
+      steps: [
+        "Dans **Membres**, touchez **noms à compléter** sous la recherche : il ne reste qu'eux.",
+        "Touchez **Modifier** sur le membre, indiquez prénom et nom et enregistrez.",
+      ],
+      notes: [
+        "Dans **Réglages**, **Prénom et nom des membres**, choisissez si l'app le demande aux membres après la connexion : jamais, avec la possibilité de reporter, ou avant tout.",
+        "Le membre peut toujours changer son nom depuis le **Profil**.",
+      ],
+      keywords: ["nom", "prénom", "nom d'utilisateur", "e-mail"],
     },
     {
       slug: "famiglie-admin",

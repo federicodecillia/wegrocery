@@ -14,7 +14,8 @@ import {
 } from "@/lib/utils";
 import { buildProductTemplate, parseProductTemplate } from "@/lib/csv/product-template";
 import { inspectListing, pickSupplierMatch, type ListingInspection } from "@/lib/csv/supplier-listing-parser";
-import { suggestMapping, type TargetField } from "@/lib/csv/header-heuristics";
+import { hasSharedColumn, suggestMapping, type TargetField } from "@/lib/csv/header-heuristics";
+import { parsePriceCell, resolvePricePerKg } from "@/lib/csv/pack-weight";
 import { upsertCycleProducts } from "@/lib/db/cycle-products";
 import { decodeUploadBase64 } from "@/lib/upload-limit";
 
@@ -268,35 +269,18 @@ export type WizardApplyInput = {
   selectedIndexes: number[]; // rows the user actually wants to import
   updatePriceOnDuplicate: boolean;
   cycleId: string | null; // null = do not add to any cycle
+  // Price per kg from the pack weight in the format or name
+  // (lib/csv/pack-weight.ts): for rows the file leaves empty, and in place
+  // of file values equal to the pack price.
+  computePricePerKg?: boolean;
+  replaceSuspectPricePerKg?: boolean;
 };
+
+type PricePerKgOptions = { computeWhenMissing: boolean; replaceSuspect: boolean };
 
 function pickCell(row: string[], idx: number | undefined): string {
   if (idx === undefined || idx < 0 || idx >= row.length) return "";
   return (row[idx] ?? "").trim();
-}
-
-function parsePriceCell(raw: string): number | null {
-  if (!raw) return null;
-  // tolerate "€ 12,50", "12.50 €", "1.234,56", thin spaces, etc.
-  const cleaned = raw
-    .replace(/[€\s ]/g, "")
-    .replace(/[^0-9.,-]/g, "");
-  if (!cleaned) return null;
-  // if both "." and "," present, last one is the decimal separator
-  let normal = cleaned;
-  const lastDot = normal.lastIndexOf(".");
-  const lastComma = normal.lastIndexOf(",");
-  if (lastDot >= 0 && lastComma >= 0) {
-    if (lastComma > lastDot) {
-      normal = normal.replace(/\./g, "").replace(",", ".");
-    } else {
-      normal = normal.replace(/,/g, "");
-    }
-  } else if (lastComma >= 0) {
-    normal = normal.replace(",", ".");
-  }
-  const n = parseFloat(normal);
-  return Number.isFinite(n) ? n : null;
 }
 
 function resolveRow(
@@ -305,6 +289,7 @@ function resolveRow(
   columns: string[],
   mapping: Partial<Record<TargetField, number>>,
   emojiOverride: string | undefined,
+  ppkOptions: PricePerKgOptions,
 ): { ok: true; row: WizardRow } | { ok: false; reason: string } {
   void columns;
   const name = pickCell(raw, mapping.name);
@@ -313,7 +298,14 @@ function resolveRow(
   const unitPriceNum = parsePriceCell(pickCell(raw, mapping.unitPrice));
   if (unitPriceNum == null) return { ok: false, reason: "prezzo mancante o non valido" };
 
-  const ppkNum = parsePriceCell(pickCell(raw, mapping.pricePerKg));
+  const format = pickCell(raw, mapping.format) || null;
+  const ppkNum = resolvePricePerKg({
+    unitPrice: unitPriceNum,
+    filePricePerKg: parsePriceCell(pickCell(raw, mapping.pricePerKg)),
+    format,
+    name,
+    ...ppkOptions,
+  }).value;
 
   const autoEmoji = getProductEmojiOrNull(name);
   const emoji = (emojiOverride && emojiOverride.trim()) || autoEmoji || "🛒";
@@ -338,7 +330,7 @@ function resolveRow(
       index,
       name,
       variant: pickCell(raw, mapping.variant) || null,
-      format: pickCell(raw, mapping.format) || null,
+      format,
       unitPrice: unitPriceNum.toFixed(2),
       pricePerKg: ppkNum != null ? ppkNum.toFixed(2) : null,
       category,
@@ -365,6 +357,7 @@ async function loadExistingCatalogForSupplier(supplierId: string) {
       variant: supplierProducts.variant,
       format: supplierProducts.format,
       unitPrice: supplierProducts.unitPrice,
+      pricePerKg: supplierProducts.pricePerKg,
     })
     .from(supplierProducts)
     .where(eq(supplierProducts.supplierId, supplierId));
@@ -381,6 +374,13 @@ export async function adminApplySupplierListingImport(
     if (input.mapping.name === undefined || input.mapping.unitPrice === undefined) {
       return { error: t.errors.mapNameAndPrice };
     }
+    if (hasSharedColumn(input.mapping)) {
+      return { error: t.errors.mapSharedColumn };
+    }
+    const ppkOptions: PricePerKgOptions = {
+      computeWhenMissing: input.computePricePerKg === true,
+      replaceSuspect: input.replaceSuspectPricePerKg === true,
+    };
 
     const db = getDb();
     const now = new Date();
@@ -433,7 +433,7 @@ export async function adminApplySupplierListingImport(
 
     for (let i = 0; i < input.rows.length; i++) {
       if (!selected.has(i)) continue;
-      const resolved = resolveRow(input.rows[i], i, input.columns, input.mapping, input.emojiOverrides[i]);
+      const resolved = resolveRow(input.rows[i], i, input.columns, input.mapping, input.emojiOverrides[i], ppkOptions);
       if (!resolved.ok) {
         invalid++;
         continue;
@@ -443,7 +443,7 @@ export async function adminApplySupplierListingImport(
       const hit = existing.get(key);
       if (!hit) {
         inserts.push({ catalogProductId: genId("cp"), row });
-      } else if (hit.unitPrice === row.unitPrice) {
+      } else if (hit.unitPrice === row.unitPrice && (hit.pricePerKg ?? null) === row.pricePerKg) {
         skipped++;
       } else if (input.updatePriceOnDuplicate) {
         updates.push({ catalogProductId: hit.catalogProductId, row });
@@ -515,7 +515,7 @@ export async function adminApplySupplierListingImport(
         const allKeys = new Set<string>();
         for (let i = 0; i < input.rows.length; i++) {
           if (!selected.has(i)) continue;
-          const resolved = resolveRow(input.rows[i], i, input.columns, input.mapping, input.emojiOverrides[i]);
+          const resolved = resolveRow(input.rows[i], i, input.columns, input.mapping, input.emojiOverrides[i], ppkOptions);
           if (!resolved.ok) continue;
           allKeys.add(dedupKey(resolved.row.name, resolved.row.variant, resolved.row.format));
         }
@@ -528,7 +528,7 @@ export async function adminApplySupplierListingImport(
             variant: hit.variant,
             format: hit.format,
             unitPrice: hit.unitPrice,
-            pricePerKg: null,
+            pricePerKg: hit.pricePerKg,
             unit: null,
             supplier: null,
             supplierId,

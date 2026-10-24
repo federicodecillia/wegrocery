@@ -22,6 +22,22 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
+## [1.37.0] - 2026-10-24
+
+*Real names for every member, and a reliable price per kg when importing a price list.*
+
+### Added
+- 🙋 **The app asks members without a real name for one.** Members whose name is the first part of their email (for example those who joined with the email link) are asked "What's your name?" after signing in. In Settings admins choose whether to ask, whether it can be put off or is required; in Members the "names to complete" filter shows who is missing.
+- [tech] 🗄️ **Migration `0041_member_name_prompt.sql`.** Adds `app_settings.member_name_prompt` (`off`, `optional`, `required`; `optional` by default); apply before deploying, rollback in `0041_member_name_prompt_down.sql`.
+- 🔎 **Search in the Catalog.** In Admin, Catalog a search box finds products by name, variety, format, notes, category or supplier, together with the filters.
+
+### Changed
+- 🖊️ **Products of a cycle can be edited again.** In Admin, Cycle, Products a pencil next to the bin opens the product's form under it (name, format, price, €/kg, category, notes), and the list shows the €/kg. Orders already placed keep their price.
+- ✏️ **A catalog product is edited where it is.** Edit opens the form right under the product instead of at the top of the page, so products far down the list stay in sight.
+
+### Fixed
+- ⚖️ **Price per kg right when importing a price list.** One column can no longer go to both Price and Price/kg; the preview flags a €/kg equal to the pack price and offers the one worked out from the weight in the name or format ("6 kg box", "12 x 240 g"), and fills it in when the file has no such column. Importing a file again also updates a changed €/kg.
+
 ## [1.36.0] - 2026-10-24
 
 *Admins can choose the order of a cycle's products, and the Cycle page is calmer.*

@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { isPlausibleHeaderRow, suggestMapping } from "./header-heuristics";
+import {
+  assignColumn,
+  fieldUsingColumn,
+  hasSharedColumn,
+  isPlausibleHeaderRow,
+  suggestMapping,
+} from "./header-heuristics";
 
 describe("suggestMapping", () => {
   it("maps a typical supplier header row", () => {
@@ -48,5 +54,30 @@ describe("isPlausibleHeaderRow", () => {
     expect(isPlausibleHeaderRow(["Prezzo", "Categoria"])).toBe(false);
     expect(isPlausibleHeaderRow(["Prodotto", "Note"])).toBe(false);
     expect(isPlausibleHeaderRow(["1,50", "Mele Golden", "cassa 10kg"])).toBe(false);
+  });
+});
+
+describe("assignColumn", () => {
+  it("frees the field that held the column", () => {
+    const { mapping, freed } = assignColumn({ name: 0, unitPrice: 1 }, "pricePerKg", 1);
+    expect(mapping).toEqual({ name: 0, pricePerKg: 1 });
+    expect(freed).toBe("unitPrice");
+    expect(hasSharedColumn(mapping)).toBe(false);
+  });
+
+  it("moves a field without freeing anything when the column is free", () => {
+    expect(assignColumn({ name: 0, unitPrice: 1 }, "unitPrice", 2)).toEqual({
+      mapping: { name: 0, unitPrice: 2 },
+      freed: null,
+    });
+  });
+
+  it("clears a field", () => {
+    expect(assignColumn({ name: 0, unitPrice: 1 }, "unitPrice", undefined).mapping).toEqual({ name: 0 });
+  });
+
+  it("spots two fields on one column", () => {
+    expect(hasSharedColumn({ unitPrice: 1, pricePerKg: 1 })).toBe(true);
+    expect(fieldUsingColumn({ unitPrice: 1 }, 1, "pricePerKg")).toBe("unitPrice");
   });
 });

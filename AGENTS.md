@@ -58,7 +58,7 @@ Never read `.env*` files other than `.env.example` (Playbook 8.3).
 │   ├── api/instance-stats/     # Signed anonymous counts for the operator console (404 without a valid signature)
 │   └── api/auth/[...all]/      # Better Auth handler, limited to lib/auth/public-endpoints.ts
 ├── components/
-│   ├── app-shell.tsx           # Async layout wrapper: phone header (logo, bell, Profile avatar) + bottom nav; SideNav from md
+│   ├── app-shell.tsx           # Async layout wrapper: phone header (logo, bell, Profile avatar) + bottom nav; SideNav from md; NamePrompt (name-prompt.tsx) instead of the page for a member named after their address (lib/members/name.ts)
 │   ├── bottom-nav.tsx          # Bottom nav (4 items, 5 for admins), phone only (hidden from md)
 │   ├── side-nav.tsx            # Same items: rail from md, sidebar from lg (admin sections under Admin)
 │   ├── nav-items.ts            # Nav items + isItemActive (icons in nav-icon.tsx)

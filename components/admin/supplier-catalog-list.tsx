@@ -1,7 +1,7 @@
 "use client";
 
 import { confirm } from "@/components/ui/confirm-dialog";
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { adminArchiveCatalogProduct } from "@/lib/actions/admin";
 import type { CatalogProductItem } from "@/lib/db/queries";
 import { formatEur, getProductEmoji } from "@/lib/utils";
@@ -10,6 +10,8 @@ import { CatalogCsvActions, CatalogProductForm, GuidedImportButton } from "./pro
 import { t } from "@/lib/i18n";
 import { NativeSelect } from "@/components/ui/native-select";
 import { labelClass } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { filterCatalogProducts } from "@/lib/catalog-filter";
 
 type SupplierWithCatalog = {
   supplier: {
@@ -68,20 +70,23 @@ export function SupplierCatalogList({
     initialSupplierId && suppliers.some((s) => s.supplierId === initialSupplierId) ? initialSupplierId : ALL,
   );
   const [categoryFilter, setCategoryFilter] = useState(ALL);
+  const [query, setQuery] = useState("");
   const [groupBy, setGroupBy] = useState<GroupBy>("category");
   const [uploadSupplierId, setUploadSupplierId] = useState(suppliers[0]?.supplierId ?? "");
   const [addingSupplierId, setAddingSupplierId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [, startTransition] = useTransition();
 
-  const filtered = allProducts.filter((product) => {
-    const supplierMatch = supplierFilter === ALL || product.supplierId === supplierFilter;
-    const categoryMatch = categoryFilter === ALL || product.category === categoryFilter;
-    return supplierMatch && categoryMatch;
-  });
+  const filtered = filterCatalogProducts(
+    allProducts.filter((product) => {
+      const supplierMatch = supplierFilter === ALL || product.supplierId === supplierFilter;
+      const categoryMatch = categoryFilter === ALL || product.category === categoryFilter;
+      return supplierMatch && categoryMatch;
+    }),
+    query,
+  );
 
   const grouped = groupProducts(filtered, groupBy);
-  const editingProduct = allProducts.find((p) => p.catalogProductId === editingId);
 
   async function handleArchive(id: string, active: boolean) {
     if (!(await confirm({ title: active ? t.admin.products.reactivateConfirm : t.admin.products.archiveConfirm, danger: !active }))) return;
@@ -93,7 +98,6 @@ export function SupplierCatalogList({
   }
 
   const defaultAddSupplierId = supplierFilter !== ALL ? supplierFilter : uploadSupplierId;
-  const selectedSupplierForAdd = addingSupplierId ?? defaultAddSupplierId;
 
   return (
     <div className="space-y-5">
@@ -141,7 +145,10 @@ export function SupplierCatalogList({
             </p>
           </div>
           <button
-            onClick={() => setAddingSupplierId(defaultAddSupplierId || suppliers[0]?.supplierId || null)}
+            onClick={() => {
+              setEditingId(null);
+              setAddingSupplierId(defaultAddSupplierId || suppliers[0]?.supplierId || null);
+            }}
             disabled={suppliers.length === 0}
             className="rounded-lg bg-accent px-3 py-1.5 text-label font-bold text-accent-foreground disabled:opacity-50"
           >
@@ -150,6 +157,14 @@ export function SupplierCatalogList({
         </div>
 
         <div className="grid gap-3">
+          <Input
+            type="search"
+            aria-label={t.admin.products.searchPlaceholder}
+            placeholder={t.admin.products.searchPlaceholder}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="rounded-xl px-4 py-2.5"
+          />
           <label className="block">
             <span className={labelClass}>
               {t.admin.products.supplierFilter}
@@ -201,15 +216,12 @@ export function SupplierCatalogList({
         </div>
       </section>
 
-      {(addingSupplierId || editingProduct) && (
+      {/* A new product opens here; an edit opens under its own row. */}
+      {addingSupplierId && (
         <CatalogProductForm
-          supplierId={editingProduct?.supplierId ?? addingSupplierId ?? selectedSupplierForAdd}
-          product={editingProduct}
+          supplierId={addingSupplierId}
           knownCategories={categories}
-          onClose={() => {
-            setAddingSupplierId(null);
-            setEditingId(null);
-          }}
+          onClose={() => setAddingSupplierId(null)}
         />
       )}
 
@@ -223,8 +235,8 @@ export function SupplierCatalogList({
               </div>
               <div className="divide-y divide-border">
                 {products.map((product) => (
+                  <div key={product.catalogProductId}>
                   <div
-                    key={product.catalogProductId}
                     className={`flex items-start gap-3 px-4 py-3 hover:bg-background/40 ${
                       !product.active ? "opacity-50 grayscale" : ""
                     }`}
@@ -262,7 +274,11 @@ export function SupplierCatalogList({
                       )}
                       <div className="mt-2 flex justify-end gap-2">
                         <button
-                          onClick={() => setEditingId(product.catalogProductId)}
+                          onClick={() => {
+                            setAddingSupplierId(null);
+                            setEditingId(product.catalogProductId);
+                          }}
+                          aria-expanded={editingId === product.catalogProductId}
                           className="text-label font-bold text-accent-text hover:underline"
                         >
                           {t.admin.common.edit}
@@ -276,6 +292,17 @@ export function SupplierCatalogList({
                       </div>
                     </div>
                   </div>
+                  {editingId === product.catalogProductId && (
+                    <InlineEditor>
+                      <CatalogProductForm
+                        supplierId={product.supplierId}
+                        product={product}
+                        knownCategories={categories}
+                        onClose={() => setEditingId(null)}
+                      />
+                    </InlineEditor>
+                  )}
+                  </div>
                 ))}
               </div>
             </section>
@@ -286,6 +313,20 @@ export function SupplierCatalogList({
           {t.admin.products.noProductsFiltered}
         </div>
       )}
+    </div>
+  );
+}
+
+// Holds the edit form under the product's row and brings it into view, so a
+// product far down the list is edited where it is.
+function InlineEditor({ children }: { children: React.ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    ref.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }, []);
+  return (
+    <div ref={ref} className="scroll-mb-24 border-t border-border bg-background p-3 [&>form]:mb-0">
+      {children}
     </div>
   );
 }

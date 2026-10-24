@@ -416,6 +416,9 @@ export const appSettings = pgTable(
     familiesEnabled: boolean("families_enabled").notNull().default(false),
     // Carta offered in "Nuovo ciclo" of a wallet group (drizzle/0038_card_cycles_switch.sql).
     cardCyclesEnabled: boolean("card_cycles_enabled").notNull().default(true),
+    // Ask members whose name is the start of their address for a real one:
+    // 'off' | 'optional' | 'required' (drizzle/0041_member_name_prompt.sql).
+    memberNamePrompt: text("member_name_prompt").notNull().default("optional"),
     // "Il nostro gruppo", shown at the top of the guide (drizzle/0030_group_info.sql).
     groupInfo: text("group_info"),
     // Bank transfer reference per order and receipt address (drizzle/0033_bank_reference.sql).
@@ -427,6 +430,7 @@ export const appSettings = pgTable(
   (table) => [
     check("app_settings_single_row", sql`${table.id} = 1`),
     check("app_settings_payment_mode_check", sql`${table.paymentMode} IN ('wallet', 'per_order')`),
+    check("app_settings_member_name_prompt_check", sql`${table.memberNamePrompt} IN ('off', 'optional', 'required')`),
     check("app_settings_min_balance_check", sql`${table.minBalance} <= 0`),
     check(
       "app_settings_max_balance_check",

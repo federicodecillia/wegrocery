@@ -461,6 +461,7 @@ export const adminGuideEs: GuideContent = {
         "Revisa las filas y los iconos, luego **Importar**.",
       ],
       notes: [
+        "**Precio/kg** es opcional: si el archivo no lo tiene, la app lo calcula a partir del peso indicado en el formato o en el nombre (por ejemplo \"caja de 6 kg\"). Si un €/kg es igual al precio del paquete, la vista previa lo señala y propone el calculado.",
         "Marca **Actualizar el precio de los productos ya en el catálogo** si la lista trae precios nuevos.",
         "Si el archivo ya sigue la plantilla de la app, usa **Otros formatos**.",
       ],
@@ -525,6 +526,21 @@ export const adminGuideEs: GuideContent = {
       ],
       notes: ["El saldo y los pedidos de los ciclos abiertos pasan a la cuenta que se queda. El historial de la otra se mantiene, deshabilitada."],
       keywords: ["duplicado", "dos cuentas", "unir", "fusionar", "doble"],
+    },
+    {
+      slug: "nomi-soci",
+      topic: "soci",
+      title: "Socios con el nombre tomado del email",
+      intro: "Quien entra con el enlace por email, sin que un administrador lo haya añadido, empieza con la primera parte de su dirección como nombre.",
+      steps: [
+        "En **Socios** toca **nombres por completar** bajo la búsqueda: solo quedan ellos.",
+        "Toca **Editar** en el socio, escribe nombre y apellido y guarda.",
+      ],
+      notes: [
+        "En **Ajustes**, **Nombre y apellido de los socios**, elige si la app se lo pregunta a los socios tras acceder: nunca, con la posibilidad de aplazarlo, o antes de todo.",
+        "El socio siempre puede cambiar su nombre desde el **Perfil**.",
+      ],
+      keywords: ["nombre", "apellido", "usuario", "email"],
     },
     {
       slug: "famiglie-admin",

@@ -9,6 +9,7 @@ import { appSettings, auditLog, guideSearchMisses } from "@/lib/db/schema";
 import { t } from "@/lib/i18n";
 import { brand } from "@/lib/brand";
 import { GROUP_INFO_MAX, normalizeGroupInfo } from "@/lib/guide/group-info";
+import { isNamePromptMode, type NamePromptMode } from "@/lib/members/name";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
 import {
   modeChangeBlockers,
@@ -218,6 +219,50 @@ export async function adminSetCardCyclesEnabled(enabled: boolean): Promise<{ err
     return {};
   } catch (e) {
     return { error: actionErrorMessage(e, t.errors.genericError, "adminSetCardCyclesEnabled") };
+  }
+}
+
+// Impostazioni -> Nome e cognome dei soci: whether members named after their
+// address are asked for a real name after signing in (lib/members/name.ts).
+export async function adminSetMemberNamePrompt(mode: NamePromptMode): Promise<{ error?: string }> {
+  try {
+    const admin = await requireAdmin();
+    if (!isNamePromptMode(mode)) return { error: t.errors.genericError };
+    const before = await getPaymentSettings();
+    if (before.memberNamePrompt === mode) return {};
+    const db = getDb();
+    const now = new Date();
+    // No row yet: the defaults the group runs on are stored with the choice.
+    const current = {
+      minBalance: before.minBalance === null ? null : before.minBalance.toFixed(2),
+      maxBalance: before.maxBalance === null ? null : before.maxBalance.toFixed(2),
+      bankTransferEnabled: before.bankTransferEnabled,
+      bankHolder: before.bankHolder,
+      bankIban: before.bankIban,
+      onlinePaymentsEnabled: before.onlinePaymentsEnabled,
+    };
+    await db.batch([
+      db
+        .insert(appSettings)
+        .values({ id: 1, ...current, memberNamePrompt: mode, updatedAt: now, updatedBy: admin.email })
+        .onConflictDoUpdate({
+          target: appSettings.id,
+          set: { memberNamePrompt: mode, updatedAt: now, updatedBy: admin.email },
+        }),
+      db.insert(auditLog).values({
+        auditId: crypto.randomUUID(),
+        userEmail: admin.email,
+        action: "set_member_name_prompt",
+        entityType: "app_settings",
+        entityId: "1",
+        payloadJson: JSON.stringify({ before: before.memberNamePrompt, after: mode }),
+        createdAt: now,
+      }),
+    ]);
+    revalidatePath("/", "layout");
+    return {};
+  } catch (e) {
+    return { error: actionErrorMessage(e, t.errors.genericError, "adminSetMemberNamePrompt") };
   }
 }
 

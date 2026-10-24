@@ -461,6 +461,7 @@ export const adminGuideEn: GuideContent = {
         "Check the rows and the icons, then **Import**.",
       ],
       notes: [
+        "**Price/kg** is optional: when the file has none, the app works it out from the weight in the format or name (for example \"6 kg box\"). If a €/kg equals the pack price, the preview flags it and offers the worked-out one.",
         "Tick **Update the price of products already in catalog** if the list has new prices.",
         "If the file already follows the app's template, use **Other formats**.",
       ],
@@ -525,6 +526,21 @@ export const adminGuideEn: GuideContent = {
       ],
       notes: ["The balance and the orders on open cycles move to the account that stays. The other one's history remains, disabled."],
       keywords: ["duplicate", "two accounts", "merge", "double"],
+    },
+    {
+      slug: "nomi-soci",
+      topic: "soci",
+      title: "Members named after their email",
+      intro: "Someone who joins with the email link, without an admin adding them, starts with the first part of their address as a name.",
+      steps: [
+        "In **Members** tap **names to complete** under the search: only they are left.",
+        "Tap **Edit** on the member, enter first and last name and save.",
+      ],
+      notes: [
+        "In **Settings**, **Members' first and last names**, choose whether the app asks members after they sign in: never, with the option to put it off, or before anything else.",
+        "Members can always change their own name from the **Profile**.",
+      ],
+      keywords: ["name", "surname", "last name", "username", "email"],
     },
     {
       slug: "famiglie-admin",
