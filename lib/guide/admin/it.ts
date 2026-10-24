@@ -529,6 +529,21 @@ export const adminGuideIt: GuideContent = {
       keywords: ["doppione", "due account", "unire", "duplicato"],
     },
     {
+      slug: "nomi-soci",
+      topic: "soci",
+      title: "Soci con il nome preso dall'email",
+      intro: "Chi entra col link via email, senza che un admin l'abbia aggiunto, all'inizio ha come nome la prima parte dell'indirizzo.",
+      steps: [
+        "In **Soci** tocca **nomi da completare** sotto la ricerca: restano solo loro.",
+        "Tocca **Modifica** sul socio, scrivi nome e cognome e salva.",
+      ],
+      notes: [
+        "In **Impostazioni**, **Nome e cognome dei soci**, scegli se l'app lo chiede ai soci dopo l'accesso: mai, con la possibilità di rimandare, o prima di tutto.",
+        "Il socio può sempre cambiare il suo nome dal **Profilo**.",
+      ],
+      keywords: ["nome", "cognome", "nome strano", "username", "email"],
+    },
+    {
       slug: "famiglie-admin",
       topic: "soci",
       title: "Famiglie: cosa vede l'admin",

@@ -18,6 +18,7 @@ import { MergeMembersDialog } from "./merge-members-dialog";
 import { Sheet } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
+import { nameNeedsCompleting } from "@/lib/members/name";
 
 type Member = {
   memberId: string;
@@ -221,6 +222,11 @@ export function SociList({
 }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [filter, setFilter] = useState("");
+  // Members still named after their address (lib/members/name.ts); absorbed
+  // accounts keep a placeholder address and never sign in again.
+  const [onlyUnnamed, setOnlyUnnamed] = useState(false);
+  const needsName = (m: Member) => !m.mergedIntoName && nameNeedsCompleting(m.fullName, [m.email, m.aliasEmail]);
+  const unnamedCount = members.filter(needsName).length;
   const [deletingId, startDeleteTransition] = useTransition();
   const [inviting, startInviteTransition] = useTransition();
   const [mergeRequest, setMergeRequest] = useState<MergeRequest | null>(null);
@@ -254,14 +260,15 @@ export function SociList({
   }
 
   const query = filter.toLowerCase().trim();
-  const visible = query
-    ? members.filter(
-        (m) =>
-          m.fullName.toLowerCase().includes(query) ||
-          m.email.toLowerCase().includes(query) ||
-          (m.aliasEmail?.toLowerCase().includes(query) ?? false),
-      )
-    : members;
+  const showUnnamed = onlyUnnamed && unnamedCount > 0;
+  const visible = members.filter(
+    (m) =>
+      (!showUnnamed || needsName(m)) &&
+      (!query ||
+        m.fullName.toLowerCase().includes(query) ||
+        m.email.toLowerCase().includes(query) ||
+        (m.aliasEmail?.toLowerCase().includes(query) ?? false)),
+  );
 
   // Legacy values are grouped under their canonical role; an unknown value
   // falls into the least-privileged group so the member stays visible.
@@ -330,6 +337,11 @@ export function SociList({
                     <span className={`whitespace-nowrap rounded-full px-2 py-0.5 text-label font-semibold ${roleColor}`}>
                       {getRoleLabel(m.role)}
                     </span>
+                    {needsName(m) && (
+                      <span className="rounded-full bg-tint/[0.05] px-1.5 py-0.5 text-label font-semibold text-secondary-foreground">
+                        {t.admin.members.nameToComplete}
+                      </span>
+                    )}
                     {!m.active && (
                       <span className="rounded-full bg-danger-bg px-1.5 py-0.5 text-label font-bold text-destructive">
                         {t.admin.members.inactiveBadge}
@@ -424,6 +436,21 @@ export function SociList({
           onChange={(e) => setFilter(e.target.value)}
           className="rounded-xl px-4 py-2.5"
         />
+        {unnamedCount > 0 && (
+          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+            <button
+              type="button"
+              aria-pressed={showUnnamed}
+              onClick={() => setOnlyUnnamed((v) => !v)}
+              className={`hit-44 min-h-(--control-h) rounded-full border px-3 py-1.5 text-label font-semibold ${
+                showUnnamed ? "border-primary bg-primary-bg text-primary-text" : "border-border text-foreground"
+              }`}
+            >
+              {t.admin.members.nameToCompleteFilter(unnamedCount)}
+            </button>
+            <span className="text-label text-secondary-foreground">{t.admin.members.nameToCompleteHint}</span>
+          </div>
+        )}
       </div>
       <DuplicateMembers
         pairs={duplicates}

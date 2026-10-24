@@ -11,6 +11,7 @@ import { IdentityForm } from "./identity-form";
 import { CardCyclesCard } from "./card-cycles-card";
 import { ConfigStatusCard } from "./config-status-card";
 import { FamiliesCard } from "./families-card";
+import { NamePromptCard } from "./name-prompt-card";
 import { GroupInfoCard } from "./group-info-card";
 import { PaymentSettingsForm } from "./impostazioni-form";
 import { PaymentModeCard } from "./payment-mode-card";
@@ -100,6 +101,7 @@ export async function TabImpostazioni() {
       <IdentitySection section="contacts" />
       <PaymentSettingsSection />
       <FamiliesCard enabled={settings.familiesEnabled} />
+      <NamePromptCard mode={settings.memberNamePrompt} />
       <GroupInfoCard key={settings.groupInfo ?? ""} initial={settings.groupInfo} />
       <SearchMissesCard misses={misses} />
       <ConfigStatusCard items={config} />

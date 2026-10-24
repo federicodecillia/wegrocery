@@ -22,6 +22,12 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
+## [Unreleased]
+
+### Added
+- 🙋 **The app asks members without a real name for one.** Members whose name is the first part of their email (for example those who joined with the email link) are asked "What's your name?" after signing in. In Settings admins choose whether to ask, whether it can be put off or is required; in Members the "names to complete" filter shows who is missing.
+- [tech] 🗄️ **Migration `0041_member_name_prompt.sql`.** Adds `app_settings.member_name_prompt` (`off`, `optional`, `required`; `optional` by default); apply before deploying, rollback in `0041_member_name_prompt_down.sql`.
+
 ## [1.36.0] - 2026-10-24
 
 *Admins can choose the order of a cycle's products, and the Cycle page is calmer.*
