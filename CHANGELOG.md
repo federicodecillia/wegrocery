@@ -22,7 +22,7 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
-## [Unreleased]
+## [1.36.0] - 2026-10-24
 
 *Admins can choose the order of a cycle's products, and the Cycle page is calmer.*
 
