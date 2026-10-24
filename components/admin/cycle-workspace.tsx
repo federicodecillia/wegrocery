@@ -37,7 +37,7 @@ import {
 } from "./ciclo-forms";
 import { CycleAccountsView } from "./cycle-accounts-view";
 import { SupplierSteps } from "./supplier-steps";
-import { CycleList, CyclePicker, CycleShortlist, type CycleListItem, type SettleState } from "./cycle-list";
+import { CycleList, CyclePicker, type CycleListItem, type SettleState } from "./cycle-list";
 import { CycleOrdersView } from "./cycle-orders-view";
 
 type Props = {
@@ -47,9 +47,9 @@ type Props = {
   creating: boolean;
 };
 
-// Admin → Ciclo: one cycle at a time. On the left (a sheet on a phone) every
-// cycle, then the chosen one's header with its main action, and its views:
-// Panoramica · Prodotti · Ordini while open (plus Fornitore past the order
+// Admin → Ciclo: one cycle at a time. On the left (on a phone or tablet, a
+// sheet opened from the top row, next to "+ Nuovo ciclo") every cycle, then
+// the chosen one's header with its main action, and its views: Panoramica · Prodotti · Ordini while open (plus Fornitore past the order
 // deadline), Panoramica · Ordini · Fornitore · Conti once closed.
 export async function CycleWorkspace({ cycleId: asked, view: askedView, creating }: Props) {
   const [cycles, suppliers, settings] = await Promise.all([getAllCycles(1000), getAllSuppliers(), getPaymentSettings()]);
@@ -122,14 +122,24 @@ export async function CycleWorkspace({ cycleId: asked, view: askedView, creating
 
   return (
     <div>
-      <CycleTodo tasks={tasks} refunds={refunds} duplicates={duplicates} />
+      <div className="mb-3 flex gap-2 lg:hidden">
+        <div className="min-w-0 flex-1">
+          <CyclePicker cycles={listItems} selectedId={selectedId} view={view} />
+        </div>
+        <Link
+          href={adminHref("ciclo", null, { new: "1" })}
+          className="flex min-h-11 shrink-0 items-center rounded-xl bg-inverse px-4 text-[13px] font-bold text-inverse-foreground"
+        >
+          {t.admin.workspace.newCycle}
+        </Link>
+      </div>
+      {/* While creating, the form comes right under the top row: on a phone "+ Nuovo ciclo" must show it in view. */}
+      {!creating && <CycleTodo tasks={tasks} refunds={refunds} duplicates={duplicates} />}
       <div className="lg:grid lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-5">
         <aside aria-label={t.admin.workspace.listTitle} className="hidden lg:block">
           <CycleList cycles={listItems} selectedId={selectedId} view={view} />
         </aside>
         <div className="min-w-0">
-          <CycleShortlist cycles={listItems} selectedId={selectedId} view={view} />
-          <CyclePicker cycles={listItems} selectedId={selectedId} view={view} />
           {cycle && view ? (
             <SelectedCycle cycle={cycle} view={view} suppliers={suppliers} />
           ) : (

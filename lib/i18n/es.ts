@@ -665,6 +665,7 @@ export const es: Strings = {
         adjustDetail: "Ninguna corrección registrada tras la entrega",
         settleCta: "Ajustar las cuentas",
         settleDetail: "Pagado con tarjeta: reembolsa o pide la diferencia",
+        lateBadge: "Con retraso",
         markSent: "Ya enviado",
         markDelivered: "Entregado tal como se pidió",
         markHint: "Solo en este dispositivo.",

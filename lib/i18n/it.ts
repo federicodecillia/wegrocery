@@ -667,6 +667,7 @@ export const it = {
         adjustDetail: "Nessuna rettifica registrata dopo la consegna",
         settleCta: "Chiudi i conti",
         settleDetail: "Pagato con carta: si rimborsa o si chiede la differenza",
+        lateBadge: "In ritardo",
         markSent: "Già inviato",
         markDelivered: "Consegnato come ordinato",
         markHint: "Vale solo su questo dispositivo.",

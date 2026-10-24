@@ -152,11 +152,11 @@ export function OpenCycleOverview({ cycle, stats }: { cycle: SerializedCycle; st
     <Card>
       <CardContent>
         <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-lg bg-primary-bg px-3 py-2">
+          <div className="rounded-lg border border-border px-3 py-2">
             <div className="text-label text-secondary-foreground">{t.admin.cycle.ordersCount}</div>
             <div className="text-[20px] font-bold text-foreground">{stats.orderCount}</div>
           </div>
-          <div className="rounded-lg bg-accent-bg px-3 py-2">
+          <div className="rounded-lg border border-border px-3 py-2">
             <div className="text-label text-secondary-foreground">{t.admin.cycle.totalAmount}</div>
             <div className="text-[20px] font-bold tabular-nums text-foreground">{formatEur(stats.grandTotal)}</div>
           </div>
@@ -167,9 +167,9 @@ export function OpenCycleOverview({ cycle, stats }: { cycle: SerializedCycle; st
           </div>
         )}
         {cycle.isOverdue && (
-          <div className="mt-3 rounded-lg border border-destructive/30 bg-danger-bg p-3 text-[13px] text-destructive">
+          <div className="mt-3 rounded-lg border border-border border-l-4 border-l-destructive bg-background p-3 text-[13px] text-foreground">
             <p className="font-semibold">{t.admin.cycle.overdueWarning}</p>
-            <ol className="mt-1.5 list-decimal space-y-1 pl-5">
+            <ol className="mt-1.5 list-decimal space-y-1 pl-5 text-secondary-foreground">
               {t.admin.cycle.overdueSteps.map((step) => (
                 <li key={step}>{step}</li>
               ))}
@@ -1219,7 +1219,7 @@ export function OrdersLink({ cycleId }: { cycleId: string }) {
   return (
     <Link
       href={adminHref("ciclo", "ordini", { cycle: cycleId })}
-      className="inline-flex min-h-(--control-h) items-center rounded-xl bg-accent/10 px-3 text-[13px] font-bold text-accent-text hover:bg-accent/20"
+      className="inline-flex min-h-(--control-h) items-center text-[13px] font-bold text-primary-text underline-offset-2 hover:underline"
     >
       {t.admin.cycle.recapOrders}
     </Link>

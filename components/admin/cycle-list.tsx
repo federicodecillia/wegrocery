@@ -63,7 +63,7 @@ export function CycleList({
       <Link
         href={adminHref("ciclo", null, { new: "1" })}
         onClick={onNavigate}
-        className="mb-3 flex min-h-(--control-h) items-center justify-center rounded-xl border border-dashed border-primary-mid bg-primary-bg text-[13px] font-bold text-primary-text"
+        className="mb-3 flex min-h-11 items-center justify-center rounded-xl bg-inverse text-[13px] font-bold text-inverse-foreground"
       >
         {w.newCycle}
       </Link>
@@ -178,31 +178,7 @@ function CycleGroupSection({
   );
 }
 
-/**
- * On a phone, above the "Tutti i cicli" button: the cycles whose accounts are
- * still to settle, then the open ones, so neither hides behind the list.
- */
-export function CycleShortlist({
-  cycles,
-  selectedId,
-  view,
-}: {
-  cycles: CycleListItem[];
-  selectedId: string | null;
-  view: CycleView | null;
-}) {
-  const groups = groupCycles(cycles).filter((g) => g.group !== "others");
-  if (groups.length === 0) return null;
-  return (
-    <div className="mb-3 rounded-xl border border-border bg-card p-2 lg:hidden">
-      {groups.map(({ group, cycles: items }) => (
-        <CycleGroupSection key={group} group={group} cycles={items} selectedId={selectedId} view={view} idPrefix="shortlist" />
-      ))}
-    </div>
-  );
-}
-
-/** On a phone: a button that opens the whole list in a sheet. */
+/** On a phone or tablet: a button that opens the whole list in a sheet (to settle and open cycles first). */
 export function CyclePicker({
   cycles,
   selectedId,
@@ -218,7 +194,7 @@ export function CyclePicker({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="mb-3 flex min-h-11 w-full items-center justify-between gap-2 rounded-xl border border-border bg-card px-3 text-left text-[13px] font-semibold text-foreground lg:hidden"
+        className="flex min-h-11 w-full items-center justify-between gap-2 rounded-xl border border-border bg-card px-3 text-left text-[13px] font-semibold text-foreground"
       >
         <span>
           {t.admin.workspace.allCycles} ({cycles.length})
