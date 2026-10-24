@@ -23,7 +23,7 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
-## [Non rilasciato]
+## [1.36.0] - 24 ottobre 2026
 
 *Gli admin possono scegliere l'ordine dei prodotti di un ciclo, e la pagina Ciclo è più ordinata.*
 
