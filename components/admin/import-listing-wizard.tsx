@@ -16,9 +16,12 @@ import {
   REQUIRED_FIELDS,
   TARGET_FIELDS,
   TARGET_LABEL,
+  assignColumn,
+  fieldUsingColumn,
   type TargetField,
 } from "@/lib/csv/header-heuristics";
-import { getProductEmojiOrNull, guessProductCategory, isGenericCategoryLabel } from "@/lib/utils";
+import { parsePriceCell, resolvePricePerKg } from "@/lib/csv/pack-weight";
+import { formatEur, getProductEmojiOrNull, guessProductCategory, isGenericCategoryLabel } from "@/lib/utils";
 import { t } from "@/lib/i18n";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
@@ -48,6 +51,8 @@ export function ImportListingWizard({ open, onClose, cycleId, cycleTitle }: Prop
   const [emojiOverrides, setEmojiOverrides] = useState<Record<number, string>>({});
   const [addToCycle, setAddToCycle] = useState<boolean>(!!cycleId);
   const [updatePriceOnDup, setUpdatePriceOnDup] = useState<boolean>(true);
+  const [computePpk, setComputePpk] = useState<boolean>(true);
+  const [replaceSuspectPpk, setReplaceSuspectPpk] = useState<boolean>(false);
 
   useEffect(() => {
     if (!open) {
@@ -64,6 +69,8 @@ export function ImportListingWizard({ open, onClose, cycleId, cycleTitle }: Prop
       setEmojiOverrides({});
       setAddToCycle(!!cycleId);
       setUpdatePriceOnDup(true);
+      setComputePpk(true);
+      setReplaceSuspectPpk(false);
     }
   }, [open, cycleId]);
 
@@ -75,6 +82,7 @@ export function ImportListingWizard({ open, onClose, cycleId, cycleTitle }: Prop
     setMapping(inspection.suggestedMappings[sheetIdx] ?? {});
     setSelectedIndexes(new Set(sheet.rows.map((_, i) => i)));
     setEmojiOverrides({});
+    setReplaceSuspectPpk(false);
   }, [inspection, sheetIdx, sheet]);
 
   // When the inspection arrives, preselect the suggested supplier.
@@ -136,6 +144,8 @@ export function ImportListingWizard({ open, onClose, cycleId, cycleTitle }: Prop
       selectedIndexes: [...selectedIndexes].sort((a, b) => a - b),
       updatePriceOnDuplicate: updatePriceOnDup,
       cycleId: addToCycle && cycleId ? cycleId : null,
+      computePricePerKg: computePpk,
+      replaceSuspectPricePerKg: replaceSuspectPpk,
     };
   }
 
@@ -259,6 +269,10 @@ export function ImportListingWizard({ open, onClose, cycleId, cycleTitle }: Prop
           updatePriceOnDup={updatePriceOnDup}
           setUpdatePriceOnDup={setUpdatePriceOnDup}
           hasCycle={!!cycleId}
+          computePpk={computePpk}
+          setComputePpk={setComputePpk}
+          replaceSuspectPpk={replaceSuspectPpk}
+          setReplaceSuspectPpk={setReplaceSuspectPpk}
         />
       )}
     </Sheet>
@@ -427,8 +441,16 @@ function Step2Mapping({
   mapping: Partial<Record<TargetField, number>>;
   setMapping: (m: Partial<Record<TargetField, number>>) => void;
 }) {
+  // Picking a column another field holds moves it: say which field let go.
+  const [freedNotice, setFreedNotice] = useState<string | null>(null);
+  const columnName = (i: number) => sheet.columns[i] || t.admin.importWizard.columnPlaceholder(i + 1);
   return (
     <div className="space-y-4">
+      {freedNotice && (
+        <p role="status" className="rounded-lg bg-primary-bg px-3 py-2 text-[12px] text-foreground">
+          {freedNotice}
+        </p>
+      )}
       <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
         {TARGET_FIELDS.map((field) => {
           const required = REQUIRED_FIELDS.includes(field);
@@ -443,20 +465,28 @@ function Step2Mapping({
                 value={value === undefined ? "" : String(value)}
                 onChange={(e) => {
                   const v = e.target.value;
-                  const next = { ...mapping };
-                  if (v === "") delete next[field];
-                  else next[field] = Number(v);
+                  const col = v === "" ? undefined : Number(v);
+                  const { mapping: next, freed } = assignColumn(mapping, field, col);
                   setMapping(next);
+                  setFreedNotice(
+                    freed && col !== undefined
+                      ? t.admin.importWizard.columnFreed(columnName(col), TARGET_LABEL[field], TARGET_LABEL[freed])
+                      : null,
+                  );
                 }}
                 wrapperClassName="flex-1"
                 className="rounded py-1 pl-2 text-[12px]"
               >
                 <option value="">(ignora)</option>
-                {sheet.columns.map((c, i) => (
-                  <option key={i} value={i}>
-                    {c || t.admin.importWizard.columnPlaceholder(i + 1)}
-                  </option>
-                ))}
+                {sheet.columns.map((_, i) => {
+                  const usedBy = fieldUsingColumn(mapping, i, field);
+                  return (
+                    <option key={i} value={i}>
+                      {columnName(i)}
+                      {usedBy ? ` ${t.admin.importWizard.columnUsedBy(TARGET_LABEL[usedBy])}` : ""}
+                    </option>
+                  );
+                })}
               </NativeSelect>
             </label>
           );
@@ -488,6 +518,10 @@ function Step3Review({
   updatePriceOnDup,
   setUpdatePriceOnDup,
   hasCycle,
+  computePpk,
+  setComputePpk,
+  replaceSuspectPpk,
+  setReplaceSuspectPpk,
 }: {
   sheet: { columns: string[]; rows: string[][] };
   mapping: Partial<Record<TargetField, number>>;
@@ -500,6 +534,10 @@ function Step3Review({
   updatePriceOnDup: boolean;
   setUpdatePriceOnDup: (b: boolean) => void;
   hasCycle: boolean;
+  computePpk: boolean;
+  setComputePpk: (b: boolean) => void;
+  replaceSuspectPpk: boolean;
+  setReplaceSuspectPpk: (b: boolean) => void;
 }) {
   function cell(rowIdx: number, field: TargetField): string {
     const col = mapping[field];
@@ -530,8 +568,45 @@ function Step3Review({
     [sheet.rows, selectedIndexes, emojiOverrides, mapping],
   );
 
+  // Same rule as the server (resolveRow), so the preview shows what is saved.
+  const pricePerKg = useMemo(
+    () =>
+      sheet.rows.map((_, i) => {
+        const unitPrice = parsePriceCell(cell(i, "unitPrice"));
+        if (unitPrice == null) return null;
+        return resolvePricePerKg({
+          unitPrice,
+          filePricePerKg: parsePriceCell(cell(i, "pricePerKg")),
+          format: cell(i, "format") || null,
+          name: cell(i, "name"),
+          computeWhenMissing: computePpk,
+          replaceSuspect: replaceSuspectPpk,
+        });
+      }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [sheet.rows, mapping, computePpk, replaceSuspectPpk],
+  );
+  const suspectCount = pricePerKg.filter((r, i) => r?.suspect && selectedIndexes.has(i)).length;
+
   return (
     <div className="space-y-3">
+      {suspectCount > 0 && (
+        <div
+          role="status"
+          className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-card px-3 py-2 text-[12px] text-foreground"
+        >
+          <span className="flex-1">
+            {replaceSuspectPpk
+              ? t.admin.importWizard.replacedPricePerKg(suspectCount)
+              : t.admin.importWizard.suspectPricePerKg(suspectCount)}
+          </span>
+          <Button size="sm" variant="outline" onClick={() => setReplaceSuspectPpk(!replaceSuspectPpk)}>
+            {replaceSuspectPpk
+              ? t.admin.importWizard.keepFilePricePerKg
+              : t.admin.importWizard.useComputedPricePerKg}
+          </Button>
+        </div>
+      )}
       <div className="flex flex-wrap items-center gap-3 rounded-lg bg-primary-bg px-3 py-2 text-[12px]">
         <label className="flex items-center gap-2">
           <input
@@ -551,6 +626,10 @@ function Step3Review({
             {t.admin.importWizard.addToCycle}
           </label>
         )}
+        <label className="flex items-center gap-2">
+          <input type="checkbox" checked={computePpk} onChange={(e) => setComputePpk(e.target.checked)} />
+          {t.admin.importWizard.computePricePerKg}
+        </label>
         {unmatchedEmojiCount > 0 && (
           <span className="ml-auto text-destructive">
             {t.admin.importWizard.unmatchedEmojis(unmatchedEmojiCount)}
@@ -623,7 +702,9 @@ function Step3Review({
                   </td>
                   <td className="p-2 align-middle text-secondary-foreground">{cell(i, "format")}</td>
                   <td className="p-2 text-right align-middle tabular-nums">{cell(i, "unitPrice")}</td>
-                  <td className="p-2 text-right align-middle tabular-nums text-secondary-foreground">{cell(i, "pricePerKg")}</td>
+                  <td className="p-2 text-right align-middle tabular-nums text-secondary-foreground">
+                    <PricePerKgCell resolution={pricePerKg[i]} />
+                  </td>
                 </tr>
               );
             })}
@@ -631,6 +712,18 @@ function Step3Review({
         </table>
       </div>
     </div>
+  );
+}
+
+function PricePerKgCell({ resolution }: { resolution: ReturnType<typeof resolvePricePerKg> | null }) {
+  if (!resolution || resolution.value == null) return <span className="text-muted-foreground">-</span>;
+  return (
+    <span className={resolution.suspect && resolution.source === "file" ? "font-semibold text-destructive" : undefined}>
+      {formatEur(resolution.value)}
+      {resolution.source === "computed" && (
+        <span className="ml-1 text-label text-primary-text">{t.admin.importWizard.pricePerKgComputed}</span>
+      )}
+    </span>
   );
 }
 

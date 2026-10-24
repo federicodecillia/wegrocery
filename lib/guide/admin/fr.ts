@@ -461,6 +461,7 @@ export const adminGuideFr: GuideContent = {
         "Vérifiez les lignes et les icônes, puis **Importer**.",
       ],
       notes: [
+        "**Prix/kg** est facultatif : si le fichier ne l'a pas, l'app le calcule à partir du poids indiqué dans le format ou le nom (par exemple « cagette de 6 kg »). Si un €/kg est égal au prix du colis, l'aperçu le signale et propose celui calculé.",
         "Cochez **Mettre à jour le prix des produits déjà au catalogue** si la liste contient de nouveaux prix.",
         "Si le fichier suit déjà le modèle de l'app, utilisez **Autres formats**.",
       ],

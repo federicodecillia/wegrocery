@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import {
   DndContext,
   KeyboardSensor,
@@ -18,7 +18,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { ChevronDown, ChevronUp, GripVertical, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronUp, GripVertical, Pencil, Trash2 } from "lucide-react";
 import { formatEur, getProductEmoji } from "@/lib/utils";
 import { t } from "@/lib/i18n";
 import {
@@ -48,6 +48,8 @@ export type OrderableProduct = {
   supplierName: string | null;
   category: string | null;
   emoji: string | null;
+  pricePerKg?: string | null;
+  notes?: string | null;
 };
 
 const po = t.admin.productOrder;
@@ -100,11 +102,18 @@ export function SortableProductList({
   products,
   onSave,
   onRemove,
+  editingId,
+  onEdit,
+  renderEditor,
 }: {
   /** In the cycle's custom order (getAdminCycleProducts). */
   products: OrderableProduct[];
   onSave: (productIds: string[]) => void;
   onRemove: (productId: string) => void;
+  /** The product whose edit form is open under its row. */
+  editingId: string | null;
+  onEdit: (productId: string) => void;
+  renderEditor: (product: OrderableProduct) => ReactNode;
 }) {
   // The list follows the props until the admin moves something; the moved
   // layout then stays (the parent remounts it with a new key on each load).
@@ -155,6 +164,9 @@ export function SortableProductList({
               apply(groups.map((x, i) => (i === gi ? { ...x, products: moveIndex(x.products, from, to) } : x)))
             }
             onRemove={onRemove}
+            editingId={editingId}
+            onEdit={onEdit}
+            renderEditor={renderEditor}
           />
         </section>
       ))}
@@ -167,11 +179,17 @@ function CategoryList({
   onMove,
   onDrop,
   onRemove,
+  editingId,
+  onEdit,
+  renderEditor,
 }: {
   group: ProductGroup<OrderableProduct>;
   onMove: (productId: string, delta: -1 | 1) => void;
   onDrop: (from: number, to: number) => void;
   onRemove: (productId: string) => void;
+  editingId: string | null;
+  onEdit: (productId: string) => void;
+  renderEditor: (product: OrderableProduct) => ReactNode;
 }) {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -209,6 +227,9 @@ function CategoryList({
               last={i === group.products.length - 1}
               onMove={(delta) => onMove(p.productId, delta)}
               onRemove={() => onRemove(p.productId)}
+              editing={editingId === p.productId}
+              onEdit={() => onEdit(p.productId)}
+              editor={editingId === p.productId ? renderEditor(p) : null}
             />
           ))}
         </ul>
@@ -223,12 +244,19 @@ function SortableRow({
   last,
   onMove,
   onRemove,
+  editing,
+  onEdit,
+  editor,
 }: {
   product: OrderableProduct;
   first: boolean;
   last: boolean;
   onMove: (delta: -1 | 1) => void;
   onRemove: () => void;
+  editing: boolean;
+  onEdit: () => void;
+  /** The edit form, shown under the row while it is open. */
+  editor: ReactNode;
 }) {
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({
     id: p.productId,
@@ -238,10 +266,11 @@ function SortableRow({
     <li
       ref={setNodeRef}
       style={{ transform: CSS.Translate.toString(transform), transition }}
-      className={`relative flex items-center gap-1 bg-card py-1.5 pr-1 pl-2.5 first:rounded-t-lg last:rounded-b-lg sm:pl-1 ${
+      className={`relative bg-card first:rounded-t-lg last:rounded-b-lg ${
         isDragging ? "z-10 shadow-md ring-1 ring-border" : ""
       }`}
     >
+      <div className="flex items-center gap-1 py-1.5 pr-1 pl-2.5 sm:pl-1">
       <button
         type="button"
         ref={setActivatorNodeRef}
@@ -260,8 +289,10 @@ function SortableRow({
         <div className="flex items-center gap-2 text-label text-secondary-foreground">
           {meta && <span className="truncate">{meta}</span>}
           <span className="shrink-0 font-bold tabular-nums text-primary-text">{formatEur(parseFloat(p.unitPrice))}</span>
+          <PricePerKg value={p.pricePerKg} />
         </div>
       </div>
+      <EditButton name={p.name} expanded={editing} onEdit={onEdit} />
       <button type="button" className={iconBtn} disabled={first} aria-label={po.moveUp(p.name)} onClick={() => onMove(-1)}>
         <ChevronUp className="size-4" aria-hidden />
       </button>
@@ -269,8 +300,31 @@ function SortableRow({
         <ChevronDown className="size-4" aria-hidden />
       </button>
       <RemoveButton name={p.name} onRemove={onRemove} />
+      </div>
+      {editor && <div className="px-2 pb-2">{editor}</div>}
     </li>
   );
+}
+
+/** Opens the edit form of a cycle product under its row. */
+export function EditButton({ name, expanded, onEdit }: { name: string; expanded: boolean; onEdit: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onEdit}
+      aria-expanded={expanded}
+      aria-label={`${t.admin.common.edit}: ${name}`}
+      title={t.admin.common.edit}
+      className={`${iconBtn} hover:text-foreground`}
+    >
+      <Pencil className="size-4" aria-hidden />
+    </button>
+  );
+}
+
+export function PricePerKg({ value }: { value: string | null | undefined }) {
+  if (!value) return null;
+  return <span className="shrink-0 tabular-nums">({formatEur(parseFloat(value))}/kg)</span>;
 }
 
 /** The quiet remove button of a cycle product: an icon, red only on hover. */

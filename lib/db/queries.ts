@@ -966,6 +966,8 @@ export async function getAdminCycleProducts(cycleId: string, alphabetical = fals
       variant: products.variant,
       format: products.format,
       unitPrice: products.unitPrice,
+      pricePerKg: products.pricePerKg,
+      notes: products.notes,
       unit: products.unit,
       supplierName: suppliers.name,
       supplierId: products.supplierId,

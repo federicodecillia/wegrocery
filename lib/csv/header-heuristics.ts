@@ -131,3 +131,40 @@ export function isPlausibleHeaderRow(columns: string[]): boolean {
   if (mapping.name === undefined) return false;
   return mapping.unitPrice !== undefined || mapping.format !== undefined;
 }
+
+// The field that already uses `col`, other than `except`.
+export function fieldUsingColumn(
+  mapping: Partial<Record<TargetField, number>>,
+  col: number,
+  except?: TargetField,
+): TargetField | null {
+  for (const field of TARGET_FIELDS) {
+    if (field !== except && mapping[field] === col) return field;
+  }
+  return null;
+}
+
+// Assign `col` to `field` keeping one column per field: a field that held the
+// column is set back to "ignore" and returned, so the wizard can say so.
+// `col === undefined` clears the field.
+export function assignColumn(
+  mapping: Partial<Record<TargetField, number>>,
+  field: TargetField,
+  col: number | undefined,
+): { mapping: Partial<Record<TargetField, number>>; freed: TargetField | null } {
+  const next = { ...mapping };
+  if (col === undefined) {
+    delete next[field];
+    return { mapping: next, freed: null };
+  }
+  const freed = fieldUsingColumn(next, col, field);
+  if (freed) delete next[freed];
+  next[field] = col;
+  return { mapping: next, freed };
+}
+
+// True when two fields point at the same column (the server refuses it).
+export function hasSharedColumn(mapping: Partial<Record<TargetField, number>>): boolean {
+  const cols = Object.values(mapping).filter((c): c is number => c !== undefined);
+  return new Set(cols).size !== cols.length;
+}

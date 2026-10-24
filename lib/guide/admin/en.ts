@@ -461,6 +461,7 @@ export const adminGuideEn: GuideContent = {
         "Check the rows and the icons, then **Import**.",
       ],
       notes: [
+        "**Price/kg** is optional: when the file has none, the app works it out from the weight in the format or name (for example \"6 kg box\"). If a €/kg equals the pack price, the preview flags it and offers the worked-out one.",
         "Tick **Update the price of products already in catalog** if the list has new prices.",
         "If the file already follows the app's template, use **Other formats**.",
       ],
