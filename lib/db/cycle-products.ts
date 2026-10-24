@@ -2,6 +2,7 @@ import { eq, sql } from "drizzle-orm";
 import { getDb } from "@/lib/db/client";
 import { products } from "@/lib/db/schema";
 import { guessProductCategory } from "@/lib/utils";
+import { productIdentityKey } from "@/lib/products/cycle-order";
 
 function genId(prefix: string): string {
   return `${prefix}_${crypto.randomUUID().replace(/-/g, "").slice(0, 16)}`;
@@ -40,17 +41,19 @@ export async function upsertCycleProducts(
     .select({ max: sql<number>`max(${products.sortOrder})` })
     .from(products)
     .where(eq(products.cycleId, cycleId));
+  // A new product goes after the others: in a custom-ordered cycle that is
+  // the end of its category (lib/products/cycle-order.ts groups by category).
   let currentSort = maxSortRow?.max || 0;
 
   const existingMap = new Map<string, (typeof existingProducts)[number] | true>();
   for (const p of existingProducts) {
-    const key = `${p.name.toLowerCase().trim()}|${p.variant?.toLowerCase().trim() || ""}|${p.format?.toLowerCase().trim() || ""}|${p.unit?.toLowerCase().trim() || ""}`;
+    const key = productIdentityKey(p);
     existingMap.set(key, p);
   }
 
   const inserts = [];
   for (const np of newProducts) {
-    const key = `${np.name.toLowerCase().trim()}|${np.variant?.toLowerCase().trim() || ""}|${np.format?.toLowerCase().trim() || ""}|${np.unit?.toLowerCase().trim() || ""}`;
+    const key = productIdentityKey(np);
     const existing = existingMap.get(key);
     const unitPriceStr = typeof np.unitPrice === "number" ? np.unitPrice.toFixed(2) : np.unitPrice;
     const pricePerKgStr =

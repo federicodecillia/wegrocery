@@ -140,13 +140,31 @@ export const adminGuideEn: GuideContent = {
         "Open the cycle and go to **Products**.",
         "Tap **Add from Catalog**, choose the supplier and select the products (or **Select all**).",
         "Confirm with **Load** and the number of products.",
-        "To take one out, **Remove** next to the product.",
+        "To take one out, tap the bin next to the product.",
       ],
       notes: [
         "Got a new price list from the supplier? Import it with **Import listing** and tick **Also add to open cycle**: it goes into the catalogue and the cycle in one go.",
         "After the close the cycle's products can no longer change.",
       ],
       keywords: ["add products", "price list", "items", "goods"],
+    },
+    {
+      slug: "ordine-prodotti",
+      topic: "ciclo",
+      title: "Choosing the order of the products",
+      intro: "By default members see the products by category, in alphabetical order. You can put them in the order you prefer.",
+      steps: [
+        "Open the cycle and go to **Products**.",
+        "In **Order members see** choose **Custom**.",
+        "Move the products with the up and down arrows, or drag them by the handle on the left (on tablet and computer). The arrows next to a category's name move the whole category.",
+        "Every move saves itself: members see the new order straight away.",
+      ],
+      notes: [
+        "Each cycle has its own order. **Use the last cycle's order** takes the previous cycle's: new products go to the end of their category.",
+        "**Alphabetical** brings back the default order; the custom order stays saved and comes back when you choose **Custom** again.",
+        "The order sheet and the supplier's file stay alphabetical.",
+      ],
+      keywords: ["sort products", "reorder", "move products", "alphabetical order", "on top", "drag"],
     },
     {
       slug: "seguire-ordini",
