@@ -23,7 +23,9 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
-## [Non rilasciato]
+## [1.37.0] - 24 ottobre 2026
+
+*Nomi veri per tutti i soci, e prezzi al kg affidabili quando si importa un listino.*
 
 ### Aggiunte
 - 🙋 **L'app chiede nome e cognome a chi non li ha.** Chi ha come nome la prima parte della sua email (per esempio chi è entrato col link via email) vede, dopo l'accesso, la domanda "Come ti chiami?". In Impostazioni gli admin scelgono se chiederlo, se si può rimandare o se è obbligatorio; in Soci il filtro "nomi da completare" mostra chi manca.
