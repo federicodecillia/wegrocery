@@ -22,6 +22,7 @@ import { cycleHandlingFee, type HandlingFee } from "@/lib/payments/order-payment
 import { orderLinesKey, orderStateKey, resumeDraft } from "@/lib/order-draft";
 import { canAccessCycle } from "@/lib/roles";
 import { resolveOrderCycle } from "@/lib/order-cycle";
+import { normalizeProductOrder } from "@/lib/products/cycle-order";
 import Link from "next/link";
 import type { Metadata } from "next";
 
@@ -151,6 +152,7 @@ export default async function OrdinePage({
         supplierName={openCycle!.supplierName}
         orderCloseAt={openCycle!.orderCloseAt?.toISOString() ?? null}
         cycleNotes={openCycle.notes}
+        productOrder={normalizeProductOrder(openCycle.productOrder)}
         products={cycleProducts.map((p) => ({
           productId: p.productId,
           name: p.name,

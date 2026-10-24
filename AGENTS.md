@@ -91,7 +91,7 @@ Never read `.env*` files other than `.env.example` (Playbook 8.3).
 │                               #   access.ts: pure checkAccess/sessionClaims (no imports, used by proxy.ts)
 ├── proxy.ts                     # Redirect unauthenticated to /login (Next.js 16's middleware)
 ├── auth.ts                     # Better Auth instance, auth() (session + member), signOut()
-├── drizzle/                    # SQL migrations (0000–0039)
+├── drizzle/                    # SQL migrations (0000–0040)
 ├── console/                    # WeGrocery Console: separate Next.js app (own package.json, registry DB, Vercel project with
 │                               #   Root Directory `console`) for the operator's fleet; excluded from the root tsc/eslint/vitest; see console/README.md
 └── public/logo.png, public/mail/logo.png (email logo, 3x)
@@ -422,6 +422,7 @@ ID prefix convention: `cyc_*`, `mem_*`, `prd_*`, `ord_*`, `led_*`, `not_*`, `aud
   `cycle_not_open`, which the order form uses to refresh); admin actions
   return `{ error }` next to their data.
 - Products loaded from semicolon-delimited text: `Name;Variant;Format;Price;Supplier;Notes`.
+- **Product order of a cycle** (migration 0040): `order_cycles.product_order` is `alpha` (default: by category, the fixed "frutta, verdura, insalate" first, then alphabetical) or `custom` (`products.sort_order`, set in Admin → Ciclo → Prodotti by arrows or drag, `@dnd-kit`). One sort for every member-facing and admin list: `productDisplayOrder` (`lib/db/product-order.ts`) in SQL, `groupCycleProducts` (`lib/products/cycle-order.ts`) for the sections. "Usa l'ordine dell'ultimo ciclo" copies the latest other custom cycle (same supplier first) by product identity. The supplier sheet stays alphabetical. Display only: no price, order or ledger row changes.
 - Email is the unique member identifier (login key). Alias email supported for non-Google accounts.
   Emails and aliases share one case-insensitive namespace: unique indexes on
   `lower(email)` / `lower(alias_email)` (migration 0017) plus the email-vs-alias

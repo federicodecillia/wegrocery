@@ -2,12 +2,15 @@
 
 import { eq, and, asc, isNull, sql } from "drizzle-orm";
 import { liveLedger } from "@/lib/db/ledger-live";
+import { productDisplayOrder } from "@/lib/db/product-order";
+import { normalizeProductOrder, type ProductOrderMode } from "@/lib/products/cycle-order";
 import { requireAdmin } from "@/lib/auth/session";
 import { t } from "@/lib/i18n";
 import { getDb } from "@/lib/db/client";
 import {
   ledgerEntries,
   members,
+  orderCycles,
   orders,
   products,
   suppliers,
@@ -119,6 +122,8 @@ export type EditClosedOrderBootstrap = {
     lineTotal: string;
   }>;
   members: Array<{ memberId: string; fullName: string }>;
+  /** How the members see the products: the editor groups them the same way. */
+  productOrder: ProductOrderMode;
 };
 
 export async function adminGetEditClosedOrderBootstrap(
@@ -129,7 +134,7 @@ export async function adminGetEditClosedOrderBootstrap(
     await requireAdmin();
     const db = getDb();
 
-    const [productRows, lineRows, memberRows] = await Promise.all([
+    const [productRows, lineRows, memberRows, cycleRows] = await Promise.all([
       db
         .select({
           productId: products.productId,
@@ -144,7 +149,7 @@ export async function adminGetEditClosedOrderBootstrap(
         })
         .from(products)
         .where(and(eq(products.cycleId, cycleId), eq(products.active, true)))
-        .orderBy(asc(products.sortOrder), asc(products.name)),
+        .orderBy(...productDisplayOrder()),
       memberId
         ? db
             .select({
@@ -167,6 +172,11 @@ export async function adminGetEditClosedOrderBootstrap(
         // A person in a family orders on the family's account.
         .where(and(eq(members.active, true), isNull(members.householdOf)))
         .orderBy(asc(members.fullName)),
+      db
+        .select({ productOrder: orderCycles.productOrder })
+        .from(orderCycles)
+        .where(eq(orderCycles.cycleId, cycleId))
+        .limit(1),
     ]);
 
     return {
@@ -174,6 +184,7 @@ export async function adminGetEditClosedOrderBootstrap(
         products: productRows,
         memberLines: lineRows,
         members: memberRows,
+        productOrder: normalizeProductOrder(cycleRows[0]?.productOrder),
       },
     };
   } catch (e) {

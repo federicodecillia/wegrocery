@@ -140,13 +140,31 @@ export const adminGuideFr: GuideContent = {
         "Ouvrez le cycle et allez dans **Produits**.",
         "Touchez **Ajouter depuis le catalogue**, choisissez le fournisseur et sélectionnez les produits (ou **Tout sélectionner**).",
         "Confirmez avec **Charger** et le nombre de produits.",
-        "Pour en retirer un, **Retirer** à côté du produit.",
+        "Pour en retirer un, touchez la corbeille à côté du produit.",
       ],
       notes: [
         "Vous avez reçu une nouvelle liste de prix du fournisseur ? Importez-la avec **Importer une liste de prix** et cochez **Ajouter aussi au cycle ouvert** : elle entre dans le catalogue et dans le cycle en une fois.",
         "Après la clôture, les produits du cycle ne peuvent plus changer.",
       ],
       keywords: ["ajouter des produits", "liste de prix", "articles", "marchandise"],
+    },
+    {
+      slug: "ordine-prodotti",
+      topic: "ciclo",
+      title: "Choisir l'ordre des produits",
+      intro: "Par défaut les membres voient les produits par catégorie, par ordre alphabétique. Vous pouvez les mettre dans l'ordre que vous préférez.",
+      steps: [
+        "Ouvrez le cycle et allez dans **Produits**.",
+        "Dans **Ordre pour les membres**, choisissez **Personnalisé**.",
+        "Déplacez les produits avec les flèches haut et bas, ou faites-les glisser par la poignée à gauche (sur tablette et ordinateur). Les flèches à côté du nom d'une catégorie déplacent toute la catégorie.",
+        "Chaque déplacement s'enregistre tout seul : les membres voient tout de suite le nouvel ordre.",
+      ],
+      notes: [
+        "Chaque cycle a son ordre. **Reprendre l'ordre du dernier cycle** reprend celui du cycle précédent : les nouveaux produits vont à la fin de leur catégorie.",
+        "**Alphabétique** remet l'ordre par défaut ; l'ordre personnalisé reste enregistré et revient si vous choisissez de nouveau **Personnalisé**.",
+        "La feuille de commande et le fichier pour le fournisseur restent par ordre alphabétique.",
+      ],
+      keywords: ["trier les produits", "réordonner", "déplacer des produits", "ordre alphabétique", "en haut", "glisser"],
     },
     {
       slug: "seguire-ordini",

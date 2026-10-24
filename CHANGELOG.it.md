@@ -23,6 +23,18 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
+## [Non rilasciato]
+
+*Gli admin possono scegliere l'ordine dei prodotti di un ciclo.*
+
+### Aggiunte
+- ↕️ **Prodotti nell'ordine che preferisci.** In Admin, Ciclo, Prodotti si sceglie tra **Alfabetico** (come prima) e **Personalizzato**: prodotti e categorie si spostano con le frecce o trascinandoli, e i soci li vedono in quell'ordine. **Usa l'ordine dell'ultimo ciclo** lo riprende dal ciclo precedente.
+- 🗑️ **Rimuovere un prodotto dal ciclo è più discreto.** Al posto del pulsante rosso c'è un cestino, rosso solo al passaggio.
+- [tecnico] **Migrazione `0040_cycle_product_order.sql`.** Aggiunge `order_cycles.product_order` (`alpha` di base) e `product_order_saved_at`; va applicata prima del deploy. Nuova dipendenza `@dnd-kit` per il trascinamento.
+
+### Risolto
+- 🏷️ **"Altro" in fondo.** Nell'ordine alfabetico i prodotti senza categoria stanno dopo tutte le altre categorie.
+
 ## [1.35.0] - 22 ottobre 2026
 
 *WeGrocery ora parla anche spagnolo e francese, e lo Storico dice quando un ordine è ancora da ritirare.*

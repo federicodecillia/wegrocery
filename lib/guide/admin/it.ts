@@ -142,13 +142,31 @@ export const adminGuideIt: GuideContent = {
         "Apri il ciclo e vai in **Prodotti**.",
         "Tocca **Aggiungi dal Catalogo**, scegli il fornitore e seleziona i prodotti (o **Seleziona tutti**).",
         "Conferma con **Carica** e il numero dei prodotti.",
-        "Per toglierne uno, **Rimuovi** accanto al prodotto.",
+        "Per toglierne uno, tocca il cestino accanto al prodotto.",
       ],
       notes: [
         "Hai un listino nuovo del fornitore? Importalo con **Importa listino** e spunta **Aggiungi anche al ciclo aperto**: entra in catalogo e nel ciclo in un colpo solo.",
         "Dopo la chiusura i prodotti del ciclo non si cambiano più.",
       ],
       keywords: ["aggiungere prodotti", "listino", "articoli", "merce"],
+    },
+    {
+      slug: "ordine-prodotti",
+      topic: "ciclo",
+      title: "Scegliere l'ordine dei prodotti",
+      intro: "Di base i soci vedono i prodotti per categoria, in ordine alfabetico. Puoi metterli nell'ordine che preferisci.",
+      steps: [
+        "Apri il ciclo e vai in **Prodotti**.",
+        "In **Ordine per i soci** scegli **Personalizzato**.",
+        "Sposta i prodotti con le frecce su e giù, o trascinali dalla maniglia a sinistra (da tablet e computer). Le frecce accanto al nome della categoria spostano tutta la categoria.",
+        "Ogni spostamento si salva da solo: i soci vedono subito il nuovo ordine.",
+      ],
+      notes: [
+        "Ogni ciclo ha il suo ordine. Con **Usa l'ordine dell'ultimo ciclo** riprendi quello del ciclo precedente: i prodotti nuovi vanno in fondo alla loro categoria.",
+        "Con **Alfabetico** torni all'ordine di base; l'ordine personalizzato resta salvato e lo ritrovi se torni su **Personalizzato**.",
+        "La distinta e il file per il fornitore restano in ordine alfabetico.",
+      ],
+      keywords: ["ordinare prodotti", "riordinare", "spostare prodotti", "ordine alfabetico", "in cima", "trascinare"],
     },
     {
       slug: "seguire-ordini",
