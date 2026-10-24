@@ -1019,6 +1019,7 @@ export const it = {
       noSupplierAvailable: "Nessun fornitore disponibile",
       catalogSectionTitle: "Catalogo prodotti",
       filteredCount: (visible: number, total: number) => `${visible} prodotti visibili su ${total}`,
+      searchPlaceholder: "Cerca prodotto (nome, varietà, formato, fornitore)",
       supplierFilter: "Fornitore",
       allSuppliers: "Tutti i fornitori",
       categoryFilter: "Categoria",

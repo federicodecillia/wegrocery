@@ -28,6 +28,10 @@ dettagli tecnici", la release su GitHub la tiene.
 ### Aggiunte
 - 🙋 **L'app chiede nome e cognome a chi non li ha.** Chi ha come nome la prima parte della sua email (per esempio chi è entrato col link via email) vede, dopo l'accesso, la domanda "Come ti chiami?". In Impostazioni gli admin scelgono se chiederlo, se si può rimandare o se è obbligatorio; in Soci il filtro "nomi da completare" mostra chi manca.
 - [tecnico] 🗄️ **Migrazione `0041_member_name_prompt.sql`.** Aggiunge `app_settings.member_name_prompt` (`off`, `optional`, `required`; `optional` di default); da applicare prima del deploy, rollback in `0041_member_name_prompt_down.sql`.
+- 🔎 **Ricerca nel Catalogo.** In Admin, Catalogo un campo di ricerca trova i prodotti per nome, varietà, formato, note, categoria o fornitore, insieme ai filtri.
+
+### Modificato
+- ✏️ **Un prodotto del catalogo si modifica dove si trova.** Modifica apre il modulo subito sotto il prodotto invece che in cima alla pagina, così anche i prodotti in fondo alla lista restano a portata.
 
 ### Risolto
 - ⚖️ **Prezzo al kg corretto nell'import del listino.** Una colonna non può più andare sia in Prezzo sia in Prezzo/kg; l'anteprima segnala un €/kg uguale al prezzo della confezione e propone quello calcolato dal peso scritto nel nome o nel formato ("cestello da 6 kg", "12 x 240 g"), e lo calcola anche quando il file non ha la colonna. Reimportando un file si aggiorna anche un €/kg cambiato.

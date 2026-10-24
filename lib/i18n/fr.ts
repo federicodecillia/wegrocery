@@ -1017,6 +1017,7 @@ export const fr: Strings = {
       noSupplierAvailable: "Aucun fournisseur disponible",
       catalogSectionTitle: "Catalogue des produits",
       filteredCount: (visible: number, total: number) => `${visible} produits visibles sur ${total}`,
+      searchPlaceholder: "Rechercher un produit (nom, variété, format, fournisseur)",
       supplierFilter: "Fournisseur",
       allSuppliers: "Tous les fournisseurs",
       categoryFilter: "Catégorie",
