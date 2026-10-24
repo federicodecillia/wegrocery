@@ -10,6 +10,9 @@ import { auditLog, members } from "@/lib/db/schema";
 import { isWelcomeStep } from "@/lib/guide/welcome";
 import { t } from "@/lib/i18n";
 import { cleanName, NAME_MAX_LENGTH } from "@/lib/profile/summary";
+import { joinFullName, NAME_LATER_COOKIE } from "@/lib/members/name";
+import { getPaymentSettings } from "@/lib/payments/get-settings";
+import { cookies } from "next/headers";
 
 // The Profile page (app/profilo): a member renames themselves. The person who
 // signed in, never the family account they work on. Addresses stay with the
@@ -19,35 +22,71 @@ export async function updateMyName(input: string): Promise<{ error?: string; mes
     const session = await requireActiveMember();
     const name = cleanName(input);
     if (!name) return { error: t.profile.nameInvalid(NAME_MAX_LENGTH) };
-
-    const db = getDb();
-    const now = new Date();
-    const [before] = await db
-      .select({ fullName: members.fullName })
-      .from(members)
-      .where(eq(members.memberId, session.personId))
-      .limit(1);
-    if (!before) return { error: t.errors.unauthorized };
-    if (before.fullName === name) return { message: t.profile.nameSaved };
-
-    await db.batch([
-      db.update(members).set({ fullName: name, updatedAt: now }).where(eq(members.memberId, session.personId)),
-      db.insert(auditLog).values({
-        auditId: crypto.randomUUID(),
-        userEmail: session.email,
-        action: "update_own_name",
-        entityType: "member",
-        entityId: session.personId,
-        payloadJson: JSON.stringify({ from: before.fullName, to: name }),
-        createdAt: now,
-      }),
-    ]);
-
-    revalidatePath("/", "layout");
+    if (!(await renameSelf(session, name))) return { error: t.errors.unauthorized };
     return { message: t.profile.nameSaved };
   } catch (e) {
     return { error: actionErrorMessage(e, t.errors.genericError, "updateMyName") };
   }
+}
+
+// The name prompt (components/name-prompt.tsx): first and last name of a
+// member still named after their address. Same rules as updateMyName.
+export async function completeMyName(first: string, last: string): Promise<{ error?: string }> {
+  try {
+    const session = await requireActiveMember();
+    const name = joinFullName(first, last);
+    if (!name) return { error: t.namePrompt.invalid(NAME_MAX_LENGTH) };
+    if (!(await renameSelf(session, name))) return { error: t.errors.unauthorized };
+    (await cookies()).delete(NAME_LATER_COOKIE);
+    return {};
+  } catch (e) {
+    return { error: actionErrorMessage(e, t.errors.genericError, "completeMyName") };
+  }
+}
+
+// "Più tardi" on the name prompt, where the group lets members skip it: a
+// cookie with no expiry, so the question comes back at the next visit.
+export async function postponeNamePrompt(): Promise<{ error?: string }> {
+  try {
+    await requireActiveMember();
+    const settings = await getPaymentSettings();
+    if (settings.memberNamePrompt === "required") return { error: t.namePrompt.required };
+    (await cookies()).set(NAME_LATER_COOKIE, "1", { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/" });
+    revalidatePath("/", "layout");
+    return {};
+  } catch (e) {
+    return { error: actionErrorMessage(e, t.errors.genericError, "postponeNamePrompt") };
+  }
+}
+
+// The person who signed in, never the family account they work on. False
+// when their row is gone.
+async function renameSelf(session: { email: string; personId: string }, name: string): Promise<boolean> {
+  const db = getDb();
+  const now = new Date();
+  const [before] = await db
+    .select({ fullName: members.fullName })
+    .from(members)
+    .where(eq(members.memberId, session.personId))
+    .limit(1);
+  if (!before) return false;
+  if (before.fullName === name) return true;
+
+  await db.batch([
+    db.update(members).set({ fullName: name, updatedAt: now }).where(eq(members.memberId, session.personId)),
+    db.insert(auditLog).values({
+      auditId: crypto.randomUUID(),
+      userEmail: session.email,
+      action: "update_own_name",
+      entityType: "member",
+      entityId: session.personId,
+      payloadJson: JSON.stringify({ from: before.fullName, to: name }),
+      createdAt: now,
+    }),
+  ]);
+
+  revalidatePath("/", "layout");
+  return true;
 }
 
 // The welcome card on Home: the person closed it ("Ho capito" or "Salta").

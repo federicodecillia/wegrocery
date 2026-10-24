@@ -11,7 +11,11 @@ import { CONTENT_WIDTH, SHELL_WIDTH, type ShellLayout } from "@/components/shell
 import { SideNav } from "@/components/side-nav";
 import { WelcomeResume } from "@/components/home/welcome-resume";
 import { AppRefresh } from "@/components/app-refresh";
+import { NamePrompt } from "@/components/name-prompt";
+import { signOut } from "@/auth";
+import { redirect } from "next/navigation";
 import { getUnreadNotificationCount, notificationOwners } from "@/lib/db/queries";
+import { namePromptFor } from "@/lib/members/name-prompt";
 
 type AppShellProps = {
   children: ReactNode;
@@ -28,7 +32,11 @@ type AppShellProps = {
 
 export async function AppShell({ children, email, name, isAdmin, memberId, personId, layout = "reading" }: AppShellProps) {
   const brand = await getBrand();
-  const unreadCount = await getUnreadNotificationCount(notificationOwners(memberId, personId));
+  const [unreadCount, namePrompt] = await Promise.all([
+    getUnreadNotificationCount(notificationOwners(memberId, personId)),
+    // A member still named after their address answers first (lib/members/name.ts).
+    namePromptFor(personId ?? memberId),
+  ]);
 
   return (
     <div className="min-h-screen bg-frame sm:p-6 md:flex md:bg-background md:p-0">
@@ -82,9 +90,21 @@ export async function AppShell({ children, email, name, isAdmin, memberId, perso
 
         <main id="main" tabIndex={-1} className="flex-1 px-5 py-4 pb-[calc(var(--spacing-nav-h)+1rem)] md:px-8 md:py-6">
           <AppRefresh />
-          <WelcomeResume />
+          {!namePrompt && <WelcomeResume />}
           <div className={CONTENT_WIDTH[layout]}>
-          {children}
+          {namePrompt ? (
+            <NamePrompt
+              currentName={name ?? ""}
+              required={namePrompt === "required"}
+              signOut={async () => {
+                "use server";
+                await signOut();
+                redirect("/login");
+              }}
+            />
+          ) : (
+            children
+          )}
           {brand.privacyUrl ? (
             <p className="mt-8 text-center text-xs">
               <a href={brand.privacyUrl} target="_blank" rel="noopener noreferrer" className="text-secondary-foreground underline">

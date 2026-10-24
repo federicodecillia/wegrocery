@@ -527,6 +527,21 @@ export const adminGuideFr: GuideContent = {
       keywords: ["doublon", "deux comptes", "fusionner", "double"],
     },
     {
+      slug: "nomi-soci",
+      topic: "soci",
+      title: "Membres nommés d'après leur e-mail",
+      intro: "Quelqu'un qui entre avec le lien par e-mail, sans qu'un admin l'ait ajouté, commence avec le début de son adresse comme nom.",
+      steps: [
+        "Dans **Membres**, touchez **noms à compléter** sous la recherche : il ne reste qu'eux.",
+        "Touchez **Modifier** sur le membre, indiquez prénom et nom et enregistrez.",
+      ],
+      notes: [
+        "Dans **Réglages**, **Prénom et nom des membres**, choisissez si l'app le demande aux membres après la connexion : jamais, avec la possibilité de reporter, ou avant tout.",
+        "Le membre peut toujours changer son nom depuis le **Profil**.",
+      ],
+      keywords: ["nom", "prénom", "nom d'utilisateur", "e-mail"],
+    },
+    {
       slug: "famiglie-admin",
       topic: "soci",
       title: "Familles : ce que voit un admin",

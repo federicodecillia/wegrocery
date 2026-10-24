@@ -527,6 +527,21 @@ export const adminGuideEs: GuideContent = {
       keywords: ["duplicado", "dos cuentas", "unir", "fusionar", "doble"],
     },
     {
+      slug: "nomi-soci",
+      topic: "soci",
+      title: "Socios con el nombre tomado del email",
+      intro: "Quien entra con el enlace por email, sin que un administrador lo haya añadido, empieza con la primera parte de su dirección como nombre.",
+      steps: [
+        "En **Socios** toca **nombres por completar** bajo la búsqueda: solo quedan ellos.",
+        "Toca **Editar** en el socio, escribe nombre y apellido y guarda.",
+      ],
+      notes: [
+        "En **Ajustes**, **Nombre y apellido de los socios**, elige si la app se lo pregunta a los socios tras acceder: nunca, con la posibilidad de aplazarlo, o antes de todo.",
+        "El socio siempre puede cambiar su nombre desde el **Perfil**.",
+      ],
+      keywords: ["nombre", "apellido", "usuario", "email"],
+    },
+    {
       slug: "famiglie-admin",
       topic: "soci",
       title: "Familias: lo que ve un admin",

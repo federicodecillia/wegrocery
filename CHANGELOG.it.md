@@ -23,6 +23,12 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
+## [Non rilasciato]
+
+### Aggiunte
+- 🙋 **L'app chiede nome e cognome a chi non li ha.** Chi ha come nome la prima parte della sua email (per esempio chi è entrato col link via email) vede, dopo l'accesso, la domanda "Come ti chiami?". In Impostazioni gli admin scelgono se chiederlo, se si può rimandare o se è obbligatorio; in Soci il filtro "nomi da completare" mostra chi manca.
+- [tecnico] 🗄️ **Migrazione `0041_member_name_prompt.sql`.** Aggiunge `app_settings.member_name_prompt` (`off`, `optional`, `required`; `optional` di default); da applicare prima del deploy, rollback in `0041_member_name_prompt_down.sql`.
+
 ## [1.36.0] - 24 ottobre 2026
 
 *Gli admin possono scegliere l'ordine dei prodotti di un ciclo, e la pagina Ciclo è più ordinata.*
