@@ -31,6 +31,7 @@ dettagli tecnici", la release su GitHub la tiene.
 - 🔎 **Ricerca nel Catalogo.** In Admin, Catalogo un campo di ricerca trova i prodotti per nome, varietà, formato, note, categoria o fornitore, insieme ai filtri.
 
 ### Modificato
+- 🖊️ **I prodotti di un ciclo si possono di nuovo modificare.** In Admin, Ciclo, Prodotti una matita accanto al cestino apre la scheda del prodotto subito sotto (nome, formato, prezzo, €/kg, categoria, note), e la lista mostra il €/kg. Gli ordini già fatti tengono il loro prezzo.
 - ✏️ **Un prodotto del catalogo si modifica dove si trova.** Modifica apre il modulo subito sotto il prodotto invece che in cima alla pagina, così anche i prodotti in fondo alla lista restano a portata.
 
 ### Risolto

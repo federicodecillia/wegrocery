@@ -30,6 +30,7 @@ A bullet that only matters to whoever hosts, runs or develops the app
 - 🔎 **Search in the Catalog.** In Admin, Catalog a search box finds products by name, variety, format, notes, category or supplier, together with the filters.
 
 ### Changed
+- 🖊️ **Products of a cycle can be edited again.** In Admin, Cycle, Products a pencil next to the bin opens the product's form under it (name, format, price, €/kg, category, notes), and the list shows the €/kg. Orders already placed keep their price.
 - ✏️ **A catalog product is edited where it is.** Edit opens the form right under the product instead of at the top of the page, so products far down the list stay in sight.
 
 ### Fixed

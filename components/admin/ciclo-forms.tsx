@@ -951,9 +951,12 @@ import {
   adminSetCycleProductOrder,
 } from "@/lib/actions/admin-product-order";
 import type { ProductOrderSource } from "@/lib/db/cycle-product-order";
+import { EditCycleProductForm } from "./prodotti-forms";
 import type { ProductOrderMode } from "@/lib/products/cycle-order";
 import {
   ProductOrderSwitch,
+  EditButton,
+  PricePerKg,
   RemoveButton,
   SortableProductList,
   type OrderableProduct,
@@ -975,6 +978,8 @@ export function CycleProductPicker({
   const [copySource, setCopySource] = useState<ProductOrderSource | null>(null);
   // Bumped on every load: the sortable list starts again from the server.
   const [loadCount, setLoadCount] = useState(0);
+  // The product whose edit form is open under its row.
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [orderPending, startOrderTransition] = useTransition();
   const [, startTransition] = useTransition();
@@ -1050,6 +1055,23 @@ export function CycleProductPicker({
     });
   }
 
+  const knownCategories = Array.from(
+    new Set(currentProducts.map((p) => p.category?.trim()).filter((c): c is string => Boolean(c))),
+  );
+
+  function renderEditor(p: CycleProduct) {
+    return (
+      <EditCycleProductForm
+        product={{ ...p, pricePerKg: p.pricePerKg ?? null, notes: p.notes ?? null }}
+        knownCategories={knownCategories}
+        onClose={() => {
+          setEditingId(null);
+          refresh();
+        }}
+      />
+    );
+  }
+
   async function handleRemove(productId: string) {
     if (!(await confirm({ title: t.admin.products.removeFromCycleConfirm, danger: true }))) return;
     startTransition(async () => {
@@ -1089,7 +1111,15 @@ export function CycleProductPicker({
       )}
 
       {currentProducts.length > 0 && productOrder === "custom" ? (
-        <SortableProductList key={loadCount} products={currentProducts} onSave={handleReorder} onRemove={handleRemove} />
+        <SortableProductList
+          key={loadCount}
+          products={currentProducts}
+          onSave={handleReorder}
+          onRemove={handleRemove}
+          editingId={editingId}
+          onEdit={setEditingId}
+          renderEditor={renderEditor}
+        />
       ) : currentProducts.length > 0 ? (
         <div className="space-y-4">
           {Array.from(new Set(currentProducts.map(p => p.supplierName || "Altro"))).map(sName => (
@@ -1099,17 +1129,26 @@ export function CycleProductPicker({
               </div>
               <div className="divide-y divide-border rounded-lg border border-border bg-card overflow-hidden shadow-sm">
                 {currentProducts.filter(p => (p.supplierName || "Altro") === sName).map((p) => (
-                  <div key={p.productId} className="flex items-center justify-between p-2.5 hover:bg-background/30">
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate text-[12px] font-medium text-foreground">{p.name}</div>
-                      <div className="flex items-center gap-2 text-label text-secondary-foreground">
-                        <span>{p.variant} {p.format && `(${p.format})`}</span>
-                        <span className="tabular-nums font-bold text-primary-text">
-                          {formatEur(parseFloat(p.unitPrice))}
-                        </span>
+                  <div key={p.productId}>
+                    <div className="flex items-center justify-between p-2.5 hover:bg-background/30">
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-[12px] font-medium text-foreground">{p.name}</div>
+                        <div className="flex items-center gap-2 text-label text-secondary-foreground">
+                          <span>{p.variant} {p.format && `(${p.format})`}</span>
+                          <span className="tabular-nums font-bold text-primary-text">
+                            {formatEur(parseFloat(p.unitPrice))}
+                          </span>
+                          <PricePerKg value={p.pricePerKg} />
+                        </div>
                       </div>
+                      <EditButton
+                        name={p.name}
+                        expanded={editingId === p.productId}
+                        onEdit={() => setEditingId(p.productId)}
+                      />
+                      <RemoveButton name={p.name} onRemove={() => handleRemove(p.productId)} />
                     </div>
-                    <RemoveButton name={p.name} onRemove={() => handleRemove(p.productId)} />
+                    {editingId === p.productId && <div className="px-2 pb-2">{renderEditor(p)}</div>}
                   </div>
                 ))}
               </div>
