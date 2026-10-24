@@ -22,6 +22,11 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
+## [Unreleased]
+
+### Changed
+- 🎨 **A calmer Admin → Ciclo page.** "+ New cycle" now sits in plain sight at the top on phones and tablets, next to the list of cycles. "To do now" uses white cards with a small "Late" badge instead of red and yellow blocks, so the cycle's main action (Close cycle) is the only coloured button.
+
 ## [1.35.0] - 2026-10-22
 
 *WeGrocery now speaks Spanish and French too, and History says when an order is still to pick up.*

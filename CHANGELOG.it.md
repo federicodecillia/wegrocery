@@ -23,6 +23,11 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
+## [Non rilasciato]
+
+### Modificato
+- 🎨 **Pagina Admin → Ciclo più ordinata.** "+ Nuovo ciclo" ora è ben visibile in cima anche su telefono e tablet, accanto all'elenco dei cicli. "Da fare ora" usa schede bianche con una piccola etichetta "In ritardo" al posto dei blocchi rossi e gialli, così l'unico bottone colorato è l'azione principale del ciclo (Chiudi ciclo).
+
 ## [1.35.0] - 22 ottobre 2026
 
 *WeGrocery ora parla anche spagnolo e francese, e lo Storico dice quando un ordine è ancora da ritirare.*

@@ -665,6 +665,7 @@ export const fr: Strings = {
         adjustDetail: "Aucune correction saisie après la livraison",
         settleCta: "Solder les comptes",
         settleDetail: "Payé par carte : remboursez ou demandez la différence",
+        lateBadge: "En retard",
         markSent: "Déjà envoyée",
         markDelivered: "Livrée comme commandée",
         markHint: "Sur cet appareil uniquement.",
