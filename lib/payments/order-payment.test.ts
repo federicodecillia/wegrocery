@@ -9,8 +9,11 @@ import {
   handlingFeeCents,
   sameHandlingFee,
   ORDER_PAYMENT_MAX_CENTS,
+  orderPartCents,
   orderPaymentAmount,
   parseHandlingFee,
+  raisedToMinimum,
+  walletOffset,
   resolveCycleFee,
 } from "./order-payment";
 
@@ -27,6 +30,8 @@ describe("orderPaymentAmount", () => {
       requiredCents: 2500,
       coveredCents: 0,
       chargeCents: 2500,
+      balanceCents: 0,
+      walletCreditCents: 0,
       outcome: "pay",
     });
   });
@@ -230,7 +235,14 @@ describe("resolveCycleFee", () => {
 });
 
 describe("checkoutLineItems", () => {
-  const labels = { products: "Products", shipping: "Shipping", fee: "Handling (estimate)", supplement: "Order supplement" };
+  const labels = {
+    products: "Products",
+    shipping: "Shipping",
+    fee: "Handling (estimate)",
+    supplement: "Order supplement",
+    afterCredit: "Order (after credit)",
+    balance: "Previous balance",
+  };
   const amount = (over: Partial<Parameters<typeof checkoutLineItems>[0]>) => ({
     productsCents: 2000,
     shippingCents: 300,
@@ -238,6 +250,8 @@ describe("checkoutLineItems", () => {
     requiredCents: 2500,
     coveredCents: 0,
     chargeCents: 2500,
+    balanceCents: 0,
+    walletCreditCents: 0,
     outcome: "pay" as const,
     ...over,
   });
@@ -309,5 +323,98 @@ describe("paidDifference", () => {
   it("says nothing when the payments match the order, and flags a shortfall", () => {
     expect(paidDifference(980, 980)).toBeNull();
     expect(paidDifference(1000, 980)).toEqual({ kind: "due", cents: 20 });
+  });
+});
+
+describe("the wallet in card payments", () => {
+  const none = { type: "fixed", value: 0 } as const;
+  const order = (productsCents: number, wallet: { debtCents: number; creditCents: number }, coveredCents = 0) =>
+    orderPaymentAmount({ productsCents, shipping: proportional, fee: none, coveredCents, wallet });
+
+  it("adds the whole debt to the payment: -10 and an order of 30 pay 40", () => {
+    expect(order(3000, { debtCents: 1000, creditCents: 0 })).toMatchObject({
+      requiredCents: 3000,
+      chargeCents: 4000,
+      balanceCents: 1000,
+      walletCreditCents: 0,
+      outcome: "pay",
+    });
+  });
+
+  it("uses the credit first: +20 and an order of 30 pay 10", () => {
+    expect(order(3000, { debtCents: 0, creditCents: 2000 })).toMatchObject({
+      chargeCents: 1000,
+      balanceCents: 0,
+      walletCreditCents: 2000,
+      outcome: "pay",
+    });
+  });
+
+  it("confirms without Stripe when the credit covers the order, using only what it needs", () => {
+    expect(order(3000, { debtCents: 0, creditCents: 4000 })).toMatchObject({
+      chargeCents: 0,
+      walletCreditCents: 3000,
+      outcome: "confirm",
+    });
+  });
+
+  it("uses less credit when what is left is under Stripe's minimum", () => {
+    const a = order(3000, { debtCents: 0, creditCents: 2980 });
+    expect(a).toMatchObject({ chargeCents: 50, walletCreditCents: 2950, outcome: "pay" });
+    expect(raisedToMinimum(a)).toBe(false);
+  });
+
+  it("collects no debt when nothing is to be paid", () => {
+    expect(order(1000, { debtCents: 1000, creditCents: 0 }, 1000)).toMatchObject({
+      chargeCents: 0,
+      balanceCents: 0,
+      outcome: "confirm",
+    });
+  });
+
+  it("counts the debt towards Stripe's minimum and the ceiling", () => {
+    const small = order(20, { debtCents: 40, creditCents: 0 });
+    expect(small).toMatchObject({ chargeCents: 60, balanceCents: 40 });
+    expect(raisedToMinimum(small)).toBe(false);
+    const tiny = order(5, { debtCents: 10, creditCents: 0 });
+    expect(tiny).toMatchObject({ chargeCents: 50, balanceCents: 10 });
+    expect(raisedToMinimum(tiny)).toBe(true);
+    expect(order(ORDER_PAYMENT_MAX_CENTS - 100, { debtCents: 200, creditCents: 0 }).outcome).toBe("too_high");
+  });
+
+  it("applies the debt again on a supplement, on top of what is covered", () => {
+    expect(order(3000, { debtCents: 500, creditCents: 0 }, 2000)).toMatchObject({ chargeCents: 1500, balanceCents: 500 });
+  });
+
+  it("works out the offset from the balance and the wallet orders not charged yet", () => {
+    expect(walletOffset({ enabled: false, balanceCents: -1000, pendingWalletOrdersCents: 0 })).toEqual({ debtCents: 0, creditCents: 0 });
+    expect(walletOffset({ enabled: true, balanceCents: -1000, pendingWalletOrdersCents: 500 })).toEqual({ debtCents: 1000, creditCents: 0 });
+    expect(walletOffset({ enabled: true, balanceCents: 2000, pendingWalletOrdersCents: 500 })).toEqual({ debtCents: 0, creditCents: 1500 });
+    expect(walletOffset({ enabled: true, balanceCents: 2000, pendingWalletOrdersCents: 3000 })).toEqual({ debtCents: 0, creditCents: 0 });
+  });
+
+  it("never gives back the debt part of a payment to the card", () => {
+    expect(orderPartCents({ amountCents: 4000, balanceCents: 1000 })).toBe(3000);
+    expect(
+      cancelRefunds([{ paymentId: "pay_a", amountCents: 4000, balanceCents: 1000, refundedCents: 0, requestedCents: 0 }]),
+    ).toEqual([{ refundId: "cancel_pay_a_1", paymentId: "pay_a", amountCents: 3000 }]);
+  });
+
+  it("puts the debt on its own Checkout line and the credit in the order's name", () => {
+    const labels = {
+      products: "Products",
+      shipping: "Shipping",
+      fee: "Fee",
+      supplement: "Supplement",
+      afterCredit: "Order (after credit)",
+      balance: "Previous balance",
+    };
+    expect(checkoutLineItems(order(3000, { debtCents: 1000, creditCents: 0 }), labels)).toEqual([
+      { name: "Products", amountCents: 3000 },
+      { name: "Previous balance", amountCents: 1000 },
+    ]);
+    expect(checkoutLineItems(order(3000, { debtCents: 0, creditCents: 2000 }), labels)).toEqual([
+      { name: "Order (after credit)", amountCents: 1000 },
+    ]);
   });
 });

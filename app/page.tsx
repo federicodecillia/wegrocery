@@ -24,7 +24,7 @@ import {
   getOrderDraft,
 } from "@/lib/db/queries";
 import { getDb } from "@/lib/db/client";
-import { getConsolidatedBalanceCents, getWalletBalance } from "@/lib/payments/balance-due";
+import { getConsolidatedBalanceCents, getWalletBalance, getWalletOffset } from "@/lib/payments/balance-due";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
 import { getCycleCoverageCents } from "@/lib/payments/order-confirm";
 import {
@@ -75,6 +75,13 @@ export default async function HomePage({
   const paidByCard = (cycle: { paymentMode: string }) => cycle.paymentMode === "per_order" && !member?.paysOffline;
 
   const activeCycles = openCycles.filter((c) => canAccessCycle(c.accessLevel, role));
+  // The wallet debt or credit a card payment counts (app_settings.card_settles_wallet).
+  const wallet = activeCycles.some(paidByCard)
+    ? await getWalletOffset(getDb(), memberId, {
+        enabled: settings.cardSettlesWallet,
+        paysOffline: member?.paysOffline ?? false,
+      })
+    : undefined;
 
   const cycleDataList = await Promise.all(
     activeCycles.map(async (cycle) => {
@@ -112,6 +119,7 @@ export default async function HomePage({
           },
           fee: { type: feeType, value: Number(cycle.handlingFeeValue) },
           coveredCents,
+          wallet,
         })
       : null;
     return homeOrderStatus({ hasConfirmedOrder, draft, coveredCents });

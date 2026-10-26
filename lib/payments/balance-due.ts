@@ -1,9 +1,10 @@
-import { sql } from "drizzle-orm";
+import { sql, type SQL } from "drizzle-orm";
 import { getDb } from "@/lib/db/client";
 import { t } from "@/lib/i18n";
 import { formatMoney } from "@/lib/i18n/format";
 import { reportError } from "@/lib/observability";
 import { audit, notifyMember, type Db } from "./effects";
+import { NO_WALLET_OFFSET, walletOffset, type WalletOffset } from "./order-payment";
 import { unsettledForMemberSql } from "./settlement-sql";
 
 // "Da saldare" in pay-per-order (spec, "Principio contabile" and "Da
@@ -13,17 +14,49 @@ import { unsettledForMemberSql } from "./settlement-sql";
 // minus the refunds asked for and not yet registered. Below zero it is an amount due,
 // above zero a credit the association gives back.
 
-export async function getConsolidatedBalanceCents(db: Db, memberId: string): Promise<number> {
+// The consolidated balance in SQL, in cents, for the writes that must check
+// it in the same transaction.
+export function consolidatedBalanceCentsSql(memberId: string): SQL {
   const unsettled = (cycleColumn: string) => unsettledForMemberSql(sql`${memberId}`, sql.raw(cycleColumn));
-  const { rows } = await db.execute<{ cents: number }>(sql`
-    SELECT (
+  return sql`(
       coalesce((SELECT round(sum(l.amount) * 100) FROM ledger_entries l
                 WHERE l.member_id = ${memberId} AND NOT ${unsettled("l.cycle_id")}), 0)
       - coalesce((SELECT sum(r.amount_cents) FROM refunds r
                   WHERE r.member_id = ${memberId} AND r.status = 'requested'
                     AND NOT ${unsettled("r.cycle_id")}), 0)
-    )::integer AS cents`);
+    )::integer`;
+}
+
+export async function getConsolidatedBalanceCents(db: Db, memberId: string): Promise<number> {
+  const { rows } = await db.execute<{ cents: number }>(sql`SELECT ${consolidatedBalanceCentsSql(memberId)} AS cents`);
   return rows[0]?.cents ?? 0;
+}
+
+// The member's orders on open wallet cycles, in cents: their close will
+// charge them, so a card payment does not spend that credit (the credit
+// limit counts them the same way).
+function pendingWalletOrdersCentsSql(memberId: string): SQL {
+  return sql`coalesce((
+    SELECT round(sum(o.line_total) * 100) FROM orders o JOIN order_cycles c ON c.cycle_id = o.cycle_id
+    WHERE o.member_id = ${memberId} AND c.status = 'open' AND c.payment_mode <> 'per_order'), 0)::integer`;
+}
+
+// The wallet credit a card payment may use, in cents (walletOffset in SQL).
+export function walletCreditAvailableCentsSql(memberId: string): SQL {
+  return sql`greatest(0, ${consolidatedBalanceCentsSql(memberId)} - greatest(0, ${pendingWalletOrdersCentsSql(memberId)}))`;
+}
+
+// How the member's wallet enters their next card payment (orderPaymentAmount):
+// nothing with the group's switch off or for a member who pays outside the app.
+export async function getWalletOffset(
+  db: Db,
+  memberId: string,
+  input: { enabled: boolean; paysOffline: boolean },
+): Promise<WalletOffset> {
+  if (!input.enabled || input.paysOffline) return NO_WALLET_OFFSET;
+  const { rows } = await db.execute<{ balance: number; pending: number }>(sql`
+    SELECT ${consolidatedBalanceCentsSql(memberId)} AS balance, ${pendingWalletOrdersCentsSql(memberId)} AS pending`);
+  return walletOffset({ enabled: true, balanceCents: rows[0]?.balance ?? 0, pendingWalletOrdersCents: rows[0]?.pending ?? 0 });
 }
 
 // The wallet balance a member sees and spends (Home, Ordine, Ricarica,

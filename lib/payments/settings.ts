@@ -11,6 +11,7 @@ import {
 } from "./bank-reference";
 import type { StripeKeyStatus } from "./config";
 import { DEFAULT_NAME_PROMPT, isNamePromptMode, type NamePromptMode } from "@/lib/members/name";
+import { parseNewCycleDefaults, type NewCycleDefaults } from "./new-cycle-defaults";
 
 export type PaymentMode = "wallet" | "per_order";
 
@@ -27,6 +28,11 @@ export type PaymentSettingsRow = {
   familiesEnabled?: boolean;
   // Optional: rows read before migration 0038 have no such column.
   cardCyclesEnabled?: boolean;
+  // Optional: rows read before migration 0042 have no such column.
+  cardSettlesWallet?: boolean;
+  // Optional: rows read before migration 0043 have no such columns.
+  newCyclePaymentMode?: string | null;
+  newCycleDefaults?: unknown;
   // Optional: rows read before migration 0041 have no such column.
   memberNamePrompt?: string;
   // Optional: rows read before migration 0030 have no such column.
@@ -64,6 +70,13 @@ export type PaymentSettings = {
   familiesEnabled: boolean;
   // A wallet group may offer single cycles paid by card (lib/payments/cycle-mode.ts).
   cardCyclesEnabled: boolean;
+  // A card payment also pays the wallet debt or uses the wallet credit
+  // (orderPaymentAmount, lib/payments/order-payment.ts).
+  cardSettlesWallet: boolean;
+  // What "Nuovo ciclo" starts from (lib/payments/new-cycle-defaults.ts): the
+  // mode (null = the group's) and, per mode, shipping and fee.
+  newCycleMode: PaymentMode | null;
+  newCycleDefaults: NewCycleDefaults;
   // Whether members named after their address are asked for a real name (lib/members/name.ts).
   memberNamePrompt: NamePromptMode;
   // "Il nostro gruppo" at the top of the guide (lib/guide/group-info.ts); null = none.
@@ -99,6 +112,12 @@ export function resolvePaymentSettings(
         onlinePaymentsEnabled: row.onlinePaymentsEnabled,
         familiesEnabled: row.familiesEnabled ?? false,
         cardCyclesEnabled: row.cardCyclesEnabled ?? true,
+        cardSettlesWallet: row.cardSettlesWallet ?? false,
+        newCycleMode:
+          row.newCyclePaymentMode === "wallet" || row.newCyclePaymentMode === "per_order"
+            ? row.newCyclePaymentMode
+            : null,
+        newCycleDefaults: parseNewCycleDefaults(row.newCycleDefaults),
         memberNamePrompt: isNamePromptMode(row.memberNamePrompt) ? row.memberNamePrompt : DEFAULT_NAME_PROMPT,
         groupInfo: row.groupInfo ?? null,
         savedAt: row.updatedAt,
@@ -115,6 +134,9 @@ export function resolvePaymentSettings(
         onlinePaymentsEnabled: true,
         familiesEnabled: false,
         cardCyclesEnabled: true,
+        cardSettlesWallet: false,
+        newCycleMode: null,
+        newCycleDefaults: {},
         memberNamePrompt: DEFAULT_NAME_PROMPT,
         groupInfo: null,
         savedAt: null,

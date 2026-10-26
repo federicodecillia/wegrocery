@@ -9,8 +9,9 @@
 const SYSTEM_CHARGE_TYPES = new Set(["order_charge", "shipping_charge", "handling_charge"]);
 
 // A merge moves a balance as a pair of rows pointing at each other
-// (drizzle/0027_member_merge.sql): editing one would break the pair.
-const NOT_EDITABLE_TYPES = new Set([...SYSTEM_CHARGE_TYPES, "member_merge"]);
+// (drizzle/0027_member_merge.sql), and so does wallet credit moved onto a
+// card cycle (drizzle/0042_card_settles_wallet.sql): editing one would break the pair.
+const NOT_EDITABLE_TYPES = new Set([...SYSTEM_CHARGE_TYPES, "member_merge", "wallet_transfer"]);
 
 export function isAdminEditableLedgerType(type: string): boolean {
   return !NOT_EDITABLE_TYPES.has(type);

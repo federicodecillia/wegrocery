@@ -15,12 +15,12 @@ export function cycleLeftoverCentsSql(member: SQL, cycle: SQL): SQL {
                 WHERE r2.member_id = ${member} AND r2.cycle_id = ${cycle} AND r2.status = 'requested'), 0))`;
 }
 
-// What the member's card payments on the cycle can still give back: paid,
-// minus refunded, minus asked for. A payment whose refund failed is left out:
+// What the member's card payments on the cycle can still give back: paid
+// (without the wallet debt a payment paid), minus refunded, minus asked for. A payment whose refund failed is left out:
 // that money goes back by bank transfer from Cassa, never to the card again.
 export function cardRefundableCentsSql(member: SQL, cycle: SQL): SQL {
   return sql`coalesce((
-    SELECT sum(p2.amount_cents - p2.refunded_cents - coalesce((
+    SELECT sum(p2.amount_cents - p2.balance_cents - p2.refunded_cents - coalesce((
       SELECT sum(r3.amount_cents) FROM refunds r3 WHERE r3.payment_id = p2.payment_id AND r3.status = 'requested'), 0))
     FROM payments p2
     WHERE p2.cycle_id = ${cycle} AND p2.member_id = ${member} AND p2.kind = 'order'

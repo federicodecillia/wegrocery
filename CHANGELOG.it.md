@@ -23,6 +23,21 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
+## [1.38.0] - 26 ottobre 2026
+
+*I nuovi cicli possono partire con la carta, con le spese giuste già proposte, e il saldo del borsellino può entrare nel pagamento con carta.*
+
+### Aggiunte
+- 💳 **Il saldo del borsellino entra nel pagamento con carta.** Con l'impostazione accesa, chi paga con carta un ciclo con carta paga anche il suo saldo negativo; se ha credito, il credito si scala (e se basta non paga nulla con carta). Prima di pagare il socio vede le voci separate, e in Storico e in Cassa ordine e saldo restano movimenti distinti. Si accende in Impostazioni, "Saldo del borsellino nei pagamenti con carta".
+- [tecnico] 🗄️ **Migrazione `0042_card_settles_wallet.sql`.** Aggiunge `app_settings.card_settles_wallet` (spento di default), `payments.balance_cents` e il tipo di movimento `wallet_transfer` (coppia legata da `counterpart`); tre controlli notturni nuovi: `order_payment_split`, `order_refund_cap`, `wallet_transfer_pairs`. Da applicare prima del deploy, rollback in `0042_card_settles_wallet_down.sql`.
+- 🧾 **I nuovi cicli possono partire con la carta.** In Impostazioni, "Nuovi cicli", scegli tra solo borsellino, borsellino con carta su richiesta, o carta con borsellino su richiesta. Si cambia anche con cicli aperti: quelli già creati restano come sono.
+- 🚚 **Spese proposte per ogni modalità.** Sempre in "Nuovi cicli" imposti spedizione e spesa di preparazione per i cicli col borsellino e per quelli con carta (per esempio 0 € e 2%): "Nuovo ciclo" le propone già compilate.
+- 🗂️ **Impostazioni dei pagamenti più ordinate.** Le opzioni sono divise in Nuovi cicli, Carta (Stripe), Bonifico, Borsellino e Avanzate, ognuna col suo Salva.
+- [tecnico] 🗄️ **Migrazione `0043_new_cycle_defaults.sql`.** Aggiunge `app_settings.new_cycle_payment_mode` e `app_settings.new_cycle_defaults` (jsonb), entrambe vuote di default (comportamento di prima). Da applicare prima del deploy, rollback in `0043_new_cycle_defaults_down.sql`.
+
+### Modificato
+- 🗂️ **In Cassa i movimenti di un ordine stanno insieme.** Nei movimenti di un socio, addebito, spedizione, rettifiche e rimborsi dello stesso ciclo diventano una sola riga con il totale netto; un tocco la apre e li mostra uno per uno.
+
 ## [1.37.0] - 24 ottobre 2026
 
 *Nomi veri per tutti i soci, e prezzi al kg affidabili quando si importa un listino.*

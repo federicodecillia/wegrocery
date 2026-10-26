@@ -9,7 +9,7 @@ import { brand } from "@/lib/brand";
 import { getBrand } from "@/lib/brand/get-brand";
 import { getDb } from "@/lib/db/client";
 import { getCycleProducts, getMemberById, getMemberPendingOrderTotals, getOpenCycles } from "@/lib/db/queries";
-import { auditLog, orderDrafts, payments } from "@/lib/db/schema";
+import { auditLog, orderCycles, orderDrafts, payments } from "@/lib/db/schema";
 import { t } from "@/lib/i18n";
 import { formatMoney } from "@/lib/i18n/format";
 import { membershipAllowsOrder } from "@/lib/membership/order-check";
@@ -17,7 +17,7 @@ import { raisesOrderTotal } from "@/lib/membership/policy";
 import { isMembershipCheckEnabled } from "@/lib/membership/wallyfor";
 import { reportError } from "@/lib/observability";
 import { normalizeDraftLines } from "@/lib/order-draft";
-import { getConsolidatedBalanceCents } from "@/lib/payments/balance-due";
+import { getConsolidatedBalanceCents, getWalletOffset } from "@/lib/payments/balance-due";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
 import { expireOpenCheckouts } from "@/lib/payments/order-checkout";
 import { cancelOrderWrite, confirmOrderWithoutPayment, getCycleCoverageCents } from "@/lib/payments/order-confirm";
@@ -112,7 +112,14 @@ export async function startOrderPayment(
       return refuse("in_progress", t.order.pay.inProgress);
     }
     const covered = await getCycleCoverageCents(db, memberId, cycleId);
+    // With the group's switch on, the payment also settles the wallet: it
+    // pays the debt, or uses the credit first.
+    const wallet = await getWalletOffset(db, memberId, {
+      enabled: settings.cardSettlesWallet,
+      paysOffline: member.paysOffline,
+    });
     const amount = orderPaymentAmount({
+      wallet,
       productsCents,
       shipping: {
         mode: cycle.shippingMode,
@@ -130,8 +137,10 @@ export async function startOrderPayment(
       const written = await confirmOrderWithoutPayment(db, {
         memberId,
         cycleId,
+        cycleTitle: cycle.title,
         lines: priced,
         expectedCoveredCents: covered,
+        walletCreditCents: amount.walletCreditCents,
       });
       if (written === "changed") return refuse("changed", t.order.pay.changed);
       await writeAudit(email, "confirmMyOrder", cycleId, { lineCount: priced.length, amount });
@@ -143,9 +152,13 @@ export async function startOrderPayment(
     // Something to pay: Stripe Checkout, unless an amount due from earlier
     // cycles is still open (the draft can still change, reduce or cancel).
     // In a wallet group a negative balance is a wallet debt, topped up as
-    // usual: it does not stop a card cycle.
+    // usual: it does not stop a card cycle. With the wallet in card payments
+    // the debt is part of this payment instead.
     if (!stripe) return refuse("unavailable", t.order.pay.unavailable);
-    const dueCents = settings.mode === "per_order" ? -(await getConsolidatedBalanceCents(db, memberId)) : 0;
+    const dueCents =
+      settings.mode === "per_order" && !settings.cardSettlesWallet
+        ? -(await getConsolidatedBalanceCents(db, memberId))
+        : 0;
     if (dueCents >= SETTLEMENT_MIN_DUE_CENTS) {
       return refuse("balance_due", t.order.pay.balanceDue(formatMoney(dueCents / 100)));
     }
@@ -168,6 +181,7 @@ export async function startOrderPayment(
       provider: "stripe",
       status: "pending",
       amountCents: amount.chargeCents,
+      balanceCents: amount.balanceCents,
       currency,
       createdAt: now,
       updatedAt: now,
@@ -178,7 +192,15 @@ export async function startOrderPayment(
 
     try {
       const origin = await requestOrigin();
-      const metadata = { paymentId, memberId, cycleId, kind: "order" };
+      // The wallet parts too, so the Stripe dashboard tells them apart.
+      const metadata = {
+        paymentId,
+        memberId,
+        cycleId,
+        kind: "order",
+        ...(amount.balanceCents > 0 ? { balanceCents: String(amount.balanceCents) } : {}),
+        ...(amount.walletCreditCents > 0 ? { walletCreditCents: String(amount.walletCreditCents) } : {}),
+      };
       const back = `${origin}/ordine?cycleId=${encodeURIComponent(cycleId)}`;
       const checkout = await stripe.checkout.sessions.create(
         {
@@ -192,6 +214,8 @@ export async function startOrderPayment(
             shipping: t.order.pay.shipping,
             fee: t.order.pay.fee,
             supplement: t.order.pay.supplement(cycle.title),
+            afterCredit: t.order.pay.lineAfterCredit(cycle.title, formatMoney(amount.walletCreditCents / 100)),
+            balance: t.order.pay.lineBalance,
           }).map((item) => ({
             quantity: 1,
             price_data: { currency, unit_amount: item.amountCents, product_data: { name: item.name } },
@@ -246,7 +270,12 @@ async function cancelOrderOf(memberId: string, email: string, cycleId: string): 
   if (stripe && (await expireOpenCheckouts(db, stripe, memberId, cycleId)) === "paid") {
     return refuse("in_progress", t.order.pay.inProgress);
   }
-  const written = await cancelOrderWrite(db, memberId, cycleId);
+  const [cycle] = await db
+    .select({ title: orderCycles.title })
+    .from(orderCycles)
+    .where(eq(orderCycles.cycleId, cycleId))
+    .limit(1);
+  const written = await cancelOrderWrite(db, memberId, cycleId, cycle?.title ?? "");
   if (written.status === "cycle_not_open") return refuse("cycle_not_open", t.errors.cycleNotOpen);
   await writeAudit(email, "cancelMyOrder", cycleId, { refunds: written.refundIds });
   for (const refundId of written.refundIds) {

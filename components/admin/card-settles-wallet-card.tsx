@@ -3,19 +3,19 @@
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "@/components/ui/toast";
-import { adminSetCardCyclesEnabled } from "@/lib/actions/admin-settings";
+import { adminSetCardSettlesWallet } from "@/lib/actions/admin-settings";
 import { t } from "@/lib/i18n";
 
-// Impostazioni: whether a wallet group may create single cycles paid by card
-// (lib/payments/cycle-mode.ts). Shown only where card cycles are possible.
-export function CardCyclesCard({ enabled }: { enabled: boolean }) {
-  const s = t.admin.settings.cardCycles;
+// Impostazioni: whether a card payment also settles the wallet (pays the debt,
+// uses the credit first). Shown only where card cycles are possible.
+export function CardSettlesWalletCard({ enabled }: { enabled: boolean }) {
+  const s = t.admin.settings.cardSettlesWallet;
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
   function handleToggle() {
     startTransition(async () => {
-      const result = await adminSetCardCyclesEnabled(!enabled);
+      const result = await adminSetCardSettlesWallet(!enabled);
       if (result.error) {
         toast.error(result.error);
         return;
@@ -26,7 +26,7 @@ export function CardCyclesCard({ enabled }: { enabled: boolean }) {
   }
 
   return (
-    <section id="cicli-carta" className="rounded-xl border border-border bg-card p-4">
+    <section id="saldo-carta" className="rounded-xl border border-border bg-card p-4">
       <h3 className="text-[13px] font-bold text-foreground">
         {s.title}: {enabled ? s.on : s.off}
       </h3>

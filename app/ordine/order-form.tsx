@@ -16,7 +16,7 @@ import type { OrderState, SaveOrderLine, SaveOrderResult } from "@/lib/actions/o
 import { discardOrderDraft, loadLastOrderForPrefill, saveOrderDraft } from "@/lib/actions/order";
 import type { OrderPaymentResult } from "@/lib/actions/order-payment";
 import { draftSyncAction, orderLinesKey, type ResumedDraft } from "@/lib/order-draft";
-import { handlingFeeCents, orderPaymentAmount, type HandlingFee } from "@/lib/payments/order-payment";
+import { handlingFeeCents, orderPaymentAmount, type HandlingFee, type WalletOffset } from "@/lib/payments/order-payment";
 import { OrderSentDialog } from "./order-sent-dialog";
 import { OrderSummary, type ConfirmedLine } from "./order-summary";
 import { OrderTotals } from "./order-totals";
@@ -76,6 +76,8 @@ export type PayPerOrder = {
   shipping: { mode: string; fixedCents: number | null };
   // What the member's payments for this cycle already cover.
   coveredCents: number;
+  // The wallet debt or credit the next payment counts (app_settings.card_settles_wallet).
+  wallet?: WalletOffset;
   payAction: (cycleId: string, lines: SaveOrderLine[]) => Promise<OrderPaymentResult>;
   cancelAction: (cycleId: string) => Promise<OrderPaymentResult>;
 };
@@ -263,6 +265,7 @@ export function OrderForm({
         shipping: payPerOrder.shipping,
         fee: payPerOrder.fee,
         coveredCents: payPerOrder.coveredCents,
+        wallet: payPerOrder.wallet,
       })
     : null;
   const hasOrder = orderTotal > 0;
@@ -571,6 +574,7 @@ export function OrderForm({
                     shipping: payPerOrder.shipping,
                     fee: payPerOrder.fee,
                     coveredCents: payPerOrder.coveredCents,
+                    wallet: payPerOrder.wallet,
                   }),
                 }
               : undefined
