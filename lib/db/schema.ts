@@ -275,6 +275,9 @@ export const payments = pgTable(
     kind: text("kind").notNull().default("topup"),
     cycleId: text("cycle_id").references(() => orderCycles.cycleId),
     orderSnapshot: jsonb("order_snapshot").$type<OrderSnapshot>(),
+    // On an order payment: the part that paid the wallet debt, booked as
+    // balance_payment rows outside the cycle (drizzle/0042_card_settles_wallet.sql).
+    balanceCents: integer("balance_cents").notNull().default(0),
   },
   (table) => [
     index("payments_member_id_idx").on(table.memberId),
@@ -283,6 +286,10 @@ export const payments = pgTable(
     check(
       "payments_order_complete_check",
       sql`${table.kind} <> 'order' OR (${table.cycleId} IS NOT NULL AND ${table.orderSnapshot} IS NOT NULL)`,
+    ),
+    check(
+      "payments_balance_cents_check",
+      sql`${table.balanceCents} >= 0 AND (${table.balanceCents} = 0 OR (${table.kind} = 'order' AND ${table.balanceCents} < ${table.amountCents}))`,
     ),
   ],
 );
@@ -416,6 +423,9 @@ export const appSettings = pgTable(
     familiesEnabled: boolean("families_enabled").notNull().default(false),
     // Carta offered in "Nuovo ciclo" of a wallet group (drizzle/0038_card_cycles_switch.sql).
     cardCyclesEnabled: boolean("card_cycles_enabled").notNull().default(true),
+    // A card payment for a pay-per-order cycle also settles the wallet: it
+    // pays the debt, or uses the credit first (drizzle/0042_card_settles_wallet.sql).
+    cardSettlesWallet: boolean("card_settles_wallet").notNull().default(false),
     // Ask members whose name is the start of their address for a real one:
     // 'off' | 'optional' | 'required' (drizzle/0041_member_name_prompt.sql).
     memberNamePrompt: text("member_name_prompt").notNull().default("optional"),
@@ -488,7 +498,9 @@ export const ledgerEntries = pgTable(
     reverses: text("reverses"),
     replaces: text("replaces"),
     // On a 'member_merge' row: the opposite row on the other member
-    // (drizzle/0027_member_merge.sql).
+    // (drizzle/0027_member_merge.sql). On a 'wallet_transfer' row: the
+    // opposite row of the same member, one outside any cycle and one on a
+    // card cycle (drizzle/0042_card_settles_wallet.sql).
     counterpart: text("counterpart"),
   },
   (table) => [
@@ -506,7 +518,10 @@ export const ledgerEntries = pgTable(
         sql`${table.type} IN ('order_charge', 'shipping_charge', 'handling_charge') AND ${table.reversedBy} IS NULL`,
       ),
     uniqueIndex("ledger_entries_counterpart_uniq").on(table.counterpart).where(sql`${table.counterpart} IS NOT NULL`),
-    check("ledger_entries_counterpart_check", sql`(${table.type} = 'member_merge') = (${table.counterpart} IS NOT NULL)`),
+    check(
+      "ledger_entries_counterpart_check",
+      sql`(${table.type} IN ('member_merge', 'wallet_transfer')) = (${table.counterpart} IS NOT NULL)`,
+    ),
     uniqueIndex("ledger_entries_reverses_uniq").on(table.reverses).where(sql`${table.reverses} IS NOT NULL`),
     check("ledger_entries_reversal_check", sql`(${table.type} = 'reversal') = (${table.reverses} IS NOT NULL)`),
     // A payment is credited at most once (drizzle/0016_stripe_payments.sql).

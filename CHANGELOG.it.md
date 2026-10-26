@@ -25,6 +25,10 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ## [Non rilasciato]
 
+### Aggiunte
+- 💳 **Il saldo del borsellino entra nel pagamento con carta.** Con l'impostazione accesa, chi paga con carta un ciclo con carta paga anche il suo saldo negativo; se ha credito, il credito si scala (e se basta non paga nulla con carta). Prima di pagare il socio vede le voci separate, e in Storico e in Cassa ordine e saldo restano movimenti distinti. Si accende in Impostazioni, "Saldo del borsellino nei pagamenti con carta".
+- [tecnico] 🗄️ **Migrazione `0042_card_settles_wallet.sql`.** Aggiunge `app_settings.card_settles_wallet` (spento di default), `payments.balance_cents` e il tipo di movimento `wallet_transfer` (coppia legata da `counterpart`); tre controlli notturni nuovi: `order_payment_split`, `order_refund_cap`, `wallet_transfer_pairs`. Da applicare prima del deploy, rollback in `0042_card_settles_wallet_down.sql`.
+
 ### Modificato
 - 🗂️ **In Cassa i movimenti di un ordine stanno insieme.** Nei movimenti di un socio, addebito, spedizione, rettifiche e rimborsi dello stesso ciclo diventano una sola riga con il totale netto; un tocco la apre e li mostra uno per uno.
 

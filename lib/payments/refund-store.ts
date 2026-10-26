@@ -69,10 +69,20 @@ async function findRefund(db: Db, input: StripeRefundInput): Promise<RefundRow |
 async function findPayment(
   db: Db,
   paymentIntentId: string,
-): Promise<{ payment_id: string; member_id: string; cycle_id: string | null } | null> {
-  const { rows } = await db.execute<{ payment_id: string; member_id: string; cycle_id: string | null }>(
-    sql`SELECT payment_id, member_id, cycle_id FROM payments WHERE payment_intent_id = ${paymentIntentId}`,
-  );
+): Promise<{ payment_id: string; member_id: string; cycle_id: string | null; balance_cents: number; order_left: number } | null> {
+  const { rows } = await db.execute<{
+    payment_id: string;
+    member_id: string;
+    cycle_id: string | null;
+    balance_cents: number;
+    order_left: number;
+  }>(sql`
+    SELECT p.payment_id, p.member_id, p.cycle_id, p.balance_cents,
+      (p.amount_cents - p.balance_cents - coalesce((
+        SELECT sum(r.amount_cents) FROM refunds r
+        WHERE r.payment_id = p.payment_id AND r.cycle_id IS NOT NULL
+          AND r.status IN ('requested', 'pending', 'succeeded')), 0))::integer AS order_left
+    FROM payments p WHERE p.payment_intent_id = ${paymentIntentId}`);
   return rows[0] ?? null;
 }
 
@@ -254,8 +264,10 @@ export async function upsertStripeRefund(input: StripeRefundInput): Promise<void
         refund_id: `ref_${input.stripeRefundId}`,
         payment_id: payment.payment_id,
         member_id: payment.member_id,
-        // An order payment's refund belongs to its cycle (order_refund).
-        cycle_id: payment.cycle_id,
+        // An order payment's refund belongs to its cycle (order_refund),
+        // unless it goes beyond the order part of a payment that also paid a
+        // wallet debt: then it comes off the wallet, outside the cycle.
+        cycle_id: payment.balance_cents > 0 && input.amountCents > payment.order_left ? null : payment.cycle_id,
         status: "requested",
         reason: "dashboard",
       };

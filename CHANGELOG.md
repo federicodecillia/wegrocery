@@ -24,6 +24,10 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ## [Unreleased]
 
+### Added
+- 💳 **The wallet balance goes into the card payment.** With the setting on, a member paying a card cycle by card also pays their negative balance; with a credit, the credit is taken off (and if it is enough, nothing is paid by card). Before paying the member sees the separate lines, and History and Treasury keep the order and the balance as separate movements. Switch it on in Settings, "Wallet balance in card payments".
+- [tech] 🗄️ **Migration `0042_card_settles_wallet.sql`.** Adds `app_settings.card_settles_wallet` (off by default), `payments.balance_cents` and the `wallet_transfer` movement type (a pair linked by `counterpart`); three new nightly checks: `order_payment_split`, `order_refund_cap`, `wallet_transfer_pairs`. Apply it before deploying, rollback in `0042_card_settles_wallet_down.sql`.
+
 ### Changed
 - 🗂️ **In Treasury, an order's movements stay together.** In a member's movements, the charge, shipping, corrections and refunds of the same cycle fold into one row with their net total; tap it to see them one by one.
 

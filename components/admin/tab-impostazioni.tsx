@@ -9,6 +9,7 @@ import { getConfigStatus } from "@/lib/config-status-server";
 import { getBrand, getGroupIdentity } from "@/lib/brand/get-brand";
 import { IdentityForm } from "./identity-form";
 import { CardCyclesCard } from "./card-cycles-card";
+import { CardSettlesWalletCard } from "./card-settles-wallet-card";
 import { ConfigStatusCard } from "./config-status-card";
 import { FamiliesCard } from "./families-card";
 import { NamePromptCard } from "./name-prompt-card";
@@ -51,6 +52,9 @@ export async function PaymentSettingsSection() {
         cardCycles={cardCyclesSelectable(cardContext)}
       />
       {cardCyclesAvailable(cardContext) && <CardCyclesCard enabled={settings.cardCyclesEnabled} />}
+      {(settings.mode === "per_order" || cardCyclesAvailable(cardContext)) && (
+        <CardSettlesWalletCard enabled={settings.cardSettlesWallet} />
+      )}
       <PaymentSettingsForm
         // A save remounts the form with the values as stored (IBAN compacted).
         key={savedAt ?? "defaults"}

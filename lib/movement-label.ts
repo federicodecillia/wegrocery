@@ -5,7 +5,7 @@ import type { Strings } from "@/lib/i18n";
 
 type MovementLabels = Strings["history"];
 
-// Every `ledger_entries.type` the database can hold (migrations 0000-0027):
+// Every `ledger_entries.type` the database can hold (migrations 0000-0042):
 // the types the app writes plus the legacy `adjustment`. A new one is added
 // here, in `movementKind` and in the Cassa badges (`lib/ledger-badge.ts`).
 export const LEDGER_TYPES = [
@@ -24,6 +24,7 @@ export const LEDGER_TYPES = [
   "order_refund",
   "balance_payment",
   "member_merge",
+  "wallet_transfer",
 ] as const;
 
 export type LedgerMovement = {
@@ -48,6 +49,7 @@ export type MovementKind =
   | "order_refund"
   | "balance_payment"
   | "member_merge"
+  | "wallet_transfer"
   | "reversal"
   | "adjustment"
   | "payout"
@@ -85,6 +87,10 @@ export function movementKind(entry: LedgerMovement): MovementKind {
       // The balance of a duplicate account moved onto the one that stays
       // (lib/members/merge-store.ts): out on one, in on the other.
       return "member_merge";
+    case "wallet_transfer":
+      // Wallet credit used for a card cycle's order, or given back
+      // (lib/payments/wallet-transfer.ts): out on one side, in on the other.
+      return "wallet_transfer";
     case "adjustment":
       // Legacy type of unknown intent (opening balances included): neutral.
       return "adjustment";
@@ -115,6 +121,7 @@ export function movementKindLabel(kind: MovementKind, labels: MovementLabels): s
     order_refund: labels.orderRefund,
     balance_payment: labels.balancePayment,
     member_merge: labels.memberMerge,
+    wallet_transfer: labels.walletTransfer,
     reversal: labels.reversal,
     adjustment: labels.correction,
     payout: labels.payout,

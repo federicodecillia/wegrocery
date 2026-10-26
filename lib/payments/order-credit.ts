@@ -4,8 +4,10 @@ import { t } from "@/lib/i18n";
 import { formatMoney } from "@/lib/i18n/format";
 import { reportError } from "@/lib/observability";
 import { sameOrderLines } from "@/lib/order-draft";
+import { balanceDueParts, walletCreditAvailableCentsSql, type BalancePart } from "./balance-due";
 import { audit, genId, notifyMember, type Db } from "./effects";
 import type { OrderSnapshot } from "./order-payment";
+import { walletTransferSql } from "./wallet-transfer";
 import { sendRequestedRefund, type RefundApi } from "./refund-request";
 import { getStripe } from "./stripe";
 
@@ -39,12 +41,62 @@ function isGuardError(e: unknown): boolean {
   return e instanceof Error && /22012|division by zero/i.test(e.message);
 }
 
+// The payment's ledger rows, from the guarded update of its row: the order
+// part (amount minus the wallet debt it paid) as order_payment on the cycle,
+// the debt as one balance_payment per part (balanceDueParts, worked out when
+// the money lands). Its CTE `upd` is the updated payment.
+function creditSql(a: OrderCreditAction, fromStatuses: string[], parts: BalancePart[], tail?: ReturnType<typeof sql>) {
+  return sql`
+    WITH upd AS (
+      UPDATE payments
+      SET status = 'succeeded',
+          checkout_session_id = ${a.sessionId},
+          payment_intent_id = coalesce(${a.paymentIntentId}, payment_intent_id),
+          updated_at = now()
+      WHERE payment_id = ${a.paymentId} AND status IN (${sql.join(fromStatuses.map((st) => sql`${st}`), sql`, `)})
+      RETURNING payment_id, member_id, amount_cents, balance_cents
+    ),
+    ord AS (
+      INSERT INTO ledger_entries
+        (entry_id, member_id, entry_date, type, amount, cycle_id, note, created_by, created_at, payment_id)
+      SELECT ${genId("led")}, member_id, now(), 'order_payment', (amount_cents - balance_cents)::numeric / 100,
+             ${a.cycleId}, ${t.ledger.orderPayment}, 'stripe', now(), payment_id
+      FROM upd
+      RETURNING payment_id
+    ),
+    bal AS (
+      INSERT INTO ledger_entries
+        (entry_id, member_id, entry_date, type, amount, cycle_id, note, created_by, created_at, payment_id)
+      SELECT 'led_' || substr(replace(gen_random_uuid()::text, '-', ''), 1, 12), upd.member_id, now(),
+             'balance_payment', p.cents::numeric / 100, p."cycleId", ${t.ledger.balancePayment}, 'stripe', now(),
+             upd.payment_id
+      FROM upd, jsonb_to_recordset(${JSON.stringify(parts)}::jsonb) AS p("cycleId" text, cents integer)
+      WHERE upd.balance_cents > 0
+      RETURNING payment_id
+    )
+    ${tail ?? sql`SELECT count(*) FROM ord`}`;
+}
+
+async function cycleTitle(db: Db, cycleId: string): Promise<string> {
+  const { rows } = await db.execute<{ title: string }>(sql`SELECT title FROM order_cycles WHERE cycle_id = ${cycleId}`);
+  return rows[0]?.title ?? "";
+}
+
+// The wallet debt a payment paid, split as the debts are now.
+async function debtParts(db: Db, payment: PaymentRow): Promise<BalancePart[]> {
+  return payment.balance_cents > 0 ? balanceDueParts(db, payment.member_id, payment.balance_cents) : [];
+}
+
 // The payment becomes the member's order: ONE transaction (db.batch) that
 // locks the cycle like saveOrder and the close do, checks that the payment is
 // the pending one the app created and that the cycle can still take the
 // order, replaces the member's lines with the paid snapshot, and credits the
-// payment on the cycle. A guard that fails rolls everything back (22012).
-async function creditBatch(db: Db, a: OrderCreditAction): Promise<boolean> {
+// payment: its order part on the cycle, the wallet debt it paid as
+// balance_payment rows (`parts`), and moves the wallet credit the snapshot
+// counted on, as far as the wallet still holds it (what is missing stays to
+// pay on the cycle, for the settlement). A guard that fails rolls everything
+// back (22012).
+async function creditBatch(db: Db, a: OrderCreditAction, payment: PaymentRow, parts: BalancePart[]): Promise<boolean> {
   const lock = db.execute(sql`SELECT 1 FROM order_cycles WHERE cycle_id = ${a.cycleId} FOR UPDATE`);
   const guard = db.execute(sql`
     SELECT 1 / (CASE WHEN
@@ -78,24 +130,20 @@ async function creditBatch(db: Db, a: OrderCreditAction): Promise<boolean> {
     FROM payments p, ${snapshotLines}
     WHERE p.payment_id = ${a.paymentId} AND l.quantity > 0
   `);
-  const credit = db.execute(sql`
-    WITH upd AS (
-      UPDATE payments
-      SET status = 'succeeded',
-          checkout_session_id = ${a.sessionId},
-          payment_intent_id = coalesce(${a.paymentIntentId}, payment_intent_id),
-          updated_at = now()
-      WHERE payment_id = ${a.paymentId} AND status = 'pending'
-      RETURNING payment_id, member_id, amount_cents
-    )
-    INSERT INTO ledger_entries
-      (entry_id, member_id, entry_date, type, amount, cycle_id, note, created_by, created_at, payment_id)
-    SELECT ${genId("led")}, member_id, now(), 'order_payment', amount_cents::numeric / 100, ${a.cycleId},
-           ${t.ledger.orderPayment}, 'stripe', now(), payment_id
-    FROM upd
-  `);
+  const credit = db.execute(creditSql(a, ["pending"], parts));
+  const walletCredit = Math.max(0, payment.order_snapshot?.walletCreditCents ?? 0);
+  const transfer = db.execute(
+    walletTransferSql({
+      memberId: payment.member_id,
+      cycleId: a.cycleId,
+      cents: sql`least(${walletCredit}, ${walletCreditAvailableCentsSql(payment.member_id)})`,
+      direction: "to_cycle",
+      notes: { wallet: t.ledger.walletCreditOut(await cycleTitle(db, a.cycleId)), cycle: t.ledger.walletCreditIn },
+      createdBy: "stripe",
+    }),
+  );
   try {
-    await db.batch([lock, guard, deleteOrder, insertOrder, credit]);
+    await db.batch([lock, guard, deleteOrder, insertOrder, credit, transfer]);
     return true;
   } catch (e) {
     if (isGuardError(e)) return false;
@@ -109,6 +157,7 @@ type PaymentRow = {
   kind: string;
   cycle_id: string | null;
   amount_cents: number;
+  balance_cents: number;
   currency: string;
   checkout_session_id: string | null;
   order_snapshot: OrderSnapshot | null;
@@ -116,42 +165,33 @@ type PaymentRow = {
 
 async function readPayment(db: Db, paymentId: string): Promise<PaymentRow | null> {
   const { rows } = await db.execute<PaymentRow>(sql`
-    SELECT member_id, status, kind, cycle_id, amount_cents, currency, checkout_session_id, order_snapshot
+    SELECT member_id, status, kind, cycle_id, amount_cents, balance_cents, currency, checkout_session_id, order_snapshot
     FROM payments WHERE payment_id = ${paymentId}
   `);
   return rows[0] ?? null;
 }
 
 // The money arrived but the order cannot exist (the cycle closed, or a paid
-// product left it): ONE statement credits the payment on the cycle and asks
-// for its full refund, so the cycle's net for the member goes back to zero.
-async function creditLate(db: Db, a: OrderCreditAction): Promise<string | null> {
-  const { rows } = await db.execute<{ refund_id: string }>(sql`
-    WITH upd AS (
-      UPDATE payments
-      SET status = 'succeeded',
-          checkout_session_id = ${a.sessionId},
-          payment_intent_id = coalesce(${a.paymentIntentId}, payment_intent_id),
-          updated_at = now()
-      WHERE payment_id = ${a.paymentId} AND status IN ('pending', 'failed', 'expired')
-      RETURNING payment_id, member_id, amount_cents
-    ),
-    led AS (
-      INSERT INTO ledger_entries
-        (entry_id, member_id, entry_date, type, amount, cycle_id, note, created_by, created_at, payment_id)
-      SELECT ${genId("led")}, member_id, now(), 'order_payment', amount_cents::numeric / 100, ${a.cycleId},
-             ${t.ledger.orderPayment}, 'stripe', now(), payment_id
-      FROM upd
-    )
+// product left it): ONE statement credits the payment and asks for the full
+// refund of its order part, so the cycle's net for the member goes back to
+// zero. The wallet debt it paid stays paid; no wallet credit moves.
+async function creditLate(db: Db, a: OrderCreditAction, parts: BalancePart[]): Promise<string | null> {
+  const { rows } = await db.execute<{ refund_id: string }>(
+    creditSql(
+      a,
+      ["pending", "failed", "expired"],
+      parts,
+      sql`
     INSERT INTO refunds
       (refund_id, payment_id, member_id, cycle_id, amount_cents, status, reason, stripe_refund_id,
        created_by, created_at, updated_at)
-    SELECT 'late_' || payment_id, payment_id, member_id, ${a.cycleId}, amount_cents, 'requested',
+    SELECT 'late_' || payment_id, payment_id, member_id, ${a.cycleId}, amount_cents - balance_cents, 'requested',
            'late_payment', NULL, 'system', now(), now()
     FROM upd
     ON CONFLICT DO NOTHING
-    RETURNING refund_id
-  `);
+    RETURNING refund_id`,
+    ),
+  );
   return rows[0]?.refund_id ?? null;
 }
 
@@ -167,14 +207,19 @@ async function afterCredit(db: Db, a: OrderCreditAction, payment: PaymentRow): P
       sql`DELETE FROM order_drafts WHERE member_id = ${payment.member_id} AND cycle_id = ${a.cycleId}`,
     );
   }
-  await audit(db, "stripe_order_payment", a.paymentId, { cycleId: a.cycleId, amountCents: a.amountCents });
+  await audit(db, "stripe_order_payment", a.paymentId, {
+    cycleId: a.cycleId,
+    amountCents: a.amountCents,
+    balanceCents: payment.balance_cents,
+    walletCreditCents: payment.order_snapshot?.walletCreditCents ?? 0,
+  });
   const { rows: cycles } = await db.execute<{ title: string }>(
     sql`SELECT title FROM order_cycles WHERE cycle_id = ${a.cycleId}`,
   );
   const s = payment.order_snapshot;
   const amount = formatMoney(a.amountCents / 100);
   const title = cycles[0]?.title ?? "";
-  const body =
+  const main =
     s && typeof s.productsCents === "number"
       ? t.notificationsServer.orderPaidBody(
           title,
@@ -184,6 +229,14 @@ async function afterCredit(db: Db, a: OrderCreditAction, payment: PaymentRow): P
           formatMoney(s.feeCents / 100),
         )
       : t.notificationsServer.orderPaidShortBody(title, amount);
+  // The wallet in the payment: the debt it paid, the credit it used.
+  const wallet = [
+    payment.balance_cents > 0 ? t.notificationsServer.orderPaidBalanceNote(formatMoney(payment.balance_cents / 100)) : null,
+    (s?.walletCreditCents ?? 0) > 0
+      ? t.notificationsServer.orderPaidCreditNote(formatMoney((s?.walletCreditCents ?? 0) / 100))
+      : null,
+  ].filter(Boolean);
+  const body = [main, ...wallet].join(" ");
   await notifyMember(
     db,
     payment.member_id,
@@ -207,7 +260,7 @@ export async function applyOrderCredit(a: OrderCreditAction, stripeArg?: RefundA
     return;
   }
 
-  if (await creditBatch(db, a)) {
+  if (await creditBatch(db, a, before, await debtParts(db, before))) {
     try {
       await afterCredit(db, a, before);
     } catch (e) {
@@ -256,7 +309,7 @@ export async function applyOrderCredit(a: OrderCreditAction, stripeArg?: RefundA
     throw new Error(`order payment ${a.paymentId} could not be credited`);
   }
 
-  const refundId = await creditLate(db, a);
+  const refundId = await creditLate(db, a, await debtParts(db, row));
   if (!refundId) return; // a concurrent delivery took it
   await audit(db, "stripe_order_payment_late", a.paymentId, {
     cycleId: a.cycleId,

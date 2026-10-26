@@ -5,7 +5,7 @@ import { Sheet } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { t } from "@/lib/i18n";
 import { formatSignedMoney } from "@/lib/i18n/format";
-import { ORDER_PAYMENT_MIN_CENTS, type OrderAmount } from "@/lib/payments/order-payment";
+import { ORDER_PAYMENT_MIN_CENTS, raisedToMinimum, type OrderAmount } from "@/lib/payments/order-payment";
 import { formatEur } from "@/lib/utils";
 
 type Props = {
@@ -69,6 +69,8 @@ export function OrderTotals({ orderTotal, payAmount, afterBalance, walletFeeCent
             [t.order.pay.shipping, payAmount.shippingCents],
             [t.order.pay.fee, payAmount.feeCents],
             [t.order.pay.alreadyPaid, -payAmount.coveredCents],
+            [t.order.pay.walletCredit, -payAmount.walletCreditCents],
+            [t.order.pay.previousBalance, payAmount.balanceCents],
           ]
         : [
             [t.order.pay.products, Math.round(orderTotal * 100)],
@@ -93,9 +95,11 @@ export function OrderTotals({ orderTotal, payAmount, afterBalance, walletFeeCent
     </dl>
     <p className="mt-3 text-[13px] leading-[1.45] text-muted-foreground">
       {payAmount
-        ? payAmount.outcome === "pay" && payAmount.chargeCents > payAmount.requiredCents - payAmount.coveredCents
+        ? raisedToMinimum(payAmount)
           ? t.order.pay.minimumNote(formatEur(ORDER_PAYMENT_MIN_CENTS / 100))
-          : t.order.pay.feeHint
+          : payAmount.balanceCents > 0 || payAmount.walletCreditCents > 0
+            ? t.order.pay.walletHint
+            : t.order.pay.feeHint
         : t.order.feeEstimateHint}
     </p>
     </>

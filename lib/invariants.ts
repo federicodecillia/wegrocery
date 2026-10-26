@@ -201,6 +201,48 @@ export const INVARIANT_CHECKS: InvariantCheck[] = [
                       WHERE l.payment_id = p.payment_id AND l.type = 'balance_payment'), 0) <> p.amount_cents`,
   },
   {
+    name: "order_payment_split",
+    // drizzle/0042_card_settles_wallet.sql: an order payment that also paid a
+    // wallet debt credits its order part on the cycle and the debt as
+    // balance_payment rows, never on that cycle.
+    description: "an order payment credits its order part on its cycle and the wallet debt it paid outside it",
+    query: sql`
+      SELECT p.payment_id AS id FROM payments p
+      WHERE p.kind = 'order' AND p.status IN ('succeeded', 'partially_refunded', 'refunded')
+        AND (
+          coalesce((SELECT round(sum(l.amount) * 100) FROM ledger_entries l
+                    WHERE l.payment_id = p.payment_id AND l.type = 'order_payment' AND l.cycle_id = p.cycle_id), 0)
+            <> p.amount_cents - p.balance_cents
+          OR coalesce((SELECT round(sum(l.amount) * 100) FROM ledger_entries l
+                       WHERE l.payment_id = p.payment_id AND l.type = 'balance_payment'), 0) <> p.balance_cents
+          OR EXISTS (SELECT 1 FROM ledger_entries l
+                     WHERE l.payment_id = p.payment_id AND l.type = 'balance_payment' AND l.cycle_id = p.cycle_id)
+        )`,
+  },
+  {
+    name: "order_refund_cap",
+    description: "the refunds of an order payment on its cycle never go beyond its order part",
+    query: sql`
+      SELECT p.payment_id AS id FROM payments p
+      WHERE p.kind = 'order'
+        AND coalesce((SELECT sum(r.amount_cents) FROM refunds r
+                      WHERE r.payment_id = p.payment_id AND r.cycle_id IS NOT NULL
+                        AND r.status IN ('requested', 'pending', 'succeeded')), 0) > p.amount_cents - p.balance_cents`,
+  },
+  {
+    name: "wallet_transfer_pairs",
+    description: "wallet credit moved onto a card cycle (or back) is a pair of the same member summing to zero, one row on the cycle and one outside",
+    query: sql`
+      SELECT w.member_id || ':' || w.entry_id AS id FROM ledger_entries w
+      LEFT JOIN ledger_entries c ON c.entry_id = w.counterpart
+      WHERE w.type = 'wallet_transfer'
+        AND (c.entry_id IS NULL OR c.type <> 'wallet_transfer' OR c.counterpart IS DISTINCT FROM w.entry_id
+             OR c.amount <> -w.amount OR c.member_id <> w.member_id
+             OR (w.cycle_id IS NULL) = (c.cycle_id IS NULL)
+             OR NOT EXISTS (SELECT 1 FROM order_cycles oc
+                            WHERE oc.cycle_id = coalesce(w.cycle_id, c.cycle_id) AND oc.payment_mode = 'per_order'))`,
+  },
+  {
     name: "settled_cycle_credit",
     // A negative net is an amount due the member has not paid yet. Money the
     // card payments can still take back means a correction came after the

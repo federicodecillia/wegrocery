@@ -1,19 +1,22 @@
 import { sql, type SQL } from "drizzle-orm";
+import { t } from "@/lib/i18n";
+import { walletCreditAvailableCentsSql } from "./balance-due";
 import type { Db } from "./effects";
+import { cycleWalletCreditCentsSql, walletTransferSql } from "./wallet-transfer";
 
 // The database side of what a member does in pay-per-order: read what the
 // cycle's payments cover, confirm an order that needs no payment, cancel.
 // lib/actions/order-payment.ts does the checks and the Stripe calls around
 // these writes; lib/payments/order-payment.ts has the arithmetic.
 
-// Paid for the cycle and not given back, in cents: the cycle's payment and
-// refund ledger rows, minus the refunds asked for and not yet in the ledger
+// Paid for the cycle and not given back, in cents: the cycle's payment,
+// wallet credit and refund ledger rows, minus the refunds asked for and not yet in the ledger
 // (their money is on its way back and must not confirm a new order).
 function coverageSql(memberId: string, cycleId: string): SQL {
   return sql`(
     (SELECT coalesce(round(sum(amount) * 100), 0)::integer FROM ledger_entries
      WHERE member_id = ${memberId} AND cycle_id = ${cycleId}
-       AND type IN ('order_payment', 'balance_payment', 'order_refund', 'refund_failed'))
+       AND type IN ('order_payment', 'balance_payment', 'wallet_transfer', 'order_refund', 'refund_failed'))
     - (SELECT coalesce(sum(amount_cents), 0)::integer FROM refunds
        WHERE member_id = ${memberId} AND cycle_id = ${cycleId} AND status = 'requested')
   )`;
@@ -37,23 +40,44 @@ function isGuardError(e: unknown): boolean {
 
 export type ConfirmLine = { productId: string; quantity: number; unitPrice: string };
 
-// Replaces the member's order with `lines` when what they already paid covers
-// it. ONE transaction, like saveOrder: the cycle is row-locked and must still
-// be open, and the coverage must still be what the amount was computed from
-// (a refund asked for in the meantime would make the order unpaid).
+// Replaces the member's order with `lines` when what they already paid, plus
+// the wallet credit it uses (walletCreditCents, moved onto the cycle here),
+// covers it. ONE transaction, like saveOrder: the cycle is row-locked and must
+// still be open, the coverage must still be what the amount was computed from
+// (a refund asked for in the meantime would make the order unpaid), and the
+// wallet must still hold that credit.
 // "changed" = the guard fired and nothing was written: the caller recomputes.
 export async function confirmOrderWithoutPayment(
   db: Db,
-  input: { memberId: string; cycleId: string; lines: ConfirmLine[]; expectedCoveredCents: number },
+  input: {
+    memberId: string;
+    cycleId: string;
+    cycleTitle?: string;
+    lines: ConfirmLine[];
+    expectedCoveredCents: number;
+    walletCreditCents?: number;
+  },
 ): Promise<"confirmed" | "changed"> {
   const { memberId, cycleId } = input;
+  const credit = Math.max(0, input.walletCreditCents ?? 0);
   const lock = db.execute(sql`SELECT 1 FROM order_cycles WHERE cycle_id = ${cycleId} FOR UPDATE`);
   const guard = db.execute(sql`
     SELECT 1 / (CASE WHEN
       ${openPerOrderCycle(cycleId)}
       AND ${coverageSql(memberId, cycleId)} = ${input.expectedCoveredCents}
+      AND (${credit} = 0 OR ${walletCreditAvailableCentsSql(memberId)} >= ${credit})
     THEN 1 ELSE 0 END) AS confirm_guard
   `);
+  const transfer = db.execute(
+    walletTransferSql({
+      memberId,
+      cycleId,
+      cents: sql`${credit}`,
+      direction: "to_cycle",
+      notes: { wallet: t.ledger.walletCreditOut(input.cycleTitle ?? ""), cycle: t.ledger.walletCreditIn },
+      createdBy: "system",
+    }),
+  );
   const deleteOrder = db.execute(sql`DELETE FROM orders WHERE member_id = ${memberId} AND cycle_id = ${cycleId}`);
   const lines = input.lines.filter((l) => l.quantity > 0);
   const insertOrder = db.execute(sql`
@@ -66,7 +90,7 @@ export async function confirmOrderWithoutPayment(
   `);
   const deleteDraft = db.execute(sql`DELETE FROM order_drafts WHERE member_id = ${memberId} AND cycle_id = ${cycleId}`);
   try {
-    await db.batch([lock, guard, deleteOrder, insertOrder, deleteDraft]);
+    await db.batch([lock, guard, transfer, deleteOrder, insertOrder, deleteDraft]);
     return "confirmed";
   } catch (e) {
     if (isGuardError(e)) return "changed";
@@ -75,15 +99,17 @@ export async function confirmOrderWithoutPayment(
 }
 
 // Cancels the member's order on an open cycle: the lines and the draft go,
-// and every paid payment of the cycle gets a refund request for what is left
-// of it (paid, minus refunded, minus already requested), so cancelling twice
-// asks for nothing twice. The id counts the payment's cancel refunds
+// every paid payment of the cycle gets a refund request for what is left of
+// its order part (paid, minus the wallet debt it paid, minus refunded, minus
+// already requested), so cancelling twice asks for nothing twice, and the
+// wallet credit the order used goes back to the wallet. The id counts the payment's cancel refunds
 // (cancel_<paymentId>_<n>): one Stripe rejected, or one reversed after being
 // paid, can be asked for again. The cycle lock keeps the count stable. The caller then sends each request to Stripe (sendRequestedRefund).
 export async function cancelOrderWrite(
   db: Db,
   memberId: string,
   cycleId: string,
+  cycleTitle = "",
 ): Promise<{ status: "cancelled"; refundIds: string[] } | { status: "cycle_not_open" }> {
   const lock = db.execute(sql`SELECT 1 FROM order_cycles WHERE cycle_id = ${cycleId} FOR UPDATE`);
   const guard = db.execute(sql`
@@ -102,7 +128,7 @@ export async function cancelOrderWrite(
            'order_cancelled', NULL, 'system', now(), now()
     FROM payments p
     CROSS JOIN LATERAL (
-      SELECT p.amount_cents - p.refunded_cents - coalesce((
+      SELECT p.amount_cents - p.balance_cents - p.refunded_cents - coalesce((
         SELECT sum(r.amount_cents) FROM refunds r
         WHERE r.payment_id = p.payment_id AND r.status = 'requested'
       ), 0)::integer AS amount
@@ -113,8 +139,18 @@ export async function cancelOrderWrite(
     ON CONFLICT DO NOTHING
     RETURNING refund_id
   `);
+  const creditBack = db.execute(
+    walletTransferSql({
+      memberId,
+      cycleId,
+      cents: cycleWalletCreditCentsSql(memberId, cycleId),
+      direction: "to_wallet",
+      notes: { wallet: t.ledger.walletCreditBack(cycleTitle), cycle: t.ledger.walletCreditBackCycle },
+      createdBy: "system",
+    }),
+  );
   try {
-    const results = await db.batch([lock, guard, deleteOrder, deleteDraft, requestRefunds]);
+    const results = await db.batch([lock, guard, deleteOrder, deleteDraft, requestRefunds, creditBack]);
     const refundIds = results[4].rows.map((r) => r.refund_id).sort();
     return { status: "cancelled", refundIds };
   } catch (e) {

@@ -58,18 +58,45 @@ export type OrderAmount = {
   requiredCents: number;
   // What the member has already paid for this cycle and not got back.
   coveredCents: number;
-  // What Stripe charges now; 0 = nothing to pay.
+  // What Stripe charges now; 0 = nothing to pay. The order's part plus
+  // balanceCents.
   chargeCents: number;
+  // With the wallet in card payments (app_settings.card_settles_wallet): the
+  // wallet debt this payment pays too, and the wallet credit it uses for the
+  // order. 0 without the switch, and never both.
+  balanceCents: number;
+  walletCreditCents: number;
   outcome: "confirm" | "pay" | "too_high";
 };
+
+// The member's wallet as a card payment counts it: the debt (a negative
+// balance, all of it) or the credit they can spend (the balance minus their
+// wallet orders not charged yet). Both 0 when the group's switch is off.
+export type WalletOffset = { debtCents: number; creditCents: number };
+
+export const NO_WALLET_OFFSET: WalletOffset = { debtCents: 0, creditCents: 0 };
+
+// The offset from the wallet balance and the member's wallet orders on other
+// open cycles, in cents; nothing when the switch is off.
+export function walletOffset(input: {
+  enabled: boolean;
+  balanceCents: number;
+  pendingWalletOrdersCents: number;
+}): WalletOffset {
+  if (!input.enabled) return NO_WALLET_OFFSET;
+  if (input.balanceCents < 0) return { debtCents: -input.balanceCents, creditCents: 0 };
+  return { debtCents: 0, creditCents: Math.max(0, input.balanceCents - Math.max(0, input.pendingWalletOrdersCents)) };
+}
 
 export function orderPaymentAmount(input: {
   productsCents: number;
   shipping: { mode: string; fixedCents: number | null };
   fee: HandlingFee;
   coveredCents: number;
+  wallet?: WalletOffset;
 }): OrderAmount {
   const { productsCents, shipping, fee } = input;
+  const wallet = input.wallet ?? NO_WALLET_OFFSET;
   const hasProducts = productsCents > 0;
   // Proportional (and manual) shipping is only known at the close: the member
   // pays it at settlement.
@@ -77,24 +104,52 @@ export function orderPaymentAmount(input: {
   const feeCents = handlingFeeCents(productsCents, fee);
   const requiredCents = productsCents + shippingCents + feeCents;
   const coveredCents = Math.max(0, input.coveredCents);
+  const base = { productsCents, shippingCents, feeCents, requiredCents, coveredCents };
   const due = requiredCents - coveredCents;
   if (due <= 0) {
-    return { productsCents, shippingCents, feeCents, requiredCents, coveredCents, chargeCents: 0, outcome: "confirm" };
+    return { ...base, chargeCents: 0, balanceCents: 0, walletCreditCents: 0, outcome: "confirm" };
   }
-  const chargeCents = Math.max(due, ORDER_PAYMENT_MIN_CENTS);
+  // The credit goes first; a debt rides along with any payment.
+  let creditCents = Math.min(Math.max(0, wallet.creditCents), due);
+  const balanceCents = creditCents > 0 ? 0 : Math.max(0, wallet.debtCents);
+  let orderCents = due - creditCents;
+  if (orderCents === 0) {
+    return { ...base, chargeCents: 0, balanceCents: 0, walletCreditCents: creditCents, outcome: "confirm" };
+  }
+  // Below Stripe's minimum: use less credit, then charge the order more.
+  const short = ORDER_PAYMENT_MIN_CENTS - (orderCents + balanceCents);
+  if (short > 0) {
+    const fromCredit = Math.min(short, creditCents);
+    creditCents -= fromCredit;
+    orderCents += short;
+  }
+  const chargeCents = orderCents + balanceCents;
   return {
-    productsCents,
-    shippingCents,
-    feeCents,
-    requiredCents,
-    coveredCents,
+    ...base,
     chargeCents,
+    balanceCents,
+    walletCreditCents: creditCents,
     outcome: chargeCents > ORDER_PAYMENT_MAX_CENTS ? "too_high" : "pay",
   };
 }
 
+// Whether Stripe's minimum raised the order's part of the charge above what
+// was left to pay.
+export function raisedToMinimum(amount: OrderAmount): boolean {
+  return (
+    amount.outcome === "pay" &&
+    amount.chargeCents - amount.balanceCents > amount.requiredCents - amount.coveredCents - amount.walletCreditCents
+  );
+}
+
+// What a payment of a cycle can give back to the card: the order's part,
+// never the wallet debt it paid (that debt was real).
+export function orderPartCents(p: { amountCents: number; balanceCents?: number }): number {
+  return p.amountCents - (p.balanceCents ?? 0);
+}
+
 // Paid for a cycle and not given back: the cycle's order_payment,
-// balance_payment, order_refund and refund_failed ledger rows (signed cents),
+// balance_payment, wallet_transfer, order_refund and refund_failed ledger rows (signed cents),
 // minus the refunds asked for and not yet in the ledger, so money on its way
 // back is never spent again.
 export function coveredCents(movementsCents: ReadonlyArray<number>, requestedRefundsCents: number): number {
@@ -111,6 +166,8 @@ export type OrderSnapshot = OrderAmount & {
 export type RefundablePayment = {
   paymentId: string;
   amountCents: number;
+  // The part that paid the wallet debt: never refunded with the order.
+  balanceCents?: number;
   // Refunds Stripe accepted (payments.refunded_cents) and refunds asked for
   // and not yet answered.
   refundedCents: number;
@@ -127,7 +184,7 @@ export function cancelRefunds(
     .map((p) => ({
       refundId: `cancel_${p.paymentId}_1`,
       paymentId: p.paymentId,
-      amountCents: p.amountCents - p.refundedCents - p.requestedCents,
+      amountCents: orderPartCents(p) - p.refundedCents - p.requestedCents,
     }))
     .filter((r) => r.amountCents > 0);
 }
@@ -159,19 +216,27 @@ export function resolveCycleFee(
 }
 
 // The lines of the Stripe Checkout page. A first payment shows its breakdown;
-// a supplement (something is already paid) is one line. They always add up to
-// chargeCents: when Stripe's minimum raised the charge, a single line carries it.
+// a supplement (something is already paid) is one line, and so is an order
+// part reduced by the wallet credit or raised to Stripe's minimum. A wallet
+// debt paid along is its own line. They always add up to chargeCents.
 export function checkoutLineItems(
   amount: OrderAmount,
-  labels: { products: string; shipping: string; fee: string; supplement: string },
+  labels: { products: string; shipping: string; fee: string; supplement: string; afterCredit: string; balance: string },
 ): { name: string; amountCents: number }[] {
-  if (amount.coveredCents > 0) return [{ name: labels.supplement, amountCents: amount.chargeCents }];
-  if (amount.chargeCents !== amount.requiredCents) return [{ name: labels.products, amountCents: amount.chargeCents }];
-  return [
-    { name: labels.products, amountCents: amount.productsCents },
-    { name: labels.shipping, amountCents: amount.shippingCents },
-    { name: labels.fee, amountCents: amount.feeCents },
-  ].filter((i) => i.amountCents > 0);
+  const orderCents = amount.chargeCents - amount.balanceCents;
+  const order =
+    amount.coveredCents > 0
+      ? [{ name: labels.supplement, amountCents: orderCents }]
+      : amount.walletCreditCents > 0
+        ? [{ name: labels.afterCredit, amountCents: orderCents }]
+        : orderCents !== amount.requiredCents
+          ? [{ name: labels.products, amountCents: orderCents }]
+          : [
+              { name: labels.products, amountCents: amount.productsCents },
+              { name: labels.shipping, amountCents: amount.shippingCents },
+              { name: labels.fee, amountCents: amount.feeCents },
+            ].filter((i) => i.amountCents > 0);
+  return amount.balanceCents > 0 ? [...order, { name: labels.balance, amountCents: amount.balanceCents }] : order;
 }
 
 // The order's state on Home, for one pay-per-order cycle. `draft` is the

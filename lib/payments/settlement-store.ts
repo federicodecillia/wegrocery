@@ -4,6 +4,7 @@ import { formatMoney } from "@/lib/i18n/format";
 import { dispatchWithBodies, getMemberEmails } from "@/lib/notifications/dispatch";
 import { reportError } from "@/lib/observability";
 import type { Db } from "./effects";
+import { orderPartCents } from "./order-payment";
 import { sendRequestedRefund, type RefundApi } from "./refund-request";
 import { planMemberSettlement, type SettlementPayment, type SettlementPlan } from "./settlement";
 
@@ -34,6 +35,7 @@ type PaymentRow = {
   member_id: string;
   created_at: Date;
   amount_cents: number;
+  balance_cents: number;
   refunded_cents: number;
   requested: number;
   failed: boolean;
@@ -66,7 +68,7 @@ export async function previewSettlement(db: Db, cycleId: string): Promise<Settle
   const [{ rows: memberRows }, { rows: paymentRows }] = await Promise.all([
     db.execute<MemberRow>(memberNetsSql(cycleId)),
     db.execute<PaymentRow>(sql`
-      SELECT p.payment_id, p.member_id, p.created_at, p.amount_cents, p.refunded_cents,
+      SELECT p.payment_id, p.member_id, p.created_at, p.amount_cents, p.balance_cents, p.refunded_cents,
         coalesce((SELECT sum(r.amount_cents) FROM refunds r
                   WHERE r.payment_id = p.payment_id AND r.status = 'requested'), 0)::integer AS requested,
         EXISTS (SELECT 1 FROM refunds r WHERE r.payment_id = p.payment_id AND r.status = 'failed') AS failed
@@ -83,7 +85,8 @@ export async function previewSettlement(db: Db, cycleId: string): Promise<Settle
       // A payment whose refund failed takes no card refund again: what it
       // still holds goes back by bank transfer from Cassa (lib/payments/
       // settlement-sql.ts says the same for the status and the nightly check).
-      amountCents: p.failed ? p.refunded_cents + p.requested : p.amount_cents,
+      // The wallet debt a payment paid never goes back to the card.
+      amountCents: p.failed ? p.refunded_cents + p.requested : orderPartCents({ amountCents: p.amount_cents, balanceCents: p.balance_cents }),
       refundedCents: p.refunded_cents,
       requestedCents: p.requested,
     });

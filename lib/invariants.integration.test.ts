@@ -87,6 +87,34 @@ describeDb("money invariants", () => {
     expect((await breaks()).settled_cycle_credit).toEqual([]);
   });
 
+  it("checks the wallet in card payments: split, refund cap and transfer pairs", async () => {
+    const { cycleId } = await scope.createCycle("walcard", { paymentMode: "per_order" });
+    // An order payment of 40 that paid 10 of debt, credited as 40 on the cycle.
+    const split = await scope.createPaidOrderPayment("split", cycleId, 4000);
+    await sql`UPDATE payments SET balance_cents = 1000 WHERE payment_id = ${split.paymentId}`;
+    // A refund on the cycle beyond the order part (30) of a payment of 40.
+    const cap = scope.id("pay_cap");
+    await sql`INSERT INTO payments (payment_id, member_id, provider, status, amount_cents, balance_cents, currency,
+        refunded_cents, checkout_session_id, created_at, updated_at, kind, cycle_id, order_snapshot)
+      VALUES (${cap}, ${scope.memberId}, 'stripe', 'failed', 4000, 1000, 'eur', 0, ${`cs_${cap}`}, now(), now(), 'order',
+        ${cycleId}, ${JSON.stringify({ lines: [] })}::jsonb)`;
+    await scope.createRequestedRefund(scope.id("ref_cap"), cap, cycleId, 3500, "order_cancelled");
+    // A wallet transfer whose two rows do not add up.
+    await sql`INSERT INTO ledger_entries (entry_id, member_id, entry_date, type, amount, cycle_id, note, created_by,
+        created_at, counterpart)
+      VALUES (${scope.id("wt_out")}, ${scope.memberId}, now(), 'wallet_transfer', -20, NULL, 'int-test', 'int-test', now(),
+          ${scope.id("wt_in")}),
+        (${scope.id("wt_in")}, ${scope.memberId}, now(), 'wallet_transfer', 15, ${cycleId}, 'int-test', 'int-test', now(),
+          ${scope.id("wt_out")})`;
+    const found = await breaks();
+    // The payment never credited of an earlier case breaks the split too.
+    expect(found.order_payment_split).toContain(split.paymentId);
+    expect(found.order_refund_cap).toEqual([cap]);
+    expect(found.wallet_transfer_pairs.sort()).toEqual(
+      [`${scope.memberId}:${scope.id("wt_in")}`, `${scope.memberId}:${scope.id("wt_out")}`].sort(),
+    );
+  });
+
   it("accepts an order charged by hand in Cassa after the close", async () => {
     const { cycleId, productIds } = await scope.createCycle("manual", { products: [{ name: "Pears", unitPrice: 4 }] });
     const other = await scope.createExtraMember("other");
