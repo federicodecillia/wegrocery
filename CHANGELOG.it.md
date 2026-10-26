@@ -23,7 +23,9 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
-## [Non rilasciato]
+## [1.38.0] - 26 ottobre 2026
+
+*I nuovi cicli possono partire con la carta, con le spese giuste già proposte, e il saldo del borsellino può entrare nel pagamento con carta.*
 
 ### Aggiunte
 - 💳 **Il saldo del borsellino entra nel pagamento con carta.** Con l'impostazione accesa, chi paga con carta un ciclo con carta paga anche il suo saldo negativo; se ha credito, il credito si scala (e se basta non paga nulla con carta). Prima di pagare il socio vede le voci separate, e in Storico e in Cassa ordine e saldo restano movimenti distinti. Si accende in Impostazioni, "Saldo del borsellino nei pagamenti con carta".
