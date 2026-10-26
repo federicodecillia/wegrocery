@@ -480,6 +480,7 @@ function HandlingFeeFields({
           step="0.01"
           required
           defaultValue={defaultValue}
+          aria-label={t.admin.cycle.handlingFeeLabel}
         />
       )}
       <p className="mt-1 text-label text-muted-foreground">{t.admin.cycle.handlingFeeHint}</p>
