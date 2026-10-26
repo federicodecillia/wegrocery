@@ -127,6 +127,7 @@ export const adminGuideFr: GuideContent = {
       notes: [
         "La valeur par défaut des nouveaux cycles se choisit dans **Réglages**, **Mode de paiement**.",
         "Si **Carte** est grisé, les cycles par carte sont désactivés pour le groupe : activez-les dans **Réglages**, **Cycles payés par carte**.",
+        "Avec **Solde du porte-monnaie dans les paiements par carte** activé (dans **Réglages**), le paiement par carte comprend aussi le solde du membre : une dette s'ajoute, un crédit se déduit. L'**Historique** et la **Caisse** les gardent en lignes distinctes.",
       ],
       when: { mode: "wallet", cards: true },
       keywords: ["carte", "solde", "porte-monnaie", "stripe", "moyen"],

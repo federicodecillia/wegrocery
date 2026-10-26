@@ -222,6 +222,51 @@ export async function adminSetCardCyclesEnabled(enabled: boolean): Promise<{ err
   }
 }
 
+// Impostazioni -> Saldo del borsellino nei pagamenti con carta: whether a
+// card payment also pays the wallet debt or uses the wallet credit
+// (orderPaymentAmount, lib/payments/order-payment.ts). Payments already made
+// do not change.
+export async function adminSetCardSettlesWallet(enabled: boolean): Promise<{ error?: string }> {
+  try {
+    const admin = await requireAdmin();
+    const before = await getPaymentSettings();
+    if (before.cardSettlesWallet === enabled) return {};
+    const db = getDb();
+    const now = new Date();
+    // No row yet: the defaults the group runs on are stored with the switch.
+    const current = {
+      minBalance: before.minBalance === null ? null : before.minBalance.toFixed(2),
+      maxBalance: before.maxBalance === null ? null : before.maxBalance.toFixed(2),
+      bankTransferEnabled: before.bankTransferEnabled,
+      bankHolder: before.bankHolder,
+      bankIban: before.bankIban,
+      onlinePaymentsEnabled: before.onlinePaymentsEnabled,
+    };
+    await db.batch([
+      db
+        .insert(appSettings)
+        .values({ id: 1, ...current, cardSettlesWallet: enabled, updatedAt: now, updatedBy: admin.email })
+        .onConflictDoUpdate({
+          target: appSettings.id,
+          set: { cardSettlesWallet: enabled, updatedAt: now, updatedBy: admin.email },
+        }),
+      db.insert(auditLog).values({
+        auditId: crypto.randomUUID(),
+        userEmail: admin.email,
+        action: "set_card_settles_wallet",
+        entityType: "app_settings",
+        entityId: "1",
+        payloadJson: JSON.stringify({ before: before.cardSettlesWallet, after: enabled }),
+        createdAt: now,
+      }),
+    ]);
+    revalidatePath("/admin");
+    return {};
+  } catch (e) {
+    return { error: actionErrorMessage(e, t.errors.genericError, "adminSetCardSettlesWallet") };
+  }
+}
+
 // Impostazioni -> Nome e cognome dei soci: whether members named after their
 // address are asked for a real name after signing in (lib/members/name.ts).
 export async function adminSetMemberNamePrompt(mode: NamePromptMode): Promise<{ error?: string }> {

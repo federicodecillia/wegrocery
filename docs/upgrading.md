@@ -71,6 +71,7 @@ the role end to end, and the whole integration suite passes with it.
 
 | Version | Migration | Environment | Stripe webhook events |
 |---|---|---|---|
+| 1.38.0 | `0042_card_settles_wallet.sql` (additive: `app_settings.card_settles_wallet`, off by default, `payments.balance_cents`, 0 by default, and the `ledger_entries` counterpart check widened to `wallet_transfer` pairs; apply it before deploying, the code selects the columns; rollback in `0042_card_settles_wallet_down.sql` while no `wallet_transfer` row exists) | none | none |
 | 1.36.0 | `0040_cycle_product_order.sql` (additive: `order_cycles.product_order`, `alpha` by default, and `order_cycles.product_order_saved_at`; apply it before deploying, the code selects the columns; rollback in `0040_cycle_product_order_down.sql`) | none | none |
 | 1.33.0 | `0039_admin_welcome.sql` (additive: `members.admin_welcome_dismissed_at`; apply it before deploying, the code selects the column; rollback in `0039_admin_welcome_down.sql`) | none | none |
 | 1.32.0 | `0038_card_cycles_switch.sql` (additive: `app_settings.card_cycles_enabled`, on by default; apply it before deploying, the code selects the column; rollback in `0038_card_cycles_switch_down.sql`) | none | none |

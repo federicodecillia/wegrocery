@@ -129,6 +129,7 @@ export const adminGuideIt: GuideContent = {
       notes: [
         "La modalità predefinita dei nuovi cicli si sceglie in **Impostazioni**, **Modalità di pagamento**.",
         "Se **Carta** è in grigio, i cicli con carta sono spenti per il gruppo: si accendono da **Impostazioni**, **Cicli pagati con carta**.",
+        "Con **Saldo del borsellino nei pagamenti con carta** acceso (in **Impostazioni**), il pagamento con carta comprende anche il saldo del socio: un debito si aggiunge, un credito si scala. In **Storico** e in **Cassa** restano voci distinte.",
       ],
       when: { mode: "wallet", cards: true },
       keywords: ["carta", "borsellino", "stripe", "metodo"],

@@ -31,6 +31,7 @@ const ORDER: MovementKind[] = [
   "handling",
   "order_payment",
   "balance_payment",
+  "wallet_transfer",
   "adjustment",
   "refund",
   "order_refund",

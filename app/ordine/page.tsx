@@ -16,7 +16,8 @@ import { cancelOrder, startOrderPayment } from "@/lib/actions/order-payment";
 import { PendingRefresh } from "@/components/ricarica/pending-refresh";
 import { getDb } from "@/lib/db/client";
 import { getOrderPaymentStatus } from "@/lib/db/queries";
-import { getWalletBalance } from "@/lib/payments/balance-due";
+import { getWalletBalance, getWalletOffset } from "@/lib/payments/balance-due";
+import { getPaymentSettings } from "@/lib/payments/get-settings";
 import { getCycleCoverageCents } from "@/lib/payments/order-confirm";
 import { cycleHandlingFee, type HandlingFee } from "@/lib/payments/order-payment";
 import { orderLinesKey, orderStateKey, resumeDraft } from "@/lib/order-draft";
@@ -83,12 +84,16 @@ export default async function OrdinePage({
   const cycleFee = cycleHandlingFee(openCycle);
   const fee: HandlingFee | null =
     openCycle.paymentMode === "per_order" && !member?.paysOffline ? cycleFee : null;
-  const [coveredCents, payment] = fee
+  const [coveredCents, payment, wallet] = fee
     ? await Promise.all([
         getCycleCoverageCents(getDb(), memberId, openCycle.cycleId),
         getOrderPaymentStatus(memberId, openCycle.cycleId, esito === "ok" ? sessionId : undefined),
+        // With the wallet in card payments, the debt or credit the next payment counts.
+        getPaymentSettings().then((settings) =>
+          getWalletOffset(getDb(), memberId, { enabled: settings.cardSettlesWallet, paysOffline: false }),
+        ),
       ])
-    : [0, null];
+    : [0, null, undefined];
   // What the way back from Stripe says; the payment row is the truth (only
   // the signed webhook moves it), never the redirect.
   const notice =
@@ -189,6 +194,7 @@ export default async function OrdinePage({
                       : Math.round(Number(openCycle.shippingCostPerMember) * 100),
                 },
                 coveredCents,
+                wallet,
                 payAction: startOrderPayment,
                 cancelAction: cancelOrder,
               }

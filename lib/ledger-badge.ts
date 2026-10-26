@@ -27,6 +27,7 @@ export function ledgerBadge(entry: LedgerMovement, tr: TreasuryLabels): { label:
     order_refund: { label: tr.cardRefundBadge, className: badgeOrange },
     balance_payment: { label: tr.balancePaymentBadge, className: badgeTeal },
     member_merge: { label: tr.memberMergeBadge, className: badgeGray },
+    wallet_transfer: { label: tr.walletTransferBadge, className: badgeGray },
     reversal: { label: tr.reversalBadge, className: badgeGray },
     adjustment: { label: tr.correctionBadge, className: badgeGray },
     payout: { label: tr.payoutBadge, className: badgeOrange },

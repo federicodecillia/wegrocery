@@ -99,6 +99,15 @@ const PATHS: Record<MovementKind, ReactNode> = {
       <path d="M6 21V9a9 9 0 0 0 9 9" />
     </>
   ),
+  // Wallet credit moved onto a card cycle: two opposite arrows.
+  wallet_transfer: (
+    <>
+      <polyline points="17 1 21 5 17 9" />
+      <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+      <polyline points="7 23 3 19 7 15" />
+      <path d="M21 13v2a4 4 0 0 1-4 4H3" />
+    </>
+  ),
   // Reversal: a turning arrow.
   reversal: <path d="M3 12a9 9 0 1 0 3-6.7M3 4v4h4" />,
   // Adjustment: pencil.
