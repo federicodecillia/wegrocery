@@ -1107,6 +1107,7 @@ export type LedgerEntryItem = {
   type: string;
   amount: string;
   note: string | null;
+  cycleId: string | null;
   cycleTitle: string | null;
   paymentId: string | null;
   method: string | null;
@@ -1125,6 +1126,7 @@ export async function getAllMembersLedger(): Promise<Record<string, LedgerEntryI
       type: ledgerEntries.type,
       amount: ledgerEntries.amount,
       note: ledgerEntries.note,
+      cycleId: ledgerEntries.cycleId,
       cycleTitle: orderCycles.title,
       paymentId: ledgerEntries.paymentId,
       method: ledgerEntries.method,
@@ -1146,6 +1148,7 @@ export async function getAllMembersLedger(): Promise<Record<string, LedgerEntryI
       type: row.type,
       amount: row.amount,
       note: row.note,
+      cycleId: row.cycleId ?? null,
       cycleTitle: row.cycleTitle ?? null,
       paymentId: row.paymentId ?? null,
       method: row.method ?? null,

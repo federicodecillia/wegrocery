@@ -18,6 +18,7 @@ import {
 import type { LedgerEntryItem, MemberWithBalance } from "@/lib/db/queries";
 import { ledgerBadge } from "@/lib/ledger-badge";
 import { movementKind } from "@/lib/movement-label";
+import { groupLedgerByCycle } from "@/lib/ledger-groups";
 import { MovementIcon } from "@/components/movement-icon";
 import { isAboveMaxBalance } from "@/lib/payments/settings";
 import { useWide } from "@/lib/ui/use-wide";
@@ -171,6 +172,7 @@ type LedgerEntry = {
   amount: string;
   note: string | null;
   entryDate: string | null;
+  cycleId?: string | null;
   cycleTitle?: string | null;
   paymentId?: string | null;
   method?: string | null;
@@ -188,7 +190,14 @@ function movementDetails(entry: LedgerEntry): string {
     .join(" · ");
 }
 
-export function LedgerEntryRow({ entry }: { entry: LedgerEntry }) {
+export function LedgerEntryRow({
+  entry,
+  inGroup = false,
+}: {
+  entry: LedgerEntry;
+  /** Inside its cycle's group: the header already names the cycle. */
+  inGroup?: boolean;
+}) {
   const [editing, setEditing] = useState(false);
   const [amount, setAmount] = useState(Math.abs(parseFloat(entry.amount)).toFixed(2));
   const [draftNote, setDraftNote] = useState(entry.note ?? "");
@@ -230,11 +239,12 @@ export function LedgerEntryRow({ entry }: { entry: LedgerEntry }) {
   const movement = { ...entry, paymentId: entry.paymentId ?? null };
   const badge = ledgerBadge(movement, t.admin.treasury);
   const kindLabel = badge.label.charAt(0).toUpperCase() + badge.label.slice(1);
-  // The cycle names the row when there is one; otherwise the note, else the kind.
-  const title = entry.cycleTitle ?? entry.note ?? kindLabel;
+  // The cycle names the row when there is one; otherwise the note, else the
+  // kind. In its cycle's group the kind does, and the cycle is in the header.
+  const title = inGroup ? kindLabel : (entry.cycleTitle ?? entry.note ?? kindLabel);
   // A note that only repeats the kind ("Spedizione", "Addebito ordine") adds nothing.
   const repeatsKind = (n: string) => n === t.ledger.orderCharge || n.toLowerCase() === badge.label.toLowerCase();
-  const note = entry.cycleTitle && entry.note && !repeatsKind(entry.note) ? entry.note : null;
+  const note = (inGroup || entry.cycleTitle) && entry.note && !repeatsKind(entry.note) ? entry.note : null;
 
   if (editing && isEditable) {
     return (
@@ -293,7 +303,8 @@ export function LedgerEntryRow({ entry }: { entry: LedgerEntry }) {
           </span>
         </div>
         <div className="mt-0.5 tabular-nums text-label text-muted-foreground">
-          {kindLabel} · {entry.entryDate ? formatDate(entry.entryDate) : "-"}
+          {!inGroup && `${kindLabel} · `}
+          {entry.entryDate ? formatDate(entry.entryDate) : "-"}
           {entry.correctedAt && ` · ${t.ledger.correctedOn(formatDate(entry.correctedAt))}`}
         </div>
         {note && <p className="mt-1 text-[13px] text-secondary-foreground">{note}</p>}
@@ -322,6 +333,58 @@ export function LedgerEntryRow({ entry }: { entry: LedgerEntry }) {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+// ── Ledger Cycle Group ────────────────────────────────────────────────────────
+
+// A cycle's movements folded under one header: the cycle, how many movements,
+// the newest day and their net total. Closed by default, so a cycle with many
+// corrections reads as one line until the admin opens it.
+function LedgerCycleGroup({ entries, totalCents }: { entries: LedgerEntryItem[]; totalCents: number }) {
+  const [open, setOpen] = useState(false);
+  const newest = entries[0];
+  const total = totalCents / 100;
+  const panelId = `cassa-cycle-${newest.entryId}`;
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        aria-expanded={open}
+        aria-controls={panelId}
+        className="flex min-h-14 w-full gap-3 px-4 py-3 text-left hover:bg-tint/[0.02]"
+      >
+        <MovementIcon kind="order" incoming={total >= 0} />
+        <span className="min-w-0 flex-1">
+          <span className="flex items-baseline justify-between gap-3">
+            <span className="min-w-0 text-[14px] font-medium text-foreground">
+              {newest.cycleTitle ?? t.admin.treasury.cycleGroupFallback}
+            </span>
+            <span
+              className={`shrink-0 whitespace-nowrap text-[14px] font-bold tabular-nums ${
+                total >= 0 ? "text-accent-text" : "text-destructive"
+              }`}
+            >
+              {formatSignedMoney(total)}
+            </span>
+          </span>
+          <span className="mt-0.5 flex items-center justify-between gap-3 tabular-nums text-label text-muted-foreground">
+            <span>
+              {t.admin.treasury.movementsCount(entries.length)} · {newest.entryDate ? formatDate(newest.entryDate) : "-"}
+            </span>
+            <span aria-hidden>{open ? "▲" : "▼"}</span>
+          </span>
+        </span>
+      </button>
+      {open && (
+        <div id={panelId} className="mx-4 mb-3 sm:ml-[3.25rem] divide-y divide-border rounded-xl border border-border bg-tint/[0.02] [&>div]:px-3">
+          {entries.map((entry) => (
+            <LedgerEntryRow key={entry.entryId} entry={entry} inGroup />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -373,9 +436,13 @@ export function CassaInlineList({
     }
     return (
       <div className="divide-y divide-border">
-        {entries.map((entry) => (
-          <LedgerEntryRow key={entry.entryId} entry={entry} />
-        ))}
+        {groupLedgerByCycle(entries).map((item) =>
+          item.kind === "entry" ? (
+            <LedgerEntryRow key={item.entry.entryId} entry={item.entry} />
+          ) : (
+            <LedgerCycleGroup key={item.cycleId} entries={item.entries} totalCents={item.totalCents} />
+          ),
+        )}
       </div>
     );
   }

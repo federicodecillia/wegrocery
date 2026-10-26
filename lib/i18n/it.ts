@@ -1256,6 +1256,7 @@ export const it = {
       reversalBadge: "storno",
       correctionBadge: "rettifica",
       otherBadge: "movimento",
+      cycleGroupFallback: "Ciclo",
       entryUpdated: "Voce aggiornata",
       entryDeleted: "Voce eliminata",
       deleteConfirm: "Eliminare questa voce del ledger?",
