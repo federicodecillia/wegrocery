@@ -1,18 +1,22 @@
+import { ChevronDown } from "lucide-react";
 import { brand } from "@/lib/brand";
+import { t } from "@/lib/i18n";
 import { getDb } from "@/lib/db/client";
-import { getGuideSearchMisses } from "@/lib/db/queries";
+import { getGuideSearchMisses, getLastHandlingFee } from "@/lib/db/queries";
 import { formatAmountInput } from "@/lib/i18n/format";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
-import { cardCyclesAvailable, cardCyclesSelectable } from "@/lib/payments/cycle-mode";
+import { cardCyclesAvailable } from "@/lib/payments/cycle-mode";
+import { newCyclePaymentChoice, startingFee } from "@/lib/payments/new-cycle-defaults";
+import { DEFAULT_HANDLING_FEE } from "@/lib/payments/order-payment";
 import { modeChangeBlockers, readModeChangeState } from "@/lib/payments/mode-change";
 import { getConfigStatus } from "@/lib/config-status-server";
 import { getBrand, getGroupIdentity } from "@/lib/brand/get-brand";
 import { IdentityForm } from "./identity-form";
-import { CardCyclesCard } from "./card-cycles-card";
 import { CardSettlesWalletCard } from "./card-settles-wallet-card";
 import { ConfigStatusCard } from "./config-status-card";
 import { FamiliesCard } from "./families-card";
 import { NamePromptCard } from "./name-prompt-card";
+import { NewCyclesCard } from "./new-cycles-card";
 import { GroupInfoCard } from "./group-info-card";
 import { PaymentSettingsForm } from "./impostazioni-form";
 import { PaymentModeCard } from "./payment-mode-card";
@@ -25,8 +29,10 @@ function toInput(euros: number | null): string {
   return euros === null ? "" : formatAmountInput(euros);
 }
 
-// The payment mode, the payment settings and the Stripe connection, shared
-// with the first-run setup (app/admin/avvio).
+// Payments in sections, in the order an admin decides them: how new cycles
+// are paid and what they cost, card (Stripe), bank transfer, wallet limits,
+// and the group's mode under Avanzate. Shared with the first-run setup
+// (app/admin/avvio).
 export async function PaymentSettingsSection() {
   const [settings, modeState] = await Promise.all([getPaymentSettings(), readModeChangeState(getDb())]);
   const savedAt = settings.savedAt?.toISOString() ?? null;
@@ -35,7 +41,13 @@ export async function PaymentSettingsSection() {
     stripeUsable: settings.stripeKey.usable,
     currency: brand.currency,
     cardCyclesEnabled: settings.cardCyclesEnabled,
+    newCycleMode: settings.newCycleMode,
   };
+  const cardAvailable = cardCyclesAvailable(cardContext);
+  const [lastWalletFee, lastCardFee] = await Promise.all([
+    getLastHandlingFee("wallet"),
+    getLastHandlingFee("per_order"),
+  ]);
   const blockers = modeChangeBlockers({
     target: settings.mode === "wallet" ? "per_order" : "wallet",
     currency: brand.currency,
@@ -43,40 +55,71 @@ export async function PaymentSettingsSection() {
     runningCycles: modeState.runningCycles,
     unsettledCycles: modeState.unsettledCycles,
   });
+  const initial = {
+    // Asked as a positive overdraft: -50 € shows as "50".
+    maxOverdraft: toInput(settings.minBalance === null ? null : -settings.minBalance),
+    maxBalance: toInput(settings.maxBalance),
+    bankTransferEnabled: settings.bankTransferEnabled,
+    bankHolder: settings.bankHolder ?? "",
+    bankIban: settings.bankIban ?? "",
+    bankReferenceTemplate: settings.bankReferenceTemplate ?? "",
+    bankReceiptEmail: settings.bankReceiptEmail ?? "",
+    onlinePaymentsEnabled: settings.onlinePaymentsEnabled,
+  };
+  // A save remounts the forms with the values as stored (IBAN compacted).
+  const formKey = savedAt ?? "defaults";
+  const s = t.admin.settings.paymentSections;
   return (
     <>
-      <PaymentModeCard
-        mode={settings.mode}
-        state={modeState}
-        blockers={blockers}
-        cardCycles={cardCyclesSelectable(cardContext)}
-      />
-      {cardCyclesAvailable(cardContext) && <CardCyclesCard enabled={settings.cardCyclesEnabled} />}
-      {(settings.mode === "per_order" || cardCyclesAvailable(cardContext)) && (
-        <CardSettlesWalletCard enabled={settings.cardSettlesWallet} />
+      {savedAt === null && (
+        <p className="rounded-lg border border-primary/40 bg-primary-bg px-3 py-2 text-[12px] text-foreground">
+          {t.admin.settings.defaultsNotice}
+        </p>
       )}
-      <PaymentSettingsForm
-        // A save remounts the form with the values as stored (IBAN compacted).
-        key={savedAt ?? "defaults"}
-        initial={{
-          // Asked as a positive overdraft: -50 € shows as "50".
-          maxOverdraft: toInput(
-            settings.minBalance === null ? null : -settings.minBalance,
-          ),
-          maxBalance: toInput(settings.maxBalance),
-          bankTransferEnabled: settings.bankTransferEnabled,
-          bankHolder: settings.bankHolder ?? "",
-          bankIban: settings.bankIban ?? "",
-          bankReferenceTemplate: settings.bankReferenceTemplate ?? "",
-          bankReceiptEmail: settings.bankReceiptEmail ?? "",
-          onlinePaymentsEnabled: settings.onlinePaymentsEnabled,
+      <SectionTitle>{s.newCycles}</SectionTitle>
+      <NewCyclesCard
+        key={`${formKey}-${settings.cardCyclesEnabled}-${settings.newCycleMode}`}
+        groupMode={settings.mode}
+        cardAvailable={cardAvailable}
+        stripeMissing={settings.mode === "wallet" && !settings.stripeKey.usable && brand.currency.toUpperCase() === "EUR"}
+        choice={newCyclePaymentChoice(settings.cardCyclesEnabled, settings.newCycleMode)}
+        defaults={settings.newCycleDefaults}
+        startFees={{
+          wallet: startingFee(settings.newCycleDefaults, "wallet", lastWalletFee),
+          per_order: startingFee(settings.newCycleDefaults, "per_order", lastCardFee) ?? DEFAULT_HANDLING_FEE,
         }}
-        stripeKey={settings.stripeKey}
-        savedAt={savedAt}
-        showLimits={settings.mode === "wallet"}
       />
+      <SectionTitle>{s.card}</SectionTitle>
       <StripeConnectionCard />
+      <PaymentSettingsForm key={`online-${formKey}`} part="online" initial={initial} stripeKey={settings.stripeKey} savedAt={savedAt} />
+      {(settings.mode === "per_order" || cardAvailable) && <CardSettlesWalletCard enabled={settings.cardSettlesWallet} />}
+      <SectionTitle>{s.bank}</SectionTitle>
+      <PaymentSettingsForm key={`bank-${formKey}`} part="bank" initial={initial} stripeKey={settings.stripeKey} savedAt={savedAt} />
+      {settings.mode === "wallet" && (
+        <>
+          <SectionTitle>{s.wallet}</SectionTitle>
+          <PaymentSettingsForm key={`limits-${formKey}`} part="limits" initial={initial} stripeKey={settings.stripeKey} savedAt={savedAt} />
+        </>
+      )}
+      <details className="group rounded-xl border border-border bg-card">
+        <summary className="flex min-h-11 cursor-pointer items-center justify-between gap-3 px-4 py-2 text-[13px] font-bold text-foreground">
+          <span>
+            <span className="block text-label font-semibold uppercase tracking-wide text-secondary-foreground">{s.advanced}</span>
+            {s.advancedSummary}
+          </span>
+          <ChevronDown aria-hidden className="h-4 w-4 shrink-0 transition-transform group-open:rotate-180" />
+        </summary>
+        <div className="px-4 pb-4 [&>section]:border-0 [&>section]:p-0 [&>section>h3]:sr-only">
+          <PaymentModeCard mode={settings.mode} state={modeState} blockers={blockers} cardCycles={settings.mode === "wallet"} />
+        </div>
+      </details>
     </>
+  );
+}
+
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  return (
+    <h2 className="px-1 pt-2 text-label font-semibold uppercase tracking-wide text-secondary-foreground">{children}</h2>
   );
 }
 

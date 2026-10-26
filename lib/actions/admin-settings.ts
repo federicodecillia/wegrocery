@@ -17,6 +17,14 @@ import {
   runningCyclesSql,
   unsettledCyclesSql,
 } from "@/lib/payments/mode-change";
+import { cardCyclesAvailable } from "@/lib/payments/cycle-mode";
+import {
+  isNewCyclePaymentChoice,
+  newCyclePaymentColumns,
+  planNewCycleDefaults,
+  type ModeDefaultsInput,
+  type NewCyclePaymentChoice,
+} from "@/lib/payments/new-cycle-defaults";
 import { planPaymentSettingsUpdate, type PaymentMode, type PaymentSettingsInput } from "@/lib/payments/settings";
 
 // Impostazioni tab: saves the payment settings (the single app_settings row)
@@ -175,50 +183,6 @@ export async function adminSetFamiliesEnabled(enabled: boolean): Promise<{ error
     return {};
   } catch (e) {
     return { error: actionErrorMessage(e, t.errors.genericError, "adminSetFamiliesEnabled") };
-  }
-}
-
-// Impostazioni -> Cicli pagati con carta: whether "Nuovo ciclo" offers Carta
-// in a wallet group (lib/payments/cycle-mode.ts). Card cycles already created
-// go on as before; online top-ups and refunds do not depend on it.
-export async function adminSetCardCyclesEnabled(enabled: boolean): Promise<{ error?: string }> {
-  try {
-    const admin = await requireAdmin();
-    const before = await getPaymentSettings();
-    if (before.cardCyclesEnabled === enabled) return {};
-    const db = getDb();
-    const now = new Date();
-    // No row yet: the defaults the group runs on are stored with the switch.
-    const current = {
-      minBalance: before.minBalance === null ? null : before.minBalance.toFixed(2),
-      maxBalance: before.maxBalance === null ? null : before.maxBalance.toFixed(2),
-      bankTransferEnabled: before.bankTransferEnabled,
-      bankHolder: before.bankHolder,
-      bankIban: before.bankIban,
-      onlinePaymentsEnabled: before.onlinePaymentsEnabled,
-    };
-    await db.batch([
-      db
-        .insert(appSettings)
-        .values({ id: 1, ...current, cardCyclesEnabled: enabled, updatedAt: now, updatedBy: admin.email })
-        .onConflictDoUpdate({
-          target: appSettings.id,
-          set: { cardCyclesEnabled: enabled, updatedAt: now, updatedBy: admin.email },
-        }),
-      db.insert(auditLog).values({
-        auditId: crypto.randomUUID(),
-        userEmail: admin.email,
-        action: "set_card_cycles_enabled",
-        entityType: "app_settings",
-        entityId: "1",
-        payloadJson: JSON.stringify({ before: before.cardCyclesEnabled, after: enabled }),
-        createdAt: now,
-      }),
-    ]);
-    revalidatePath("/admin");
-    return {};
-  } catch (e) {
-    return { error: actionErrorMessage(e, t.errors.genericError, "adminSetCardCyclesEnabled") };
   }
 }
 
@@ -381,5 +345,110 @@ export async function adminClearGuideSearchMisses(): Promise<{ error?: string }>
     return {};
   } catch (e) {
     return { error: actionErrorMessage(e, t.errors.genericError, "adminClearGuideSearchMisses") };
+  }
+}
+
+// The stored row's required columns, for an insert when no admin saved yet:
+// the defaults the group runs on are stored with the new value.
+function settingsRowOf(before: Awaited<ReturnType<typeof getPaymentSettings>>) {
+  return {
+    minBalance: before.minBalance === null ? null : before.minBalance.toFixed(2),
+    maxBalance: before.maxBalance === null ? null : before.maxBalance.toFixed(2),
+    bankTransferEnabled: before.bankTransferEnabled,
+    bankHolder: before.bankHolder,
+    bankIban: before.bankIban,
+    onlinePaymentsEnabled: before.onlinePaymentsEnabled,
+  };
+}
+
+// Impostazioni -> Come si pagano i nuovi cicli, in a wallet group: wallet
+// only, wallet with Carta on request, or Carta preselected
+// (lib/payments/new-cycle-defaults.ts). Allowed with cycles running: each
+// cycle keeps the mode it was created with, only "Nuovo ciclo" changes.
+export async function adminSetNewCyclePayment(choice: NewCyclePaymentChoice): Promise<{ error?: string }> {
+  try {
+    const admin = await requireAdmin();
+    if (!isNewCyclePaymentChoice(choice)) return { error: t.errors.genericError };
+    const before = await getPaymentSettings();
+    const available = cardCyclesAvailable({
+      groupMode: before.mode,
+      stripeUsable: before.stripeKey.usable,
+      currency: brand.currency,
+    });
+    if (before.mode !== "wallet") return { error: t.errors.genericError };
+    if (choice !== "wallet_only" && !available) return { error: t.errors.cyclePaymentModeUnavailable };
+    const columns = newCyclePaymentColumns(choice);
+    if (before.cardCyclesEnabled === columns.cardCyclesEnabled && before.newCycleMode === columns.newCyclePaymentMode) {
+      return {};
+    }
+    const db = getDb();
+    const now = new Date();
+    await db.batch([
+      db
+        .insert(appSettings)
+        .values({ id: 1, ...settingsRowOf(before), ...columns, updatedAt: now, updatedBy: admin.email })
+        .onConflictDoUpdate({
+          target: appSettings.id,
+          set: { ...columns, updatedAt: now, updatedBy: admin.email },
+        }),
+      db.insert(auditLog).values({
+        auditId: crypto.randomUUID(),
+        userEmail: admin.email,
+        action: "set_new_cycle_payment",
+        entityType: "app_settings",
+        entityId: "1",
+        payloadJson: JSON.stringify({
+          before: { cardCyclesEnabled: before.cardCyclesEnabled, newCyclePaymentMode: before.newCycleMode },
+          after: columns,
+        }),
+        createdAt: now,
+      }),
+    ]);
+    revalidatePath("/admin");
+    return {};
+  } catch (e) {
+    return { error: actionErrorMessage(e, t.errors.genericError, "adminSetNewCyclePayment") };
+  }
+}
+
+// Impostazioni -> Spese predefinite dei nuovi cicli: per payment mode, the
+// shipping and preparation fee "Nuovo ciclo" starts from. Cycles already
+// created keep theirs.
+export async function adminSetNewCycleDefaults(
+  input: Partial<Record<PaymentMode, ModeDefaultsInput>>,
+): Promise<{ error?: string }> {
+  try {
+    const admin = await requireAdmin();
+    const before = await getPaymentSettings();
+    const plan = planNewCycleDefaults(before.newCycleDefaults, input);
+    if ("error" in plan) {
+      return {
+        error: plan.error.field === "fee" ? t.errors.handlingFeeInvalid : t.admin.settings.newCycles.shippingInvalid,
+      };
+    }
+    const db = getDb();
+    const now = new Date();
+    await db.batch([
+      db
+        .insert(appSettings)
+        .values({ id: 1, ...settingsRowOf(before), newCycleDefaults: plan.defaults, updatedAt: now, updatedBy: admin.email })
+        .onConflictDoUpdate({
+          target: appSettings.id,
+          set: { newCycleDefaults: plan.defaults, updatedAt: now, updatedBy: admin.email },
+        }),
+      db.insert(auditLog).values({
+        auditId: crypto.randomUUID(),
+        userEmail: admin.email,
+        action: "set_new_cycle_defaults",
+        entityType: "app_settings",
+        entityId: "1",
+        payloadJson: JSON.stringify({ before: before.newCycleDefaults, after: plan.defaults }),
+        createdAt: now,
+      }),
+    ]);
+    revalidatePath("/admin");
+    return {};
+  } catch (e) {
+    return { error: actionErrorMessage(e, t.errors.genericError, "adminSetNewCycleDefaults") };
   }
 }

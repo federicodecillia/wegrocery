@@ -69,6 +69,7 @@ import { selectCycleAccessMembers } from "@/lib/notifications/reminder";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
 import { resolveCycleFee, type HandlingFee } from "@/lib/payments/order-payment";
 import { cardCyclesAvailable, resolveNewCycleMode } from "@/lib/payments/cycle-mode";
+import { startingFee } from "@/lib/payments/new-cycle-defaults";
 import { reverseEntry, reverseEntrySql } from "@/lib/ledger-reversal";
 import { liveLedger } from "@/lib/db/ledger-live";
 import { retryRequestedRefunds } from "@/lib/payments/refund-request";
@@ -172,6 +173,7 @@ export async function adminCreateCycle(data: CreateCycleInput): Promise<{error?:
       stripeUsable: settings.stripeKey.usable,
       currency: brand.currency,
       cardCyclesEnabled: settings.cardCyclesEnabled,
+      newCycleMode: settings.newCycleMode,
     };
     const chosen = resolveNewCycleMode(data.paymentMode, cardContext);
     if ("error" in chosen) {
@@ -185,7 +187,7 @@ export async function adminCreateCycle(data: CreateCycleInput): Promise<{error?:
       data.handlingFeeType !== undefined && data.handlingFeeValue !== undefined
         ? { type: data.handlingFeeType, value: data.handlingFeeValue }
         : undefined,
-      await getLastHandlingFee(paymentMode),
+      startingFee(settings.newCycleDefaults, paymentMode, await getLastHandlingFee(paymentMode)),
     );
     if ("error" in fee) return { error: t.errors.handlingFeeInvalid };
 

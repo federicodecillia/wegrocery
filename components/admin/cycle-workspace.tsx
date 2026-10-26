@@ -11,7 +11,8 @@ import {
 } from "@/lib/db/queries";
 import { getDb } from "@/lib/db/client";
 import { brand } from "@/lib/brand";
-import { cardCyclesAvailable, cardCyclesSelectable } from "@/lib/payments/cycle-mode";
+import { cardCyclesAvailable, cardCyclesSelectable, defaultNewCycleMode } from "@/lib/payments/cycle-mode";
+import { startingFee } from "@/lib/payments/new-cycle-defaults";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
 import { getSettlementStatus } from "@/lib/payments/settlement-store";
 import { DEFAULT_HANDLING_FEE } from "@/lib/payments/order-payment";
@@ -160,14 +161,17 @@ async function NewCycle({
   settings: Awaited<ReturnType<typeof getPaymentSettings>>;
   empty: boolean;
 }) {
-  // Each new cycle starts from the last fee of the same payment mode: none in
-  // wallet mode, 10% per order, until one is set. A wallet group may also pay
-  // a single cycle by card (lib/payments/cycle-mode.ts).
+  // Each new cycle starts from the defaults of its payment mode set in
+  // Impostazioni, else the last fee of that mode: none in wallet mode, 10% per
+  // order, until one is set (lib/payments/new-cycle-defaults.ts). A wallet
+  // group may also pay a single cycle by card, or start every new cycle by
+  // card (lib/payments/cycle-mode.ts).
   const cardContext = {
     groupMode: settings.mode,
     stripeUsable: settings.stripeKey.usable,
     currency: brand.currency,
     cardCyclesEnabled: settings.cardCyclesEnabled,
+    newCycleMode: settings.newCycleMode,
   };
   const cardSelectable = cardCyclesSelectable(cardContext);
   const cardSwitchedOff = cardCyclesAvailable(cardContext) && !settings.cardCyclesEnabled;
@@ -175,6 +179,7 @@ async function NewCycle({
     settings.mode === "wallet" ? getLastHandlingFee("wallet") : null,
     settings.mode === "per_order" || cardSelectable ? getLastHandlingFee("per_order") : null,
   ]);
+  const defaults = settings.newCycleDefaults;
   const feeInput = (fee: { type: "percent" | "fixed"; value: number } | null) =>
     fee && { type: fee.type, value: String(fee.value) };
   return (
@@ -182,11 +187,13 @@ async function NewCycle({
       {empty && <p className="mb-3 text-[13px] text-secondary-foreground">{t.admin.workspace.noCycles}</p>}
       <CreateCycleForm
         suppliers={suppliers}
-        paymentMode={settings.mode}
+        paymentMode={defaultNewCycleMode(cardContext)}
         cardSelectable={cardSelectable}
         cardSwitchedOff={cardSwitchedOff}
-        walletFee={feeInput(lastWalletFee)}
-        cardFee={feeInput(lastCardFee ?? DEFAULT_HANDLING_FEE)}
+        walletFee={feeInput(startingFee(defaults, "wallet", lastWalletFee))}
+        cardFee={feeInput(startingFee(defaults, "per_order", lastCardFee) ?? DEFAULT_HANDLING_FEE)}
+        walletShipping={defaults.wallet?.shipping ?? null}
+        cardShipping={defaults.per_order?.shipping ?? null}
         defaultOpen
       />
     </div>

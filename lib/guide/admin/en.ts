@@ -125,8 +125,8 @@ export const adminGuideEn: GuideContent = {
         "**Card**: each member pays their order by card when confirming it. Once costs are final, **Settle accounts** refunds or asks for the difference.",
       ],
       notes: [
-        "The default for new cycles is chosen in **Settings**, **Payment mode**.",
-        "If **Card** is greyed out, card cycles are switched off for the group: switch them on in **Settings**, **Cycles paid by card**.",
+        "The default for new cycles is chosen in **Settings**, **New cycles**: even with cycles open, which stay as they are.",
+        "If **Card** is greyed out, card cycles are switched off for the group: switch them on in **Settings**, **New cycles**. There you also choose whether new cycles start with Card, and the shipping and preparation costs proposed for each mode.",
         "With **Wallet balance in card payments** on (in **Settings**), the card payment includes the member's balance too: a debt is added, a credit is taken off. **History** and **Treasury** keep them as separate lines.",
       ],
       when: { mode: "wallet", cards: true },
@@ -586,9 +586,10 @@ export const adminGuideEn: GuideContent = {
       slug: "modalita-pagamento",
       topic: "impostazioni",
       title: "The group's payment mode",
-      intro: "In **Settings**, **Payment mode** you choose how members usually pay: with their balance (wallet) or order by order by card.",
+      intro: "In **Settings**, **New cycles** you choose how the cycles you create from now on are paid: wallet only, wallet with card on request, or card with wallet on request. There you also set the shipping and preparation costs proposed for each mode.",
       notes: [
-        "It applies to new cycles. If card payments are connected, you can also have a single cycle paid by card when you create it.",
+        "You can change it with cycles open: those already created stay as they are.",
+        "Under **Advanced**, **Group payment mode** decides whether the group uses the wallet or card only: a choice made once.",
         "To change mode, the app tells you what has to be closed first (for example open cycles).",
       ],
       keywords: ["wallet", "card", "mode", "payments"],

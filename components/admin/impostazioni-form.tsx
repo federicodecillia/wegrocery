@@ -26,15 +26,17 @@ function referencePreview(template: string): string {
   });
 }
 
+// One part of the payment settings, each in its own section of Impostazioni
+// with its own Save. The form holds every value and saves them all
+// (adminUpdatePaymentSettings), but only its part can be edited here.
 export function PaymentSettingsForm({
+  part,
   initial,
   stripeKey,
   savedAt,
-  showLimits = true,
 }: {
+  part: "limits" | "bank" | "online";
   initial: PaymentSettingsInput;
-  // The balance limits only apply to the wallet mode.
-  showLimits?: boolean;
   stripeKey: StripeKeyState;
   // ISO date of the last save; null while the values are the defaults.
   savedAt: string | null;
@@ -62,14 +64,8 @@ export function PaymentSettingsForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="space-y-4">
-      {savedAt === null && (
-        <p className="rounded-lg border border-primary/40 bg-primary-bg px-3 py-2 text-[12px] text-foreground">
-          {s.defaultsNotice}
-        </p>
-      )}
-
-      {showLimits && (
+    <form onSubmit={handleSubmit} noValidate className="space-y-3">
+      {part === "limits" && (
         <section className={card}>
           <h3 className="text-[13px] font-bold text-foreground">{s.limitsTitle}</h3>
           <p className="mb-3 mt-1 text-[12px] text-secondary-foreground">{s.limitsHint}</p>
@@ -108,115 +104,119 @@ export function PaymentSettingsForm({
         </section>
       )}
 
-      <section className={card}>
-        <label className="flex items-start justify-between gap-3">
-          <span>
-            <span className="block text-[13px] font-bold text-foreground">{s.bankTitle}</span>
-            <span className="mt-1 block text-[12px] text-secondary-foreground">{s.bankHint}</span>
-          </span>
-          <input
-            type="checkbox"
-            checked={values.bankTransferEnabled}
-            onChange={(e) => update("bankTransferEnabled", e.target.checked)}
-            className="mt-0.5 h-5 w-5 shrink-0 accent-accent"
-          />
-        </label>
-        <div className="mt-3 space-y-3">
-          <div>
-            <Label htmlFor="settings-bank-holder">
-              {s.bankHolderLabel}
-            </Label>
-            <Input
-              id="settings-bank-holder"
-              type="text"
-              autoComplete="off"
-              value={values.bankHolder}
-              onChange={(e) => update("bankHolder", e.target.value)}
-            />
-          </div>
-          <div>
-            <Label htmlFor="settings-bank-iban">
-              {s.bankIbanLabel}
-            </Label>
-            <Input
-              id="settings-bank-iban"
-              type="text"
-              autoComplete="off"
-              autoCapitalize="characters"
-              spellCheck={false}
-              value={values.bankIban}
-              onChange={(e) => update("bankIban", e.target.value)}
-              className="tabular-nums"
-            />
-          </div>
-          <div>
-            <Label htmlFor="settings-bank-reference">
-              {s.bankReferenceLabel}
-            </Label>
-            <Input
-              id="settings-bank-reference"
-              type="text"
-              autoComplete="off"
-              maxLength={BANK_REFERENCE_MAX}
-              value={values.bankReferenceTemplate}
-              onChange={(e) => update("bankReferenceTemplate", e.target.value)}
-              placeholder={t.topup.bankOrderReferenceDefault}
-              aria-describedby="settings-bank-reference-help"
-            />
-            <p id="settings-bank-reference-help" className={helpCls}>
-              {s.bankReferenceHelp}
-            </p>
-            <p className="mt-1 break-words text-[12px] font-medium text-foreground">
-              {s.bankReferencePreview(referencePreview(values.bankReferenceTemplate))}
-            </p>
-          </div>
-          <div>
-            <Label htmlFor="settings-bank-receipt">
-              {s.bankReceiptLabel}
-            </Label>
-            <Input
-              id="settings-bank-receipt"
-              type="email"
-              autoComplete="off"
-              spellCheck={false}
-              value={values.bankReceiptEmail}
-              onChange={(e) => update("bankReceiptEmail", e.target.value)}
-              aria-describedby="settings-bank-receipt-help"
-            />
-            <p id="settings-bank-receipt-help" className={helpCls}>
-              {s.bankReceiptHelp}
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <section className={card}>
-        <label className="flex items-start justify-between gap-3">
-          <span>
-            <span className="flex items-center gap-2 text-[13px] font-bold text-foreground">
-              {s.onlineTitle}
-              {stripeKey.usable && !stripeKey.livemode && (
-                <span className="rounded-full bg-primary-bg px-2 py-0.5 tabular-nums text-label font-semibold text-primary-text">
-                  {s.testMode}
-                </span>
-              )}
+      {part === "bank" && (
+        <section className={card}>
+          <label className="flex items-start justify-between gap-3">
+            <span>
+              <span className="block text-[13px] font-bold text-foreground">{s.bankTitle}</span>
+              <span className="mt-1 block text-[12px] text-secondary-foreground">{s.bankHint}</span>
             </span>
-            <span className="mt-1 block text-[12px] text-secondary-foreground">{s.onlineHint}</span>
-          </span>
-          <input
-            type="checkbox"
-            checked={values.onlinePaymentsEnabled}
-            disabled={!stripeKey.usable}
-            onChange={(e) => update("onlinePaymentsEnabled", e.target.checked)}
-            className="mt-0.5 h-5 w-5 shrink-0 accent-accent disabled:opacity-50"
-          />
-        </label>
-        {!stripeKey.usable && (
-          <p className="mt-2 rounded-lg bg-danger-bg px-3 py-2 text-[12px] text-destructive">
-            {s.stripeUnavailable[stripeKey.reason]}
-          </p>
-        )}
-      </section>
+            <input
+              type="checkbox"
+              checked={values.bankTransferEnabled}
+              onChange={(e) => update("bankTransferEnabled", e.target.checked)}
+              className="mt-0.5 h-5 w-5 shrink-0 accent-accent"
+            />
+          </label>
+          <div className="mt-3 space-y-3">
+            <div>
+              <Label htmlFor="settings-bank-holder">
+                {s.bankHolderLabel}
+              </Label>
+              <Input
+                id="settings-bank-holder"
+                type="text"
+                autoComplete="off"
+                value={values.bankHolder}
+                onChange={(e) => update("bankHolder", e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="settings-bank-iban">
+                {s.bankIbanLabel}
+              </Label>
+              <Input
+                id="settings-bank-iban"
+                type="text"
+                autoComplete="off"
+                autoCapitalize="characters"
+                spellCheck={false}
+                value={values.bankIban}
+                onChange={(e) => update("bankIban", e.target.value)}
+                className="tabular-nums"
+              />
+            </div>
+            <div>
+              <Label htmlFor="settings-bank-reference">
+                {s.bankReferenceLabel}
+              </Label>
+              <Input
+                id="settings-bank-reference"
+                type="text"
+                autoComplete="off"
+                maxLength={BANK_REFERENCE_MAX}
+                value={values.bankReferenceTemplate}
+                onChange={(e) => update("bankReferenceTemplate", e.target.value)}
+                placeholder={t.topup.bankOrderReferenceDefault}
+                aria-describedby="settings-bank-reference-help"
+              />
+              <p id="settings-bank-reference-help" className={helpCls}>
+                {s.bankReferenceHelp}
+              </p>
+              <p className="mt-1 break-words text-[12px] font-medium text-foreground">
+                {s.bankReferencePreview(referencePreview(values.bankReferenceTemplate))}
+              </p>
+            </div>
+            <div>
+              <Label htmlFor="settings-bank-receipt">
+                {s.bankReceiptLabel}
+              </Label>
+              <Input
+                id="settings-bank-receipt"
+                type="email"
+                autoComplete="off"
+                spellCheck={false}
+                value={values.bankReceiptEmail}
+                onChange={(e) => update("bankReceiptEmail", e.target.value)}
+                aria-describedby="settings-bank-receipt-help"
+              />
+              <p id="settings-bank-receipt-help" className={helpCls}>
+                {s.bankReceiptHelp}
+              </p>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {part === "online" && (
+        <section className={card}>
+          <label className="flex items-start justify-between gap-3">
+            <span>
+              <span className="flex items-center gap-2 text-[13px] font-bold text-foreground">
+                {s.onlineTitle}
+                {stripeKey.usable && !stripeKey.livemode && (
+                  <span className="rounded-full bg-primary-bg px-2 py-0.5 tabular-nums text-label font-semibold text-primary-text">
+                    {s.testMode}
+                  </span>
+                )}
+              </span>
+              <span className="mt-1 block text-[12px] text-secondary-foreground">{s.onlineHint}</span>
+            </span>
+            <input
+              type="checkbox"
+              checked={values.onlinePaymentsEnabled}
+              disabled={!stripeKey.usable}
+              onChange={(e) => update("onlinePaymentsEnabled", e.target.checked)}
+              className="mt-0.5 h-5 w-5 shrink-0 accent-accent disabled:opacity-50"
+            />
+          </label>
+          {!stripeKey.usable && (
+            <p className="mt-2 rounded-lg bg-danger-bg px-3 py-2 text-[12px] text-destructive">
+              {s.stripeUnavailable[stripeKey.reason]}
+            </p>
+          )}
+        </section>
+      )}
 
       <button
         type="submit"
