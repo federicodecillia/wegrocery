@@ -1260,6 +1260,7 @@ export const es: Strings = {
       reversalBadge: "anulación",
       correctionBadge: "corrección",
       otherBadge: "movimiento",
+      cycleGroupFallback: "Ciclo",
       entryUpdated: "Movimiento actualizado",
       entryDeleted: "Movimiento eliminado",
       deleteConfirm: "¿Eliminar este movimiento del registro?",

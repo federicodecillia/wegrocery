@@ -1260,6 +1260,7 @@ export const en: Strings = {
       reversalBadge: "reversal",
       correctionBadge: "correction",
       otherBadge: "movement",
+      cycleGroupFallback: "Cycle",
       entryUpdated: "Entry updated",
       entryDeleted: "Entry deleted",
       deleteConfirm: "Delete this ledger entry?",
