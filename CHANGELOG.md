@@ -22,6 +22,11 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
+## [Unreleased]
+
+### Changed
+- 🗂️ **In Treasury, an order's movements stay together.** In a member's movements, the charge, shipping, corrections and refunds of the same cycle fold into one row with their net total; tap it to see them one by one.
+
 ## [1.37.0] - 2026-10-24
 
 *Real names for every member, and a reliable price per kg when importing a price list.*

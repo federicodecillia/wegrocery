@@ -23,6 +23,11 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
+## [Non rilasciato]
+
+### Modificato
+- 🗂️ **In Cassa i movimenti di un ordine stanno insieme.** Nei movimenti di un socio, addebito, spedizione, rettifiche e rimborsi dello stesso ciclo diventano una sola riga con il totale netto; un tocco la apre e li mostra uno per uno.
+
 ## [1.37.0] - 24 ottobre 2026
 
 *Nomi veri per tutti i soci, e prezzi al kg affidabili quando si importa un listino.*
