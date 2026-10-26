@@ -8,6 +8,7 @@ import { formatDeadline, formatPickupSlot } from "@/lib/i18n/deadline";
 import { t } from "@/lib/i18n";
 import { formatMoney, formatHandlingFee } from "@/lib/i18n/format";
 import { HANDLING_FEE_MAX, cycleHandlingFee } from "@/lib/payments/order-payment";
+import type { ShippingDefault } from "@/lib/payments/new-cycle-defaults";
 import { utcToZonedLocalInput } from "@/lib/i18n/zoned-time";
 import {
   adminCreateCycle,
@@ -761,10 +762,12 @@ export function CreateCycleForm({
   cardSwitchedOff = false,
   walletFee,
   cardFee,
+  walletShipping = null,
+  cardShipping = null,
   defaultOpen = false,
 }: {
   suppliers: Supplier[];
-  /** The group's mode: the default of a new cycle. */
+  /** The mode a new cycle starts from (lib/payments/cycle-mode.ts, defaultNewCycleMode). */
   paymentMode: "wallet" | "per_order";
   /** A wallet group may pay this cycle by card (lib/payments/cycle-mode.ts). */
   cardSelectable: boolean;
@@ -773,16 +776,29 @@ export function CreateCycleForm({
   /** The fee a new cycle of each mode starts from; null = none. */
   walletFee: { type: "percent" | "fixed"; value: string } | null;
   cardFee: { type: "percent" | "fixed"; value: string } | null;
+  /** The shipping a new cycle of each mode starts from (Impostazioni); null = empty, per member. */
+  walletShipping?: ShippingDefault | null;
+  cardShipping?: ShippingDefault | null;
   /** Open from the start (the workspace's "+ Nuovo ciclo", or no cycle yet). */
   defaultOpen?: boolean;
 }) {
   const [open, setOpen] = useState(defaultOpen);
   const [paymentMode, setPaymentMode] = useState<"wallet" | "per_order">(groupMode);
   const handlingFee = paymentMode === "per_order" ? cardFee : walletFee;
+  const shippingDefault = (mode: "wallet" | "per_order") => (mode === "per_order" ? cardShipping : walletShipping);
   const [isPending, startTransition] = useTransition();
   const [shippingMode, setShippingMode] = useState<"fixed_per_member" | "proportional">(
-    "fixed_per_member",
+    shippingDefault(groupMode)?.mode ?? "fixed_per_member",
   );
+  const shipping = shippingDefault(paymentMode);
+  const shippingAmount = (mode: "fixed_per_member" | "proportional") =>
+    shipping?.mode === mode && shipping.amount !== null ? String(shipping.amount) : "";
+
+  // Another mode starts from its own defaults, shipping included.
+  function changePaymentMode(mode: "wallet" | "per_order") {
+    setPaymentMode(mode);
+    setShippingMode(shippingDefault(mode)?.mode ?? "fixed_per_member");
+  }
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -854,16 +870,17 @@ export function CreateCycleForm({
           </label>
         </div>
 
+        {(cardSelectable || cardSwitchedOff) && (
+          <PaymentModeFields mode={paymentMode} onModeChange={changePaymentMode} cardDisabled={!cardSelectable} />
+        )}
+
         <ShippingModeFields
+          key={paymentMode}
           mode={shippingMode}
           onModeChange={setShippingMode}
-          defaultPerMember=""
-          defaultTotal=""
+          defaultPerMember={shippingAmount("fixed_per_member")}
+          defaultTotal={shippingAmount("proportional")}
         />
-
-        {(cardSelectable || cardSwitchedOff) && (
-          <PaymentModeFields mode={paymentMode} onModeChange={setPaymentMode} cardDisabled={!cardSelectable} />
-        )}
 
         <HandlingFeeFields
           // A new mode starts from its own last fee.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cardCyclesAvailable, cardCyclesSelectable, resolveNewCycleMode } from "./cycle-mode";
+import { cardCyclesAvailable, cardCyclesSelectable, defaultNewCycleMode, resolveNewCycleMode } from "./cycle-mode";
 
 const wallet = { groupMode: "wallet" as const, stripeUsable: true, currency: "EUR", cardCyclesEnabled: true };
 const perOrder = { ...wallet, groupMode: "per_order" as const };
@@ -44,5 +44,17 @@ describe("the payment mode of a new cycle", () => {
 
   it("rejects unknown values", () => {
     expect(resolveNewCycleMode("cash", wallet)).toEqual({ error: "invalid" });
+  });
+
+  it("starts new cycles by card when the group chose so, while card cycles are possible", () => {
+    const cardFirst = { ...wallet, newCycleMode: "per_order" as const };
+    expect(defaultNewCycleMode(cardFirst)).toBe("per_order");
+    expect(resolveNewCycleMode(undefined, cardFirst)).toEqual({ mode: "per_order" });
+    // The wallet stays one click away.
+    expect(resolveNewCycleMode("wallet", cardFirst)).toEqual({ mode: "wallet" });
+    // No usable key, or card cycles switched off: back to the wallet.
+    expect(defaultNewCycleMode({ ...cardFirst, stripeUsable: false })).toBe("wallet");
+    expect(defaultNewCycleMode({ ...cardFirst, cardCyclesEnabled: false })).toBe("wallet");
+    expect(defaultNewCycleMode({ ...wallet, newCycleMode: null })).toBe("wallet");
   });
 });

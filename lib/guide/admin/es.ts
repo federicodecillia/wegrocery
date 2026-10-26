@@ -126,7 +126,7 @@ export const adminGuideEs: GuideContent = {
       ],
       notes: [
         "El valor por defecto de los ciclos nuevos se elige en **Ajustes**, **Modo de pago**.",
-        "Si **Tarjeta** aparece en gris, los ciclos con tarjeta están desactivados para el grupo: actívalos en **Ajustes**, **Ciclos pagados con tarjeta**.",
+        "Si **Tarjeta** aparece en gris, los ciclos con tarjeta están desactivados para el grupo: actívalos en **Ajustes**, **Ciclos nuevos**. Allí eliges también si los ciclos nuevos empiezan con Tarjeta y los gastos de envío y preparación propuestos para cada modo.",
         "Con **Saldo del monedero en los pagos con tarjeta** activo (en **Ajustes**), el pago con tarjeta incluye también el saldo del socio: una deuda se suma, un crédito se descuenta. En **Historial** y en **Caja** siguen siendo líneas distintas.",
       ],
       when: { mode: "wallet", cards: true },

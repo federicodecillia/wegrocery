@@ -126,7 +126,7 @@ export const adminGuideEn: GuideContent = {
       ],
       notes: [
         "The default for new cycles is chosen in **Settings**, **Payment mode**.",
-        "If **Card** is greyed out, card cycles are switched off for the group: switch them on in **Settings**, **Cycles paid by card**.",
+        "If **Card** is greyed out, card cycles are switched off for the group: switch them on in **Settings**, **New cycles**. There you also choose whether new cycles start with Card, and the shipping and preparation costs proposed for each mode.",
         "With **Wallet balance in card payments** on (in **Settings**), the card payment includes the member's balance too: a debt is added, a credit is taken off. **History** and **Treasury** keep them as separate lines.",
       ],
       when: { mode: "wallet", cards: true },

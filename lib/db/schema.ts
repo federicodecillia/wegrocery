@@ -426,6 +426,11 @@ export const appSettings = pgTable(
     // A card payment for a pay-per-order cycle also settles the wallet: it
     // pays the debt, or uses the credit first (drizzle/0042_card_settles_wallet.sql).
     cardSettlesWallet: boolean("card_settles_wallet").notNull().default(false),
+    // What "Nuovo ciclo" starts from: the payment mode ('wallet' | 'per_order',
+    // NULL = the group's) and, per mode, shipping and preparation fee
+    // (drizzle/0043_new_cycle_defaults.sql, lib/payments/new-cycle-defaults.ts).
+    newCyclePaymentMode: text("new_cycle_payment_mode"),
+    newCycleDefaults: jsonb("new_cycle_defaults"),
     // Ask members whose name is the start of their address for a real one:
     // 'off' | 'optional' | 'required' (drizzle/0041_member_name_prompt.sql).
     memberNamePrompt: text("member_name_prompt").notNull().default("optional"),
@@ -440,6 +445,10 @@ export const appSettings = pgTable(
   (table) => [
     check("app_settings_single_row", sql`${table.id} = 1`),
     check("app_settings_payment_mode_check", sql`${table.paymentMode} IN ('wallet', 'per_order')`),
+    check(
+      "app_settings_new_cycle_payment_mode_check",
+      sql`${table.newCyclePaymentMode} IN ('wallet', 'per_order')`,
+    ),
     check("app_settings_member_name_prompt_check", sql`${table.memberNamePrompt} IN ('off', 'optional', 'required')`),
     check("app_settings_min_balance_check", sql`${table.minBalance} <= 0`),
     check(

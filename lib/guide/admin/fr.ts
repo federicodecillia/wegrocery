@@ -126,7 +126,7 @@ export const adminGuideFr: GuideContent = {
       ],
       notes: [
         "La valeur par défaut des nouveaux cycles se choisit dans **Réglages**, **Mode de paiement**.",
-        "Si **Carte** est grisé, les cycles par carte sont désactivés pour le groupe : activez-les dans **Réglages**, **Cycles payés par carte**.",
+        "Si **Carte** est grisé, les cycles par carte sont désactivés pour le groupe : activez-les dans **Réglages**, **Nouveaux cycles**. Vous y choisissez aussi si les nouveaux cycles démarrent avec Carte, et les frais de livraison et de préparation proposés pour chaque mode.",
         "Avec **Solde du porte-monnaie dans les paiements par carte** activé (dans **Réglages**), le paiement par carte comprend aussi le solde du membre : une dette s'ajoute, un crédit se déduit. L'**Historique** et la **Caisse** les gardent en lignes distinctes.",
       ],
       when: { mode: "wallet", cards: true },
