@@ -1238,12 +1238,13 @@ export type SettlementPreviewRow = {
 
 export async function adminPreviewSettlement(
   cycleId: string,
-): Promise<{ rows: SettlementPreviewRow[]; settledAt: string | null } | { error: string }> {
+): Promise<{ rows: SettlementPreviewRow[]; settledAt: string | null; carryShortfall: boolean } | { error: string }> {
   try {
     await requireAdmin();
     const preview = await previewSettlement(getDb(), cycleId);
     return {
       settledAt: preview.cycle.settledAt ? new Date(preview.cycle.settledAt).toISOString() : null,
+      carryShortfall: preview.carryShortfall,
       rows: preview.members.map((m) => ({
         memberId: m.memberId,
         fullName: m.fullName,

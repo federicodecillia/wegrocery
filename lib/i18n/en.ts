@@ -382,6 +382,7 @@ export const en: Strings = {
     creditLabel: "Credit",
     creditHint: "You paid more than the final cost of your orders: the difference is your credit, and the association will give it back.",
     nothingDue: "Nothing is due.",
+    smallDueCarried: (amount: string) => `You owe ${amount}: we add it to your next card payment.`,
     goToOrder: "Go to order",
     lineItem: (org: string) => `Amount due to ${org}`,
     nothingToPay: "Nothing is due.",
@@ -745,6 +746,8 @@ export const en: Strings = {
       title: (cycle: string) => `Settle accounts: ${cycle}`,
       intro:
         "With the final costs (weighing and supplier sheet) the app refunds to the card what each member paid in excess, asks those who paid less to settle, and writes off gaps under 0.50. It can run again at any time.",
+      introCarry:
+        "With the final costs (weighing and supplier sheet) the app refunds to the card what each member paid in excess. For those who paid less the gap stays on their balance and is added to their next card payment. It can run again at any time.",
       loading: "Calculating...",
       empty: "No members on this cycle.",
       net: (amount: string) => `cycle net ${amount}`,
@@ -2091,6 +2094,8 @@ export const en: Strings = {
     settlementDueTitle: "Amount due",
     settlementDueBody: (cycle: string, amount: string) =>
       `The final costs of "${cycle}" are more than you paid: ${amount} is due. You can pay it from Top up with "Pay now".`,
+    settlementDueCarriedBody: (cycle: string, amount: string) =>
+      `The final costs of "${cycle}" (weighing and supplier sheet) are more than you paid: ${amount} is due. We add it to your next card payment.`,
     orderRefundTitle: "Refund on its way",
     orderRefundCancelledBody: (amount: string) =>
       `You cancelled your order: we are refunding ${amount} to the card you paid with. It usually takes 5-10 days.`,

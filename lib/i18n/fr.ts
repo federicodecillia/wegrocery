@@ -382,6 +382,7 @@ export const fr: Strings = {
     creditLabel: "Crédit",
     creditHint: "Vous avez payé plus que le coût final de vos commandes : la différence est votre crédit, et l'association vous la rendra.",
     nothingDue: "Rien n'est dû.",
+    smallDueCarried: (amount: string) => `Vous devez ${amount} : nous les ajoutons à votre prochain paiement par carte.`,
     goToOrder: "Aller à la commande",
     lineItem: (org: string) => `Montant dû à ${org}`,
     nothingToPay: "Rien n'est dû.",
@@ -745,6 +746,8 @@ export const fr: Strings = {
       title: (cycle: string) => `Solder les comptes : ${cycle}`,
       intro:
         "Avec les coûts finaux (pesée et bon du fournisseur), l'app rembourse sur la carte ce que chaque membre a payé en trop, demande à ceux qui ont payé moins de régler, et passe en pertes les écarts de moins de 0,50. Vous pouvez la relancer à tout moment.",
+      introCarry:
+        "Avec les coûts finaux (pesée et bon du fournisseur), l'app rembourse sur la carte ce que chaque membre a payé en trop. Pour ceux qui ont payé moins, l'écart reste sur leur solde et s'ajoute à leur prochain paiement par carte. Vous pouvez la relancer à tout moment.",
       loading: "Calcul en cours...",
       empty: "Aucun membre sur ce cycle.",
       net: (amount: string) => `net du cycle ${amount}`,
@@ -2091,6 +2094,8 @@ export const fr: Strings = {
     settlementDueTitle: "Montant dû",
     settlementDueBody: (cycle: string, amount: string) =>
       `Les coûts définitifs de « ${cycle} » dépassent ce que vous avez payé : ${amount} restent dus. Vous pouvez les régler depuis Recharger avec « Payer maintenant ».`,
+    settlementDueCarriedBody: (cycle: string, amount: string) =>
+      `Les coûts définitifs de « ${cycle} » (pesée et bon du fournisseur) dépassent ce que vous avez payé : ${amount} restent dus. Nous les ajoutons à votre prochain paiement par carte.`,
     orderRefundTitle: "Remboursement en cours",
     orderRefundCancelledBody: (amount: string) =>
       `Vous avez annulé votre commande : nous vous remboursons ${amount} sur la carte utilisée pour payer. Cela prend en général 5 à 10 jours.`,

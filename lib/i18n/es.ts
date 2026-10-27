@@ -382,6 +382,7 @@ export const es: Strings = {
     creditLabel: "Crédito",
     creditHint: "Has pagado más que el coste final de tus pedidos: la diferencia es tu crédito y la asociación te la devolverá.",
     nothingDue: "No hay nada pendiente.",
+    smallDueCarried: (amount: string) => `Tienes ${amount} pendientes: los añadimos a tu próximo pago con tarjeta.`,
     goToOrder: "Ir al pedido",
     lineItem: (org: string) => `Importe pendiente con ${org}`,
     nothingToPay: "No hay nada pendiente.",
@@ -745,6 +746,8 @@ export const es: Strings = {
       title: (cycle: string) => `Ajustar las cuentas: ${cycle}`,
       intro:
         "Con los costes finales (pesaje y hoja del proveedor) la app devuelve a la tarjeta lo que cada socio pagó de más, pide a quien pagó de menos que salde, y da por saldadas las diferencias de menos de 0,50. Se puede repetir en cualquier momento.",
+      introCarry:
+        "Con los costes finales (pesaje y hoja del proveedor) la app devuelve a la tarjeta lo que cada socio pagó de más. A quien pagó de menos la diferencia se le queda en el saldo y se añade a su próximo pago con tarjeta. Se puede repetir en cualquier momento.",
       loading: "Calculando...",
       empty: "Ningún socio en este ciclo.",
       net: (amount: string) => `neto del ciclo ${amount}`,
@@ -2091,6 +2094,8 @@ export const es: Strings = {
     settlementDueTitle: "Importe pendiente",
     settlementDueBody: (cycle: string, amount: string) =>
       `Los costes finales de "${cycle}" superan lo que pagaste: quedan ${amount} pendientes. Puedes pagarlos desde Recarga con "Pagar ahora".`,
+    settlementDueCarriedBody: (cycle: string, amount: string) =>
+      `Los costes finales de "${cycle}" (pesaje y hoja del proveedor) superan lo que pagaste: quedan ${amount} pendientes. Los añadimos a tu próximo pago con tarjeta.`,
     orderRefundTitle: "Reembolso en camino",
     orderRefundCancelledBody: (amount: string) =>
       `Has anulado tu pedido: te reembolsamos ${amount} en la tarjeta con la que pagaste. Suele tardar 5-10 días.`,

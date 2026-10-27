@@ -328,7 +328,7 @@ export const adminGuideEs: GuideContent = {
       steps: [
         "Registra primero los pesos y la hoja del pedido, si hace falta.",
         "Abre el ciclo, ve a **Cuentas** y toca **Ajustar las cuentas**.",
-        "Revisa la lista: **Reembolso** para quien pagó de más, **Pendiente** para quien pagó de menos, **Saldado** para las diferencias por debajo de 0,50.",
+        "Revisa la lista: **Reembolso** para quien pagó de más, **Pendiente** para quien pagó de menos, **Saldado** para las diferencias por debajo de 0,50. Con \"Saldo del monedero en los pagos con tarjeta\" activado no hay saldados: la diferencia se añade al próximo pago con tarjeta del socio.",
         "Confirma con **Ajustar las cuentas**.",
       ],
       notes: [

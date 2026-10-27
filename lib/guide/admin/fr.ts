@@ -328,7 +328,7 @@ export const adminGuideFr: GuideContent = {
       steps: [
         "Saisissez d'abord les poids et le bon de commande, si besoin.",
         "Ouvrez le cycle, allez dans **Comptes** et touchez **Solder les comptes**.",
-        "Vérifiez la liste : **Remboursement** pour ceux qui ont trop payé, **Dû** pour ceux qui n'ont pas assez payé, **Passé en pertes** pour les écarts sous 0,50.",
+        "Vérifiez la liste : **Remboursement** pour ceux qui ont trop payé, **Dû** pour ceux qui n'ont pas assez payé, **Passé en pertes** pour les écarts sous 0,50. Avec « Solde du porte-monnaie dans les paiements par carte » activé, rien n'est passé en pertes : l'écart s'ajoute au prochain paiement par carte du membre.",
         "Confirmez avec **Solder les comptes**.",
       ],
       notes: [

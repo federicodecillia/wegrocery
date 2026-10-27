@@ -22,6 +22,11 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
+## [Unreleased]
+
+### Changed
+- ⚖️ **Weighing gaps move to the next payment.** With "Wallet balance in card payments" on, when the final weighing costs more than what was paid the gap stays on the balance and is added to the next card payment, under 0.50 too (it used to be written off). The member gets a notice saying so.
+
 ## [1.39.0] - 2026-10-27
 
 *Tidier settings, a "None" preparation fee for card cycles too, and wallet top-ups that can be switched off.*

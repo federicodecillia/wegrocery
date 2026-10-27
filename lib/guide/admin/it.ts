@@ -330,7 +330,7 @@ export const adminGuideIt: GuideContent = {
       steps: [
         "Registra prima pesate e distinta, se servono.",
         "Apri il ciclo e vai in **Conti**, poi tocca **Chiudi i conti**.",
-        "Controlla l'elenco: **Rimborso** per chi ha pagato in più, **Da saldare** per chi ha pagato meno, **Abbuono** per le differenze sotto 0,50 €.",
+        "Controlla l'elenco: **Rimborso** per chi ha pagato in più, **Da saldare** per chi ha pagato meno, **Abbuono** per le differenze sotto 0,50 €. Con \"Saldo del borsellino nei pagamenti con carta\" acceso non ci sono abbuoni: la differenza si aggiunge al prossimo pagamento con carta del socio.",
         "Conferma con **Chiudi i conti**.",
       ],
       notes: [

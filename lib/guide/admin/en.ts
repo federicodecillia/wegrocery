@@ -328,7 +328,7 @@ export const adminGuideEn: GuideContent = {
       steps: [
         "Record weights and the order sheet first, if needed.",
         "Open the cycle, go to **Accounts** and tap **Settle accounts**.",
-        "Check the list: **Refund** for whoever paid too much, **Due** for whoever paid too little, **Write-off** for gaps under 0.50.",
+        "Check the list: **Refund** for whoever paid too much, **Due** for whoever paid too little, **Write-off** for gaps under 0.50. With \"Wallet balance in card payments\" on there are no write-offs: the gap is added to the member's next card payment.",
         "Confirm with **Settle accounts**.",
       ],
       notes: [

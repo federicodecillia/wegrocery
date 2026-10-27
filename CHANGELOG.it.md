@@ -23,6 +23,11 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
+## [Non rilasciato]
+
+### Modificato
+- ⚖️ **Le differenze delle pesate passano al pagamento successivo.** Con "Saldo del borsellino nei pagamenti con carta" acceso, se a conti chiusi le pesate costano più di quanto pagato la differenza resta sul saldo e si aggiunge al prossimo pagamento con carta, anche sotto 0,50 € (prima veniva abbonata). Il socio riceve un avviso che lo spiega.
+
 ## [1.39.0] - 27 ottobre 2026
 
 *Impostazioni più ordinate, "Nessuna" spesa di preparazione anche per i cicli con carta e le ricariche del borsellino che si possono spegnere.*

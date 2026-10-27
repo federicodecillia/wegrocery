@@ -382,6 +382,7 @@ export const it = {
     creditLabel: "Credito",
     creditHint: "Hai pagato più del costo definitivo dei tuoi ordini: la differenza è un credito a tuo favore e l'associazione te la restituisce.",
     nothingDue: "Non hai nulla da saldare.",
+    smallDueCarried: (amount: string) => `Hai ${amount} da saldare: li aggiungiamo al tuo prossimo pagamento con la carta.`,
     goToOrder: "Vai all'ordine",
     lineItem: (org: string) => `Saldo dovuto a ${org}`,
     nothingToPay: "Non hai nulla da saldare.",
@@ -747,6 +748,8 @@ export const it = {
       title: (cycle: string) => `Chiudi i conti: ${cycle}`,
       intro:
         "Con i costi definitivi (pesate e distinta) l'app restituisce sulla carta quello che ogni socio ha pagato in più, chiede di saldare a chi ha pagato meno e abbuona le differenze sotto 0,50 €. Si può rifare in qualsiasi momento.",
+      introCarry:
+        "Con i costi definitivi (pesate e distinta) l'app restituisce sulla carta quello che ogni socio ha pagato in più. A chi ha pagato meno la differenza resta sul saldo e si aggiunge al suo prossimo pagamento con la carta. Si può rifare in qualsiasi momento.",
       loading: "Calcolo...",
       empty: "Nessun socio su questo ciclo.",
       net: (amount: string) => `netto del ciclo ${amount}`,
@@ -2099,6 +2102,8 @@ export const it = {
     settlementDueTitle: "Da saldare",
     settlementDueBody: (cycle: string, amount: string) =>
       `I costi definitivi di "${cycle}" superano quanto hai pagato: mancano ${amount}. Puoi saldarli da Ricarica con "Paga ora".`,
+    settlementDueCarriedBody: (cycle: string, amount: string) =>
+      `I costi definitivi di "${cycle}" (pesate e distinta) superano quanto hai pagato: mancano ${amount}. Li aggiungiamo al tuo prossimo pagamento con la carta.`,
     orderRefundTitle: "Rimborso in arrivo",
     orderRefundCancelledBody: (amount: string) =>
       `Hai annullato l'ordine: ti rimborsiamo ${amount} sulla carta con cui hai pagato. Di solito arriva in 5-10 giorni.`,
