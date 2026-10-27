@@ -201,16 +201,20 @@ export function parseHandlingFee(type: string, value: string): HandlingFee | { e
 
 export const DEFAULT_HANDLING_FEE: HandlingFee = { type: "percent", value: 10 };
 
-// The fee a cycle gets from its form: "none" (wallet only: a per_order cycle
-// always has one, drizzle/0021) or a valid fee. When the form sent nothing:
-// the last cycle's of the same mode, else none in wallet mode and 10% per order.
+// No preparation fee on a card cycle, which always stores one (drizzle/0021):
+// 0% charges nothing.
+export const NO_HANDLING_FEE: HandlingFee = { type: "percent", value: 0 };
+
+// The fee a cycle gets from its form: "none" (no fee; 0% on a per_order cycle)
+// or a valid fee. When the form sent nothing: the last cycle's of the same
+// mode, else none in wallet mode and 10% per order.
 export function resolveCycleFee(
   mode: "wallet" | "per_order",
   input: { type: string; value: string } | undefined,
   lastFee: HandlingFee | null,
 ): { fee: HandlingFee | null } | { error: "invalid" } {
   if (!input) return { fee: lastFee ?? (mode === "per_order" ? DEFAULT_HANDLING_FEE : null) };
-  if (input.type === "none") return mode === "per_order" ? { error: "invalid" } : { fee: null };
+  if (input.type === "none") return { fee: mode === "per_order" ? NO_HANDLING_FEE : null };
   const parsed = parseHandlingFee(input.type, input.value);
   return "error" in parsed ? parsed : { fee: parsed };
 }

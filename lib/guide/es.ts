@@ -235,7 +235,7 @@ export const guideEs: GuideContent = {
       title: "Recargar el saldo",
       intro: "Pregunta a tesorería cómo pagar: en cuanto lo registra, tu saldo se actualiza y recibes un aviso.",
       keywords: ["pago", "transferencia", "efectivo", "dinero", "crédito"],
-      when: { mode: "wallet", bankTransfer: false, onlineTopup: false },
+      when: { mode: "wallet", topups: true, bankTransfer: false, onlineTopup: false },
     },
     {
       slug: "saldo-negativo",
@@ -248,7 +248,7 @@ export const guideEs: GuideContent = {
       ],
       link: { href: "/ricarica", label: "Abrir Recarga" },
       keywords: ["negativo", "deuda", "insuficiente", "descubierto", "límite"],
-      when: { mode: "wallet" },
+      when: { mode: "wallet", topups: true },
     },
     {
       slug: "spese-preparazione",

@@ -16,7 +16,10 @@ function tabClass(active: boolean): string {
 // "Come si fa?": the admin guide's card for what is on screen.
 function HelpLink({ href }: { href: string }) {
   return (
-    <Link href={href} className="ml-auto inline-flex min-h-11 items-center gap-1 text-[13px] font-semibold text-primary-text hover:underline">
+    <Link
+      href={href}
+      className="ml-auto inline-flex min-h-11 shrink-0 items-center gap-1 whitespace-nowrap text-[13px] font-semibold text-primary-text hover:underline"
+    >
       <CircleHelp aria-hidden className="size-4" />
       {t.admin.nav.help}
     </Link>
@@ -119,13 +122,13 @@ export function AdminNav() {
       </nav>
 
       {views ? (
-        <nav aria-label={t.admin.nav.views} className="flex gap-4 border-b border-border px-1">
+        <nav aria-label={t.admin.nav.views} className="flex gap-4 overflow-x-auto border-b border-border px-1 [scrollbar-width:none]">
           {views.map((v) => (
             <Link
               key={v.id}
               href={adminHref(section, v.id)}
               aria-current={view === v.id ? "page" : undefined}
-              className={`-mb-px flex min-h-11 items-center border-b-2 text-[14px] font-semibold ${
+              className={`-mb-px flex min-h-11 shrink-0 items-center whitespace-nowrap border-b-2 text-[14px] font-semibold ${
                 view === v.id ? "border-primary text-foreground" : "border-transparent text-secondary-foreground hover:text-foreground"
               }`}
             >

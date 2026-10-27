@@ -426,6 +426,9 @@ export const appSettings = pgTable(
     // A card payment for a pay-per-order cycle also settles the wallet: it
     // pays the debt, or uses the credit first (drizzle/0042_card_settles_wallet.sql).
     cardSettlesWallet: boolean("card_settles_wallet").notNull().default(false),
+    // Members may top up the wallet (bank transfer, online); off for a wallet
+    // group that collects every order by card (drizzle/0044_wallet_topups.sql).
+    walletTopupsEnabled: boolean("wallet_topups_enabled").notNull().default(true),
     // What "Nuovo ciclo" starts from: the payment mode ('wallet' | 'per_order',
     // NULL = the group's) and, per mode, shipping and preparation fee
     // (drizzle/0043_new_cycle_defaults.sql, lib/payments/new-cycle-defaults.ts).
@@ -465,7 +468,7 @@ export const appSettings = pgTable(
     ),
     check(
       "app_settings_wallet_channel_check",
-      sql`${table.paymentMode} <> 'wallet' OR ${table.bankTransferEnabled} OR ${table.onlinePaymentsEnabled}`,
+      sql`${table.paymentMode} <> 'wallet' OR NOT ${table.walletTopupsEnabled} OR ${table.bankTransferEnabled} OR ${table.onlinePaymentsEnabled}`,
     ),
     check(
       "app_settings_per_order_online_check",

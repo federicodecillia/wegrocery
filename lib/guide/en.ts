@@ -235,7 +235,7 @@ export const guideEn: GuideContent = {
       title: "Topping up your balance",
       intro: "Ask the treasurer how to pay: once they record it, your balance is updated and you get a notification.",
       keywords: ["payment", "transfer", "cash", "money", "credit"],
-      when: { mode: "wallet", bankTransfer: false, onlineTopup: false },
+      when: { mode: "wallet", topups: true, bankTransfer: false, onlineTopup: false },
     },
     {
       slug: "saldo-negativo",
@@ -248,7 +248,7 @@ export const guideEn: GuideContent = {
       ],
       link: { href: "/ricarica", label: "Open Top up" },
       keywords: ["negative", "debt", "insufficient", "overdrawn", "limit"],
-      when: { mode: "wallet" },
+      when: { mode: "wallet", topups: true },
     },
     {
       slug: "spese-preparazione",

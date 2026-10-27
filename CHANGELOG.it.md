@@ -23,6 +23,20 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
+## [1.39.0] - 27 ottobre 2026
+
+*Impostazioni più ordinate, "Nessuna" spesa di preparazione anche per i cicli con carta e le ricariche del borsellino che si possono spegnere.*
+
+### Aggiunte
+- 🔒 **Ricariche del borsellino spegnibili.** Un gruppo che fa pagare ogni ordine con carta può spegnere le ricariche in Impostazioni, Pagamenti, Borsellino: i soci non vedono più Ricarica, IBAN e causale (in Home, Profilo, Storico e guida) e la ricarica online viene rifiutata. Saldi e movimenti restano, e in Cassa si può sempre registrare un versamento a mano. Di default le ricariche restano attive.
+- [tecnico] 🗄️ **Migrazione `0044_wallet_topups.sql`.** Aggiunge `app_settings.wallet_topups_enabled` (acceso di default) e allarga `app_settings_wallet_channel_check`: con le ricariche spente un gruppo col borsellino può non avere canali. Da applicare prima del deploy, rollback in `0044_wallet_topups_down.sql`.
+
+### Modificato
+- 🗂️ **Impostazioni divise per argomento.** Una barra in alto porta a Pagamenti, Gruppo (nome, logo, colori e contatti), Soci e guida, Tecniche. Ogni riquadro resta chiuso e mostra in una riga com'è impostato; si apre con un tocco, o da solo se c'è qualcosa da sistemare.
+- 💳 **La carta in un solo riquadro.** Collegamento a Stripe, ricarica online e saldo nei pagamenti con carta stanno insieme in "Carta (Stripe)", e lo stato di Stripe non è più ripetuto in più punti.
+- 🧾 **Spese proposte più compatte.** Spedizione e preparazione si scelgono da un menu con l'importo accanto, uguali per i cicli col borsellino e per quelli con carta.
+- 🧾 **"Nessuna" spesa di preparazione anche per i cicli con carta.** In Impostazioni e in Nuovo ciclo i cicli con carta hanno ora l'opzione "Nessuna", come quelli col borsellino.
+
 ## [1.38.0] - 26 ottobre 2026
 
 *I nuovi cicli possono partire con la carta, con le spese giuste già proposte, e il saldo del borsellino può entrare nel pagamento con carta.*

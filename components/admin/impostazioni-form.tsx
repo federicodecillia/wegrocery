@@ -194,11 +194,6 @@ export function PaymentSettingsForm({
             <span>
               <span className="flex items-center gap-2 text-[13px] font-bold text-foreground">
                 {s.onlineTitle}
-                {stripeKey.usable && !stripeKey.livemode && (
-                  <span className="rounded-full bg-primary-bg px-2 py-0.5 tabular-nums text-label font-semibold text-primary-text">
-                    {s.testMode}
-                  </span>
-                )}
               </span>
               <span className="mt-1 block text-[12px] text-secondary-foreground">{s.onlineHint}</span>
             </span>
@@ -210,11 +205,6 @@ export function PaymentSettingsForm({
               className="mt-0.5 h-5 w-5 shrink-0 accent-accent disabled:opacity-50"
             />
           </label>
-          {!stripeKey.usable && (
-            <p className="mt-2 rounded-lg bg-danger-bg px-3 py-2 text-[12px] text-destructive">
-              {s.stripeUnavailable[stripeKey.reason]}
-            </p>
-          )}
         </section>
       )}
 

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "@/components/ui/toast";
 import { Input } from "@/components/ui/input";
 import { labelClass } from "@/components/ui/label";
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { adminSetNewCycleDefaults, adminSetNewCyclePayment } from "@/lib/actions/admin-settings";
 import { t } from "@/lib/i18n";
 import { formatHandlingFee, formatMoney } from "@/lib/i18n/format";
@@ -21,21 +22,17 @@ const CHOICES: NewCyclePaymentChoice[] = ["wallet_only", "wallet_default", "card
 // The order the preview is worked out on, in euros.
 const SAMPLE_ORDER = 50;
 
-const segmentCls = (active: boolean) =>
-  `flex-1 rounded-md py-1.5 text-label font-semibold transition-colors ${
-    active ? "bg-card text-foreground shadow-sm" : "bg-transparent text-secondary-foreground"
-  }`;
-
 // The fee shows what "Nuovo ciclo" starts from today: the default, else the
 // last one of that mode (10% by card), so saving never changes it unseen.
 function toInput(d: ModeDefaults | undefined, mode: PaymentMode, startFee: HandlingFee | null): ModeDefaultsInput {
   const fee = d?.fee ?? startFee ?? undefined;
+  // "None": stored as such for the wallet, as 0% for a card cycle (NO_HANDLING_FEE).
+  const noFee = fee !== undefined && (fee.type === "none" || (mode === "per_order" && fee.value === 0));
   return {
     shippingMode: d?.shipping?.mode ?? "fixed_per_member",
     shippingAmount: d?.shipping?.amount == null ? "" : String(d.shipping.amount),
-    // A card cycle always has a fee: "none" only for the wallet.
-    feeType: fee ? fee.type : mode === "wallet" ? "none" : "percent",
-    feeValue: fee && fee.type !== "none" ? String(fee.value) : "",
+    feeType: noFee ? "none" : fee ? fee.type : mode === "wallet" ? "none" : "percent",
+    feeValue: fee && !noFee ? String(fee.value) : "",
   };
 }
 
@@ -62,6 +59,19 @@ function previewOf(v: ModeDefaultsInput): string {
   return s.preview(formatMoney(SAMPLE_ORDER), shipping, fee);
 }
 
+// An amount field with its unit inside, on the same row as its choice.
+function UnitInput({ unit, ...props }: React.ComponentProps<typeof Input> & { unit: string }) {
+  return (
+    <div className="relative w-28 shrink-0">
+      <Input type="text" inputMode="decimal" autoComplete="off" className="pr-8 text-right tabular-nums" {...props} />
+      <span aria-hidden className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-[13px] text-muted-foreground">
+        {unit}
+      </span>
+    </div>
+  );
+}
+
+// One mode's defaults, compact: each cost is a choice and an amount on one row.
 function ModeDefaultsFields({
   mode,
   value,
@@ -75,88 +85,71 @@ function ModeDefaultsFields({
   const c = t.admin.cycle;
   const id = (name: string) => `new-cycle-${mode}-${name}`;
   const feeOptions: { v: ModeDefaultsInput["feeType"]; label: string }[] = [
-    ...(mode === "wallet" ? [{ v: "none" as const, label: c.handlingFeeNone }] : []),
+    { v: "none", label: c.handlingFeeNone },
     { v: "percent", label: c.handlingFeePercent },
     { v: "fixed", label: c.handlingFeeFixed },
   ];
+  const proportional = value.shippingMode === "proportional";
   return (
     <fieldset className="min-w-0 rounded-lg border border-border p-3">
       <legend className="px-1 text-[12px] font-bold text-foreground">
         {mode === "wallet" ? s.walletColumn : s.cardColumn}
       </legend>
-      <p className={labelClass} id={id("shipping-label")}>
+      <label htmlFor={id("shipping-mode")} className={labelClass}>
         {c.shippingLabel}
-      </p>
-      <div className="mb-2 flex rounded-lg bg-tint/[0.05] p-0.5" role="group" aria-labelledby={id("shipping-label")}>
-        {(
-          [
-            { v: "fixed_per_member", label: c.shippingFixed },
-            { v: "proportional", label: c.shippingProportional },
-          ] as const
-        ).map((opt) => (
-          <button
-            key={opt.v}
-            type="button"
-            aria-pressed={value.shippingMode === opt.v}
-            onClick={() => onChange({ ...value, shippingMode: opt.v })}
-            className={segmentCls(value.shippingMode === opt.v)}
-          >
-            {opt.label}
-          </button>
-        ))}
+      </label>
+      <div className="flex gap-2">
+        <NativeSelect
+          id={id("shipping-mode")}
+          wrapperClassName="min-w-0 flex-1"
+          value={value.shippingMode}
+          onChange={(e) => onChange({ ...value, shippingMode: e.target.value as ModeDefaultsInput["shippingMode"] })}
+        >
+          <NativeSelectOption value="fixed_per_member">{c.shippingFixed}</NativeSelectOption>
+          <NativeSelectOption value="proportional">{c.shippingProportional}</NativeSelectOption>
+        </NativeSelect>
+        <UnitInput
+          id={id("shipping")}
+          unit="€"
+          aria-label={`${c.shippingLabel}, ${proportional ? s.shippingTotal : s.shippingPerMember}`}
+          value={value.shippingAmount}
+          onChange={(e) => onChange({ ...value, shippingAmount: e.target.value })}
+          placeholder="0,00"
+        />
       </div>
-      <Input
-        id={id("shipping")}
-        type="text"
-        inputMode="decimal"
-        autoComplete="off"
-        aria-labelledby={id("shipping-label")}
-        aria-describedby={id("shipping-unit")}
-        value={value.shippingAmount}
-        onChange={(e) => onChange({ ...value, shippingAmount: e.target.value })}
-        placeholder="0,00"
-      />
-      <p id={id("shipping-unit")} className="mt-1 text-label text-muted-foreground">
-        {value.shippingMode === "proportional" ? s.shippingTotal : s.shippingPerMember}
-      </p>
 
-      <p className={`${labelClass} mt-3`} id={id("fee-label")}>
+      <label htmlFor={id("fee-type")} className={`${labelClass} mt-3`}>
         {c.handlingFeeLabel}
-      </p>
-      <div className="mb-2 flex rounded-lg bg-tint/[0.05] p-0.5" role="group" aria-labelledby={id("fee-label")}>
-        {feeOptions.map((opt) => (
-          <button
-            key={opt.v}
-            type="button"
-            aria-pressed={value.feeType === opt.v}
-            onClick={() => onChange({ ...value, feeType: opt.v })}
-            className={segmentCls(value.feeType === opt.v)}
-          >
-            {opt.label}
-          </button>
-        ))}
-      </div>
-      {value.feeType !== "none" && (
-        <>
-          <Input
+      </label>
+      <div className="flex gap-2">
+        <NativeSelect
+          id={id("fee-type")}
+          wrapperClassName="min-w-0 flex-1"
+          value={value.feeType}
+          onChange={(e) => onChange({ ...value, feeType: e.target.value as ModeDefaultsInput["feeType"] })}
+        >
+          {feeOptions.map((opt) => (
+            <NativeSelectOption key={opt.v} value={opt.v}>
+              {opt.label}
+            </NativeSelectOption>
+          ))}
+        </NativeSelect>
+        {value.feeType !== "none" && (
+          <UnitInput
             id={id("fee")}
-            type="text"
-            inputMode="decimal"
-            autoComplete="off"
-            aria-labelledby={id("fee-label")}
-            aria-describedby={id("fee-help")}
+            unit={value.feeType === "percent" ? "%" : "€"}
+            aria-label={`${c.handlingFeeLabel}, ${
+              value.feeType === "percent" ? `% (max ${HANDLING_FEE_MAX.percent})` : `€ (max ${HANDLING_FEE_MAX.fixed})`
+            }`}
             value={value.feeValue}
             onChange={(e) => onChange({ ...value, feeValue: e.target.value })}
-            placeholder={value.feeType === "percent" ? "%" : "€"}
           />
-          <p id={id("fee-help")} className="mt-1 text-label text-muted-foreground">
-            {value.feeType === "percent" ? `% (max ${HANDLING_FEE_MAX.percent})` : `€ (max ${HANDLING_FEE_MAX.fixed})`}
-            {" · "}
-            {s.feeEmpty}
-          </p>
-        </>
+        )}
+      </div>
+      {value.feeType !== "none" && value.feeValue.trim() === "" && (
+        <p className="mt-1 text-label text-muted-foreground">{s.feeEmpty}</p>
       )}
-      <p className="mt-3 text-[12px] font-medium text-foreground">{previewOf(value)}</p>
+      <p className="mt-3 text-[12px] text-secondary-foreground">{previewOf(value)}</p>
     </fieldset>
   );
 }

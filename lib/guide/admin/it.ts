@@ -61,9 +61,9 @@ export const adminGuideIt: GuideContent = {
       steps: [
         "Segui i passi con **Avanti**. Puoi fermarti quando vuoi con **Salta per ora**: quello che hai salvato resta.",
         "Alla fine tocca **Concludi la configurazione**.",
-        "Per rivederla in seguito: **Impostazioni**, riquadro **Configurazione guidata**, **Apri**.",
+        "Per rivederla in seguito: **Impostazioni**, **Tecniche**, riquadro **Configurazione guidata**, **Apri**.",
       ],
-      link: { href: "/admin?tab=impostazioni", label: "Apri Impostazioni" },
+      link: { href: "/admin?tab=impostazioni&view=tecniche", label: "Apri Impostazioni" },
       keywords: ["avvio", "primo avvio", "setup", "installazione"],
     },
     {
@@ -127,9 +127,10 @@ export const adminGuideIt: GuideContent = {
         "**Carta**: ogni socio paga il suo ordine con la carta quando lo conferma. A costi definitivi **Chiudi i conti** rimborsa o chiede la differenza.",
       ],
       notes: [
-        "La modalità predefinita dei nuovi cicli si sceglie in **Impostazioni**, **Nuovi cicli**: anche con cicli aperti, che restano come sono.",
-        "Se **Carta** è in grigio, i cicli con carta sono spenti per il gruppo: si accendono da **Impostazioni**, **Nuovi cicli**. Lì scegli anche se i nuovi cicli partono con Carta e le spese di spedizione e preparazione proposte per ogni modalità.",
-        "Con **Saldo del borsellino nei pagamenti con carta** acceso (in **Impostazioni**), il pagamento con carta comprende anche il saldo del socio: un debito si aggiunge, un credito si scala. In **Storico** e in **Cassa** restano voci distinte.",
+        "La modalità predefinita dei nuovi cicli si sceglie in **Impostazioni**, **Pagamenti**, **Come si pagano i nuovi cicli**: anche con cicli aperti, che restano come sono.",
+        "Se **Carta** è in grigio, i cicli con carta sono spenti per il gruppo: si accendono da **Impostazioni**, **Pagamenti**, **Come si pagano i nuovi cicli**. Lì scegli anche se i nuovi cicli partono con Carta e le spese di spedizione e preparazione proposte per ogni modalità.",
+        "Con **Saldo del borsellino nei pagamenti con carta** acceso (in **Impostazioni**, **Pagamenti**), il pagamento con carta comprende anche il saldo del socio: un debito si aggiunge, un credito si scala. In **Storico** e in **Cassa** restano voci distinte.",
+        "Se ormai ogni ordine si paga con carta, in **Impostazioni**, **Pagamenti**, **Borsellino** puoi spegnere le **Ricariche del borsellino**: i soci non vedono più Ricarica, IBAN e causale, mentre saldi e movimenti restano.",
       ],
       when: { mode: "wallet", cards: true },
       keywords: ["carta", "borsellino", "stripe", "metodo"],
@@ -229,7 +230,7 @@ export const adminGuideIt: GuideContent = {
       title: "Cosa succede ai saldi quando chiudi",
       intro: "Alla chiusura ogni socio con un ordine riceve un addebito sul saldo: prodotti, spedizione e spese di preparazione, se previste. Riceve anche un avviso con il dettaglio.",
       notes: [
-        "Se un saldo va sotto zero il socio lo vede in Home e può ricaricare. Le soglie si cambiano in **Impostazioni**, **Soglie del saldo**.",
+        "Se un saldo va sotto zero il socio lo vede in Home e può ricaricare. Le soglie si cambiano in **Impostazioni**, **Pagamenti**, **Borsellino**.",
         "Ogni correzione successiva (pesi, distinta, ordine modificato) crea un movimento in più, visibile al socio. Non si riscrive mai un addebito già fatto.",
       ],
       when: { mode: "wallet" },
@@ -419,7 +420,7 @@ export const adminGuideIt: GuideContent = {
         "In **Cassa** tocca **Saldo < 0** per vedere chi è sotto zero.",
         "Ricorda al socio di ricaricare: in Home vede già il suo saldo e il pulsante per ricaricare.",
       ],
-      notes: ["Quanto si può andare sotto zero (**Scoperto massimo**) vale per tutti e si cambia in **Impostazioni**, **Soglie del saldo**."],
+      notes: ["Quanto si può andare sotto zero (**Scoperto massimo**) vale per tutti e si cambia in **Impostazioni**, **Pagamenti**, **Borsellino**."],
       when: { mode: "wallet" },
       keywords: ["negativo", "debito", "rosso", "soglia"],
     },
@@ -429,7 +430,7 @@ export const adminGuideIt: GuideContent = {
       title: "IBAN, causale del bonifico e contabile",
       intro: "I soci trovano IBAN, intestatario e la causale da usare nella pagina Ricarica e nello Storico.",
       steps: [
-        "Apri **Impostazioni** e cerca **Ricarica con bonifico**.",
+        "Apri **Impostazioni**, **Pagamenti**, **Bonifico**.",
         "Scrivi intestatario e IBAN.",
         "In **Causale per gli ordini** puoi usare {ordine}, {mese}, {anno} e {socio}: l'app li compila per ogni ordine.",
         "Se volete ricevere la ricevuta del bonifico (la contabile), scrivi l'indirizzo in **Email per la contabile**: i soci vedono l'invito a mandarla lì.",
@@ -540,7 +541,7 @@ export const adminGuideIt: GuideContent = {
         "Tocca **Modifica** sul socio, scrivi nome e cognome e salva.",
       ],
       notes: [
-        "In **Impostazioni**, **Nome e cognome dei soci**, scegli se l'app lo chiede ai soci dopo l'accesso: mai, con la possibilità di rimandare, o prima di tutto.",
+        "In **Impostazioni**, **Soci e guida**, **Nome e cognome dei soci**, scegli se l'app lo chiede ai soci dopo l'accesso: mai, con la possibilità di rimandare, o prima di tutto.",
         "Il socio può sempre cambiare il suo nome dal **Profilo**.",
       ],
       keywords: ["nome", "cognome", "nome strano", "username", "email"],
@@ -553,7 +554,7 @@ export const adminGuideIt: GuideContent = {
       notes: [
         "In **Soci** chi è in famiglia ha l'indicazione **in famiglia con**. Ricariche e movimenti vanno sull'account della famiglia.",
         "Per staccare una persona: tocca il socio e **Scollega dalla famiglia**. Torna al suo account con saldo zero; saldo e storico restano alla famiglia.",
-        "Le famiglie si accendono o spengono in **Impostazioni**, **Famiglie**.",
+        "Le famiglie si accendono o spengono in **Impostazioni**, **Soci e guida**, **Famiglie**.",
       ],
       when: { families: true },
       keywords: ["famiglia", "account condiviso", "scollegare", "nucleo"],
@@ -566,11 +567,11 @@ export const adminGuideIt: GuideContent = {
       title: "Scrivere \"Il nostro gruppo\" per i soci",
       intro: "È il testo che i soci leggono in cima alla guida: dove e quando si ritira, chi contattare, le regole interne.",
       steps: [
-        "Apri **Impostazioni** e cerca **Il nostro gruppo**.",
+        "Apri **Impostazioni**, **Soci e guida** e cerca **Il nostro gruppo**.",
         "Scrivi in modo semplice, a paragrafi brevi, e salva.",
       ],
       notes: ["Le parole che scrivi qui si trovano anche con la ricerca della guida."],
-      link: { href: "/admin?tab=impostazioni", label: "Apri Impostazioni" },
+      link: { href: "/admin?tab=impostazioni&view=soci", label: "Apri Impostazioni" },
       keywords: ["informazioni", "regole", "ritiro", "testo guida"],
     },
     {
@@ -578,7 +579,7 @@ export const adminGuideIt: GuideContent = {
       topic: "impostazioni",
       title: "Nome, logo e colori",
       steps: [
-        "Apri **Impostazioni**, **Nome, logo e colori**.",
+        "Apri **Impostazioni**, **Gruppo**, **Nome, logo e colori**.",
         "Cambia nome, nome breve (sotto l'icona del telefono), logo e colori, e salva.",
       ],
       notes: ["Un campo lasciato vuoto torna al valore predefinito dell'installazione."],
@@ -588,7 +589,7 @@ export const adminGuideIt: GuideContent = {
       slug: "modalita-pagamento",
       topic: "impostazioni",
       title: "Modalità di pagamento del gruppo",
-      intro: "In **Impostazioni**, **Nuovi cicli** scegli come si pagano i cicli che crei da ora: solo borsellino, borsellino con carta su richiesta, oppure carta con borsellino su richiesta. Lì imposti anche spedizione e spese di preparazione proposte per ogni modalità.",
+      intro: "In **Impostazioni**, **Pagamenti**, **Come si pagano i nuovi cicli** scegli come si pagano i cicli che crei da ora: solo borsellino, borsellino con carta su richiesta, oppure carta con borsellino su richiesta. Lì imposti anche spedizione e spese di preparazione proposte per ogni modalità.",
       notes: [
         "Si cambia anche con cicli aperti: quelli già creati restano come sono.",
         "In **Avanzate**, **Modalità del gruppo** decidi se il gruppo usa il borsellino o solo la carta: è una scelta da fare una volta.",
@@ -602,11 +603,11 @@ export const adminGuideIt: GuideContent = {
       title: "Collegare il pagamento con carta",
       intro: "Il pagamento con carta passa da Stripe, un servizio esterno di pagamenti. Serve un account Stripe del gruppo.",
       steps: [
-        "Apri **Impostazioni**, **Collegamento a Stripe**.",
+        "Apri **Impostazioni**, **Pagamenti**, **Carta (Stripe)**.",
         "Segui **Come collegarlo**: si crea su Stripe una chiave con pochi permessi e la si incolla qui.",
         "L'app crea da sola il collegamento con Stripe e lo verifica.",
       ],
-      notes: ["Se qualcosa non torna, **Impostazioni tecniche** dice cosa manca, senza mostrare le chiavi."],
+      notes: ["Se qualcosa non torna, **Impostazioni**, **Tecniche** dice cosa manca, senza mostrare le chiavi."],
       keywords: ["stripe", "carta", "pagamento online", "chiave"],
     },
     {
@@ -614,7 +615,7 @@ export const adminGuideIt: GuideContent = {
       topic: "impostazioni",
       title: "Ricerche senza risultati e statistiche",
       steps: [
-        "**Impostazioni**, **Ricerche senza risultati**: le parole che i soci hanno cercato nella guida senza trovare nulla. Contate senza nomi. Utili per capire cosa scrivere in \"Il nostro gruppo\".",
+        "**Impostazioni**, **Soci e guida**, **Ricerche senza risultati**: le parole che i soci hanno cercato nella guida senza trovare nulla. Contate senza nomi. Utili per capire cosa scrivere in \"Il nostro gruppo\".",
         "**Statistiche**: l'uso dell'app e i numeri dei cicli (ordini, soci, totali), anche per fornitore.",
       ],
       keywords: ["statistiche", "numeri", "ricerche", "dati", "report"],

@@ -235,7 +235,7 @@ export const guideFr: GuideContent = {
       title: "Recharger votre solde",
       intro: "Demandez à la trésorerie comment payer : dès qu'elle l'enregistre, votre solde est mis à jour et vous recevez une notification.",
       keywords: ["paiement", "virement", "espèces", "argent", "crédit"],
-      when: { mode: "wallet", bankTransfer: false, onlineTopup: false },
+      when: { mode: "wallet", topups: true, bankTransfer: false, onlineTopup: false },
     },
     {
       slug: "saldo-negativo",
@@ -248,7 +248,7 @@ export const guideFr: GuideContent = {
       ],
       link: { href: "/ricarica", label: "Ouvrir Recharger" },
       keywords: ["négatif", "dette", "insuffisant", "découvert", "limite"],
-      when: { mode: "wallet" },
+      when: { mode: "wallet", topups: true },
     },
     {
       slug: "spese-preparazione",

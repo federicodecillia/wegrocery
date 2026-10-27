@@ -22,6 +22,20 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
+## [1.39.0] - 2026-10-27
+
+*Tidier settings, a "None" preparation fee for card cycles too, and wallet top-ups that can be switched off.*
+
+### Added
+- 🔒 **Wallet top-ups can be switched off.** A group that has every order paid by card can switch top-ups off in Settings, Payments, Wallet: members no longer see Top up, the IBAN or the reference (on Home, Profile, History and in the guide) and an online top-up is refused. Balances and movements stay, and Treasury can still record a payment by hand. Top-ups stay on by default.
+- [tech] 🗄️ **Migration `0044_wallet_topups.sql`.** Adds `app_settings.wallet_topups_enabled` (on by default) and widens `app_settings_wallet_channel_check`: with top-ups off a wallet group may have no channel. Apply it before deploying, rollback in `0044_wallet_topups_down.sql`.
+
+### Changed
+- 🗂️ **Settings split by topic.** A bar at the top leads to Payments, Group (name, logo, colours and contacts), Members & guide, Technical. Each panel stays folded and shows on one line how it is set; a tap opens it, and it opens by itself when something needs fixing.
+- 💳 **Card payments in one panel.** The Stripe connection, online top-up and wallet balance in card payments sit together under "Card (Stripe)", and Stripe's status is no longer repeated in several places.
+- 🧾 **Proposed costs, more compact.** Shipping and preparation are picked from a menu with the amount next to it, the same for wallet cycles and card cycles.
+- 🧾 **"None" preparation fee for card cycles too.** In Settings and in New cycle, card cycles now offer "None", like wallet cycles.
+
 ## [1.38.0] - 2026-10-26
 
 *New cycles can start by card, with the right costs already proposed, and the wallet balance can go into the card payment.*

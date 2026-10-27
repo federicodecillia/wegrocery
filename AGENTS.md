@@ -51,7 +51,7 @@ Never read `.env*` files other than `.env.example` (Playbook 8.3).
 │   ├── notifiche/page.tsx      # Notification list with mark-as-read
 │   ├── profilo/page.tsx        # Profile (header avatar): name, emails, card, family, notifications, money, app, sign-out (privacy stays in the footer)
 │   ├── guida/page.tsx          # Guide index: "Il nostro gruppo" (admin text), search, topics, news; cards in guida/[topic] (content in lib/guide); admin guide in guida/admin (lib/guide/admin, server only: adminGuideFor checks the role, 404 for members)
-│   ├── admin/page.tsx          # Admin: Ciclo ("Da fare ora" on top, lib/admin/cycle-phase.ts; workspace: cycle list + Panoramica/Prodotti/Ordini/Fornitore/Conti, components/admin/cycle-workspace.tsx, lib/admin/cycle-views.ts) · Cassa · Soci · Catalogo (Prodotti, Fornitori) · ⋯ Statistiche, Impostazioni (lib/admin/nav.ts; old ?tab= links resolve)
+│   ├── admin/page.tsx          # Admin: Ciclo ("Da fare ora" on top, lib/admin/cycle-phase.ts; workspace: cycle list + Panoramica/Prodotti/Ordini/Fornitore/Conti, components/admin/cycle-workspace.tsx, lib/admin/cycle-views.ts) · Cassa · Soci · Catalogo (Prodotti, Fornitori) · ⋯ Statistiche, Impostazioni (views Pagamenti · Gruppo · Soci e guida · Tecniche, each block a folded `SettingsPanel` with a one-line summary, components/admin/settings-panel.tsx, lib/admin/settings-summary.ts) (lib/admin/nav.ts; old ?tab= links resolve)
 │   ├── admin/avvio/page.tsx    # First-run setup wizard (lib/admin/setup-steps.ts), offered by a banner while group_identity.setup_completed_at is null
 │   ├── brand/[file]/route.ts   # Uploaded logo (/brand/logo-<ms>.<ext>), public, immutable cache
 │   ├── login/page.tsx          # Login with Google

@@ -5,11 +5,13 @@
 export type WelcomeStep = "intro" | "balance" | "pay" | "order" | "pickup" | "notify" | "family" | "install" | "help";
 
 // How the member pays: a wallet (balance), each order by card, or outside the
-// app (a pay-per-order member with pays_offline: no money step to explain).
+// app (a pay-per-order member with pays_offline, or a wallet group with
+// top-ups off: no money step to explain).
 export type WelcomeMoney = "wallet" | "per_order" | "offline";
 
-export function welcomeMoney(mode: "wallet" | "per_order", paysOffline: boolean): WelcomeMoney {
-  if (mode === "wallet") return "wallet";
+// A wallet group with top-ups off collects its orders by card: no wallet step.
+export function welcomeMoney(mode: "wallet" | "per_order", paysOffline: boolean, topups = true): WelcomeMoney {
+  if (mode === "wallet") return topups ? "wallet" : "offline";
   return paysOffline ? "offline" : "per_order";
 }
 
