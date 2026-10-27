@@ -279,6 +279,15 @@ export const guideEn: GuideContent = {
       when: { mode: "per_order" },
     },
     {
+      slug: "quota-preventiva",
+      topic: "soldi",
+      title: "What the weighing deposit is",
+      intro:
+        "On cycles with products sold by weight the real cost is known only after the supplier weighs them. If the cycle has a deposit, you pay a small percentage on top of the products with your order. After the weighing, when the accounts are settled, we refund the unused part to your card; if the weighing costs more, the gap is added to your next payment.",
+      keywords: ["weighing", "weight", "deposit", "advance", "adjustment", "vegetables"],
+      when: { mode: "per_order" },
+    },
+    {
       slug: "rimborsi",
       topic: "soldi",
       title: "When refunds arrive",

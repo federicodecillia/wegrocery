@@ -279,6 +279,15 @@ export const guideFr: GuideContent = {
       when: { mode: "per_order" },
     },
     {
+      slug: "quota-preventiva",
+      topic: "soldi",
+      title: "Qu'est-ce que la provision pour pesée",
+      intro:
+        "Dans les cycles avec des produits au poids, le coût réel n'est connu qu'après la pesée du fournisseur. Si le cycle le prévoit, vous payez avec la commande un petit pourcentage en plus sur les produits. Après la pesée, à la clôture des comptes, nous remboursons sur votre carte la part non utilisée ; si la pesée coûte plus, l'écart s'ajoute à votre prochain paiement.",
+      keywords: ["pesée", "poids", "provision", "avance", "régularisation", "légumes"],
+      when: { mode: "per_order" },
+    },
+    {
       slug: "rimborsi",
       topic: "soldi",
       title: "Quand arrivent les remboursements",

@@ -110,6 +110,10 @@ export const orderCycles = pgTable("order_cycles", {
   // 'percent' of the products or a 'fixed' amount. NULL = no fee.
   handlingFeeType: text("handling_fee_type"),
   handlingFeeValue: numeric("handling_fee_value", { precision: 10, scale: 2 }),
+  // Weighing deposit of a card cycle (drizzle/0045_weighing_deposit.sql): a
+  // percentage of the products paid with the order and given back at the
+  // settlement for what the weighing did not use. NULL = none.
+  weighingDepositPct: numeric("weighing_deposit_pct", { precision: 5, scale: 2 }),
   // Last settlement of a pay-per-order cycle (drizzle/0024_settlement.sql).
   settledAt: timestamp("settled_at", { withTimezone: true }),
   // How members see the products (drizzle/0040_cycle_product_order.sql):

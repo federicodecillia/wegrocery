@@ -29,6 +29,7 @@ import { getPaymentSettings } from "@/lib/payments/get-settings";
 import { getCycleCoverageCents } from "@/lib/payments/order-confirm";
 import {
   cycleHandlingFee,
+  cycleWeighingDeposit,
   handlingFeeCents,
   homeOrderStatus,
   orderPaymentAmount,
@@ -122,6 +123,7 @@ export default async function HomePage({
           fee: { type: feeType, value: Number(cycle.handlingFeeValue) },
           coveredCents,
           wallet,
+          depositPct: cycleWeighingDeposit(cycle),
         })
       : null;
     return homeOrderStatus({ hasConfirmedOrder, draft, coveredCents });

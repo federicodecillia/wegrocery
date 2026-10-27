@@ -34,6 +34,7 @@ export function SettleCycleButton({
 }) {
   const [open, setOpen] = useState(false);
   const [rows, setRows] = useState<SettlementPreviewRow[] | null>(null);
+  const [carry, setCarry] = useState(false);
   const [isPending, startTransition] = useTransition();
   const s = t.admin.settlement;
 
@@ -48,6 +49,7 @@ export function SettleCycleButton({
         return;
       }
       setRows(result.rows);
+      setCarry(result.carryShortfall);
     });
   }
 
@@ -75,7 +77,7 @@ export function SettleCycleButton({
         open={open}
         onRequestClose={() => !isPending && setOpen(false)}
         title={s.title(cycleTitle)}
-        subtitle={s.intro}
+        subtitle={carry ? s.introCarry : s.intro}
         footer={
           <SheetActions>
             <Button variant="outline" className="flex-1" onClick={() => setOpen(false)}>

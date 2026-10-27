@@ -25,6 +25,8 @@ export type MemberSettlement = {
 export type SettlementPreview = {
   cycle: { cycleId: string; title: string; status: string; paymentMode: string; settledAt: Date | null };
   members: MemberSettlement[];
+  // app_settings.card_settles_wallet: shortfalls are carried, never written off.
+  carryShortfall: boolean;
   // net:requested per member, compared inside the batch.
   snapshot: Record<string, string>;
 };
@@ -55,7 +57,12 @@ function memberNetsSql(cycleId: string) {
     )`;
 }
 
-export async function previewSettlement(db: Db, cycleId: string): Promise<SettlementPreview> {
+// `carryShortfall` is read from app_settings unless given (tests).
+export async function previewSettlement(
+  db: Db,
+  cycleId: string,
+  opts: { carryShortfall?: boolean } = {},
+): Promise<SettlementPreview> {
   const { rows: cycles } = await db.execute<{
     cycle_id: string;
     title: string;
@@ -65,7 +72,7 @@ export async function previewSettlement(db: Db, cycleId: string): Promise<Settle
   }>(sql`SELECT cycle_id, title, status, payment_mode, settled_at FROM order_cycles WHERE cycle_id = ${cycleId}`);
   const c = cycles[0];
   if (!c) throw new Error(`cycle ${cycleId} not found`);
-  const [{ rows: memberRows }, { rows: paymentRows }] = await Promise.all([
+  const [{ rows: memberRows }, { rows: paymentRows }, { rows: settingRows }] = await Promise.all([
     db.execute<MemberRow>(memberNetsSql(cycleId)),
     db.execute<PaymentRow>(sql`
       SELECT p.payment_id, p.member_id, p.created_at, p.amount_cents, p.balance_cents, p.refunded_cents,
@@ -75,7 +82,9 @@ export async function previewSettlement(db: Db, cycleId: string): Promise<Settle
       FROM payments p
       WHERE p.cycle_id = ${cycleId} AND p.kind = 'order'
         AND p.status IN ('succeeded', 'partially_refunded', 'refunded')`),
+    db.execute<{ card_settles_wallet: boolean }>(sql`SELECT card_settles_wallet FROM app_settings WHERE id = 1`),
   ]);
+  const carryShortfall = opts.carryShortfall ?? settingRows[0]?.card_settles_wallet ?? false;
   const paymentsByMember = new Map<string, SettlementPayment[]>();
   for (const p of paymentRows) {
     const list = paymentsByMember.get(p.member_id) ?? [];
@@ -104,12 +113,14 @@ export async function previewSettlement(db: Db, cycleId: string): Promise<Settle
         requestedCents: m.requested,
         paysOffline: m.pays_offline,
         payments: paymentsByMember.get(m.member_id) ?? [],
+        carryShortfall,
       }),
     }))
     .sort((a, b) => a.fullName.localeCompare(b.fullName));
   return {
     cycle: { cycleId: c.cycle_id, title: c.title, status: c.status, paymentMode: c.payment_mode, settledAt: c.settled_at },
     members,
+    carryShortfall,
     snapshot: Object.fromEntries(memberRows.map((m) => [m.member_id, `${m.net}:${m.requested}`])),
   };
 }
@@ -130,12 +141,12 @@ export type SettleResult = {
 export async function settleCycle(
   db: Db,
   cycleId: string,
-  opts: { by: string; stripe: RefundApi | null; budgetMs?: number },
+  opts: { by: string; stripe: RefundApi | null; budgetMs?: number; carryShortfall?: boolean },
 ): Promise<SettleResult> {
   let preview: SettlementPreview | null = null;
   let writeOffs = 0;
   for (let attempt = 0; attempt < 3 && preview === null; attempt++) {
-    const p = await previewSettlement(db, cycleId);
+    const p = await previewSettlement(db, cycleId, { carryShortfall: opts.carryShortfall });
     if (p.cycle.paymentMode !== "per_order" || (p.cycle.status !== "closed" && p.cycle.status !== "cancelled")) {
       throw new Error(`cycle ${cycleId} is not closed or is not paid per order`);
     }
@@ -212,7 +223,7 @@ export async function settleCycle(
 
   const due = preview.members.filter((m) => m.plan.kind === "due");
   try {
-    await notifyDue(db, preview.cycle.cycleId, preview.cycle.title, due);
+    await notifyDue(db, preview.cycle.cycleId, preview.cycle.title, due, preview.carryShortfall);
   } catch (e) {
     reportError("settlement notices", e, { cycleId });
   }
@@ -228,7 +239,13 @@ export async function settleCycle(
 }
 
 // Each member who owes money hears it once per cycle and amount.
-async function notifyDue(db: Db, cycleId: string, title: string, due: MemberSettlement[]): Promise<void> {
+async function notifyDue(
+  db: Db,
+  cycleId: string,
+  title: string,
+  due: MemberSettlement[],
+  carried: boolean,
+): Promise<void> {
   if (due.length === 0) return;
   const href = `/ricarica?cycleId=${cycleId}`;
   const { rows: told } = await db.execute<{ member_id: string; body: string }>(sql`
@@ -236,7 +253,10 @@ async function notifyDue(db: Db, cycleId: string, title: string, due: MemberSett
   const items = due
     .map((m) => {
       const amount = formatMoney((m.plan.kind === "due" ? m.plan.dueCents : 0) / 100);
-      return { m, body: t.notificationsServer.settlementDueBody(title, amount) };
+      const body = carried
+        ? t.notificationsServer.settlementDueCarriedBody(title, amount)
+        : t.notificationsServer.settlementDueBody(title, amount);
+      return { m, body };
     })
     .filter(({ m, body }) => !told.some((r) => r.member_id === m.memberId && r.body === body));
   if (items.length === 0) return;

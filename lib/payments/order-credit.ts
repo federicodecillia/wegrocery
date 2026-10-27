@@ -231,6 +231,9 @@ async function afterCredit(db: Db, a: OrderCreditAction, payment: PaymentRow): P
       : t.notificationsServer.orderPaidShortBody(title, amount);
   // The wallet in the payment: the debt it paid, the credit it used.
   const wallet = [
+    (s?.depositCents ?? 0) > 0
+      ? t.notificationsServer.orderPaidDepositNote(formatMoney((s?.depositCents ?? 0) / 100))
+      : null,
     payment.balance_cents > 0 ? t.notificationsServer.orderPaidBalanceNote(formatMoney(payment.balance_cents / 100)) : null,
     (s?.walletCreditCents ?? 0) > 0
       ? t.notificationsServer.orderPaidCreditNote(formatMoney((s?.walletCreditCents ?? 0) / 100))

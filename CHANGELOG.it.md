@@ -23,6 +23,15 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
+## [Non rilasciato]
+
+### Aggiunte
+- ⚖️ **Quota preventiva per le pesate.** Nei cicli con carta l'admin può aggiungere una percentuale (per esempio 3%) sui prodotti, pagata con l'ordine come riga a parte. Quando si chiudono i conti dopo le pesate, la parte non usata torna da sola sulla carta del socio. Si attiva per ciclo e si propone di default da Impostazioni, Pagamenti, Nuovi cicli.
+- [tecnico] 🗄️ **Migrazione `0045_weighing_deposit.sql`.** Aggiunge `order_cycles.weighing_deposit_pct` (vuota = nessuna quota, solo cicli con carta, al massimo 25%). Da applicare prima del deploy, rollback in `0045_weighing_deposit_down.sql`.
+
+### Modificato
+- ⚖️ **Le differenze delle pesate passano al pagamento successivo.** Con "Saldo del borsellino nei pagamenti con carta" acceso, se a conti chiusi le pesate costano più di quanto pagato la differenza resta sul saldo e si aggiunge al prossimo pagamento con carta, anche sotto 0,50 € (prima veniva abbonata). Il socio riceve un avviso che lo spiega.
+
 ## [1.39.0] - 27 ottobre 2026
 
 *Impostazioni più ordinate, "Nessuna" spesa di preparazione anche per i cicli con carta e le ricariche del borsellino che si possono spegnere.*

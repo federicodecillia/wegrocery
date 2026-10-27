@@ -22,6 +22,15 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
+## [Unreleased]
+
+### Added
+- ⚖️ **Weighing deposit.** On card cycles the admin can add a percentage (for example 3%) on the products, paid with the order as its own line. When the accounts are settled after the weighing, the unused part goes back to the member's card by itself. It is set per cycle, with a default in Settings, Payments, New cycles.
+- [tech] 🗄️ **Migration `0045_weighing_deposit.sql`.** Adds `order_cycles.weighing_deposit_pct` (empty = no deposit, card cycles only, at most 25%). Apply before deploying, rollback in `0045_weighing_deposit_down.sql`.
+
+### Changed
+- ⚖️ **Weighing gaps move to the next payment.** With "Wallet balance in card payments" on, when the final weighing costs more than what was paid the gap stays on the balance and is added to the next card payment, under 0.50 too (it used to be written off). The member gets a notice saying so.
+
 ## [1.39.0] - 2026-10-27
 
 *Tidier settings, a "None" preparation fee for card cycles too, and wallet top-ups that can be switched off.*

@@ -9,7 +9,12 @@ import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { adminSetNewCycleDefaults, adminSetNewCyclePayment } from "@/lib/actions/admin-settings";
 import { t } from "@/lib/i18n";
 import { formatHandlingFee, formatMoney } from "@/lib/i18n/format";
-import { HANDLING_FEE_MAX, type HandlingFee } from "@/lib/payments/order-payment";
+import {
+  HANDLING_FEE_MAX,
+  WEIGHING_DEPOSIT_MAX,
+  WEIGHING_DEPOSIT_SUGGESTED,
+  type HandlingFee,
+} from "@/lib/payments/order-payment";
 import type {
   ModeDefaults,
   ModeDefaultsInput,
@@ -33,6 +38,7 @@ function toInput(d: ModeDefaults | undefined, mode: PaymentMode, startFee: Handl
     shippingAmount: d?.shipping?.amount == null ? "" : String(d.shipping.amount),
     feeType: noFee ? "none" : fee ? fee.type : mode === "wallet" ? "none" : "percent",
     feeValue: fee && !noFee ? String(fee.value) : "",
+    ...(mode === "per_order" && { depositPct: d?.depositPct ? String(d.depositPct) : "" }),
   };
 }
 
@@ -90,6 +96,8 @@ function ModeDefaultsFields({
     { v: "fixed", label: c.handlingFeeFixed },
   ];
   const proportional = value.shippingMode === "proportional";
+  // Kept apart from the amount, so clearing the field does not switch it off.
+  const [depositOn, setDepositOn] = useState((value.depositPct ?? "") !== "");
   return (
     <fieldset className="min-w-0 rounded-lg border border-border p-3">
       <legend className="px-1 text-[12px] font-bold text-foreground">
@@ -148,6 +156,39 @@ function ModeDefaultsFields({
       </div>
       {value.feeType !== "none" && value.feeValue.trim() === "" && (
         <p className="mt-1 text-label text-muted-foreground">{s.feeEmpty}</p>
+      )}
+
+      {mode === "per_order" && (
+        <>
+          <label htmlFor={id("deposit-type")} className={`${labelClass} mt-3`}>
+            {c.weighingDepositLabel}
+          </label>
+          <div className="flex gap-2">
+            <NativeSelect
+              id={id("deposit-type")}
+              wrapperClassName="min-w-0 flex-1"
+              value={depositOn ? "percent" : "none"}
+              onChange={(e) => {
+                const on = e.target.value === "percent";
+                setDepositOn(on);
+                onChange({ ...value, depositPct: on ? String(WEIGHING_DEPOSIT_SUGGESTED) : "" });
+              }}
+            >
+              <NativeSelectOption value="none">{c.handlingFeeNone}</NativeSelectOption>
+              <NativeSelectOption value="percent">{c.handlingFeePercent}</NativeSelectOption>
+            </NativeSelect>
+            {depositOn && (
+              <UnitInput
+                id={id("deposit")}
+                unit="%"
+                aria-label={`${c.weighingDepositLabel}, % (max ${WEIGHING_DEPOSIT_MAX})`}
+                value={value.depositPct ?? ""}
+                onChange={(e) => onChange({ ...value, depositPct: e.target.value })}
+              />
+            )}
+          </div>
+          <p className="mt-1 text-label text-muted-foreground">{c.weighingDepositHint}</p>
+        </>
       )}
       <p className="mt-3 text-[12px] text-secondary-foreground">{previewOf(value)}</p>
     </fieldset>

@@ -109,6 +109,7 @@ export const adminGuideIt: GuideContent = {
         "Scrivi il **Titolo** (quello che leggono i soci) e la **Chiusura ordini**: giorno e ora entro cui si ordina.",
         "Scegli il **Fornitore**. Se manca, aggiungilo prima in **Catalogo**, **Fornitori**.",
         "Se serve, aggiungi uno o due **Ritiri** (giorno e orario), la **Spedizione** e le **Spese di preparazione ordine**.",
+        "In un ciclo con carta e prodotti a peso puoi accendere la **Quota preventiva pesate**: una percentuale in più pagata con l'ordine, che **Chiudi i conti** restituisce sulla carta per la parte non usata.",
         "Scegli l'**Accesso**: chi può ordinare. Di solito **Utenti (tutti)**.",
         "Le **Note** sono visibili ai soci in Ordine e in Home: comode per avvisi sul ritiro.",
         "Tocca **Crea ciclo**. Il ciclo è subito aperto e i soci ricevono l'avviso.",
@@ -330,7 +331,7 @@ export const adminGuideIt: GuideContent = {
       steps: [
         "Registra prima pesate e distinta, se servono.",
         "Apri il ciclo e vai in **Conti**, poi tocca **Chiudi i conti**.",
-        "Controlla l'elenco: **Rimborso** per chi ha pagato in più, **Da saldare** per chi ha pagato meno, **Abbuono** per le differenze sotto 0,50 €.",
+        "Controlla l'elenco: **Rimborso** per chi ha pagato in più, **Da saldare** per chi ha pagato meno, **Abbuono** per le differenze sotto 0,50 €. Con \"Saldo del borsellino nei pagamenti con carta\" acceso non ci sono abbuoni: la differenza si aggiunge al prossimo pagamento con carta del socio.",
         "Conferma con **Chiudi i conti**.",
       ],
       notes: [

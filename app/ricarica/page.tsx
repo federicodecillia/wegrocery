@@ -101,7 +101,11 @@ export default async function RicaricaPage({
         <BalanceDueCard cents={cents} canPay={settings.onlineTopupAvailable} />
         {cents > -SETTLEMENT_MIN_DUE_CENTS && cents <= 0 && (
           <div className="flex items-center justify-between rounded-card border border-border bg-card p-4.5 shadow-card">
-            <span className="text-[14px] text-secondary-foreground">{t.balance.nothingDue}</span>
+            <span className="text-[14px] text-secondary-foreground">
+              {cents < 0 && settings.cardSettlesWallet
+                ? t.balance.smallDueCarried(formatMoney(-cents / 100))
+                : t.balance.nothingDue}
+            </span>
             <Link href="/ordine" className="rounded-full bg-primary px-4 py-2.5 text-[14px] font-bold text-primary-foreground">
               {t.balance.goToOrder}
             </Link>

@@ -54,6 +54,14 @@ describe("planMemberSettlement", () => {
     expect(planMemberSettlement({ ...base, netCents: -49 })).toEqual({ kind: "writeOff", cents: 49 });
   });
 
+  it("carries any shortfall to the next payment when the wallet rides on card payments", () => {
+    expect(planMemberSettlement({ ...base, netCents: -1, carryShortfall: true })).toEqual({ kind: "due", dueCents: 1 });
+    expect(planMemberSettlement({ ...base, netCents: -49, carryShortfall: true })).toEqual({ kind: "due", dueCents: 49 });
+    expect(planMemberSettlement({ ...base, netCents: -900, paysOffline: true, carryShortfall: true })).toEqual({
+      kind: "offline",
+    });
+  });
+
   it("leaves members who pay outside the app to Treasury", () => {
     expect(planMemberSettlement({ ...base, netCents: 900, paysOffline: true })).toEqual({ kind: "offline" });
     expect(planMemberSettlement({ ...base, netCents: -900, paysOffline: true })).toEqual({ kind: "offline" });

@@ -7,7 +7,13 @@ import { Sheet } from "@/components/ui/sheet";
 import { formatDeadline, formatPickupSlot } from "@/lib/i18n/deadline";
 import { t } from "@/lib/i18n";
 import { formatMoney, formatHandlingFee } from "@/lib/i18n/format";
-import { HANDLING_FEE_MAX, cycleHandlingFee } from "@/lib/payments/order-payment";
+import {
+  HANDLING_FEE_MAX,
+  WEIGHING_DEPOSIT_MAX,
+  WEIGHING_DEPOSIT_SUGGESTED,
+  cycleHandlingFee,
+  cycleWeighingDeposit,
+} from "@/lib/payments/order-payment";
 import type { ShippingDefault } from "@/lib/payments/new-cycle-defaults";
 import { utcToZonedLocalInput } from "@/lib/i18n/zoned-time";
 import {
@@ -50,6 +56,7 @@ export type SerializedCycle = {
   paymentMode?: string;
   handlingFeeType?: string | null;
   handlingFeeValue?: string | null;
+  weighingDepositPct?: string | null;
 };
 
 function AccessLevelOptions() {
@@ -138,6 +145,14 @@ export function CycleFacts({ cycle }: { cycle: SerializedCycle }) {
             </span>
           </div>
         )}
+      {cycleWeighingDeposit(cycle) !== null && (
+        <div>
+          {t.admin.cycle.weighingDepositLabel}:{" "}
+          <span className="font-semibold text-foreground">
+            {formatHandlingFee({ type: "percent", value: cycleWeighingDeposit(cycle)! })}
+          </span>
+        </div>
+      )}
       <div>
         {t.admin.cycle.accessLabel}:{" "}
         <span className="font-semibold text-foreground">{getAccessLabel(cycle.accessLevel)}</span>
@@ -493,6 +508,52 @@ function HandlingFeeFields({
   );
 }
 
+// The weighing deposit of a card cycle (drizzle/0045): a percentage of the
+// products paid with the order and given back at the settlement for what the
+// weighing did not use. Off, or a percentage up to WEIGHING_DEPOSIT_MAX.
+function WeighingDepositFields({ defaultPct, warning }: { defaultPct: number | null; warning?: string }) {
+  const [on, setOn] = useState(defaultPct !== null);
+  const options: { v: boolean; label: string }[] = [
+    { v: false, label: t.admin.cycle.handlingFeeNone },
+    { v: true, label: t.admin.cycle.handlingFeePercent },
+  ];
+  return (
+    <div>
+      <p className={labelClass}>{t.admin.cycle.weighingDepositLabel}</p>
+      <div className="mb-2 flex rounded-lg bg-tint/[0.05] p-0.5">
+        {options.map((opt) => (
+          <button
+            key={String(opt.v)}
+            type="button"
+            onClick={() => setOn(opt.v)}
+            className={`flex-1 rounded-md py-1.5 text-label font-semibold transition-colors ${
+              on === opt.v ? "bg-card text-foreground shadow-sm" : "bg-transparent text-secondary-foreground"
+            }`}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+      {on ? (
+        <Input
+          name="weighingDepositPct"
+          type="number"
+          min="0.01"
+          max={String(WEIGHING_DEPOSIT_MAX)}
+          step="0.01"
+          required
+          defaultValue={defaultPct !== null ? String(defaultPct) : String(WEIGHING_DEPOSIT_SUGGESTED)}
+          aria-label={t.admin.cycle.weighingDepositLabel}
+        />
+      ) : (
+        <input type="hidden" name="weighingDepositPct" value="" />
+      )}
+      <p className="mt-1 text-label text-muted-foreground">{t.admin.cycle.weighingDepositHint}</p>
+      {warning && on && <p className="mt-1 text-label text-destructive">{warning}</p>}
+    </div>
+  );
+}
+
 export function EditCycleForm({
   cycle,
   suppliers,
@@ -557,6 +618,7 @@ export function EditCycleForm({
           accessLevel: fd.get("accessLevel") as string,
           handlingFeeType: fd.get("handlingFeeType") as string,
           handlingFeeValue: fd.get("handlingFeeValue") as string,
+          ...(isPerOrder && { weighingDepositPct: (fd.get("weighingDepositPct") as string | null) ?? "" }),
         };
     startTransition(async () => {
       const result = await adminUpdateCycle(cycle.cycleId, {
@@ -636,6 +698,13 @@ export function EditCycleForm({
           perOrder={isPerOrder}
           warning={isPerOrder ? t.admin.cycle.handlingFeeEditWarning : undefined}
           note={isPerOrder && shippingMode === "proportional" ? t.admin.cycle.perOrderProportionalNote : null}
+        />
+      )}
+
+      {!isClosed && isPerOrder && (
+        <WeighingDepositFields
+          defaultPct={cycleWeighingDeposit(cycle)}
+          warning={t.admin.cycle.handlingFeeEditWarning}
         />
       )}
 
@@ -766,6 +835,7 @@ export function CreateCycleForm({
   cardSwitchedOff = false,
   walletFee,
   cardFee,
+  cardDeposit = null,
   walletShipping = null,
   cardShipping = null,
   defaultOpen = false,
@@ -780,6 +850,8 @@ export function CreateCycleForm({
   /** The fee a new cycle of each mode starts from; null = none. */
   walletFee: { type: "percent" | "fixed"; value: string } | null;
   cardFee: { type: "percent" | "fixed"; value: string } | null;
+  /** The weighing deposit a new card cycle starts from (Impostazioni); null = none. */
+  cardDeposit?: number | null;
   /** The shipping a new cycle of each mode starts from (Impostazioni); null = empty, per member. */
   walletShipping?: ShippingDefault | null;
   cardShipping?: ShippingDefault | null;
@@ -822,6 +894,7 @@ export function CreateCycleForm({
       shippingTotal: fd.get("shippingTotal") as string,
       handlingFeeType: fd.get("handlingFeeType") as string,
       handlingFeeValue: fd.get("handlingFeeValue") as string,
+      weighingDepositPct: paymentMode === "per_order" ? ((fd.get("weighingDepositPct") as string | null) ?? "") : "",
       paymentMode,
     };
     startTransition(async () => {
@@ -898,6 +971,8 @@ export function CreateCycleForm({
               : null
           }
         />
+
+        {paymentMode === "per_order" && <WeighingDepositFields defaultPct={cardDeposit} />}
 
         <PickupSection />
 

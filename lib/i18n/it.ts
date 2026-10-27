@@ -200,6 +200,9 @@ export const it = {
       products: "Prodotti",
       shipping: "Spedizione",
       fee: "Spese di preparazione ordine",
+      deposit: "Quota preventiva pesate",
+      depositLine: (pct: string) => `Quota preventiva pesate (${pct}), restituita per la parte non usata`,
+      depositHint: "La quota preventiva copre le pesate del fornitore: a conti chiusi ti restituiamo sulla carta la parte non usata.",
       feeHint: "Le spese di preparazione restano all'associazione. Spedizione e pesate si regolano a conti chiusi.",
       refundDifference: (amount: string) =>
         `Hai pagato ${amount} in più di quanto costa ora l'ordine: te li rimborsiamo sulla carta a conti chiusi.`,
@@ -382,6 +385,7 @@ export const it = {
     creditLabel: "Credito",
     creditHint: "Hai pagato più del costo definitivo dei tuoi ordini: la differenza è un credito a tuo favore e l'associazione te la restituisce.",
     nothingDue: "Non hai nulla da saldare.",
+    smallDueCarried: (amount: string) => `Hai ${amount} da saldare: li aggiungiamo al tuo prossimo pagamento con la carta.`,
     goToOrder: "Vai all'ordine",
     lineItem: (org: string) => `Saldo dovuto a ${org}`,
     nothingToPay: "Non hai nulla da saldare.",
@@ -747,6 +751,8 @@ export const it = {
       title: (cycle: string) => `Chiudi i conti: ${cycle}`,
       intro:
         "Con i costi definitivi (pesate e distinta) l'app restituisce sulla carta quello che ogni socio ha pagato in più, chiede di saldare a chi ha pagato meno e abbuona le differenze sotto 0,50 €. Si può rifare in qualsiasi momento.",
+      introCarry:
+        "Con i costi definitivi (pesate e distinta) l'app restituisce sulla carta quello che ogni socio ha pagato in più. A chi ha pagato meno la differenza resta sul saldo e si aggiunge al suo prossimo pagamento con la carta. Si può rifare in qualsiasi momento.",
       loading: "Calcolo...",
       empty: "Nessun socio su questo ciclo.",
       net: (amount: string) => `netto del ciclo ${amount}`,
@@ -960,6 +966,8 @@ export const it = {
       handlingFeeFixed: "Importo fisso",
       handlingFeeHint: "Trattenute dall'associazione per commissioni e gestione: si addebitano alla chiusura, calcolate sui prodotti ordinati. Al massimo 25% o 10 €.",
       handlingFeeEditWarning: "Chi ha già pagato con la quota precedente salda la differenza al conguaglio.",
+      weighingDepositLabel: "Quota preventiva pesate",
+      weighingDepositHint: "Per i prodotti a peso: una percentuale in più sui prodotti, pagata con l'ordine. Con Chiudi i conti l'app restituisce sulla carta la parte non usata dalle pesate. Al massimo 25%.",
       paymentModeLabel: "Pagamento",
       paymentModeWallet: "Borsellino",
       paymentModeCard: "Carta",
@@ -2092,6 +2100,8 @@ export const it = {
       `Il tuo ordine per "${cycle}" è confermato. Hai pagato ${amount}: prodotti ${products}, spedizione ${shipping}, spese di preparazione ordine ${fee}. A conti chiusi si regola la differenza su prodotti e spedizione.`,
     orderPaidBalanceNote: (amount: string) => `Comprende ${amount} di saldo precedente.`,
     orderPaidCreditNote: (amount: string) => `Usati ${amount} di credito del borsellino.`,
+    orderPaidDepositNote: (amount: string) =>
+      `Comprende ${amount} di quota preventiva per le pesate: a conti chiusi ti restituiamo la parte non usata.`,
     orderPaidShortBody: (cycle: string, amount: string) =>
       `Il tuo ordine per "${cycle}" è confermato. Hai pagato ${amount}.`,
     balancePaidTitle: "Saldo pagato",
@@ -2099,6 +2109,8 @@ export const it = {
     settlementDueTitle: "Da saldare",
     settlementDueBody: (cycle: string, amount: string) =>
       `I costi definitivi di "${cycle}" superano quanto hai pagato: mancano ${amount}. Puoi saldarli da Ricarica con "Paga ora".`,
+    settlementDueCarriedBody: (cycle: string, amount: string) =>
+      `I costi definitivi di "${cycle}" (pesate e distinta) superano quanto hai pagato: mancano ${amount}. Li aggiungiamo al tuo prossimo pagamento con la carta.`,
     orderRefundTitle: "Rimborso in arrivo",
     orderRefundCancelledBody: (amount: string) =>
       `Hai annullato l'ordine: ti rimborsiamo ${amount} sulla carta con cui hai pagato. Di solito arriva in 5-10 giorni.`,
@@ -2264,6 +2276,8 @@ export const it = {
     invalidAccessLevel: "Livello di accesso non valido",
     handlingFeeLocked: "Il ciclo è già chiuso: le spese di preparazione non si possono più cambiare.",
     handlingFeeInvalid: "Spese di preparazione non valide: un numero con al massimo due decimali, fino al 25% o a 10 €",
+    weighingDepositInvalid: "Quota preventiva non valida: un numero con al massimo due decimali, fino al 25%",
+    weighingDepositLocked: "Il ciclo è già chiuso: la quota preventiva non si può più cambiare.",
     cardCyclesOff: "I cicli pagati con carta sono spenti per il gruppo: si attivano da Impostazioni > Nuovi cicli.",
     cyclePaymentModeUnavailable: "Il pagamento con carta non è disponibile per questo ciclo: serve Stripe configurato e il gruppo in modalità borsellino.",
     cycleNotOpen: "Il ciclo non è più aperto",

@@ -2,7 +2,9 @@
 // once the costs are final, what happens to each member's cycle net (what
 // they paid minus what the order cost). Cents throughout.
 
-// Stripe's minimum charge: below it a shortfall is written off.
+// Stripe's minimum charge: below it a shortfall is written off, unless the
+// wallet rides on card payments (app_settings.card_settles_wallet): the next
+// payment then carries it, whatever its size.
 export const SETTLEMENT_MIN_DUE_CENTS = 50;
 
 export type SettlementPayment = {
@@ -22,6 +24,8 @@ export type SettlementInput = {
   requestedCents: number;
   paysOffline: boolean;
   payments: SettlementPayment[];
+  // app_settings.card_settles_wallet: no write-off, every shortfall is due.
+  carryShortfall?: boolean;
 };
 
 export type SettlementPlan =
@@ -45,7 +49,9 @@ export function planMemberSettlement(input: SettlementInput): SettlementPlan {
   if (target === 0) return { kind: "settled" };
   if (target < 0) {
     const due = -target;
-    return due >= SETTLEMENT_MIN_DUE_CENTS ? { kind: "due", dueCents: due } : { kind: "writeOff", cents: due };
+    return due >= SETTLEMENT_MIN_DUE_CENTS || input.carryShortfall
+      ? { kind: "due", dueCents: due }
+      : { kind: "writeOff", cents: due };
   }
   let left = target;
   const refunds: { paymentId: string; amountCents: number }[] = [];

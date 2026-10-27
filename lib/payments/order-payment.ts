@@ -50,11 +50,45 @@ export function sameHandlingFee(a: HandlingFee | null, b: HandlingFee | null): b
   return a.type === b.type && Math.round(a.value * 100) === Math.round(b.value * 100);
 }
 
+// The weighing deposit of a card cycle (drizzle/0045_weighing_deposit.sql):
+// a percentage of the products paid with the order, for products whose final
+// cost only the supplier's weighing tells. The settlement gives back by card
+// what the weighing did not use. Same rounding as a percent fee.
+export const WEIGHING_DEPOSIT_MAX = 25;
+// What the cycle form proposes when the admin switches the deposit on.
+export const WEIGHING_DEPOSIT_SUGGESTED = 3;
+
+export function weighingDepositCents(productsCents: number, pct: number | null): number {
+  if (!pct || pct <= 0 || productsCents <= 0) return 0;
+  return handlingFeeCents(productsCents, { type: "percent", value: pct });
+}
+
+// A cycle row's deposit percentage, null when it has none.
+export function cycleWeighingDeposit(cycle: { weighingDepositPct?: string | null }): number | null {
+  if (cycle.weighingDepositPct == null) return null;
+  const pct = Number(cycle.weighingDepositPct);
+  return Number.isFinite(pct) && pct > 0 ? pct : null;
+}
+
+// The form's deposit: "" or "0" = none, else "3", "2,5": at most two
+// decimals, above 0 and at most WEIGHING_DEPOSIT_MAX.
+export function parseWeighingDeposit(value: string): { pct: number | null } | { error: "invalid" } {
+  const trimmed = value.trim();
+  if (trimmed === "") return { pct: null };
+  if (!/^\d{1,2}([.,]\d{1,2})?$/.test(trimmed)) return { error: "invalid" };
+  const n = Number(trimmed.replace(",", "."));
+  if (n === 0) return { pct: null };
+  return n > WEIGHING_DEPOSIT_MAX ? { error: "invalid" } : { pct: n };
+}
+
 export type OrderAmount = {
   productsCents: number;
   shippingCents: number;
   feeCents: number;
-  // products + shipping + fee
+  // The weighing deposit; 0 on a cycle without one. Optional on snapshots
+  // stored before drizzle/0045.
+  depositCents?: number;
+  // products + shipping + fee + deposit
   requiredCents: number;
   // What the member has already paid for this cycle and not got back.
   coveredCents: number;
@@ -94,6 +128,7 @@ export function orderPaymentAmount(input: {
   fee: HandlingFee;
   coveredCents: number;
   wallet?: WalletOffset;
+  depositPct?: number | null;
 }): OrderAmount {
   const { productsCents, shipping, fee } = input;
   const wallet = input.wallet ?? NO_WALLET_OFFSET;
@@ -102,9 +137,10 @@ export function orderPaymentAmount(input: {
   // pays it at settlement.
   const shippingCents = hasProducts && shipping.mode === "fixed_per_member" ? (shipping.fixedCents ?? 0) : 0;
   const feeCents = handlingFeeCents(productsCents, fee);
-  const requiredCents = productsCents + shippingCents + feeCents;
+  const depositCents = weighingDepositCents(productsCents, input.depositPct ?? null);
+  const requiredCents = productsCents + shippingCents + feeCents + depositCents;
   const coveredCents = Math.max(0, input.coveredCents);
-  const base = { productsCents, shippingCents, feeCents, requiredCents, coveredCents };
+  const base = { productsCents, shippingCents, feeCents, depositCents, requiredCents, coveredCents };
   const due = requiredCents - coveredCents;
   if (due <= 0) {
     return { ...base, chargeCents: 0, balanceCents: 0, walletCreditCents: 0, outcome: "confirm" };
@@ -225,7 +261,15 @@ export function resolveCycleFee(
 // debt paid along is its own line. They always add up to chargeCents.
 export function checkoutLineItems(
   amount: OrderAmount,
-  labels: { products: string; shipping: string; fee: string; supplement: string; afterCredit: string; balance: string },
+  labels: {
+    products: string;
+    shipping: string;
+    fee: string;
+    deposit: string;
+    supplement: string;
+    afterCredit: string;
+    balance: string;
+  },
 ): { name: string; amountCents: number }[] {
   const orderCents = amount.chargeCents - amount.balanceCents;
   const order =
@@ -239,6 +283,7 @@ export function checkoutLineItems(
               { name: labels.products, amountCents: amount.productsCents },
               { name: labels.shipping, amountCents: amount.shippingCents },
               { name: labels.fee, amountCents: amount.feeCents },
+              { name: labels.deposit, amountCents: amount.depositCents ?? 0 },
             ].filter((i) => i.amountCents > 0);
   return amount.balanceCents > 0 ? [...order, { name: labels.balance, amountCents: amount.balanceCents }] : order;
 }

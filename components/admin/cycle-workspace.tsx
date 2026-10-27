@@ -194,6 +194,7 @@ async function NewCycle({
         cardFee={feeInput(startingFee(defaults, "per_order", lastCardFee) ?? DEFAULT_HANDLING_FEE)}
         walletShipping={defaults.wallet?.shipping ?? null}
         cardShipping={defaults.per_order?.shipping ?? null}
+        cardDeposit={defaults.per_order?.depositPct ?? null}
         defaultOpen
       />
     </div>
@@ -222,6 +223,7 @@ function serialize(c: FullCycle): SerializedCycle {
     paymentMode: c.paymentMode,
     handlingFeeType: c.handlingFeeType,
     handlingFeeValue: c.handlingFeeValue,
+    weighingDepositPct: c.weighingDepositPct,
   };
 }
 
