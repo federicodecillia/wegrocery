@@ -23,7 +23,9 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
-## [Non rilasciato]
+## [1.39.0] - 27 ottobre 2026
+
+*Impostazioni più ordinate, "Nessuna" spesa di preparazione anche per i cicli con carta e le ricariche del borsellino che si possono spegnere.*
 
 ### Aggiunte
 - 🔒 **Ricariche del borsellino spegnibili.** Un gruppo che fa pagare ogni ordine con carta può spegnere le ricariche in Impostazioni, Pagamenti, Borsellino: i soci non vedono più Ricarica, IBAN e causale (in Home, Profilo, Storico e guida) e la ricarica online viene rifiutata. Saldi e movimenti restano, e in Cassa si può sempre registrare un versamento a mano. Di default le ricariche restano attive.
