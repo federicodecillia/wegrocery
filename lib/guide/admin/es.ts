@@ -59,9 +59,9 @@ export const adminGuideEs: GuideContent = {
       steps: [
         "Recorre los pasos con **Siguiente**. Puedes parar cuando quieras con **Saltar por ahora**: lo que has guardado se queda.",
         "Al final toca **Terminar la configuración**.",
-        "Para repetirla más adelante: **Ajustes**, la tarjeta **Configuración guiada**, **Abrir**.",
+        "Para repetirla más adelante: **Ajustes**, **Técnicos**, la tarjeta **Configuración guiada**, **Abrir**.",
       ],
-      link: { href: "/admin?tab=impostazioni", label: "Abrir Ajustes" },
+      link: { href: "/admin?tab=impostazioni&view=tecniche", label: "Abrir Ajustes" },
       keywords: ["primer arranque", "configuración", "instalación", "asistente"],
     },
     {
@@ -125,9 +125,9 @@ export const adminGuideEs: GuideContent = {
         "**Tarjeta**: cada socio paga su pedido con tarjeta al confirmarlo. Cuando los costes son definitivos, **Ajustar las cuentas** reembolsa o pide la diferencia.",
       ],
       notes: [
-        "El valor por defecto de los ciclos nuevos se elige en **Ajustes**, **Ciclos nuevos**: también con ciclos abiertos, que se quedan como están.",
-        "Si **Tarjeta** aparece en gris, los ciclos con tarjeta están desactivados para el grupo: actívalos en **Ajustes**, **Ciclos nuevos**. Allí eliges también si los ciclos nuevos empiezan con Tarjeta y los gastos de envío y preparación propuestos para cada modo.",
-        "Con **Saldo del monedero en los pagos con tarjeta** activo (en **Ajustes**), el pago con tarjeta incluye también el saldo del socio: una deuda se suma, un crédito se descuenta. En **Historial** y en **Caja** siguen siendo líneas distintas.",
+        "El valor por defecto de los ciclos nuevos se elige en **Ajustes**, **Pagos**, **Cómo se pagan los ciclos nuevos**: también con ciclos abiertos, que se quedan como están.",
+        "Si **Tarjeta** aparece en gris, los ciclos con tarjeta están desactivados para el grupo: actívalos en **Ajustes**, **Pagos**, **Cómo se pagan los ciclos nuevos**. Allí eliges también si los ciclos nuevos empiezan con Tarjeta y los gastos de envío y preparación propuestos para cada modo.",
+        "Con **Saldo del monedero en los pagos con tarjeta** activo (en **Ajustes**, **Pagos**), el pago con tarjeta incluye también el saldo del socio: una deuda se suma, un crédito se descuenta. En **Historial** y en **Caja** siguen siendo líneas distintas.",
       ],
       when: { mode: "wallet", cards: true },
       keywords: ["tarjeta", "saldo", "monedero", "stripe", "método"],
@@ -227,7 +227,7 @@ export const adminGuideEs: GuideContent = {
       title: "Qué pasa con los saldos al cerrar",
       intro: "Al cierre, cada socio con un pedido recibe un cargo en su saldo: productos, envío y cuota de preparación, si la hay. También recibe un aviso con el detalle.",
       notes: [
-        "Si un saldo baja de cero, el socio lo ve en Inicio y puede recargar. Los límites se cambian en **Ajustes**, **Límites de saldo**.",
+        "Si un saldo baja de cero, el socio lo ve en Inicio y puede recargar. Los límites se cambian en **Ajustes**, **Pagos**, **Saldo**.",
         "Cada corrección posterior (pesos, hoja del pedido, un pedido editado) añade un movimiento nuevo que el socio puede ver. Un cargo ya hecho nunca se reescribe.",
       ],
       when: { mode: "wallet" },
@@ -417,7 +417,7 @@ export const adminGuideEs: GuideContent = {
         "En **Tesorería** toca **Saldo < 0** para ver quién está por debajo de cero.",
         "Recuerda al socio que recargue: en Inicio ya ve su saldo y el botón para recargar.",
       ],
-      notes: ["Cuánto pueden bajar de cero los socios (**Descubierto máx.**) es igual para todos y se cambia en **Ajustes**, **Límites de saldo**."],
+      notes: ["Cuánto pueden bajar de cero los socios (**Descubierto máx.**) es igual para todos y se cambia en **Ajustes**, **Pagos**, **Saldo**."],
       when: { mode: "wallet" },
       keywords: ["negativo", "deuda", "descubierto", "límite"],
     },
@@ -427,7 +427,7 @@ export const adminGuideEs: GuideContent = {
       title: "IBAN, concepto de la transferencia y justificante",
       intro: "Los socios encuentran el IBAN, el titular de la cuenta y el concepto que usar en la página Recarga y en el Historial.",
       steps: [
-        "Abre **Ajustes** y busca **Recargas por transferencia**.",
+        "Abre **Ajustes**, **Pagos**, **Transferencia**.",
         "Escribe el titular de la cuenta y el IBAN.",
         "En **Concepto para los pedidos** puedes usar {order}, {month}, {year} y {member}: la app los rellena para cada pedido.",
         "Si quieres que los socios envíen el justificante de la transferencia, escribe la dirección en **Email para el justificante de transferencia**: los socios ven una invitación a enviarlo ahí.",
@@ -538,7 +538,7 @@ export const adminGuideEs: GuideContent = {
         "Toca **Editar** en el socio, escribe nombre y apellido y guarda.",
       ],
       notes: [
-        "En **Ajustes**, **Nombre y apellido de los socios**, elige si la app se lo pregunta a los socios tras acceder: nunca, con la posibilidad de aplazarlo, o antes de todo.",
+        "En **Ajustes**, **Socios y guía**, **Nombre y apellido de los socios**, elige si la app se lo pregunta a los socios tras acceder: nunca, con la posibilidad de aplazarlo, o antes de todo.",
         "El socio siempre puede cambiar su nombre desde el **Perfil**.",
       ],
       keywords: ["nombre", "apellido", "usuario", "email"],
@@ -551,7 +551,7 @@ export const adminGuideEs: GuideContent = {
       notes: [
         "En **Socios** quien está en una familia muestra **en familia con**. Las recargas y los movimientos van a la cuenta de la familia.",
         "Para separar a alguien: toca el socio y **Separar de la familia**. Vuelve a su propia cuenta con saldo cero; el saldo y el historial se quedan en la familia.",
-        "Las familias se activan o desactivan en **Ajustes**, **Familias**.",
+        "Las familias se activan o desactivan en **Ajustes**, **Socios y guía**, **Familias**.",
       ],
       when: { families: true },
       keywords: ["familia", "cuenta compartida", "separar", "hogar"],
@@ -564,11 +564,11 @@ export const adminGuideEs: GuideContent = {
       title: "Escribir \"Nuestro grupo\" para los socios",
       intro: "Es el texto que los socios leen al principio de la guía: dónde y cuándo recoger, a quién contactar, las normas del grupo.",
       steps: [
-        "Abre **Ajustes** y busca **Nuestro grupo**.",
+        "Abre **Ajustes**, **Socios y guía** y busca **Nuestro grupo**.",
         "Escribe de forma sencilla, en párrafos cortos, y guarda.",
       ],
       notes: ["Las palabras que escribes aquí también las encuentra el buscador de la guía."],
-      link: { href: "/admin?tab=impostazioni", label: "Abrir Ajustes" },
+      link: { href: "/admin?tab=impostazioni&view=soci", label: "Abrir Ajustes" },
       keywords: ["información", "normas", "recogida", "texto de la guía"],
     },
     {
@@ -576,7 +576,7 @@ export const adminGuideEs: GuideContent = {
       topic: "impostazioni",
       title: "Nombre, logo y colores",
       steps: [
-        "Abre **Ajustes**, **Nombre, logo y colores**.",
+        "Abre **Ajustes**, **Grupo**, **Nombre, logo y colores**.",
         "Cambia el nombre, el nombre corto (bajo el icono del móvil), el logo y los colores, y guarda.",
       ],
       notes: ["Un campo vacío vuelve al valor por defecto de la instalación."],
@@ -586,7 +586,7 @@ export const adminGuideEs: GuideContent = {
       slug: "modalita-pagamento",
       topic: "impostazioni",
       title: "El modo de pago del grupo",
-      intro: "En **Ajustes**, **Ciclos nuevos** eliges cómo se pagan los ciclos que crees a partir de ahora: solo saldo, saldo con tarjeta si se pide, o tarjeta con saldo si se pide. Allí fijas también los gastos de envío y preparación propuestos para cada modo.",
+      intro: "En **Ajustes**, **Pagos**, **Cómo se pagan los ciclos nuevos** eliges cómo se pagan los ciclos que crees a partir de ahora: solo saldo, saldo con tarjeta si se pide, o tarjeta con saldo si se pide. Allí fijas también los gastos de envío y preparación propuestos para cada modo.",
       notes: [
         "Se puede cambiar con ciclos abiertos: los ya creados se quedan como están.",
         "En **Avanzado**, **Modo de pago del grupo** decide si el grupo usa el saldo o solo la tarjeta: se elige una vez.",
@@ -600,11 +600,11 @@ export const adminGuideEs: GuideContent = {
       title: "Conectar los pagos con tarjeta",
       intro: "Los pagos con tarjeta pasan por Stripe, un servicio de pago externo. El grupo necesita su propia cuenta de Stripe.",
       steps: [
-        "Abre **Ajustes**, **Conexión con Stripe**.",
+        "Abre **Ajustes**, **Pagos**, **Tarjeta (Stripe)**.",
         "Sigue **Cómo conectarlo**: creas en Stripe una clave con pocos permisos y la pegas aquí.",
         "La app configura sola la conexión con Stripe y la comprueba.",
       ],
-      notes: ["Si algo falla, **Ajustes técnicos** muestra lo que falta, sin mostrar las claves."],
+      notes: ["Si algo falla, **Ajustes**, **Técnicos** muestra lo que falta, sin mostrar las claves."],
       keywords: ["stripe", "tarjeta", "pago online", "clave"],
     },
     {
@@ -612,7 +612,7 @@ export const adminGuideEs: GuideContent = {
       topic: "impostazioni",
       title: "Búsquedas sin resultados y estadísticas",
       steps: [
-        "**Ajustes**, **Búsquedas sin resultados**: las palabras que los socios han buscado en la guía sin encontrar nada. Se cuentan sin nombres. Útil para saber qué escribir en \"Nuestro grupo\".",
+        "**Ajustes**, **Socios y guía**, **Búsquedas sin resultados**: las palabras que los socios han buscado en la guía sin encontrar nada. Se cuentan sin nombres. Útil para saber qué escribir en \"Nuestro grupo\".",
         "**Estadísticas**: cómo se usa la app y los números de los ciclos (pedidos, socios, totales), también por proveedor.",
       ],
       keywords: ["estadísticas", "números", "búsquedas", "datos", "informe"],

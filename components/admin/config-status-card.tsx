@@ -17,19 +17,15 @@ const OPTIONAL = new Set<ConfigItem["id"]>(["brand", "stripe", "membership", "se
 // states only, never a value. Nothing here is set from this card: each item
 // says what it does and how it is turned on (by whoever hosts the app, or,
 // for Stripe, also from the payment settings' Stripe card).
-export function ConfigStatusCard({ items }: { items: ConfigItem[] }) {
+// With `bare` (inside an Impostazioni panel, which has the title) the list
+// runs edge to edge under the intro, without a card of its own.
+export function ConfigStatusCard({ items, bare = false }: { items: ConfigItem[]; bare?: boolean }) {
   const s = t.admin.configStatus;
   const groups = [
     { id: "essential", items: items.filter((i) => !OPTIONAL.has(i.id)) },
     { id: "optional", items: items.filter((i) => OPTIONAL.has(i.id)) },
   ] as const;
-  return (
-    <Card>
-      <CardHeader>
-        <h3 className="text-[13px] font-bold text-foreground">{s.title}</h3>
-        <p className="mt-1 text-[12px] text-secondary-foreground">{s.intro}</p>
-      </CardHeader>
-      {groups.map((group) => (
+  const list = groups.map((group) => (
         <section key={group.id}>
           <h4 className="border-t border-border bg-tint/[0.02] px-4 py-2 font-mono text-label uppercase tracking-[0.08em] text-secondary-foreground">
             {s.groups[group.id]}
@@ -40,7 +36,22 @@ export function ConfigStatusCard({ items }: { items: ConfigItem[] }) {
             ))}
           </ul>
         </section>
-      ))}
+      ));
+  if (bare) {
+    return (
+      <div>
+        <p className="text-[12px] text-secondary-foreground">{s.intro}</p>
+        <div className="-mx-4 -mb-4 mt-3">{list}</div>
+      </div>
+    );
+  }
+  return (
+    <Card>
+      <CardHeader>
+        <h3 className="text-[13px] font-bold text-foreground">{s.title}</h3>
+        <p className="mt-1 text-[12px] text-secondary-foreground">{s.intro}</p>
+      </CardHeader>
+      {list}
     </Card>
   );
 }
