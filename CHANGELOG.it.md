@@ -23,6 +23,13 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
+## [Non rilasciato]
+
+### Modificato
+- 🗂️ **Impostazioni divise per argomento.** Una barra in alto porta a Pagamenti, Gruppo (nome, logo, colori e contatti), Soci e guida, Tecniche. Ogni riquadro resta chiuso e mostra in una riga com'è impostato; si apre con un tocco, o da solo se c'è qualcosa da sistemare.
+- 💳 **La carta in un solo riquadro.** Collegamento a Stripe, ricarica online e saldo nei pagamenti con carta stanno insieme in "Carta (Stripe)", e lo stato di Stripe non è più ripetuto in più punti.
+- 🧾 **Spese proposte più compatte.** Spedizione e preparazione si scelgono da un menu con l'importo accanto, uguali per i cicli col borsellino e per quelli con carta.
+
 ## [1.38.0] - 26 ottobre 2026
 
 *I nuovi cicli possono partire con la carta, con le spese giuste già proposte, e il saldo del borsellino può entrare nel pagamento con carta.*

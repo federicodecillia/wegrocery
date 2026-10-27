@@ -11,7 +11,10 @@ export type AdminSection = "ciclo" | "cassa" | "soci" | "catalogo" | "statistich
 /** Catalogue views; the cycle's views live in lib/admin/cycle-views.ts. */
 export type CatalogView = "prodotti" | "fornitori";
 
-export type AdminView = CatalogView | CycleView;
+/** Settings views, by topic (components/admin/tab-impostazioni.tsx). */
+export type SettingsView = "pagamenti" | "gruppo" | "soci" | "tecniche";
+
+export type AdminView = CatalogView | SettingsView | CycleView;
 
 // The admin guide's index (app/guida/admin): the ⋯ menu and the sidebar link it.
 export const ADMIN_GUIDE_HREF = "/guida/admin";
@@ -30,10 +33,16 @@ export const ADMIN_MORE: { id: AdminSection; label: string }[] = [
 ];
 
 /** The views the bar shows under a section, first one the default (the cycle draws its own). */
-export const ADMIN_VIEWS: Partial<Record<AdminSection, { id: CatalogView; label: string }[]>> = {
+export const ADMIN_VIEWS: Partial<Record<AdminSection, { id: CatalogView | SettingsView; label: string }[]>> = {
   catalogo: [
     { id: "prodotti", label: t.admin.nav.catalogProducts },
     { id: "fornitori", label: t.admin.nav.catalogSuppliers },
+  ],
+  impostazioni: [
+    { id: "pagamenti", label: t.admin.nav.settingsPayments },
+    { id: "gruppo", label: t.admin.nav.settingsGroup },
+    { id: "soci", label: t.admin.nav.settingsMembers },
+    { id: "tecniche", label: t.admin.nav.settingsTechnical },
   ],
 };
 
@@ -47,7 +56,14 @@ export function adminHelpHref(section: AdminSection, view: AdminView | null): st
     soci: "soci",
     catalogo: view === "fornitori" ? "catalogo#aggiungere-fornitore" : "catalogo",
     statistiche: "impostazioni#ricerche-statistiche",
-    impostazioni: "impostazioni",
+    impostazioni:
+      view === "gruppo"
+        ? "impostazioni#nome-logo-colori"
+        : view === "soci"
+          ? "impostazioni#il-nostro-gruppo-admin"
+          : view === "tecniche"
+            ? "impostazioni#collegare-carta"
+            : "impostazioni#modalita-pagamento",
   };
   return `${ADMIN_GUIDE_HREF}/${card[section]}`;
 }

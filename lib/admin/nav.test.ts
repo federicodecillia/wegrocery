@@ -13,7 +13,7 @@ describe("resolveAdminRoute", () => {
     expect(resolveAdminRoute("prodotti", undefined)).toEqual({ section: "catalogo", view: "prodotti" });
     expect(resolveAdminRoute("fornitori", undefined)).toEqual({ section: "catalogo", view: "fornitori" });
     expect(resolveAdminRoute("cassa", undefined)).toEqual({ section: "cassa", view: null });
-    expect(resolveAdminRoute("impostazioni", undefined)).toEqual({ section: "impostazioni", view: null });
+    expect(resolveAdminRoute("impostazioni", undefined)).toEqual({ section: "impostazioni", view: "pagamenti" });
   });
 
   it("sends a member's order history to their page in Soci", () => {
@@ -29,6 +29,8 @@ describe("resolveAdminRoute", () => {
     expect(resolveAdminRoute("catalogo", "fornitori")).toEqual({ section: "catalogo", view: "fornitori" });
     expect(resolveAdminRoute("catalogo", "ordini")).toEqual({ section: "catalogo", view: "prodotti" });
     expect(resolveAdminRoute("soci", "ordini")).toEqual({ section: "soci", view: null });
+    expect(resolveAdminRoute("impostazioni", "tecniche")).toEqual({ section: "impostazioni", view: "tecniche" });
+    expect(resolveAdminRoute("impostazioni", "nonsense")).toEqual({ section: "impostazioni", view: "pagamenti" });
   });
 });
 
@@ -42,5 +44,9 @@ describe("adminHref and adminTitle", () => {
     expect(adminTitle(undefined, undefined)).toBe("Cycle");
     expect(adminTitle("ordini", undefined)).toBe("Cycle: Orders");
     expect(adminTitle("statistiche", undefined)).toBe("Statistics");
+    expect(adminTitle("impostazioni", undefined)).toBe("Settings");
+    expect(adminTitle("impostazioni", "gruppo")).toBe("Settings: Group");
+    expect(adminHref("impostazioni", "pagamenti")).toBe("/admin?tab=impostazioni");
+    expect(adminHref("impostazioni", "soci")).toBe("/admin?tab=impostazioni&view=soci");
   });
 });

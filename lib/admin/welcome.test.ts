@@ -58,6 +58,10 @@ describe("admin help links", () => {
     ["catalogo", "fornitori"],
     ["statistiche", null],
     ["impostazioni", null],
+    ["impostazioni", "pagamenti"],
+    ["impostazioni", "gruppo"],
+    ["impostazioni", "soci"],
+    ["impostazioni", "tecniche"],
   ];
   it.each(cases)("%s / %s opens a card of the admin guide", (section, view) => {
     expect(guideTarget(adminHelpHref(section, view)), adminHelpHref(section, view)).toBe(true);

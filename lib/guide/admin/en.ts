@@ -59,9 +59,9 @@ export const adminGuideEn: GuideContent = {
       steps: [
         "Go through the steps with **Next**. You can stop any time with **Skip for now**: what you saved stays.",
         "At the end tap **Finish the setup**.",
-        "To go through it again later: **Settings**, the **Guided setup** card, **Open**.",
+        "To go through it again later: **Settings**, **Technical**, the **Guided setup** card, **Open**.",
       ],
-      link: { href: "/admin?tab=impostazioni", label: "Open Settings" },
+      link: { href: "/admin?tab=impostazioni&view=tecniche", label: "Open Settings" },
       keywords: ["first start", "setup", "installation", "wizard"],
     },
     {
@@ -125,9 +125,9 @@ export const adminGuideEn: GuideContent = {
         "**Card**: each member pays their order by card when confirming it. Once costs are final, **Settle accounts** refunds or asks for the difference.",
       ],
       notes: [
-        "The default for new cycles is chosen in **Settings**, **New cycles**: even with cycles open, which stay as they are.",
-        "If **Card** is greyed out, card cycles are switched off for the group: switch them on in **Settings**, **New cycles**. There you also choose whether new cycles start with Card, and the shipping and preparation costs proposed for each mode.",
-        "With **Wallet balance in card payments** on (in **Settings**), the card payment includes the member's balance too: a debt is added, a credit is taken off. **History** and **Treasury** keep them as separate lines.",
+        "The default for new cycles is chosen in **Settings**, **Payments**, **How new cycles are paid**: even with cycles open, which stay as they are.",
+        "If **Card** is greyed out, card cycles are switched off for the group: switch them on in **Settings**, **Payments**, **How new cycles are paid**. There you also choose whether new cycles start with Card, and the shipping and preparation costs proposed for each mode.",
+        "With **Wallet balance in card payments** on (in **Settings**, **Payments**), the card payment includes the member's balance too: a debt is added, a credit is taken off. **History** and **Treasury** keep them as separate lines.",
       ],
       when: { mode: "wallet", cards: true },
       keywords: ["card", "wallet", "stripe", "method"],
@@ -227,7 +227,7 @@ export const adminGuideEn: GuideContent = {
       title: "What happens to balances when you close",
       intro: "At the close every member with an order gets a charge on their balance: products, shipping and the preparation fee, if any. They also get a notification with the details.",
       notes: [
-        "If a balance goes below zero the member sees it on Home and can top up. The limits are changed in **Settings**, **Balance limits**.",
+        "If a balance goes below zero the member sees it on Home and can top up. The limits are changed in **Settings**, **Payments**, **Wallet**.",
         "Every later correction (weights, order sheet, an edited order) adds a new movement the member can see. A charge already made is never rewritten.",
       ],
       when: { mode: "wallet" },
@@ -417,7 +417,7 @@ export const adminGuideEn: GuideContent = {
         "In **Treasury** tap **Balance < 0** to see who is below zero.",
         "Remind the member to top up: on Home they already see their balance and the button to top up.",
       ],
-      notes: ["How far below zero members can go (**Max overdraft**) is the same for everyone and is changed in **Settings**, **Balance limits**."],
+      notes: ["How far below zero members can go (**Max overdraft**) is the same for everyone and is changed in **Settings**, **Payments**, **Wallet**."],
       when: { mode: "wallet" },
       keywords: ["negative", "debt", "overdrawn", "limit"],
     },
@@ -427,7 +427,7 @@ export const adminGuideEn: GuideContent = {
       title: "IBAN, transfer reference and receipt",
       intro: "Members find the IBAN, the account holder and the reference to use on the Top-up page and in History.",
       steps: [
-        "Open **Settings** and find **Bank transfer top-ups**.",
+        "Open **Settings**, **Payments**, **Bank transfer**.",
         "Write the account holder and the IBAN.",
         "In **Reference for orders** you can use {order}, {month}, {year} and {member}: the app fills them in for each order.",
         "If you want members to send the transfer receipt, write the address in **Email for the transfer receipt**: members see an invitation to send it there.",
@@ -538,7 +538,7 @@ export const adminGuideEn: GuideContent = {
         "Tap **Edit** on the member, enter first and last name and save.",
       ],
       notes: [
-        "In **Settings**, **Members' first and last names**, choose whether the app asks members after they sign in: never, with the option to put it off, or before anything else.",
+        "In **Settings**, **Members & guide**, **Members' first and last names**, choose whether the app asks members after they sign in: never, with the option to put it off, or before anything else.",
         "Members can always change their own name from the **Profile**.",
       ],
       keywords: ["name", "surname", "last name", "username", "email"],
@@ -551,7 +551,7 @@ export const adminGuideEn: GuideContent = {
       notes: [
         "In **Members** someone in a family shows **in a family with**. Top-ups and movements go on the family's account.",
         "To detach someone: tap the member and **Unlink from family**. They go back to their own account with a zero balance; balance and history stay with the family.",
-        "Families are turned on or off in **Settings**, **Families**.",
+        "Families are turned on or off in **Settings**, **Members & guide**, **Families**.",
       ],
       when: { families: true },
       keywords: ["family", "shared account", "unlink", "household"],
@@ -564,11 +564,11 @@ export const adminGuideEn: GuideContent = {
       title: "Writing \"Our group\" for members",
       intro: "It is the text members read at the top of the guide: where and when to pick up, who to contact, the group's rules.",
       steps: [
-        "Open **Settings** and find **Our group**.",
+        "Open **Settings**, **Members & guide** and find **Our group**.",
         "Write simply, in short paragraphs, and save.",
       ],
       notes: ["The words you write here are also found by the guide's search."],
-      link: { href: "/admin?tab=impostazioni", label: "Open Settings" },
+      link: { href: "/admin?tab=impostazioni&view=soci", label: "Open Settings" },
       keywords: ["information", "rules", "pickup", "guide text"],
     },
     {
@@ -576,7 +576,7 @@ export const adminGuideEn: GuideContent = {
       topic: "impostazioni",
       title: "Name, logo and colours",
       steps: [
-        "Open **Settings**, **Name, logo and colours**.",
+        "Open **Settings**, **Group**, **Name, logo and colours**.",
         "Change the name, the short name (under the phone icon), the logo and the colours, and save.",
       ],
       notes: ["A field left empty goes back to the installation's default."],
@@ -586,7 +586,7 @@ export const adminGuideEn: GuideContent = {
       slug: "modalita-pagamento",
       topic: "impostazioni",
       title: "The group's payment mode",
-      intro: "In **Settings**, **New cycles** you choose how the cycles you create from now on are paid: wallet only, wallet with card on request, or card with wallet on request. There you also set the shipping and preparation costs proposed for each mode.",
+      intro: "In **Settings**, **Payments**, **How new cycles are paid** you choose how the cycles you create from now on are paid: wallet only, wallet with card on request, or card with wallet on request. There you also set the shipping and preparation costs proposed for each mode.",
       notes: [
         "You can change it with cycles open: those already created stay as they are.",
         "Under **Advanced**, **Group payment mode** decides whether the group uses the wallet or card only: a choice made once.",
@@ -600,11 +600,11 @@ export const adminGuideEn: GuideContent = {
       title: "Connecting card payments",
       intro: "Card payments go through Stripe, an external payment service. The group needs its own Stripe account.",
       steps: [
-        "Open **Settings**, **Stripe connection**.",
+        "Open **Settings**, **Payments**, **Card (Stripe)**.",
         "Follow **How to connect it**: you create a key with few permissions on Stripe and paste it here.",
         "The app sets up the link with Stripe by itself and checks it.",
       ],
-      notes: ["If something is wrong, **Technical settings** shows what is missing, without showing the keys."],
+      notes: ["If something is wrong, **Settings**, **Technical** shows what is missing, without showing the keys."],
       keywords: ["stripe", "card", "online payment", "key"],
     },
     {
@@ -612,7 +612,7 @@ export const adminGuideEn: GuideContent = {
       topic: "impostazioni",
       title: "Searches with no results and statistics",
       steps: [
-        "**Settings**, **Searches with no results**: the words members searched for in the guide without finding anything. Counted without names. Useful to know what to write in \"Our group\".",
+        "**Settings**, **Members & guide**, **Searches with no results**: the words members searched for in the guide without finding anything. Counted without names. Useful to know what to write in \"Our group\".",
         "**Statistics**: how the app is used and the cycles' numbers (orders, members, totals), also per supplier.",
       ],
       keywords: ["statistics", "numbers", "searches", "data", "report"],

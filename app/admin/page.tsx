@@ -15,7 +15,7 @@ import { SetupBanner } from "@/components/admin/setup/setup-banner";
 import { AdminWelcome } from "@/components/admin/admin-welcome";
 import { ADMIN_WELCOME_QUERY } from "@/lib/admin/welcome";
 import type { Metadata } from "next";
-import { adminTitle, resolveAdminRoute } from "@/lib/admin/nav";
+import { adminTitle, resolveAdminRoute, type SettingsView } from "@/lib/admin/nav";
 import type { CycleView } from "@/lib/admin/cycle-views";
 
 export async function generateMetadata({ searchParams }: { searchParams: SearchParams }): Promise<Metadata> {
@@ -110,7 +110,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Search
             memberIds={parseCsvParam(filterMemberId)}
           />
         )}
-        {section === "impostazioni" && <TabImpostazioni />}
+        {section === "impostazioni" && <TabImpostazioni view={view as SettingsView} />}
       </Suspense>
     </AppShell>
   );

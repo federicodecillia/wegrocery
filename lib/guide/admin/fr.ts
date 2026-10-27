@@ -59,9 +59,9 @@ export const adminGuideFr: GuideContent = {
       steps: [
         "Parcourez les étapes avec **Suivant**. Vous pouvez vous arrêter quand vous voulez avec **Passer pour l'instant** : ce que vous avez enregistré reste.",
         "À la fin, touchez **Terminer la configuration**.",
-        "Pour la refaire plus tard : **Réglages**, la carte **Configuration guidée**, **Ouvrir**.",
+        "Pour la refaire plus tard : **Réglages**, **Technique**, la carte **Configuration guidée**, **Ouvrir**.",
       ],
-      link: { href: "/admin?tab=impostazioni", label: "Ouvrir Réglages" },
+      link: { href: "/admin?tab=impostazioni&view=tecniche", label: "Ouvrir Réglages" },
       keywords: ["premier démarrage", "configuration", "installation", "assistant"],
     },
     {
@@ -125,9 +125,9 @@ export const adminGuideFr: GuideContent = {
         "**Carte** : chaque membre paie sa commande par carte en la confirmant. Une fois les coûts définitifs, **Solder les comptes** rembourse ou demande la différence.",
       ],
       notes: [
-        "La valeur par défaut des nouveaux cycles se choisit dans **Réglages**, **Nouveaux cycles** : même avec des cycles ouverts, qui restent tels quels.",
-        "Si **Carte** est grisé, les cycles par carte sont désactivés pour le groupe : activez-les dans **Réglages**, **Nouveaux cycles**. Vous y choisissez aussi si les nouveaux cycles démarrent avec Carte, et les frais de livraison et de préparation proposés pour chaque mode.",
-        "Avec **Solde du porte-monnaie dans les paiements par carte** activé (dans **Réglages**), le paiement par carte comprend aussi le solde du membre : une dette s'ajoute, un crédit se déduit. L'**Historique** et la **Caisse** les gardent en lignes distinctes.",
+        "La valeur par défaut des nouveaux cycles se choisit dans **Réglages**, **Paiements**, **Comment se paient les nouveaux cycles** : même avec des cycles ouverts, qui restent tels quels.",
+        "Si **Carte** est grisé, les cycles par carte sont désactivés pour le groupe : activez-les dans **Réglages**, **Paiements**, **Comment se paient les nouveaux cycles**. Vous y choisissez aussi si les nouveaux cycles démarrent avec Carte, et les frais de livraison et de préparation proposés pour chaque mode.",
+        "Avec **Solde du porte-monnaie dans les paiements par carte** activé (dans **Réglages**, **Paiements**), le paiement par carte comprend aussi le solde du membre : une dette s'ajoute, un crédit se déduit. L'**Historique** et la **Caisse** les gardent en lignes distinctes.",
       ],
       when: { mode: "wallet", cards: true },
       keywords: ["carte", "solde", "porte-monnaie", "stripe", "moyen"],
@@ -227,7 +227,7 @@ export const adminGuideFr: GuideContent = {
       title: "Ce qui arrive aux soldes à la clôture",
       intro: "À la clôture, chaque membre qui a commandé reçoit un prélèvement sur son solde : produits, livraison et frais de préparation, s'il y en a. Il reçoit aussi une notification avec le détail.",
       notes: [
-        "Si un solde passe sous zéro, le membre le voit sur l'Accueil et peut recharger. Les limites se modifient dans **Réglages**, **Limites de solde**.",
+        "Si un solde passe sous zéro, le membre le voit sur l'Accueil et peut recharger. Les limites se modifient dans **Réglages**, **Paiements**, **Solde**.",
         "Chaque correction ultérieure (poids, bon de commande, commande modifiée) ajoute un nouveau mouvement visible par le membre. Un prélèvement déjà fait n'est jamais réécrit.",
       ],
       when: { mode: "wallet" },
@@ -417,7 +417,7 @@ export const adminGuideFr: GuideContent = {
         "Dans **Trésorerie**, touchez **Solde < 0** pour voir qui est sous zéro.",
         "Rappelez au membre de recharger : sur l'Accueil, il voit déjà son solde et le bouton pour recharger.",
       ],
-      notes: ["Jusqu'où les membres peuvent descendre sous zéro (**Découvert max.**) est identique pour tous et se modifie dans **Réglages**, **Limites de solde**."],
+      notes: ["Jusqu'où les membres peuvent descendre sous zéro (**Découvert max.**) est identique pour tous et se modifie dans **Réglages**, **Paiements**, **Solde**."],
       when: { mode: "wallet" },
       keywords: ["négatif", "dette", "découvert", "limite"],
     },
@@ -427,7 +427,7 @@ export const adminGuideFr: GuideContent = {
       title: "IBAN, libellé du virement et justificatif",
       intro: "Les membres trouvent l'IBAN, le titulaire du compte et le libellé à utiliser sur la page Recharger et dans l'Historique.",
       steps: [
-        "Ouvrez **Réglages** et cherchez **Recharges par virement**.",
+        "Ouvrez **Réglages**, **Paiements**, **Virement**.",
         "Écrivez le titulaire du compte et l'IBAN.",
         "Dans **Libellé pour les commandes**, vous pouvez utiliser {order}, {month}, {year} et {member} : l'app les remplit pour chaque commande.",
         "Si vous voulez que les membres envoient le justificatif de virement, écrivez l'adresse dans **Email pour le justificatif de virement** : les membres voient une invitation à l'y envoyer.",
@@ -538,7 +538,7 @@ export const adminGuideFr: GuideContent = {
         "Touchez **Modifier** sur le membre, indiquez prénom et nom et enregistrez.",
       ],
       notes: [
-        "Dans **Réglages**, **Prénom et nom des membres**, choisissez si l'app le demande aux membres après la connexion : jamais, avec la possibilité de reporter, ou avant tout.",
+        "Dans **Réglages**, **Membres et guide**, **Prénom et nom des membres**, choisissez si l'app le demande aux membres après la connexion : jamais, avec la possibilité de reporter, ou avant tout.",
         "Le membre peut toujours changer son nom depuis le **Profil**.",
       ],
       keywords: ["nom", "prénom", "nom d'utilisateur", "e-mail"],
@@ -551,7 +551,7 @@ export const adminGuideFr: GuideContent = {
       notes: [
         "Dans **Membres**, une personne dans une famille affiche **en famille avec**. Les recharges et les mouvements vont sur le compte de la famille.",
         "Pour détacher quelqu'un : touchez le membre puis **Détacher de la famille**. Il revient à son propre compte avec un solde à zéro ; le solde et l'historique restent à la famille.",
-        "Les familles s'activent ou se désactivent dans **Réglages**, **Familles**.",
+        "Les familles s'activent ou se désactivent dans **Réglages**, **Membres et guide**, **Familles**.",
       ],
       when: { families: true },
       keywords: ["famille", "compte partagé", "détacher", "foyer"],
@@ -564,11 +564,11 @@ export const adminGuideFr: GuideContent = {
       title: "Écrire « Notre groupe » pour les membres",
       intro: "C'est le texte que les membres lisent en haut du guide : où et quand retirer, qui contacter, les règles du groupe.",
       steps: [
-        "Ouvrez **Réglages** et cherchez **Notre groupe**.",
+        "Ouvrez **Réglages**, **Membres et guide** et cherchez **Notre groupe**.",
         "Écrivez simplement, en paragraphes courts, et enregistrez.",
       ],
       notes: ["Les mots que vous écrivez ici sont aussi trouvés par la recherche du guide."],
-      link: { href: "/admin?tab=impostazioni", label: "Ouvrir Réglages" },
+      link: { href: "/admin?tab=impostazioni&view=soci", label: "Ouvrir Réglages" },
       keywords: ["informations", "règles", "retrait", "texte du guide"],
     },
     {
@@ -576,7 +576,7 @@ export const adminGuideFr: GuideContent = {
       topic: "impostazioni",
       title: "Nom, logo et couleurs",
       steps: [
-        "Ouvrez **Réglages**, **Nom, logo et couleurs**.",
+        "Ouvrez **Réglages**, **Groupe**, **Nom, logo et couleurs**.",
         "Changez le nom, le nom court (sous l'icône du téléphone), le logo et les couleurs, et enregistrez.",
       ],
       notes: ["Un champ laissé vide revient à la valeur par défaut de l'installation."],
@@ -586,7 +586,7 @@ export const adminGuideFr: GuideContent = {
       slug: "modalita-pagamento",
       topic: "impostazioni",
       title: "Le mode de paiement du groupe",
-      intro: "Dans **Réglages**, **Nouveaux cycles**, vous choisissez comment se paient les cycles créés à partir de maintenant : solde uniquement, solde avec carte sur demande, ou carte avec solde sur demande. Vous y réglez aussi les frais de livraison et de préparation proposés pour chaque mode.",
+      intro: "Dans **Réglages**, **Paiements**, **Comment se paient les nouveaux cycles**, vous choisissez comment se paient les cycles créés à partir de maintenant : solde uniquement, solde avec carte sur demande, ou carte avec solde sur demande. Vous y réglez aussi les frais de livraison et de préparation proposés pour chaque mode.",
       notes: [
         "Cela se change même avec des cycles ouverts : ceux déjà créés restent tels quels.",
         "Dans **Avancé**, **Mode de paiement du groupe** décide si le groupe utilise le solde ou seulement la carte : un choix fait une fois.",
@@ -600,11 +600,11 @@ export const adminGuideFr: GuideContent = {
       title: "Connecter les paiements par carte",
       intro: "Les paiements par carte passent par Stripe, un service de paiement externe. Le groupe a besoin de son propre compte Stripe.",
       steps: [
-        "Ouvrez **Réglages**, **Connexion Stripe**.",
+        "Ouvrez **Réglages**, **Paiements**, **Carte (Stripe)**.",
         "Suivez **Comment le connecter** : vous créez sur Stripe une clé avec peu d'autorisations et vous la collez ici.",
         "L'app configure toute seule le lien avec Stripe et le vérifie.",
       ],
-      notes: ["En cas de problème, **Réglages techniques** montre ce qui manque, sans afficher les clés."],
+      notes: ["En cas de problème, **Réglages**, **Technique** montre ce qui manque, sans afficher les clés."],
       keywords: ["stripe", "carte", "paiement en ligne", "clé"],
     },
     {
@@ -612,7 +612,7 @@ export const adminGuideFr: GuideContent = {
       topic: "impostazioni",
       title: "Recherches sans résultat et statistiques",
       steps: [
-        "**Réglages**, **Recherches sans résultat** : les mots que les membres ont cherchés dans le guide sans rien trouver. Comptés sans noms. Utile pour savoir quoi écrire dans « Notre groupe ».",
+        "**Réglages**, **Membres et guide**, **Recherches sans résultat** : les mots que les membres ont cherchés dans le guide sans rien trouver. Comptés sans noms. Utile pour savoir quoi écrire dans « Notre groupe ».",
         "**Statistiques** : comment l'app est utilisée et les chiffres des cycles (commandes, membres, totaux), aussi par fournisseur.",
       ],
       keywords: ["statistiques", "chiffres", "recherches", "données", "rapport"],
