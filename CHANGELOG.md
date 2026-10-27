@@ -22,7 +22,9 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
-## [Unreleased]
+## [1.39.0] - 2026-10-27
+
+*Tidier settings, a "None" preparation fee for card cycles too, and wallet top-ups that can be switched off.*
 
 ### Added
 - 🔒 **Wallet top-ups can be switched off.** A group that has every order paid by card can switch top-ups off in Settings, Payments, Wallet: members no longer see Top up, the IBAN or the reference (on Home, Profile, History and in the guide) and an online top-up is refused. Balances and movements stay, and Treasury can still record a payment by hand. Top-ups stay on by default.
