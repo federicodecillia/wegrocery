@@ -67,7 +67,7 @@ import {
 } from "@/lib/notifications/dispatch";
 import { selectCycleAccessMembers } from "@/lib/notifications/reminder";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
-import { resolveCycleFee, type HandlingFee } from "@/lib/payments/order-payment";
+import { parseWeighingDeposit, resolveCycleFee, type HandlingFee } from "@/lib/payments/order-payment";
 import { cardCyclesAvailable, resolveNewCycleMode } from "@/lib/payments/cycle-mode";
 import { startingFee } from "@/lib/payments/new-cycle-defaults";
 import { reverseEntry, reverseEntrySql } from "@/lib/ledger-reversal";
@@ -144,6 +144,8 @@ export type CreateCycleInput = {
   /** "none" (wallet cycles only), "percent" or "fixed". Omitted: the last cycle's fee of the same payment mode. */
   handlingFeeType?: string;
   handlingFeeValue?: string;
+  /** Card cycles: the weighing deposit in percent, "" = none. Omitted: the default from Impostazioni. */
+  weighingDepositPct?: string;
   /** "wallet" or "per_order" (lib/payments/cycle-mode.ts). Omitted: the group's mode. */
   paymentMode?: string;
 };
@@ -190,6 +192,17 @@ export async function adminCreateCycle(data: CreateCycleInput): Promise<{error?:
       startingFee(settings.newCycleDefaults, paymentMode, await getLastHandlingFee(paymentMode)),
     );
     if ("error" in fee) return { error: t.errors.handlingFeeInvalid };
+    // Only a card cycle takes a deposit (the database refuses it on a wallet cycle).
+    let depositPct: number | null = null;
+    if (paymentMode === "per_order") {
+      if (data.weighingDepositPct === undefined) {
+        depositPct = settings.newCycleDefaults.per_order?.depositPct ?? null;
+      } else {
+        const deposit = parseWeighingDeposit(data.weighingDepositPct);
+        if ("error" in deposit) return { error: t.errors.weighingDepositInvalid };
+        depositPct = deposit.pct;
+      }
+    }
 
     const cycleId = genId("cyc");
     const now = new Date();
@@ -221,6 +234,7 @@ export async function adminCreateCycle(data: CreateCycleInput): Promise<{error?:
       paymentMode,
       handlingFeeType: fee.fee?.type ?? null,
       handlingFeeValue: fee.fee ? fee.fee.value.toFixed(2) : null,
+      weighingDepositPct: depositPct === null ? null : depositPct.toFixed(2),
     });
 
     await writeAudit(db, admin.email, "create_cycle", "cycle", cycleId, { ...data, accessLevel, paymentMode });
@@ -777,6 +791,7 @@ export async function adminUpdateCycle(
     shippingTotal?: string;
     handlingFeeType?: string;
     handlingFeeValue?: string;
+    weighingDepositPct?: string;
   },
 ): Promise<{ error?: string; adjustedMembers?: number }> {
   try {
@@ -814,6 +829,15 @@ export async function adminUpdateCycle(
       fee = resolved.fee;
     }
 
+    // The weighing deposit changes only on an open card cycle: after the close
+    // the payments are what they are, and the settlement gives back the rest.
+    let depositPct: number | null | undefined;
+    if (data.weighingDepositPct !== undefined && before.paymentMode === "per_order") {
+      const deposit = parseWeighingDeposit(data.weighingDepositPct);
+      if ("error" in deposit) return { error: t.errors.weighingDepositInvalid };
+      depositPct = deposit.pct;
+    }
+
     const dates = parseCycleDates(data);
     if ("error" in dates) return { error: dates.error };
 
@@ -834,6 +858,14 @@ export async function adminUpdateCycle(
 
     if (fee !== undefined && !(await updateCycleFee(db, cycleId, fee))) {
       return { error: t.errors.handlingFeeLocked };
+    }
+    if (depositPct !== undefined) {
+      const updated = await db
+        .update(orderCycles)
+        .set({ weighingDepositPct: depositPct === null ? null : depositPct.toFixed(2) })
+        .where(and(eq(orderCycles.cycleId, cycleId), eq(orderCycles.status, "open")))
+        .returning({ cycleId: orderCycles.cycleId });
+      if (updated.length === 0) return { error: t.errors.weighingDepositLocked };
     }
 
     await db

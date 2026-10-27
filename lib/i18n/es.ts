@@ -200,6 +200,9 @@ export const es: Strings = {
       products: "Productos",
       shipping: "Envío",
       fee: "Cuota de preparación del pedido",
+      deposit: "Depósito por pesaje",
+      depositLine: (pct: string) => `Depósito por pesaje (${pct}), se devuelve la parte no usada`,
+      depositHint: "El depósito cubre el pesaje del proveedor: al cerrar las cuentas te devolvemos a la tarjeta la parte no usada.",
       feeHint: "La cuota de preparación del pedido se queda en el grupo. El envío y los pesos se ajustan al cerrar el ciclo.",
       refundDifference: (amount: string) =>
         `Has pagado ${amount} más de lo que cuesta ahora el pedido: te lo devolvemos a la tarjeta cuando se liquide el ciclo.`,
@@ -961,6 +964,8 @@ export const es: Strings = {
       handlingFeeFixed: "Importe fijo",
       handlingFeeHint: "Se la queda el grupo para comisiones bancarias y gastos de gestión: se cobra al cierre, sobre los productos pedidos. Como máximo 25% o 10 €.",
       handlingFeeEditWarning: "Los socios que ya pagaron con la cuota anterior ajustan la diferencia en la liquidación.",
+      weighingDepositLabel: "Depósito por pesaje",
+      weighingDepositHint: "Para los productos a peso: un porcentaje extra sobre los productos, pagado con el pedido. Al cerrar las cuentas la app devuelve a la tarjeta la parte que el pesaje no usó. Como máximo 25%.",
       paymentModeLabel: "Pago",
       paymentModeWallet: "Monedero",
       paymentModeCard: "Tarjeta",
@@ -2087,6 +2092,8 @@ export const es: Strings = {
       `Tu pedido de "${cycle}" está confirmado. Has pagado ${amount}: productos ${products}, envío ${shipping}, cuota de preparación del pedido ${fee}. Cuando se liquide el ciclo, cualquier diferencia en productos y envío se ajusta.`,
     orderPaidBalanceNote: (amount: string) => `Incluye ${amount} de saldo anterior.`,
     orderPaidCreditNote: (amount: string) => `Usados ${amount} de crédito del monedero.`,
+    orderPaidDepositNote: (amount: string) =>
+      `Incluye ${amount} de depósito por pesaje: al cerrar las cuentas te devolvemos la parte no usada.`,
     orderPaidShortBody: (cycle: string, amount: string) =>
       `Tu pedido de "${cycle}" está confirmado. Has pagado ${amount}.`,
     balancePaidTitle: "Saldo pagado",
@@ -2260,6 +2267,8 @@ export const es: Strings = {
     invalidAccessLevel: "Nivel de acceso no válido",
     handlingFeeLocked: "El ciclo ya está cerrado: la cuota de preparación del pedido ya no puede cambiar.",
     handlingFeeInvalid: "Cuota de preparación del pedido no válida: un número con dos decimales como máximo, hasta el 25% o 10 €",
+    weighingDepositInvalid: "Depósito por pesaje no válido: un número con dos decimales como máximo, hasta el 25%",
+    weighingDepositLocked: "El ciclo ya está cerrado: el depósito por pesaje ya no se puede cambiar.",
     cardCyclesOff: "Los ciclos pagados con tarjeta están desactivados para el grupo: actívalos en Ajustes > Ciclos nuevos.",
     cyclePaymentModeUnavailable: "El pago con tarjeta no está disponible para este ciclo: requiere Stripe configurado y el grupo en modo saldo.",
     cycleNotOpen: "El ciclo ya no está abierto",

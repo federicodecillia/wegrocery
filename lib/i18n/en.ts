@@ -200,6 +200,9 @@ export const en: Strings = {
       products: "Products",
       shipping: "Shipping",
       fee: "Order preparation fee",
+      deposit: "Weighing deposit",
+      depositLine: (pct: string) => `Weighing deposit (${pct}), the unused part given back`,
+      depositHint: "The weighing deposit covers the supplier's weighing: once the accounts are settled we refund the unused part to your card.",
       feeHint: "The order preparation fee stays with the group. Shipping and weighing are settled when the cycle is closed.",
       refundDifference: (amount: string) =>
         `You paid ${amount} more than the order costs now: we refund it to your card when the cycle is settled.`,
@@ -961,6 +964,8 @@ export const en: Strings = {
       handlingFeeFixed: "Fixed amount",
       handlingFeeHint: "Kept by the group for bank fees and running costs: charged at the close, on the products ordered. At most 25% or €10.",
       handlingFeeEditWarning: "Members who already paid with the previous fee settle the difference at settlement.",
+      weighingDepositLabel: "Weighing deposit",
+      weighingDepositHint: "For products sold by weight: a percentage on top of the products, paid with the order. Settle accounts refunds to the card what the weighing did not use. At most 25%.",
       paymentModeLabel: "Payment",
       paymentModeWallet: "Wallet",
       paymentModeCard: "Card",
@@ -2087,6 +2092,8 @@ export const en: Strings = {
       `Your order for "${cycle}" is confirmed. You paid ${amount}: products ${products}, shipping ${shipping}, order preparation fee ${fee}. When the cycle is settled, any difference on products and shipping is evened out.`,
     orderPaidBalanceNote: (amount: string) => `It includes ${amount} of previous balance.`,
     orderPaidCreditNote: (amount: string) => `${amount} of wallet credit used.`,
+    orderPaidDepositNote: (amount: string) =>
+      `It includes a ${amount} weighing deposit: once the accounts are settled we give back the unused part.`,
     orderPaidShortBody: (cycle: string, amount: string) =>
       `Your order for "${cycle}" is confirmed. You paid ${amount}.`,
     balancePaidTitle: "Balance paid",
@@ -2259,6 +2266,8 @@ export const en: Strings = {
     invalidAccessLevel: "Invalid access level",
     handlingFeeLocked: "The cycle is already closed: the order preparation fee can no longer change.",
     handlingFeeInvalid: "Invalid order preparation fee: a number with at most two decimals, up to 25% or €10",
+    weighingDepositInvalid: "Invalid weighing deposit: a number with at most two decimals, up to 25%",
+    weighingDepositLocked: "The cycle is already closed: the weighing deposit can no longer change.",
     cardCyclesOff: "Cycles paid by card are switched off for the group: switch them on in Settings > New cycles.",
     cyclePaymentModeUnavailable: "Card payment is not available for this cycle: it needs Stripe set up and the group in wallet mode.",
     cycleNotOpen: "The cycle is no longer open",

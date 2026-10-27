@@ -68,6 +68,7 @@ export function OrderTotals({ orderTotal, payAmount, afterBalance, walletFeeCent
             [t.order.pay.products, payAmount.productsCents],
             [t.order.pay.shipping, payAmount.shippingCents],
             [t.order.pay.fee, payAmount.feeCents],
+            [t.order.pay.deposit, payAmount.depositCents ?? 0],
             [t.order.pay.alreadyPaid, -payAmount.coveredCents],
             [t.order.pay.walletCredit, -payAmount.walletCreditCents],
             [t.order.pay.previousBalance, payAmount.balanceCents],
@@ -99,7 +100,9 @@ export function OrderTotals({ orderTotal, payAmount, afterBalance, walletFeeCent
           ? t.order.pay.minimumNote(formatEur(ORDER_PAYMENT_MIN_CENTS / 100))
           : payAmount.balanceCents > 0 || payAmount.walletCreditCents > 0
             ? t.order.pay.walletHint
-            : t.order.pay.feeHint
+            : (payAmount.depositCents ?? 0) > 0
+              ? t.order.pay.depositHint
+              : t.order.pay.feeHint
         : t.order.feeEstimateHint}
     </p>
     </>

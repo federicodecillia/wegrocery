@@ -1,5 +1,12 @@
 import type { PaymentMode } from "./settings";
-import { HANDLING_FEE_MAX, NO_HANDLING_FEE, parseHandlingFee, type HandlingFee } from "./order-payment";
+import {
+  HANDLING_FEE_MAX,
+  NO_HANDLING_FEE,
+  WEIGHING_DEPOSIT_MAX,
+  parseHandlingFee,
+  parseWeighingDeposit,
+  type HandlingFee,
+} from "./order-payment";
 
 // What "Nuovo ciclo" starts from (drizzle/0043_new_cycle_defaults.sql): per
 // payment mode, the shipping and the preparation fee the admins chose in
@@ -12,7 +19,9 @@ export type ShippingDefault = { mode: "fixed_per_member" | "proportional"; amoun
 // "none" is stored for wallet cycles; a card cycle always has a fee
 // (drizzle/0021), so its "none" is stored as 0% (NO_HANDLING_FEE).
 export type FeeDefault = { type: "none" } | HandlingFee;
-export type ModeDefaults = { shipping?: ShippingDefault; fee?: FeeDefault };
+// depositPct: the weighing deposit of a new card cycle (drizzle/0045), card
+// cycles only; absent = none.
+export type ModeDefaults = { shipping?: ShippingDefault; fee?: FeeDefault; depositPct?: number };
 export type NewCycleDefaults = Partial<Record<PaymentMode, ModeDefaults>>;
 
 // The largest shipping amount a default may carry, per member or in total.
@@ -26,13 +35,15 @@ export function parseNewCycleDefaults(raw: unknown): NewCycleDefaults {
   const out: NewCycleDefaults = {};
   for (const [mode, value] of Object.entries(raw as Record<string, unknown>)) {
     if (!isMode(mode) || !value || typeof value !== "object") continue;
-    const v = value as { shipping?: unknown; fee?: unknown };
+    const v = value as { shipping?: unknown; fee?: unknown; depositPct?: unknown };
     const entry: ModeDefaults = {};
     const shipping = readShipping(v.shipping);
     if (shipping) entry.shipping = shipping;
     const fee = readFee(v.fee, mode);
     if (fee) entry.fee = fee;
-    if (entry.shipping || entry.fee) out[mode] = entry;
+    const depositPct = mode === "per_order" ? readDeposit(v.depositPct) : null;
+    if (depositPct !== null) entry.depositPct = depositPct;
+    if (entry.shipping || entry.fee || entry.depositPct !== undefined) out[mode] = entry;
   }
   return out;
 }
@@ -44,6 +55,11 @@ function readShipping(raw: unknown): ShippingDefault | null {
   if (amount === null) return { mode, amount: null };
   if (typeof amount !== "number" || !Number.isFinite(amount) || amount < 0 || amount > SHIPPING_DEFAULT_MAX) return null;
   return { mode, amount };
+}
+
+function readDeposit(raw: unknown): number | null {
+  if (typeof raw !== "number" || !Number.isFinite(raw) || raw <= 0 || raw > WEIGHING_DEPOSIT_MAX) return null;
+  return raw;
 }
 
 function readFee(raw: unknown, mode: PaymentMode): FeeDefault | null {
@@ -61,9 +77,11 @@ export type ModeDefaultsInput = {
   shippingAmount: string;
   feeType: "none" | "percent" | "fixed";
   feeValue: string;
+  // Card cycles only: the weighing deposit, "" = none. Left out: unchanged.
+  depositPct?: string;
 };
 
-export type DefaultsError = { mode: PaymentMode; field: "shipping" | "fee" };
+export type DefaultsError = { mode: PaymentMode; field: "shipping" | "fee" | "deposit" };
 
 // "0", "2,5", "1.50": at most two decimals, no sign.
 function parseAmount(value: string): number | null | "invalid" {
@@ -97,6 +115,15 @@ export function planNewCycleDefaults(
       const fee = parseHandlingFee(i.feeType, i.feeValue);
       if ("error" in fee) return { error: { mode, field: "fee" } };
       entry.fee = fee;
+    }
+    if (mode === "per_order") {
+      if (i.depositPct === undefined) {
+        if (current.per_order?.depositPct !== undefined) entry.depositPct = current.per_order.depositPct;
+      } else {
+        const deposit = parseWeighingDeposit(i.depositPct);
+        if ("error" in deposit) return { error: { mode, field: "deposit" } };
+        if (deposit.pct !== null) entry.depositPct = deposit.pct;
+      }
     }
     next[mode] = entry;
   }

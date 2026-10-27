@@ -279,6 +279,15 @@ export const guideEs: GuideContent = {
       when: { mode: "per_order" },
     },
     {
+      slug: "quota-preventiva",
+      topic: "soldi",
+      title: "Qué es el depósito por pesaje",
+      intro:
+        "En los ciclos con productos a peso el coste real solo se sabe después del pesaje del proveedor. Si el ciclo lo prevé, pagas con el pedido un pequeño porcentaje extra sobre los productos. Después del pesaje, al cerrar las cuentas, te devolvemos a la tarjeta la parte no usada; si el pesaje cuesta más, la diferencia se añade a tu próximo pago.",
+      keywords: ["pesaje", "peso", "depósito", "anticipo", "ajuste", "verdura"],
+      when: { mode: "per_order" },
+    },
+    {
       slug: "rimborsi",
       topic: "soldi",
       title: "Cuándo llegan los reembolsos",

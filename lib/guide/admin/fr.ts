@@ -107,6 +107,7 @@ export const adminGuideFr: GuideContent = {
         "Écrivez le **Titre** (ce que lisent les membres) et la **Clôture des commandes** : le jour et l'heure jusqu'auxquels les membres commandent.",
         "Choisissez le **Fournisseur**. S'il manque, ajoutez-le d'abord dans **Catalogue**, **Fournisseurs**.",
         "Si besoin, ajoutez un ou deux **Retraits** (jour et heure), la **Livraison** et les **Frais de préparation de la commande**.",
+        "Dans un cycle par carte avec des produits au poids, vous pouvez activer la **Provision pour pesée** : un pourcentage en plus payé avec la commande, dont **Solder les comptes** rembourse sur la carte la part non utilisée.",
         "Choisissez l'**Accès** : qui peut commander. En général **Utilisateurs (tous)**.",
         "Les **Notes** sont montrées aux membres sur la page de commande et sur l'Accueil : pratiques pour les avis de retrait.",
         "Touchez **Créer le cycle**. Le cycle est ouvert tout de suite et les membres reçoivent une notification.",

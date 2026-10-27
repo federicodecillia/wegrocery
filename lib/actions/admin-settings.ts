@@ -478,7 +478,12 @@ export async function adminSetNewCycleDefaults(
     const plan = planNewCycleDefaults(before.newCycleDefaults, input);
     if ("error" in plan) {
       return {
-        error: plan.error.field === "fee" ? t.errors.handlingFeeInvalid : t.admin.settings.newCycles.shippingInvalid,
+        error:
+          plan.error.field === "fee"
+            ? t.errors.handlingFeeInvalid
+            : plan.error.field === "deposit"
+              ? t.errors.weighingDepositInvalid
+              : t.admin.settings.newCycles.shippingInvalid,
       };
     }
     const db = getDb();

@@ -287,6 +287,15 @@ export const guideIt: GuideContent = {
       when: { mode: "per_order" },
     },
     {
+      slug: "quota-preventiva",
+      topic: "soldi",
+      title: "Cos'è la quota preventiva per le pesate",
+      intro:
+        "Nei cicli con prodotti a peso il costo vero si sa solo dopo le pesate del fornitore. Se il ciclo la prevede, paghi con l'ordine una piccola percentuale in più sui prodotti. Dopo le pesate, quando si chiudono i conti, ti restituiamo sulla carta la parte non usata; se le pesate costano di più, la differenza si aggiunge al tuo prossimo pagamento.",
+      keywords: ["pesate", "peso", "quota", "anticipo", "deposito", "conguaglio", "verdura"],
+      when: { mode: "per_order" },
+    },
+    {
       slug: "rimborsi",
       topic: "soldi",
       title: "Quando arrivano i rimborsi",

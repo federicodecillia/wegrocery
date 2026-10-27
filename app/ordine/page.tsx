@@ -19,7 +19,7 @@ import { getOrderPaymentStatus } from "@/lib/db/queries";
 import { getWalletBalance, getWalletOffset } from "@/lib/payments/balance-due";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
 import { getCycleCoverageCents } from "@/lib/payments/order-confirm";
-import { cycleHandlingFee, type HandlingFee } from "@/lib/payments/order-payment";
+import { cycleHandlingFee, cycleWeighingDeposit, type HandlingFee } from "@/lib/payments/order-payment";
 import { orderLinesKey, orderStateKey, resumeDraft } from "@/lib/order-draft";
 import { canAccessCycle } from "@/lib/roles";
 import { resolveOrderCycle } from "@/lib/order-cycle";
@@ -195,6 +195,7 @@ export default async function OrdinePage({
                 },
                 coveredCents,
                 wallet,
+                depositPct: cycleWeighingDeposit(openCycle),
                 payAction: startOrderPayment,
                 cancelAction: cancelOrder,
               }

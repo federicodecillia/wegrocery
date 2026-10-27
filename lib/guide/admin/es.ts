@@ -107,6 +107,7 @@ export const adminGuideEs: GuideContent = {
         "Escribe el **Título** (lo que leen los socios) y el **Cierre de pedidos**: el día y la hora hasta los que los socios piden.",
         "Elige el **Proveedor**. Si falta, añádelo antes en **Catálogo**, **Proveedores**.",
         "Si hace falta, añade una o dos **Recogidas** (día y hora), el **Envío** y la **Cuota de preparación del pedido**.",
+        "En un ciclo con tarjeta y productos a peso puedes activar el **Depósito por pesaje**: un porcentaje extra pagado con el pedido, cuya parte no usada **Ajustar las cuentas** devuelve a la tarjeta.",
         "Elige el **Acceso**: quién puede pedir. Normalmente **Usuarios (todos)**.",
         "Las **Notas** se muestran a los socios en la página del pedido y en Inicio: útiles para los avisos de recogida.",
         "Toca **Crear ciclo**. El ciclo queda abierto enseguida y los socios reciben un aviso.",

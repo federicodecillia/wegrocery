@@ -78,6 +78,8 @@ export type PayPerOrder = {
   coveredCents: number;
   // The wallet debt or credit the next payment counts (app_settings.card_settles_wallet).
   wallet?: WalletOffset;
+  // The cycle's weighing deposit, percent of the products; null = none.
+  depositPct?: number | null;
   payAction: (cycleId: string, lines: SaveOrderLine[]) => Promise<OrderPaymentResult>;
   cancelAction: (cycleId: string) => Promise<OrderPaymentResult>;
 };
@@ -266,6 +268,7 @@ export function OrderForm({
         fee: payPerOrder.fee,
         coveredCents: payPerOrder.coveredCents,
         wallet: payPerOrder.wallet,
+        depositPct: payPerOrder.depositPct,
       })
     : null;
   const hasOrder = orderTotal > 0;
@@ -575,6 +578,7 @@ export function OrderForm({
                     fee: payPerOrder.fee,
                     coveredCents: payPerOrder.coveredCents,
                     wallet: payPerOrder.wallet,
+                    depositPct: payPerOrder.depositPct,
                   }),
                 }
               : undefined

@@ -107,6 +107,7 @@ export const adminGuideEn: GuideContent = {
         "Write the **Title** (what members read) and the **Order closing**: the day and time by which members order.",
         "Choose the **Supplier**. If it is missing, add it first in **Catalogue**, **Suppliers**.",
         "If needed, add one or two **Pickups** (day and time), the **Shipping** and the **Order preparation fee**.",
+        "On a card cycle with products sold by weight you can switch on the **Weighing deposit**: a percentage paid on top with the order, whose unused part **Settle accounts** gives back to the card.",
         "Choose the **Access**: who can order. Usually **Users (everyone)**.",
         "The **Notes** are shown to members on the order page and on Home: handy for pickup notices.",
         "Tap **Create cycle**. The cycle is open straight away and members get a notification.",

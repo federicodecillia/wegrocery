@@ -200,6 +200,9 @@ export const fr: Strings = {
       products: "Produits",
       shipping: "Livraison",
       fee: "Frais de préparation de la commande",
+      deposit: "Provision pour pesée",
+      depositLine: (pct: string) => `Provision pour pesée (${pct}), la part non utilisée est rendue`,
+      depositHint: "La provision couvre la pesée du fournisseur : à la clôture des comptes, nous remboursons sur votre carte la part non utilisée.",
       feeHint: "Les frais de préparation de la commande restent au groupe. La livraison et les pesées sont régularisées à la clôture du cycle.",
       refundDifference: (amount: string) =>
         `Vous avez payé ${amount} de plus que le coût actuel de la commande : nous vous le remboursons sur votre carte au solde du cycle.`,
@@ -961,6 +964,8 @@ export const fr: Strings = {
       handlingFeeFixed: "Montant fixe",
       handlingFeeHint: "Conservés par le groupe pour les frais bancaires et de gestion : facturés à la clôture, sur les produits commandés. 25 % ou 10 € au maximum.",
       handlingFeeEditWarning: "Les membres qui ont déjà payé avec les frais précédents régularisent la différence au solde.",
+      weighingDepositLabel: "Provision pour pesée",
+      weighingDepositHint: "Pour les produits au poids : un pourcentage en plus sur les produits, payé avec la commande. À la clôture des comptes, l'app rembourse sur la carte ce que la pesée n'a pas utilisé. 25 % au maximum.",
       paymentModeLabel: "Paiement",
       paymentModeWallet: "Porte-monnaie",
       paymentModeCard: "Carte",
@@ -2087,6 +2092,8 @@ export const fr: Strings = {
       `Votre commande pour « ${cycle} » est confirmée. Vous avez payé ${amount} : produits ${products}, livraison ${shipping}, frais de préparation de la commande ${fee}. Quand le cycle sera soldé, toute différence sur les produits et la livraison sera régularisée.`,
     orderPaidBalanceNote: (amount: string) => `Comprend ${amount} de solde précédent.`,
     orderPaidCreditNote: (amount: string) => `${amount} de crédit du porte-monnaie utilisés.`,
+    orderPaidDepositNote: (amount: string) =>
+      `Dont ${amount} de provision pour pesée : à la clôture des comptes, nous rendons la part non utilisée.`,
     orderPaidShortBody: (cycle: string, amount: string) =>
       `Votre commande pour « ${cycle} » est confirmée. Vous avez payé ${amount}.`,
     balancePaidTitle: "Solde réglé",
@@ -2261,6 +2268,8 @@ export const fr: Strings = {
     invalidAccessLevel: "Niveau d'accès non valide",
     handlingFeeLocked: "Le cycle est déjà clôturé : les frais de préparation de la commande ne peuvent plus changer.",
     handlingFeeInvalid: "Frais de préparation de la commande non valides : un nombre avec au plus deux décimales, jusqu'à 25 % ou 10 €",
+    weighingDepositInvalid: "Provision pour pesée non valide : un nombre avec deux décimales au plus, jusqu'à 25 %",
+    weighingDepositLocked: "Le cycle est déjà clos : la provision pour pesée ne peut plus changer.",
     cardCyclesOff: "Les cycles payés par carte sont désactivés pour le groupe : activez-les dans Réglages > Nouveaux cycles.",
     cyclePaymentModeUnavailable: "Le paiement par carte n'est pas disponible pour ce cycle : il faut Stripe configuré et le groupe en mode solde.",
     cycleNotOpen: "Le cycle n'est plus ouvert",

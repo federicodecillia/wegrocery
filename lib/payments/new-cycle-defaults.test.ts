@@ -69,6 +69,22 @@ describe("the defaults of new cycles", () => {
     });
   });
 
+  it("keeps a weighing deposit for card cycles only", () => {
+    expect(parseNewCycleDefaults({ per_order: { depositPct: 3 }, wallet: { depositPct: 3 } })).toEqual({
+      per_order: { depositPct: 3 },
+    });
+    expect(parseNewCycleDefaults({ per_order: { depositPct: 30 } })).toEqual({});
+    const on = planNewCycleDefaults({}, { per_order: { ...card, depositPct: "2,5" } });
+    expect(on).toEqual({ defaults: { per_order: { shipping: { mode: "fixed_per_member", amount: 0 }, fee: { type: "percent", value: 2 }, depositPct: 2.5 } } });
+    const off = planNewCycleDefaults({ per_order: { depositPct: 3 } }, { per_order: { ...card, depositPct: "" } });
+    expect("defaults" in off && off.defaults.per_order?.depositPct).toBeUndefined();
+    const kept = planNewCycleDefaults({ per_order: { depositPct: 3 } }, { per_order: card });
+    expect("defaults" in kept && kept.defaults.per_order?.depositPct).toBe(3);
+    expect(planNewCycleDefaults({}, { per_order: { ...card, depositPct: "40" } })).toEqual({
+      error: { mode: "per_order", field: "deposit" },
+    });
+  });
+
   it("starts a cycle from the default fee, else the last one of that mode", () => {
     const last = { type: "percent" as const, value: 10 };
     expect(startingFee({ per_order: { fee: { type: "percent", value: 2 } } }, "per_order", last)).toEqual({
