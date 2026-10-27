@@ -26,12 +26,13 @@ const SAMPLE_ORDER = 50;
 // last one of that mode (10% by card), so saving never changes it unseen.
 function toInput(d: ModeDefaults | undefined, mode: PaymentMode, startFee: HandlingFee | null): ModeDefaultsInput {
   const fee = d?.fee ?? startFee ?? undefined;
+  // "None": stored as such for the wallet, as 0% for a card cycle (NO_HANDLING_FEE).
+  const noFee = fee !== undefined && (fee.type === "none" || (mode === "per_order" && fee.value === 0));
   return {
     shippingMode: d?.shipping?.mode ?? "fixed_per_member",
     shippingAmount: d?.shipping?.amount == null ? "" : String(d.shipping.amount),
-    // A card cycle always has a fee: "none" only for the wallet.
-    feeType: fee ? fee.type : mode === "wallet" ? "none" : "percent",
-    feeValue: fee && fee.type !== "none" ? String(fee.value) : "",
+    feeType: noFee ? "none" : fee ? fee.type : mode === "wallet" ? "none" : "percent",
+    feeValue: fee && !noFee ? String(fee.value) : "",
   };
 }
 
@@ -84,7 +85,7 @@ function ModeDefaultsFields({
   const c = t.admin.cycle;
   const id = (name: string) => `new-cycle-${mode}-${name}`;
   const feeOptions: { v: ModeDefaultsInput["feeType"]; label: string }[] = [
-    ...(mode === "wallet" ? [{ v: "none" as const, label: c.handlingFeeNone }] : []),
+    { v: "none", label: c.handlingFeeNone },
     { v: "percent", label: c.handlingFeePercent },
     { v: "fixed", label: c.handlingFeeFixed },
   ];

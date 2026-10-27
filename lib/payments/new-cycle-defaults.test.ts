@@ -54,10 +54,13 @@ describe("the defaults of new cycles", () => {
     });
   });
 
-  it("refuses a card cycle without a fee, a bad amount or a fee over the maximum", () => {
-    expect(planNewCycleDefaults({}, { per_order: { ...card, feeType: "none" } })).toEqual({
-      error: { mode: "per_order", field: "fee" },
+  it("stores no fee on card cycles as 0%", () => {
+    expect(planNewCycleDefaults({}, { per_order: { ...card, feeType: "none", feeValue: "" } })).toEqual({
+      defaults: { per_order: { shipping: { mode: "fixed_per_member", amount: 0 }, fee: { type: "percent", value: 0 } } },
     });
+  });
+
+  it("refuses a bad amount or a fee over the maximum", () => {
     expect(planNewCycleDefaults({}, { wallet: { ...card, shippingAmount: "-3" } })).toEqual({
       error: { mode: "wallet", field: "shipping" },
     });
