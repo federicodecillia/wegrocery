@@ -11,9 +11,9 @@ import { adminGuideFor } from "./index";
 import { adminGuideIt } from "./it";
 
 const ROOT = process.cwd();
-const wallet: GuideContext = { mode: "wallet", families: false, onlineTopup: false, bankTransfer: true, cards: false };
+const wallet: GuideContext = { mode: "wallet", families: false, onlineTopup: false, bankTransfer: true, topups: true, cards: false };
 const walletCards: GuideContext = { ...wallet, onlineTopup: true, cards: true };
-const perOrder: GuideContext = { mode: "per_order", families: true, onlineTopup: true, bankTransfer: false, cards: true };
+const perOrder: GuideContext = { mode: "per_order", families: true, onlineTopup: true, bankTransfer: false, topups: true, cards: true };
 
 const slugs = (g: GuideContent) => g.articles.map((a) => a.slug);
 

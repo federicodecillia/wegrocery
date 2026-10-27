@@ -46,4 +46,5 @@ export const MIGRATIONS = [
   "0041_member_name_prompt.sql",
   "0042_card_settles_wallet.sql",
   "0043_new_cycle_defaults.sql",
+  "0044_wallet_topups.sql",
 ] as const;

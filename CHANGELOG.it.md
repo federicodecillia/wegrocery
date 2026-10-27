@@ -25,6 +25,10 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ## [Non rilasciato]
 
+### Aggiunte
+- 🔒 **Ricariche del borsellino spegnibili.** Un gruppo che fa pagare ogni ordine con carta può spegnere le ricariche in Impostazioni, Pagamenti, Borsellino: i soci non vedono più Ricarica, IBAN e causale (in Home, Profilo, Storico e guida) e la ricarica online viene rifiutata. Saldi e movimenti restano, e in Cassa si può sempre registrare un versamento a mano. Di default le ricariche restano attive.
+- [tecnico] 🗄️ **Migrazione `0044_wallet_topups.sql`.** Aggiunge `app_settings.wallet_topups_enabled` (acceso di default) e allarga `app_settings_wallet_channel_check`: con le ricariche spente un gruppo col borsellino può non avere canali. Da applicare prima del deploy, rollback in `0044_wallet_topups_down.sql`.
+
 ### Modificato
 - 🗂️ **Impostazioni divise per argomento.** Una barra in alto porta a Pagamenti, Gruppo (nome, logo, colori e contatti), Soci e guida, Tecniche. Ogni riquadro resta chiuso e mostra in una riga com'è impostato; si apre con un tocco, o da solo se c'è qualcosa da sistemare.
 - 💳 **La carta in un solo riquadro.** Collegamento a Stripe, ricarica online e saldo nei pagamenti con carta stanno insieme in "Carta (Stripe)", e lo stato di Stripe non è più ripetuto in più punti.

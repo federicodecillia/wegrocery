@@ -130,6 +130,7 @@ export const adminGuideIt: GuideContent = {
         "La modalità predefinita dei nuovi cicli si sceglie in **Impostazioni**, **Pagamenti**, **Come si pagano i nuovi cicli**: anche con cicli aperti, che restano come sono.",
         "Se **Carta** è in grigio, i cicli con carta sono spenti per il gruppo: si accendono da **Impostazioni**, **Pagamenti**, **Come si pagano i nuovi cicli**. Lì scegli anche se i nuovi cicli partono con Carta e le spese di spedizione e preparazione proposte per ogni modalità.",
         "Con **Saldo del borsellino nei pagamenti con carta** acceso (in **Impostazioni**, **Pagamenti**), il pagamento con carta comprende anche il saldo del socio: un debito si aggiunge, un credito si scala. In **Storico** e in **Cassa** restano voci distinte.",
+        "Se ormai ogni ordine si paga con carta, in **Impostazioni**, **Pagamenti**, **Borsellino** puoi spegnere le **Ricariche del borsellino**: i soci non vedono più Ricarica, IBAN e causale, mentre saldi e movimenti restano.",
       ],
       when: { mode: "wallet", cards: true },
       keywords: ["carta", "borsellino", "stripe", "metodo"],

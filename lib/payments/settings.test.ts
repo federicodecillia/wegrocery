@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { StripeKeyStatus } from "./config";
 import {
+  canEnableWalletTopups,
   isAboveMaxBalance,
   planPaymentSettingsUpdate,
   resolvePaymentSettings,
@@ -40,6 +41,7 @@ describe("resolvePaymentSettings", () => {
       familiesEnabled: false,
       cardCyclesEnabled: true,
       cardSettlesWallet: false,
+      walletTopupsEnabled: true,
       newCycleMode: null,
       newCycleDefaults: {},
       memberNamePrompt: "optional",
@@ -79,6 +81,23 @@ describe("resolvePaymentSettings", () => {
     expect(s.stripeKey).toEqual({ usable: false, reason: "missing" });
     const off = resolvePaymentSettings({ ...row, onlinePaymentsEnabled: false }, brand, testKey);
     expect(off.onlineTopupAvailable).toBe(false);
+  });
+
+  it("offers no top-up channel in a wallet group with top-ups off, and keeps the details", () => {
+    const s = resolvePaymentSettings({ ...row, walletTopupsEnabled: false }, brand, testKey);
+    expect(s.walletTopupsEnabled).toBe(false);
+    expect(s.bankTransfer).toBeNull();
+    expect(s.onlineTopupAvailable).toBe(false);
+    expect(s.bankIban).toBe(IBAN);
+    expect(s.onlinePaymentsEnabled).toBe(true);
+    // Rows read before migration 0044: top-ups on.
+    expect(resolvePaymentSettings(row, brand, testKey).walletTopupsEnabled).toBe(true);
+  });
+
+  it("leaves a pay-per-order group's online payments to the top-up switch untouched", () => {
+    const s = resolvePaymentSettings({ ...row, paymentMode: "per_order", walletTopupsEnabled: false }, brand, testKey);
+    expect(s.onlineTopupAvailable).toBe(true);
+    expect(s.bankTransfer).toEqual({ holder: "Tesoriere", iban: IBAN });
   });
 
   it("never carries the secret key", () => {
@@ -188,6 +207,23 @@ describe("planPaymentSettingsUpdate", () => {
       planPaymentSettingsUpdate({ ...input, bankTransferEnabled: false, onlinePaymentsEnabled: false }, usable),
     ).toEqual({ error: "noChannel" });
     expect(planPaymentSettingsUpdate({ ...input, onlinePaymentsEnabled: false }, missing)).toHaveProperty("values");
+  });
+
+  it("needs no channel with the wallet top-ups off", () => {
+    expect(
+      planPaymentSettingsUpdate({ ...input, bankTransferEnabled: false, onlinePaymentsEnabled: false }, usable, true),
+    ).toHaveProperty("values");
+  });
+});
+
+describe("canEnableWalletTopups", () => {
+  const wallet = { mode: "wallet" as const, bankTransferEnabled: false, onlinePaymentsEnabled: false, stripeKey: usable };
+  it("needs a channel members can use first", () => {
+    expect(canEnableWalletTopups(wallet)).toBe(false);
+    expect(canEnableWalletTopups({ ...wallet, bankTransferEnabled: true })).toBe(true);
+    expect(canEnableWalletTopups({ ...wallet, onlinePaymentsEnabled: true })).toBe(true);
+    expect(canEnableWalletTopups({ ...wallet, onlinePaymentsEnabled: true, stripeKey: missing })).toBe(false);
+    expect(canEnableWalletTopups({ ...wallet, mode: "per_order" })).toBe(true);
   });
 });
 

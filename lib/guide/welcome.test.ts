@@ -16,6 +16,8 @@ describe("welcome steps", () => {
     ]);
     // pays_offline only matters in pay-per-order.
     expect(welcomeMoney("wallet", true)).toBe("wallet");
+    // Top-ups off: no wallet step to explain.
+    expect(welcomeMoney("wallet", false, false)).toBe("offline");
   });
 
   it("explains card payment in a pay-per-order group", () => {

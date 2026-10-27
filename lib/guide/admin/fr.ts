@@ -128,6 +128,7 @@ export const adminGuideFr: GuideContent = {
         "La valeur par défaut des nouveaux cycles se choisit dans **Réglages**, **Paiements**, **Comment se paient les nouveaux cycles** : même avec des cycles ouverts, qui restent tels quels.",
         "Si **Carte** est grisé, les cycles par carte sont désactivés pour le groupe : activez-les dans **Réglages**, **Paiements**, **Comment se paient les nouveaux cycles**. Vous y choisissez aussi si les nouveaux cycles démarrent avec Carte, et les frais de livraison et de préparation proposés pour chaque mode.",
         "Avec **Solde du porte-monnaie dans les paiements par carte** activé (dans **Réglages**, **Paiements**), le paiement par carte comprend aussi le solde du membre : une dette s'ajoute, un crédit se déduit. L'**Historique** et la **Caisse** les gardent en lignes distinctes.",
+        "Si chaque commande se paie désormais par carte, dans **Réglages**, **Paiements**, **Solde** vous pouvez désactiver les **Recharges du porte-monnaie** : les membres ne voient plus Recharger, l'IBAN ni le libellé, et soldes et mouvements restent.",
       ],
       when: { mode: "wallet", cards: true },
       keywords: ["carte", "solde", "porte-monnaie", "stripe", "moyen"],

@@ -6,10 +6,10 @@ import { guideEs } from "./es";
 import { guideFr } from "./fr";
 import { guideIt } from "./it";
 import { buildSearchIndex, normalizeText, searchGuide } from "./search";
-import { isVisible, visibleGuide, type GuideContent, type GuideContext } from "./types";
+import { guideContext, isVisible, visibleGuide, type GuideContent, type GuideContext } from "./types";
 
-const wallet: GuideContext = { mode: "wallet", families: false, onlineTopup: true, bankTransfer: true, cards: true };
-const perOrder: GuideContext = { mode: "per_order", families: true, onlineTopup: true, bankTransfer: false, cards: true };
+const wallet: GuideContext = { mode: "wallet", families: false, onlineTopup: true, bankTransfer: true, topups: true, cards: true };
+const perOrder: GuideContext = { mode: "per_order", families: true, onlineTopup: true, bankTransfer: false, topups: true, cards: true };
 
 const slugs = (g: GuideContent) => g.articles.map((a) => a.slug);
 
@@ -107,6 +107,23 @@ describe("visibleGuide", () => {
         expect(s.includes("ricarica-bonifico")).toBe(bankTransfer);
         expect(s.includes("ricarica-cassa")).toBe(!onlineTopup && !bankTransfer);
       }
+    }
+  });
+
+  it("shows no top-up card in a wallet group with top-ups off", () => {
+    const ctx = guideContext({
+      mode: "wallet",
+      familiesEnabled: false,
+      onlineTopupAvailable: false,
+      bankTransfer: null,
+      walletTopupsEnabled: false,
+      stripeKey: { usable: true },
+    });
+    expect(ctx.topups).toBe(false);
+    for (const content of [guideIt, guideEn, guideEs, guideFr]) {
+      const s = slugs(visibleGuide(content, ctx));
+      expect(s.filter((x) => x.startsWith("ricarica-"))).toEqual([]);
+      expect(s).not.toContain("saldo-negativo");
     }
   });
 });

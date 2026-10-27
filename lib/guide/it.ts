@@ -243,7 +243,7 @@ export const guideIt: GuideContent = {
       title: "Ricaricare il saldo",
       intro: "Chiedi a chi gestisce la cassa come versare: quando registra il versamento il saldo si aggiorna e ti arriva una notifica.",
       keywords: ["versamento", "bonifico", "contanti", "soldi", "credito"],
-      when: { mode: "wallet", bankTransfer: false, onlineTopup: false },
+      when: { mode: "wallet", topups: true, bankTransfer: false, onlineTopup: false },
     },
     {
       slug: "saldo-negativo",
@@ -256,7 +256,7 @@ export const guideIt: GuideContent = {
       ],
       link: { href: "/ricarica", label: "Apri Ricarica" },
       keywords: ["negativo", "debito", "insufficiente", "rosso", "limite"],
-      when: { mode: "wallet" },
+      when: { mode: "wallet", topups: true },
     },
     {
       slug: "spese-preparazione",
