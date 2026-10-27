@@ -28,6 +28,7 @@ A bullet that only matters to whoever hosts, runs or develops the app
 - 🗂️ **Settings split by topic.** A bar at the top leads to Payments, Group (name, logo, colours and contacts), Members & guide, Technical. Each panel stays folded and shows on one line how it is set; a tap opens it, and it opens by itself when something needs fixing.
 - 💳 **Card payments in one panel.** The Stripe connection, online top-up and wallet balance in card payments sit together under "Card (Stripe)", and Stripe's status is no longer repeated in several places.
 - 🧾 **Proposed costs, more compact.** Shipping and preparation are picked from a menu with the amount next to it, the same for wallet cycles and card cycles.
+- 🧾 **"None" preparation fee for card cycles too.** In Settings and in New cycle, card cycles now offer "None", like wallet cycles.
 
 ## [1.38.0] - 2026-10-26
 

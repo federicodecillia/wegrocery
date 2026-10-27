@@ -76,7 +76,7 @@ function closeWarnings(cycle: SerializedCycle, stats: CycleStats) {
     handlingFeeValue: cycle.handlingFeeValue ?? null,
   });
   const closeWarning =
-    [perOrderWarning, fee ? t.admin.cycle.closeFeeNote(formatHandlingFee(fee)) : null].filter(Boolean).join("\n\n") ||
+    [perOrderWarning, fee && fee.value > 0 ? t.admin.cycle.closeFeeNote(formatHandlingFee(fee)) : null].filter(Boolean).join("\n\n") ||
     null;
   return { perOrderWarning, closeWarning };
 }
@@ -431,23 +431,26 @@ function ShippingModeFields({
 type FeeChoice = "none" | "percent" | "fixed";
 
 // The order preparation fee of a cycle: a percentage of the products, a fixed
-// amount per member, or (wallet cycles only) none.
+// amount per member, or none. A card cycle always stores a fee (drizzle/0021),
+// so its "none" is saved as 0% (resolveCycleFee) and a 0 fee shows as none.
 function HandlingFeeFields({
   defaultType,
   defaultValue,
-  allowNone,
+  perOrder,
   warning,
   note,
 }: {
   defaultType: FeeChoice;
   defaultValue: string;
-  allowNone: boolean;
+  perOrder: boolean;
   warning?: string;
   note?: string | null;
 }) {
-  const [type, setType] = useState<FeeChoice>(defaultType);
+  const [type, setType] = useState<FeeChoice>(
+    perOrder && defaultType !== "none" && defaultValue !== "" && Number(defaultValue) === 0 ? "none" : defaultType,
+  );
   const options: { v: FeeChoice; label: string }[] = [
-    ...(allowNone ? [{ v: "none" as const, label: t.admin.cycle.handlingFeeNone }] : []),
+    { v: "none", label: t.admin.cycle.handlingFeeNone },
     { v: "percent", label: t.admin.cycle.handlingFeePercent },
     { v: "fixed", label: t.admin.cycle.handlingFeeFixed },
   ];
@@ -630,7 +633,7 @@ export function EditCycleForm({
         <HandlingFeeFields
           defaultType={cycleFee?.type ?? "none"}
           defaultValue={cycleFee ? String(cycleFee.value) : ""}
-          allowNone={!isPerOrder}
+          perOrder={isPerOrder}
           warning={isPerOrder ? t.admin.cycle.handlingFeeEditWarning : undefined}
           note={isPerOrder && shippingMode === "proportional" ? t.admin.cycle.perOrderProportionalNote : null}
         />
@@ -888,7 +891,7 @@ export function CreateCycleForm({
           key={paymentMode}
           defaultType={handlingFee?.type ?? "none"}
           defaultValue={handlingFee?.value ?? ""}
-          allowNone={paymentMode === "wallet"}
+          perOrder={paymentMode === "per_order"}
           note={
             paymentMode === "per_order" && shippingMode === "proportional"
               ? t.admin.cycle.perOrderProportionalNote

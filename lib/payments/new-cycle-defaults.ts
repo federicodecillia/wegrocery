@@ -1,5 +1,5 @@
 import type { PaymentMode } from "./settings";
-import { HANDLING_FEE_MAX, parseHandlingFee, type HandlingFee } from "./order-payment";
+import { HANDLING_FEE_MAX, NO_HANDLING_FEE, parseHandlingFee, type HandlingFee } from "./order-payment";
 
 // What "Nuovo ciclo" starts from (drizzle/0043_new_cycle_defaults.sql): per
 // payment mode, the shipping and the preparation fee the admins chose in
@@ -9,7 +9,8 @@ import { HANDLING_FEE_MAX, parseHandlingFee, type HandlingFee } from "./order-pa
 // last fee of the same mode (10% by card), shipping empty. Pure.
 
 export type ShippingDefault = { mode: "fixed_per_member" | "proportional"; amount: number | null };
-// "none" is for wallet cycles only: a card cycle always has a fee (drizzle/0021).
+// "none" is stored for wallet cycles; a card cycle always has a fee
+// (drizzle/0021), so its "none" is stored as 0% (NO_HANDLING_FEE).
 export type FeeDefault = { type: "none" } | HandlingFee;
 export type ModeDefaults = { shipping?: ShippingDefault; fee?: FeeDefault };
 export type NewCycleDefaults = Partial<Record<PaymentMode, ModeDefaults>>;
@@ -91,8 +92,7 @@ export function planNewCycleDefaults(
     if (amount === "invalid") return { error: { mode, field: "shipping" } };
     const entry: ModeDefaults = { shipping: { mode: i.shippingMode, amount } };
     if (i.feeType === "none") {
-      if (mode !== "wallet") return { error: { mode, field: "fee" } };
-      entry.fee = { type: "none" };
+      entry.fee = mode === "wallet" ? { type: "none" } : NO_HANDLING_FEE;
     } else if (i.feeValue.trim() !== "") {
       const fee = parseHandlingFee(i.feeType, i.feeValue);
       if ("error" in fee) return { error: { mode, field: "fee" } };

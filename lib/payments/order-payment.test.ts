@@ -214,8 +214,8 @@ describe("resolveCycleFee", () => {
     expect(resolveCycleFee("wallet", { type: "other", value: "5" }, null)).toEqual({ error: "invalid" });
   });
 
-  it("refuses no fee on a per_order cycle", () => {
-    expect(resolveCycleFee("per_order", { type: "none", value: "" }, null)).toEqual({ error: "invalid" });
+  it("stores no fee on a per_order cycle as 0%", () => {
+    expect(resolveCycleFee("per_order", { type: "none", value: "" }, null)).toEqual({ fee: { type: "percent", value: 0 } });
   });
 
   it("starts a wallet cycle from the last wallet cycle's fee, else none", () => {
