@@ -30,6 +30,8 @@ export type PaymentSettingsRow = {
   cardCyclesEnabled?: boolean;
   // Optional: rows read before migration 0042 have no such column.
   cardSettlesWallet?: boolean;
+  // Optional: rows read before migration 0044 have no such column.
+  walletTopupsEnabled?: boolean;
   // Optional: rows read before migration 0043 have no such columns.
   newCyclePaymentMode?: string | null;
   newCycleDefaults?: unknown;
@@ -73,6 +75,9 @@ export type PaymentSettings = {
   // A card payment also pays the wallet debt or uses the wallet credit
   // (orderPaymentAmount, lib/payments/order-payment.ts).
   cardSettlesWallet: boolean;
+  // Members of a wallet group may top up (bank transfer, online). Off: the
+  // wallet stays, but bankTransfer and onlineTopupAvailable below are off.
+  walletTopupsEnabled: boolean;
   // What "Nuovo ciclo" starts from (lib/payments/new-cycle-defaults.ts): the
   // mode (null = the group's) and, per mode, shipping and fee.
   newCycleMode: PaymentMode | null;
@@ -82,7 +87,8 @@ export type PaymentSettings = {
   // "Il nostro gruppo" at the top of the guide (lib/guide/group-info.ts); null = none.
   groupInfo: string | null;
   // What members get: the bank details when that channel is on, online
-  // top-ups when switched on and the deploy has a usable key.
+  // top-ups when switched on and the deploy has a usable key. Both off in a
+  // wallet group with top-ups off.
   bankTransfer: { holder: string; iban: string } | null;
   onlineTopupAvailable: boolean;
   stripeKey: StripeKeyState;
@@ -113,6 +119,7 @@ export function resolvePaymentSettings(
         familiesEnabled: row.familiesEnabled ?? false,
         cardCyclesEnabled: row.cardCyclesEnabled ?? true,
         cardSettlesWallet: row.cardSettlesWallet ?? false,
+        walletTopupsEnabled: row.walletTopupsEnabled ?? true,
         newCycleMode:
           row.newCyclePaymentMode === "wallet" || row.newCyclePaymentMode === "per_order"
             ? row.newCyclePaymentMode
@@ -135,6 +142,7 @@ export function resolvePaymentSettings(
         familiesEnabled: false,
         cardCyclesEnabled: true,
         cardSettlesWallet: false,
+        walletTopupsEnabled: true,
         newCycleMode: null,
         newCycleDefaults: {},
         memberNamePrompt: DEFAULT_NAME_PROMPT,
@@ -144,13 +152,14 @@ export function resolvePaymentSettings(
   const stripeKey: StripeKeyState = keyStatus.enabled
     ? { usable: true, livemode: keyStatus.livemode }
     : { usable: false, reason: keyStatus.reason };
+  const topups = stored.mode !== "wallet" || stored.walletTopupsEnabled;
   return {
     ...stored,
     bankTransfer:
-      stored.bankTransferEnabled && stored.bankHolder && stored.bankIban
+      topups && stored.bankTransferEnabled && stored.bankHolder && stored.bankIban
         ? { holder: stored.bankHolder, iban: stored.bankIban }
         : null,
-    onlineTopupAvailable: stored.onlinePaymentsEnabled && stripeKey.usable,
+    onlineTopupAvailable: topups && stored.onlinePaymentsEnabled && stripeKey.usable,
     stripeKey,
   };
 }
@@ -219,6 +228,8 @@ export function isValidIban(iban: string): boolean {
 export function planPaymentSettingsUpdate(
   input: PaymentSettingsInput,
   stripeKey: StripeKeyState,
+  // A wallet group with top-ups switched off needs no channel.
+  topupsOff = false,
 ): { values: PaymentSettingsValues } | { error: PaymentSettingsError } {
   const overdraft = parseLimitCents(input.maxOverdraft);
   if (overdraft === "invalid") return { error: "overdraftInvalid" };
@@ -240,7 +251,7 @@ export function planPaymentSettingsUpdate(
   if (receiptEmail !== "" && !isValidReceiptEmail(receiptEmail)) return { error: "receiptEmailInvalid" };
   // Members need a way to top up: the bank details, or Stripe with a key that
   // works on this deploy.
-  if (!input.bankTransferEnabled && !(input.onlinePaymentsEnabled && stripeKey.usable)) {
+  if (!topupsOff && !input.bankTransferEnabled && !(input.onlinePaymentsEnabled && stripeKey.usable)) {
     return { error: "noChannel" };
   }
 
@@ -259,6 +270,15 @@ export function planPaymentSettingsUpdate(
 }
 
 // Above the group's maximum balance, compared in cents; never without one.
+// Whether top-ups may be switched on again: a wallet group needs a channel
+// first (app_settings_wallet_channel_check), as when saving the channels.
+export function canEnableWalletTopups(
+  settings: Pick<PaymentSettings, "mode" | "bankTransferEnabled" | "onlinePaymentsEnabled" | "stripeKey">,
+): boolean {
+  if (settings.mode !== "wallet") return true;
+  return settings.bankTransferEnabled || (settings.onlinePaymentsEnabled && settings.stripeKey.usable);
+}
+
 export function isAboveMaxBalance(balance: number, maxBalance: number | null): boolean {
   return maxBalance !== null && Math.round(balance * 100) > Math.round(maxBalance * 100);
 }

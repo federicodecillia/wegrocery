@@ -67,6 +67,8 @@ export default async function HomePage({
   // where its order stands, and the amount due or the credit comes first. A
   // member who pays outside the app keeps the wallet view.
   const payPerOrder = settings.mode === "per_order" && !member?.paysOffline;
+  // A wallet group may switch top-ups off: the balance stays, without "Ricarica".
+  const topups = settings.mode !== "wallet" || settings.walletTopupsEnabled;
   const consolidatedCents = payPerOrder ? await getConsolidatedBalanceCents(getDb(), memberId) : 0;
   // A wallet group's balance leaves out the card cycles not settled yet.
   const balance = payPerOrder ? 0 : await getWalletBalance(getDb(), memberId, member?.paysOffline ?? false);
@@ -300,7 +302,22 @@ export default async function HomePage({
         {cycleDataList.some((d) => d.feeCents > 0) && (
           <p className="mt-1.5 text-label text-muted-foreground">{t.home.feeIncluded}</p>
         )}
-        {isNegative ? (
+        {!topups ? (
+          isNegative && (
+            <p className="mt-2.5 text-[13px] text-secondary-foreground">
+              {settings.cardSettlesWallet ? (
+                t.home.topupsOffDebtCard
+              ) : (
+                <>
+                  {t.home.topupsOffDebtContact}{" "}
+                  <a href={`mailto:${brand.supportEmail}`} className="break-all font-semibold text-primary-text underline">
+                    {brand.supportEmail}
+                  </a>
+                </>
+              )}
+            </p>
+          )
+        ) : isNegative ? (
           <div className="mt-3">
             <Link
               href="/ricarica"
@@ -383,7 +400,7 @@ export default async function HomePage({
       {showWelcome && (
         <WelcomeCard
           appName={brand.appName}
-          money={welcomeMoney(settings.mode, member?.paysOffline ?? false)}
+          money={welcomeMoney(settings.mode, member?.paysOffline ?? false, settings.walletTopupsEnabled)}
           families={settings.familiesEnabled}
           hasGroupInfo={settings.groupInfo !== null}
           reopened={reopenWelcome}

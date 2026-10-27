@@ -17,6 +17,7 @@ import { configBlocking, configIssues, ibanTail, stripeSummary } from "@/lib/adm
 import { getStripeCredentials } from "@/lib/payments/stripe-credentials";
 import { IdentityForm } from "./identity-form";
 import { CardSettlesWalletCard } from "./card-settles-wallet-card";
+import { WalletTopupsCard } from "./wallet-topups-card";
 import { ConfigStatusCard } from "./config-status-card";
 import { FamiliesCard } from "./families-card";
 import { NamePromptCard } from "./name-prompt-card";
@@ -145,11 +146,19 @@ export async function PaymentSettingsSection({ panels = false }: { panels?: bool
       </PaymentBlock>
       {settings.mode === "wallet" && (
         <PaymentBlock
-        panels={panels}
+          panels={panels}
           id="borsellino"
           title={s.wallet}
-          summary={sum.limits(limit(settings.minBalance === null ? null : -settings.minBalance), limit(settings.maxBalance))}
+          summary={[
+            ...(settings.walletTopupsEnabled ? [] : [sum.topupsOff]),
+            sum.limits(limit(settings.minBalance === null ? null : -settings.minBalance), limit(settings.maxBalance)),
+          ].join(" · ")}
+          stacked
         >
+          <WalletTopupsCard
+            enabled={settings.walletTopupsEnabled}
+            suggestCardSettles={cardAvailable && !settings.cardSettlesWallet}
+          />
           <PaymentSettingsForm key={`limits-${formKey}`} part="limits" initial={initial} stripeKey={settings.stripeKey} savedAt={savedAt} />
         </PaymentBlock>
       )}

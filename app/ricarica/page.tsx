@@ -112,6 +112,27 @@ export default async function RicaricaPage({
   }
   // Without the card cycles not settled yet (lib/payments/balance-due.ts).
   const balance = await getWalletBalance(getDb(), memberId, member?.paysOffline ?? false);
+  // A wallet group with top-ups off: the balance only, no channel to offer.
+  if (settings.mode === "wallet" && !settings.walletTopupsEnabled) {
+    return (
+      <AppShell email={session.user.email} name={session.user.fullName} isAdmin={role === "admin"} memberId={memberId} personId={session.user.personId}>
+        <div className="mb-4 flex items-center gap-2">
+          <h1 className="text-[22px] font-black tracking-[-0.02em] text-foreground">{t.balance.title}</h1>
+          <HelpLink href="/guida/soldi" />
+        </div>
+        {result && (
+          <div className={`mb-4 rounded-card border py-3 px-3.5 text-[14px] ${TONE_CLASSES[result.tone]}`}>
+            {result.text}
+            {result.pending && <PendingRefresh />}
+          </div>
+        )}
+        <BalanceSummary label={t.topup.currentBalance} balance={balance} />
+        <p className="rounded-card border border-border bg-card p-4.5 text-[14px] text-secondary-foreground shadow-card">
+          {t.topup.closed}
+        </p>
+      </AppShell>
+    );
+  }
   const online = settings.onlineTopupAvailable && !payPerOrder;
   const bank = settings.bankTransfer;
   const memberName = member?.fullName ?? session.user.fullName ?? session.user.email;

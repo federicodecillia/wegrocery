@@ -25,7 +25,12 @@ import {
   type ModeDefaultsInput,
   type NewCyclePaymentChoice,
 } from "@/lib/payments/new-cycle-defaults";
-import { planPaymentSettingsUpdate, type PaymentMode, type PaymentSettingsInput } from "@/lib/payments/settings";
+import {
+  canEnableWalletTopups,
+  planPaymentSettingsUpdate,
+  type PaymentMode,
+  type PaymentSettingsInput,
+} from "@/lib/payments/settings";
 
 // Impostazioni tab: saves the payment settings (the single app_settings row)
 // and audits them before and after, in one batch. The payment mode has its
@@ -34,7 +39,11 @@ export async function adminUpdatePaymentSettings(input: PaymentSettingsInput): P
   try {
     const admin = await requireAdmin();
     const before = await getPaymentSettings();
-    const planned = planPaymentSettingsUpdate(input, before.stripeKey);
+    const planned = planPaymentSettingsUpdate(
+      input,
+      before.stripeKey,
+      before.mode === "wallet" && !before.walletTopupsEnabled,
+    );
     if ("error" in planned) return { error: t.admin.settings.errors[planned.error] };
 
     const db = getDb();
@@ -228,6 +237,52 @@ export async function adminSetCardSettlesWallet(enabled: boolean): Promise<{ err
     return {};
   } catch (e) {
     return { error: actionErrorMessage(e, t.errors.genericError, "adminSetCardSettlesWallet") };
+  }
+}
+
+// Impostazioni -> Borsellino: whether members may top up the wallet (bank
+// transfer, online). Off for a wallet group that collects every order by
+// card; balances and the ledger do not change, and the admin can still record
+// a transfer in Cassa. Back on only with a channel on (wallet_channel_check).
+export async function adminSetWalletTopups(enabled: boolean): Promise<{ error?: string }> {
+  try {
+    const admin = await requireAdmin();
+    const before = await getPaymentSettings();
+    if (before.walletTopupsEnabled === enabled) return {};
+    if (enabled && !canEnableWalletTopups(before)) return { error: t.admin.settings.errors.noChannel };
+    const db = getDb();
+    const now = new Date();
+    // No row yet: the defaults the group runs on are stored with the switch.
+    const current = {
+      minBalance: before.minBalance === null ? null : before.minBalance.toFixed(2),
+      maxBalance: before.maxBalance === null ? null : before.maxBalance.toFixed(2),
+      bankTransferEnabled: before.bankTransferEnabled,
+      bankHolder: before.bankHolder,
+      bankIban: before.bankIban,
+      onlinePaymentsEnabled: before.onlinePaymentsEnabled,
+    };
+    await db.batch([
+      db
+        .insert(appSettings)
+        .values({ id: 1, ...current, walletTopupsEnabled: enabled, updatedAt: now, updatedBy: admin.email })
+        .onConflictDoUpdate({
+          target: appSettings.id,
+          set: { walletTopupsEnabled: enabled, updatedAt: now, updatedBy: admin.email },
+        }),
+      db.insert(auditLog).values({
+        auditId: crypto.randomUUID(),
+        userEmail: admin.email,
+        action: "set_wallet_topups",
+        entityType: "app_settings",
+        entityId: "1",
+        payloadJson: JSON.stringify({ before: before.walletTopupsEnabled, after: enabled }),
+        createdAt: now,
+      }),
+    ]);
+    revalidatePath("/", "layout");
+    return {};
+  } catch (e) {
+    return { error: actionErrorMessage(e, t.errors.genericError, "adminSetWalletTopups") };
   }
 }
 
