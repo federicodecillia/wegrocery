@@ -472,6 +472,10 @@ export const fr: Strings = {
           label: "Solde et remboursements",
           hint: "Recharges, solde qui vous est restitué et remboursements sur carte, y compris ceux qui ont échoué.",
         },
+        pickup: {
+          label: "Date de retrait",
+          hint: "Quand l'admin fixe ou change la date ou l'heure de retrait d'un cycle où vous avez commandé.",
+        },
       },
     },
   },
@@ -994,6 +998,7 @@ export const fr: Strings = {
       cycleCreated: "Cycle créé",
       cycleUpdated: "Cycle mis à jour",
       cycleUpdatedShipping: (n: number) => `Cycle mis à jour : livraison recalculée pour ${n} membres`,
+      cycleUpdatedPickup: (n: number) => `Cycle mis à jour : ${n === 1 ? "1 membre prévenu" : `${n} membres prévenus`} du nouveau retrait`,
       manageProducts: "Gérer les produits",
       closeProducts: "Fermer les produits",
       importListing: "📥 Importer une liste de prix",
@@ -2162,6 +2167,14 @@ export const fr: Strings = {
     cycleCancelledTitle: "Commande annulée",
     cycleCancelledBody: (title: string, amount: string, reason: string) =>
       `Le cycle « ${title} » a été annulé : ${reason}. Nous vous avons remboursé ${amount}.`,
+    pickupAddedTitle: (title: string) => `Retrait « ${title} » fixé`,
+    pickupAddedBody: (title: string, slots: string) =>
+      `Le retrait du cycle « ${title} » est fixé : ${slots}.`,
+    pickupChangedTitle: (title: string) => `Retrait « ${title} » modifié`,
+    pickupChangedBody: (title: string, slots: string, before: string) =>
+      `Le retrait du cycle « ${title} » a changé : désormais ${slots} (avant ${before}).`,
+    pickupRemovedBody: (title: string) =>
+      `Le retrait du cycle « ${title} » n'a plus de date : nous vous préviendrons dès qu'elle sera fixée.`,
   },
   family: {
     title: "Famille",

@@ -631,6 +631,8 @@ export function EditCycleForm({
       }
       if (isClosed && result.adjustedMembers && result.adjustedMembers > 0) {
         toast.success(t.admin.cycle.cycleUpdatedShipping(result.adjustedMembers));
+      } else if (result.pickupNotified && result.pickupNotified > 0) {
+        toast.success(t.admin.cycle.cycleUpdatedPickup(result.pickupNotified));
       } else {
         toast.success(t.admin.cycle.cycleUpdated);
       }

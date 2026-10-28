@@ -472,6 +472,10 @@ export const es: Strings = {
           label: "Saldo y reembolsos",
           hint: "Recargas, saldo que se te devuelve y reembolsos a la tarjeta, también los fallidos.",
         },
+        pickup: {
+          label: "Fecha de recogida",
+          hint: "Cuando el admin fija o cambia la fecha o la hora de recogida de un ciclo en el que has pedido.",
+        },
       },
     },
   },
@@ -994,6 +998,7 @@ export const es: Strings = {
       cycleCreated: "Ciclo creado",
       cycleUpdated: "Ciclo actualizado",
       cycleUpdatedShipping: (n: number) => `Ciclo actualizado: envío recalculado para ${n} socios`,
+      cycleUpdatedPickup: (n: number) => `Ciclo actualizado: ${n === 1 ? "1 socio avisado" : `${n} socios avisados`} de la nueva recogida`,
       manageProducts: "Gestionar productos",
       closeProducts: "Cerrar productos",
       importListing: "📥 Importar lista de precios",
@@ -2162,6 +2167,14 @@ export const es: Strings = {
     cycleCancelledTitle: "Pedido anulado",
     cycleCancelledBody: (title: string, amount: string, reason: string) =>
       `El ciclo "${title}" se ha anulado: ${reason}. Te hemos reembolsado ${amount}.`,
+    pickupAddedTitle: (title: string) => `Recogida de "${title}" fijada`,
+    pickupAddedBody: (title: string, slots: string) =>
+      `La recogida del ciclo "${title}" está fijada: ${slots}.`,
+    pickupChangedTitle: (title: string) => `Recogida de "${title}" cambiada`,
+    pickupChangedBody: (title: string, slots: string, before: string) =>
+      `La recogida del ciclo "${title}" ha cambiado: ahora ${slots} (antes ${before}).`,
+    pickupRemovedBody: (title: string) =>
+      `La recogida del ciclo "${title}" ya no tiene fecha: te avisaremos cuando se fije.`,
   },
   family: {
     title: "Familia",
