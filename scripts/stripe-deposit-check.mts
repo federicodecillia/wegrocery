@@ -18,7 +18,7 @@ import { join } from "node:path";
 import { parseEnv } from "node:util";
 import { neon } from "@neondatabase/serverless";
 import Stripe from "stripe";
-import { REQUIRED_STRIPE_EVENTS } from "../lib/payments/config.ts";
+import { REQUIRED_STRIPE_EVENTS } from "../lib/payments/config";
 
 let fromFile: Record<string, string | undefined> = {};
 try {
@@ -106,7 +106,7 @@ async function setup() {
 // The way startOrderPayment does it: amount from orderPaymentAmount, a pending
 // payments row with the snapshot, a Checkout Session with the same metadata.
 async function pay(k: keyof typeof MEMBERS) {
-  const { orderPaymentAmount, checkoutLineItems } = await import("../lib/payments/order-payment.ts");
+  const { orderPaymentAmount, checkoutLineItems } = await import("../lib/payments/order-payment");
   const m = MEMBERS[k];
   const lines = m.lines.map((l) => ({ ...l, unitPriceCents: PRICES[l.productId] }));
   const productsCents = lines.reduce((s, l) => s + l.unitPriceCents * l.quantity, 0);
@@ -212,9 +212,9 @@ async function run() {
       MEMBERS[k].lines.map((l) => `${l.productId} ${l.quantity}`));
   }
 
-  const { getDb } = await import("../lib/db/client.ts");
-  const { commitCycleClose } = await import("../lib/cycle-close-store.ts");
-  const { settleCycle, previewSettlement } = await import("../lib/payments/settlement-store.ts");
+  const { getDb } = await import("../lib/db/client");
+  const { commitCycleClose } = await import("../lib/cycle-close-store");
+  const { settleCycle, previewSettlement } = await import("../lib/payments/settlement-store");
   const db = getDb();
   await commitCycleClose(db, C, "stripe-deposit-check");
 
