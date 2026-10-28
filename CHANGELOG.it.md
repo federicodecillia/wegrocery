@@ -23,7 +23,9 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
-## [Non rilasciato]
+## [1.40.0] - 28 ottobre 2026
+
+*Una quota preventiva per le pesate nei cicli con carta, e le differenze delle pesate che passano al pagamento successivo invece di essere condonate.*
 
 ### Aggiunte
 - ⚖️ **Quota preventiva per le pesate.** Nei cicli con carta l'admin può aggiungere una percentuale (per esempio 3%) sui prodotti, pagata con l'ordine come riga a parte. Quando si chiudono i conti dopo le pesate, la parte non usata torna da sola sulla carta del socio. Si attiva per ciclo e si propone di default da Impostazioni, Pagamenti, Nuovi cicli.

@@ -22,7 +22,9 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
-## [Unreleased]
+## [1.40.0] - 2026-10-28
+
+*A weighing deposit for card cycles, and weighing gaps that move to the next payment instead of being written off.*
 
 ### Added
 - ⚖️ **Weighing deposit.** On card cycles the admin can add a percentage (for example 3%) on the products, paid with the order as its own line. When the accounts are settled after the weighing, the unused part goes back to the member's card by itself. It is set per cycle, with a default in Settings, Payments, New cycles.
