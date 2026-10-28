@@ -472,6 +472,10 @@ export const it = {
           label: "Saldo e rimborsi",
           hint: "Ricariche, saldo restituito e rimborsi con carta, anche quelli non riusciti.",
         },
+        pickup: {
+          label: "Data di ritiro",
+          hint: "Quando l'admin fissa o cambia la data o l'orario di ritiro di un ciclo in cui hai ordinato.",
+        },
       },
     },
   },
@@ -996,6 +1000,7 @@ export const it = {
       cycleCreated: "Ciclo creato",
       cycleUpdated: "Ciclo aggiornato",
       cycleUpdatedShipping: (n: number) => `Ciclo aggiornato: ricalcolata spedizione per ${n} soci`,
+      cycleUpdatedPickup: (n: number) => `Ciclo aggiornato: ${n === 1 ? "1 socio avvisato" : `${n} soci avvisati`} del nuovo ritiro`,
       manageProducts: "Gestisci Prodotti",
       closeProducts: "Chiudi Prodotti",
       importListing: "📥 Importa listino",
@@ -2170,6 +2175,14 @@ export const it = {
     cycleCancelledTitle: "Ordine annullato",
     cycleCancelledBody: (title: string, amount: string, reason: string) =>
       `Il ciclo "${title}" è stato annullato: ${reason}. Ti abbiamo riaccreditato ${amount}.`,
+    pickupAddedTitle: (title: string) => `Ritiro "${title}" fissato`,
+    pickupAddedBody: (title: string, slots: string) =>
+      `Il ritiro del ciclo "${title}" è fissato: ${slots}.`,
+    pickupChangedTitle: (title: string) => `Ritiro "${title}" cambiato`,
+    pickupChangedBody: (title: string, slots: string, before: string) =>
+      `Il ritiro del ciclo "${title}" è cambiato: ora ${slots} (prima ${before}).`,
+    pickupRemovedBody: (title: string) =>
+      `Il ritiro del ciclo "${title}" non ha più una data: ti avviseremo quando sarà fissata.`,
   },
   family: {
     title: "Famiglia",

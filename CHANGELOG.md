@@ -22,6 +22,11 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
+## [Unreleased]
+
+### Added
+- 📅 **Notice when the pickup changes.** When the admin sets, moves or clears the pickup date or time of a cycle, the members who ordered in it are told. In Notification preferences the new "Pickup date" group lets each member choose the app, email or both.
+
 ## [1.40.0] - 2026-10-28
 
 *A weighing deposit for card cycles, and weighing gaps that move to the next payment instead of being written off.*
