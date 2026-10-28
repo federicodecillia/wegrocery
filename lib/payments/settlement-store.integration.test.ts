@@ -69,6 +69,15 @@ describeDb("settlement of a pay-per-order cycle", () => {
     });
   });
 
+  it("with the wallet in card payments, carries a shortfall under the minimum instead of writing it off", async () => {
+    const plans = Object.fromEntries(
+      (await previewSettlement(getDb(), cycleId, { carryShortfall: true })).members.map((m) => [m.memberId, m.plan]),
+    );
+    expect(plans[tiny]).toEqual({ kind: "due", dueCents: 30 });
+    expect(plans[short]).toEqual({ kind: "due", dueCents: 230 });
+    expect(plans[offline]).toEqual({ kind: "offline" });
+  });
+
   it("refunds, writes off and marks the cycle settled; a second run changes nothing", async () => {
     const api = stripe();
     const first = await settleCycle(getDb(), cycleId, { by: "admin@example.invalid", stripe: api });

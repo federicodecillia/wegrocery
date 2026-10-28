@@ -645,6 +645,7 @@ export async function getAllCycles(limit = 30) {
       paymentMode: orderCycles.paymentMode,
       handlingFeeType: orderCycles.handlingFeeType,
       handlingFeeValue: orderCycles.handlingFeeValue,
+      weighingDepositPct: orderCycles.weighingDepositPct,
       settledAt: orderCycles.settledAt,
     })
     .from(orderCycles)

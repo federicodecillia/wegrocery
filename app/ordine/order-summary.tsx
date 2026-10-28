@@ -160,6 +160,7 @@ function PaymentBreakdown({ amount, paidCents }: { amount: OrderAmount; paidCent
     [t.order.pay.products, amount.productsCents],
     [t.order.pay.shipping, amount.shippingCents],
     [t.order.pay.fee, amount.feeCents],
+    [t.order.pay.deposit, amount.depositCents ?? 0],
   ];
   return (
     <div className="mt-3 space-y-0.5 border-t border-border pt-2 text-[12px] text-secondary-foreground">
@@ -176,7 +177,9 @@ function PaymentBreakdown({ amount, paidCents }: { amount: OrderAmount; paidCent
           ? t.order.pay.refundDifference(formatEur(gap.cents / 100))
           : gap?.kind === "due"
             ? t.order.pay.dueDifference(formatEur(gap.cents / 100))
-            : t.order.pay.feeHint}
+            : (amount.depositCents ?? 0) > 0
+              ? t.order.pay.depositHint
+              : t.order.pay.feeHint}
       </p>
     </div>
   );

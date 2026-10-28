@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   cancelRefunds,
+  cycleWeighingDeposit,
+  parseWeighingDeposit,
+  weighingDepositCents,
   checkoutLineItems,
   homeOrderStatus,
   paidDifference,
@@ -27,6 +30,7 @@ describe("orderPaymentAmount", () => {
       productsCents: 2000,
       shippingCents: 300,
       feeCents: 200,
+      depositCents: 0,
       requiredCents: 2500,
       coveredCents: 0,
       chargeCents: 2500,
@@ -239,6 +243,7 @@ describe("checkoutLineItems", () => {
     products: "Products",
     shipping: "Shipping",
     fee: "Handling (estimate)",
+    deposit: "Weighing deposit",
     supplement: "Order supplement",
     afterCredit: "Order (after credit)",
     balance: "Previous balance",
@@ -405,6 +410,7 @@ describe("the wallet in card payments", () => {
       products: "Products",
       shipping: "Shipping",
       fee: "Fee",
+      deposit: "Deposit",
       supplement: "Supplement",
       afterCredit: "Order (after credit)",
       balance: "Previous balance",
@@ -416,5 +422,62 @@ describe("the wallet in card payments", () => {
     expect(checkoutLineItems(order(3000, { debtCents: 0, creditCents: 2000 }), labels)).toEqual([
       { name: "Order (after credit)", amountCents: 1000 },
     ]);
+  });
+});
+
+describe("weighing deposit", () => {
+  const shipping = { mode: "fixed_per_member", fixedCents: 200 };
+  const fee = { type: "percent" as const, value: 0 };
+
+  it("is a percentage of the products, rounded like a percent fee", () => {
+    expect(weighingDepositCents(1000, 3)).toBe(30);
+    expect(weighingDepositCents(988, 3)).toBe(30); // 29.64 -> 30
+    expect(weighingDepositCents(1050, 2.5)).toBe(26); // 26.25 -> 26
+    expect(weighingDepositCents(1000, null)).toBe(0);
+    expect(weighingDepositCents(0, 3)).toBe(0);
+  });
+
+  it("adds to what the order requires, on products only", () => {
+    const amount = orderPaymentAmount({ productsCents: 1000, shipping, fee, coveredCents: 0, depositPct: 3 });
+    expect(amount).toMatchObject({ depositCents: 30, requiredCents: 1230, chargeCents: 1230, outcome: "pay" });
+  });
+
+  it("follows the order when it changes after paying", () => {
+    // Paid 10.00 + 3%; the member takes 2.00 out: 0.06 of deposit less too.
+    const amount = orderPaymentAmount({ productsCents: 800, shipping, fee, coveredCents: 1230, depositPct: 3 });
+    expect(amount).toMatchObject({ depositCents: 24, requiredCents: 1024, chargeCents: 0, outcome: "confirm" });
+  });
+
+  it("is its own Checkout line", () => {
+    const amount = orderPaymentAmount({ productsCents: 1000, shipping, fee, coveredCents: 0, depositPct: 3 });
+    expect(
+      checkoutLineItems(amount, {
+        products: "P",
+        shipping: "S",
+        fee: "F",
+        deposit: "D",
+        supplement: "X",
+        afterCredit: "C",
+        balance: "B",
+      }),
+    ).toEqual([
+      { name: "P", amountCents: 1000 },
+      { name: "S", amountCents: 200 },
+      { name: "D", amountCents: 30 },
+    ]);
+  });
+
+  it("reads the form and the cycle row", () => {
+    expect(parseWeighingDeposit("")).toEqual({ pct: null });
+    expect(parseWeighingDeposit("0")).toEqual({ pct: null });
+    expect(parseWeighingDeposit("3")).toEqual({ pct: 3 });
+    expect(parseWeighingDeposit("2,5")).toEqual({ pct: 2.5 });
+    expect(parseWeighingDeposit("25")).toEqual({ pct: 25 });
+    expect(parseWeighingDeposit("26")).toEqual({ error: "invalid" });
+    expect(parseWeighingDeposit("-1")).toEqual({ error: "invalid" });
+    expect(parseWeighingDeposit("3.333")).toEqual({ error: "invalid" });
+    expect(cycleWeighingDeposit({ weighingDepositPct: "3.00" })).toBe(3);
+    expect(cycleWeighingDeposit({ weighingDepositPct: null })).toBeNull();
+    expect(cycleWeighingDeposit({})).toBeNull();
   });
 });

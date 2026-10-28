@@ -11,7 +11,7 @@ import { getDb } from "@/lib/db/client";
 import { getCycleProducts, getMemberById, getMemberPendingOrderTotals, getOpenCycles } from "@/lib/db/queries";
 import { auditLog, orderCycles, orderDrafts, payments } from "@/lib/db/schema";
 import { t } from "@/lib/i18n";
-import { formatMoney } from "@/lib/i18n/format";
+import { formatHandlingFee, formatMoney } from "@/lib/i18n/format";
 import { membershipAllowsOrder } from "@/lib/membership/order-check";
 import { raisesOrderTotal } from "@/lib/membership/policy";
 import { isMembershipCheckEnabled } from "@/lib/membership/wallyfor";
@@ -24,6 +24,7 @@ import { cancelOrderWrite, confirmOrderWithoutPayment, getCycleCoverageCents } f
 import {
   checkoutLineItems,
   cycleHandlingFee,
+  cycleWeighingDeposit,
   ORDER_PAYMENT_MAX_CENTS,
   orderPaymentAmount,
   type OrderSnapshot,
@@ -127,6 +128,7 @@ export async function startOrderPayment(
       },
       fee,
       coveredCents: covered,
+      depositPct: cycleWeighingDeposit(cycle),
     });
 
     if (amount.outcome === "too_high") {
@@ -213,6 +215,7 @@ export async function startOrderPayment(
             products: t.order.pay.lineProducts(cycle.title),
             shipping: t.order.pay.shipping,
             fee: t.order.pay.fee,
+            deposit: t.order.pay.depositLine(formatHandlingFee({ type: "percent", value: cycleWeighingDeposit(cycle) ?? 0 })),
             supplement: t.order.pay.supplement(cycle.title),
             afterCredit: t.order.pay.lineAfterCredit(cycle.title, formatMoney(amount.walletCreditCents / 100)),
             balance: t.order.pay.lineBalance,
