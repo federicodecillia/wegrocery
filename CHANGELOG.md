@@ -22,7 +22,9 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
-## [Unreleased]
+## [1.41.0] - 2026-10-28
+
+*A notice when the pickup of a cycle you ordered in is set or changes.*
 
 ### Added
 - 📅 **Notice when the pickup changes.** When the admin sets, moves or clears the pickup date or time of a cycle, the members who ordered in it are told. In Notification preferences the new "Pickup date" group lets each member choose the app, email or both.

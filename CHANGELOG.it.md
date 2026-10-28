@@ -23,7 +23,9 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
-## [Unreleased]
+## [1.41.0] - 28 ottobre 2026
+
+*Un avviso quando il ritiro di un ciclo in cui hai ordinato viene fissato o cambia.*
 
 ### Aggiunte
 - 📅 **Avviso quando cambia il ritiro.** Quando l'admin fissa, sposta o toglie la data o l'orario di ritiro di un ciclo, chi ha ordinato in quel ciclo riceve un avviso. Nelle Preferenze notifiche il nuovo gruppo "Data di ritiro" permette a ciascuno di scegliere app, email o entrambe.
