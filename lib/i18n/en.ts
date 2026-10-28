@@ -472,6 +472,10 @@ export const en: Strings = {
           label: "Balance and refunds",
           hint: "Top-ups, balance paid back to you and card refunds, including failed ones.",
         },
+        pickup: {
+          label: "Pickup date",
+          hint: "When the admin sets or changes the pickup date or time of a cycle you ordered in.",
+        },
       },
     },
   },
@@ -994,6 +998,7 @@ export const en: Strings = {
       cycleCreated: "Cycle created",
       cycleUpdated: "Cycle updated",
       cycleUpdatedShipping: (n: number) => `Cycle updated: shipping recalculated for ${n} members`,
+      cycleUpdatedPickup: (n: number) => `Cycle updated: ${n === 1 ? "1 member" : `${n} members`} told about the new pickup`,
       manageProducts: "Manage Products",
       closeProducts: "Close Products",
       importListing: "📥 Import listing",
@@ -2162,6 +2167,14 @@ export const en: Strings = {
     cycleCancelledTitle: "Order cancelled",
     cycleCancelledBody: (title: string, amount: string, reason: string) =>
       `The cycle "${title}" was cancelled: ${reason}. We refunded you ${amount}.`,
+    pickupAddedTitle: (title: string) => `Pickup for "${title}" set`,
+    pickupAddedBody: (title: string, slots: string) =>
+      `The pickup for the cycle "${title}" is set: ${slots}.`,
+    pickupChangedTitle: (title: string) => `Pickup for "${title}" changed`,
+    pickupChangedBody: (title: string, slots: string, before: string) =>
+      `The pickup for the cycle "${title}" has changed: now ${slots} (was ${before}).`,
+    pickupRemovedBody: (title: string) =>
+      `The pickup for the cycle "${title}" no longer has a date: we will let you know once it is set.`,
   },
   family: {
     title: "Family",

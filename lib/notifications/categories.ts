@@ -12,6 +12,7 @@ export const NOTIFICATION_CATEGORIES = [
   "order_charge",
   "order_updates",
   "wallet_topup",
+  "pickup",
 ] as const;
 
 export type NotificationCategory = (typeof NOTIFICATION_CATEGORIES)[number];
@@ -28,6 +29,7 @@ export const CATEGORY_DEFAULTS: Record<NotificationCategory, ChannelPrefs> = {
   order_charge: { app: true, email: false },
   order_updates: { app: true, email: false },
   wallet_topup: { app: true, email: false },
+  pickup: { app: true, email: false },
 };
 
 // Maps a raw `notifications.type` value to its category. Legacy DB values are
@@ -65,6 +67,9 @@ const TYPE_TO_CATEGORY: Record<string, NotificationCategory> = {
   settlement_due: "order_charge",
   // The member paid what they owed: a payment, filed with the charges.
   balance_paid: "order_charge",
+  // The pickup day or hours of a cycle the member ordered in were set,
+  // changed or cleared (adminUpdateCycle, lib/notifications/pickup.ts).
+  pickup_changed: "pickup",
 };
 
 export function categoryForType(type: string): NotificationCategory | null {

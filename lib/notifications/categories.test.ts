@@ -54,6 +54,11 @@ describe("categoryForType", () => {
     expect(categoryForType("refund_failed")).toBe("wallet_topup");
   });
 
+  it("files a pickup change under its own category", () => {
+    expect(categoryForType("pickup_changed")).toBe("pickup");
+    expect(isNotificationCategory("pickup")).toBe(true);
+  });
+
   it("returns null for unknown types", () => {
     expect(categoryForType("shipping_charge")).toBeNull();
     expect(categoryForType("something_new")).toBeNull();

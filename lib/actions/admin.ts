@@ -66,6 +66,7 @@ import {
   getResolvedPreferences,
 } from "@/lib/notifications/dispatch";
 import { selectCycleAccessMembers } from "@/lib/notifications/reminder";
+import { pickupNotice, type CyclePickup } from "@/lib/notifications/pickup";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
 import { parseWeighingDeposit, resolveCycleFee, type HandlingFee } from "@/lib/payments/order-payment";
 import { cardCyclesAvailable, resolveNewCycleMode } from "@/lib/payments/cycle-mode";
@@ -715,6 +716,34 @@ async function notifyShippingChanges(
   }
 }
 
+// One `pickup_changed` notification per active member with an order on the
+// cycle (the account, for a family), when a save moved the pickup as members
+// read it. Best-effort, after the commit: a failure is logged, never reported
+// as a failed save.
+async function notifyPickupChange(
+  db: ReturnType<typeof getDb>,
+  cycleId: string,
+  cycleTitle: string,
+  before: CyclePickup,
+  after: CyclePickup,
+  now: Date,
+): Promise<number> {
+  const notice = pickupNotice(cycleTitle, before, after);
+  if (!notice) return 0;
+  try {
+    const recipients = await db
+      .selectDistinct({ memberId: members.memberId, email: members.email })
+      .from(orders)
+      .innerJoin(members, eq(members.memberId, orders.memberId))
+      .where(and(eq(orders.cycleId, cycleId), eq(members.active, true)));
+    await dispatchToMembers(db, recipients, { ...notice, type: "pickup_changed", href: `/storico?cycleId=${cycleId}` }, now);
+    return recipients.length;
+  } catch (notifyError) {
+    console.error("[pickup_changed] dispatch failed:", notifyError);
+    return 0;
+  }
+}
+
 // Re-splits a closed cycle's shipping_charge entries after its shipping
 // settings changed (adminUpdateCycle); adminEditClosedOrder runs the same plan
 // inside its own batch. A changed share is reversed and posted again (the
@@ -793,7 +822,7 @@ export async function adminUpdateCycle(
     handlingFeeValue?: string;
     weighingDepositPct?: string;
   },
-): Promise<{ error?: string; adjustedMembers?: number }> {
+): Promise<{ error?: string; adjustedMembers?: number; pickupNotified?: number }> {
   try {
     const admin = await requireAdmin();
     const db = getDb();
@@ -803,7 +832,12 @@ export async function adminUpdateCycle(
     const [before] = await db
       .select({
         status: orderCycles.status,
+        title: orderCycles.title,
         orderCloseAt: orderCycles.orderCloseAt,
+        pickupDate: orderCycles.pickupDate,
+        pickupEndTime: orderCycles.pickupEndTime,
+        pickup2Date: orderCycles.pickup2Date,
+        pickup2EndTime: orderCycles.pickup2EndTime,
         shippingMode: orderCycles.shippingMode,
         shippingCostPerMember: orderCycles.shippingCostPerMember,
         shippingTotal: orderCycles.shippingTotal,
@@ -911,9 +945,31 @@ export async function adminUpdateCycle(
     }
 
     await writeAudit(db, admin.email, "update_cycle", "cycle", cycleId, { ...data, ...(accessLevel && { accessLevel }) });
+
+    // Members who ordered hear about a new, moved or cleared pickup, through
+    // their "Data di ritiro" preferences. A cancelled cycle has nothing to
+    // pick up.
+    let pickupNotified = 0;
+    if (before.status !== "cancelled") {
+      pickupNotified = await notifyPickupChange(
+        db,
+        cycleId,
+        data.title?.trim() || before.title,
+        before,
+        {
+          pickupDate: dates.pickupDate === undefined ? before.pickupDate : dates.pickupDate,
+          pickupEndTime: data.pickupEndTime === undefined ? before.pickupEndTime : data.pickupEndTime || null,
+          pickup2Date: dates.pickup2Date === undefined ? before.pickup2Date : dates.pickup2Date,
+          pickup2EndTime: data.pickup2EndTime === undefined ? before.pickup2EndTime : data.pickup2EndTime || null,
+        },
+        new Date(),
+      );
+      if (pickupNotified > 0) revalidatePath("/notifiche");
+    }
+
     revalidatePath("/admin");
     revalidatePath("/");
-    return { adjustedMembers };
+    return { adjustedMembers, pickupNotified };
   } catch (e) {
     return { error: actionErrorMessage(e, t.errors.cycleUpdateError, "adminUpdateCycle") };
   }

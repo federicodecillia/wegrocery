@@ -34,8 +34,9 @@ describe("countChannels", () => {
         order_charge: { app: true, email: false },
         order_updates: { app: false, email: false },
         wallet_topup: { app: true, email: false },
+        pickup: { app: true, email: true },
       }),
-    ).toEqual({ app: 3, email: 1, total: 4 });
+    ).toEqual({ app: 4, email: 2, total: 5 });
   });
 });
 
