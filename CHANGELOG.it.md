@@ -23,6 +23,13 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
+## [1.42.0] - 29 ottobre 2026
+
+*Una scorciatoia per fissare il ritiro di un ciclo, anche dopo la chiusura.*
+
+### Aggiunte
+- 🗓️ **"Aggiungi il ritiro" dalla panoramica del ciclo.** Un ciclo senza ritiro, aperto o chiuso, ora dice "Ritiro: non ancora fissato" nella Panoramica, con un pulsante che apre la modifica direttamente sul ritiro. Una nuova scheda nella guida per gli admin spiega che il ritiro si fissa o si cambia anche dopo la chiusura, e che chi ha ordinato riceve un avviso.
+
 ## [1.41.0] - 28 ottobre 2026
 
 *Un avviso quando il ritiro di un ciclo in cui hai ordinato viene fissato o cambia.*

@@ -195,6 +195,23 @@ export const adminGuideEn: GuideContent = {
       keywords: ["extend", "move", "deadline", "date", "postpone"],
     },
     {
+      slug: "ritiro-ciclo",
+      topic: "ciclo",
+      title: "Setting or changing the pickup",
+      intro: "The pickup day and time can be added or changed at any time, even after the cycle is closed.",
+      steps: [
+        "Open the cycle. If the pickup is missing, the **Overview** says **Pickup: not set yet**: tap **Add the pickup**. Otherwise tap **✎ Edit** at the top.",
+        "Under **Pickups** choose the day and time. If needed, add a second pickup.",
+        "Tap **Save changes**.",
+      ],
+      notes: [
+        "Members who ordered in that cycle get a notice with the new pickup (in the app, and by email if they chose it in their preferences). The confirmation tells you how many members were told.",
+        "The pickup does not touch charges or balances: you can change it freely, even on a closed cycle.",
+      ],
+      link: { href: "/admin?tab=ciclo", label: "Go to the cycles" },
+      keywords: ["pickup", "pickup date", "time", "delivery", "collection", "closed cycle"],
+    },
+    {
       slug: "scadenza-passata",
       topic: "ciclo",
       title: "The order deadline has passed but the cycle is still open",

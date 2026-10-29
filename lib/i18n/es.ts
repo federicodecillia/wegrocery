@@ -952,6 +952,8 @@ export const es: Strings = {
       pickupSingle: "Recogida:",
       pickupFirst: "Recogida 1:",
       pickupSecond: "Recogida 2:",
+      pickupMissing: "Recogida: aún sin fijar",
+      pickupAdd: "Añadir la recogida",
       pickupSection: "Recogidas (opcional)",
       timeFrom: "Desde",
       timeTo: "Hasta",

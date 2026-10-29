@@ -195,6 +195,23 @@ export const adminGuideEs: GuideContent = {
       keywords: ["ampliar", "mover", "fecha límite", "fecha", "aplazar"],
     },
     {
+      slug: "ritiro-ciclo",
+      topic: "ciclo",
+      title: "Fijar o cambiar la recogida",
+      intro: "El día y la hora de recogida se pueden añadir o cambiar en cualquier momento, también después de cerrar el ciclo.",
+      steps: [
+        "Abre el ciclo. Si falta la recogida, el **Resumen** dice **Recogida: aún sin fijar**: toca **Añadir la recogida**. Si no, toca **✎ Editar** arriba.",
+        "En **Recogidas** elige el día y la hora. Si hace falta, añade una segunda recogida.",
+        "Toca **Guardar cambios**.",
+      ],
+      notes: [
+        "Quien pidió en ese ciclo recibe un aviso con la nueva recogida (en la app, y por email si lo eligió en sus preferencias). El mensaje de confirmación te dice cuántos socios han sido avisados.",
+        "La recogida no toca cargos ni saldos: puedes cambiarla sin problema también con el ciclo cerrado.",
+      ],
+      link: { href: "/admin?tab=ciclo", label: "Ir a los ciclos" },
+      keywords: ["recogida", "fecha de recogida", "hora", "entrega", "ciclo cerrado"],
+    },
+    {
       slug: "scadenza-passata",
       topic: "ciclo",
       title: "La fecha límite ha pasado pero el ciclo sigue abierto",

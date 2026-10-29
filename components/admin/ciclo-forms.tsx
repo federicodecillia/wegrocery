@@ -102,13 +102,28 @@ export function CloseCycleAction({ cycle, stats }: { cycle: SerializedCycle; sta
 }
 
 /** Deadline, pickups, shipping and access: the facts of a cycle, read-only. */
-export function CycleFacts({ cycle }: { cycle: SerializedCycle }) {
+// With `suppliers`, a cycle with no pickup yet says so, with a button that
+// opens the edit sheet on the pickup: it can be set even after the close, and
+// members who ordered are told (adminUpdateCycle).
+export function CycleFacts({ cycle, suppliers }: { cycle: SerializedCycle; suppliers?: Supplier[] }) {
   return (
     <div className="space-y-1 text-[13px] text-secondary-foreground">
       {cycle.orderCloseAt && (
         <div>
           {t.admin.cycle.orderCloseAt}:{" "}
           <span className="font-semibold text-foreground">{formatDeadline(cycle.orderCloseAt)}</span>
+        </div>
+      )}
+      {!cycle.pickupDate && suppliers && cycle.status !== "cancelled" && (
+        <div className="flex flex-wrap items-center gap-x-2">
+          <span>{t.admin.cycle.pickupMissing}</span>
+          <EditCycleButton
+            cycle={cycle}
+            suppliers={suppliers}
+            label={t.admin.cycle.pickupAdd}
+            focusPickup
+            className="inline-flex min-h-(--control-h) items-center font-bold text-primary-text underline-offset-2 hover:underline"
+          />
         </div>
       )}
       {cycle.pickupDate && (
@@ -162,7 +177,15 @@ export function CycleFacts({ cycle }: { cycle: SerializedCycle }) {
 }
 
 /** Panoramica of an open cycle: how many ordered, the total, what to know before closing. */
-export function OpenCycleOverview({ cycle, stats }: { cycle: SerializedCycle; stats: CycleStats }) {
+export function OpenCycleOverview({
+  cycle,
+  stats,
+  suppliers,
+}: {
+  cycle: SerializedCycle;
+  stats: CycleStats;
+  suppliers: Supplier[];
+}) {
   const { perOrderWarning } = closeWarnings(cycle, stats);
   return (
     <Card>
@@ -193,7 +216,7 @@ export function OpenCycleOverview({ cycle, stats }: { cycle: SerializedCycle; st
           </div>
         )}
         <div className="mt-3">
-          <CycleFacts cycle={cycle} />
+          <CycleFacts cycle={cycle} suppliers={suppliers} />
         </div>
         <div className="mt-3">
           <OrdersLink cycleId={cycle.cycleId} />
@@ -319,6 +342,7 @@ function PickupSection({
   defPickup2Date,
   defPickup2Start,
   defPickup2End,
+  focus = false,
 }: {
   defPickup1Date?: string;
   defPickup1Start?: string;
@@ -326,10 +350,18 @@ function PickupSection({
   defPickup2Date?: string;
   defPickup2Start?: string;
   defPickup2End?: string;
+  focus?: boolean;
 }) {
   const [showPickup2, setShowPickup2] = useState(Boolean(defPickup2Date));
+  // Opened from "Aggiungi il ritiro": bring the pickup into view.
+  const sectionRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (focus && node) requestAnimationFrame(() => node.scrollIntoView({ block: "center" }));
+    },
+    [focus],
+  );
   return (
-    <div>
+    <div ref={sectionRef}>
       <p className={labelClass}>{t.admin.cycle.pickupSection}</p>
       <div className="space-y-2">
         <PickupRow
@@ -559,11 +591,13 @@ export function EditCycleForm({
   suppliers,
   onClose,
   isClosed = false,
+  focusPickup = false,
 }: {
   cycle: SerializedCycle;
   suppliers: Supplier[];
   onClose: () => void;
   isClosed?: boolean;
+  focusPickup?: boolean;
 }) {
   const [isPending, startTransition] = useTransition();
   const isPerOrder = cycle.paymentMode === "per_order";
@@ -717,6 +751,7 @@ export function EditCycleForm({
         defPickup2Date={pickup2Local.slice(0, 10)}
         defPickup2Start={pickup2Local.slice(11, 16)}
         defPickup2End={cycle.pickup2EndTime ?? ""}
+        focus={focusPickup}
       />
 
       <div className={isClosed ? "" : "grid grid-cols-2 gap-3"}>
@@ -1319,10 +1354,14 @@ export function EditCycleButton({
   cycle,
   suppliers,
   className,
+  label,
+  focusPickup = false,
 }: {
   cycle: SerializedCycle;
   suppliers: Supplier[];
   className?: string;
+  label?: string;
+  focusPickup?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const isClosed = cycle.status !== "open";
@@ -1335,7 +1374,7 @@ export function EditCycleButton({
           "min-h-(--control-h) rounded-xl border border-border bg-card px-3 text-[13px] font-semibold text-foreground hover:bg-tint/[0.03]"
         }
       >
-        {isClosed ? t.admin.cycle.editClosedButton : t.admin.common.edit}
+        {label ?? (isClosed ? t.admin.cycle.editClosedButton : t.admin.common.edit)}
       </button>
       {open && (
         <Sheet
@@ -1344,7 +1383,13 @@ export function EditCycleButton({
           title={cycle.title}
           subtitle={isClosed ? t.admin.cycle.editClosedLabel : undefined}
         >
-          <EditCycleForm cycle={cycle} suppliers={suppliers} onClose={() => setOpen(false)} isClosed={isClosed} />
+          <EditCycleForm
+            cycle={cycle}
+            suppliers={suppliers}
+            onClose={() => setOpen(false)}
+            isClosed={isClosed}
+            focusPickup={focusPickup}
+          />
         </Sheet>
       )}
     </>

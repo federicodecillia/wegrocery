@@ -195,6 +195,23 @@ export const adminGuideFr: GuideContent = {
       keywords: ["prolonger", "déplacer", "date limite", "date", "repousser"],
     },
     {
+      slug: "ritiro-ciclo",
+      topic: "ciclo",
+      title: "Fixer ou changer le retrait",
+      intro: "Le jour et l'heure de retrait peuvent être ajoutés ou changés à tout moment, même après la clôture du cycle.",
+      steps: [
+        "Ouvrez le cycle. Si le retrait manque, la **Vue d'ensemble** indique **Retrait : pas encore fixé** : touchez **Ajouter le retrait**. Sinon touchez **✎ Modifier** en haut.",
+        "Dans **Retraits** choisissez le jour et l'heure. Si besoin, ajoutez un second retrait.",
+        "Touchez **Enregistrer les modifications**.",
+      ],
+      notes: [
+        "Les membres qui ont commandé dans ce cycle reçoivent un avis avec le nouveau retrait (dans l'app, et par email s'ils l'ont choisi dans leurs préférences). Le message de confirmation vous dit combien de membres ont été prévenus.",
+        "Le retrait ne touche ni les débits ni les soldes : vous pouvez le changer sans souci, même sur un cycle clôturé.",
+      ],
+      link: { href: "/admin?tab=ciclo", label: "Aller aux cycles" },
+      keywords: ["retrait", "date de retrait", "heure", "livraison", "cycle clôturé"],
+    },
+    {
       slug: "scadenza-passata",
       topic: "ciclo",
       title: "La date limite est passée mais le cycle est encore ouvert",
