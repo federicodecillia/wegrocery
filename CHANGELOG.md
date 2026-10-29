@@ -22,7 +22,9 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
-## [Unreleased]
+## [1.42.0] - 2026-10-29
+
+*A shortcut to set the pickup of a cycle, even after it is closed.*
 
 ### Added
 - 🗓️ **"Add the pickup" from the cycle overview.** A cycle with no pickup yet, open or closed, now says "Pickup: not set yet" in its Overview, with a button that opens the edit straight on the pickup. A new card in the admin guide explains that the pickup can be set or changed even after the close, and that members who ordered are told.
