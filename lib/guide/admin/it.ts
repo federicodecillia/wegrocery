@@ -197,6 +197,23 @@ export const adminGuideIt: GuideContent = {
       keywords: ["prorogare", "spostare", "scadenza", "data", "allungare"],
     },
     {
+      slug: "ritiro-ciclo",
+      topic: "ciclo",
+      title: "Fissare o cambiare il ritiro",
+      intro: "Il giorno e l'orario di ritiro si possono aggiungere o cambiare in ogni momento, anche dopo aver chiuso il ciclo.",
+      steps: [
+        "Apri il ciclo. Se il ritiro manca, la **Panoramica** dice **Ritiro: non ancora fissato**: tocca **Aggiungi il ritiro**. Altrimenti tocca **✎ Modifica** in alto.",
+        "In **Ritiri** scegli giorno e orario. Se serve, aggiungi un secondo ritiro.",
+        "Tocca **Salva modifiche**.",
+      ],
+      notes: [
+        "Chi ha ordinato in quel ciclo riceve un avviso con il nuovo ritiro (in app, e per email se l'ha scelto nelle sue preferenze). Il messaggio di conferma ti dice quanti soci sono stati avvisati.",
+        "Il ritiro non tocca addebiti né saldi: puoi cambiarlo senza pensieri anche a ciclo chiuso.",
+      ],
+      link: { href: "/admin?tab=ciclo", label: "Vai ai cicli" },
+      keywords: ["ritiro", "data ritiro", "orario", "consegna", "quando si ritira", "ciclo chiuso"],
+    },
+    {
       slug: "scadenza-passata",
       topic: "ciclo",
       title: "Gli ordini sono scaduti ma il ciclo è ancora aperto",

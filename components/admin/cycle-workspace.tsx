@@ -295,11 +295,11 @@ async function SelectedCycle({
 
       {view === "panoramica" &&
         (isOpen ? (
-          <OpenCycleOverview cycle={cycle} stats={stats} />
+          <OpenCycleOverview cycle={cycle} stats={stats} suppliers={suppliers} />
         ) : (
           <Card>
             <CardContent>
-              <CycleFacts cycle={cycle} />
+              <CycleFacts cycle={cycle} suppliers={suppliers} />
               <div className="mt-3">
                 <OrdersLink cycleId={c.cycleId} />
               </div>
