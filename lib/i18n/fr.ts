@@ -952,6 +952,8 @@ export const fr: Strings = {
       pickupSingle: "Retrait :",
       pickupFirst: "Retrait 1 :",
       pickupSecond: "Retrait 2 :",
+      pickupMissing: "Retrait : pas encore fixé",
+      pickupAdd: "Ajouter le retrait",
       pickupSection: "Retraits (facultatif)",
       timeFrom: "De",
       timeTo: "À",

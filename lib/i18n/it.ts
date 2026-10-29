@@ -954,6 +954,8 @@ export const it = {
       pickupSingle: "Ritiro:",
       pickupFirst: "Ritiro 1:",
       pickupSecond: "Ritiro 2:",
+      pickupMissing: "Ritiro: non ancora fissato",
+      pickupAdd: "Aggiungi il ritiro",
       pickupSection: "Ritiri (opzionale)",
       timeFrom: "Dalle",
       timeTo: "Alle",
