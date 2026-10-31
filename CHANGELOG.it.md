@@ -23,6 +23,13 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
+## [Unreleased]
+
+### Aggiunte
+- 📦 **Registro dei ritiri.** Un ciclo chiuso ha la nuova scheda **Ritiri**: spunti un socio quando ritira (vale l'orario di adesso) o tocchi il nome per un altro orario, chi ha ritirato e una nota per gli admin. Accanto al titolo del ciclo un contatore dice quanti hanno ritirato, per esempio "8/10 ritirati".
+- 🔔 **Promemoria per chi non ha ritirato.** Dal giorno di ritiro "Da fare ora" segnala i cicli con soci che devono ancora ritirare, e "Chiudi i conti" avvisa se qualcuno non ha ancora ritirato. Il socio vede "Ritirato il …" nello Storico; il nuovo avviso "Ordine ritirato" è spento finché non lo accende.
+- 🗄️ [tecnico] **Migrazione `0046_cycle_pickups.sql`.** Nuova tabella `cycle_pickups`; va applicata prima del deploy.
+
 ## [1.42.0] - 29 ottobre 2026
 
 *Una scorciatoia per fissare il ritiro di un ciclo, anche dopo la chiusura.*

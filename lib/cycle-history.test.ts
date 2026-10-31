@@ -224,6 +224,13 @@ describe("historyBadge", () => {
   const entry = (extra: Partial<HistoryLineRow>) =>
     buildCycleHistory([line(cycle("a"), "Uova", "3.00", extra)], [])[0];
 
+  it("shows a marked pickup as collected, whatever the pickup window", () => {
+    const e = entry({ pickupDate: at("2026-10-24T16:00:00Z"), pickupEndTime: "20:00" });
+    expect(historyBadge({ ...e, pickedUpAt: at("2026-10-24T16:30:00Z") }, at("2026-10-24T17:00:00Z"))).toBe("pickedUp");
+    expect(historyBadge({ ...e, pickedUpAt: null }, at("2026-10-24T17:00:00Z"))).toBe("toPickUp");
+    expect(historyBadge({ status: "cancelled", pickupEndsAt: null, pickedUpAt: at("2026-10-24T16:30:00Z") }, at("2026-10-25T10:00:00Z"))).toBe("cancelled");
+  });
+
   it("keeps open and cancelled cycles as they are", () => {
     expect(historyBadge({ status: "open", pickupEndsAt: null }, at("2026-10-22T10:00:00Z"))).toBe("open");
     expect(historyBadge({ status: "cancelled", pickupEndsAt: null }, at("2026-10-22T10:00:00Z"))).toBe("cancelled");

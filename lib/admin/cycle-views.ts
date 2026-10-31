@@ -4,13 +4,14 @@ import { t } from "@/lib/i18n";
 // list, with the views that make sense for where it stands. Pure, so the
 // rules are tested without a database.
 
-export type CycleView = "panoramica" | "prodotti" | "ordini" | "fornitore" | "conti";
+export type CycleView = "panoramica" | "prodotti" | "ordini" | "fornitore" | "ritiri" | "conti";
 
 export const CYCLE_VIEW_LABELS: Record<CycleView, string> = {
   panoramica: t.admin.workspace.views.panoramica,
   prodotti: t.admin.workspace.views.prodotti,
   ordini: t.admin.workspace.views.ordini,
   fornitore: t.admin.workspace.views.fornitore,
+  ritiri: t.admin.workspace.views.ritiri,
   conti: t.admin.workspace.views.conti,
 };
 
@@ -31,13 +32,15 @@ export function supplierOrderReady(status: string, orderCloseAt: Date | null, no
 /**
  * The views of a cycle by status: products only while it is open (the close
  * freezes them), the supplier once there is something to send (`supplierReady`:
- * an open cycle past its deadline), the accounts (settlement, cancelling)
- * after the close.
+ * an open cycle past its deadline), the pickups (on an open cycle the view
+ * says to close it first), the accounts (settlement, cancelling) after the
+ * close.
  */
 export function cycleViews(status: string, supplierReady = false): CycleView[] {
-  if (status === "open") return supplierReady ? ["panoramica", "prodotti", "ordini", "fornitore"] : ["panoramica", "prodotti", "ordini"];
+  if (status === "open")
+    return supplierReady ? ["panoramica", "prodotti", "ordini", "fornitore", "ritiri"] : ["panoramica", "prodotti", "ordini", "ritiri"];
   if (status === "cancelled") return ["panoramica", "ordini", "conti"];
-  return ["panoramica", "ordini", "fornitore", "conti"];
+  return ["panoramica", "ordini", "fornitore", "ritiri", "conti"];
 }
 
 /** The view asked for when the cycle has it, else its overview. */

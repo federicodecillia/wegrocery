@@ -214,6 +214,23 @@ export const adminGuideIt: GuideContent = {
       keywords: ["ritiro", "data ritiro", "orario", "consegna", "quando si ritira", "ciclo chiuso"],
     },
     {
+      slug: "segnare-ritiri",
+      topic: "ciclo",
+      title: "Segnare chi ha ritirato",
+      intro: "A ciclo chiuso la scheda **Ritiri** elenca chi ha ordinato: segni chi passa a ritirare e in alto vedi a che punto sei, per esempio **8/10 ritirati**.",
+      steps: [
+        "Apri il ciclo chiuso e tocca **Ritiri**, oppure il contatore 📦 accanto al titolo.",
+        "Quando un socio ritira, tocca la spunta accanto al nome: vale l'orario di adesso.",
+        "Per un altro orario, per dire chi ha ritirato al posto del socio o per una nota, tocca il nome e poi **Salva**.",
+      ],
+      notes: [
+        "Se hai segnato per sbaglio, tocca di nuovo la spunta o, dal nome, **Segna come non ritirato**. La nota la vedono solo gli admin.",
+        "Il socio vede nello Storico quando ha ritirato; l'avviso gli arriva solo se l'ha acceso in **Ordine ritirato**. Dopo il giorno di ritiro, **Da fare ora** ricorda chi manca e **Chiudi i conti** avvisa se qualcuno non ha ancora ritirato. A ciclo aperto i ritiri non si segnano: prima chiudi il ciclo.",
+      ],
+      link: { href: "/admin?tab=ciclo", label: "Vai ai cicli" },
+      keywords: ["ritirato", "ritiri", "chi ha ritirato", "registro ritiri", "spunta", "consegnato", "presenze"],
+    },
+    {
       slug: "scadenza-passata",
       topic: "ciclo",
       title: "Gli ordini sono scaduti ma il ciclo è ancora aperto",

@@ -212,6 +212,23 @@ export const adminGuideEs: GuideContent = {
       keywords: ["recogida", "fecha de recogida", "hora", "entrega", "ciclo cerrado"],
     },
     {
+      slug: "segnare-ritiri",
+      topic: "ciclo",
+      title: "Marcar quién ha recogido",
+      intro: "Con el ciclo cerrado, la pestaña **Recogidas** lista quién pidió: marcas quién pasa a recoger y arriba ves cómo vas, por ejemplo **8/10 recogidos**.",
+      steps: [
+        "Abre el ciclo cerrado y toca **Recogidas**, o el contador 📦 junto al título.",
+        "Cuando un socio recoge, toca la marca junto al nombre: cuenta la hora de ahora.",
+        "Para otra hora, para indicar quién recogió en lugar del socio o para una nota, toca el nombre y luego **Guardar**.",
+      ],
+      notes: [
+        "¿Marcado por error? Toca de nuevo la marca o, desde el nombre, **Marcar como no recogido**. La nota solo la ven los administradores.",
+        "El socio ve en el Historial cuándo recogió; el aviso le llega solo si activó **Pedido recogido**. Después del día de recogida, **Qué hacer ahora** recuerda quién falta y **Ajustar las cuentas** avisa si alguien aún no ha recogido. Con el ciclo abierto no se marcan recogidas: ciérralo antes.",
+      ],
+      link: { href: "/admin?tab=ciclo", label: "Ir a los ciclos" },
+      keywords: ["recogido", "recogidas", "quién recogió", "registro de recogidas", "marca", "entregado", "asistencia"],
+    },
+    {
       slug: "scadenza-passata",
       topic: "ciclo",
       title: "La fecha límite ha pasado pero el ciclo sigue abierto",
