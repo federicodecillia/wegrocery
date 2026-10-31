@@ -40,6 +40,10 @@ import { CycleAccountsView } from "./cycle-accounts-view";
 import { SupplierSteps } from "./supplier-steps";
 import { CycleList, CyclePicker, type CycleListItem, type SettleState } from "./cycle-list";
 import { CycleOrdersView } from "./cycle-orders-view";
+import { CyclePickupsView } from "./cycle-pickups-view";
+import { RichText } from "@/components/guide/rich-text";
+import { getCyclePickups } from "@/lib/db/pickups";
+import { pickupProgressLabel } from "@/lib/pickups";
 
 type Props = {
   cycleId?: string;
@@ -50,8 +54,8 @@ type Props = {
 
 // Admin → Ciclo: one cycle at a time. On the left (on a phone or tablet, a
 // sheet opened from the top row, next to "+ Nuovo ciclo") every cycle, then
-// the chosen one's header with its main action, and its views: Panoramica · Prodotti · Ordini while open (plus Fornitore past the order
-// deadline), Panoramica · Ordini · Fornitore · Conti once closed.
+// the chosen one's header with its main action, and its views: Panoramica · Prodotti · Ordini · Ritiri while open (plus Fornitore past the order
+// deadline), Panoramica · Ordini · Fornitore · Ritiri · Conti once closed.
 export async function CycleWorkspace({ cycleId: asked, view: askedView, creating }: Props) {
   const [cycles, suppliers, settings] = await Promise.all([getAllCycles(1000), getAllSuppliers(), getPaymentSettings()]);
   const selectedId = creating ? null : defaultCycleId(cycles, asked);
@@ -111,6 +115,8 @@ export async function CycleWorkspace({ cycleId: asked, view: askedView, creating
         supplierSent: f?.supplierSent ?? false,
         adjusted: f?.adjusted ?? false,
         settlementPending: settlementPending(settleStates.get(c.cycleId) ?? null),
+        pickupDate: c.pickupDate,
+        pickedUp: f?.pickedUp ?? 0,
       };
     }),
     now,
@@ -240,10 +246,12 @@ async function SelectedCycle({
   const w = t.admin.workspace;
   const isOpen = c.status === "open";
   const perOrder = c.paymentMode === "per_order";
-  const [rawStats, settlement] = await Promise.all([
+  const [rawStats, settlement, pickups] = await Promise.all([
     isOpen ? getOpenCycleStats(c.cycleId) : null,
     perOrder && !isOpen ? getSettlementStatus(getDb(), c.cycleId) : null,
+    c.status === "closed" ? getCyclePickups(c.cycleId) : [],
   ]);
+  const collected = pickups.filter((p) => p.pickedUpAt).length;
   const stats = {
     orderCount: rawStats?.orderCount ?? 0,
     grandTotal: rawStats?.grandTotal ?? 0,
@@ -264,6 +272,17 @@ async function SelectedCycle({
               {isOpen ? t.admin.cycle.openBadge : c.status === "cancelled" ? t.admin.cycle.cancelledBadge : t.admin.cycle.closedBadge}
             </Badge>
             {perOrder && <Badge variant="brand">💳 {t.admin.cycle.cardBadge}</Badge>}
+            {pickups.length > 0 && (
+              // The pickup counter: a link to Ritiri, so not a Badge (a status, never clickable).
+              <Link
+                href={adminHref("ciclo", "ritiri", { cycle: c.cycleId })}
+                className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-label font-semibold tabular-nums underline-offset-2 hover:underline ${
+                  collected >= pickups.length ? "border-accent/20 bg-accent-bg text-accent-text" : "border-border bg-tint/[0.04] text-secondary-foreground"
+                }`}
+              >
+                📦 {pickupProgressLabel({ done: collected, total: pickups.length })}
+              </Link>
+            )}
           </div>
           <h2 id="cycle-title" className="text-[18px] font-black text-foreground">
             {c.title}
@@ -325,8 +344,29 @@ async function SelectedCycle({
           </Card>
         ))}
 
+      {view === "ritiri" &&
+        (isOpen ? (
+          <Card>
+            <CardContent>
+              <h3 className="text-[14px] font-bold text-foreground">{t.admin.pickups.openTitle}</h3>
+              <p className="mt-1 mb-3 max-w-prose text-[13px] text-secondary-foreground">
+                <RichText text={t.admin.pickups.openHint} />
+              </p>
+              <CloseCycleAction cycle={cycle} stats={stats} />
+            </CardContent>
+          </Card>
+        ) : (
+          <CyclePickupsView cycleId={c.cycleId} rows={pickups} />
+        ))}
+
       {view === "conti" && (
-        <CycleAccountsView cycle={cycle} settledAt={c.settledAt?.toISOString() ?? null} settlement={settlement} />
+        <CycleAccountsView
+          cycle={cycle}
+          settledAt={c.settledAt?.toISOString() ?? null}
+          settlement={settlement}
+          // Warned only where the register is in use: a group that never marks pickups is not nagged.
+          notCollected={collected > 0 ? pickups.length - collected : 0}
+        />
       )}
     </section>
   );

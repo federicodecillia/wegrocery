@@ -13,13 +13,14 @@ export const NOTIFICATION_CATEGORIES = [
   "order_updates",
   "wallet_topup",
   "pickup",
+  "picked_up",
 ] as const;
 
 export type NotificationCategory = (typeof NOTIFICATION_CATEGORIES)[number];
 
 export type ChannelPrefs = { app: boolean; email: boolean };
 
-// Per-category defaults. App is on for everything; email is off for every
+// Per-category defaults. App is on for everything but picked_up; email is off for every
 // category until the member turns it on in the panel (since 1.17.0, also for
 // cycle_opened: one email per member per cycle weighs on the email quota, and
 // the sign-in links must get through). Members who saved their preferences
@@ -30,6 +31,10 @@ export const CATEGORY_DEFAULTS: Record<NotificationCategory, ChannelPrefs> = {
   order_updates: { app: true, email: false },
   wallet_topup: { app: true, email: false },
   pickup: { app: true, email: false },
+  // The order was marked collected (Admin → Ciclo → Ritiri): the member was
+  // there, so both channels stay off until they turn one on; Storico shows
+  // the pickup either way.
+  picked_up: { app: false, email: false },
 };
 
 // Maps a raw `notifications.type` value to its category. Legacy DB values are
@@ -70,6 +75,8 @@ const TYPE_TO_CATEGORY: Record<string, NotificationCategory> = {
   // The pickup day or hours of a cycle the member ordered in were set,
   // changed or cleared (adminUpdateCycle, lib/notifications/pickup.ts).
   pickup_changed: "pickup",
+  // The member's order was marked collected (lib/actions/admin-pickups.ts).
+  order_picked_up: "picked_up",
 };
 
 export function categoryForType(type: string): NotificationCategory | null {

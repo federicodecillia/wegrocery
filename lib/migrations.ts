@@ -48,4 +48,5 @@ export const MIGRATIONS = [
   "0043_new_cycle_defaults.sql",
   "0044_wallet_topups.sql",
   "0045_weighing_deposit.sql",
+  "0046_cycle_pickups.sql",
 ] as const;

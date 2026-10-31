@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { t } from "@/lib/i18n";
-import { formatNumber, formatSignedMoney } from "@/lib/i18n/format";
+import { formatDateTime, formatNumber, formatSignedMoney } from "@/lib/i18n/format";
 import { formatDate, formatEur, memberProductEmoji } from "@/lib/utils";
 import type { CycleHistoryEntry, HistoryBadge } from "@/lib/cycle-history";
 import { BalanceSummary } from "@/components/balance/balance-summary";
@@ -24,8 +24,18 @@ type LedgerEntry = MovementDetail & { entryId: string; correctedAt?: string | nu
 type Tab = "ordini" | "movimenti";
 const TABS: Tab[] = ["ordini", "movimenti"];
 
+type HistoryItem = CycleHistoryEntry & { badge: HistoryBadge; pickedUpAt: string | null; collectedBy: string | null };
+
+// Under a cycle's title: when the order was collected, once an admin marked
+// it (Admin → Ciclo → Ritiri), else the pickup day.
+function cycleWhen(o: HistoryItem): string {
+  if (!o.pickedUpAt) return formatDate(o.pickupDate);
+  const when = formatDateTime(o.pickedUpAt);
+  return o.collectedBy ? t.history.pickedUpBy(when, o.collectedBy) : t.history.pickedUpAt(when);
+}
+
 type Props = {
-  orderHistory: (CycleHistoryEntry & { badge: HistoryBadge })[];
+  orderHistory: HistoryItem[];
   movements: LedgerEntry[];
   balance: number;
   // null when the group has the bank transfer off.
@@ -182,7 +192,7 @@ export function StoricoTabs({ orderHistory, movements, balance, bankRefs }: Prop
           {shownCycle && (
             <section aria-labelledby="cycle-detail-title" className="hidden rounded-card border border-border bg-card p-4 shadow-card lg:sticky lg:top-4 lg:block">
               <h2 id="cycle-detail-title" className="text-[15px] font-bold text-foreground">{shownCycle.title}</h2>
-              <p className="mt-0.5 mb-3 tabular-nums text-label text-muted-foreground">{formatDate(shownCycle.pickupDate)}</p>
+              <p className="mt-0.5 mb-3 tabular-nums text-label text-muted-foreground">{cycleWhen(shownCycle)}</p>
               <CycleDetail entry={shownCycle} bankRefs={bankRefs} />
             </section>
           )}
@@ -233,7 +243,7 @@ export function StoricoTabs({ orderHistory, movements, balance, bankRefs }: Prop
         onRequestClose={() => setSheetCycleId(null)}
         size="sm"
         title={sheetCycle?.title}
-        subtitle={(sheetCycle && formatDate(sheetCycle.pickupDate)) || undefined}
+        subtitle={(sheetCycle && cycleWhen(sheetCycle)) || undefined}
         footer={
           <Button block onClick={() => setSheetCycleId(null)}>
             {t.common.close}

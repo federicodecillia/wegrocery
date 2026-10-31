@@ -26,11 +26,14 @@ export function SettleCycleButton({
   cycleTitle,
   settledAt,
   status,
+  notCollected = 0,
 }: {
   cycleId: string;
   cycleTitle: string;
   settledAt: string | null;
   status: SettlementStatus;
+  /** Members who have not collected yet (Ritiri): a warning on top of the preview. */
+  notCollected?: number;
 }) {
   const [open, setOpen] = useState(false);
   const [rows, setRows] = useState<SettlementPreviewRow[] | null>(null);
@@ -96,6 +99,11 @@ export function SettleCycleButton({
           </SheetActions>
         }
       >
+        {notCollected > 0 && (
+          <p role="status" className="mb-3 rounded-xl bg-primary-bg px-3 py-2 text-[13px] text-primary-text">
+            📦 {t.admin.pickups.settleWarning(notCollected)}
+          </p>
+        )}
         {rows === null ? (
           <p className="py-6 text-center text-[13px] text-secondary-foreground">{s.loading}</p>
         ) : rows.length === 0 ? (

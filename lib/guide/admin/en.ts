@@ -212,6 +212,23 @@ export const adminGuideEn: GuideContent = {
       keywords: ["pickup", "pickup date", "time", "delivery", "collection", "closed cycle"],
     },
     {
+      slug: "segnare-ritiri",
+      topic: "ciclo",
+      title: "Mark who collected",
+      intro: "Once the cycle is closed, the **Pickups** tab lists who ordered: you tick who comes to collect and see how far you are at the top, for example **8/10 collected**.",
+      steps: [
+        "Open the closed cycle and tap **Pickups**, or the 📦 counter next to the title.",
+        "When a member collects, tap the tick next to the name: the time is now.",
+        "For another time, to say who collected instead of the member or to add a note, tap the name and then **Save**.",
+      ],
+      notes: [
+        "Ticked by mistake? Tap the tick again or, from the name, **Mark as not collected**. Only admins see the note.",
+        "The member sees in History when they collected; the notice reaches them only if they turned on **Order collected**. After the pickup day, **To do now** lists who is missing and **Settle accounts** warns if someone has not collected yet. Pickups cannot be marked while the cycle is open: close it first.",
+      ],
+      link: { href: "/admin?tab=ciclo", label: "Go to cycles" },
+      keywords: ["collected", "pickups", "who collected", "pickup register", "tick", "delivered", "attendance"],
+    },
+    {
       slug: "scadenza-passata",
       topic: "ciclo",
       title: "The order deadline has passed but the cycle is still open",

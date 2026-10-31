@@ -22,6 +22,13 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
+## [Unreleased]
+
+### Added
+- 📦 **Pickup register.** A closed cycle has a new **Pickups** tab: tick a member when they collect (the time is now) or tap the name to set another time, who collected and a note for the admins. A counter next to the cycle title shows how many collected, such as "8/10 collected".
+- 🔔 **Reminders for missing pickups.** From the pickup day, "To do now" lists the cycles with members still to collect, and "Settle accounts" warns when someone has not collected yet. Members see "Collected on …" in History; the new "Order collected" notification is off unless they turn it on.
+- 🗄️ [tech] **Migration `0046_cycle_pickups.sql`.** New table `cycle_pickups`; apply it before deploying.
+
 ## [1.42.0] - 2026-10-29
 
 *A shortcut to set the pickup of a cycle, even after it is closed.*

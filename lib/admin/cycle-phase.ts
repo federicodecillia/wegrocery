@@ -17,6 +17,8 @@ export type CycleStep =
   | "to_send"
   /** Closed and sent, no weight, sheet or correction recorded yet. */
   | "to_adjust"
+  /** Closed, its first pickup has started, and some members have not collected yet. */
+  | "to_collect"
   /** Card cycle whose accounts ask for "Chiudi i conti". */
   | "to_settle";
 
@@ -37,6 +39,10 @@ export type CycleFacts = {
   adjusted: boolean;
   /** settlementPending() of a card cycle; false for a wallet cycle. */
   settlementPending: boolean;
+  /** The first pickup day; null while none is set. */
+  pickupDate: Date | null;
+  /** Members with an order whose pickup was marked (Admin → Ciclo → Ritiri). */
+  pickedUp: number;
 };
 
 export type CycleTask = {
@@ -47,6 +53,8 @@ export type CycleTask = {
   orderMembers: number;
   /** For "overdue": hours since the deadline; for "open": hours left. */
   hours: number | null;
+  /** For "to_collect": members still to collect. */
+  toCollect: number;
 };
 
 /** The steps a cycle still asks for, in the order they are done. Empty: nothing to do. */
@@ -60,11 +68,17 @@ export function cycleSteps(f: CycleFacts, now: Date): CycleStep[] {
     if (!f.supplierSent) steps.push("to_send");
     if (!f.adjusted) steps.push("to_adjust");
   }
+  if (f.status === "closed" && recent && pickupsMissing(f, now)) steps.push("to_collect");
   if (f.settlementPending) steps.push("to_settle");
   return steps;
 }
 
-const URGENCY: Record<CycleStep, number> = { overdue: 0, to_settle: 1, to_send: 2, to_adjust: 3, open: 4 };
+/** From its first pickup on, a closed cycle with members who did not collect yet. */
+function pickupsMissing(f: CycleFacts, now: Date): boolean {
+  return f.pickupDate != null && f.pickupDate.getTime() <= now.getTime() && f.pickedUp < f.orderMembers;
+}
+
+const URGENCY: Record<CycleStep, number> = { overdue: 0, to_settle: 1, to_send: 2, to_adjust: 3, to_collect: 4, open: 5 };
 
 /**
  * Every cycle with something to do, the most urgent first; among open cycles
@@ -81,7 +95,8 @@ export function cycleTasks(cycles: CycleFacts[], now: Date): CycleTask[] {
         ? null
         : Math.floor(Math.abs(now.getTime() - close) / HOUR);
     const when = f.status === "open" ? (close ?? Number.MAX_SAFE_INTEGER) : -(f.closedAt?.getTime() ?? 0);
-    return [{ task: { cycleId: f.cycleId, title: f.title, steps, orderMembers: f.orderMembers, hours }, when }];
+    const toCollect = Math.max(0, f.orderMembers - f.pickedUp);
+    return [{ task: { cycleId: f.cycleId, title: f.title, steps, orderMembers: f.orderMembers, hours, toCollect }, when }];
   });
   return tasks
     .sort((a, b) => URGENCY[a.task.steps[0]] - URGENCY[b.task.steps[0]] || a.when - b.when)

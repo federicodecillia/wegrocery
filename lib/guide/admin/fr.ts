@@ -212,6 +212,23 @@ export const adminGuideFr: GuideContent = {
       keywords: ["retrait", "date de retrait", "heure", "livraison", "cycle clôturé"],
     },
     {
+      slug: "segnare-ritiri",
+      topic: "ciclo",
+      title: "Marquer qui a retiré",
+      intro: "Une fois le cycle clôturé, l'onglet **Retraits** liste qui a commandé : vous cochez qui passe retirer et voyez en haut où vous en êtes, par exemple **8/10 retirées**.",
+      steps: [
+        "Ouvrez le cycle clôturé et touchez **Retraits**, ou le compteur 📦 à côté du titre.",
+        "Quand un membre retire, touchez la coche à côté du nom : l'heure est maintenant.",
+        "Pour une autre heure, pour indiquer qui a retiré à la place du membre ou pour une note, touchez le nom puis **Enregistrer**.",
+      ],
+      notes: [
+        "Coché par erreur ? Touchez de nouveau la coche ou, depuis le nom, **Marquer comme non retirée**. Seuls les admins voient la note.",
+        "Le membre voit dans l'Historique quand il a retiré ; l'avis ne lui arrive que s'il a activé **Commande retirée**. Après le jour de retrait, **À faire maintenant** rappelle qui manque et **Solder les comptes** prévient si quelqu'un n'a pas encore retiré. Les retraits ne se marquent pas tant que le cycle est ouvert : clôturez-le d'abord.",
+      ],
+      link: { href: "/admin?tab=ciclo", label: "Aller aux cycles" },
+      keywords: ["retirée", "retraits", "qui a retiré", "registre des retraits", "coche", "livré", "présences"],
+    },
+    {
       slug: "scadenza-passata",
       topic: "ciclo",
       title: "La date limite est passée mais le cycle est encore ouvert",

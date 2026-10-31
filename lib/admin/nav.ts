@@ -51,7 +51,7 @@ export const ADMIN_VIEWS: Partial<Record<AdminSection, { id: CatalogView | Setti
 // cards exist.
 export function adminHelpHref(section: AdminSection, view: AdminView | null): string {
   const card: Record<AdminSection, string> = {
-    ciclo: view === "fornitore" ? "fornitore" : view === "prodotti" ? "ciclo#prodotti-nel-ciclo" : view === "ordini" ? "ciclo#seguire-ordini" : "ciclo",
+    ciclo: view === "fornitore" ? "fornitore" : view === "prodotti" ? "ciclo#prodotti-nel-ciclo" : view === "ordini" ? "ciclo#seguire-ordini" : view === "ritiri" ? "ciclo#segnare-ritiri" : "ciclo",
     cassa: "cassa",
     soci: "soci",
     catalogo: view === "fornitori" ? "catalogo#aggiungere-fornitore" : "catalogo",

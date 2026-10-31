@@ -15,9 +15,9 @@ describe("CATEGORY_DEFAULTS", () => {
     }
   });
 
-  it("enables the in-app channel for every category", () => {
+  it("enables the in-app channel for every category but the pickup receipt", () => {
     for (const category of NOTIFICATION_CATEGORIES) {
-      expect(CATEGORY_DEFAULTS[category].app).toBe(true);
+      expect(CATEGORY_DEFAULTS[category].app).toBe(category !== "picked_up");
     }
   });
 
@@ -57,6 +57,11 @@ describe("categoryForType", () => {
   it("files a pickup change under its own category", () => {
     expect(categoryForType("pickup_changed")).toBe("pickup");
     expect(isNotificationCategory("pickup")).toBe(true);
+  });
+
+  it("files the pickup receipt under its own category, off by default", () => {
+    expect(categoryForType("order_picked_up")).toBe("picked_up");
+    expect(channelsForType("order_picked_up", resolvePreferences([]))).toEqual({ app: false, email: false });
   });
 
   it("returns null for unknown types", () => {

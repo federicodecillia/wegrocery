@@ -5,8 +5,8 @@ const d = (iso: string) => new Date(iso);
 
 describe("cycle views", () => {
   it("offers products only while open, supplier and accounts after the close", () => {
-    expect(cycleViews("open")).toEqual(["panoramica", "prodotti", "ordini"]);
-    expect(cycleViews("closed")).toEqual(["panoramica", "ordini", "fornitore", "conti"]);
+    expect(cycleViews("open")).toEqual(["panoramica", "prodotti", "ordini", "ritiri"]);
+    expect(cycleViews("closed")).toEqual(["panoramica", "ordini", "fornitore", "ritiri", "conti"]);
     expect(cycleViews("cancelled")).toEqual(["panoramica", "ordini", "conti"]);
   });
 
@@ -24,7 +24,7 @@ describe("cycle views", () => {
     expect(supplierOrderReady("open", null, now)).toBe(false);
     expect(supplierOrderReady("closed", null, now)).toBe(true);
     expect(supplierOrderReady("cancelled", d("2026-10-01"), now)).toBe(false);
-    expect(cycleViews("open", true)).toEqual(["panoramica", "prodotti", "ordini", "fornitore"]);
+    expect(cycleViews("open", true)).toEqual(["panoramica", "prodotti", "ordini", "fornitore", "ritiri"]);
     expect(resolveCycleView("open", "fornitore", true)).toBe("fornitore");
     expect(resolveCycleView("open", "fornitore")).toBe("panoramica");
   });
