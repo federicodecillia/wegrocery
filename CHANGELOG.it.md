@@ -23,7 +23,9 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
-## [Unreleased]
+## [1.43.0] - 1 novembre 2026
+
+*Chi ha ritirato il suo ordine, e il nuovo "Referente ordini" per aiutare con i cicli.*
 
 ### Aggiunte
 - 📦 **Registro dei ritiri.** Un ciclo chiuso ha la nuova scheda **Ritiri**: spunti un socio quando ritira (vale l'orario di adesso) o tocchi il nome per un altro orario, chi ha ritirato e una nota per gli admin. Accanto al titolo del ciclo un contatore dice quanti hanno ritirato, per esempio "8/10 ritirati".

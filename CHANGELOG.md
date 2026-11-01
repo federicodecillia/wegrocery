@@ -22,7 +22,9 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
-## [Unreleased]
+## [1.43.0] - 2026-11-01
+
+*Who collected their order, and a new "Orders referent" to help run the cycles.*
 
 ### Added
 - 📦 **Pickup register.** A closed cycle has a new **Pickups** tab: tick a member when they collect (the time is now) or tap the name to set another time, who collected and a note for the admins. A counter next to the cycle title shows how many collected, such as "8/10 collected".
