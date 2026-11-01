@@ -22,10 +22,13 @@ import { t } from "@/lib/i18n";
 import { formatDate } from "@/lib/i18n/format";
 import { formatDeadline } from "@/lib/i18n/deadline";
 import { adminHref } from "@/lib/admin/nav";
-import { CYCLE_VIEW_LABELS, cycleViews, defaultCycleId, resolveCycleView, settlementCandidate, settlementPending, supplierOrderReady, type CycleView } from "@/lib/admin/cycle-views";
+import { CYCLE_VIEW_LABELS, cycleViews, defaultCycleId, resolveCycleView, settlementCandidate, settlementPending, supplierOrderReady, viewsFor, type CycleView } from "@/lib/admin/cycle-views";
 import { CycleTodo } from "./cycle-todo";
 import { TASK_WINDOW_DAYS, cycleTasks } from "@/lib/admin/cycle-phase";
 import { findDuplicatePairs } from "@/lib/members/duplicates";
+import { managesCycle } from "@/lib/auth/manager";
+import { ACCESS_LEVELS, type Role } from "@/lib/roles";
+import { AccessLevelsProvider } from "./access-levels";
 import {
   CloseCycleAction,
   CreateCycleForm,
@@ -50,17 +53,25 @@ type Props = {
   view: CycleView | null;
   /** "+ Nuovo ciclo": the creation form, open. */
   creating: boolean;
+  /** "referent": a "Referente ordini", on the cycles their role sees, without the accounts. */
+  access?: "admin" | "referent";
+  /** The session's role: the cycles a referent sees and the levels they may give. */
+  role?: Role | null;
 };
 
 // Admin → Ciclo: one cycle at a time. On the left (on a phone or tablet, a
 // sheet opened from the top row, next to "+ Nuovo ciclo") every cycle, then
 // the chosen one's header with its main action, and its views: Panoramica · Prodotti · Ordini · Ritiri while open (plus Fornitore past the order
 // deadline), Panoramica · Ordini · Fornitore · Ritiri · Conti once closed.
-export async function CycleWorkspace({ cycleId: asked, view: askedView, creating }: Props) {
-  const [cycles, suppliers, settings] = await Promise.all([getAllCycles(1000), getAllSuppliers(), getPaymentSettings()]);
+export async function CycleWorkspace({ cycleId: asked, view: askedView, creating, access = "admin", role = null }: Props) {
+  const referent = access === "referent";
+  const [allCycles, suppliers, settings] = await Promise.all([getAllCycles(1000), getAllSuppliers(), getPaymentSettings()]);
+  // A referent sees the cycles their role sees as a member, nothing more.
+  const cycles = referent ? allCycles.filter((c) => managesCycle({ access, role }, c.accessLevel)) : allCycles;
+  const accessLevels = ACCESS_LEVELS.filter((level) => managesCycle({ access, role }, level));
   const selectedId = creating ? null : defaultCycleId(cycles, asked);
   const cycle = cycles.find((c) => c.cycleId === selectedId) ?? null;
-  const view = cycle ? resolveCycleView(cycle.status, askedView, supplierOrderReady(cycle.status, cycle.orderCloseAt)) : null;
+  const view = cycle ? resolveCycleView(cycle.status, askedView, supplierOrderReady(cycle.status, cycle.orderCloseAt), access) : null;
 
   // Card cycles closed or cancelled, unsettled or settled lately: whether
   // their accounts still ask for "Chiudi i conti" (a correction or a failed
@@ -69,7 +80,8 @@ export async function CycleWorkspace({ cycleId: asked, view: askedView, creating
   const settleStates = new Map(
     await Promise.all(
       cycles
-        .filter((c) => settlementCandidate(c, now))
+        // The accounts are the admins': a referent is not asked to settle.
+        .filter((c) => !referent && settlementCandidate(c, now))
         .map(async (c) => [c.cycleId, await getSettlementStatus(getDb(), c.cycleId)] as const),
     ),
   );
@@ -98,9 +110,10 @@ export async function CycleWorkspace({ cycleId: asked, view: askedView, creating
   );
   const [taskFacts, refunds, allMembers, dismissed] = await Promise.all([
     getCycleTaskFacts(inScope.map((c) => c.cycleId)),
-    getRequestedRefundCount(),
-    getAllMembers(),
-    getDismissedDuplicatePairs(),
+    // Cassa and Soci are the admins': a referent gets neither nudge.
+    referent ? 0 : getRequestedRefundCount(),
+    referent ? [] : getAllMembers(),
+    referent ? new Set<string>() : getDismissedDuplicatePairs(),
   ]);
   const tasks = cycleTasks(
     inScope.map((c) => {
@@ -128,6 +141,7 @@ export async function CycleWorkspace({ cycleId: asked, view: askedView, creating
   ).length;
 
   return (
+    <AccessLevelsProvider levels={accessLevels}>
     <div>
       <div className="mb-3 flex gap-2 lg:hidden">
         <div className="min-w-0 flex-1">
@@ -148,13 +162,14 @@ export async function CycleWorkspace({ cycleId: asked, view: askedView, creating
         </aside>
         <div className="min-w-0">
           {cycle && view ? (
-            <SelectedCycle cycle={cycle} view={view} suppliers={suppliers} />
+            <SelectedCycle cycle={cycle} view={view} suppliers={suppliers} access={access} />
           ) : (
             <NewCycle suppliers={suppliers} settings={settings} empty={cycles.length === 0} />
           )}
         </div>
       </div>
     </div>
+    </AccessLevelsProvider>
   );
 }
 
@@ -237,10 +252,12 @@ async function SelectedCycle({
   cycle: c,
   view,
   suppliers,
+  access,
 }: {
   cycle: FullCycle;
   view: CycleView;
   suppliers: { supplierId: string; name: string }[];
+  access: "admin" | "referent";
 }) {
   const cycle = serialize(c);
   const w = t.admin.workspace;
@@ -248,7 +265,7 @@ async function SelectedCycle({
   const perOrder = c.paymentMode === "per_order";
   const [rawStats, settlement, pickups] = await Promise.all([
     isOpen ? getOpenCycleStats(c.cycleId) : null,
-    perOrder && !isOpen ? getSettlementStatus(getDb(), c.cycleId) : null,
+    perOrder && !isOpen && access === "admin" ? getSettlementStatus(getDb(), c.cycleId) : null,
     c.status === "closed" ? getCyclePickups(c.cycleId) : [],
   ]);
   const collected = pickups.filter((p) => p.pickedUpAt).length;
@@ -298,7 +315,7 @@ async function SelectedCycle({
       </header>
 
       <nav aria-label={t.admin.nav.views} className="mb-4 flex gap-4 overflow-x-auto border-b border-border px-1 [scrollbar-width:none]">
-        {cycleViews(c.status, supplierOrderReady(c.status, c.orderCloseAt)).map((v) => (
+        {viewsFor(cycleViews(c.status, supplierOrderReady(c.status, c.orderCloseAt)), access).map((v) => (
           <Link
             key={v}
             href={adminHref("ciclo", v, { cycle: c.cycleId })}

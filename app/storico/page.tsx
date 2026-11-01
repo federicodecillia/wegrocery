@@ -1,6 +1,7 @@
 import { AppShell } from "@/components/app-shell";
+import { adminAccess } from "@/lib/auth/access";
 import { StoricoTabs } from "./storico-tabs";
-import { getUserRole, requireUserSession } from "@/lib/auth/session";
+import { requireUserSession } from "@/lib/auth/session";
 import { getFamilyMemberIds, getMemberById, getMemberLedger, getMemberStorico } from "@/lib/db/queries";
 import { getDb } from "@/lib/db/client";
 import { getWalletBalance } from "@/lib/payments/balance-due";
@@ -16,7 +17,6 @@ export const metadata: Metadata = { title: t.nav.history };
 
 export default async function StoricoPage() {
   const session = await requireUserSession();
-  const role = getUserRole(session);
   const memberId = session.user.memberId!;
 
   // A family's account shows the history its people had before joining too.
@@ -41,7 +41,7 @@ export default async function StoricoPage() {
   const now = new Date();
 
   return (
-    <AppShell email={session.user.email} name={session.user.fullName} isAdmin={role === "admin"} memberId={memberId} personId={session.user.personId} layout="wide">
+    <AppShell email={session.user.email} name={session.user.fullName} admin={adminAccess(session.user)} memberId={memberId} personId={session.user.personId} layout="wide">
       <StoricoTabs
         orderHistory={orderHistory.map((o) => {
           const pickup = pickups.get(o.cycleId);

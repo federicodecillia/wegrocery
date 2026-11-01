@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { adminHref, adminTitle, resolveAdminRoute } from "./nav";
+import { adminHref, adminSectionsFor, adminTitle, resolveAdminRoute, sectionAllowed } from "./nav";
 
 describe("resolveAdminRoute", () => {
   it("defaults to the cycle, its view left to the workspace", () => {
@@ -48,5 +48,18 @@ describe("adminHref and adminTitle", () => {
     expect(adminTitle("impostazioni", "gruppo")).toBe("Settings: Group");
     expect(adminHref("impostazioni", "pagamenti")).toBe("/admin?tab=impostazioni");
     expect(adminHref("impostazioni", "soci")).toBe("/admin?tab=impostazioni&view=soci");
+  });
+});
+
+describe("referent sections", () => {
+  it("opens the cycles, the members and the catalogue, never the money or the settings", () => {
+    const { primary, more } = adminSectionsFor("referent");
+    expect(primary.map((s) => s.id)).toEqual(["ciclo", "soci", "catalogo"]);
+    expect(more).toEqual([]);
+    expect(sectionAllowed("cassa", "referent")).toBe(false);
+    expect(sectionAllowed("impostazioni", "referent")).toBe(false);
+    expect(sectionAllowed("statistiche", "referent")).toBe(false);
+    expect(sectionAllowed("cassa", "admin")).toBe(true);
+    expect(adminSectionsFor("admin").more.map((s) => s.id)).toEqual(["statistiche", "impostazioni"]);
   });
 });

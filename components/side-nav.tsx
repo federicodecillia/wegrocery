@@ -6,12 +6,12 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { NavIcon } from "@/components/nav-icon";
 import { isItemActive, isNotificationsPath, isProfilePath, visibleNavItems } from "@/components/nav-items";
-import { ADMIN_GUIDE_HREF, ADMIN_MORE, ADMIN_PRIMARY, adminHref, resolveAdminRoute } from "@/lib/admin/nav";
+import { ADMIN_GUIDE_HREF, adminHref, adminSectionsFor, resolveAdminRoute } from "@/lib/admin/nav";
 import { t } from "@/lib/i18n";
 import { initials } from "@/lib/profile/summary";
 
 type SideNavProps = {
-  isAdmin: boolean;
+  admin: "admin" | "referent" | null;
   unreadCount: number;
   name?: string | null;
   email: string;
@@ -24,7 +24,7 @@ type SideNavProps = {
 // a rail (icon over label) on a tablet, a sidebar (icon beside label) from
 // lg. The items are the same as the bottom bar's (nav-items.ts); from lg the
 // admin's sections hang under Admin, so the admin page drops its pill bar.
-export function SideNav({ isAdmin, unreadCount, name, email, appName, logoUrl, showName }: SideNavProps) {
+export function SideNav({ admin, unreadCount, name, email, appName, logoUrl, showName }: SideNavProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const onAdmin = pathname === "/admin" || pathname.startsWith("/admin/");
@@ -51,7 +51,7 @@ export function SideNav({ isAdmin, unreadCount, name, email, appName, logoUrl, s
 
       <nav aria-label={t.nav.mainAria} className="flex-1 overflow-y-auto px-2 py-2 lg:px-3">
         <ul className="space-y-1">
-          {visibleNavItems(isAdmin).map((item) => {
+          {visibleNavItems(admin !== null).map((item) => {
             const active = isItemActive(pathname, item);
             return (
               <li key={item.href}>
@@ -61,7 +61,7 @@ export function SideNav({ isAdmin, unreadCount, name, email, appName, logoUrl, s
                 </Link>
                 {item.href === "/admin" && onAdmin && (
                   <ul className="mt-1 hidden space-y-0.5 border-l border-border pl-3 lg:ml-5 lg:block">
-                    {[...ADMIN_PRIMARY, ...ADMIN_MORE].map((s) => (
+                    {(admin ? [...adminSectionsFor(admin).primary, ...adminSectionsFor(admin).more] : []).map((s) => (
                       <li key={s.id}>
                         <Link
                           href={adminHref(s.id)}

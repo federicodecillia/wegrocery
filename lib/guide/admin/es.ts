@@ -68,17 +68,18 @@ export const adminGuideEs: GuideContent = {
       slug: "ruoli",
       topic: "inizio",
       title: "Quién puede gestionar el grupo: los roles",
-      intro: "Cada socio tiene un rol: **Admin**, **Socios activos** o **Usuarios**. Solo los admins ven el área Admin y esta guía.",
+      intro: "Cada socio tiene dos ajustes: **Acceso a la app** (Socio, **Referente de pedidos** o **Administrador**) y **Ciclos que ve** (Usuarios o Socios activos). Solo administradores y referentes ven el área Admin y esta guía.",
       steps: [
-        "Abre **Socios** y toca el socio.",
-        "Elige el **Rol** y guarda con **Actualizar**.",
+        "Abre **Socios** y toca **Modificar** en el socio.",
+        "Elige **Acceso a la app** y **Ciclos que ve**, y guarda con **Actualizar**.",
       ],
       notes: [
-        "El rol también decide en qué ciclos puede pedir alguien: cada ciclo tiene un nivel de **Acceso** (Usuarios, Socios activos o solo Admin).",
-        "Conviene tener al menos dos admins, para que el grupo no se quede bloqueado cuando uno no está.",
+        "El **Referente de pedidos** ayuda con los ciclos que ve: los abre, cambia fechas y horas, los cierra, envía el pedido al proveedor, sube la hoja, marca las recogidas y gestiona el catálogo. Ve los socios solo en lectura y no tiene Caja, Cuentas, Estadísticas ni Ajustes.",
+        "**Ciclos que ve** decide en qué ciclos puede pedir alguien: cada ciclo tiene un nivel de **Acceso** (Usuarios, Socios activos o solo Admin). Un administrador los ve todos.",
+        "Conviene tener al menos dos administradores, para que el grupo no se quede bloqueado cuando uno no está.",
       ],
       link: { href: "/admin?tab=soci", label: "Abrir Socios" },
-      keywords: ["administrador", "permisos", "nombrar", "admin"],
+      keywords: ["administrador", "permisos", "nombrar", "admin", "referente", "referente de pedidos", "visibilidad"],
     },
 
     // El ciclo de pedidos
@@ -529,7 +530,7 @@ export const adminGuideEs: GuideContent = {
       steps: [
         "Abre **Socios** y toca **Añadir socio**.",
         "Escribe el **Nombre** y el **Email**. Si entra con una segunda dirección, añádela como **Email secundario**.",
-        "Deja el **Rol** en Usuarios salvo que haga falta otro, y guarda.",
+        "Deja **Acceso a la app** en Socio y **Ciclos que ve** en Usuarios, salvo que haga falta otra cosa, y guarda.",
         "Toca **Invitar**: el socio recibe un email con el enlace para entrar.",
       ],
       notes: ["Cada dirección puede pertenecer a un solo socio."],

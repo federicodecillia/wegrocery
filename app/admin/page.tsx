@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
-import { checkAccess } from "@/lib/auth/access";
+import { adminAccess } from "@/lib/auth/access";
 import { requireUserSession } from "@/lib/auth/session";
 import { AdminNav } from "@/components/admin/admin-nav";
 import { CycleWorkspace } from "@/components/admin/cycle-workspace";
@@ -15,7 +15,8 @@ import { SetupBanner } from "@/components/admin/setup/setup-banner";
 import { AdminWelcome } from "@/components/admin/admin-welcome";
 import { ADMIN_WELCOME_QUERY } from "@/lib/admin/welcome";
 import type { Metadata } from "next";
-import { adminTitle, resolveAdminRoute, type SettingsView } from "@/lib/admin/nav";
+import { adminTitle, resolveAdminRoute, sectionAllowed, type SettingsView } from "@/lib/admin/nav";
+import { normalizeRole } from "@/lib/roles";
 import type { CycleView } from "@/lib/admin/cycle-views";
 
 export async function generateMetadata({ searchParams }: { searchParams: SearchParams }): Promise<Metadata> {
@@ -58,8 +59,10 @@ function TabSkeleton() {
 
 export default async function AdminPage({ searchParams }: { searchParams: SearchParams }) {
   const session = await requireUserSession();
-  // Same rule as proxy.ts and requireAdmin: role admin and an active member.
-  if (!checkAccess(session.user, "admin").ok) redirect("/");
+  // Same rule as requireAdmin / requireOrderManager: an active admin, or an
+  // active "Referente ordini" for the limited area (lib/admin/nav.ts).
+  const access = adminAccess(session.user);
+  if (!access) redirect("/");
 
   const {
     tab: tabParam,
@@ -71,18 +74,21 @@ export default async function AdminPage({ searchParams }: { searchParams: Search
     new: newParam,
     [ADMIN_WELCOME_QUERY]: welcomeParam,
   } = await searchParams;
-  const { section, view } = resolveAdminRoute(tabParam, viewParam, filterMemberId, cycleId);
+  const route = resolveAdminRoute(tabParam, viewParam, filterMemberId, cycleId);
+  // A section a referent cannot open falls back to the cycles.
+  const { section, view } = sectionAllowed(route.section, access) ? route : { section: "ciclo" as const, view: null };
+  const referent = access === "referent";
   const balanceFilter =
     balanceParam === "negative" || balanceParam === "above_max" ? balanceParam : undefined;
 
   return (
-    <AppShell email={session.user.email} name={session.user.fullName} isAdmin memberId={session.user.memberId!} personId={session.user.personId} layout="wide">
+    <AppShell email={session.user.email} name={session.user.fullName} admin={adminAccess(session.user)} memberId={session.user.memberId!} personId={session.user.personId} layout="wide">
       <h1 className="sr-only">{`Admin: ${adminTitle(tabParam, viewParam, filterMemberId, cycleId)}`}</h1>
       <Suspense fallback={null}>
-        <AdminNav />
+        <AdminNav access={access} />
       </Suspense>
-      <SetupBanner />
-      {section === "ciclo" && !view && !cycleId && newParam !== "1" && (
+      {!referent && <SetupBanner />}
+      {!referent && section === "ciclo" && !view && !cycleId && newParam !== "1" && (
         <Suspense fallback={null}>
           <AdminWelcome personId={session.user.personId ?? session.user.memberId!} reopened={welcomeParam === "1"} />
         </Suspense>
@@ -97,12 +103,14 @@ export default async function AdminPage({ searchParams }: { searchParams: Search
             cycleId={cycleId}
             view={view as CycleView | null}
             creating={newParam === "1"}
+            access={access}
+            role={normalizeRole(session.user.role)}
           />
         )}
         {view === "prodotti" && <TabProdotti supplierId={filterSupplierId} />}
         {view === "fornitori" && <TabFornitori />}
         {section === "cassa" && <TabCassa balanceFilter={balanceFilter} memberId={filterMemberId} />}
-        {section === "soci" && <TabSoci memberId={filterMemberId} />}
+        {section === "soci" && <TabSoci memberId={referent ? undefined : filterMemberId} readOnly={referent} />}
         {section === "statistiche" && (
           <TabStatistiche
             cycleIds={parseCsvParam(cycleId)}

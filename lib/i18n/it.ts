@@ -650,6 +650,11 @@ export const it = {
   },
   // Member roles and cycle access levels (lib/roles.ts). The same three words
   // name both: a cycle's access level is the minimum role that can order.
+  adminAccess: {
+    admin: "Amministratore",
+    referent: "Referente ordini",
+    none: "Socio",
+  },
   roles: {
     admin: "Admin",
     attivi: "Attivi",
@@ -1366,6 +1371,16 @@ export const it = {
       aliasEmailHint: "(alias login)",
       aliasEmailPlaceholder: "es. nome@gmail.com",
       roleLabel: "Ruolo",
+      accessLabel: "Accesso all'app",
+      accessHint: {
+        none: "Ordina e vede i suoi movimenti, niente area Admin.",
+        referent: "Aiuta con gli ordini: apre, modifica e chiude i cicli che vede, fornitore, ritiri e catalogo. Niente cassa, conti, soci o impostazioni.",
+        admin: "Tutta l'area Admin, compresi soldi, soci e impostazioni.",
+      },
+      visibilityLabel: "Cicli che vede",
+      visibilityHint: "I cicli in cui può ordinare (e che gestisce, se è referente).",
+      visibilityAll: "Tutti i cicli",
+      readOnlyHint: "Elenco dei soci in sola lettura: per aggiungere o modificare un socio chiedi a un amministratore.",
       statusLabel: "Stato",
       statusActive: "Abilitato",
       statusInactive: "Disabilitato",
@@ -2349,6 +2364,7 @@ export const it = {
     invalidQuantity: "Quantità non valida",
     invalidRole: "Ruolo non valido",
     invalidAccessLevel: "Livello di accesso non valido",
+    accessLevelNotAllowed: "Non puoi dare a un ciclo una visibilità che tu non hai.",
     handlingFeeLocked: "Il ciclo è già chiuso: le spese di preparazione non si possono più cambiare.",
     handlingFeeInvalid: "Spese di preparazione non valide: un numero con al massimo due decimali, fino al 25% o a 10 €",
     weighingDepositInvalid: "Quota preventiva non valida: un numero con al massimo due decimali, fino al 25%",

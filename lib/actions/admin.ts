@@ -6,7 +6,8 @@ import { headers } from "next/headers";
 import { getAuthInstance } from "@/auth";
 import { admitEmail } from "@/lib/auth/admission";
 import { eq, and, isNull, notInArray, sql, inArray } from "drizzle-orm";
-import { requireAdmin } from "@/lib/auth/session";
+import { requireAdmin, requireOrderManager } from "@/lib/auth/session";
+import { managesCycle, requireCycleManager, requireOrderLineManager, requireProductManager } from "@/lib/auth/manager";
 import { t } from "@/lib/i18n";
 import { formatMoney, formatDate } from "@/lib/i18n/format";
 import { parseCycleDates } from "@/lib/cycle-dates";
@@ -153,7 +154,7 @@ export type CreateCycleInput = {
 
 export async function adminCreateCycle(data: CreateCycleInput): Promise<{error?: string}> {
   try {
-    const admin = await requireAdmin();
+    const admin = await requireOrderManager();
     if (!data.title?.trim()) return { error: t.errors.fieldRequired(t.fields.title) };
     const dates = parseCycleDates({
       orderCloseAt: data.orderCloseAt ?? "",
@@ -165,6 +166,8 @@ export async function adminCreateCycle(data: CreateCycleInput): Promise<{error?:
     if (!data.supplierId) return { error: t.errors.fieldRequired(t.fields.supplier) };
     const accessLevel = data.accessLevel ? normalizeAccessLevel(data.accessLevel) : DEFAULT_ACCESS_LEVEL;
     if (!accessLevel) return { error: t.errors.invalidAccessLevel };
+    // A referent opens cycles they can see themselves, never an admin-only one.
+    if (!managesCycle(admin, accessLevel)) return { error: t.errors.accessLevelNotAllowed };
 
     const db = getDb();
 
@@ -288,7 +291,7 @@ export async function adminCloseCycle(
   cycleId: string,
 ): Promise<{ chargesGenerated: number } | { error: string }> {
   try {
-    const admin = await requireAdmin();
+    const admin = await requireCycleManager(cycleId);
     const db = getDb();
     const result = await performCycleClose(db, cycleId, admin.email);
     await writeAudit(db, admin.email, "close_cycle", "cycle", cycleId, result);
@@ -320,7 +323,7 @@ export async function adminCloseCycleWithDistinta(input: {
   | { error: string; closed?: boolean }
 > {
   try {
-    const admin = await requireAdmin();
+    const admin = await requireCycleManager(input.cycleId);
     const db = getDb();
     const { decodeUploadBase64 } = await import("@/lib/upload-limit");
     const buf = decodeUploadBase64(input.fileBase64);
@@ -523,7 +526,7 @@ export async function adminCloseCycleWithAdjustments(
   adjustments: ReadonlyArray<{ productId: string; finalUnitPrice: number }>,
 ): Promise<{ chargesGenerated: number; productsAdjusted: number } | { error: string }> {
   try {
-    const admin = await requireAdmin();
+    const admin = await requireCycleManager(cycleId);
     const db = getDb();
 
     // Re-pricing rewrites products and order lines, so it must never run on a
@@ -824,7 +827,7 @@ export async function adminUpdateCycle(
   },
 ): Promise<{ error?: string; adjustedMembers?: number; pickupNotified?: number }> {
   try {
-    const admin = await requireAdmin();
+    const admin = await requireCycleManager(cycleId);
     const db = getDb();
 
     // Load current state so we can decide afterwards whether the cycle is
@@ -879,6 +882,7 @@ export async function adminUpdateCycle(
     if (typeof data.accessLevel === "string") {
       const parsed = normalizeAccessLevel(data.accessLevel);
       if (!parsed) return { error: t.errors.invalidAccessLevel };
+      if (!managesCycle(admin, parsed)) return { error: t.errors.accessLevelNotAllowed };
       accessLevel = parsed;
     }
 
@@ -991,7 +995,7 @@ export async function adminUpdateCycleProduct(
   }
 ): Promise<{ error?: string }> {
   try {
-    const admin = await requireAdmin();
+    const admin = await requireProductManager(productId);
     const db = getDb();
     const pricePerKg =
       data.pricePerKg != null && !Number.isNaN(data.pricePerKg)
@@ -1398,7 +1402,7 @@ export async function adminGetSupplierEmailDefaults(cycleId: string): Promise<
   | { error: string }
 > {
   try {
-    const admin = await requireAdmin();
+    const admin = await requireCycleManager(cycleId);
     const db = getDb();
     const [cycle] = await db
       .select({
@@ -1453,7 +1457,7 @@ export async function adminSendSupplierEmail(
   overrides?: { to?: string; from?: string; cc?: string[]; subject?: string },
 ): Promise<{ ok: true; recipient: string; rowCount: number } | { error: string }> {
   try {
-    const admin = await requireAdmin();
+    const admin = await requireCycleManager(cycleId);
     const db = getDb();
 
     const [cycle] = await db
@@ -1556,7 +1560,7 @@ export async function adminUpdateOrderLineActuals(input: OrderLineActualsInput):
   | { error: string }
 > {
   try {
-    const admin = await requireAdmin();
+    const admin = await requireOrderLineManager(input.orderLineId);
     const result = await applyOrderLineActuals(getDb(), admin.email, input);
     if ("error" in result) return result;
     revalidatePath("/admin");
@@ -1762,7 +1766,7 @@ export async function adminEditClosedOrder(input: EditClosedOrderInput): Promise
   | { error: string }
 > {
   try {
-    const admin = await requireAdmin();
+    const admin = await requireCycleManager(input.cycleId);
     const db = getDb();
     const now = new Date();
 
@@ -2043,7 +2047,7 @@ export type SaveOpenOrderResult =
 
 export async function adminSaveOpenOrder(input: SaveOpenOrderInput): Promise<SaveOpenOrderResult> {
   try {
-    const admin = await requireAdmin();
+    const admin = await requireCycleManager(input.cycleId);
     const db = getDb();
     const now = new Date();
 
@@ -2357,6 +2361,9 @@ export type UpsertMemberInput = {
   // Pay-per-order: the member pays outside the app (Cassa), so orders are
   // confirmed without Stripe and the settlement leaves them out.
   paysOffline?: boolean;
+  // "Referente ordini" (lib/roles.ts AdminAccess): a limited Admin area.
+  // Meaningless for an admin, stored false there. Left out: unchanged.
+  ordersReferent?: boolean;
 };
 
 // Emails and aliases share one namespace (lib/member-email.ts). The message
@@ -2425,6 +2432,9 @@ export async function adminUpsertMember(
             role,
             active: data.active,
             ...(data.paysOffline === undefined ? {} : { paysOffline: data.paysOffline }),
+            ...(data.ordersReferent === undefined && role !== "admin"
+              ? {}
+              : { ordersReferent: role !== "admin" && data.ordersReferent === true }),
             updatedAt: now,
           })
           .where(eq(members.memberId, data.memberId));
@@ -2439,6 +2449,7 @@ export async function adminUpsertMember(
           role,
           active: data.active,
           paysOffline: data.paysOffline ?? false,
+          ordersReferent: role !== "admin" && data.ordersReferent === true,
           createdAt: now,
           updatedAt: now,
         });
@@ -2475,7 +2486,7 @@ export type UpsertSupplierInput = {
 
 export async function adminUpsertSupplier(data: UpsertSupplierInput): Promise<{ error?: string }> {
   try {
-    const admin = await requireAdmin();
+    const admin = await requireOrderManager();
     if (!data.name?.trim()) return { error: t.errors.fieldRequired(t.fields.name) };
 
     const db = getDb();
@@ -2522,7 +2533,7 @@ export async function adminUpsertSupplier(data: UpsertSupplierInput): Promise<{ 
 
 export async function adminArchiveSupplier(supplierId: string, active: boolean): Promise<{ error?: string }> {
   try {
-    const admin = await requireAdmin();
+    const admin = await requireOrderManager();
     const db = getDb();
     await db.update(suppliers).set({ active }).where(eq(suppliers.supplierId, supplierId));
     await writeAudit(db, admin.email, active ? "unarchive_supplier" : "archive_supplier", "supplier", supplierId);
@@ -2535,7 +2546,7 @@ export async function adminArchiveSupplier(supplierId: string, active: boolean):
 
 export async function adminDeleteSupplier(supplierId: string): Promise<{ error?: string }> {
   try {
-    const admin = await requireAdmin();
+    const admin = await requireOrderManager();
     const db = getDb();
     const [cycleCount] = await db
       .select({ n: sql<string>`count(*)` })
@@ -2571,7 +2582,7 @@ export type UpsertCatalogProductInput = {
 
 export async function adminUpsertCatalogProduct(data: UpsertCatalogProductInput): Promise<{error?: string; archived?: boolean}> {
   try {
-    const admin = await requireAdmin();
+    const admin = await requireOrderManager();
     const db = getDb();
     const now = new Date();
 
@@ -2663,7 +2674,7 @@ export async function adminUpsertCatalogProduct(data: UpsertCatalogProductInput)
 
 export async function adminArchiveCatalogProduct(catalogProductId: string, active: boolean): Promise<{error?: string}> {
   try {
-    const admin = await requireAdmin();
+    const admin = await requireOrderManager();
     const db = getDb();
     await db.update(supplierProducts).set({ active, archivedAt: active ? null : new Date() }).where(eq(supplierProducts.catalogProductId, catalogProductId));
     await writeAudit(db, admin.email, active ? "unarchive_catalog_product" : "archive_catalog_product", "catalog", catalogProductId);
@@ -2677,7 +2688,7 @@ export async function adminArchiveCatalogProduct(catalogProductId: string, activ
 export async function adminLoadFromCatalog(cycleId: string, catalogProductIds: string[]): Promise<{error?: string; count?: number}> {
   try {
     if (!catalogProductIds.length) return { error: t.errors.noProductsSelected };
-    const admin = await requireAdmin();
+    const admin = await requireCycleManager(cycleId);
     const db = getDb();
 
     const selectedProducts = await db
@@ -2713,7 +2724,7 @@ export async function adminLoadFromCatalog(cycleId: string, catalogProductIds: s
 
 export async function adminRemoveProductFromCycle(productId: string): Promise<{error?: string}> {
   try {
-    const admin = await requireAdmin();
+    const admin = await requireProductManager(productId);
     const db = getDb();
     await db.delete(products).where(eq(products.productId, productId));
     await writeAudit(db, admin.email, "remove_product_from_cycle", "product", productId);
@@ -2727,7 +2738,7 @@ export async function adminRemoveProductFromCycle(productId: string): Promise<{e
 
 export async function adminGetCatalogBySupplier(supplierId: string) {
   try {
-    await requireAdmin();
+    await requireOrderManager();
     const { getCatalogBySupplier } = await import("@/lib/db/queries");
     return await getCatalogBySupplier(supplierId);
   } catch (e) {
@@ -2737,7 +2748,7 @@ export async function adminGetCatalogBySupplier(supplierId: string) {
 
 export async function adminGetCycleProductsForReview(cycleId: string) {
   try {
-    await requireAdmin();
+    await requireCycleManager(cycleId);
     const { getCycleProductsForReview } = await import("@/lib/db/queries");
     return await getCycleProductsForReview(cycleId);
   } catch (e) {
@@ -2755,7 +2766,7 @@ export async function adminBuildSupplierDistinta(
   cycleId: string,
 ): Promise<{ ok: true; filename: string; base64: string } | { error: string }> {
   try {
-    await requireAdmin();
+    await requireCycleManager(cycleId);
     const { buildSupplierDistinta } = await import("@/lib/csv/distinta-builder");
     const r = await buildSupplierDistinta(cycleId);
     return { ok: true, filename: r.filename, base64: r.content.toString("base64") };
@@ -2778,7 +2789,7 @@ export async function adminPreviewDistintaImport(input: {
   | { error: string }
 > {
   try {
-    await requireAdmin();
+    await requireCycleManager(input.cycleId);
     const { decodeUploadBase64 } = await import("@/lib/upload-limit");
     const buf = decodeUploadBase64(input.fileBase64);
     const { parseSupplierDistinta } = await import("@/lib/csv/distinta-parser");
@@ -2812,7 +2823,7 @@ export async function adminApplyDistintaImport(input: {
   | { error: string; warnings?: string[]; errors?: string[] }
 > {
   try {
-    const admin = await requireAdmin();
+    const admin = await requireCycleManager(input.cycleId);
     const { decodeUploadBase64 } = await import("@/lib/upload-limit");
     const buf = decodeUploadBase64(input.fileBase64);
     const { parseSupplierDistinta } = await import("@/lib/csv/distinta-parser");

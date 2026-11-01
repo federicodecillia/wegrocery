@@ -8,7 +8,7 @@ import { FinishSetup } from "@/components/admin/setup/finish-setup";
 import { SetupChecks } from "@/components/admin/setup/setup-checks";
 import { IdentitySection, PaymentSettingsSection } from "@/components/admin/tab-impostazioni";
 import { SETUP_STEPS, setupHref, stepIndex } from "@/lib/admin/setup-steps";
-import { checkAccess } from "@/lib/auth/access";
+import { adminAccess, checkAccess } from "@/lib/auth/access";
 import { requireUserSession } from "@/lib/auth/session";
 import { getConfigStatus } from "@/lib/config-status-server";
 import { getAppBaseUrl } from "@/lib/email/base-url";
@@ -31,7 +31,7 @@ export default async function SetupPage({ searchParams }: { searchParams: Promis
   const next = index < SETUP_STEPS.length - 1 ? SETUP_STEPS[index + 1] : null;
 
   return (
-    <AppShell email={session.user.email} name={session.user.fullName} isAdmin memberId={session.user.memberId!} personId={session.user.personId}>
+    <AppShell email={session.user.email} name={session.user.fullName} admin={adminAccess(session.user)} memberId={session.user.memberId!} personId={session.user.personId}>
       <p className="font-mono text-label uppercase tracking-[0.1em] text-secondary-foreground">{s.stepOf(index + 1, SETUP_STEPS.length)}</p>
       <h1 className="mt-1 text-title font-black text-foreground">{s.steps[step]}</h1>
       {index === 0 && <p className="mt-2 text-[14px] text-secondary-foreground">{s.intro}</p>}

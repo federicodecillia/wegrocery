@@ -27,6 +27,9 @@ export const members = pgTable(
     // 'admin' | 'attivi' | 'utenti' (CHECK since migration 0015). Read it through
     // normalizeRole (lib/roles.ts), which also maps the pre-0015 values.
     role: text("role").notNull(),
+    // "Referente ordini" (drizzle/0047_orders_referent.sql): a limited Admin
+    // area, separate from the cycles the role lets them see (lib/roles.ts).
+    ordersReferent: boolean("orders_referent").notNull().default(false),
     active: boolean("active").notNull().default(true),
     // Last WallyFor membership-card check (migration 0014): 'valid' | 'invalid',
     // NULL = never checked (always NULL on deploys without WALLYFOR_* env).

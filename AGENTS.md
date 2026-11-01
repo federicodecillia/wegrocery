@@ -360,6 +360,22 @@ all in `lib/roles.ts`:
 | `attivi` | "Attivi" (active members) | "Attivi": attivi + admin |
 | `utenti` | "Utenti" (default, auto-provisioning) | "Utenti (tutti)": everyone, the default for new cycles |
 
+**Admin access is a second axis** (migration 0047, `members.orders_referent`):
+`adminAccessFor(role, ordersReferent)` in `lib/roles.ts` gives `admin` (the
+role admin: everything), `referent` ("Referente ordini") or none. A referent
+opens Admin → Ciclo (only the cycles their role sees, `managesCycle` in
+`lib/auth/manager.ts`; no Conti view, no settlement or cancelling), Catalogo,
+Soci read only (no balances, orders or editing) and the admin guide; never
+Cassa, Statistiche, Impostazioni or the setup wizard (`REFERENT_SECTIONS`,
+`sectionAllowed` in `lib/admin/nav.ts`). Guards: `requireAdmin` (admins only),
+`requireOrderManager` (admin or referent: catalogue), `requireCycleManager` /
+`requireProductManager` / `requireOrderLineManager` (admin, or a referent on a
+cycle they see; another cycle reads as not found). A referent may give a cycle
+only an access level they see themselves. The flag is the person's own (the
+Admin area is personal, also in a family) and is stored false for an admin.
+Pages pass `admin={adminAccess(session.user)}` to `AppShell` (the Admin item
+and its sections).
+
 - Always go through `normalizeRole` / `normalizeAccessLevel` /
   `canAccessCycle` / `getRoleLabel` / `getAccessLabel`; never compare raw
   strings other than `role === "admin"`. Admin actions reject unknown values.
@@ -372,7 +388,7 @@ all in `lib/roles.ts`:
 
 | Table | Purpose |
 |---|---|
-| `members` | User registry; `role`: admin / attivi / utenti; `merged_into` on an account absorbed by a merge (see Member merge); `household_of` on a person who joined a family (see Families); `welcome_dismissed_at` when the person closed the welcome card on Home (migration 0031, `lib/guide/welcome.ts`; `/?benvenuto=1` shows it again) and `welcome_step` where they stopped (migration 0036, `saveWelcomeStep`) |
+| `members` | User registry; `role`: admin / attivi / utenti; `orders_referent` the "Referente ordini" flag (migration 0047, see Role System); `merged_into` on an account absorbed by a merge (see Member merge); `household_of` on a person who joined a family (see Families); `welcome_dismissed_at` when the person closed the welcome card on Home (migration 0031, `lib/guide/welcome.ts`; `/?benvenuto=1` shows it again) and `welcome_step` where they stopped (migration 0036, `saveWelcomeStep`) |
 | `order_cycles` | Weekly order windows; one `open` at a time |
 | `products` | Per-cycle product list |
 | `orders` | Order lines per member per cycle |
@@ -750,7 +766,7 @@ Key patterns:
 
 - `AppShell` is an **async Server Component** (fetches unread notification count). Don't convert to Client Component.
 - Every page that renders `AppShell` must pass `memberId={session.user.memberId!}`.
-- All Server Actions use `requireUserSession()` / `requireAdmin()` — never trust client payloads for auth.
+- All Server Actions use `requireUserSession()` / `requireAdmin()` / the manager guards of `lib/auth/manager.ts` — never trust client payloads for auth.
 - `revalidatePath()` must be called after mutations so Server Components re-fetch fresh data.
 
 <!-- BEGIN:nextjs-agent-rules -->

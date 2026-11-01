@@ -8,7 +8,7 @@ import { confirm } from "@/components/ui/confirm-dialog";
 import { adminDeleteMember, adminInviteMember, adminUpsertMember, type UpsertMemberInput } from "@/lib/actions/admin";
 import { adminUnlinkFamilyMember } from "@/lib/actions/family";
 import { formatDate } from "@/lib/utils";
-import { DEFAULT_ROLE, ROLES, getRoleLabel, normalizeRole, type Role } from "@/lib/roles";
+import { DEFAULT_ROLE, ROLES, adminAccessFor, getRoleLabel, normalizeRole, type AdminAccess, type Role } from "@/lib/roles";
 import { t } from "@/lib/i18n";
 import { useCloseCreate } from "./create-toggle";
 import { adminHref } from "@/lib/admin/nav";
@@ -26,6 +26,8 @@ type Member = {
   email: string;
   aliasEmail: string | null;
   role: string;
+  /** "Referente ordini" (members.orders_referent). */
+  ordersReferent?: boolean;
   active: boolean;
   paysOffline?: boolean;
   lastLoginAt?: string | null;
@@ -56,6 +58,11 @@ export function SociForm({
   const close = onClose ?? closeCreate;
   const [isPending, startTransition] = useTransition();
   const isEdit = !!member;
+  // Two axes (lib/roles.ts): what the person may do in the app, and which
+  // cycles they see. An admin sees every cycle, so the second one locks.
+  const startRole = normalizeRole(member?.role) ?? DEFAULT_ROLE;
+  const [access, setAccess] = useState<AdminAccess | "none">(adminAccessFor(startRole, member?.ordersReferent) ?? "none");
+  const [visibility, setVisibility] = useState<Exclude<Role, "admin">>(startRole === "admin" ? "attivi" : startRole);
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -65,7 +72,8 @@ export function SociForm({
       fullName: fd.get("fullName") as string,
       email: fd.get("email") as string,
       aliasEmail: (fd.get("aliasEmail") as string) || undefined,
-      role: fd.get("role") as string,
+      role: access === "admin" ? "admin" : visibility,
+      ordersReferent: access === "referent",
       active: fd.get("active") === "true",
       // Left out when the option is hidden, so the saved value stays.
       paysOffline: offlineOption ? fd.get("paysOffline") === "on" : undefined,
@@ -89,7 +97,11 @@ export function SociForm({
         }
         toast.success(isEdit ? t.admin.members.memberUpdated : t.admin.members.memberAdded);
         close?.();
-        if (!isEdit) (e.target as HTMLFormElement).reset();
+        if (!isEdit) {
+          (e.target as HTMLFormElement).reset();
+          setAccess("none");
+          setVisibility(DEFAULT_ROLE === "admin" ? "attivi" : DEFAULT_ROLE);
+        }
       } catch (err) {
         toast.error(err instanceof Error ? err.message : t.admin.common.error);
       }
@@ -149,23 +161,44 @@ export function SociForm({
             />
           </label>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid gap-3 sm:grid-cols-2">
           <div>
             <label className="block">
               <span className="block mb-1 text-label font-semibold uppercase tracking-wide text-secondary-foreground">
-                {t.admin.members.roleLabel}
+                {t.admin.members.accessLabel}
               </span>
-              <NativeSelect
-                name="role"
-                defaultValue={normalizeRole(member?.role) ?? DEFAULT_ROLE}
-              >
-                {ROLES.map((r) => (
-                  <option key={r} value={r}>
-                    {t.roles[r]}
-                  </option>
-                ))}
+              <NativeSelect name="access" value={access} onChange={(e) => setAccess(e.target.value as AdminAccess | "none")}>
+                <option value="none">{t.adminAccess.none}</option>
+                <option value="referent">{t.adminAccess.referent}</option>
+                <option value="admin">{t.adminAccess.admin}</option>
               </NativeSelect>
             </label>
+            <p className="mt-1 text-label text-muted-foreground">{t.admin.members.accessHint[access]}</p>
+          </div>
+          <div>
+            <label className="block">
+              <span className="block mb-1 text-label font-semibold uppercase tracking-wide text-secondary-foreground">
+                {t.admin.members.visibilityLabel}
+              </span>
+              {access === "admin" ? (
+                <NativeSelect name="visibility" value="admin" disabled>
+                  <option value="admin">{t.admin.members.visibilityAll}</option>
+                </NativeSelect>
+              ) : (
+                <NativeSelect
+                  name="visibility"
+                  value={visibility}
+                  onChange={(e) => setVisibility(e.target.value as Exclude<Role, "admin">)}
+                >
+                  {ROLES.filter((r): r is Exclude<Role, "admin"> => r !== "admin").map((r) => (
+                    <option key={r} value={r}>
+                      {t.roles[r]}
+                    </option>
+                  ))}
+                </NativeSelect>
+              )}
+            </label>
+            <p className="mt-1 text-label text-muted-foreground">{t.admin.members.visibilityHint}</p>
           </div>
           <div>
             <label className="block">
@@ -214,9 +247,12 @@ export function SociList({
   members,
   offlineOption = false,
   duplicates = [],
+  readOnly = false,
 }: {
   members: Member[];
   offlineOption?: boolean;
+  /** A "Referente ordini": who the members are, without orders, balances or any editing. */
+  readOnly?: boolean;
   // Possible duplicate accounts (lib/members/duplicates.ts).
   duplicates?: ReadonlyArray<DuplicatePair>;
 }) {
@@ -337,7 +373,12 @@ export function SociList({
                     <span className={`whitespace-nowrap rounded-full px-2 py-0.5 text-label font-semibold ${roleColor}`}>
                       {getRoleLabel(m.role)}
                     </span>
-                    {needsName(m) && (
+                    {m.ordersReferent && normalizeRole(m.role) !== "admin" && (
+                      <span className="whitespace-nowrap rounded-full bg-primary-bg px-2 py-0.5 text-label font-semibold text-primary-text">
+                        {t.adminAccess.referent}
+                      </span>
+                    )}
+                    {!readOnly && needsName(m) && (
                       <span className="rounded-full bg-tint/[0.05] px-1.5 py-0.5 text-label font-semibold text-secondary-foreground">
                         {t.admin.members.nameToComplete}
                       </span>
@@ -365,6 +406,7 @@ export function SociList({
                     </div>
                   )}
                 </div>
+                {!readOnly && (
                 <div className="flex shrink-0 items-center gap-2">
                   <Link
                     href={adminHref("soci", null, { member: m.memberId })}
@@ -418,6 +460,7 @@ export function SociList({
 <Ellipsis aria-hidden className="size-4" />
                   </button>
                 </div>
+                )}
               </div>
             ),
           )}
@@ -436,7 +479,7 @@ export function SociList({
           onChange={(e) => setFilter(e.target.value)}
           className="rounded-xl px-4 py-2.5"
         />
-        {unnamedCount > 0 && (
+        {!readOnly && unnamedCount > 0 && (
           <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
             <button
               type="button"

@@ -1,4 +1,5 @@
 import { AppShell } from "@/components/app-shell";
+import { adminAccess } from "@/lib/auth/access";
 import { ByFlylabs } from "@/components/by-flylabs";
 import { LogoutButton } from "@/components/logout-button";
 import { InstallRow } from "@/components/profile/install-row";
@@ -77,7 +78,7 @@ export default async function ProfilePage() {
           : null;
 
   return (
-    <AppShell email={session.user.email} name={session.user.fullName} isAdmin={role === "admin"} memberId={memberId} personId={personId}>
+    <AppShell email={session.user.email} name={session.user.fullName} admin={adminAccess(session.user)} memberId={memberId} personId={personId}>
       <div className="mb-5 flex items-center gap-4">
         <div
           aria-hidden

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cycleViews, defaultCycleId, filterCycles, groupCycles, resolveCycleView, settlementCandidate, settlementPending, supplierOrderReady } from "./cycle-views";
+import { cycleViews, viewsFor, defaultCycleId, filterCycles, groupCycles, resolveCycleView, settlementCandidate, settlementPending, supplierOrderReady } from "./cycle-views";
 
 const d = (iso: string) => new Date(iso);
 
@@ -12,6 +12,10 @@ describe("cycle views", () => {
 
   it("falls back to the overview for a view the cycle does not have", () => {
     expect(resolveCycleView("open", "conti")).toBe("panoramica");
+    expect(resolveCycleView("closed", "conti", false, "referent")).toBe("panoramica");
+    expect(resolveCycleView("closed", "ritiri", false, "referent")).toBe("ritiri");
+    expect(viewsFor(cycleViews("closed"), "referent")).toEqual(["panoramica", "ordini", "fornitore", "ritiri"]);
+    expect(viewsFor(cycleViews("closed"))).toEqual(cycleViews("closed"));
     expect(resolveCycleView("closed", "ordini")).toBe("ordini");
     expect(resolveCycleView("closed", "nonsense")).toBe("panoramica");
     expect(resolveCycleView("closed", undefined)).toBe("panoramica");

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { adminAccess } from "@/lib/auth/access";
 import { AppShell } from "@/components/app-shell";
 import { BalanceDueCard } from "@/components/balance/balance-due-card";
 import { CycleCountdown } from "@/components/home/cycle-countdown";
@@ -396,7 +397,7 @@ export default async function HomePage({
   );
 
   return (
-    <AppShell email={session.user.email} name={session.user.fullName} isAdmin={role === "admin"} memberId={memberId} personId={session.user.personId} layout="wide">
+    <AppShell email={session.user.email} name={session.user.fullName} admin={adminAccess(session.user)} memberId={memberId} personId={session.user.personId} layout="wide">
       <h1 className="sr-only">{t.nav.home}</h1>
       {role === "admin" && <SetupBanner />}
       {showWelcome && (
