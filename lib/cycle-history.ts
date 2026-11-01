@@ -199,15 +199,20 @@ export function buildCycleHistory(
     });
 }
 
-// The badge of a cycle in the Orders tab. The app does not record the
-// physical pickup, so a closed cycle reads "to pick up" until its last pickup
-// window closes and "done" after it; with no pickup day set it only says the
-// order is closed.
-export type HistoryBadge = "open" | "cancelled" | "toPickUp" | "done" | "closed";
+// The badge of a cycle in the Orders tab. A closed cycle whose pickup an
+// admin marked (Admin → Ciclo → Ritiri) reads "collected"; otherwise it reads
+// "to pick up" until its last pickup window closes and "done" after it (most
+// groups do not mark pickups); with no pickup day set it only says the order
+// is closed.
+export type HistoryBadge = "open" | "cancelled" | "toPickUp" | "pickedUp" | "done" | "closed";
 
-export function historyBadge(entry: Pick<CycleHistoryEntry, "status" | "pickupEndsAt">, now: Date): HistoryBadge {
+export function historyBadge(
+  entry: Pick<CycleHistoryEntry, "status" | "pickupEndsAt"> & { pickedUpAt?: Date | string | null },
+  now: Date,
+): HistoryBadge {
   if (entry.status === "open") return "open";
   if (entry.status === "cancelled") return "cancelled";
+  if (entry.pickedUpAt) return "pickedUp";
   if (!entry.pickupEndsAt) return "closed";
   return now < entry.pickupEndsAt ? "toPickUp" : "done";
 }

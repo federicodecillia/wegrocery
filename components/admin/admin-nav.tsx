@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { t } from "@/lib/i18n";
-import { ADMIN_GUIDE_HREF, ADMIN_MORE, ADMIN_PRIMARY, ADMIN_VIEWS, adminHelpHref, adminHref, resolveAdminRoute } from "@/lib/admin/nav";
+import { ADMIN_GUIDE_HREF, ADMIN_VIEWS, adminHelpHref, adminHref, adminSectionsFor, resolveAdminRoute } from "@/lib/admin/nav";
 
 function tabClass(active: boolean): string {
   return `flex min-h-(--control-h) items-center justify-center rounded-full px-2 text-center text-[13px] font-semibold transition-colors ${
@@ -29,7 +29,9 @@ function HelpLink({ href }: { href: string }) {
 // The admin bar: Ciclo · Cassa · Soci · Catalogo, then ⋯ (Statistiche,
 // Impostazioni, the admin guide) on a phone, all in line from lg. A section
 // with views shows them as a second, lighter row.
-export function AdminNav() {
+export function AdminNav({ access }: { access: "admin" | "referent" }) {
+  // A "Referente ordini" gets Ciclo · Soci · Catalogo (lib/admin/nav.ts).
+  const { primary: ADMIN_PRIMARY, more: ADMIN_MORE } = adminSectionsFor(access);
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const { section, view } = resolveAdminRoute(

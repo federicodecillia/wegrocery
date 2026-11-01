@@ -68,17 +68,18 @@ export const adminGuideEn: GuideContent = {
       slug: "ruoli",
       topic: "inizio",
       title: "Who can run the group: roles",
-      intro: "Every member has a role: **Admin**, **Active members** or **Users**. Only admins see the Admin area and this guide.",
+      intro: "Every member has two settings: **Access to the app** (Member, **Orders referent** or **Administrator**) and **Cycles they see** (Users or Active members). Only administrators and referents see the Admin area and this guide.",
       steps: [
-        "Open **Members** and tap the member.",
-        "Choose the **Role** and save with **Update**.",
+        "Open **Members** and tap **Edit** on the member.",
+        "Choose **Access to the app** and **Cycles they see**, then save with **Update**.",
       ],
       notes: [
-        "The role also decides which cycles someone can order on: every cycle has an **Access** level (Users, Active members or Admin only).",
-        "It is worth having at least two admins, so the group is not stuck when one is away.",
+        "The **Orders referent** helps with the cycles they see: opens them, changes dates and times, closes them, sends the order to the supplier, uploads the sheet, marks the pickups and runs the catalogue. They see the members read only and have no Treasury, Accounts, Stats or Settings.",
+        "**Cycles they see** decides which cycles someone can order on: every cycle has an **Access** level (Users, Active members or Admin only). An administrator sees them all.",
+        "It is worth having at least two administrators, so the group is not stuck when one is away.",
       ],
       link: { href: "/admin?tab=soci", label: "Open Members" },
-      keywords: ["administrator", "permissions", "appoint", "admin"],
+      keywords: ["administrator", "permissions", "appoint", "admin", "referent", "orders referent", "visibility"],
     },
 
     // The order cycle
@@ -210,6 +211,23 @@ export const adminGuideEn: GuideContent = {
       ],
       link: { href: "/admin?tab=ciclo", label: "Go to the cycles" },
       keywords: ["pickup", "pickup date", "time", "delivery", "collection", "closed cycle"],
+    },
+    {
+      slug: "segnare-ritiri",
+      topic: "ciclo",
+      title: "Mark who collected",
+      intro: "Once the cycle is closed, the **Pickups** tab lists who ordered: you tick who comes to collect and see how far you are at the top, for example **8/10 collected**.",
+      steps: [
+        "Open the closed cycle and tap **Pickups**, or the 📦 counter next to the title.",
+        "When a member collects, tap the tick next to the name: the time is now.",
+        "For another time, to say who collected instead of the member or to add a note, tap the name and then **Save**.",
+      ],
+      notes: [
+        "Ticked by mistake? Tap the tick again or, from the name, **Mark as not collected**. Only admins see the note.",
+        "The member sees in History when they collected; the notice reaches them only if they turned on **Order collected**. After the pickup day, **To do now** lists who is missing and **Settle accounts** warns if someone has not collected yet. Pickups cannot be marked while the cycle is open: close it first.",
+      ],
+      link: { href: "/admin?tab=ciclo", label: "Go to cycles" },
+      keywords: ["collected", "pickups", "who collected", "pickup register", "tick", "delivered", "attendance"],
     },
     {
       slug: "scadenza-passata",
@@ -512,7 +530,7 @@ export const adminGuideEn: GuideContent = {
       steps: [
         "Open **Members** and tap **Add member**.",
         "Write the **Name** and **Email**. If they sign in with a second address, add it as **Secondary email**.",
-        "Leave the **Role** on Users unless needed otherwise, and save.",
+        "Leave **Access to the app** on Member and **Cycles they see** on Users, unless needed otherwise, and save.",
         "Tap **Invite**: the member gets an email with the link to sign in.",
       ],
       notes: ["Each address can belong to one member only."],

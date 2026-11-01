@@ -1,4 +1,5 @@
 import { AppShell } from "@/components/app-shell";
+import { adminAccess } from "@/lib/auth/access";
 import { EmptyIcon } from "@/components/ui-icon";
 import { OrderForm } from "./order-form";
 import { CycleChooser } from "./cycle-chooser";
@@ -49,7 +50,7 @@ export default async function OrdinePage({
   const choice = resolveOrderCycle(activeCycles, searchCycleId);
   if (choice.kind === "choose") {
     return (
-      <AppShell email={session.user.email} name={session.user.fullName} isAdmin={role === "admin"} memberId={memberId} personId={session.user.personId}>
+      <AppShell email={session.user.email} name={session.user.fullName} admin={adminAccess(session.user)} memberId={memberId} personId={session.user.personId}>
         <CycleChooser cycles={activeCycles} />
       </AppShell>
     );
@@ -58,7 +59,7 @@ export default async function OrdinePage({
 
   if (!openCycle) {
     return (
-      <AppShell email={session.user.email} name={session.user.fullName} isAdmin={role === "admin"} memberId={memberId} personId={session.user.personId}>
+      <AppShell email={session.user.email} name={session.user.fullName} admin={adminAccess(session.user)} memberId={memberId} personId={session.user.personId}>
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <EmptyIcon name="cart" />
           <h2 className="text-[18px] font-bold text-foreground">{t.order.noOpenOrders}</h2>
@@ -113,7 +114,7 @@ export default async function OrdinePage({
 
   return (
     // Wide: from lg the form puts the cart beside the catalogue.
-    <AppShell email={session.user.email} name={session.user.fullName} isAdmin={role === "admin"} memberId={memberId} personId={session.user.personId} layout="wide">
+    <AppShell email={session.user.email} name={session.user.fullName} admin={adminAccess(session.user)} memberId={memberId} personId={session.user.personId} layout="wide">
       {notice && (
         <div
           className={`mb-4 rounded-card border py-3 px-3.5 text-[14px] ${

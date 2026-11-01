@@ -1,8 +1,9 @@
 import { Settings } from "lucide-react";
+import { adminAccess } from "@/lib/auth/access";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { t } from "@/lib/i18n";
-import { getUserRole, requireUserSession } from "@/lib/auth/session";
+import { requireUserSession } from "@/lib/auth/session";
 import { getMemberNotifications, notificationOwners } from "@/lib/db/queries";
 import { markAllNotificationsRead } from "@/lib/actions/notifications";
 import { formatTime } from "@/lib/i18n/format";
@@ -15,7 +16,6 @@ export const metadata: Metadata = { title: t.notifications.title };
 
 export default async function NotifichePage() {
   const session = await requireUserSession();
-  const role = getUserRole(session);
   const memberId = session.user.memberId!;
 
   const notifications = await getMemberNotifications(notificationOwners(memberId, session.user.personId), 50);
@@ -23,7 +23,7 @@ export default async function NotifichePage() {
   const unreadCount = notifications.filter((n) => !n.readAt).length;
 
   return (
-    <AppShell email={session.user.email} name={session.user.fullName} isAdmin={role === "admin"} memberId={memberId} personId={session.user.personId}>
+    <AppShell email={session.user.email} name={session.user.fullName} admin={adminAccess(session.user)} memberId={memberId} personId={session.user.personId}>
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2">
           <h1 className="text-title font-black text-foreground">

@@ -4,7 +4,7 @@ import { eq, and, asc, isNull, sql } from "drizzle-orm";
 import { liveLedger } from "@/lib/db/ledger-live";
 import { productDisplayOrder } from "@/lib/db/product-order";
 import { normalizeProductOrder, type ProductOrderMode } from "@/lib/products/cycle-order";
-import { requireAdmin } from "@/lib/auth/session";
+import { requireCycleManager } from "@/lib/auth/manager";
 import { t } from "@/lib/i18n";
 import { getDb } from "@/lib/db/client";
 import {
@@ -18,7 +18,7 @@ import {
 
 export async function adminGetCycleOrderDetails(cycleId: string) {
   try {
-    await requireAdmin();
+    await requireCycleManager(cycleId);
     const db = getDb();
 
     const [rows, shippingRows, handlingRows] = await Promise.all([
@@ -131,7 +131,7 @@ export async function adminGetEditClosedOrderBootstrap(
   memberId: string | null,
 ): Promise<{ data?: EditClosedOrderBootstrap; error?: string }> {
   try {
-    await requireAdmin();
+    await requireCycleManager(cycleId);
     const db = getDb();
 
     const [productRows, lineRows, memberRows, cycleRows] = await Promise.all([

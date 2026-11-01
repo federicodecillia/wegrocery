@@ -23,6 +23,7 @@ import {
 } from "@/lib/actions/admin";
 import { formatEur } from "@/lib/utils";
 import { ACCESS_LEVELS, DEFAULT_ACCESS_LEVEL, getAccessLabel, normalizeAccessLevel } from "@/lib/roles";
+import { useAccessLevels } from "./access-levels";
 import { Card, CardContent } from "@/components/ui/card";
 import type { CatalogProductItem } from "@/lib/db/queries";
 import Link from "next/link";
@@ -59,8 +60,10 @@ export type SerializedCycle = {
   weighingDepositPct?: string | null;
 };
 
-function AccessLevelOptions() {
-  return ACCESS_LEVELS.map((level) => (
+function AccessLevelOptions({ current }: { current?: string }) {
+  const allowed = useAccessLevels();
+  // A cycle keeps showing its own level, even one this person cannot give.
+  return ACCESS_LEVELS.filter((level) => allowed.includes(level) || level === current).map((level) => (
     <option key={level} value={level}>
       {t.cycleAccess[level]}
     </option>
@@ -781,7 +784,7 @@ export function EditCycleForm({
                 name="accessLevel"
                 defaultValue={normalizeAccessLevel(cycle.accessLevel) ?? DEFAULT_ACCESS_LEVEL}
               >
-                <AccessLevelOptions />
+                <AccessLevelOptions current={normalizeAccessLevel(cycle.accessLevel) ?? undefined} />
               </NativeSelect>
             </label>
             <p className="mt-1 text-label text-muted-foreground">{t.admin.cycle.accessHint}</p>

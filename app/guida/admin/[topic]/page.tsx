@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { adminAccess } from "@/lib/auth/access";
 import { notFound } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { GuideArticleCard } from "@/components/guide/guide-article";
@@ -30,7 +31,7 @@ export default async function AdminGuideTopicPage({ params }: { params: Promise<
   const articles = guide.articles.filter((a) => a.topic === topic.id);
 
   return (
-    <AppShell email={session.user.email} name={session.user.fullName} isAdmin memberId={session.user.memberId!} personId={session.user.personId}>
+    <AppShell email={session.user.email} name={session.user.fullName} admin={adminAccess(session.user)} memberId={session.user.memberId!} personId={session.user.personId}>
       <div className="mb-4">
         <BackLink href={ADMIN_GUIDE_HREF}>{t.guide.backToAdminGuide}</BackLink>
       </div>

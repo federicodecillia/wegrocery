@@ -1603,14 +1603,15 @@ export async function getCycleLedgerRows(cycleId: string): Promise<CycleLedgerRo
 
 /**
  * What "Da fare ora" (lib/admin/cycle-phase.ts) needs per cycle: members with
- * an order, whether the order sheet was emailed from the app, and whether any
+ * an order, whether the order sheet was emailed from the app, whether any
  * correction was recorded after the close (a live correction row, an imported
- * supplier sheet, or per-member shipping). Read only.
+ * supplier sheet, or per-member shipping), and how many of those members
+ * collected their order (cycle_pickups). Read only.
  */
 export async function getCycleTaskFacts(cycleIds: string[]): Promise<
-  Map<string, { orderMembers: number; supplierSent: boolean; adjusted: boolean }>
+  Map<string, { orderMembers: number; supplierSent: boolean; adjusted: boolean; pickedUp: number }>
 > {
-  const out = new Map<string, { orderMembers: number; supplierSent: boolean; adjusted: boolean }>();
+  const out = new Map<string, { orderMembers: number; supplierSent: boolean; adjusted: boolean; pickedUp: number }>();
   if (cycleIds.length === 0) return out;
   const ids = sql.join(
     cycleIds.map((id) => sql`${id}`),
@@ -1621,6 +1622,7 @@ export async function getCycleTaskFacts(cycleIds: string[]): Promise<
     order_members: number;
     supplier_sent: boolean;
     adjusted: boolean;
+    picked_up: number;
   }>(sql`
     SELECT c.cycle_id,
       (SELECT count(DISTINCT o.member_id)::int FROM orders o WHERE o.cycle_id = c.cycle_id) AS order_members,
@@ -1630,12 +1632,14 @@ export async function getCycleTaskFacts(cycleIds: string[]): Promise<
         OR EXISTS (SELECT 1 FROM audit_log a WHERE a.entity_type = 'cycle' AND a.entity_id = c.cycle_id
                    AND a.action = 'supplier_distinta_imported')
         OR EXISTS (SELECT 1 FROM ledger_entries l WHERE l.cycle_id = c.cycle_id AND l.type = 'correction'
-                   AND l.reversed_by IS NULL)) AS adjusted
+                   AND l.reversed_by IS NULL)) AS adjusted,
+      (SELECT count(*)::int FROM cycle_pickups p WHERE p.cycle_id = c.cycle_id
+         AND EXISTS (SELECT 1 FROM orders o WHERE o.cycle_id = p.cycle_id AND o.member_id = p.member_id)) AS picked_up
     FROM order_cycles c
     WHERE c.cycle_id IN (${ids})
   `);
   for (const r of rows) {
-    out.set(r.cycle_id, { orderMembers: r.order_members, supplierSent: r.supplier_sent, adjusted: r.adjusted });
+    out.set(r.cycle_id, { orderMembers: r.order_members, supplierSent: r.supplier_sent, adjusted: r.adjusted, pickedUp: r.picked_up });
   }
   return out;
 }

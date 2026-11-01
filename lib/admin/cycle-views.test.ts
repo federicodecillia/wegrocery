@@ -1,17 +1,21 @@
 import { describe, expect, it } from "vitest";
-import { cycleViews, defaultCycleId, filterCycles, groupCycles, resolveCycleView, settlementCandidate, settlementPending, supplierOrderReady } from "./cycle-views";
+import { cycleViews, viewsFor, defaultCycleId, filterCycles, groupCycles, resolveCycleView, settlementCandidate, settlementPending, supplierOrderReady } from "./cycle-views";
 
 const d = (iso: string) => new Date(iso);
 
 describe("cycle views", () => {
   it("offers products only while open, supplier and accounts after the close", () => {
-    expect(cycleViews("open")).toEqual(["panoramica", "prodotti", "ordini"]);
-    expect(cycleViews("closed")).toEqual(["panoramica", "ordini", "fornitore", "conti"]);
+    expect(cycleViews("open")).toEqual(["panoramica", "prodotti", "ordini", "ritiri"]);
+    expect(cycleViews("closed")).toEqual(["panoramica", "ordini", "fornitore", "ritiri", "conti"]);
     expect(cycleViews("cancelled")).toEqual(["panoramica", "ordini", "conti"]);
   });
 
   it("falls back to the overview for a view the cycle does not have", () => {
     expect(resolveCycleView("open", "conti")).toBe("panoramica");
+    expect(resolveCycleView("closed", "conti", false, "referent")).toBe("panoramica");
+    expect(resolveCycleView("closed", "ritiri", false, "referent")).toBe("ritiri");
+    expect(viewsFor(cycleViews("closed"), "referent")).toEqual(["panoramica", "ordini", "fornitore", "ritiri"]);
+    expect(viewsFor(cycleViews("closed"))).toEqual(cycleViews("closed"));
     expect(resolveCycleView("closed", "ordini")).toBe("ordini");
     expect(resolveCycleView("closed", "nonsense")).toBe("panoramica");
     expect(resolveCycleView("closed", undefined)).toBe("panoramica");
@@ -24,7 +28,7 @@ describe("cycle views", () => {
     expect(supplierOrderReady("open", null, now)).toBe(false);
     expect(supplierOrderReady("closed", null, now)).toBe(true);
     expect(supplierOrderReady("cancelled", d("2026-10-01"), now)).toBe(false);
-    expect(cycleViews("open", true)).toEqual(["panoramica", "prodotti", "ordini", "fornitore"]);
+    expect(cycleViews("open", true)).toEqual(["panoramica", "prodotti", "ordini", "fornitore", "ritiri"]);
     expect(resolveCycleView("open", "fornitore", true)).toBe("fornitore");
     expect(resolveCycleView("open", "fornitore")).toBe("panoramica");
   });

@@ -27,6 +27,9 @@ export const members = pgTable(
     // 'admin' | 'attivi' | 'utenti' (CHECK since migration 0015). Read it through
     // normalizeRole (lib/roles.ts), which also maps the pre-0015 values.
     role: text("role").notNull(),
+    // "Referente ordini" (drizzle/0047_orders_referent.sql): a limited Admin
+    // area, separate from the cycles the role lets them see (lib/roles.ts).
+    ordersReferent: boolean("orders_referent").notNull().default(false),
     active: boolean("active").notNull().default(true),
     // Last WallyFor membership-card check (migration 0014): 'valid' | 'invalid',
     // NULL = never checked (always NULL on deploys without WALLYFOR_* env).
@@ -613,6 +616,34 @@ export const notificationPreferences = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
   },
   (table) => [primaryKey({ columns: [table.memberId, table.category] })],
+);
+
+// The pickup register of a closed cycle (drizzle/0046_cycle_pickups.sql,
+// lib/pickups.ts): one row per member (the account that ordered) and cycle
+// once the order was collected; no row = not collected yet.
+export const cyclePickups = pgTable(
+  "cycle_pickups",
+  {
+    cycleId: text("cycle_id")
+      .notNull()
+      .references(() => orderCycles.cycleId, { onDelete: "cascade" }),
+    memberId: text("member_id")
+      .notNull()
+      .references(() => members.memberId, { onDelete: "cascade" }),
+    pickedUpAt: timestamp("picked_up_at", { withTimezone: true }).notNull(),
+    // Who collected it when not the member; free text.
+    collectedBy: text("collected_by"),
+    // For the admins only, never shown to the member.
+    note: text("note"),
+    recordedBy: text("recorded_by").notNull(),
+    recordedAt: timestamp("recorded_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.cycleId, table.memberId] }),
+    index("cycle_pickups_member_idx").on(table.memberId),
+    check("cycle_pickups_collected_by_len", sql`${table.collectedBy} IS NULL OR char_length(${table.collectedBy}) <= 120`),
+    check("cycle_pickups_note_len", sql`${table.note} IS NULL OR char_length(${table.note}) <= 500`),
+  ],
 );
 
 // Possible duplicate accounts an admin marked "not the same person"

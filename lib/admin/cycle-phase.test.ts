@@ -13,6 +13,8 @@ const facts = (over: Partial<CycleFacts>): CycleFacts => ({
   supplierSent: false,
   adjusted: false,
   settlementPending: false,
+  pickupDate: null,
+  pickedUp: 0,
   ...over,
 });
 
@@ -27,6 +29,24 @@ describe("cycleSteps", () => {
     expect(cycleSteps(facts({ settlementPending: true }), now)).toEqual(["to_send", "to_adjust", "to_settle"]);
     expect(cycleSteps(facts({ supplierSent: true }), now)).toEqual(["to_adjust"]);
     expect(cycleSteps(facts({ supplierSent: true, adjusted: true }), now)).toEqual([]);
+  });
+
+  it("asks to mark the pickups once the first pickup has started", () => {
+    const done = { supplierSent: true, adjusted: true };
+    expect(cycleSteps(facts({ ...done, pickupDate: h(2) }), now)).toEqual([]);
+    expect(cycleSteps(facts({ ...done, pickupDate: h(-2), pickedUp: 1 }), now)).toEqual(["to_collect"]);
+    expect(cycleSteps(facts({ ...done, pickupDate: h(-2), pickedUp: 3 }), now)).toEqual([]);
+    expect(cycleSteps(facts({ ...done, pickupDate: null }), now)).toEqual([]);
+    expect(cycleSteps(facts({ pickupDate: h(-2), settlementPending: true }), now)).toEqual([
+      "to_send",
+      "to_adjust",
+      "to_collect",
+      "to_settle",
+    ]);
+    expect(cycleSteps(facts({ ...done, status: "cancelled", pickupDate: h(-2) }), now)).toEqual([]);
+    expect(cycleSteps(facts({ ...done, closedAt: h(-24 * 15), pickupDate: h(-2) }), now)).toEqual([]);
+    const [task] = cycleTasks([facts({ ...done, pickupDate: h(-2), pickedUp: 1 })], now);
+    expect(task.toCollect).toBe(2);
   });
 
   it("old or empty cycles only keep the settlement", () => {

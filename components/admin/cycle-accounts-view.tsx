@@ -21,10 +21,13 @@ export async function CycleAccountsView({
   cycle,
   settledAt,
   settlement,
+  notCollected = 0,
 }: {
   cycle: SerializedCycle;
   settledAt: string | null;
   settlement: SettlementStatus | null;
+  /** Members still to collect, once some pickups were marked: a warning before "Chiudi i conti". */
+  notCollected?: number;
 }) {
   const money = summarizeCycleMoney(await getCycleLedgerRows(cycle.cycleId));
   const a = t.admin.workspace.accounts;
@@ -41,7 +44,13 @@ export async function CycleAccountsView({
             <CardContent>
               <h3 className="text-[14px] font-bold text-foreground">{a.settleTitle}</h3>
               <p className="mt-1 mb-3 max-w-prose text-[13px] text-secondary-foreground">{w.accountsIntro}</p>
-              <SettleCycleButton cycleId={cycle.cycleId} cycleTitle={cycle.title} settledAt={settledAt} status={settlement} />
+              <SettleCycleButton
+                cycleId={cycle.cycleId}
+                cycleTitle={cycle.title}
+                settledAt={settledAt}
+                status={settlement}
+                notCollected={notCollected}
+              />
             </CardContent>
           </Card>
         )}

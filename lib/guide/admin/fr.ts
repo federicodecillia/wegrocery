@@ -67,18 +67,19 @@ export const adminGuideFr: GuideContent = {
     {
       slug: "ruoli",
       topic: "inizio",
-      title: "Qui peut gérer le groupe : les rôles",
-      intro: "Chaque membre a un rôle : **Admin**, **Membres actifs** ou **Utilisateurs**. Seuls les admins voient l'espace Admin et ce guide.",
+      title: "Qui peut gérer le groupe : les rôles",
+      intro: "Chaque membre a deux réglages : **Accès à l'app** (Membre, **Référent commandes** ou **Administrateur**) et **Cycles visibles** (Utilisateurs ou Membres actifs). Seuls les administrateurs et les référents voient l'espace Admin et ce guide.",
       steps: [
-        "Ouvrez **Membres** et touchez le membre.",
-        "Choisissez le **Rôle** et enregistrez avec **Mettre à jour**.",
+        "Ouvrez **Membres** et touchez **Modifier** sur le membre.",
+        "Choisissez **Accès à l'app** et **Cycles visibles**, puis enregistrez avec **Mettre à jour**.",
       ],
       notes: [
-        "Le rôle décide aussi sur quels cycles une personne peut commander : chaque cycle a un niveau d'**Accès** (Utilisateurs, Membres actifs ou Admin uniquement).",
-        "Mieux vaut avoir au moins deux admins, pour que le groupe ne soit pas bloqué quand l'un est absent.",
+        "Le **Référent commandes** aide pour les cycles qu'il voit : il les ouvre, change dates et heures, les clôture, envoie la commande au fournisseur, importe le fichier, marque les retraits et gère le catalogue. Il voit les membres en lecture seule et n'a ni Caisse, ni Comptes, ni Statistiques, ni Réglages.",
+        "**Cycles visibles** décide sur quels cycles une personne peut commander : chaque cycle a un niveau d'**Accès** (Utilisateurs, Membres actifs ou Admin uniquement). Un administrateur les voit tous.",
+        "Mieux vaut avoir au moins deux administrateurs, pour que le groupe ne soit pas bloqué quand l'un est absent.",
       ],
       link: { href: "/admin?tab=soci", label: "Ouvrir Membres" },
-      keywords: ["administrateur", "autorisations", "nommer", "admin"],
+      keywords: ["administrateur", "autorisations", "nommer", "admin", "référent", "référent commandes", "visibilité"],
     },
 
     // Le cycle de commande
@@ -210,6 +211,23 @@ export const adminGuideFr: GuideContent = {
       ],
       link: { href: "/admin?tab=ciclo", label: "Aller aux cycles" },
       keywords: ["retrait", "date de retrait", "heure", "livraison", "cycle clôturé"],
+    },
+    {
+      slug: "segnare-ritiri",
+      topic: "ciclo",
+      title: "Marquer qui a retiré",
+      intro: "Une fois le cycle clôturé, l'onglet **Retraits** liste qui a commandé : vous cochez qui passe retirer et voyez en haut où vous en êtes, par exemple **8/10 retirées**.",
+      steps: [
+        "Ouvrez le cycle clôturé et touchez **Retraits**, ou le compteur 📦 à côté du titre.",
+        "Quand un membre retire, touchez la coche à côté du nom : l'heure est maintenant.",
+        "Pour une autre heure, pour indiquer qui a retiré à la place du membre ou pour une note, touchez le nom puis **Enregistrer**.",
+      ],
+      notes: [
+        "Coché par erreur ? Touchez de nouveau la coche ou, depuis le nom, **Marquer comme non retirée**. Seuls les admins voient la note.",
+        "Le membre voit dans l'Historique quand il a retiré ; l'avis ne lui arrive que s'il a activé **Commande retirée**. Après le jour de retrait, **À faire maintenant** rappelle qui manque et **Solder les comptes** prévient si quelqu'un n'a pas encore retiré. Les retraits ne se marquent pas tant que le cycle est ouvert : clôturez-le d'abord.",
+      ],
+      link: { href: "/admin?tab=ciclo", label: "Aller aux cycles" },
+      keywords: ["retirée", "retraits", "qui a retiré", "registre des retraits", "coche", "livré", "présences"],
     },
     {
       slug: "scadenza-passata",
@@ -512,7 +530,7 @@ export const adminGuideFr: GuideContent = {
       steps: [
         "Ouvrez **Membres** et touchez **Ajouter un membre**.",
         "Écrivez le **Nom** et l'**Email**. S'il se connecte avec une deuxième adresse, ajoutez-la comme **Email secondaire**.",
-        "Laissez le **Rôle** sur Utilisateurs sauf besoin contraire, et enregistrez.",
+        "Laissez **Accès à l'app** sur Membre et **Cycles visibles** sur Utilisateurs, sauf besoin contraire, et enregistrez.",
         "Touchez **Inviter** : le membre reçoit un email avec le lien pour se connecter.",
       ],
       notes: ["Chaque adresse ne peut appartenir qu'à un seul membre."],

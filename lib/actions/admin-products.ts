@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { eq } from "drizzle-orm";
-import { requireAdmin } from "@/lib/auth/session";
+import { requireOrderManager } from "@/lib/auth/session";
 import { t } from "@/lib/i18n";
 import { getDb } from "@/lib/db/client";
 import { supplierProducts, auditLog, suppliers } from "@/lib/db/schema";
@@ -25,7 +25,7 @@ function genId(prefix: string): string {
 
 export async function adminImportProductsCsv(supplierId: string, csvText: string) {
   try {
-    const admin = await requireAdmin();
+    const admin = await requireOrderManager();
     const db = getDb();
     const now = new Date();
 
@@ -131,7 +131,7 @@ export async function adminBuildProductTemplate(): Promise<
   | { error: string }
 > {
   try {
-    await requireAdmin();
+    await requireOrderManager();
     const buf = await buildProductTemplate();
     return { base64: buf.toString("base64"), filename: "template_prodotti.xlsx" };
   } catch (e) {
@@ -141,7 +141,7 @@ export async function adminBuildProductTemplate(): Promise<
 
 export async function adminImportProductsXlsx(supplierId: string, base64: string) {
   try {
-    const admin = await requireAdmin();
+    const admin = await requireOrderManager();
     const db = getDb();
     const now = new Date();
 
@@ -206,7 +206,7 @@ export async function adminInspectSupplierListing(
   base64: string,
 ): Promise<{ data?: WizardInspectionResult; error?: string }> {
   try {
-    await requireAdmin();
+    await requireOrderManager();
     if (!filename || !base64) return { error: t.errors.fileMissing };
 
     const buf = decodeUploadBase64(base64);
@@ -370,7 +370,7 @@ export async function adminApplySupplierListingImport(
   input: WizardApplyInput,
 ): Promise<{ data?: { added: number; updated: number; skipped: number; invalid: number; addedToCycle: number }; error?: string }> {
   try {
-    const admin = await requireAdmin();
+    const admin = await requireOrderManager();
     if (input.mapping.name === undefined || input.mapping.unitPrice === undefined) {
       return { error: t.errors.mapNameAndPrice };
     }

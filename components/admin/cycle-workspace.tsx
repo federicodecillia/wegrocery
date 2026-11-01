@@ -22,10 +22,13 @@ import { t } from "@/lib/i18n";
 import { formatDate } from "@/lib/i18n/format";
 import { formatDeadline } from "@/lib/i18n/deadline";
 import { adminHref } from "@/lib/admin/nav";
-import { CYCLE_VIEW_LABELS, cycleViews, defaultCycleId, resolveCycleView, settlementCandidate, settlementPending, supplierOrderReady, type CycleView } from "@/lib/admin/cycle-views";
+import { CYCLE_VIEW_LABELS, cycleViews, defaultCycleId, resolveCycleView, settlementCandidate, settlementPending, supplierOrderReady, viewsFor, type CycleView } from "@/lib/admin/cycle-views";
 import { CycleTodo } from "./cycle-todo";
 import { TASK_WINDOW_DAYS, cycleTasks } from "@/lib/admin/cycle-phase";
 import { findDuplicatePairs } from "@/lib/members/duplicates";
+import { managesCycle } from "@/lib/auth/manager";
+import { ACCESS_LEVELS, type Role } from "@/lib/roles";
+import { AccessLevelsProvider } from "./access-levels";
 import {
   CloseCycleAction,
   CreateCycleForm,
@@ -40,23 +43,35 @@ import { CycleAccountsView } from "./cycle-accounts-view";
 import { SupplierSteps } from "./supplier-steps";
 import { CycleList, CyclePicker, type CycleListItem, type SettleState } from "./cycle-list";
 import { CycleOrdersView } from "./cycle-orders-view";
+import { CyclePickupsView } from "./cycle-pickups-view";
+import { RichText } from "@/components/guide/rich-text";
+import { getCyclePickups } from "@/lib/db/pickups";
+import { pickupProgressLabel } from "@/lib/pickups";
 
 type Props = {
   cycleId?: string;
   view: CycleView | null;
   /** "+ Nuovo ciclo": the creation form, open. */
   creating: boolean;
+  /** "referent": a "Referente ordini", on the cycles their role sees, without the accounts. */
+  access?: "admin" | "referent";
+  /** The session's role: the cycles a referent sees and the levels they may give. */
+  role?: Role | null;
 };
 
 // Admin → Ciclo: one cycle at a time. On the left (on a phone or tablet, a
 // sheet opened from the top row, next to "+ Nuovo ciclo") every cycle, then
-// the chosen one's header with its main action, and its views: Panoramica · Prodotti · Ordini while open (plus Fornitore past the order
-// deadline), Panoramica · Ordini · Fornitore · Conti once closed.
-export async function CycleWorkspace({ cycleId: asked, view: askedView, creating }: Props) {
-  const [cycles, suppliers, settings] = await Promise.all([getAllCycles(1000), getAllSuppliers(), getPaymentSettings()]);
+// the chosen one's header with its main action, and its views: Panoramica · Prodotti · Ordini · Ritiri while open (plus Fornitore past the order
+// deadline), Panoramica · Ordini · Fornitore · Ritiri · Conti once closed.
+export async function CycleWorkspace({ cycleId: asked, view: askedView, creating, access = "admin", role = null }: Props) {
+  const referent = access === "referent";
+  const [allCycles, suppliers, settings] = await Promise.all([getAllCycles(1000), getAllSuppliers(), getPaymentSettings()]);
+  // A referent sees the cycles their role sees as a member, nothing more.
+  const cycles = referent ? allCycles.filter((c) => managesCycle({ access, role }, c.accessLevel)) : allCycles;
+  const accessLevels = ACCESS_LEVELS.filter((level) => managesCycle({ access, role }, level));
   const selectedId = creating ? null : defaultCycleId(cycles, asked);
   const cycle = cycles.find((c) => c.cycleId === selectedId) ?? null;
-  const view = cycle ? resolveCycleView(cycle.status, askedView, supplierOrderReady(cycle.status, cycle.orderCloseAt)) : null;
+  const view = cycle ? resolveCycleView(cycle.status, askedView, supplierOrderReady(cycle.status, cycle.orderCloseAt), access) : null;
 
   // Card cycles closed or cancelled, unsettled or settled lately: whether
   // their accounts still ask for "Chiudi i conti" (a correction or a failed
@@ -65,7 +80,8 @@ export async function CycleWorkspace({ cycleId: asked, view: askedView, creating
   const settleStates = new Map(
     await Promise.all(
       cycles
-        .filter((c) => settlementCandidate(c, now))
+        // The accounts are the admins': a referent is not asked to settle.
+        .filter((c) => !referent && settlementCandidate(c, now))
         .map(async (c) => [c.cycleId, await getSettlementStatus(getDb(), c.cycleId)] as const),
     ),
   );
@@ -94,9 +110,10 @@ export async function CycleWorkspace({ cycleId: asked, view: askedView, creating
   );
   const [taskFacts, refunds, allMembers, dismissed] = await Promise.all([
     getCycleTaskFacts(inScope.map((c) => c.cycleId)),
-    getRequestedRefundCount(),
-    getAllMembers(),
-    getDismissedDuplicatePairs(),
+    // Cassa and Soci are the admins': a referent gets neither nudge.
+    referent ? 0 : getRequestedRefundCount(),
+    referent ? [] : getAllMembers(),
+    referent ? new Set<string>() : getDismissedDuplicatePairs(),
   ]);
   const tasks = cycleTasks(
     inScope.map((c) => {
@@ -111,6 +128,8 @@ export async function CycleWorkspace({ cycleId: asked, view: askedView, creating
         supplierSent: f?.supplierSent ?? false,
         adjusted: f?.adjusted ?? false,
         settlementPending: settlementPending(settleStates.get(c.cycleId) ?? null),
+        pickupDate: c.pickupDate,
+        pickedUp: f?.pickedUp ?? 0,
       };
     }),
     now,
@@ -122,6 +141,7 @@ export async function CycleWorkspace({ cycleId: asked, view: askedView, creating
   ).length;
 
   return (
+    <AccessLevelsProvider levels={accessLevels}>
     <div>
       <div className="mb-3 flex gap-2 lg:hidden">
         <div className="min-w-0 flex-1">
@@ -142,13 +162,14 @@ export async function CycleWorkspace({ cycleId: asked, view: askedView, creating
         </aside>
         <div className="min-w-0">
           {cycle && view ? (
-            <SelectedCycle cycle={cycle} view={view} suppliers={suppliers} />
+            <SelectedCycle cycle={cycle} view={view} suppliers={suppliers} access={access} />
           ) : (
             <NewCycle suppliers={suppliers} settings={settings} empty={cycles.length === 0} />
           )}
         </div>
       </div>
     </div>
+    </AccessLevelsProvider>
   );
 }
 
@@ -231,19 +252,23 @@ async function SelectedCycle({
   cycle: c,
   view,
   suppliers,
+  access,
 }: {
   cycle: FullCycle;
   view: CycleView;
   suppliers: { supplierId: string; name: string }[];
+  access: "admin" | "referent";
 }) {
   const cycle = serialize(c);
   const w = t.admin.workspace;
   const isOpen = c.status === "open";
   const perOrder = c.paymentMode === "per_order";
-  const [rawStats, settlement] = await Promise.all([
+  const [rawStats, settlement, pickups] = await Promise.all([
     isOpen ? getOpenCycleStats(c.cycleId) : null,
-    perOrder && !isOpen ? getSettlementStatus(getDb(), c.cycleId) : null,
+    perOrder && !isOpen && access === "admin" ? getSettlementStatus(getDb(), c.cycleId) : null,
+    c.status === "closed" ? getCyclePickups(c.cycleId) : [],
   ]);
+  const collected = pickups.filter((p) => p.pickedUpAt).length;
   const stats = {
     orderCount: rawStats?.orderCount ?? 0,
     grandTotal: rawStats?.grandTotal ?? 0,
@@ -264,6 +289,17 @@ async function SelectedCycle({
               {isOpen ? t.admin.cycle.openBadge : c.status === "cancelled" ? t.admin.cycle.cancelledBadge : t.admin.cycle.closedBadge}
             </Badge>
             {perOrder && <Badge variant="brand">💳 {t.admin.cycle.cardBadge}</Badge>}
+            {pickups.length > 0 && (
+              // The pickup counter: a link to Ritiri, so not a Badge (a status, never clickable).
+              <Link
+                href={adminHref("ciclo", "ritiri", { cycle: c.cycleId })}
+                className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-label font-semibold tabular-nums underline-offset-2 hover:underline ${
+                  collected >= pickups.length ? "border-accent/20 bg-accent-bg text-accent-text" : "border-border bg-tint/[0.04] text-secondary-foreground"
+                }`}
+              >
+                📦 {pickupProgressLabel({ done: collected, total: pickups.length })}
+              </Link>
+            )}
           </div>
           <h2 id="cycle-title" className="text-[18px] font-black text-foreground">
             {c.title}
@@ -279,7 +315,7 @@ async function SelectedCycle({
       </header>
 
       <nav aria-label={t.admin.nav.views} className="mb-4 flex gap-4 overflow-x-auto border-b border-border px-1 [scrollbar-width:none]">
-        {cycleViews(c.status, supplierOrderReady(c.status, c.orderCloseAt)).map((v) => (
+        {viewsFor(cycleViews(c.status, supplierOrderReady(c.status, c.orderCloseAt)), access).map((v) => (
           <Link
             key={v}
             href={adminHref("ciclo", v, { cycle: c.cycleId })}
@@ -325,8 +361,29 @@ async function SelectedCycle({
           </Card>
         ))}
 
+      {view === "ritiri" &&
+        (isOpen ? (
+          <Card>
+            <CardContent>
+              <h3 className="text-[14px] font-bold text-foreground">{t.admin.pickups.openTitle}</h3>
+              <p className="mt-1 mb-3 max-w-prose text-[13px] text-secondary-foreground">
+                <RichText text={t.admin.pickups.openHint} />
+              </p>
+              <CloseCycleAction cycle={cycle} stats={stats} />
+            </CardContent>
+          </Card>
+        ) : (
+          <CyclePickupsView cycleId={c.cycleId} rows={pickups} />
+        ))}
+
       {view === "conti" && (
-        <CycleAccountsView cycle={cycle} settledAt={c.settledAt?.toISOString() ?? null} settlement={settlement} />
+        <CycleAccountsView
+          cycle={cycle}
+          settledAt={c.settledAt?.toISOString() ?? null}
+          settlement={settlement}
+          // Warned only where the register is in use: a group that never marks pickups is not nagged.
+          notCollected={collected > 0 ? pickups.length - collected : 0}
+        />
       )}
     </section>
   );

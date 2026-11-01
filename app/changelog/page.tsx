@@ -1,8 +1,9 @@
 import Link from "next/link";
+import { adminAccess } from "@/lib/auth/access";
 import { brand } from "@/lib/brand";
 import { AppShell } from "@/components/app-shell";
 import { ChangelogView } from "@/components/changelog-view";
-import { getUserRole, requireUserSession } from "@/lib/auth/session";
+import { requireUserSession } from "@/lib/auth/session";
 import { loadChangelog, readShowTechnical, type ChangelogLanguage } from "@/lib/changelog";
 import { en } from "@/lib/i18n/en";
 import { it } from "@/lib/i18n/it";
@@ -13,7 +14,6 @@ type SearchParams = Promise<{ lang?: string; tech?: string | string[] }>;
 // app shell. Changes for members by default, technical ones behind the switch.
 export default async function ChangelogPage({ searchParams }: { searchParams: SearchParams }) {
   const session = await requireUserSession();
-  const role = getUserRole(session);
 
   const { lang: langParam, tech } = await searchParams;
   // The changelogs exist in Italian and English: a Spanish or French deploy reads the English one.
@@ -26,7 +26,7 @@ export default async function ChangelogPage({ searchParams }: { searchParams: Se
     <AppShell
       email={session.user.email}
       name={session.user.fullName}
-      isAdmin={role === "admin"}
+      admin={adminAccess(session.user)}
       memberId={session.user.memberId!}
       personId={session.user.personId}
     >

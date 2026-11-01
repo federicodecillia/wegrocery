@@ -51,7 +51,7 @@ export const ADMIN_VIEWS: Partial<Record<AdminSection, { id: CatalogView | Setti
 // cards exist.
 export function adminHelpHref(section: AdminSection, view: AdminView | null): string {
   const card: Record<AdminSection, string> = {
-    ciclo: view === "fornitore" ? "fornitore" : view === "prodotti" ? "ciclo#prodotti-nel-ciclo" : view === "ordini" ? "ciclo#seguire-ordini" : "ciclo",
+    ciclo: view === "fornitore" ? "fornitore" : view === "prodotti" ? "ciclo#prodotti-nel-ciclo" : view === "ordini" ? "ciclo#seguire-ordini" : view === "ritiri" ? "ciclo#segnare-ritiri" : "ciclo",
     cassa: "cassa",
     soci: "soci",
     catalogo: view === "fornitori" ? "catalogo#aggiungere-fornitore" : "catalogo",
@@ -69,6 +69,28 @@ export function adminHelpHref(section: AdminSection, view: AdminView | null): st
 }
 
 const SECTIONS = new Set<string>([...ADMIN_PRIMARY, ...ADMIN_MORE].map((s) => s.id));
+
+/**
+ * The sections a "Referente ordini" opens: the cycles (without their
+ * accounts), the catalogue and the members, read only. Cassa, Statistiche and
+ * Impostazioni stay with the admins.
+ */
+export const REFERENT_SECTIONS: readonly AdminSection[] = ["ciclo", "soci", "catalogo"];
+
+export function sectionAllowed(section: AdminSection, access: "admin" | "referent"): boolean {
+  return access === "admin" || REFERENT_SECTIONS.includes(section);
+}
+
+/** The bar's sections for this access, phone row first, then the ⋯ menu. */
+export function adminSectionsFor(access: "admin" | "referent"): {
+  primary: { id: AdminSection; label: string }[];
+  more: { id: AdminSection; label: string }[];
+} {
+  return {
+    primary: ADMIN_PRIMARY.filter((s) => sectionAllowed(s.id, access)),
+    more: ADMIN_MORE.filter((s) => sectionAllowed(s.id, access)),
+  };
+}
 
 // The tabs before the new bar, and where each one lives now.
 const LEGACY: Record<string, { section: AdminSection; view: AdminView }> = {

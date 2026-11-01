@@ -1,4 +1,5 @@
 import { and, eq } from "drizzle-orm";
+import { adminAccess } from "@/lib/auth/access";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { BalanceDueCard } from "@/components/balance/balance-due-card";
@@ -7,7 +8,7 @@ import { BankReceipt } from "@/components/ricarica/bank-receipt";
 import { CopyField } from "@/components/ricarica/copy-field";
 import { PendingRefresh } from "@/components/ricarica/pending-refresh";
 import { TopupForm } from "@/components/ricarica/topup-form";
-import { getUserRole, requireUserSession } from "@/lib/auth/session";
+import { requireUserSession } from "@/lib/auth/session";
 import { getDb } from "@/lib/db/client";
 import { getFamilyMemberIds, getMemberById, getMemberStorico } from "@/lib/db/queries";
 import { payments } from "@/lib/db/schema";
@@ -71,7 +72,6 @@ export default async function RicaricaPage({
   searchParams: Promise<{ esito?: string; session_id?: string }>;
 }) {
   const session = await requireUserSession();
-  const role = getUserRole(session);
   const memberId = session.user.memberId!;
   const { esito, session_id } = await searchParams;
 
@@ -87,7 +87,7 @@ export default async function RicaricaPage({
   if (payPerOrder && !member?.paysOffline) {
     const cents = await getConsolidatedBalanceCents(getDb(), memberId);
     return (
-      <AppShell email={session.user.email} name={session.user.fullName} isAdmin={role === "admin"} memberId={memberId} personId={session.user.personId}>
+      <AppShell email={session.user.email} name={session.user.fullName} admin={adminAccess(session.user)} memberId={memberId} personId={session.user.personId}>
         <div className="mb-4 flex items-center gap-2">
           <h1 className="text-[22px] font-black tracking-[-0.02em] text-foreground">{t.balance.title}</h1>
           <HelpLink href="/guida/soldi#da-saldare" />
@@ -119,7 +119,7 @@ export default async function RicaricaPage({
   // A wallet group with top-ups off: the balance only, no channel to offer.
   if (settings.mode === "wallet" && !settings.walletTopupsEnabled) {
     return (
-      <AppShell email={session.user.email} name={session.user.fullName} isAdmin={role === "admin"} memberId={memberId} personId={session.user.personId}>
+      <AppShell email={session.user.email} name={session.user.fullName} admin={adminAccess(session.user)} memberId={memberId} personId={session.user.personId}>
         <div className="mb-4 flex items-center gap-2">
           <h1 className="text-[22px] font-black tracking-[-0.02em] text-foreground">{t.balance.title}</h1>
           <HelpLink href="/guida/soldi" />
@@ -154,7 +154,7 @@ export default async function RicaricaPage({
   const roomCents = maxBalanceCents === null ? null : maxBalanceCents - balanceCents;
 
   return (
-    <AppShell email={session.user.email} name={session.user.fullName} isAdmin={role === "admin"} memberId={memberId} personId={session.user.personId}>
+    <AppShell email={session.user.email} name={session.user.fullName} admin={adminAccess(session.user)} memberId={memberId} personId={session.user.personId}>
       <div className="mb-4 flex items-center gap-2">
         <h1 className="text-[22px] font-black tracking-[-0.02em] text-foreground">{t.topup.title}</h1>
         <HelpLink href="/guida/soldi" />

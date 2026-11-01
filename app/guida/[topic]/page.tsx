@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { adminAccess } from "@/lib/auth/access";
 import { UiIcon, topicIcon } from "@/components/ui-icon";
 import { BackLink } from "@/components/ui/back-link";
 import { notFound } from "next/navigation";
@@ -6,7 +7,7 @@ import { t } from "@/lib/i18n";
 import { AppShell } from "@/components/app-shell";
 import { GuideArticleCard } from "@/components/guide/guide-article";
 import { GuideContact } from "@/components/guide/guide-contact";
-import { getUserRole, requireUserSession } from "@/lib/auth/session";
+import { requireUserSession } from "@/lib/auth/session";
 import { guideContent } from "@/lib/guide";
 import { guideContext, visibleGuide } from "@/lib/guide/types";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
@@ -21,7 +22,6 @@ export async function generateMetadata({ params }: { params: Promise<{ topic: st
 // deploy does not show (families off) is a 404, like an unknown one.
 export default async function GuideTopicPage({ params }: { params: Promise<{ topic: string }> }) {
   const session = await requireUserSession();
-  const role = getUserRole(session);
   const [{ topic: topicId }, settings] = await Promise.all([params, getPaymentSettings()]);
   const guide = visibleGuide(guideContent, guideContext(settings));
   const topic = guide.topics.find((x) => x.id === topicId);
@@ -29,7 +29,7 @@ export default async function GuideTopicPage({ params }: { params: Promise<{ top
   const articles = guide.articles.filter((a) => a.topic === topic.id);
 
   return (
-    <AppShell email={session.user.email} name={session.user.fullName} isAdmin={role === "admin"} memberId={session.user.memberId!} personId={session.user.personId}>
+    <AppShell email={session.user.email} name={session.user.fullName} admin={adminAccess(session.user)} memberId={session.user.memberId!} personId={session.user.personId}>
       <div className="mb-4">
         <BackLink href="/guida">{t.guide.backToGuide}</BackLink>
       </div>

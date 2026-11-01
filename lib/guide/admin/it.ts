@@ -70,17 +70,18 @@ export const adminGuideIt: GuideContent = {
       slug: "ruoli",
       topic: "inizio",
       title: "Chi può gestire il gruppo: i ruoli",
-      intro: "Ogni socio ha un ruolo: **Admin**, **Attivi** o **Utenti**. Solo gli Admin vedono l'area Admin e questa guida.",
+      intro: "Ogni socio ha due impostazioni: **Accesso all'app** (Socio, **Referente ordini** o **Amministratore**) e **Cicli che vede** (Utenti o Attivi). Solo amministratori e referenti vedono l'area Admin e questa guida.",
       steps: [
-        "Apri **Soci** e tocca il socio.",
-        "Scegli il **Ruolo** e salva con **Aggiorna**.",
+        "Apri **Soci** e tocca **Modifica** sul socio.",
+        "Scegli **Accesso all'app** e **Cicli che vede**, poi salva con **Aggiorna**.",
       ],
       notes: [
-        "Il ruolo decide anche a quali cicli si può ordinare: ogni ciclo ha un livello di **Accesso** (Utenti, Attivi o Solo admin).",
-        "Conviene avere almeno due admin, così il gruppo non resta bloccato se uno è assente.",
+        "Il **Referente ordini** aiuta con i cicli che vede: li apre, cambia date e orari, chiude, manda l'ordine al fornitore, carica la distinta, segna i ritiri e gestisce il catalogo. Vede i soci in sola lettura e non ha Cassa, Conti, Statistiche né Impostazioni.",
+        "**Cicli che vede** decide a quali cicli si può ordinare: ogni ciclo ha un livello di **Accesso** (Utenti, Attivi o Solo admin). Un amministratore li vede tutti.",
+        "Conviene avere almeno due amministratori, così il gruppo non resta bloccato se uno è assente.",
       ],
       link: { href: "/admin?tab=soci", label: "Apri Soci" },
-      keywords: ["amministratore", "permessi", "nominare", "admin"],
+      keywords: ["amministratore", "permessi", "nominare", "admin", "referente", "referente ordini", "visibilità"],
     },
 
     // Il ciclo d'ordine
@@ -212,6 +213,23 @@ export const adminGuideIt: GuideContent = {
       ],
       link: { href: "/admin?tab=ciclo", label: "Vai ai cicli" },
       keywords: ["ritiro", "data ritiro", "orario", "consegna", "quando si ritira", "ciclo chiuso"],
+    },
+    {
+      slug: "segnare-ritiri",
+      topic: "ciclo",
+      title: "Segnare chi ha ritirato",
+      intro: "A ciclo chiuso la scheda **Ritiri** elenca chi ha ordinato: segni chi passa a ritirare e in alto vedi a che punto sei, per esempio **8/10 ritirati**.",
+      steps: [
+        "Apri il ciclo chiuso e tocca **Ritiri**, oppure il contatore 📦 accanto al titolo.",
+        "Quando un socio ritira, tocca la spunta accanto al nome: vale l'orario di adesso.",
+        "Per un altro orario, per dire chi ha ritirato al posto del socio o per una nota, tocca il nome e poi **Salva**.",
+      ],
+      notes: [
+        "Se hai segnato per sbaglio, tocca di nuovo la spunta o, dal nome, **Segna come non ritirato**. La nota la vedono solo gli admin.",
+        "Il socio vede nello Storico quando ha ritirato; l'avviso gli arriva solo se l'ha acceso in **Ordine ritirato**. Dopo il giorno di ritiro, **Da fare ora** ricorda chi manca e **Chiudi i conti** avvisa se qualcuno non ha ancora ritirato. A ciclo aperto i ritiri non si segnano: prima chiudi il ciclo.",
+      ],
+      link: { href: "/admin?tab=ciclo", label: "Vai ai cicli" },
+      keywords: ["ritirato", "ritiri", "chi ha ritirato", "registro ritiri", "spunta", "consegnato", "presenze"],
     },
     {
       slug: "scadenza-passata",
@@ -514,7 +532,7 @@ export const adminGuideIt: GuideContent = {
       steps: [
         "Apri **Soci** e tocca **Aggiungi socio**.",
         "Scrivi **Nome** ed **Email**. Se usa un secondo indirizzo per entrare, aggiungilo come **Email secondaria**.",
-        "Lascia il **Ruolo** su Utenti, salvo diversa necessità, e salva.",
+        "Lascia **Accesso all'app** su Socio e **Cicli che vede** su Utenti, salvo diversa necessità, e salva.",
         "Tocca **Invita**: il socio riceve un'email con il link per entrare.",
       ],
       notes: ["Ogni indirizzo può appartenere a un solo socio."],

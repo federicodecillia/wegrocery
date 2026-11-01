@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireAdmin } from "@/lib/auth/session";
+import { requireCycleManager } from "@/lib/auth/manager";
 import { t } from "@/lib/i18n";
 import { getDb } from "@/lib/db/client";
 import { auditLog } from "@/lib/db/schema";
@@ -38,7 +38,7 @@ export type CycleProductsData = {
 
 export async function adminGetCycleProducts(cycleId: string): Promise<CycleProductsData | { error: string }> {
   try {
-    await requireAdmin();
+    await requireCycleManager(cycleId);
     const db = getDb();
     const state = await readCycleOrderState(db, cycleId);
     if (!state) throw new ActionError(t.errors.cycleNotFound);
@@ -58,7 +58,7 @@ export async function adminGetCycleProducts(cycleId: string): Promise<CycleProdu
  */
 export async function adminSetCycleProductOrder(cycleId: string, mode: ProductOrderMode): Promise<Result> {
   try {
-    const admin = await requireAdmin();
+    const admin = await requireCycleManager(cycleId);
     const db = getDb();
     const state = await readCycleOrderState(db, cycleId);
     if (!state) throw new ActionError(t.errors.cycleNotFound);
@@ -81,7 +81,7 @@ export async function adminSetCycleProductOrder(cycleId: string, mode: ProductOr
 /** Saves the order the admin arranged: every id once, all of this cycle. */
 export async function adminReorderCycleProducts(cycleId: string, productIds: string[]): Promise<Result> {
   try {
-    const admin = await requireAdmin();
+    const admin = await requireCycleManager(cycleId);
     const db = getDb();
     const own = new Set(await readCycleProductIds(db, cycleId));
     const unique = new Set(productIds);
@@ -106,7 +106,7 @@ export async function adminReorderCycleProducts(cycleId: string, productIds: str
 /** "Usa l'ordine dell'ultimo ciclo": `source` names the cycle copied. */
 export async function adminCopyProductOrderFromPrevious(cycleId: string): Promise<Result> {
   try {
-    const admin = await requireAdmin();
+    const admin = await requireCycleManager(cycleId);
     const db = getDb();
     const state = await readCycleOrderState(db, cycleId);
     if (!state) throw new ActionError(t.errors.cycleNotFound);

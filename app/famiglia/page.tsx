@@ -1,7 +1,8 @@
 import { BackLink } from "@/components/ui/back-link";
+import { adminAccess } from "@/lib/auth/access";
 import { AppShell } from "@/components/app-shell";
 import { FamilyPanel } from "@/components/family-panel";
-import { getUserRole, requireUserSession } from "@/lib/auth/session";
+import { requireUserSession } from "@/lib/auth/session";
 import { getFamilyPeople, getMemberBalance, getPendingFamilyInvites } from "@/lib/db/queries";
 import { t } from "@/lib/i18n";
 import { formatDate, formatMoney } from "@/lib/i18n/format";
@@ -15,7 +16,6 @@ export const metadata: Metadata = { title: t.family.title };
 // sent and received, leave or remove.
 export default async function FamilyPage() {
   const session = await requireUserSession();
-  const role = getUserRole(session);
   const memberId = session.user.memberId!;
   const personId = session.user.personId ?? memberId;
   const inFamily = personId !== memberId;
@@ -30,7 +30,7 @@ export default async function FamilyPage() {
   const balance = received.length > 0 ? await getMemberBalance(personId) : 0;
 
   return (
-    <AppShell email={session.user.email} name={session.user.fullName} isAdmin={role === "admin"} memberId={memberId} personId={personId}>
+    <AppShell email={session.user.email} name={session.user.fullName} admin={adminAccess(session.user)} memberId={memberId} personId={personId}>
       <div className="mb-4">
         <BackLink href="/profilo">{t.profile.title}</BackLink>
       </div>

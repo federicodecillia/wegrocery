@@ -339,9 +339,10 @@ User interaction → Server Action ("use server") → auth check → DB mutation
   - `order_adjusted` — closed-cycle shipping recompute (only members whose share moved) OR per-line "actual delivered" rectification
   - `cycle_opened` — a cycle is created (always created already-open, so this is the single emit point, in `adminCreateCycle`)
   - `pickup_changed` (category `pickup`) — `adminUpdateCycle` set, moved or cleared the pickup as members read it (`pickupNotice`, `lib/notifications/pickup.ts`, compares the formatted slots): every active member with an order on the cycle (the account, for a family), never on a cancelled cycle
+  - `order_picked_up` (category `picked_up`) — an admin first marked the member's order as collected (`adminMarkPickup`, `lib/actions/admin-pickups.ts`); editing or clearing the mark sends nothing
   - `cycle_closing_reminder` — **retired in v1.9.0.** No longer emitted. Rows sent while the feature existed remain in members' inboxes and fall through `categoryForType` to the unknown-type branch: rendered in-app, never emailed. Do not reintroduce the name for something else.
 - **All emission goes through `lib/notifications/dispatch.ts`** (`dispatchNotification` for single members, `dispatchWithBodies` for per-member bodies like cycle close, `dispatchToMembers` for broadcasts). Never insert into `notifications` directly — dispatch is where channel preferences are honoured.
-- **Preferences** (`notification_preferences`, sparse: absent row = code default). Categories + defaults live in `lib/notifications/categories.ts`: `cycle_opened`, `order_charge`, `order_updates`, `wallet_topup`, `pickup`: app on, email off by default (since 1.17.0 also `cycle_opened`, to save the email quota for sign-in links; saved preferences are kept). The keys are stable (saved preferences key on them) but the member-facing voices are named for what they cover: `cycle_opened` "Nuovo ciclo aperto", `order_charge` "Addebiti e pagamenti" (`order_closed`, `settlement_due`, `order_paid`, `balance_paid`, `manual_charge_recorded`, `membership_fee_charged`), `order_updates` "Modifiche all'ordine" (`order_adjusted`, `order_corrected`, `cycle_cancelled`), `wallet_topup` "Saldo e rimborsi" (`topup_received`, `payout_sent`, `order_refund_sent`, `refund_failed`), `pickup` "Data di ritiro" (`pickup_changed`). A new type goes under the voice whose hint it fits, and the hint in `lib/i18n/it.ts`/`en.ts` is updated with it. Members edit them at `/profilo/notifiche` (Profile, or bell → ⚙; the old `/notifiche/impostazioni` redirects) via `updateNotificationPreference`. Raw `type` values are unchanged in the DB; `categoryForType` maps them (unknown type → in-app only, never email). Stored rows for retired categories are ignored by `resolvePreferences`, so removing a category needs no data migration.
+- **Preferences** (`notification_preferences`, sparse: absent row = code default). Categories + defaults live in `lib/notifications/categories.ts`: `cycle_opened`, `order_charge`, `order_updates`, `wallet_topup`, `pickup`: app on, email off by default; `picked_up`: both off by default (since 1.17.0 also `cycle_opened`, to save the email quota for sign-in links; saved preferences are kept). The keys are stable (saved preferences key on them) but the member-facing voices are named for what they cover: `cycle_opened` "Nuovo ciclo aperto", `order_charge` "Addebiti e pagamenti" (`order_closed`, `settlement_due`, `order_paid`, `balance_paid`, `manual_charge_recorded`, `membership_fee_charged`), `order_updates` "Modifiche all'ordine" (`order_adjusted`, `order_corrected`, `cycle_cancelled`), `wallet_topup` "Saldo e rimborsi" (`topup_received`, `payout_sent`, `order_refund_sent`, `refund_failed`), `pickup` "Data di ritiro" (`pickup_changed`), `picked_up` "Ordine ritirato" (`order_picked_up`). A new type goes under the voice whose hint it fits, and the hint in `lib/i18n/it.ts`/`en.ts` is updated with it. Members edit them at `/profilo/notifiche` (Profile, or bell → ⚙; the old `/notifiche/impostazioni` redirects) via `updateNotificationPreference`. Raw `type` values are unchanged in the DB; `categoryForType` maps them (unknown type → in-app only, never email). Stored rows for retired categories are ignored by `resolvePreferences`, so removing a category needs no data migration.
 - **Cycle-open audience** is gated by `canAccessCycle(accessLevel, role)` (an admin-only cycle only notifies admins); balance-change notifications (charge/updates/top-up) are personal.
 - **No cron.** The app has no scheduled server work: the only `api/` route is `api/auth`. The closing-reminder cron was removed in v1.9.0 — GitHub executed 13% of its `*/15` schedule, so a reminder that had to fire inside a window was never reliable, and the feature was not worth the machinery. If a future feature needs scheduling, decide the mechanism first (Vercel Cron needs a paid plan for sub-daily; the account is Hobby).
 - `AppShell` fetches `getUnreadNotificationCount(memberId)` and passes it to `NotificationBell`
@@ -359,6 +360,22 @@ all in `lib/roles.ts`:
 | `attivi` | "Attivi" (active members) | "Attivi": attivi + admin |
 | `utenti` | "Utenti" (default, auto-provisioning) | "Utenti (tutti)": everyone, the default for new cycles |
 
+**Admin access is a second axis** (migration 0047, `members.orders_referent`):
+`adminAccessFor(role, ordersReferent)` in `lib/roles.ts` gives `admin` (the
+role admin: everything), `referent` ("Referente ordini") or none. A referent
+opens Admin → Ciclo (only the cycles their role sees, `managesCycle` in
+`lib/auth/manager.ts`; no Conti view, no settlement or cancelling), Catalogo,
+Soci read only (no balances, orders or editing) and the admin guide; never
+Cassa, Statistiche, Impostazioni or the setup wizard (`REFERENT_SECTIONS`,
+`sectionAllowed` in `lib/admin/nav.ts`). Guards: `requireAdmin` (admins only),
+`requireOrderManager` (admin or referent: catalogue), `requireCycleManager` /
+`requireProductManager` / `requireOrderLineManager` (admin, or a referent on a
+cycle they see; another cycle reads as not found). A referent may give a cycle
+only an access level they see themselves. The flag is the person's own (the
+Admin area is personal, also in a family) and is stored false for an admin.
+Pages pass `admin={adminAccess(session.user)}` to `AppShell` (the Admin item
+and its sections).
+
 - Always go through `normalizeRole` / `normalizeAccessLevel` /
   `canAccessCycle` / `getRoleLabel` / `getAccessLabel`; never compare raw
   strings other than `role === "admin"`. Admin actions reject unknown values.
@@ -371,7 +388,7 @@ all in `lib/roles.ts`:
 
 | Table | Purpose |
 |---|---|
-| `members` | User registry; `role`: admin / attivi / utenti; `merged_into` on an account absorbed by a merge (see Member merge); `household_of` on a person who joined a family (see Families); `welcome_dismissed_at` when the person closed the welcome card on Home (migration 0031, `lib/guide/welcome.ts`; `/?benvenuto=1` shows it again) and `welcome_step` where they stopped (migration 0036, `saveWelcomeStep`) |
+| `members` | User registry; `role`: admin / attivi / utenti; `orders_referent` the "Referente ordini" flag (migration 0047, see Role System); `merged_into` on an account absorbed by a merge (see Member merge); `household_of` on a person who joined a family (see Families); `welcome_dismissed_at` when the person closed the welcome card on Home (migration 0031, `lib/guide/welcome.ts`; `/?benvenuto=1` shows it again) and `welcome_step` where they stopped (migration 0036, `saveWelcomeStep`) |
 | `order_cycles` | Weekly order windows; one `open` at a time |
 | `products` | Per-cycle product list |
 | `orders` | Order lines per member per cycle |
@@ -383,6 +400,7 @@ all in `lib/roles.ts`:
 | `app_settings` | Payment settings from admin → Impostazioni, one row (`id = 1`): `payment_mode` (`wallet` | `per_order`, changed only by `adminChangePaymentMode`), `min_balance` / `max_balance`, bank transfer on/off with holder and IBAN, online payments on/off, `families_enabled`, `group_info` ("Il nostro gruppo" at the top of `/guida`, migration 0030, `lib/guide/group-info.ts`), `bank_reference_template` / `bank_receipt_email` (the bank transfer reference of each order paid by bank transfer, shown with Copy on `/ricarica` and in Storico, and the receipt address; migration 0033, `lib/payments/bank-reference.ts`, `order-reference.ts`). No row = brand defaults. Read only through `getPaymentSettings` (`lib/payments/get-settings.ts`) |
 | `order_drafts` | A member's unconfirmed edits on an open cycle (`member_id`, `cycle_id`, `lines` jsonb), autosaved by the order form; `saveOrder` and the cycle close delete them in their batch |
 | `order_cycles.payment_mode` / `handling_fee_*`, `payments.kind` / `cycle_id` / `order_snapshot` | Pay-per-order (`drizzle/0021_pay_per_order.sql`): see Online top-ups (Stripe). Ledger types `order_payment` (+) and `order_refund` (−) sit on the cycle. `order_cycles.settled_at` and `members.pays_offline` (`drizzle/0024_settlement.sql`): see Pay-per-order |
+| `cycle_pickups` | Pickup register of a closed cycle (migration 0046, `lib/pickups.ts`, `lib/db/pickups.ts`, `lib/actions/admin-pickups.ts`): one row per cycle and member (the account that ordered) once the order was collected, `picked_up_at`, optional `collected_by` and `note` (admins only, never shown to the member), `recorded_by`. No row = not collected; clearing deletes the row (audit `pickup_marked` / `pickup_updated` / `pickup_cleared`). Only on a `closed` cycle, only for a member with an order on it. Admin → Ciclo → **Ritiri** (on an open cycle the view only says to close it), the 📦 counter in the cycle header, the `to_collect` step of "Da fare ora" (`lib/admin/cycle-phase.ts`, from the first pickup day on) and a warning in "Chiudi i conti" once some pickups are marked; the member's Storico shows "Ritirato il …" (`historyBadge` → `pickedUp`) |
 | `audit_log` | Append-only admin action log |
 | `usage_events` | Usage counters (migration 0037): `day`, `name` (a fixed list in `lib/usage/events.ts`), `count`; no member id, no text, no amount, and `DEMO_MODE` records nothing. Written by `recordUsage` (never throws), read by Admin → Statistiche; pruned after 400 days at sign-in |
 | `guide_search_misses` | Guide searches with no results, counted with no member id (migration 0032): `query` normalized by `missQuery` (`lib/guide/search-misses.ts`, which drops addresses, long numbers and sentences), `count`, `last_at`; pruned after 90 days, listed in admin → Impostazioni |
@@ -748,7 +766,7 @@ Key patterns:
 
 - `AppShell` is an **async Server Component** (fetches unread notification count). Don't convert to Client Component.
 - Every page that renders `AppShell` must pass `memberId={session.user.memberId!}`.
-- All Server Actions use `requireUserSession()` / `requireAdmin()` — never trust client payloads for auth.
+- All Server Actions use `requireUserSession()` / `requireAdmin()` / the manager guards of `lib/auth/manager.ts` — never trust client payloads for auth.
 - `revalidatePath()` must be called after mutations so Server Components re-fetch fresh data.
 
 <!-- BEGIN:nextjs-agent-rules -->

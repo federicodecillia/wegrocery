@@ -78,6 +78,8 @@ export async function auth(): Promise<AppSession | null> {
         role,
         active: true,
         fullName: person.fullName,
+        // The Admin area is personal: the person's own flag, not the account's.
+        ordersReferent: person.ordersReferent,
       },
     };
   }
