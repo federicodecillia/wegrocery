@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  adminAccessFor,
   ACCESS_LEVELS,
   ROLES,
   canAccessCycle,
@@ -121,5 +122,19 @@ describe("labels", () => {
     expect(getAccessLabel("soci")).toBe(getAccessLabel("attivi"));
     expect(getAccessLabel("all")).toBe(getAccessLabel("utenti"));
     expect(getAccessLabel("strano")).toBe("strano");
+  });
+});
+
+describe("adminAccessFor", () => {
+  it("keeps the Admin area apart from the cycles a role sees", () => {
+    expect(adminAccessFor("admin", false)).toBe("admin");
+    // An admin has everything: the referent flag adds nothing.
+    expect(adminAccessFor("admin", true)).toBe("admin");
+    expect(adminAccessFor("attivi", true)).toBe("referent");
+    expect(adminAccessFor("utenti", true)).toBe("referent");
+    expect(adminAccessFor("attivi", false)).toBeNull();
+    expect(adminAccessFor("utenti", null)).toBeNull();
+    // A legacy role is read canonically.
+    expect(adminAccessFor("attivo", true)).toBe("referent");
   });
 });

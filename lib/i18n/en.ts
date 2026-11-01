@@ -648,6 +648,11 @@ export const en: Strings = {
     contactIntro: (appName: string) =>
       `Write to us or talk to whoever manages the treasury at pickup. For technical issues, contact ${appName}'s IT team.`,
   },
+  adminAccess: {
+    admin: "Administrator",
+    referent: "Orders referent",
+    none: "Member",
+  },
   roles: {
     admin: "Admin",
     attivi: "Active members",
@@ -1363,6 +1368,16 @@ export const en: Strings = {
       aliasEmailHint: "(login alias)",
       aliasEmailPlaceholder: "e.g. name@gmail.com",
       roleLabel: "Role",
+      accessLabel: "Access to the app",
+      accessHint: {
+        none: "Orders and sees their own movements, no Admin area.",
+        referent: "Helps with the orders: opens, edits and closes the cycles they see, supplier, pickups and catalogue. No treasury, accounts, members or settings.",
+        admin: "The whole Admin area, money, members and settings included.",
+      },
+      visibilityLabel: "Cycles they see",
+      visibilityHint: "The cycles they can order in (and run, as a referent).",
+      visibilityAll: "Every cycle",
+      readOnlyHint: "The members, read only: ask an administrator to add or edit a member.",
       statusLabel: "Status",
       statusActive: "Enabled",
       statusInactive: "Disabled",
@@ -2339,6 +2354,7 @@ export const en: Strings = {
     invalidQuantity: "Invalid quantity",
     invalidRole: "Invalid role",
     invalidAccessLevel: "Invalid access level",
+    accessLevelNotAllowed: "You cannot give a cycle a visibility you do not have.",
     handlingFeeLocked: "The cycle is already closed: the order preparation fee can no longer change.",
     handlingFeeInvalid: "Invalid order preparation fee: a number with at most two decimals, up to 25% or €10",
     weighingDepositInvalid: "Invalid weighing deposit: a number with at most two decimals, up to 25%",

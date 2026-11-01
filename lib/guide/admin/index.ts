@@ -15,9 +15,10 @@ const ADMIN_GUIDES: Record<Locale, GuideContent> = {
 };
 
 // The admin guide (/guida/admin) in the deploy's language, handed out only
-// to an active admin: anyone else gets null, so a page cannot show or index
+// to an active admin or "Referente ordini": anyone else gets null, so a page cannot show or index
 // it by forgetting a role check. Server only (lib/guide/admin/admin-guide.test.ts).
 export function adminGuideFor(user: SessionUser): GuideContent | null {
-  if (!checkAccess(user, "admin").ok) return null;
+  // A "Referente ordini" reads it too: most of it is the cycle work they share.
+  if (!checkAccess(user, "manager").ok) return null;
   return ADMIN_GUIDES[brand.locale];
 }

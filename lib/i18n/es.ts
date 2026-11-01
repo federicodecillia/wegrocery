@@ -648,6 +648,11 @@ export const es: Strings = {
     contactIntro: (appName: string) =>
       `Escríbenos o habla con quien gestiona la tesorería en la recogida. Para problemas técnicos, contacta con el equipo informático de ${appName}.`,
   },
+  adminAccess: {
+    admin: "Administrador",
+    referent: "Referente de pedidos",
+    none: "Socio",
+  },
   roles: {
     admin: "Admin",
     attivi: "Socios activos",
@@ -1363,6 +1368,16 @@ export const es: Strings = {
       aliasEmailHint: "(alias de acceso)",
       aliasEmailPlaceholder: "p. ej. nombre@gmail.com",
       roleLabel: "Rol",
+      accessLabel: "Acceso a la app",
+      accessHint: {
+        none: "Pide y ve sus movimientos, sin área Admin.",
+        referent: "Ayuda con los pedidos: abre, modifica y cierra los ciclos que ve, proveedor, recogidas y catálogo. Sin caja, cuentas, socios ni ajustes.",
+        admin: "Toda el área Admin, incluidos dinero, socios y ajustes.",
+      },
+      visibilityLabel: "Ciclos que ve",
+      visibilityHint: "Los ciclos en los que puede pedir (y que gestiona, si es referente).",
+      visibilityAll: "Todos los ciclos",
+      readOnlyHint: "Lista de socios solo de lectura: para añadir o modificar un socio pídeselo a un administrador.",
       statusLabel: "Estado",
       statusActive: "Habilitado",
       statusInactive: "Deshabilitado",
@@ -2340,6 +2355,7 @@ export const es: Strings = {
     invalidQuantity: "Cantidad no válida",
     invalidRole: "Rol no válido",
     invalidAccessLevel: "Nivel de acceso no válido",
+    accessLevelNotAllowed: "No puedes dar a un ciclo una visibilidad que tú no tienes.",
     handlingFeeLocked: "El ciclo ya está cerrado: la cuota de preparación del pedido ya no puede cambiar.",
     handlingFeeInvalid: "Cuota de preparación del pedido no válida: un número con dos decimales como máximo, hasta el 25% o 10 €",
     weighingDepositInvalid: "Depósito por pesaje no válido: un número con dos decimales como máximo, hasta el 25%",

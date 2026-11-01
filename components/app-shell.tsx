@@ -16,13 +16,15 @@ import { signOut } from "@/auth";
 import { redirect } from "next/navigation";
 import { getUnreadNotificationCount, notificationOwners } from "@/lib/db/queries";
 import { namePromptFor } from "@/lib/members/name-prompt";
+import type { AdminAccess } from "@/lib/roles";
 
 type AppShellProps = {
   children: ReactNode;
   email: string;
   /** The signed-in person's name, for the avatar's initials (session.user.fullName). */
   name?: string | null;
-  isAdmin: boolean;
+  /** How much of Admin the person may open (lib/auth/access.ts adminAccess): the Admin item and its sections. */
+  admin: AdminAccess | null;
   memberId: string;
   /** Who signed in, when they work on a family's account: their own notifications count too. */
   personId?: string | null;
@@ -30,7 +32,7 @@ type AppShellProps = {
   layout?: ShellLayout;
 };
 
-export async function AppShell({ children, email, name, isAdmin, memberId, personId, layout = "reading" }: AppShellProps) {
+export async function AppShell({ children, email, name, admin, memberId, personId, layout = "reading" }: AppShellProps) {
   const brand = await getBrand();
   const [unreadCount, namePrompt] = await Promise.all([
     getUnreadNotificationCount(notificationOwners(memberId, personId)),
@@ -43,7 +45,7 @@ export async function AppShell({ children, email, name, isAdmin, memberId, perso
       {/* From md the rail (tablet) or sidebar (PC) replaces the header and the bottom bar. */}
       <Suspense>
         <SideNav
-          isAdmin={isAdmin}
+          admin={admin}
           unreadCount={unreadCount}
           name={name}
           email={email}
@@ -114,7 +116,7 @@ export async function AppShell({ children, email, name, isAdmin, memberId, perso
           ) : null}
           </div>
         </main>
-        <BottomNav isAdmin={isAdmin} />
+        <BottomNav isAdmin={admin !== null} />
       </div>
     </div>
   );

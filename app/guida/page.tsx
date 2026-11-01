@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { adminAccess } from "@/lib/auth/access";
 import { brand as staticBrand } from "@/lib/brand";
 import { getBrand } from "@/lib/brand/get-brand";
 import { t } from "@/lib/i18n";
@@ -9,7 +10,7 @@ import { GuideContact } from "@/components/guide/guide-contact";
 import { GuideSearch } from "@/components/guide/guide-search";
 import { RichText } from "@/components/guide/rich-text";
 import { GuideTopicGrid } from "@/components/guide/topic-grid";
-import { getUserRole, requireUserSession } from "@/lib/auth/session";
+import { requireUserSession } from "@/lib/auth/session";
 import { loadChangelog, visibleChangelog } from "@/lib/changelog";
 import { guideContent } from "@/lib/guide";
 import { adminGuideFor } from "@/lib/guide/admin";
@@ -31,7 +32,6 @@ export const metadata: Metadata = { title: t.guide.title };
 export default async function GuidaPage() {
   const brand = await getBrand();
   const session = await requireUserSession();
-  const role = getUserRole(session);
 
   // Pull the most recent released version (skip the [Unreleased] block) for
   // the teaser, in the deploy's locale — same default as /changelog, where
@@ -61,7 +61,7 @@ export default async function GuidaPage() {
   }
 
   return (
-    <AppShell email={session.user.email} name={session.user.fullName} isAdmin={role === "admin"} memberId={session.user.memberId!} personId={session.user.personId}>
+    <AppShell email={session.user.email} name={session.user.fullName} admin={adminAccess(session.user)} memberId={session.user.memberId!} personId={session.user.personId}>
       <h1 className="mb-1 text-title font-black text-foreground">
         {t.guide.title}
       </h1>

@@ -29,6 +29,8 @@ export type MemberRow = {
   email: string;
   aliasEmail: string | null;
   role: string;
+  /** "Referente ordini" (migration 0047). */
+  ordersReferent: boolean;
   active: boolean;
   // The account this person joined (a family), or null.
   householdOf: string | null;
@@ -45,6 +47,7 @@ export async function findMemberByLoginEmail(email: string): Promise<MemberRow |
       email: members.email,
       aliasEmail: members.aliasEmail,
       role: members.role,
+      ordersReferent: members.ordersReferent,
       active: members.active,
       householdOf: members.householdOf,
     })
@@ -63,6 +66,7 @@ export async function findMemberById(memberId: string): Promise<MemberRow | null
       email: members.email,
       aliasEmail: members.aliasEmail,
       role: members.role,
+      ordersReferent: members.ordersReferent,
       active: members.active,
       householdOf: members.householdOf,
     })

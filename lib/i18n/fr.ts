@@ -648,6 +648,11 @@ export const fr: Strings = {
     contactIntro: (appName: string) =>
       `Écrivez-nous ou parlez à la personne qui gère la trésorerie lors du retrait. Pour les problèmes techniques, contactez l'équipe informatique de ${appName}.`,
   },
+  adminAccess: {
+    admin: "Administrateur",
+    referent: "Référent commandes",
+    none: "Membre",
+  },
   roles: {
     admin: "Admin",
     attivi: "Membres actifs",
@@ -1363,6 +1368,16 @@ export const fr: Strings = {
       aliasEmailHint: "(alias de connexion)",
       aliasEmailPlaceholder: "ex. nom@gmail.com",
       roleLabel: "Rôle",
+      accessLabel: "Accès à l'app",
+      accessHint: {
+        none: "Commande et voit ses mouvements, pas d'espace Admin.",
+        referent: "Aide pour les commandes : ouvre, modifie et clôture les cycles qu'il voit, fournisseur, retraits et catalogue. Ni caisse, ni comptes, ni membres, ni réglages.",
+        admin: "Tout l'espace Admin, argent, membres et réglages compris.",
+      },
+      visibilityLabel: "Cycles visibles",
+      visibilityHint: "Les cycles où il peut commander (et qu'il gère, s'il est référent).",
+      visibilityAll: "Tous les cycles",
+      readOnlyHint: "Liste des membres en lecture seule : pour ajouter ou modifier un membre, demandez à un administrateur.",
       statusLabel: "État",
       statusActive: "Activé",
       statusInactive: "Désactivé",
@@ -2341,6 +2356,7 @@ export const fr: Strings = {
     invalidQuantity: "Quantité non valide",
     invalidRole: "Rôle non valide",
     invalidAccessLevel: "Niveau d'accès non valide",
+    accessLevelNotAllowed: "Vous ne pouvez pas donner à un cycle une visibilité que vous n'avez pas.",
     handlingFeeLocked: "Le cycle est déjà clôturé : les frais de préparation de la commande ne peuvent plus changer.",
     handlingFeeInvalid: "Frais de préparation de la commande non valides : un nombre avec au plus deux décimales, jusqu'à 25 % ou 10 €",
     weighingDepositInvalid: "Provision pour pesée non valide : un nombre avec deux décimales au plus, jusqu'à 25 %",

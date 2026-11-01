@@ -83,3 +83,23 @@ export function getAccessLabel(accessLevel: string): string {
   const level = normalizeAccessLevel(accessLevel);
   return level ? t.cycleAccess[level] : accessLevel;
 }
+
+// ── Access to the Admin area ─────────────────────────────────────────────────
+// A second axis, separate from the cycles a role lets a member see: who may
+// open Admin, and how much of it. "admin" is the role admin (everything);
+// "referent" is a "Referente ordini" (members.orders_referent, migration
+// 0047): the cycles their role lets them see, supplier and sheet, pickups,
+// catalogue, members read only; never Cassa, accounts, settings or roles.
+
+export type AdminAccess = "admin" | "referent";
+
+/** Admin access from the stored role and flag; null = no Admin area. */
+export function adminAccessFor(role: string | null | undefined, ordersReferent: boolean | null | undefined): AdminAccess | null {
+  if (normalizeRole(role) === "admin") return "admin";
+  return ordersReferent === true ? "referent" : null;
+}
+
+/** The label of a member's access, for the member list and form. */
+export function getAdminAccessLabel(access: AdminAccess | null): string {
+  return access ? t.adminAccess[access] : t.adminAccess.none;
+}

@@ -1,8 +1,9 @@
 import { BackLink } from "@/components/ui/back-link";
+import { adminAccess } from "@/lib/auth/access";
 import { AppShell } from "@/components/app-shell";
 import { NotificationPreferencesForm } from "@/components/notification-preferences-form";
 import { t } from "@/lib/i18n";
-import { getUserRole, requireUserSession } from "@/lib/auth/session";
+import { requireUserSession } from "@/lib/auth/session";
 import { getNotificationPreferences } from "@/lib/db/queries";
 import { resolvePreferences } from "@/lib/notifications/categories";
 import { HelpLink } from "@/components/guide/help-link";
@@ -12,14 +13,13 @@ export const metadata: Metadata = { title: t.notifications.settings.title };
 
 export default async function NotificationSettingsPage() {
   const session = await requireUserSession();
-  const role = getUserRole(session);
   const memberId = session.user.memberId!;
 
   const rows = await getNotificationPreferences(memberId);
   const initial = resolvePreferences(rows);
 
   return (
-    <AppShell email={session.user.email} name={session.user.fullName} isAdmin={role === "admin"} memberId={memberId} personId={session.user.personId}>
+    <AppShell email={session.user.email} name={session.user.fullName} admin={adminAccess(session.user)} memberId={memberId} personId={session.user.personId}>
       <div className="mb-4">
         <BackLink href="/profilo">{t.profile.title}</BackLink>
       </div>

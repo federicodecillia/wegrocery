@@ -2,7 +2,7 @@
 
 import { and, eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
-import { requireAdmin } from "@/lib/auth/session";
+import { requireCycleManager } from "@/lib/auth/manager";
 import { ActionError, actionErrorMessage } from "@/lib/action-error";
 import { getDb } from "@/lib/db/client";
 import { auditLog, cyclePickups, members, orderCycles, orders } from "@/lib/db/schema";
@@ -45,7 +45,7 @@ async function checkTarget(db: Db, { cycleId, memberId }: Target) {
  */
 export async function adminMarkPickup(input: Target & PickupForm): Promise<{ error?: string }> {
   try {
-    const admin = await requireAdmin();
+    const admin = await requireCycleManager(input.cycleId);
     const db = getDb();
     const now = new Date();
     const values = readPickupForm(input, now);
@@ -97,7 +97,7 @@ export async function adminMarkPickup(input: Target & PickupForm): Promise<{ err
 /** Takes the mark off: the order reads "to collect" again. No message to the member. */
 export async function adminClearPickup(input: Target): Promise<{ error?: string }> {
   try {
-    const admin = await requireAdmin();
+    const admin = await requireCycleManager(input.cycleId);
     const db = getDb();
     await checkTarget(db, input);
     const removed = await db

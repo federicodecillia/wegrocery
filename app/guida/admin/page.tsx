@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { adminAccess } from "@/lib/auth/access";
 import { notFound } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { GuideSearch } from "@/components/guide/guide-search";
@@ -18,7 +19,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = { title: t.guide.title };
 
 // The admin guide's index: search and topics, cards on app/guida/admin/[topic].
-// Anyone but an active admin gets a 404, like an unknown page: the guide's
+// Anyone but an active admin or "Referente ordini" gets a 404, like an unknown page: the guide's
 // content comes only from adminGuideFor, which checks the role itself.
 export default async function AdminGuidePage() {
   const session = await requireUserSession();
@@ -28,7 +29,7 @@ export default async function AdminGuidePage() {
   const topicTitles = Object.fromEntries(guide.topics.map((x) => [`${ADMIN_GUIDE_SECTION}${x.id}`, x.title]));
 
   return (
-    <AppShell email={session.user.email} name={session.user.fullName} isAdmin memberId={session.user.memberId!} personId={session.user.personId}>
+    <AppShell email={session.user.email} name={session.user.fullName} admin={adminAccess(session.user)} memberId={session.user.memberId!} personId={session.user.personId}>
       <div className="mb-4">
         <BackLink href="/guida">{t.guide.backToGuide}</BackLink>
       </div>

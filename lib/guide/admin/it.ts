@@ -70,17 +70,18 @@ export const adminGuideIt: GuideContent = {
       slug: "ruoli",
       topic: "inizio",
       title: "Chi può gestire il gruppo: i ruoli",
-      intro: "Ogni socio ha un ruolo: **Admin**, **Attivi** o **Utenti**. Solo gli Admin vedono l'area Admin e questa guida.",
+      intro: "Ogni socio ha due impostazioni: **Accesso all'app** (Socio, **Referente ordini** o **Amministratore**) e **Cicli che vede** (Utenti o Attivi). Solo amministratori e referenti vedono l'area Admin e questa guida.",
       steps: [
-        "Apri **Soci** e tocca il socio.",
-        "Scegli il **Ruolo** e salva con **Aggiorna**.",
+        "Apri **Soci** e tocca **Modifica** sul socio.",
+        "Scegli **Accesso all'app** e **Cicli che vede**, poi salva con **Aggiorna**.",
       ],
       notes: [
-        "Il ruolo decide anche a quali cicli si può ordinare: ogni ciclo ha un livello di **Accesso** (Utenti, Attivi o Solo admin).",
-        "Conviene avere almeno due admin, così il gruppo non resta bloccato se uno è assente.",
+        "Il **Referente ordini** aiuta con i cicli che vede: li apre, cambia date e orari, chiude, manda l'ordine al fornitore, carica la distinta, segna i ritiri e gestisce il catalogo. Vede i soci in sola lettura e non ha Cassa, Conti, Statistiche né Impostazioni.",
+        "**Cicli che vede** decide a quali cicli si può ordinare: ogni ciclo ha un livello di **Accesso** (Utenti, Attivi o Solo admin). Un amministratore li vede tutti.",
+        "Conviene avere almeno due amministratori, così il gruppo non resta bloccato se uno è assente.",
       ],
       link: { href: "/admin?tab=soci", label: "Apri Soci" },
-      keywords: ["amministratore", "permessi", "nominare", "admin"],
+      keywords: ["amministratore", "permessi", "nominare", "admin", "referente", "referente ordini", "visibilità"],
     },
 
     // Il ciclo d'ordine
@@ -531,7 +532,7 @@ export const adminGuideIt: GuideContent = {
       steps: [
         "Apri **Soci** e tocca **Aggiungi socio**.",
         "Scrivi **Nome** ed **Email**. Se usa un secondo indirizzo per entrare, aggiungilo come **Email secondaria**.",
-        "Lascia il **Ruolo** su Utenti, salvo diversa necessità, e salva.",
+        "Lascia **Accesso all'app** su Socio e **Cicli che vede** su Utenti, salvo diversa necessità, e salva.",
         "Tocca **Invita**: il socio riceve un'email con il link per entrare.",
       ],
       notes: ["Ogni indirizzo può appartenere a un solo socio."],

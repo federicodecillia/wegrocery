@@ -67,18 +67,19 @@ export const adminGuideFr: GuideContent = {
     {
       slug: "ruoli",
       topic: "inizio",
-      title: "Qui peut gérer le groupe : les rôles",
-      intro: "Chaque membre a un rôle : **Admin**, **Membres actifs** ou **Utilisateurs**. Seuls les admins voient l'espace Admin et ce guide.",
+      title: "Qui peut gérer le groupe : les rôles",
+      intro: "Chaque membre a deux réglages : **Accès à l'app** (Membre, **Référent commandes** ou **Administrateur**) et **Cycles visibles** (Utilisateurs ou Membres actifs). Seuls les administrateurs et les référents voient l'espace Admin et ce guide.",
       steps: [
-        "Ouvrez **Membres** et touchez le membre.",
-        "Choisissez le **Rôle** et enregistrez avec **Mettre à jour**.",
+        "Ouvrez **Membres** et touchez **Modifier** sur le membre.",
+        "Choisissez **Accès à l'app** et **Cycles visibles**, puis enregistrez avec **Mettre à jour**.",
       ],
       notes: [
-        "Le rôle décide aussi sur quels cycles une personne peut commander : chaque cycle a un niveau d'**Accès** (Utilisateurs, Membres actifs ou Admin uniquement).",
-        "Mieux vaut avoir au moins deux admins, pour que le groupe ne soit pas bloqué quand l'un est absent.",
+        "Le **Référent commandes** aide pour les cycles qu'il voit : il les ouvre, change dates et heures, les clôture, envoie la commande au fournisseur, importe le fichier, marque les retraits et gère le catalogue. Il voit les membres en lecture seule et n'a ni Caisse, ni Comptes, ni Statistiques, ni Réglages.",
+        "**Cycles visibles** décide sur quels cycles une personne peut commander : chaque cycle a un niveau d'**Accès** (Utilisateurs, Membres actifs ou Admin uniquement). Un administrateur les voit tous.",
+        "Mieux vaut avoir au moins deux administrateurs, pour que le groupe ne soit pas bloqué quand l'un est absent.",
       ],
       link: { href: "/admin?tab=soci", label: "Ouvrir Membres" },
-      keywords: ["administrateur", "autorisations", "nommer", "admin"],
+      keywords: ["administrateur", "autorisations", "nommer", "admin", "référent", "référent commandes", "visibilité"],
     },
 
     // Le cycle de commande
@@ -529,7 +530,7 @@ export const adminGuideFr: GuideContent = {
       steps: [
         "Ouvrez **Membres** et touchez **Ajouter un membre**.",
         "Écrivez le **Nom** et l'**Email**. S'il se connecte avec une deuxième adresse, ajoutez-la comme **Email secondaire**.",
-        "Laissez le **Rôle** sur Utilisateurs sauf besoin contraire, et enregistrez.",
+        "Laissez **Accès à l'app** sur Membre et **Cycles visibles** sur Utilisateurs, sauf besoin contraire, et enregistrez.",
         "Touchez **Inviter** : le membre reçoit un email avec le lien pour se connecter.",
       ],
       notes: ["Chaque adresse ne peut appartenir qu'à un seul membre."],

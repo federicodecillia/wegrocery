@@ -28,7 +28,9 @@ dettagli tecnici", la release su GitHub la tiene.
 ### Aggiunte
 - 📦 **Registro dei ritiri.** Un ciclo chiuso ha la nuova scheda **Ritiri**: spunti un socio quando ritira (vale l'orario di adesso) o tocchi il nome per un altro orario, chi ha ritirato e una nota per gli admin. Accanto al titolo del ciclo un contatore dice quanti hanno ritirato, per esempio "8/10 ritirati".
 - 🔔 **Promemoria per chi non ha ritirato.** Dal giorno di ritiro "Da fare ora" segnala i cicli con soci che devono ancora ritirare, e "Chiudi i conti" avvisa se qualcuno non ha ancora ritirato. Il socio vede "Ritirato il …" nello Storico; il nuovo avviso "Ordine ritirato" è spento finché non lo accende.
+- 👥 **"Referente ordini".** Un nuovo accesso per i soci che aiutano con gli ordini senza essere amministratori: aprono, modificano e chiudono i cicli che vedono, mandano l'ordine al fornitore, caricano la distinta, segnano i ritiri e gestiscono il catalogo; vedono i soci in sola lettura, senza cassa, conti o impostazioni. Il form del socio ora ha due voci: "Accesso all'app" e "Cicli che vede".
 - 🗄️ [tecnico] **Migrazione `0046_cycle_pickups.sql`.** Nuova tabella `cycle_pickups`; va applicata prima del deploy.
+- 🗄️ [tecnico] **Migrazione `0047_orders_referent.sql`.** Nuova colonna `members.orders_referent`, falsa per tutti; va applicata prima del deploy.
 
 ## [1.42.0] - 29 ottobre 2026
 

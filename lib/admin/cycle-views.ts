@@ -43,9 +43,23 @@ export function cycleViews(status: string, supplierReady = false): CycleView[] {
   return ["panoramica", "ordini", "fornitore", "ritiri", "conti"];
 }
 
-/** The view asked for when the cycle has it, else its overview. */
-export function resolveCycleView(status: string, view: string | undefined | null, supplierReady = false): CycleView {
-  return isCycleView(view) && cycleViews(status, supplierReady).includes(view) ? view : "panoramica";
+/**
+ * The views this person sees: a "Referente ordini" works on the order, not on
+ * the money, so the accounts (settlement, cancelling, movements) stay with
+ * the admins.
+ */
+export function viewsFor(views: CycleView[], access: "admin" | "referent" = "admin"): CycleView[] {
+  return access === "admin" ? views : views.filter((v) => v !== "conti");
+}
+
+/** The view asked for when the cycle has it (for this person), else its overview. */
+export function resolveCycleView(
+  status: string,
+  view: string | undefined | null,
+  supplierReady = false,
+  access: "admin" | "referent" = "admin",
+): CycleView {
+  return isCycleView(view) && viewsFor(cycleViews(status, supplierReady), access).includes(view) ? view : "panoramica";
 }
 
 type IndexedCycle = { cycleId: string; status: string; orderCloseAt: Date | null; createdAt: Date };
