@@ -5,11 +5,12 @@ import { getFamilyMemberIds } from "@/lib/db/queries";
 import { orderCycles, orders, suppliers } from "@/lib/db/schema";
 import { getAppBaseUrl } from "@/lib/email/base-url";
 import { t } from "@/lib/i18n";
-import { buildCycleIcs, icsFileName } from "@/lib/ics";
+import { buildCycleIcs } from "@/lib/calendar-ics";
+import { icsFileName, icsHeaders } from "@/lib/ics";
 import { canAccessCycle } from "@/lib/roles";
 
 // "Aggiungi al calendario" (/calendario): one cycle's dates as an .ics file
-// (lib/ics.ts) the phone opens in its calendar. Signed-in members only, for a
+// (lib/calendar-ics.ts on the kit module lib/ics.ts) the phone opens in its calendar. Signed-in members only, for a
 // cycle they can see or ordered on; anything else is a plain 404.
 
 const notFound = () => new Response("Not found", { status: 404, headers: { "cache-control": "no-store" } });
@@ -68,11 +69,5 @@ export async function GET(_request: Request, { params }: { params: Promise<{ cyc
     t.calendar.ics,
     new Date(),
   );
-  return new Response(ics, {
-    headers: {
-      "content-type": "text/calendar; charset=utf-8",
-      "content-disposition": `attachment; filename="${icsFileName(cycle.title)}"`,
-      "cache-control": "private, no-store",
-    },
-  });
+  return new Response(ics, { headers: icsHeaders(icsFileName(cycle.title, "ordine")) });
 }
