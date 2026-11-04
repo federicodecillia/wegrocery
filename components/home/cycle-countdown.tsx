@@ -2,14 +2,10 @@
 
 import { Badge } from "@/components/ui/badge";
 import { useEffect, useState } from "react";
-import { cn } from "@/lib/utils";
-import { buttonVariants } from "@/components/ui/button";
 import { t } from "@/lib/i18n";
 import { closesIn, formatDeadline, formatPickups, isLastDay } from "@/lib/i18n/deadline";
-import Link from "next/link";
 
 type Props = {
-  cycleId: string;
   title: string;
   orderCloseAt: string;
   orderOpenAt: string;
@@ -17,8 +13,6 @@ type Props = {
   pickupEndTime: string | null;
   pickup2Date: string | null;
   pickup2EndTime: string | null;
-  /** The member has a confirmed order on this cycle. */
-  hasOrder: boolean;
 };
 
 function computeCountdown(closeAt: string, openAt: string, now: Date) {
@@ -32,10 +26,10 @@ function computeCountdown(closeAt: string, openAt: string, now: Date) {
   return { hrs, mins, pct };
 }
 
-// The open cycle on Home: what it is, until when, when to collect, and the
-// way to the order right there. The countdown boxes appear only in the last
-// day, when the minutes matter.
-export function CycleCountdown({ cycleId, title, orderCloseAt, orderOpenAt, pickupDate, pickupEndTime, pickup2Date, pickup2EndTime, hasOrder }: Props) {
+// The head of an open cycle's card on Home: what it is, until when, when to
+// collect. The countdown boxes appear only in the last day, when the minutes
+// matter. The card itself (order, notes, the way to the order) is the page's.
+export function CycleCountdown({ title, orderCloseAt, orderOpenAt, pickupDate, pickupEndTime, pickup2Date, pickup2EndTime }: Props) {
   // null until mounted: the server and the browser would disagree on "now".
   const [now, setNow] = useState<Date | null>(null);
 
@@ -53,19 +47,19 @@ export function CycleCountdown({ cycleId, title, orderCloseAt, orderOpenAt, pick
   );
 
   return (
-    <div className="mb-3.5 rounded-card border border-border bg-card p-4.5 shadow-card">
+    <div>
       <div className="flex items-start justify-between gap-3">
-        <h2 className="text-[17px] font-extrabold leading-snug tracking-[-0.02em] text-foreground">{title}</h2>
+        <h3 className="text-[16px] font-extrabold leading-snug tracking-[-0.02em] text-foreground">{title}</h3>
         <Badge variant="accent" dot>
           {t.cycle.open}
         </Badge>
       </div>
-      <p className={`mt-1 text-[14px] ${lastDay ? "font-semibold text-destructive" : "text-foreground"}`}>
+      <p className={`mt-0.5 text-[14px] ${lastDay ? "font-semibold text-destructive" : "text-foreground"}`}>
         {now ? `${closesIn(orderCloseAt, now)} · ` : `${t.cycle.closesLabel} `}
         <span className="whitespace-nowrap">{formatDeadline(orderCloseAt)}</span>
       </p>
       {pickups.map((line, i) => (
-        <p key={i} className="mt-0.5 text-[14px] text-secondary-foreground">
+        <p key={i} className="text-[13px] text-secondary-foreground">
           {pickups.length > 1 ? (i === 0 ? t.cycle.pickup1(line) : t.cycle.pickup2(line)) : t.cycle.pickupSingle(line)}
         </p>
       ))}
@@ -89,13 +83,6 @@ export function CycleCountdown({ cycleId, title, orderCloseAt, orderOpenAt, pick
         </div>
       )}
 
-      {!hasOrder && <p className="mt-3 text-[14px] text-secondary-foreground">{t.cycle.notOrderedYet}</p>}
-      <Link
-        href={`/ordine?cycleId=${cycleId}`}
-        className={cn(buttonVariants({ variant: "brand", block: true }), "mt-4")}
-      >
-        {t.cycle.goToOrder}
-      </Link>
     </div>
   );
 }

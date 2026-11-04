@@ -47,7 +47,7 @@ export const guideFr: GuideContent = {
       topic: "primi-passi",
       title: "Comment l'app est organisée",
       steps: [
-        "**Accueil** : votre solde, la commande ouverte avec le temps restant et vos derniers mouvements.",
+        "**Accueil** : le calendrier avec les prochaines dates, les commandes ouvertes avec le temps restant, puis votre solde et vos derniers mouvements.",
         "**Commande** : le catalogue du cycle ouvert, où vous choisissez les produits et confirmez.",
         "**Historique** : vos commandes passées et chaque mouvement du solde.",
         "**Guide** : cette page, avec les nouveautés de l'app et les contacts.",
@@ -148,7 +148,7 @@ export const guideFr: GuideContent = {
         "L'Accueil indique quand la commande se clôture et combien de temps il reste. Après la clôture, la commande ne peut plus être modifiée : le groupe l'envoie aux fournisseurs.",
       notes: [
         "Quand plusieurs commandes sont ouvertes en même temps, dans **Commande** vous choisissez d'abord laquelle ouvrir.",
-        "Les jours de retrait sont indiqués sur l'Accueil, sous la commande.",
+        "Les jours de retrait sont sur l'Accueil, dans la section **Calendrier**.",
       ],
       keywords: ["date limite", "clôture", "heure", "retrait", "livraison", "date"],
     },
@@ -159,7 +159,7 @@ export const guideFr: GuideContent = {
       intro:
         "Le **Calendrier des commandes** montre, mois par mois, quand les commandes ouvrent et ferment et quand les retirer, cycles passés compris.",
       steps: [
-        "Sur l'Accueil, touchez **Calendrier des commandes** (ou, si rien n'est ouvert, le lien dans **Commande**).",
+        "Sur l'Accueil, touchez **Ouvrir le calendrier** dans la section **Calendrier** (ou, si rien n'est ouvert, le lien dans **Commande**).",
         "Passez d'un mois à l'autre avec les flèches : les points de couleur marquent ouvertures, clôtures et retraits.",
         "Touchez un jour pour ne voir que ses commandes ; **Tout le mois** affiche à nouveau la liste complète.",
       ],
@@ -221,7 +221,7 @@ export const guideFr: GuideContent = {
       topic: "soldi",
       title: "Recharger par virement",
       steps: [
-        "Sur l'Accueil, touchez **Recharger le solde**.",
+        "Sur l'Accueil, à côté du solde, touchez **Recharger**.",
         "Dans **Virement bancaire**, copiez le titulaire, l'IBAN et le libellé : pour payer une commande, utilisez le libellé de cette commande, déjà rempli.",
         "Faites le virement depuis votre banque.",
       ],
@@ -238,7 +238,7 @@ export const guideFr: GuideContent = {
       topic: "soldi",
       title: "Recharger en ligne par carte",
       steps: [
-        "Sur l'Accueil, touchez **Recharger le solde**.",
+        "Sur l'Accueil, à côté du solde, touchez **Recharger**.",
         "Dans **Payer en ligne**, choisissez un montant ou saisissez-le.",
         "Touchez **Payer** et terminez le paiement. Votre solde est mis à jour dès que le paiement est confirmé.",
       ],

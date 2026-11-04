@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { ChevronDown, ChevronLeft, ChevronRight, Lock, LockOpen, Package } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { KindIcon } from "@/components/calendar/kind-icon";
 import { Badge } from "@/components/ui/badge";
 import {
   entriesIn,
@@ -38,17 +39,6 @@ const DOT: Record<CalendarEventKind, string> = {
   closes: "bg-primary",
   pickup: "rotate-45 bg-inverse",
 };
-
-const ICON_COLOR: Record<CalendarEventKind, string> = {
-  opens: "text-accent-text",
-  closes: "text-primary-text",
-  pickup: "text-foreground",
-};
-
-function KindIcon({ kind, className }: { kind: CalendarEventKind; className?: string }) {
-  const Icon = kind === "opens" ? LockOpen : kind === "closes" ? Lock : Package;
-  return <Icon aria-hidden className={cn("size-4 shrink-0", ICON_COLOR[kind], className)} strokeWidth={2.25} />;
-}
 
 // Monday first: 2024-01-01 was a Monday.
 const WEEKDAYS = Array.from({ length: 7 }, (_, i) => formatDate(noon(`2024-01-0${i + 1}`), { weekday: "short" }));

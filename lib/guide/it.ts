@@ -49,7 +49,7 @@ export const guideIt: GuideContent = {
       topic: "primi-passi",
       title: "Com'è fatta l'app",
       steps: [
-        "**Home**: il tuo saldo, l'ordine aperto con il tempo che resta e gli ultimi movimenti.",
+        "**Home**: il calendario con le prossime date, gli ordini aperti con il tempo che resta, poi il saldo e gli ultimi movimenti.",
         "**Ordine**: il catalogo del ciclo aperto, dove scegli i prodotti e confermi.",
         "**Storico**: i tuoi ordini passati e tutti i movimenti del saldo.",
         "**Guida**: questa pagina, con le novità dell'app e i contatti.",
@@ -150,7 +150,7 @@ export const guideIt: GuideContent = {
         "La Home mostra quando chiude l'ordine e quanto tempo resta. Dopo la chiusura l'ordine non si può più cambiare: il gruppo lo manda ai fornitori.",
       notes: [
         "Se ci sono più ordini aperti insieme, in **Ordine** scegli prima quale aprire.",
-        "I giorni di ritiro sono indicati in Home, sotto l'ordine.",
+        "I giorni di ritiro sono in Home, nella sezione **Calendario**.",
       ],
       keywords: ["scadenza", "chiusura", "orario", "ritiro", "consegna", "data"],
     },
@@ -161,7 +161,7 @@ export const guideIt: GuideContent = {
       intro:
         "Il **Calendario ordini** mostra mese per mese quando aprono e chiudono gli ordini e quando si ritira, anche per i cicli passati.",
       steps: [
-        "In Home tocca **Calendario ordini** (o, se non c'è niente di aperto, il link in **Ordine**).",
+        "In Home tocca **Apri il calendario** nella sezione **Calendario** (o, se non c'è niente di aperto, il link in **Ordine**).",
         "Sfoglia i mesi con le frecce: i pallini colorati segnano aperture, chiusure e ritiri.",
         "Tocca un giorno per vedere solo i suoi ordini; **Tutto il mese** torna all'elenco completo.",
       ],
@@ -227,7 +227,7 @@ export const guideIt: GuideContent = {
       topic: "soldi",
       title: "Ricaricare con un bonifico",
       steps: [
-        "In Home tocca **Ricarica il saldo**.",
+        "In Home, accanto al saldo, tocca **Ricarica**.",
         "Nella sezione **Bonifico** copia intestatario, IBAN e causale: se paghi un ordine, usa la causale di quell'ordine, già compilata.",
         "Fai il bonifico dalla tua banca.",
       ],
@@ -244,7 +244,7 @@ export const guideIt: GuideContent = {
       topic: "soldi",
       title: "Ricaricare online con la carta",
       steps: [
-        "In Home tocca **Ricarica il saldo**.",
+        "In Home, accanto al saldo, tocca **Ricarica**.",
         "In **Paga online** scegli un importo o scrivilo.",
         "Tocca **Paga** e completa il pagamento. Il saldo si aggiorna appena il pagamento è confermato.",
       ],

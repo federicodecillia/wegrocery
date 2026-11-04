@@ -27,8 +27,11 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ### Aggiunte
 - 📅 **Calendario ordini.** Una nuova pagina, da Home (e da Ordine quando non c'è niente di aperto), mostra mese per mese quando aprono e chiudono gli ordini e quando si ritira, per i cicli aperti e per quelli dell'ultimo anno. Tocchi un giorno per vedere solo i suoi cicli; ognuno dice se hai ordinato o ritirato e porta all'ordine o allo Storico.
-- 🗓️ **Cicli in programma.** Creando un ciclo puoi scegliere **Più avanti** in "Quando aprono gli ordini": il ciclo entra nel calendario dei soci con le sue date (con "Date indicative" se possono ancora cambiare) e i prodotti come anteprima, aggiunti a mano o dal listino Excel del fornitore come sempre. Nessuno può ordinare finché un admin o un referente ordini non tocca **Apri gli ordini**; "Da fare ora" lo ricorda il giorno previsto, e un ciclo in programma si può eliminare. In Home il link al calendario dice qual è il prossimo.
+- 🗓️ **Cicli in programma.** Creando un ciclo puoi scegliere **Più avanti** in "Quando aprono gli ordini": il ciclo entra nel calendario dei soci con le sue date (con "Date indicative" se possono ancora cambiare) e i prodotti come anteprima, aggiunti a mano o dal listino Excel del fornitore come sempre. Nessuno può ordinare finché un admin o un referente ordini non tocca **Apri gli ordini**; "Da fare ora" lo ricorda il giorno previsto, e un ciclo in programma si può eliminare. Il calendario in Home dice quando apre.
 - 🗄️ [tecnico] **Migrazione `0048_planned_cycles.sql`.** Nuova colonna `order_cycles.dates_tentative`, falsa per tutti i cicli, e il blocco delle spese di preparazione della 0026 ora lascia cambiare anche quelle di un ciclo in programma; da applicare prima del deploy.
+
+### Modificato
+- 🏠 **Una Home più ordinata, a sezioni.** In alto il **Calendario** con le prossime date (aperture e chiusure degli ordini, ritiri, cicli in programma), poi gli **ordini aperti** in card compatte dove il tuo ordine è raccolto in una riga ("Il tuo ordine · 5 prodotti · 23,40 €") che si apre con un tocco, infine **saldo e movimenti** in una riga più piccola, visto che con i pagamenti con carta il saldo resta vicino a zero. Da computer i soldi stanno a destra.
 
 ## [1.43.0] - 1 novembre 2026
 

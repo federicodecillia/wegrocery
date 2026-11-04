@@ -26,8 +26,11 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ### Added
 - 📅 **Order calendar.** A new page, reached from Home (and from Order when nothing is open), shows month by month when orders open and close and when to pick up, for the open cycles and those of the last year. Tap a day to see only its cycles; each one says whether you ordered or collected and leads to the order or to History.
-- 🗓️ **Planned cycles.** When creating a cycle, choose **Later** under "When the orders open": the cycle goes in the members' calendar with its dates (marked "Tentative dates" if they may still move) and its products as a preview, added by hand or from the supplier's Excel listing as usual. Nobody can order until an admin or orders referent taps **Open the orders**; "To do now" reminds them on the planned day, and a planned cycle can be deleted. Home shows the next one under the calendar link.
+- 🗓️ **Planned cycles.** When creating a cycle, choose **Later** under "When the orders open": the cycle goes in the members' calendar with its dates (marked "Tentative dates" if they may still move) and its products as a preview, added by hand or from the supplier's Excel listing as usual. Nobody can order until an admin or orders referent taps **Open the orders**; "To do now" reminds them on the planned day, and a planned cycle can be deleted. The calendar on Home shows when it opens.
 - 🗄️ [tech] **Migration `0048_planned_cycles.sql`.** New column `order_cycles.dates_tentative`, false for every cycle, and the fee freeze of 0026 now lets a planned cycle change its fee too; apply it before deploying.
+
+### Changed
+- 🏠 **A tidier Home, in sections.** On top the **Calendar** with the next dates (orders opening and closing, pickups, planned cycles), then the **open orders** in compact cards where your order is folded into one line ("Your order · 5 products · €23.40") that opens on a tap, then the **balance and movements** on one smaller line, since card payments keep the balance near zero. On a computer the money sits on the right.
 
 ## [1.43.0] - 2026-11-01
 
