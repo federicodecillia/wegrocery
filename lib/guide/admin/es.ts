@@ -128,7 +128,7 @@ export const adminGuideEs: GuideContent = {
         "Elige la **Apertura de pedidos prevista** y el **Cierre de pedidos**. Si las fechas aún pueden cambiar, marca **Fechas orientativas**: los socios lo ven en el calendario.",
         "Completa el resto como en un ciclo normal y toca **Crear ciclo**.",
         "En **Productos** añade productos del catálogo o importa la lista Excel del proveedor: los socios los ven como vista previa.",
-        "El día de la apertura **Por hacer ahora** te lo recuerda: toca **Abrir los pedidos**. El ciclo se abre y se avisa a los socios.",
+        "El día de la apertura **Qué hacer ahora** te lo recuerda: toca **Abrir los pedidos**. El ciclo se abre y se avisa a los socios.",
       ],
       notes: [
         "Mientras está programado puedes cambiarlo todo desde **Editar**, fechas incluidas. Si el cierre ya ha pasado, cambia la fecha antes de abrir.",
@@ -229,7 +229,7 @@ export const adminGuideEs: GuideContent = {
       notes: [
         "Quien pidió en ese ciclo recibe un aviso con la nueva recogida (en la app, y por email si lo eligió en sus preferencias). El mensaje de confirmación te dice cuántos socios han sido avisados.",
         "La recogida no toca cargos ni saldos: puedes cambiarla sin problema también con el ciclo cerrado.",
-        "Si la fecha es solo la prevista (a menudo se sabe solo después del cierre, tras hablar con el proveedor), marca **Recogida por confirmar**: los socios leen \"por confirmar\" junto a la recogida. Cuando el proveedor la confirme, desmárcala: quien ha pedido recibe **Recogida confirmada**, aunque la fecha no cambie.",
+        "Si la fecha es solo la prevista (a menudo se sabe solo después del cierre, tras hablar con el proveedor), marca **Recogida por confirmar**: los socios leen \"por confirmar\" junto a la recogida. Cuando el proveedor la confirme, desmárcala: quien ha pedido recibe **Recogida confirmada**, aunque la fecha no cambie. Mientras siga por confirmar, **Qué hacer ahora** te lo recuerda.",
       ],
       link: { href: "/admin?tab=ciclo", label: "Ir a los ciclos" },
       keywords: ["recogida", "fecha de recogida", "hora", "entrega", "ciclo cerrado"],

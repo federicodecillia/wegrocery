@@ -768,6 +768,9 @@ export const fr: Strings = {
             .join(" · "),
         sendCta: "Envoyer la commande au fournisseur",
         sendDetail: "Cycle clôturé, commande pas encore envoyée depuis l'app",
+        confirmPickupCta: "Confirmer le retrait",
+        confirmPickupDetail: (day: string) =>
+          `Le retrait du ${day} est encore à confirmer : quand le fournisseur le confirme, décochez-le dans ✎ Modifier et ceux qui ont commandé sont prévenus`,
         adjustCta: "Saisir les poids ou importer le bon",
         adjustDetail: "Aucune correction saisie après la livraison",
         settleCta: "Solder les comptes",

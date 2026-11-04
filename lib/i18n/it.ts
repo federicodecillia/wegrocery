@@ -770,6 +770,9 @@ export const it = {
             .join(" · "),
         sendCta: "Invia l'ordine al fornitore",
         sendDetail: "Ciclo chiuso, ordine non ancora inviato dall'app",
+        confirmPickupCta: "Conferma il ritiro",
+        confirmPickupDetail: (day: string) =>
+          `Il ritiro di ${day} è ancora da confermare: quando il fornitore lo conferma togli la spunta in ✎ Modifica, chi ha ordinato viene avvisato`,
         adjustCta: "Registra i pesi o carica la distinta",
         adjustDetail: "Nessuna rettifica registrata dopo la consegna",
         settleCta: "Chiudi i conti",

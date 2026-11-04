@@ -768,6 +768,9 @@ export const en: Strings = {
             .join(" · "),
         sendCta: "Send the order to the supplier",
         sendDetail: "Cycle closed, order not sent from the app yet",
+        confirmPickupCta: "Confirm the pickup",
+        confirmPickupDetail: (day: string) =>
+          `The pickup on ${day} is still to be confirmed: once the supplier confirms it, untick it in ✎ Edit and those who ordered are told`,
         adjustCta: "Record weights or upload the sheet",
         adjustDetail: "No correction recorded after delivery",
         settleCta: "Settle accounts",

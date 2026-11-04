@@ -768,6 +768,9 @@ export const es: Strings = {
             .join(" · "),
         sendCta: "Enviar el pedido al proveedor",
         sendDetail: "Ciclo cerrado, pedido aún no enviado desde la app",
+        confirmPickupCta: "Confirma la recogida",
+        confirmPickupDetail: (day: string) =>
+          `La recogida del ${day} sigue por confirmar: cuando el proveedor la confirme, desmárcala en ✎ Editar y quien ha pedido recibe un aviso`,
         adjustCta: "Registrar los pesos o subir la hoja",
         adjustDetail: "Ninguna corrección registrada tras la entrega",
         settleCta: "Ajustar las cuentas",

@@ -132,6 +132,7 @@ export async function CycleWorkspace({ cycleId: asked, view: askedView, creating
         adjusted: f?.adjusted ?? false,
         settlementPending: settlementPending(settleStates.get(c.cycleId) ?? null),
         pickupDate: c.pickupDate,
+        pickupTentative: c.pickupTentative,
         pickedUp: f?.pickedUp ?? 0,
       };
     }),
