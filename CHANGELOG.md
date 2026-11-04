@@ -32,6 +32,8 @@ A bullet that only matters to whoever hosts, runs or develops the app
 - 🗄️ [tech] **Migration `0049_cycle_open_alerts.sql`.** New table `cycle_open_alerts` for the "tell me when it opens" requests; apply it before deploying.
 
 ### Changed
+- ✉️ **Emails in the group's look.** The app's emails (sign-in, notifications, family invites, "Notify me when it opens") show the group's logo and name on top, in its colours; the link to the app is a button that says where it leads ("Go to the order", "Open History", "Sign in"), the sign-in code a large box, and a notification has its title.
+- 📅 **The same calendar legend for one cycle and for All.** With a cycle chosen the legend also shows **Opens**, as in All.
 - 🏠 **A clearer Home: one list of cycles.** Each cycle shows once, in the group of what you have to do: **To order** (deadline with the weekday in full, "tomorrow" or "Last day", your order folded into one line, a small "Order", "Edit" or "Pay" button), **To collect** (closed cycles with your order and the pickup ahead) and **Coming up** (planned cycles). A date tile on each cycle stands in for the calendar; the full calendar is one tap away, and on a computer this month sits on the right. The balance is one small line at the bottom, and goes on top only when it is negative.
 
 ## [1.43.0] - 2026-11-01

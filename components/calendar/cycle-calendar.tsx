@@ -401,6 +401,8 @@ function Legend({ chosen, paint }: { chosen: CalendarEntry | null; paint: Paint 
     <ul aria-label={t.calendar.legendLabel} className="mt-2 flex flex-wrap gap-x-4 gap-y-1.5 border-t border-border px-1 pt-2.5">
       {chosen ? (
         <>
+          {/* The same days as "Tutti", in the order they come: opens, the days to order, last day. */}
+          {item(<span aria-hidden className={cn("size-4 rounded-full ring-2 ring-inset", paint.ring)} />, l.opens)}
           {item(<span aria-hidden className={cn("h-3 w-5 rounded-full", chosen.state === "planned" ? cn("border-2 border-dashed", paint.border) : paint.band)} />, chosen.state === "planned" ? l.tentative : l.window)}
           {item(<span aria-hidden className={cn("flex size-4 items-center justify-center rounded", paint.solid)} />, l.closes)}
         </>

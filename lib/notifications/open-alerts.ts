@@ -37,7 +37,7 @@ export async function sendOpenAlerts(
     const toEmail = targets.filter((r) => !channelsForType("cycle_opened", prefs.get(r.memberId)!).email);
     if (toEmail.length > 0) {
       const n = t.notificationsServer;
-      const { subject, text } = notificationEmail(
+      const { subject, text, heading } = notificationEmail(
         {
           title: n.openAlertTitle(cycle.title),
           body: n.openAlertBody(cycle.title, cycle.orderCloseAt ? formatDeadline(cycle.orderCloseAt) : ""),
@@ -46,7 +46,7 @@ export async function sendOpenAlerts(
         await getBrand(),
       );
       const result = await sendMailBatch(
-        toEmail.map((r) => ({ to: r.email, subject, text })),
+        toEmail.map((r) => ({ to: r.email, subject, text, heading })),
         undefined,
         emailIdempotencyKey("open_alert", cycle.cycleId),
       );

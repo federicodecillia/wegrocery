@@ -2562,6 +2562,20 @@ export const es: Strings = {
     notificationCta: (url: string) => `Ábrelo en la app: ${url}`,
     notificationManagePrefs: (url: string) => `Gestiona tus preferencias de notificación: ${url}`,
     notificationFooter: (orgName: string) => orgName,
+    buttons: {
+      app: "Abrir la app",
+      link: "Abrir el enlace",
+      signIn: "Entrar",
+      order: "Ir al pedido",
+      history: "Abrir el Historial",
+      topUp: "Ir a la recarga",
+      family: "Abrir Familia",
+      calendar: "Abrir el calendario",
+      notifications: "Abrir las notificaciones",
+      profile: "Abrir el perfil",
+      admin: "Abrir el área Admin",
+      preferences: "Gestionar las notificaciones",
+    },
     supplierOrderSubject: (orgName: string, cycleTitle: string) => `Pedido ${orgName}: ${cycleTitle}`,
     supplierOrderBody: (input: {
       appName: string;

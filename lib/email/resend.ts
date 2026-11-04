@@ -1,9 +1,10 @@
 import { Resend } from "resend";
+import { brand } from "@/lib/brand";
 import { getBrand } from "@/lib/brand/get-brand";
 import { t } from "@/lib/i18n";
 import { getAppBaseUrl } from "./base-url";
 import { emailIdempotencyKey, minuteBucket } from "./idempotency";
-import { emailHtml } from "./layout";
+import { emailColors, emailHtml, emailLogoUrl, type EmailIdentity } from "./layout";
 import { outboundEnvFromProcess, resolveOutbound, resolveOutboundBatch } from "./outbound-policy";
 
 type Attachment = {
@@ -27,6 +28,8 @@ type SendMailOpts = {
   // The message as the template wrote it. The HTML part is always derived
   // from it here (lib/email/layout.ts, Playbook 7.7), so the two never drift.
   text: string;
+  // A title on top of the HTML card (a notification's); the subject carries it already.
+  heading?: string | null;
   attachments?: Attachment[];
   // Extra headers (List-Unsubscribe and its Post companion).
   headers?: Record<string, string>;
@@ -37,21 +40,31 @@ type SendMailOpts = {
 };
 
 // The branded HTML part every email carries next to its text (Playbook 7.7):
-// the text on a card in the app's light colours, the WeGrocery logo and "by
-// flylabs.ai" unless the group switched it off (brand.flylabsSignature,
-// Playbook 2.11). Without a base URL the logo becomes the name in text.
-function brandedHtml(text: string, subject: string, signature: boolean): string {
-  return emailHtml(text, { subject, baseUrl: getAppBaseUrl() ?? "", signature });
+// the group's logo, name and colours, the text on a card, the WeGrocery logo
+// and "by flylabs.ai" unless the group switched it off (brand.flylabsSignature,
+// Playbook 2.11). Without a base URL the logos become names in text.
+type Look = { identity: EmailIdentity; signature: boolean; baseUrl: string };
+
+function brandedHtml(text: string, subject: string, look: Look, heading?: string | null): string {
+  return emailHtml(text, { subject, baseUrl: look.baseUrl, signature: look.signature, identity: look.identity, heading });
 }
 
-// Whether the group keeps the signature. A message never waits on it: should
-// the identity not load, the default (on) goes out.
-async function flylabsSignatureOn(): Promise<boolean> {
-  try {
-    return (await getBrand()).flylabsSignature;
-  } catch {
-    return true;
-  }
+// The group as the app shows it (getBrand: Impostazioni over the brand JSON).
+// A message never waits on it: should the identity not load, the brand JSON
+// goes out.
+async function emailLook(): Promise<Look> {
+  const baseUrl = getAppBaseUrl() ?? "";
+  const b = await getBrand().catch(() => brand);
+  return {
+    baseUrl,
+    signature: b.flylabsSignature,
+    identity: {
+      name: b.appName,
+      logoUrl: emailLogoUrl(b.logoUrl, baseUrl),
+      showName: b.headerShowName,
+      colors: emailColors(b.theme),
+    },
+  };
 }
 
 // Returns the configured default sender (MAIL_FROM) so the client can
@@ -83,7 +96,7 @@ export async function sendMail(
   const from = opts.from?.trim() || process.env.MAIL_FROM;
   if (!apiKey) return { error: "RESEND_API_KEY non configurata" };
   if (!from) return { error: "MAIL_FROM non configurata" };
-  const signature = await flylabsSignatureOn();
+  const look = await emailLook();
 
   try {
     const resend = new Resend(apiKey);
@@ -95,7 +108,7 @@ export async function sendMail(
       ...(opts.replyTo ? { replyTo: opts.replyTo } : {}),
       subject: target.subject,
       text: opts.text,
-      html: brandedHtml(opts.text, target.subject, signature),
+      html: brandedHtml(opts.text, target.subject, look, opts.heading),
       ...(opts.attachments ? { attachments: opts.attachments } : {}),
       ...(opts.headers ? { headers: opts.headers } : {}),
       },
@@ -119,7 +132,7 @@ export async function sendMail(
 // throws, returns a discriminated result. No attachments (batch doesn't
 // support them). `sent` counts messages handed to Resend, not deliveries.
 export async function sendMailBatch(
-  items: ReadonlyArray<{ to: string; subject: string; text: string; headers?: Record<string, string> }>,
+  items: ReadonlyArray<{ to: string; subject: string; text: string; heading?: string | null; headers?: Record<string, string> }>,
   from?: string,
   // Names this fan-out; each chunk of 100 derives its own key from it.
   idempotencyKey?: string,
@@ -144,7 +157,7 @@ export async function sendMailBatch(
   const sender = from?.trim() || process.env.MAIL_FROM;
   if (!apiKey) return { error: "RESEND_API_KEY non configurata" };
   if (!sender) return { error: "MAIL_FROM non configurata" };
-  const signature = await flylabsSignatureOn();
+  const look = await emailLook();
 
   try {
     const resend = new Resend(apiKey);
@@ -156,7 +169,7 @@ export async function sendMailBatch(
           to: [it.to],
           subject: it.subject,
           text: it.text,
-          html: brandedHtml(it.text, it.subject, signature),
+          html: brandedHtml(it.text, it.subject, look, it.heading),
           ...(it.headers ? { headers: it.headers } : {}),
         })),
         {
