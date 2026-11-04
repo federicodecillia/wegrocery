@@ -153,6 +153,23 @@ export const guideEs: GuideContent = {
       keywords: ["fecha límite", "cierre", "hora", "recogida", "entrega", "fecha"],
     },
     {
+      slug: "calendario-ordini",
+      topic: "ordinare",
+      title: "Ver cuándo hay pedidos",
+      intro:
+        "El **Calendario de pedidos** muestra mes a mes cuándo abren y cierran los pedidos y cuándo se recogen, también los ciclos pasados.",
+      steps: [
+        "En Inicio toca **Calendario de pedidos** (o, si no hay nada abierto, el enlace en **Pedido**).",
+        "Pasa de un mes a otro con las flechas: los puntos de colores marcan aperturas, cierres y recogidas.",
+        "Toca un día para ver solo sus pedidos; **Todo el mes** vuelve a la lista completa.",
+      ],
+      notes: [
+        "Cada ciclo indica si has pedido y si el pedido se ha recogido. Desde un ciclo abierto vas al pedido, desde uno pasado a su detalle en el **Historial**.",
+      ],
+      link: { href: "/calendario", label: "Abrir el calendario" },
+      keywords: ["calendario", "fechas", "próximos", "futuros", "cuándo", "recogida", "apertura", "mes"],
+    },
+    {
       slug: "dopo-chiusura",
       topic: "ordinare",
       title: "Qué pasa cuando se cierra el pedido",

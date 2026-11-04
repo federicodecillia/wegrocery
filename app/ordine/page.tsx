@@ -66,6 +66,12 @@ export default async function OrdinePage({
           <p className="mt-2 text-[14px] text-secondary-foreground">
             {t.order.noOpenOrdersHint}
           </p>
+          <Link
+            href="/calendario"
+            className="mt-4 inline-flex min-h-11 items-center rounded-full border border-border bg-card px-4 text-[14px] font-semibold text-primary-text"
+          >
+            {t.calendar.orderEmptyLink} <span aria-hidden className="ml-1">→</span>
+          </Link>
         </div>
       </AppShell>
     );

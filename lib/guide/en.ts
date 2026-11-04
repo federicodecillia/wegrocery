@@ -153,6 +153,23 @@ export const guideEn: GuideContent = {
       keywords: ["deadline", "closing", "time", "pickup", "delivery", "date"],
     },
     {
+      slug: "calendario-ordini",
+      topic: "ordinare",
+      title: "See when the orders are",
+      intro:
+        "The **Order calendar** shows, month by month, when orders open and close and when to pick up, past cycles included.",
+      steps: [
+        "On Home tap **Order calendar** (or, when nothing is open, the link in **Order**).",
+        "Move between months with the arrows: the coloured dots mark openings, closings and pickups.",
+        "Tap a day to see only its orders; **Whole month** brings the full list back.",
+      ],
+      notes: [
+        "Each cycle says whether you ordered and whether the order was collected. An open cycle leads to the order, a past one to its detail in **History**.",
+      ],
+      link: { href: "/calendario", label: "Open the calendar" },
+      keywords: ["calendar", "dates", "upcoming", "future", "when", "pickup", "opening", "month"],
+    },
+    {
       slug: "dopo-chiusura",
       topic: "ordinare",
       title: "What happens when the order closes",

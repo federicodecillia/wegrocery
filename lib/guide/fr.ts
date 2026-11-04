@@ -153,6 +153,23 @@ export const guideFr: GuideContent = {
       keywords: ["date limite", "clôture", "heure", "retrait", "livraison", "date"],
     },
     {
+      slug: "calendario-ordini",
+      topic: "ordinare",
+      title: "Voir quand ont lieu les commandes",
+      intro:
+        "Le **Calendrier des commandes** montre, mois par mois, quand les commandes ouvrent et ferment et quand les retirer, cycles passés compris.",
+      steps: [
+        "Sur l'Accueil, touchez **Calendrier des commandes** (ou, si rien n'est ouvert, le lien dans **Commande**).",
+        "Passez d'un mois à l'autre avec les flèches : les points de couleur marquent ouvertures, clôtures et retraits.",
+        "Touchez un jour pour ne voir que ses commandes ; **Tout le mois** affiche à nouveau la liste complète.",
+      ],
+      notes: [
+        "Chaque cycle indique si vous avez commandé et si la commande a été retirée. Un cycle ouvert mène à la commande, un cycle passé à son détail dans l'**Historique**.",
+      ],
+      link: { href: "/calendario", label: "Ouvrir le calendrier" },
+      keywords: ["calendrier", "dates", "prochaines", "futures", "quand", "retrait", "ouverture", "mois"],
+    },
+    {
       slug: "dopo-chiusura",
       topic: "ordinare",
       title: "Ce qui se passe à la clôture de la commande",
