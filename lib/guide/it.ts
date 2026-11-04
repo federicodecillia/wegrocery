@@ -166,6 +166,7 @@ export const guideIt: GuideContent = {
         "Tocca un giorno per vedere il suo ciclo; se ce ne sono più di uno, li trovi elencati sotto. Le frecce cambiano mese.",
       ],
       notes: [
+        "Su un ciclo **In programma** tocca **Avvisami quando apre** per ricevere un'email all'apertura. **Aggiungi al calendario** mette scadenza e ritiro nel calendario del telefono.",
         "Un ciclo **In programma** non è ancora aperto: vedi le date (a volte **indicative**) e l'anteprima dei prodotti, e ordini quando apre.",
         "Ogni ciclo dice se hai ordinato e se l'ordine è stato ritirato. Da un ciclo aperto vai all'ordine, da uno passato al dettaglio nello **Storico**.",
       ],

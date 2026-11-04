@@ -360,6 +360,19 @@ export const fr: Strings = {
     previewNote: "Aperçu : produits et prix peuvent encore changer avant l'ouverture des commandes.",
     previewEmpty: "Les produits n'ont pas encore été ajoutés.",
     plannedHint: "Vous pourrez commander dès l'ouverture : vous serez prévenu comme d'habitude.",
+    notifyMe: "Prévenez-moi à l'ouverture",
+    notifyOn: "Nous vous enverrons un e-mail à l'ouverture.",
+    notifyCancel: "Annuler le rappel",
+    notifyAdded: "Nous vous enverrons un e-mail à l'ouverture",
+    notifyRemoved: "Rappel annulé",
+    addToCalendar: "Ajouter au calendrier",
+    addToCalendarHint: "La clôture et le retrait dans le calendrier du téléphone, avec un rappel.",
+    ics: {
+      opens: (title: string) => `Ouverture des commandes : ${title}`,
+      closes: (title: string) => `Dernier moment pour commander : ${title}`,
+      pickup: (title: string) => `Retrait : ${title}`,
+      closesAlarm: "Les commandes ferment bientôt",
+    },
   },
 
   history: {
@@ -2207,6 +2220,8 @@ export const fr: Strings = {
     },
   },
   notificationsServer: {
+    openAlertTitle: (title: string) => `Les commandes sont ouvertes : ${title}`,
+    openAlertBody: (title: string, deadline: string) => `Vous avez demandé à être prévenu : vous pouvez commander « ${title} » jusqu'au ${deadline}.`,
     orderClosedTitle: "Commande clôturée",
     orderClosedBody: (title: string, total: string) =>
       `« ${title} » a été clôturé. Vous avez été prélevé de ${total}.`,
@@ -2420,6 +2435,7 @@ export const fr: Strings = {
     supplier: "Fournisseur",
   },
   errors: {
+    alertNotPlanned: "Ce cycle n'est plus programmé : les commandes sont déjà ouvertes ou il a été supprimé.",
     plannedOpenAfterClose: "Les commandes doivent ouvrir avant leur clôture.",
     plannedCloseInPast: "La clôture des commandes de ce cycle est passée : déplacez la date avec Modifier, puis ouvrez les commandes.",
     cycleNotPlanned: "Ce cycle n'est plus programmé.",

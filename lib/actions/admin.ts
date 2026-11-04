@@ -69,6 +69,7 @@ import {
   getResolvedPreferences,
 } from "@/lib/notifications/dispatch";
 import { selectCycleAccessMembers } from "@/lib/notifications/reminder";
+import { sendOpenAlerts } from "@/lib/notifications/open-alerts";
 import { pickupNotice, type CyclePickup } from "@/lib/notifications/pickup";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
 import { parseWeighingDeposit, resolveCycleFee, type HandlingFee } from "@/lib/payments/order-payment";
@@ -348,8 +349,10 @@ export async function adminOpenPlannedCycle(cycleId: string): Promise<{ error?: 
       if (!current) return { error: t.errors.cycleNotFound };
       return { error: current.status === "planned" ? t.errors.plannedCloseInPast : t.errors.cycleNotPlanned };
     }
-    await writeAudit(db, admin.email, "open_planned_cycle", "cycle", cycleId, { openedAt: now.toISOString() });
     await notifyCycleOpened(db, opened, now);
+    // "Avvisami quando apre": an email to those who asked (and are not emailed already).
+    const alerted = await sendOpenAlerts(db, { cycleId, title: opened.title, orderCloseAt: opened.orderCloseAt });
+    await writeAudit(db, admin.email, "open_planned_cycle", "cycle", cycleId, { openedAt: now.toISOString(), alertsEmailed: alerted });
     revalidatePath("/admin");
     revalidatePath("/");
     revalidatePath("/ordine");
