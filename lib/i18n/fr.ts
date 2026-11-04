@@ -327,6 +327,7 @@ export const fr: Strings = {
     all: "Toutes",
     legendLabel: "Légende",
     legend: {
+      opens: "Ouvre",
       window: "Jours pour commander",
       closes: "Dernier jour",
       pickup: "Retrait",

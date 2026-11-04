@@ -327,6 +327,7 @@ export const en: Strings = {
     all: "All",
     legendLabel: "Legend",
     legend: {
+      opens: "Opens",
       window: "Days to order",
       closes: "Last day",
       pickup: "Pickup",
