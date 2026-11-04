@@ -47,7 +47,7 @@ export const guideEs: GuideContent = {
       topic: "primi-passi",
       title: "Cómo está organizada la app",
       steps: [
-        "**Inicio**: el calendario con las próximas fechas, los pedidos abiertos con el tiempo que queda, y luego tu saldo y tus últimos movimientos.",
+        "**Inicio**: los ciclos en **Por pedir**, **Por recoger** y **Próximamente**, cada uno con su fecha, y luego tu saldo y tus últimos movimientos.",
         "**Pedido**: el catálogo del ciclo abierto, donde eliges los productos y confirmas.",
         "**Historial**: tus pedidos pasados y cada movimiento del saldo.",
         "**Guía**: esta página, con las novedades de la app y los contactos.",
@@ -148,7 +148,7 @@ export const guideEs: GuideContent = {
         "En Inicio ves cuándo se cierra el pedido y cuánto tiempo queda. Tras el cierre el pedido ya no se puede cambiar: el grupo lo envía a los proveedores.",
       notes: [
         "Cuando hay varios pedidos abiertos a la vez, en **Pedido** eliges primero cuál abrir.",
-        "Los días de recogida están en Inicio, en la sección **Calendario**.",
+        "Los días de recogida están en Inicio, bajo cada ciclo; tras el cierre el ciclo pasa a **Por recoger**.",
       ],
       keywords: ["fecha límite", "cierre", "hora", "recogida", "entrega", "fecha"],
     },
@@ -159,7 +159,7 @@ export const guideEs: GuideContent = {
       intro:
         "El **Calendario de pedidos** muestra mes a mes cuándo abren y cierran los pedidos y cuándo se recogen, también los ciclos pasados.",
       steps: [
-        "En Inicio toca **Abrir el calendario** en la sección **Calendario** (o, si no hay nada abierto, el enlace en **Pedido**).",
+        "En Inicio toca **Calendario completo**, junto a **Por pedir** (o, si no hay nada abierto, el enlace en **Pedido**).",
         "Pasa de un mes a otro con las flechas: los puntos de colores marcan aperturas, cierres y recogidas.",
         "Toca un día para ver solo sus pedidos; **Todo el mes** vuelve a la lista completa.",
       ],
@@ -212,7 +212,7 @@ export const guideEs: GuideContent = {
       title: "Cómo funciona el saldo",
       intro:
         "El saldo es tu crédito con el grupo. Lo recargas por adelantado y, cuando se cierra cada pedido, su coste se descuenta de ahí.",
-      notes: ["En Inicio ves el saldo de hoy y lo que quedará tras el pedido abierto."],
+      notes: ["Al final de Inicio ves el saldo de hoy; si los pedidos abiertos lo dejan bajo cero, te lo dice."],
       keywords: ["crédito", "cuenta", "dinero", "monedero"],
       when: { mode: "wallet" },
     },

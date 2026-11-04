@@ -49,7 +49,7 @@ export const guideIt: GuideContent = {
       topic: "primi-passi",
       title: "Com'è fatta l'app",
       steps: [
-        "**Home**: il calendario con le prossime date, gli ordini aperti con il tempo che resta, poi il saldo e gli ultimi movimenti.",
+        "**Home**: i cicli divisi in **Da ordinare**, **Da ritirare** e **In arrivo**, ognuno con la sua data, poi il saldo e gli ultimi movimenti.",
         "**Ordine**: il catalogo del ciclo aperto, dove scegli i prodotti e confermi.",
         "**Storico**: i tuoi ordini passati e tutti i movimenti del saldo.",
         "**Guida**: questa pagina, con le novità dell'app e i contatti.",
@@ -150,7 +150,7 @@ export const guideIt: GuideContent = {
         "La Home mostra quando chiude l'ordine e quanto tempo resta. Dopo la chiusura l'ordine non si può più cambiare: il gruppo lo manda ai fornitori.",
       notes: [
         "Se ci sono più ordini aperti insieme, in **Ordine** scegli prima quale aprire.",
-        "I giorni di ritiro sono in Home, nella sezione **Calendario**.",
+        "I giorni di ritiro sono in Home, sotto ogni ciclo; dopo la chiusura il ciclo passa in **Da ritirare**.",
       ],
       keywords: ["scadenza", "chiusura", "orario", "ritiro", "consegna", "data"],
     },
@@ -161,7 +161,7 @@ export const guideIt: GuideContent = {
       intro:
         "Il **Calendario ordini** mostra mese per mese quando aprono e chiudono gli ordini e quando si ritira, anche per i cicli passati.",
       steps: [
-        "In Home tocca **Apri il calendario** nella sezione **Calendario** (o, se non c'è niente di aperto, il link in **Ordine**).",
+        "In Home tocca **Calendario completo**, accanto a **Da ordinare** (o, se non c'è niente di aperto, il link in **Ordine**).",
         "Sfoglia i mesi con le frecce: i pallini colorati segnano aperture, chiusure e ritiri.",
         "Tocca un giorno per vedere solo i suoi ordini; **Tutto il mese** torna all'elenco completo.",
       ],
@@ -217,7 +217,7 @@ export const guideIt: GuideContent = {
       intro:
         "Il saldo è il tuo credito presso il gruppo. Lo ricarichi in anticipo e, alla chiusura di ogni ordine, il costo viene scalato da lì.",
       notes: [
-        "In Home vedi il saldo di oggi e quanto resterà dopo l'ordine aperto.",
+        "In Home, in fondo, vedi il saldo di oggi; se gli ordini aperti lo portano sotto zero, te lo dice.",
       ],
       keywords: ["credito", "conto", "soldi", "borsellino"],
       when: { mode: "wallet" },

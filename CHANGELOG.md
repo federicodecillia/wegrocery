@@ -30,7 +30,7 @@ A bullet that only matters to whoever hosts, runs or develops the app
 - 🗄️ [tech] **Migration `0048_planned_cycles.sql`.** New column `order_cycles.dates_tentative`, false for every cycle, and the fee freeze of 0026 now lets a planned cycle change its fee too; apply it before deploying.
 
 ### Changed
-- 🏠 **A tidier Home, in sections.** On top the **Calendar** with the next dates (orders opening and closing, pickups, planned cycles), then the **open orders** in compact cards where your order is folded into one line ("Your order · 5 products · €23.40") that opens on a tap, then the **balance and movements** on one smaller line, since card payments keep the balance near zero. On a computer the money sits on the right.
+- 🏠 **A clearer Home: one list of cycles.** Each cycle shows once, in the group of what you have to do: **To order** (deadline with the weekday in full, "tomorrow" or "Last day", your order folded into one line, a small "Order", "Edit" or "Pay" button), **To collect** (closed cycles with your order and the pickup ahead) and **Coming up** (planned cycles). A date tile on each cycle stands in for the calendar; the full calendar is one tap away, and on a computer this month sits on the right. The balance is one small line at the bottom, and goes on top only when it is negative.
 
 ## [1.43.0] - 2026-11-01
 

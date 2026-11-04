@@ -45,7 +45,7 @@ Never read `.env*` files other than `.env.example` (Playbook 8.3).
 
 ```
 ├── app/                        # Next.js App Router pages
-│   ├── page.tsx                # Home in sections (components/home/): Calendario (next dates, upcomingEvents), Ordini aperti (OpenCycleCard, the member's order folded), Saldo e movimenti (compact HomeBalance); from lg the money on the right
+│   ├── page.tsx                # Home: one list of cycles, each once, by what to do (lib/home.ts): Da ordinare (OpenCycleCard: date tile, deadline in words, order folded, one small action), Da ritirare and In arrivo (CycleRow); then Saldo e movimenti (HomeBalance, on top when negative). From lg: this month (HomeMonth) and the money on the right
 │   ├── ordine/page.tsx         # Order: confirmed recap (edit/cancel) or the stepper form
 │   ├── storico/page.tsx        # Order history + ledger movements tabs
 │   ├── calendario/page.tsx     # Order calendar: month grid + the month's cycles, planned ones with a product preview (lib/calendar.ts pure, lib/db/calendar.ts read, components/calendar/cycle-calendar.tsx); from Home (with the next planned cycle) and from Ordine when nothing is open
@@ -750,7 +750,7 @@ Rules (enforced by `lib/brand/design-guard.test.ts`):
   zooms the page on smaller fields), so do not size fields below that.
 
 Key patterns:
-- **Home balance** (`components/home/home-balance.tsx`): one compact line in the "Saldo e movimenti" section (card payments keep it near zero); `danger-bg` with a "Ricarica" button only when negative
+- **Home balance** (`components/home/home-balance.tsx`): one compact line at the bottom (card payments keep it near zero); a negative balance goes on top with `danger-bg` and a "Ricarica" button; "Dopo questi ordini avrai" only when the open orders take it below zero
 - **Pill steppers** in order form: zero-state (single + btn) vs has-qty state (−/qty/+)
 - **Installable app (PWA)**: `app/manifest.ts` (public: `proxy.ts` lets `manifest.webmanifest` and `.png` through) lists icons drawn at build time from `brand.logoUrl` by `app/icons/[file]/route.tsx` (sizes in `lib/pwa/icons.ts`; a logo that cannot be loaded becomes a letter, never a failed build). `components/install-prompt.tsx` sits last on Home, phones only (`lib/pwa/install-hint.ts`); no service worker.
 - **Navigation**: items from `nav-items.ts`, filtered by `visibleNavItems` (members 4, admins 5 with Admin). `BottomNav` (with the header: logo, bell, avatar) on a phone, below `md`; from `md` `SideNav` replaces both: a rail (88 px, icon over label) on a tablet, a sidebar (248 px, icon beside label) from `lg`, with the logo on top and Notifiche and Profilo at the bottom. From `lg` the admin sections hang under Admin in the sidebar and the admin pill bar (`AdminNav`) hides; its views row stays (Playbook 2.8). An item's `also` paths keep it current on pages without an item (Ricarica → Home); the bell and the avatar carry `aria-current` on Notifiche and on Profilo/Famiglia

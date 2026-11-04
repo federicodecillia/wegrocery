@@ -28,7 +28,7 @@ export function HomeBalance({
     <div className={`mb-3 rounded-card border px-4 py-3 shadow-card ${negative ? "border-destructive/30 bg-danger-bg" : "border-border bg-card"}`}>
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <div className={`text-label font-semibold ${negative ? "text-destructive" : "text-secondary-foreground"}`}>
+          <div className={`text-[14px] font-semibold ${negative ? "text-destructive" : "text-secondary-foreground"}`}>
             {negative ? t.home.balanceToTopUp : t.home.balanceShort}
           </div>
           <div className={`text-[20px] font-black tabular-nums tracking-[-0.03em] ${negative ? "text-destructive" : "text-foreground"}`}>
@@ -46,10 +46,11 @@ export function HomeBalance({
             </Link>
           ))}
       </div>
-      {afterOrders !== null && (
-        <p className="mt-1 text-label text-secondary-foreground">
-          <span className="tabular-nums">{t.home.afterOpenOrders(formatSignedMoney(afterOrders))}</span>
-          {feeIncluded && <> · {t.home.feeIncluded}</>}
+      {/* Worth a line only when the open orders take the balance below zero: then it is news. */}
+      {afterOrders !== null && afterOrders < 0 && (
+        <p className="mt-2 rounded-lg bg-warning-bg px-3 py-2 text-[14px] text-warning">
+          <span className="tabular-nums font-semibold">{t.home.afterOpenOrdersShort(formatSignedMoney(afterOrders))}</span>
+          {feeIncluded && <span className="block text-[13px]">{t.home.feeIncluded}</span>}
         </p>
       )}
       {!topups && negative && (

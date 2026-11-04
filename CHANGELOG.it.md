@@ -31,7 +31,7 @@ dettagli tecnici", la release su GitHub la tiene.
 - 🗄️ [tecnico] **Migrazione `0048_planned_cycles.sql`.** Nuova colonna `order_cycles.dates_tentative`, falsa per tutti i cicli, e il blocco delle spese di preparazione della 0026 ora lascia cambiare anche quelle di un ciclo in programma; da applicare prima del deploy.
 
 ### Modificato
-- 🏠 **Una Home più ordinata, a sezioni.** In alto il **Calendario** con le prossime date (aperture e chiusure degli ordini, ritiri, cicli in programma), poi gli **ordini aperti** in card compatte dove il tuo ordine è raccolto in una riga ("Il tuo ordine · 5 prodotti · 23,40 €") che si apre con un tocco, infine **saldo e movimenti** in una riga più piccola, visto che con i pagamenti con carta il saldo resta vicino a zero. Da computer i soldi stanno a destra.
+- 🏠 **Una Home più chiara: una sola lista di cicli.** Ogni ciclo compare una volta, nel gruppo di cosa devi fare: **Da ordinare** (la scadenza con il giorno della settimana per intero, "domani" o "Ultimo giorno", il tuo ordine raccolto in una riga, un piccolo pulsante "Ordina", "Modifica" o "Paga"), **Da ritirare** (i cicli chiusi con il tuo ordine e il ritiro ancora da fare) e **In arrivo** (i cicli in programma). Il riquadro con la data su ogni ciclo fa da calendario; il calendario completo è a un tocco, e da computer il mese corrente sta a destra. Il saldo è una riga piccola in fondo, e va in alto solo se è negativo.
 
 ## [1.43.0] - 1 novembre 2026
 
