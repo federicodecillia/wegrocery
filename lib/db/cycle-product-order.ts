@@ -46,9 +46,9 @@ export async function readCycleProductIds(db: Db, cycleId: string): Promise<stri
 
 /**
  * Saves `productIds` as the cycle's custom order and switches the cycle to
- * it, in one batch, only while the cycle is open. sort_order becomes 1..n in
+ * it, in one batch, only before the close (open or planned). sort_order becomes 1..n in
  * that order; a product of the cycle missing from the list (added in the
- * meantime) goes after them, in its current order. "closed" = the cycle is
+ *  meantime) goes after them, in its current order. "closed" = the cycle is
  * no longer open and nothing was written.
  */
 export async function saveCustomProductOrder(
@@ -57,7 +57,7 @@ export async function saveCustomProductOrder(
   productIds: readonly string[],
 ): Promise<"saved" | "closed"> {
   const ids = JSON.stringify(productIds);
-  const open = sql`EXISTS (SELECT 1 FROM order_cycles WHERE cycle_id = ${cycleId} AND status = 'open')`;
+  const open = sql`EXISTS (SELECT 1 FROM order_cycles WHERE cycle_id = ${cycleId} AND status IN ('open', 'planned'))`;
   const [, cycle] = await db.batch([
     db.execute(sql`
       WITH wanted AS (
@@ -76,7 +76,7 @@ export async function saveCustomProductOrder(
     `),
     db.execute<{ cycle_id: string }>(sql`
       UPDATE order_cycles SET product_order = 'custom', product_order_saved_at = now()
-      WHERE cycle_id = ${cycleId} AND status = 'open'
+      WHERE cycle_id = ${cycleId} AND status IN ('open', 'planned')
       RETURNING cycle_id
     `),
   ]);
@@ -87,7 +87,7 @@ export async function saveCustomProductOrder(
 export async function setAlphabeticalOrder(db: Db, cycleId: string): Promise<"saved" | "closed"> {
   const { rows } = await db.execute<{ cycle_id: string }>(sql`
     UPDATE order_cycles SET product_order = 'alpha'
-    WHERE cycle_id = ${cycleId} AND status = 'open'
+    WHERE cycle_id = ${cycleId} AND status IN ('open', 'planned')
     RETURNING cycle_id
   `);
   return rows.length > 0 ? "saved" : "closed";
@@ -97,7 +97,7 @@ export async function setAlphabeticalOrder(db: Db, cycleId: string): Promise<"sa
 export async function resumeCustomOrder(db: Db, cycleId: string): Promise<"saved" | "closed"> {
   const { rows } = await db.execute<{ cycle_id: string }>(sql`
     UPDATE order_cycles SET product_order = 'custom'
-    WHERE cycle_id = ${cycleId} AND status = 'open'
+    WHERE cycle_id = ${cycleId} AND status IN ('open', 'planned')
     RETURNING cycle_id
   `);
   return rows.length > 0 ? "saved" : "closed";

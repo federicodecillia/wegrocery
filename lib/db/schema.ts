@@ -117,6 +117,10 @@ export const orderCycles = pgTable("order_cycles", {
   // percentage of the products paid with the order and given back at the
   // settlement for what the weighing did not use. NULL = none.
   weighingDepositPct: numeric("weighing_deposit_pct", { precision: 5, scale: 2 }),
+  // The dates of a cycle may still move: "Date indicative" in the calendar
+  // (drizzle/0048_planned_cycles.sql). Set on a planned cycle, cleared when
+  // its orders open.
+  datesTentative: boolean("dates_tentative").notNull().default(false),
   // Last settlement of a pay-per-order cycle (drizzle/0024_settlement.sql).
   settledAt: timestamp("settled_at", { withTimezone: true }),
   // How members see the products (drizzle/0040_cycle_product_order.sql):

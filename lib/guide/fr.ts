@@ -164,6 +164,7 @@ export const guideFr: GuideContent = {
         "Touchez un jour pour ne voir que ses commandes ; **Tout le mois** affiche à nouveau la liste complète.",
       ],
       notes: [
+        "Un cycle **Programmé** n'est pas encore ouvert : vous voyez ses dates (parfois **indicatives**) et un aperçu des produits, et vous commandez à son ouverture.",
         "Chaque cycle indique si vous avez commandé et si la commande a été retirée. Un cycle ouvert mène à la commande, un cycle passé à son détail dans l'**Historique**.",
       ],
       link: { href: "/calendario", label: "Ouvrir le calendrier" },

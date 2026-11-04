@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, Lock, LockOpen, Package } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, Lock, LockOpen, Package } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   entriesIn,
@@ -18,7 +18,7 @@ import {
   type CalendarScope,
 } from "@/lib/calendar";
 import { t } from "@/lib/i18n";
-import { formatDate, formatDateTime } from "@/lib/i18n/format";
+import { formatDate, formatDateTime, formatMoney } from "@/lib/i18n/format";
 import { cn } from "@/lib/utils";
 
 // /calendario: a month grid with a dot per kind of event on each day, and
@@ -222,9 +222,13 @@ function CycleCard({ entry, scope }: { entry: CalendarEntry; scope: CalendarScop
     <article className="overflow-hidden rounded-card border border-border bg-card shadow-card">
       <div className="px-4 pb-3 pt-3.5">
         <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
-          <Badge variant={entry.state === "open" ? "accent" : "default"} dot={entry.state === "open"}>
+          <Badge
+            variant={entry.state === "open" ? "accent" : entry.state === "planned" ? "brand" : "default"}
+            dot={entry.state === "open"}
+          >
             {c.states[entry.state]}
           </Badge>
+          {entry.tentative && <Badge>{c.tentative}</Badge>}
           {entry.pickedUp ? (
             <Badge variant="accent">{c.pickedUp}</Badge>
           ) : (
@@ -238,6 +242,7 @@ function CycleCard({ entry, scope }: { entry: CalendarEntry; scope: CalendarScop
             <EventRow key={`${event.kind}-${event.at}`} event={event} highlight={scope.day ? eventInScope(event, scope) : false} />
           ))}
         </ul>
+        {entry.state === "planned" && <PlannedPreview entry={entry} />}
       </div>
       {entry.href && (
         <Link
@@ -267,5 +272,45 @@ function EventRow({ event, highlight }: { event: CalendarEvent; highlight: boole
         </span>
       </span>
     </li>
+  );
+}
+
+// A planned cycle: members cannot order yet, but see what is coming. The list
+// folds away so a long one does not push the next cycles down.
+function PlannedPreview({ entry }: { entry: CalendarEntry }) {
+  const c = t.calendar;
+  return (
+    <div className="mt-3 border-t border-border pt-2.5">
+      <p className="text-[13px] text-secondary-foreground">{c.plannedHint}</p>
+      {entry.preview.length === 0 ? (
+        <p className="mt-1 text-[13px] text-muted-foreground">{c.previewEmpty}</p>
+      ) : (
+        <details className="group mt-1.5">
+          <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 text-[14px] font-semibold text-primary-text [&::-webkit-details-marker]:hidden">
+            {c.previewToggle(entry.preview.length)}
+            <ChevronDown aria-hidden className="size-4 transition-transform group-open:rotate-180" />
+          </summary>
+          <p className="mb-2 text-label text-muted-foreground">{c.previewNote}</p>
+          <ul className="divide-y divide-border rounded-xl border border-border">
+            {entry.preview.map((p, i) => (
+              <li key={`${p.name}-${i}`} className="flex items-start justify-between gap-3 px-3 py-2 text-[14px]">
+                <span className="flex min-w-0 items-start gap-2">
+                  {p.emoji && (
+                    <span aria-hidden className="w-4.5 shrink-0 text-[16px] leading-tight">
+                      {p.emoji}
+                    </span>
+                  )}
+                  <span className="min-w-0">
+                    <span className="block text-foreground">{p.name}</span>
+                    {p.detail && <span className="block text-label text-secondary-foreground">{p.detail}</span>}
+                  </span>
+                </span>
+                <span className="shrink-0 tabular-nums text-secondary-foreground">{formatMoney(p.price)}</span>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
+    </div>
   );
 }

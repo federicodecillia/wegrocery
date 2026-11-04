@@ -8,6 +8,10 @@ describe("cycle views", () => {
     expect(cycleViews("open")).toEqual(["panoramica", "prodotti", "ordini", "ritiri"]);
     expect(cycleViews("closed")).toEqual(["panoramica", "ordini", "fornitore", "ritiri", "conti"]);
     expect(cycleViews("cancelled")).toEqual(["panoramica", "ordini", "conti"]);
+    // Planned: nobody can order yet, so no orders, supplier, pickups or accounts.
+    expect(cycleViews("planned")).toEqual(["panoramica", "prodotti"]);
+    expect(resolveCycleView("planned", "ordini")).toBe("panoramica");
+    expect(supplierOrderReady("planned", d("2026-01-01T00:00:00Z"))).toBe(false);
   });
 
   it("falls back to the overview for a view the cycle does not have", () => {
@@ -74,6 +78,7 @@ describe("settlementCandidate and settlementPending", () => {
     expect(settlementCandidate(base, now)).toBe(true);
     expect(settlementCandidate({ ...base, status: "cancelled" }, now)).toBe(true);
     expect(settlementCandidate({ ...base, status: "open" }, now)).toBe(false);
+    expect(settlementCandidate({ ...base, status: "planned" }, now)).toBe(false);
     expect(settlementCandidate({ ...base, paymentMode: "wallet" }, now)).toBe(false);
     expect(settlementCandidate({ ...base, settledAt: new Date("2026-08-01T00:00:00Z") }, now)).toBe(true);
     expect(settlementCandidate({ ...base, settledAt: new Date("2026-06-01T00:00:00Z") }, now)).toBe(false);
@@ -96,12 +101,14 @@ describe("groupCycles", () => {
       { id: "c", status: "closed", toSettle: true },
       { id: "d", status: "cancelled", toSettle: false },
       { id: "e", status: "closed", toSettle: true },
+      { id: "f", status: "planned", toSettle: false },
     ];
     expect(groupCycles(list).map((g) => [g.group, g.cycles.map((c) => c.id)])).toEqual([
       ["toSettle", ["c", "e"]],
       ["open", ["b"]],
+      ["planned", ["f"]],
       ["others", ["a", "d"]],
     ]);
-    expect(groupCycles(list.filter((c) => !c.toSettle)).map((g) => g.group)).toEqual(["open", "others"]);
+    expect(groupCycles(list.filter((c) => !c.toSettle)).map((g) => g.group)).toEqual(["open", "planned", "others"]);
   });
 });

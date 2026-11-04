@@ -164,6 +164,7 @@ export const guideEn: GuideContent = {
         "Tap a day to see only its orders; **Whole month** brings the full list back.",
       ],
       notes: [
+        "A **Planned** cycle is not open yet: you see its dates (sometimes **tentative**) and a preview of its products, and you order once it opens.",
         "Each cycle says whether you ordered and whether the order was collected. An open cycle leads to the order, a past one to its detail in **History**.",
       ],
       link: { href: "/calendario", label: "Open the calendar" },

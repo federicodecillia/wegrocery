@@ -13,7 +13,7 @@ import { SetupBanner } from "@/components/admin/setup/setup-banner";
 import { getBrand } from "@/lib/brand/get-brand";
 import { isWelcomeStep, WELCOME_QUERY, welcomeDone, welcomeMoney } from "@/lib/guide/welcome";
 import { t } from "@/lib/i18n";
-import { formatSignedMoney } from "@/lib/i18n/format";
+import { formatDate, formatSignedMoney } from "@/lib/i18n/format";
 import { getUserRole, requireUserSession } from "@/lib/auth/session";
 import {
   getCycleProducts,
@@ -26,6 +26,7 @@ import {
   getOrderDraft,
 } from "@/lib/db/queries";
 import { getDb } from "@/lib/db/client";
+import { getNextPlannedCycle } from "@/lib/db/calendar";
 import { getConsolidatedBalanceCents, getWalletBalance, getWalletOffset } from "@/lib/payments/balance-due";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
 import { getCycleCoverageCents } from "@/lib/payments/order-confirm";
@@ -51,12 +52,13 @@ export default async function HomePage({
   const memberId = session.user.memberId!;
   const personId = session.user.personId ?? memberId;
 
-  const [openCycles, recentMovements, nextPickup, settings, member] = await Promise.all([
+  const [openCycles, recentMovements, nextPickup, settings, member, nextPlanned] = await Promise.all([
     getOpenCycles(),
     getMemberLedger(memberId, 4),
     getNextMemberPickup(memberId),
     getPaymentSettings(),
     getMemberById(memberId),
+    getNextPlannedCycle(role),
   ]);
   // The welcome card is personal: the person who signed in, not the family
   // account they shop on.
@@ -358,7 +360,14 @@ export default async function HomePage({
         <CalendarDays aria-hidden className="size-5 shrink-0 text-primary-text" strokeWidth={2.25} />
         <span className="min-w-0 flex-1">
           <span className="block text-[14px] font-bold text-foreground">{t.calendar.homeLink}</span>
-          <span className="block text-label text-secondary-foreground">{t.calendar.homeLinkHint}</span>
+          <span className="block text-label text-secondary-foreground">
+            {nextPlanned
+              ? (nextPlanned.datesTentative ? t.calendar.homeNextTentative : t.calendar.homeNext)(
+                  nextPlanned.title,
+                  formatDate(nextPlanned.orderOpenAt, { weekday: "short", day: "numeric", month: "short" }),
+                )
+              : t.calendar.homeLinkHint}
+          </span>
         </span>
         <span aria-hidden className="text-primary-text">→</span>
       </Link>

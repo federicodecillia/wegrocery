@@ -7,6 +7,7 @@ const facts = (over: Partial<CycleFacts>): CycleFacts => ({
   cycleId: "cyc_1",
   title: "Ciclo",
   status: "closed",
+  orderOpenAt: null,
   orderCloseAt: h(-48),
   closedAt: h(-24),
   orderMembers: 3,
@@ -19,6 +20,32 @@ const facts = (over: Partial<CycleFacts>): CycleFacts => ({
 });
 
 describe("cycleSteps", () => {
+  it("a planned cycle asks to be opened from its planned day on", () => {
+    const planned = (orderOpenAt: Date | null) => facts({ status: "planned", orderOpenAt, orderCloseAt: h(200), closedAt: null });
+    // 12:00 UTC is 14:00 in Rome: later today, earlier today, yesterday.
+    expect(cycleSteps(planned(h(6)), now)).toEqual(["to_open"]);
+    expect(cycleSteps(planned(h(-3)), now)).toEqual(["to_open"]);
+    expect(cycleSteps(planned(h(-30)), now)).toEqual(["to_open"]);
+    // Tomorrow (Rome) or no opening at all: nothing yet.
+    expect(cycleSteps(planned(h(24)), now)).toEqual([]);
+    expect(cycleSteps(planned(null), now)).toEqual([]);
+  });
+
+  it("puts a planned cycle due to open right after an overdue one, with the hours it is late", () => {
+    const tasks = cycleTasks(
+      [
+        facts({ cycleId: "send", supplierSent: false }),
+        facts({ cycleId: "plan", status: "planned", orderOpenAt: h(-5), orderCloseAt: h(100), closedAt: null }),
+        facts({ cycleId: "late", status: "open", orderCloseAt: h(-2), closedAt: null }),
+      ],
+      now,
+    );
+    expect(tasks.map((x) => x.cycleId)).toEqual(["late", "plan", "send"]);
+    expect(tasks[1].hours).toBe(5);
+    const today = cycleTasks([facts({ cycleId: "plan", status: "planned", orderOpenAt: h(3), orderCloseAt: h(100), closedAt: null })], now);
+    expect(today[0].hours).toBeNull();
+  });
+
   it("an open cycle past its deadline must be closed", () => {
     expect(cycleSteps(facts({ status: "open", orderCloseAt: h(-5), closedAt: null }), now)).toEqual(["overdue"]);
     expect(cycleSteps(facts({ status: "open", orderCloseAt: h(5), closedAt: null }), now)).toEqual(["open"]);

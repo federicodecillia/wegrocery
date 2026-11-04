@@ -1,5 +1,5 @@
-// The order calendar (/calendario): the cycles a member can see, past and
-// open, laid out by day. Pure (no I/O): the rows come from
+// The order calendar (/calendario): the cycles a member can see, planned,
+// open and past, laid out by day. Pure (no I/O): the rows come from
 // lib/db/calendar.ts, the page and components/calendar/ draw the result.
 // Days are calendar days in the group's time zone ("YYYY-MM-DD"), worked out
 // on the server so the grid never depends on the device's clock.
@@ -23,7 +23,12 @@ export type CalendarCycleRow = {
   hasOrder: boolean;
   /** An admin marked the order as collected (Admin → Ciclo → Ritiri). */
   pickedUp: boolean;
+  /** The dates may still move (a planned cycle, drizzle/0048_planned_cycles.sql). */
+  datesTentative: boolean;
 };
+
+/** A product of a planned cycle, shown as a preview: name, detail, price. */
+export type PreviewProduct = { name: string; detail: string | null; price: number; emoji: string | null };
 
 export type CalendarEventKind = "opens" | "closes" | "pickup";
 
@@ -40,11 +45,11 @@ export type CalendarEvent = {
 };
 
 /**
- * Where the cycle stands for a member: taking orders, closed with the pickup
- * still ahead, or over (the last pickup window ended, or a closed cycle with
- * no pickup day).
+ * Where the cycle stands for a member: planned (orders not open yet), taking
+ * orders, closed with the pickup still ahead, or over (the last pickup window
+ * ended, or a closed cycle with no pickup day).
  */
-export type CalendarState = "open" | "closed" | "past";
+export type CalendarState = "planned" | "open" | "closed" | "past";
 
 export type CalendarEntry = {
   cycleId: string;
@@ -55,6 +60,10 @@ export type CalendarEntry = {
   productCount: number;
   hasOrder: boolean;
   pickedUp: boolean;
+  /** "Date indicative": only on a planned cycle. */
+  tentative: boolean;
+  /** The products of a planned cycle, as a preview; empty otherwise. */
+  preview: PreviewProduct[];
   /** Where the card leads: the order form, the cycle in Storico, or nowhere. */
   href: string | null;
 };
@@ -90,6 +99,7 @@ function pickupEnd(start: Date, endTime: string | null): Date {
 }
 
 function stateOf(row: CalendarCycleRow, now: Date): CalendarState {
+  if (row.status === "planned") return "planned";
   const closed = row.status !== "open" || (row.orderCloseAt !== null && row.orderCloseAt.getTime() <= now.getTime());
   if (!closed) return "open";
   const ends = [
@@ -112,10 +122,17 @@ function eventsOf(row: CalendarCycleRow): CalendarEvent[] {
   return events.sort((a, b) => a.at.localeCompare(b.at));
 }
 
-/** The cycles as calendar entries. Cancelled cycles stay in Storico only. */
-export function buildCalendar(rows: ReadonlyArray<CalendarCycleRow>, now: Date): CalendarEntry[] {
+/** The statuses the calendar shows. Cancelled cycles stay in Storico only. */
+export const CALENDAR_STATUSES = ["planned", "open", "closed"] as const;
+
+/** The cycles as calendar entries, with the preview of each planned one (`previews`, by cycle). */
+export function buildCalendar(
+  rows: ReadonlyArray<CalendarCycleRow>,
+  now: Date,
+  previews: ReadonlyMap<string, PreviewProduct[]> = new Map(),
+): CalendarEntry[] {
   return rows
-    .filter((r) => r.status === "open" || r.status === "closed")
+    .filter((r) => (CALENDAR_STATUSES as readonly string[]).includes(r.status))
     .map((row) => {
       const state = stateOf(row, now);
       const href =
@@ -133,6 +150,8 @@ export function buildCalendar(rows: ReadonlyArray<CalendarCycleRow>, now: Date):
         productCount: row.productCount,
         hasOrder: row.hasOrder,
         pickedUp: row.pickedUp,
+        tentative: state === "planned" && row.datesTentative,
+        preview: state === "planned" ? (previews.get(row.cycleId) ?? []) : [],
         href,
       };
     });

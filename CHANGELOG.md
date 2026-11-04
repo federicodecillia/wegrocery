@@ -26,6 +26,8 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ### Added
 - 📅 **Order calendar.** A new page, reached from Home (and from Order when nothing is open), shows month by month when orders open and close and when to pick up, for the open cycles and those of the last year. Tap a day to see only its cycles; each one says whether you ordered or collected and leads to the order or to History.
+- 🗓️ **Planned cycles.** When creating a cycle, choose **Later** under "When the orders open": the cycle goes in the members' calendar with its dates (marked "Tentative dates" if they may still move) and its products as a preview, added by hand or from the supplier's Excel listing as usual. Nobody can order until an admin or orders referent taps **Open the orders**; "To do now" reminds them on the planned day, and a planned cycle can be deleted. Home shows the next one under the calendar link.
+- 🗄️ [tech] **Migration `0048_planned_cycles.sql`.** New column `order_cycles.dates_tentative`, false for every cycle, and the fee freeze of 0026 now lets a planned cycle change its fee too; apply it before deploying.
 
 ## [1.43.0] - 2026-11-01
 

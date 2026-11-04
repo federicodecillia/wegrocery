@@ -1,13 +1,15 @@
-import { and, desc, eq, inArray, sql } from "drizzle-orm";
-import { CALENDAR_PAST_DAYS, type CalendarCycleRow } from "@/lib/calendar";
+import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
+import { CALENDAR_PAST_DAYS, CALENDAR_STATUSES, type CalendarCycleRow, type PreviewProduct } from "@/lib/calendar";
 import { canAccessCycle } from "@/lib/roles";
+import { memberProductEmoji } from "@/lib/utils";
 import { getDb } from "./client";
+import { getCycleProducts } from "./queries";
 import { cyclePickups, orderCycles, orders, products, suppliers } from "./schema";
 
 // Reads of the order calendar (/calendario, lib/calendar.ts).
 
 /**
- * The open and closed cycles of the last CALENDAR_PAST_DAYS a member can see
+ * The planned, open and closed cycles of the last CALENDAR_PAST_DAYS a member can see
  * (canAccessCycle for their role, or any cycle their account ordered on),
  * with whether they ordered and collected. `memberIds`: the account and the
  * people of its family, as in Storico.
@@ -29,6 +31,7 @@ export async function getCalendarCycles(role: string | null, memberIds: string[]
       pickupEndTime: orderCycles.pickupEndTime,
       pickup2Date: orderCycles.pickup2Date,
       pickup2EndTime: orderCycles.pickup2EndTime,
+      datesTentative: orderCycles.datesTentative,
       productCount: sql<number>`(SELECT count(*)::int FROM ${products} WHERE ${products.cycleId} = ${orderCycles.cycleId})`,
       hasOrder: sql<boolean>`EXISTS (
         SELECT 1 FROM ${orders}
@@ -43,7 +46,7 @@ export async function getCalendarCycles(role: string | null, memberIds: string[]
     .leftJoin(suppliers, eq(orderCycles.supplierId, suppliers.supplierId))
     .where(
       and(
-        inArray(orderCycles.status, ["open", "closed"]),
+        inArray(orderCycles.status, [...CALENDAR_STATUSES]),
         sql`greatest(
           ${orderCycles.pickupDate}, ${orderCycles.pickup2Date},
           ${orderCycles.orderCloseAt}, coalesce(${orderCycles.orderOpenAt}, ${orderCycles.createdAt})
@@ -68,5 +71,41 @@ export async function getCalendarCycles(role: string | null, memberIds: string[]
       productCount: Number(r.productCount),
       hasOrder: Boolean(r.hasOrder),
       pickedUp: Boolean(r.pickedUp),
+      datesTentative: r.datesTentative,
     }));
+}
+
+/** The products of the planned cycles, as the members will see them once open: the preview. */
+export async function getPlannedPreviews(cycleIds: string[]): Promise<Map<string, PreviewProduct[]>> {
+  const lists = await Promise.all(cycleIds.map((id) => getCycleProducts(id)));
+  return new Map(
+    cycleIds.map((id, i) => [
+      id,
+      lists[i].map((p) => ({
+        name: p.name,
+        detail: [p.variant, p.format].filter(Boolean).join(" · ") || null,
+        price: Number(p.unitPrice),
+        emoji: memberProductEmoji(p.emoji, p.name),
+      })),
+    ]),
+  );
+}
+
+export type NextPlannedCycle = { cycleId: string; title: string; orderOpenAt: Date; datesTentative: boolean };
+
+/** The next planned cycle a member can see, by its planned opening, for the calendar link on Home. */
+export async function getNextPlannedCycle(role: string | null): Promise<NextPlannedCycle | null> {
+  const rows = await getDb()
+    .select({
+      cycleId: orderCycles.cycleId,
+      title: orderCycles.title,
+      accessLevel: orderCycles.accessLevel,
+      orderOpenAt: orderCycles.orderOpenAt,
+      datesTentative: orderCycles.datesTentative,
+    })
+    .from(orderCycles)
+    .where(eq(orderCycles.status, "planned"))
+    .orderBy(asc(orderCycles.orderOpenAt));
+  const next = rows.find((r) => r.orderOpenAt !== null && canAccessCycle(r.accessLevel, role));
+  return next ? { cycleId: next.cycleId, title: next.title, orderOpenAt: new Date(next.orderOpenAt!), datesTentative: next.datesTentative } : null;
 }
