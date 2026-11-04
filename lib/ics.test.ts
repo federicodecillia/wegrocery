@@ -1,68 +1,66 @@
 import { describe, expect, it } from "vitest";
-import { buildCycleIcs, escapeText, foldLine, icsFileName, type IcsText } from "./ics";
+import { buildIcs, escapeText, foldLine, icsFileName, icsHeaders } from "./ics";
 
-const TEXT: IcsText = {
-  opens: (t) => `Opens: ${t}`,
-  closes: (t) => `Last moment to order: ${t}`,
-  pickup: (t) => `Pickup: ${t}`,
-  closesAlarm: "Orders close soon",
-};
 const NOW = new Date("2026-11-04T10:00:00Z");
+const PRODID = "-//FlyLabs//Esempio//IT";
 
-describe("buildCycleIcs", () => {
-  const ics = buildCycleIcs(
-    {
-      cycleId: "cyc_1",
-      title: "Verdura, frutta; e altro",
-      supplierName: "Orto Bio",
-      opensAt: null,
-      closeAt: new Date("2026-11-08T20:00:00Z"),
-      pickups: [
-        { at: new Date("2026-11-12T16:00:00Z"), endTime: "19:00" },
-        // 00:00 in Rome: a pickup day with no time.
-        { at: new Date("2026-11-13T23:00:00Z"), endTime: null },
-      ],
-      url: "https://example.invalid/calendario",
-    },
-    TEXT,
-    NOW,
+describe("buildIcs", () => {
+  const ics = buildIcs(
+    [
+      {
+        uid: "c1-closes@app",
+        summary: "Ultimo momento: Verdura, frutta; e altro",
+        start: new Date("2026-11-08T19:30:00Z"),
+        end: new Date("2026-11-08T20:00:00Z"),
+        url: "https://app.example.org/calendario",
+        alarm: { minutesBefore: 180, text: "Chiude tra poco" },
+      },
+      { uid: "c1-pickup@app", summary: "Ritiro", day: "2026-11-14", description: "Riga uno\nriga due" },
+    ],
+    { productId: PRODID, now: NOW },
   );
   const lines = ics.split("\r\n");
 
-  it("is a calendar with one event per date, CRLF ended", () => {
+  it("is a calendar with one event each, CRLF ended", () => {
     expect(lines[0]).toBe("BEGIN:VCALENDAR");
+    expect(lines).toContain(`PRODID:${PRODID}`);
     expect(ics.endsWith("END:VCALENDAR\r\n")).toBe(true);
-    expect(lines.filter((l) => l === "BEGIN:VEVENT")).toHaveLength(3);
+    expect(lines.filter((l) => l === "BEGIN:VEVENT")).toHaveLength(2);
+    expect(lines.filter((l) => l === "DTSTAMP:20261104T100000Z")).toHaveLength(2);
   });
 
-  it("puts the last moment to order just before the close, with a reminder", () => {
-    expect(lines).toContain("UID:cyc_1-closes@wegrocery");
+  it("writes a timed event in UTC, with its link and reminder", () => {
+    expect(lines).toContain("UID:c1-closes@app");
     expect(lines).toContain("DTSTART:20261108T193000Z");
     expect(lines).toContain("DTEND:20261108T200000Z");
-    expect(lines).toContain("TRIGGER:-PT3H");
+    expect(lines).toContain("URL:https://app.example.org/calendario");
+    expect(lines).toContain("TRIGGER:-PT180M");
+    expect(lines).toContain("DESCRIPTION:Chiude tra poco");
   });
 
-  it("gives a pickup its window, and a pickup with no time the whole day", () => {
-    expect(lines).toContain("DTSTART:20261112T160000Z");
-    // 19:00 in Rome is 18:00 UTC in November.
-    expect(lines).toContain("DTEND:20261112T180000Z");
+  it("writes a whole day as dates, the end the day after", () => {
     expect(lines).toContain("DTSTART;VALUE=DATE:20261114");
     expect(lines).toContain("DTEND;VALUE=DATE:20261115");
+    expect(lines).toContain("DESCRIPTION:Riga uno\\nriga due");
   });
 
-  it("escapes the text and names the supplier", () => {
-    expect(ics).toContain("SUMMARY:Pickup: Verdura\\, frutta\\; e altro (Orto Bio)");
+  it("closes a month and a year with the right next day", () => {
+    const end = buildIcs([{ uid: "y", summary: "S", day: "2026-12-31" }], { productId: PRODID, now: NOW });
+    expect(end).toContain("DTEND;VALUE=DATE:20270101");
   });
 
-  it("adds the opening of a planned cycle", () => {
-    const planned = buildCycleIcs(
-      { cycleId: "p", title: "Formaggi", supplierName: null, opensAt: new Date("2026-11-16T08:00:00Z"), closeAt: null, pickups: [], url: null },
-      TEXT,
-      NOW,
-    );
-    expect(planned).toContain("UID:p-opens@wegrocery");
-    expect(planned).toContain("SUMMARY:Opens: Formaggi");
-    expect(planned).not.toContain("URL:");
+  it("escapes the text", () => {
+    expect(ics).toContain("SUMMARY:Ultimo momento: Verdura\\, frutta\\; e altro");
+  });
+
+  it("never ends an event before it starts", () => {
+    const at = new Date("2026-11-12T16:00:00Z");
+    const one = buildIcs([{ uid: "p", summary: "S", start: at, end: at }], { productId: PRODID, now: NOW });
+    expect(one).toContain("DTEND:20261112T160100Z");
+  });
+
+  it("refuses a day that is not YYYY-MM-DD", () => {
+    expect(() => buildIcs([{ uid: "x", summary: "S", day: "14/11/2026" }], { productId: PRODID, now: NOW })).toThrow();
   });
 });
 
@@ -77,8 +75,16 @@ describe("text helpers", () => {
     expect(folded.replace(/\r\n /g, "")).toBe(`SUMMARY:${"è".repeat(60)}`);
   });
 
-  it("names the file after the cycle", () => {
+  it("names the file after the title", () => {
     expect(icsFileName("Verdura di stagione!")).toBe("verdura-di-stagione.ics");
-    expect(icsFileName("€€€")).toBe("ordine.ics");
+    expect(icsFileName("€€€", "ordine")).toBe("ordine.ics");
+  });
+
+  it("serves it as a private download", () => {
+    expect(icsHeaders("a.ics")).toEqual({
+      "Content-Type": "text/calendar; charset=utf-8",
+      "Content-Disposition": 'attachment; filename="a.ics"',
+      "Cache-Control": "private, no-store",
+    });
   });
 });
