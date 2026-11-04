@@ -22,6 +22,11 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
+## [Unreleased]
+
+### Added
+- 📅 **Order calendar.** A new page, reached from Home (and from Order when nothing is open), shows month by month when orders open and close and when to pick up, for the open cycles and those of the last year. Tap a day to see only its cycles; each one says whether you ordered or collected and leads to the order or to History.
+
 ## [1.43.0] - 2026-11-01
 
 *Who collected their order, and a new "Orders referent" to help run the cycles.*

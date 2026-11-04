@@ -155,6 +155,23 @@ export const guideIt: GuideContent = {
       keywords: ["scadenza", "chiusura", "orario", "ritiro", "consegna", "data"],
     },
     {
+      slug: "calendario-ordini",
+      topic: "ordinare",
+      title: "Vedere quando ci sono gli ordini",
+      intro:
+        "Il **Calendario ordini** mostra mese per mese quando aprono e chiudono gli ordini e quando si ritira, anche per i cicli passati.",
+      steps: [
+        "In Home tocca **Calendario ordini** (o, se non c'è niente di aperto, il link in **Ordine**).",
+        "Sfoglia i mesi con le frecce: i pallini colorati segnano aperture, chiusure e ritiri.",
+        "Tocca un giorno per vedere solo i suoi ordini; **Tutto il mese** torna all'elenco completo.",
+      ],
+      notes: [
+        "Ogni ciclo dice se hai ordinato e se l'ordine è stato ritirato. Da un ciclo aperto vai all'ordine, da uno passato al dettaglio nello **Storico**.",
+      ],
+      link: { href: "/calendario", label: "Apri il calendario" },
+      keywords: ["calendario", "date", "prossimi", "futuri", "quando", "ritiro", "apertura", "mese"],
+    },
+    {
       slug: "dopo-chiusura",
       topic: "ordinare",
       title: "Cosa succede quando l'ordine chiude",

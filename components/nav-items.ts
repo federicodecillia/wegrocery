@@ -8,14 +8,14 @@ export type NavItem = {
   icon: NavIconName;
   exact?: boolean;
   adminOnly?: boolean;
-  /** Pages with no item of their own that belong to this one (Ricarica is reached from the balance on Home). */
+  /** Pages with no item of their own that belong to this one (Ricarica and Calendario are reached from Home). */
   also?: string[];
 };
 
 // Shared by BottomNav (phone) and SideNav (rail from md, sidebar from lg). Icons live in
 // nav-icon.tsx so this file stays plain TypeScript.
 export const navItems: NavItem[] = [
-  { href: "/", label: t.nav.home, icon: "home", exact: true, also: ["/ricarica"] },
+  { href: "/", label: t.nav.home, icon: "home", exact: true, also: ["/ricarica", "/calendario"] },
   { href: "/ordine", label: t.nav.order, icon: "order" },
   { href: "/storico", label: t.nav.history, icon: "history" },
   { href: "/guida", label: t.nav.guide, icon: "guide" },

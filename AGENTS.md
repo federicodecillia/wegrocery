@@ -48,6 +48,7 @@ Never read `.env*` files other than `.env.example` (Playbook 8.3).
 │   ├── page.tsx                # Home: saldo hero, ciclo aperto, ultimi movimenti
 │   ├── ordine/page.tsx         # Order: confirmed recap (edit/cancel) or the stepper form
 │   ├── storico/page.tsx        # Order history + ledger movements tabs
+│   ├── calendario/page.tsx     # Order calendar: month grid + the month's cycles (lib/calendar.ts pure, lib/db/calendar.ts read, components/calendar/cycle-calendar.tsx); from Home and from Ordine when nothing is open
 │   ├── notifiche/page.tsx      # Notification list with mark-as-read
 │   ├── profilo/page.tsx        # Profile (header avatar): name, emails, card, family, notifications, money, app, sign-out (privacy stays in the footer)
 │   ├── guida/page.tsx          # Guide index: "Il nostro gruppo" (admin text), search, topics, news; cards in guida/[topic] (content in lib/guide); admin guide in guida/admin (lib/guide/admin, server only: adminGuideFor checks the role, 404 for members)

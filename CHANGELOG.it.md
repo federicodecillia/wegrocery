@@ -23,6 +23,11 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
+## [Unreleased]
+
+### Aggiunte
+- 📅 **Calendario ordini.** Una nuova pagina, da Home (e da Ordine quando non c'è niente di aperto), mostra mese per mese quando aprono e chiudono gli ordini e quando si ritira, per i cicli aperti e per quelli dell'ultimo anno. Tocchi un giorno per vedere solo i suoi cicli; ognuno dice se hai ordinato o ritirato e porta all'ordine o allo Storico.
+
 ## [1.43.0] - 1 novembre 2026
 
 *Chi ha ritirato il suo ordine, e il nuovo "Referente ordini" per aiutare con i cicli.*

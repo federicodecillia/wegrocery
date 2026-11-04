@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CalendarDays } from "lucide-react";
 import { adminAccess } from "@/lib/auth/access";
 import { AppShell } from "@/components/app-shell";
 import { BalanceDueCard } from "@/components/balance/balance-due-card";
@@ -350,6 +351,17 @@ export default async function HomePage({
       {nextPickup && !cycleDataList.some((d) => d.cycle.cycleId === nextPickup.cycleId) && (
         <NextPickupCard pickup={nextPickup} />
       )}
+      <Link
+        href="/calendario"
+        className="mb-3.5 flex min-h-11 items-center gap-3 rounded-card border border-border bg-card px-4 py-3 shadow-card"
+      >
+        <CalendarDays aria-hidden className="size-5 shrink-0 text-primary-text" strokeWidth={2.25} />
+        <span className="min-w-0 flex-1">
+          <span className="block text-[14px] font-bold text-foreground">{t.calendar.homeLink}</span>
+          <span className="block text-label text-secondary-foreground">{t.calendar.homeLinkHint}</span>
+        </span>
+        <span aria-hidden className="text-primary-text">→</span>
+      </Link>
 
     </>
   );
