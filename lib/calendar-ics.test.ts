@@ -5,6 +5,7 @@ const TEXT: IcsText = {
   opens: (t) => `Opens: ${t}`,
   closes: (t) => `Last moment to order: ${t}`,
   pickup: (t) => `Pickup: ${t}`,
+  pickupTentative: (t) => `Pickup to be confirmed: ${t}`,
   closesAlarm: "Orders close soon",
 };
 const NOW = new Date("2026-11-04T10:00:00Z");
@@ -63,5 +64,14 @@ describe("buildCycleIcs", () => {
     expect(planned).toContain("UID:p-opens@wegrocery");
     expect(planned).toContain("SUMMARY:Opens: Formaggi");
     expect(planned).not.toContain("URL:");
+  });
+
+  it("says when the pickup is still to be confirmed", () => {
+    const tentative = buildCycleIcs(
+      { cycleId: "t", title: "Formaggi", supplierName: null, opensAt: null, closeAt: null, pickups: [{ at: new Date("2026-11-12T16:00:00Z"), endTime: null }], pickupTentative: true, url: null },
+      TEXT,
+      NOW,
+    );
+    expect(tentative).toContain("SUMMARY:Pickup to be confirmed: Formaggi");
   });
 });

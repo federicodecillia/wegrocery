@@ -25,6 +25,8 @@ export type OpenCycleCardCycle = {
   /** ISO. */
   orderCloseAt: string;
   pickups: { date: string; endTime: string | null }[];
+  /** "Ritiro da confermare". */
+  pickupTentative?: boolean;
 };
 
 // Small actions: 44 px tall, as wide as their word. The filled one only when
@@ -78,7 +80,7 @@ export function OpenCycleCard({
           </p>
           {cycle.pickups.map((p, i) => (
             <p key={i} className="text-[14px] text-secondary-foreground">
-              {h.pickupOn(formatPickupLong(p.date, p.endTime))}
+              {(cycle.pickupTentative ? h.pickupExpected : h.pickupOn)(formatPickupLong(p.date, p.endTime))}
             </p>
           ))}
           {notes && <p className="mt-1.5 line-clamp-3 whitespace-pre-line break-words text-[14px] text-foreground">{notes}</p>}

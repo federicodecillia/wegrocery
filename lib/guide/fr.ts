@@ -149,6 +149,7 @@ export const guideFr: GuideContent = {
       notes: [
         "Quand plusieurs commandes sont ouvertes en même temps, dans **Commande** vous choisissez d'abord laquelle ouvrir.",
         "Les jours de retrait sont sur l'Accueil, sous chaque cycle ; après la clôture, le cycle passe dans **À retirer**.",
+        "Si le retrait indique **à confirmer**, la date est celle prévue et peut encore changer : vous recevez un avis quand le groupe la confirme.",
       ],
       keywords: ["date limite", "clôture", "heure", "retrait", "livraison", "date"],
     },

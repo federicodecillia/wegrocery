@@ -19,6 +19,8 @@ export type CycleStep =
   | "open"
   /** Closed, the order sheet never sent from the app. */
   | "to_send"
+  /** Closed, its pickup still "da confermare" (drizzle/0050_pickup_tentative.sql). */
+  | "to_confirm_pickup"
   /** Closed and sent, no weight, sheet or correction recorded yet. */
   | "to_adjust"
   /** Closed, its first pickup has started, and some members have not collected yet. */
@@ -47,6 +49,8 @@ export type CycleFacts = {
   settlementPending: boolean;
   /** The first pickup day; null while none is set. */
   pickupDate: Date | null;
+  /** "Ritiro da confermare"; absent = confirmed. */
+  pickupTentative?: boolean;
   /** Members with an order whose pickup was marked (Admin → Ciclo → Ritiri). */
   pickedUp: number;
 };
@@ -61,6 +65,8 @@ export type CycleTask = {
   hours: number | null;
   /** For "to_collect": members still to collect. */
   toCollect: number;
+  /** For "to_confirm_pickup": the pickup to confirm. */
+  pickupDate: Date | null;
 };
 
 /** The steps a cycle still asks for, in the order they are done. Empty: nothing to do. */
@@ -74,13 +80,18 @@ export function cycleSteps(f: CycleFacts, now: Date): CycleStep[] {
   }
   const steps: CycleStep[] = [];
   const recent = f.closedAt != null && now.getTime() - f.closedAt.getTime() <= TASK_WINDOW_DAYS * DAY;
-  if (f.status === "closed" && recent && f.orderMembers > 0) {
-    if (!f.supplierSent) steps.push("to_send");
-    if (!f.adjusted) steps.push("to_adjust");
-  }
+  if (f.status === "closed" && recent && f.orderMembers > 0 && !f.supplierSent) steps.push("to_send");
+  // Until the admin confirms it, however long after the close, while the pickup is ahead.
+  if (f.status === "closed" && pickupToConfirm(f, now, recent)) steps.push("to_confirm_pickup");
+  if (f.status === "closed" && recent && f.orderMembers > 0 && !f.adjusted) steps.push("to_adjust");
   if (f.status === "closed" && recent && pickupsMissing(f, now)) steps.push("to_collect");
   if (f.settlementPending) steps.push("to_settle");
   return steps;
+}
+
+/** A pickup "da confermare": in the window after the close, or later while it is still ahead. */
+function pickupToConfirm(f: CycleFacts, now: Date, recent: boolean): boolean {
+  return Boolean(f.pickupTentative) && f.pickupDate != null && (recent || f.pickupDate.getTime() > now.getTime());
 }
 
 /** From its first pickup on, a closed cycle with members who did not collect yet. */
@@ -88,7 +99,7 @@ function pickupsMissing(f: CycleFacts, now: Date): boolean {
   return f.pickupDate != null && f.pickupDate.getTime() <= now.getTime() && f.pickedUp < f.orderMembers;
 }
 
-const URGENCY: Record<CycleStep, number> = { overdue: 0, to_open: 1, to_settle: 2, to_send: 3, to_adjust: 4, to_collect: 5, open: 6 };
+const URGENCY: Record<CycleStep, number> = { overdue: 0, to_open: 1, to_settle: 2, to_send: 3, to_confirm_pickup: 4, to_adjust: 5, to_collect: 6, open: 7 };
 
 /**
  * Every cycle with something to do, the most urgent first; among open cycles
@@ -116,7 +127,7 @@ export function cycleTasks(cycles: CycleFacts[], now: Date): CycleTask[] {
           ? (close ?? Number.MAX_SAFE_INTEGER)
           : -(f.closedAt?.getTime() ?? 0);
     const toCollect = Math.max(0, f.orderMembers - f.pickedUp);
-    return [{ task: { cycleId: f.cycleId, title: f.title, steps, orderMembers: f.orderMembers, hours, toCollect }, when }];
+    return [{ task: { cycleId: f.cycleId, title: f.title, steps, orderMembers: f.orderMembers, hours, toCollect, pickupDate: f.pickupDate }, when }];
   });
   return tasks
     .sort((a, b) => URGENCY[a.task.steps[0]] - URGENCY[b.task.steps[0]] || a.when - b.when)

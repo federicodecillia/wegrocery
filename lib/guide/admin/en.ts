@@ -229,6 +229,7 @@ export const adminGuideEn: GuideContent = {
       notes: [
         "Members who ordered in that cycle get a notice with the new pickup (in the app, and by email if they chose it in their preferences). The confirmation tells you how many members were told.",
         "The pickup does not touch charges or balances: you can change it freely, even on a closed cycle.",
+        "If the date is only the expected one (often known only after the close, once you hear from the supplier), tick **Pickup to be confirmed**: members read \"to be confirmed\" next to the pickup. When the supplier confirms it, untick it: those who ordered get **Pickup confirmed**, even if the date stays the same. Until then, **To do now** reminds you.",
       ],
       link: { href: "/admin?tab=ciclo", label: "Go to the cycles" },
       keywords: ["pickup", "pickup date", "time", "delivery", "collection", "closed cycle"],

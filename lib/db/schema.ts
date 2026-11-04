@@ -121,6 +121,9 @@ export const orderCycles = pgTable("order_cycles", {
   // (drizzle/0048_planned_cycles.sql). Set on a planned cycle, cleared when
   // its orders open.
   datesTentative: boolean("dates_tentative").notNull().default(false),
+  // The pickup date is the expected one: "da confermare" for the members
+  // until an admin confirms it (drizzle/0050_pickup_tentative.sql).
+  pickupTentative: boolean("pickup_tentative").notNull().default(false),
   // Last settlement of a pay-per-order cycle (drizzle/0024_settlement.sql).
   settledAt: timestamp("settled_at", { withTimezone: true }),
   // How members see the products (drizzle/0040_cycle_product_order.sql):

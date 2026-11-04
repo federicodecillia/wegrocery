@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { t } from "@/lib/i18n";
+import { formatLongDay } from "@/lib/i18n/deadline";
 import { Badge } from "@/components/ui/badge";
 import { adminHref } from "@/lib/admin/nav";
 import { currentStep, doneKey, type CycleStep, type CycleTask } from "@/lib/admin/cycle-phase";
@@ -36,6 +37,7 @@ const VIEW: Record<CycleStep, CycleView> = {
   to_open: "panoramica",
   open: "ordini",
   to_send: "fornitore",
+  to_confirm_pickup: "panoramica",
   to_adjust: "ordini",
   to_collect: "ritiri",
   to_settle: "conti",
@@ -140,7 +142,7 @@ export function CycleTodo({
 
 function cta(step: CycleStep): string {
   const d = t.admin.workspace.todo;
-  return { overdue: d.overdueCta, to_open: d.openPlannedCta, open: d.openCta, to_send: d.sendCta, to_adjust: d.adjustCta, to_collect: d.collectCta, to_settle: d.settleCta }[step];
+  return { overdue: d.overdueCta, to_open: d.openPlannedCta, open: d.openCta, to_send: d.sendCta, to_confirm_pickup: d.confirmPickupCta, to_adjust: d.adjustCta, to_collect: d.collectCta, to_settle: d.settleCta }[step];
 }
 
 function detail(task: CycleTask, step: CycleStep): string {
@@ -154,6 +156,8 @@ function detail(task: CycleTask, step: CycleStep): string {
       return d.openDetail(task.orderMembers, task.hours);
     case "to_send":
       return d.sendDetail;
+    case "to_confirm_pickup":
+      return d.confirmPickupDetail(task.pickupDate ? formatLongDay(task.pickupDate) : "");
     case "to_adjust":
       return d.adjustDetail;
     case "to_collect":

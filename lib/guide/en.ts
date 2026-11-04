@@ -149,6 +149,7 @@ export const guideEn: GuideContent = {
       notes: [
         "When several orders are open at once, in **Order** you first choose which one to open.",
         "The pickup days are on Home, under each cycle; after the close the cycle moves to **To collect**.",
+        "If the pickup says **to be confirmed**, the date is the expected one and may still change: you get a notice when the group confirms it.",
       ],
       keywords: ["deadline", "closing", "time", "pickup", "delivery", "date"],
     },

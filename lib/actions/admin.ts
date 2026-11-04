@@ -162,6 +162,8 @@ export type CreateCycleInput = {
   orderOpenAt?: string;
   /** Planned cycles: the dates may still move ("Date indicative"). */
   datesTentative?: boolean;
+  /** The pickup date is the expected one ("Ritiro da confermare"); ignored with no pickup. */
+  pickupTentative?: boolean;
 };
 
 /** A planned cycle's opening: required, and before the close. */
@@ -254,6 +256,7 @@ export async function adminCreateCycle(data: CreateCycleInput): Promise<{error?:
       orderCloseAt,
       status: plannedOpenAt ? "planned" : "open",
       datesTentative: plannedOpenAt ? Boolean(data.datesTentative) : false,
+      pickupTentative: Boolean(data.pickupTentative) && dates.pickupDate !== null,
       accessLevel,
       notes: data.notes?.trim() || null,
       createdBy: admin.email,
@@ -320,7 +323,7 @@ async function notifyCycleOpened(
 
 /**
  * "Apri gli ordini" on a planned cycle: it becomes open now, its dates are no
- * longer indicative, and the members who can see it are told. Refused once
+ * longer indicative (its pickup stays "da confermare" if they were), and the members who can see it are told. Refused once
  * its order deadline has passed (the admin moves it first) and on a cycle
  * that is not planned.
  */
@@ -331,7 +334,9 @@ export async function adminOpenPlannedCycle(cycleId: string): Promise<{ error?: 
     const now = new Date();
     const [opened] = await db
       .update(orderCycles)
-      .set({ status: "open", orderOpenAt: now, datesTentative: false })
+      // "Date indicative" ends here, but a pickup that was only indicative
+      // stays "da confermare" (the right side reads the row before the update).
+      .set({ status: "open", orderOpenAt: now, datesTentative: false, pickupTentative: sql`${orderCycles.pickupTentative} OR ${orderCycles.datesTentative}` })
       .where(
         and(
           eq(orderCycles.cycleId, cycleId),
@@ -931,6 +936,8 @@ export async function adminUpdateCycle(
     /** Planned cycles only: when the orders should open, and whether the dates are indicative. */
     orderOpenAt?: string;
     datesTentative?: boolean;
+    /** "Ritiro da confermare"; cleared with no pickup date. */
+    pickupTentative?: boolean;
   },
 ): Promise<{ error?: string; adjustedMembers?: number; pickupNotified?: number }> {
   try {
@@ -949,6 +956,7 @@ export async function adminUpdateCycle(
         pickupEndTime: orderCycles.pickupEndTime,
         pickup2Date: orderCycles.pickup2Date,
         pickup2EndTime: orderCycles.pickup2EndTime,
+        pickupTentative: orderCycles.pickupTentative,
         shippingMode: orderCycles.shippingMode,
         shippingCostPerMember: orderCycles.shippingCostPerMember,
         shippingTotal: orderCycles.shippingTotal,
@@ -985,6 +993,9 @@ export async function adminUpdateCycle(
 
     const dates = parseCycleDates(data);
     if ("error" in dates) return { error: dates.error };
+    const pickupAfter = dates.pickupDate === undefined ? before.pickupDate : dates.pickupDate;
+    // Nothing to confirm without a date: the mark goes with it.
+    const pickupTentative = pickupAfter === null ? false : (data.pickupTentative ?? before.pickupTentative);
 
     // Only a planned cycle moves its opening: an open one opened already.
     const planned = before.status === "planned";
@@ -1039,6 +1050,7 @@ export async function adminUpdateCycle(
         ...(data.orderCloseAt !== undefined && { orderCloseAt: dates.orderCloseAt }),
         ...(plannedOpenAt !== undefined && { orderOpenAt: plannedOpenAt }),
         ...(planned && data.datesTentative !== undefined && { datesTentative: data.datesTentative }),
+        pickupTentative,
         ...(data.notes !== undefined && { notes: data.notes || null }),
         ...(data.supplierId !== undefined && { supplierId: data.supplierId || null }),
         ...(accessLevel !== undefined && { accessLevel }),
@@ -1070,7 +1082,7 @@ export async function adminUpdateCycle(
 
     await writeAudit(db, admin.email, "update_cycle", "cycle", cycleId, { ...data, ...(accessLevel && { accessLevel }) });
 
-    // Members who ordered hear about a new, moved or cleared pickup, through
+    // Members who ordered hear about a new, moved, cleared or confirmed pickup, through
     // their "Data di ritiro" preferences. A cancelled cycle has nothing to
     // pick up.
     let pickupNotified = 0;
@@ -1085,6 +1097,7 @@ export async function adminUpdateCycle(
           pickupEndTime: data.pickupEndTime === undefined ? before.pickupEndTime : data.pickupEndTime || null,
           pickup2Date: dates.pickup2Date === undefined ? before.pickup2Date : dates.pickup2Date,
           pickup2EndTime: data.pickup2EndTime === undefined ? before.pickup2EndTime : data.pickup2EndTime || null,
+          pickupTentative,
         },
         new Date(),
       );

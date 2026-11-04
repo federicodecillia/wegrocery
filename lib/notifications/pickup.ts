@@ -1,6 +1,6 @@
 // Pure helper for the "pickup changed" notice: decides whether saving a cycle
-// moved its pickup (first or second day, or their end times) and writes the
-// notice. Kept side-effect-free so it can be unit tested; the DB reads and the
+// moved its pickup (first or second day, or their end times), or confirmed a
+// pickup that was "da confermare", and writes the notice. Kept side-effect-free so it can be unit tested; the DB reads and the
 // dispatch live in adminUpdateCycle (lib/actions/admin.ts).
 
 import { t } from "@/lib/i18n";
@@ -11,9 +11,12 @@ export type CyclePickup = {
   pickupEndTime: string | null;
   pickup2Date: Date | null;
   pickup2EndTime: string | null;
+  /** "Ritiro da confermare" (drizzle/0050_pickup_tentative.sql); absent = confirmed. */
+  pickupTentative?: boolean;
 };
 
-export type PickupChange = "added" | "changed" | "removed";
+/** "confirmed": the same pickup, no longer "da confermare". */
+export type PickupChange = "added" | "changed" | "removed" | "confirmed";
 
 // A second pickup without a first one is not shown anywhere (formatPickups),
 // so it does not count as a pickup either.
@@ -33,7 +36,10 @@ function slots(p: CyclePickup): string[] {
 export function pickupChange(before: CyclePickup, after: CyclePickup): PickupChange | null {
   const was = slots(before);
   const now = slots(after);
-  if (was.join("\n") === now.join("\n")) return null;
+  if (was.join("\n") === now.join("\n")) {
+    // The members were told it might move: that it will not is news too.
+    return now.length > 0 && before.pickupTentative && !after.pickupTentative ? "confirmed" : null;
+  }
   if (was.length === 0) return "added";
   if (now.length === 0) return "removed";
   return "changed";
@@ -54,6 +60,8 @@ export function pickupNotice(
       return { title: s.pickupAddedTitle(cycleTitle), body: s.pickupAddedBody(cycleTitle, now) };
     case "removed":
       return { title: s.pickupChangedTitle(cycleTitle), body: s.pickupRemovedBody(cycleTitle) };
+    case "confirmed":
+      return { title: s.pickupConfirmedTitle(cycleTitle), body: s.pickupConfirmedBody(cycleTitle, now) };
     case "changed":
       return {
         title: s.pickupChangedTitle(cycleTitle),

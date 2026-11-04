@@ -231,6 +231,7 @@ export const adminGuideIt: GuideContent = {
       notes: [
         "Chi ha ordinato in quel ciclo riceve un avviso con il nuovo ritiro (in app, e per email se l'ha scelto nelle sue preferenze). Il messaggio di conferma ti dice quanti soci sono stati avvisati.",
         "Il ritiro non tocca addebiti né saldi: puoi cambiarlo senza pensieri anche a ciclo chiuso.",
+        "Se la data è solo quella prevista (spesso si sa solo dopo la chiusura, sentito il fornitore), spunta **Ritiro da confermare**: i soci leggono \"da confermare\" accanto al ritiro. Quando il fornitore la conferma togli la spunta: chi ha ordinato riceve **Ritiro confermato**, anche se la data non cambia. Finché resta da confermare, **Da fare ora** te lo ricorda.",
       ],
       link: { href: "/admin?tab=ciclo", label: "Vai ai cicli" },
       keywords: ["ritiro", "data ritiro", "orario", "consegna", "quando si ritira", "ciclo chiuso"],

@@ -229,6 +229,7 @@ export const adminGuideFr: GuideContent = {
       notes: [
         "Les membres qui ont commandé dans ce cycle reçoivent un avis avec le nouveau retrait (dans l'app, et par email s'ils l'ont choisi dans leurs préférences). Le message de confirmation vous dit combien de membres ont été prévenus.",
         "Le retrait ne touche ni les débits ni les soldes : vous pouvez le changer sans souci, même sur un cycle clôturé.",
+        "Si la date n'est que prévue (souvent connue seulement après la clôture, une fois le fournisseur entendu), cochez **Retrait à confirmer** : les membres lisent \"à confirmer\" à côté du retrait. Quand le fournisseur la confirme, décochez-la : ceux qui ont commandé reçoivent **Retrait confirmé**, même si la date ne change pas. Tant qu'il reste à confirmer, **À faire maintenant** vous le rappelle.",
       ],
       link: { href: "/admin?tab=ciclo", label: "Aller aux cycles" },
       keywords: ["retrait", "date de retrait", "heure", "livraison", "cycle clôturé"],

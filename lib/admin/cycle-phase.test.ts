@@ -122,3 +122,33 @@ describe("currentStep", () => {
     expect(currentStep(t, new Set([doneKey("cyc_1", "to_send"), doneKey("cyc_1", "to_adjust")]))).toBeNull();
   });
 });
+
+describe("a pickup da confermare", () => {
+  const sent = { supplierSent: true, adjusted: true };
+
+  it("asks to confirm it after the close, and stops once confirmed", () => {
+    expect(cycleSteps(facts({ ...sent, pickupDate: h(72), pickupTentative: true }), now)).toEqual(["to_confirm_pickup"]);
+    expect(cycleSteps(facts({ ...sent, pickupDate: h(72), pickupTentative: false }), now)).toEqual([]);
+  });
+
+  it("comes after sending the order and before the corrections", () => {
+    expect(cycleSteps(facts({ pickupDate: h(72), pickupTentative: true }), now)).toEqual(["to_send", "to_confirm_pickup", "to_adjust"]);
+  });
+
+  it("keeps asking long after the close while the pickup is ahead, not once it is past", () => {
+    const old = { ...sent, closedAt: h(-24 * 30), pickupTentative: true };
+    expect(cycleSteps(facts({ ...old, pickupDate: h(48) }), now)).toEqual(["to_confirm_pickup"]);
+    expect(cycleSteps(facts({ ...old, pickupDate: h(-48) }), now)).toEqual([]);
+  });
+
+  it("has nothing to confirm without a pickup day, nor on an open cycle", () => {
+    expect(cycleSteps(facts({ ...sent, pickupDate: null, pickupTentative: true }), now)).toEqual([]);
+    expect(cycleSteps(facts({ status: "open", orderCloseAt: h(24), closedAt: null, pickupDate: h(72), pickupTentative: true }), now)).toEqual(["open"]);
+  });
+
+  it("carries the pickup day for the reminder", () => {
+    const [task] = cycleTasks([facts({ ...sent, pickupDate: h(72), pickupTentative: true })], now);
+    expect(task.steps).toEqual(["to_confirm_pickup"]);
+    expect(task.pickupDate).toEqual(h(72));
+  });
+});

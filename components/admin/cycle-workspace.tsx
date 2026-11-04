@@ -132,6 +132,7 @@ export async function CycleWorkspace({ cycleId: asked, view: askedView, creating
         adjusted: f?.adjusted ?? false,
         settlementPending: settlementPending(settleStates.get(c.cycleId) ?? null),
         pickupDate: c.pickupDate,
+        pickupTentative: c.pickupTentative,
         pickedUp: f?.pickedUp ?? 0,
       };
     }),
@@ -233,6 +234,7 @@ function serialize(c: FullCycle): SerializedCycle {
     title: c.title,
     orderOpenAt: c.orderOpenAt?.toISOString() ?? null,
     datesTentative: c.datesTentative,
+    pickupTentative: c.pickupTentative,
     orderCloseAt: c.orderCloseAt?.toISOString() ?? null,
     pickupDate: c.pickupDate?.toISOString() ?? null,
     pickupEndTime: c.pickupEndTime ?? null,

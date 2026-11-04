@@ -32,6 +32,7 @@ export async function getCalendarCycles(role: string | null, memberIds: string[]
       pickup2Date: orderCycles.pickup2Date,
       pickup2EndTime: orderCycles.pickup2EndTime,
       datesTentative: orderCycles.datesTentative,
+      pickupTentative: orderCycles.pickupTentative,
       productCount: sql<number>`(SELECT count(*)::int FROM ${products} WHERE ${products.cycleId} = ${orderCycles.cycleId})`,
       hasOrder: sql<boolean>`EXISTS (
         SELECT 1 FROM ${orders}
@@ -72,6 +73,7 @@ export async function getCalendarCycles(role: string | null, memberIds: string[]
       hasOrder: Boolean(r.hasOrder),
       pickedUp: Boolean(r.pickedUp),
       datesTentative: r.datesTentative,
+      pickupTentative: r.pickupTentative,
     }));
 }
 

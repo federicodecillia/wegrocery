@@ -34,6 +34,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ cyc
       pickupEndTime: orderCycles.pickupEndTime,
       pickup2Date: orderCycles.pickup2Date,
       pickup2EndTime: orderCycles.pickup2EndTime,
+      pickupTentative: orderCycles.pickupTentative,
       supplierName: suppliers.name,
     })
     .from(orderCycles)
@@ -64,6 +65,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ cyc
         cycle.pickupDate && { at: new Date(cycle.pickupDate), endTime: cycle.pickupEndTime },
         cycle.pickup2Date && { at: new Date(cycle.pickup2Date), endTime: cycle.pickup2EndTime },
       ].filter((p): p is { at: Date; endTime: string | null } => Boolean(p)),
+      pickupTentative: cycle.pickupTentative,
       url: base ? `${base}/calendario` : null,
     },
     t.calendar.ics,
