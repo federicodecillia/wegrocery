@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildCalendar, type CalendarCycleRow } from "./calendar";
-import { assignLanes, cyclesInMonth, cyclesOnDay, dayRole, defaultCycleId, spanOf, weekSegment } from "./calendar-view";
+import { cyclesInMonth, cyclesOnDay, dayRole, defaultCycleId, spanOf, weekSegment } from "./calendar-view";
 
 const NOW = new Date("2026-11-04T10:00:00Z");
 
@@ -76,15 +76,6 @@ describe("the month's cycles", () => {
 
   it("finds every cycle with something on a day, inside its window too", () => {
     expect(cyclesOnDay(entries, "2026-11-05").map((e) => e.cycleId).sort()).toEqual(["collect", "long", "open"]);
-  });
-
-  it("gives overlapping cycles their own lane and reuses a free one", () => {
-    const lanes = assignLanes(cyclesInMonth(entries, "2026-11"));
-    expect(lanes.get("collect")).toBe(0);
-    expect(lanes.get("long")).toBe(1);
-    expect(lanes.get("open")).toBe(2);
-    // "collect" ends on 5 Nov: the planned cycle (from the 20th) takes its lane.
-    expect(lanes.get("planned")).toBe(0);
   });
 
 });

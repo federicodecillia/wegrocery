@@ -2,12 +2,11 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { ChevronDown, ChevronLeft, ChevronRight, Lock, LockOpen, Package } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, Lock, Package, ShoppingBasket } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { DateTile, type DateTileTone } from "@/components/home/date-tile";
 import { monthGrid, monthOf, monthRange, shiftMonth, type CalendarEntry } from "@/lib/calendar";
 import {
-  assignLanes,
   cyclesInMonth,
   cyclesOnDay,
   dayRole,
@@ -25,21 +24,19 @@ import { cn } from "@/lib/utils";
 // /calendario. One clear model: the chips choose, the grid shows, the card
 // explains. One cycle at a time by default (the one Home would put first):
 // its days to order as a band, its last day as a solid tile, its pickup with
-// a ring and a package. "Tutti" draws every cycle of the month in its own
-// lane, each in its own colour. Tapping a day selects its cycle, or lists
-// the cycles of that day when there are several. Days come from the server
+// a ring and a package. "Tutti" draws no ranges (with many long cycles they
+// only add noise): each day shows the icons of what happens on it, with a
+// count. Tapping a day selects its cycle, or lists the cycles of that day
+// when there are several. The chips are one scrolling row on a phone, so the
+// grid stays near the top. Days come from the server
 // (lib/calendar.ts), so nothing depends on the device's clock.
 
-/** A colour per cycle from the group's palette; a finished cycle is grey. */
-type Paint = { bar: string; band: string; solid: string; ring: string; border: string };
-const PAINTS: Paint[] = [
-  { bar: "bg-primary", band: "bg-primary-bg", solid: "bg-primary text-primary-foreground", ring: "ring-primary", border: "border-primary" },
-  { bar: "bg-accent", band: "bg-accent-bg", solid: "bg-accent text-accent-foreground", ring: "ring-accent", border: "border-accent" },
-  { bar: "bg-inverse", band: "bg-tint/[0.08]", solid: "bg-inverse text-inverse-foreground", ring: "ring-inverse", border: "border-inverse" },
-];
-const PAST: Paint = { bar: "bg-neutral", band: "bg-tint/[0.06]", solid: "bg-tint/[0.14] text-foreground", ring: "ring-neutral", border: "border-neutral" };
-/** Lanes drawn in "Tutti"; a busier day says "+n". */
-const LANES = 3;
+/** How the chosen cycle is painted: the group's colour, grey once it is over. */
+type Paint = { band: string; solid: string; ring: string; border: string };
+const CURRENT: Paint = { band: "bg-primary-bg", solid: "bg-primary text-primary-foreground", ring: "ring-primary", border: "border-primary" };
+const PAST: Paint = { band: "bg-tint/[0.06]", solid: "bg-tint/[0.14] text-foreground", ring: "ring-neutral", border: "border-neutral" };
+/** Icons drawn in a day of "Tutti"; a busier day adds "+n". */
+const DAY_ICONS = 2;
 
 const noon = (day: string) => new Date(`${day}T12:00:00Z`);
 const longDay = (day: string) => formatDate(noon(day), { weekday: "long", day: "numeric", month: "long" });
@@ -87,10 +84,8 @@ export function CycleCalendar({ entries, today }: { entries: CalendarEntry[]; to
 
   const inMonth = useMemo(() => cyclesInMonth(entries, month), [entries, month]);
   const spans = useMemo(() => new Map(inMonth.map((e) => [e.cycleId, spanOf(e)])), [inMonth]);
-  const lanes = useMemo(() => assignLanes(inMonth), [inMonth]);
   const chosen = selected === "all" ? null : (inMonth.find((e) => e.cycleId === selected) ?? null);
-  // The colour follows the lane: cycles that overlap never share one.
-  const paint = (e: CalendarEntry) => (e.state === "past" ? PAST : PAINTS[(lanes.get(e.cycleId) ?? 0) % PAINTS.length]);
+  const paint = (e: CalendarEntry) => (e.state === "past" ? PAST : CURRENT);
 
   // A month keeps the cycle chosen when it touches it, else opens on its own default.
   function goMonth(next: string) {
@@ -166,24 +161,19 @@ export function CycleCalendar({ entries, today }: { entries: CalendarEntry[]; to
         </p>
 
         {inMonth.length > 0 && (
-          <fieldset className="mb-3">
-            <legend className="mb-1.5 text-[14px] font-semibold text-secondary-foreground">{c.chooseLabel}</legend>
-            <div className="flex flex-wrap gap-2">
+          // min-w-0: a fieldset is as wide as its content by default, and the chip row would widen the page.
+          <fieldset className="mb-3 min-w-0">
+            <legend className="sr-only">{c.chooseLabel}</legend>
+            {/* One row that scrolls sideways on a phone (the grid stays near the top); wrapped from lg. */}
+            <div className="-mx-5 flex snap-x scroll-px-5 gap-2 overflow-x-auto px-5 pb-1 [scrollbar-width:none] md:-mx-8 md:scroll-px-8 md:px-8 lg:mx-0 lg:flex-wrap lg:overflow-visible lg:px-0">
               {inMonth.length > 1 && (
                 <Chip name="calendar-cycle" checked={selected === "all"} onChange={() => choose("all")}>
                   {c.all}
                 </Chip>
               )}
               {inMonth.map((e) => (
-                <Chip
-                  key={e.cycleId}
-                  name="calendar-cycle"
-                  checked={chosen?.cycleId === e.cycleId}
-                  onChange={() => choose(e.cycleId)}
-                  paint={paint(e)}
-                  dashed={e.state === "planned"}
-                >
-                  {e.title} · {rangeLabel(spans.get(e.cycleId)!)}
+                <Chip key={e.cycleId} name="calendar-cycle" checked={chosen?.cycleId === e.cycleId} onChange={() => choose(e.cycleId)}>
+                  {e.title}
                 </Chip>
               ))}
             </div>
@@ -203,15 +193,9 @@ export function CycleCalendar({ entries, today }: { entries: CalendarEntry[]; to
             const week = cells.map((cell) => (cell.inMonth ? cell.day : ""));
             return (
               <div key={cells[0].day} className="relative grid grid-cols-7">
-                {/* Under the numbers: the chosen cycle's band, or a lane per cycle. */}
+                {/* Under the numbers: the chosen cycle's band (nothing in "Tutti"). */}
                 <div aria-hidden className="pointer-events-none absolute inset-0 grid grid-cols-7">
-                  {chosen ? (
-                    <Band week={week} span={spans.get(chosen.cycleId)!} paint={paint(chosen)} dashed={chosen.state === "planned"} />
-                  ) : (
-                    inMonth
-                      .filter((e) => (lanes.get(e.cycleId) ?? 0) < LANES)
-                      .map((e) => <Lane key={e.cycleId} week={week} span={spans.get(e.cycleId)!} paint={paint(e)} lane={lanes.get(e.cycleId) ?? 0} dashed={e.state === "planned"} />)
-                  )}
+                  {chosen && <Band week={week} span={spans.get(chosen.cycleId)!} paint={paint(chosen)} dashed={chosen.state === "planned"} />}
                 </div>
                 {cells.map(({ day, inMonth: isInMonth }) =>
                   isInMonth ? (
@@ -224,17 +208,16 @@ export function CycleCalendar({ entries, today }: { entries: CalendarEntry[]; to
                       chosenPaint={chosen ? paint(chosen) : null}
                       cycles={cyclesOnDay(inMonth, day)}
                       spans={spans}
-                      lanes={lanes}
                       onTap={tapDay}
                     />
                   ) : (
-                    <div key={day} aria-hidden className="h-16" />
+                    <div key={day} aria-hidden className="h-14" />
                   ),
                 )}
               </div>
             );
           })}
-          <Legend chosen={chosen} paint={chosen ? paint(chosen) : PAINTS[0]} />
+          <Legend chosen={chosen} paint={chosen ? paint(chosen) : CURRENT} />
         </div>
       </section>
 
@@ -253,14 +236,14 @@ export function CycleCalendar({ entries, today }: { entries: CalendarEntry[]; to
             )}
           </div>
         ) : dayList ? (
-          <DayList day={dayList} cycles={cyclesOnDay(inMonth, dayList)} spans={spans} paint={paint} onChoose={choose} />
+          <DayList day={dayList} cycles={cyclesOnDay(inMonth, dayList)} spans={spans} onChoose={choose} />
         ) : chosen ? (
-          <CycleDetail entry={chosen} span={spans.get(chosen.cycleId)!} today={today} paint={paint(chosen)} />
+          <CycleDetail entry={chosen} span={spans.get(chosen.cycleId)!} today={today} />
         ) : (
           <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-card shadow-card">
             {inMonth.map((e) => (
               <li key={e.cycleId}>
-                <CycleRowButton entry={e} span={spans.get(e.cycleId)!} today={today} paint={paint(e)} onChoose={choose} />
+                <CycleRowButton entry={e} span={spans.get(e.cycleId)!} today={today} onChoose={choose} />
               </li>
             ))}
           </ul>
@@ -270,31 +253,17 @@ export function CycleCalendar({ entries, today }: { entries: CalendarEntry[]; to
   );
 }
 
-function Chip({
-  name,
-  checked,
-  onChange,
-  paint,
-  dashed = false,
-  children,
-}: {
-  name: string;
-  checked: boolean;
-  onChange: () => void;
-  paint?: Paint;
-  dashed?: boolean;
-  children: React.ReactNode;
-}) {
+function Chip({ name, checked, onChange, children }: { name: string; checked: boolean; onChange: () => void; children: React.ReactNode }) {
   return (
     <label
       className={cn(
-        "inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full px-3.5 text-[14px] has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ring",
-        checked ? cn("border-2 bg-card font-bold text-foreground", paint?.border ?? "border-inverse") : "border border-border bg-tint/[0.03] font-semibold text-secondary-foreground",
+        // relative: the sr-only radio is absolute and would escape the scrolling row, widening the page.
+        "relative inline-flex min-h-11 max-w-[15rem] shrink-0 cursor-pointer snap-start items-center rounded-full px-4 text-[15px] has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ring",
+        checked ? "bg-inverse font-bold text-inverse-foreground" : "border border-border bg-card font-semibold text-foreground",
       )}
     >
       <input type="radio" name={name} checked={checked} onChange={onChange} className="sr-only" />
-      {paint && <span aria-hidden className={cn("h-2 w-5 shrink-0 rounded-full", dashed ? cn("border-2 border-dashed bg-transparent", paint.border) : paint.bar)} />}
-      <span>{children}</span>
+      <span className="truncate">{children}</span>
     </label>
   );
 }
@@ -317,31 +286,6 @@ function Band({ week, span, paint, dashed }: { week: string[]; span: CycleSpan; 
   );
 }
 
-/** "Tutti": a cycle's days to order as a thin bar in its lane, its pickup as a diamond in the same lane. */
-function Lane({ week, span, paint, lane, dashed }: { week: string[]; span: CycleSpan; paint: Paint; lane: number; dashed: boolean }) {
-  const bottom = 4 + lane * 7;
-  const seg = span.open && span.close ? weekSegment(week, span.open, span.close) : null;
-  const pickups = week.map((d, i) => (span.pickups.includes(d) ? i : -1)).filter((i) => i >= 0);
-  return (
-    <>
-      {seg && (
-        <div
-          className={cn(
-            "row-start-1 h-1.5 self-end",
-            dashed ? cn("border-t-2 border-dashed", paint.border) : paint.bar,
-            seg.startsHere && "ml-1.5 rounded-l-full",
-            seg.endsHere && "mr-1.5",
-          )}
-          style={{ gridColumn: `${seg.start + 1} / span ${seg.length}`, marginBottom: bottom }}
-        />
-      )}
-      {pickups.map((i) => (
-        <div key={i} className={cn("row-start-1 size-2 rotate-45 self-end justify-self-center", paint.bar)} style={{ gridColumn: i + 1, marginBottom: bottom - 1 }} />
-      ))}
-    </>
-  );
-}
-
 function DayCell({
   day,
   today,
@@ -350,7 +294,6 @@ function DayCell({
   chosenPaint,
   cycles,
   spans,
-  lanes,
   onTap,
 }: {
   day: string;
@@ -360,7 +303,6 @@ function DayCell({
   chosenPaint: Paint | null;
   cycles: CalendarEntry[];
   spans: Map<string, CycleSpan>;
-  lanes: Map<string, number>;
   onTap: (day: string) => void;
 }) {
   const c = t.calendar;
@@ -373,7 +315,15 @@ function DayCell({
   ]
     .filter(Boolean)
     .join(". ");
-  const hidden = chosen ? 0 : cycles.filter((e) => (lanes.get(e.cycleId) ?? 0) >= LANES).length;
+  // "Tutti": the icons of what happens on the day across its cycles (last
+  // days first, then pickups, then openings), at most DAY_ICONS and a count.
+  const marks: (typeof Lock)[] = [];
+  if (!chosen) {
+    const roles = cycles.map((e) => dayRole(spans.get(e.cycleId)!, day));
+    for (const r of roles) if (r.closes) marks.push(Lock);
+    for (const r of roles) if (r.pickup) marks.push(Package);
+    for (const r of roles) if (r.opens) marks.push(ShoppingBasket);
+  }
 
   const number = (
     <span
@@ -395,13 +345,17 @@ function DayCell({
       {Number(day.slice(8))}
     </span>
   );
-  const icon = role ? (role.pickup ? Package : role.closes ? Lock : role.opens ? LockOpen : null) : null;
-  const Icon = icon;
+  const Icon = role ? (role.pickup ? Package : role.closes ? Lock : role.opens ? ShoppingBasket : null) : null;
   const content = (
-    <span className="relative flex h-16 flex-col items-center pt-1">
+    <span className="relative flex h-14 flex-col items-center pt-1">
       {number}
-      <span className="mt-0.5 flex h-3.5 items-center">{Icon && <Icon aria-hidden className="size-3.5 text-foreground" strokeWidth={2.5} />}</span>
-      {hidden > 0 && <span className="absolute bottom-0 right-0.5 text-label font-semibold text-secondary-foreground">{c.moreLanes(hidden)}</span>}
+      <span className="mt-0.5 flex h-4 items-center gap-0.5">
+        {Icon && <Icon aria-hidden className="size-3.5 text-foreground" strokeWidth={2.5} />}
+        {marks.slice(0, DAY_ICONS).map((M, i) => (
+          <M key={i} aria-hidden className="size-3.5 text-foreground" strokeWidth={2.5} />
+        ))}
+        {marks.length > DAY_ICONS && <span className="text-label font-bold leading-none text-foreground">{c.moreLanes(marks.length - DAY_ICONS)}</span>}
+      </span>
     </span>
   );
   if (cycles.length === 0) {
@@ -440,7 +394,10 @@ function Legend({ chosen, paint }: { chosen: CalendarEntry | null; paint: Paint 
           {item(<span aria-hidden className={cn("flex size-4 items-center justify-center rounded", paint.solid)} />, l.closes)}
         </>
       ) : (
-        item(<span aria-hidden className="h-1.5 w-5 rounded-full bg-primary" />, l.window)
+        <>
+          {item(<ShoppingBasket aria-hidden className="size-3.5 text-foreground" strokeWidth={2.5} />, l.opens)}
+          {item(<Lock aria-hidden className="size-3.5 text-foreground" strokeWidth={2.5} />, l.closes)}
+        </>
       )}
       {item(<Package aria-hidden className="size-3.5 text-foreground" strokeWidth={2.5} />, l.pickup)}
       {item(<span aria-hidden className="size-3.5 rounded-full bg-inverse" />, l.today)}
@@ -453,13 +410,11 @@ function DayList({
   day,
   cycles,
   spans,
-  paint,
   onChoose,
 }: {
   day: string;
   cycles: CalendarEntry[];
   spans: Map<string, CycleSpan>;
-  paint: (e: CalendarEntry) => Paint;
   onChoose: (id: string) => void;
 }) {
   return (
@@ -469,7 +424,6 @@ function DayList({
         {cycles.map((e) => (
           <li key={e.cycleId}>
             <button type="button" onClick={() => onChoose(e.cycleId)} className="flex w-full items-center gap-3 px-4 py-3 text-left">
-              <span aria-hidden className={cn("h-8 w-1.5 shrink-0 rounded-full", paint(e).bar)} />
               <span className="min-w-0 flex-1">
                 <span className="block text-[16px] font-bold text-foreground">{e.title}</span>
                 <span className="block text-[15px] text-secondary-foreground first-letter:uppercase">{roleWords(spans.get(e.cycleId)!, day)}</span>
@@ -488,19 +442,16 @@ function CycleRowButton({
   entry,
   span,
   today,
-  paint,
   onChoose,
 }: {
   entry: CalendarEntry;
   span: CycleSpan;
   today: string;
-  paint: Paint;
   onChoose: (id: string) => void;
 }) {
   const next = [span.open, span.close, ...span.pickups].filter((d): d is string => d !== null && d >= today).sort()[0] ?? span.last;
   return (
     <button type="button" onClick={() => onChoose(entry.cycleId)} className="flex w-full items-center gap-3 px-4 py-3 text-left">
-      <span aria-hidden className={cn("h-12 w-1.5 shrink-0 rounded-full", paint.bar)} />
       <DateTile day={next} tone="neutral" />
       <span className="min-w-0 flex-1">
         <span className="block text-[16px] font-bold leading-snug text-foreground">{entry.title}</span>
@@ -513,7 +464,7 @@ function CycleRowButton({
 }
 
 /** The chosen cycle in Home's words: when it opens, until when to order, when to collect, and what to do. */
-function CycleDetail({ entry, span, today, paint }: { entry: CalendarEntry; span: CycleSpan; today: string; paint: Paint }) {
+function CycleDetail({ entry, span, today }: { entry: CalendarEntry; span: CycleSpan; today: string }) {
   const c = t.calendar;
   const h = t.home;
   const opens = entry.events.find((e) => e.kind === "opens");
@@ -542,7 +493,6 @@ function CycleDetail({ entry, span, today, paint }: { entry: CalendarEntry; span
     <article className="overflow-hidden rounded-card border border-border bg-card shadow-card">
       <div className="px-4 pb-3.5 pt-3.5">
         <div className="mb-3 flex items-start gap-3">
-          <span aria-hidden className={cn("mt-1 h-10 w-1.5 shrink-0 rounded-full", entry.state === "planned" ? cn("border-2 border-dashed", paint.border) : paint.bar)} />
           <div className="min-w-0 flex-1">
             <h2 className="text-[18px] font-extrabold leading-snug text-foreground">{entry.title}</h2>
             {entry.supplierName && <p className="text-[14px] text-secondary-foreground">{entry.supplierName}</p>}
@@ -553,7 +503,7 @@ function CycleDetail({ entry, span, today, paint }: { entry: CalendarEntry; span
           </div>
         </div>
         <ul className="space-y-2.5">
-          {opens && row("opens", span.open, "neutral", LockOpen, c.opensAt(formatLongDay(opens.at), formatTime(opens.at)))}
+          {opens && row("opens", span.open, "neutral", ShoppingBasket, c.opensAt(formatLongDay(opens.at), formatTime(opens.at)))}
           {deadline &&
             row(
               "closes",

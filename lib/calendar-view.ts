@@ -80,23 +80,6 @@ export function cyclesOnDay(entries: ReadonlyArray<CalendarEntry>, day: string):
   return entries.filter((e) => hasRole(dayRole(spanOf(e), day)));
 }
 
-/**
- * A lane per cycle so that overlapping spans never share one: the lowest
- * free lane, in the order given (cyclesInMonth's).
- */
-export function assignLanes(entries: ReadonlyArray<CalendarEntry>): Map<string, number> {
-  const ends: string[] = [];
-  const lanes = new Map<string, number>();
-  for (const entry of entries) {
-    const span = spanOf(entry);
-    let lane = ends.findIndex((end) => end < span.first);
-    if (lane === -1) lane = ends.length;
-    ends[lane] = span.last;
-    lanes.set(entry.cycleId, lane);
-  }
-  return lanes;
-}
-
 /** The part of [from, to] inside a week (seven days): its columns, and whether it starts or ends there. */
 export type WeekSegment = { start: number; length: number; startsHere: boolean; endsHere: boolean };
 

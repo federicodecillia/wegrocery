@@ -327,6 +327,7 @@ export const it = {
     all: "Tutti",
     legendLabel: "Legenda",
     legend: {
+      opens: "Apre",
       window: "Giorni per ordinare",
       closes: "Ultimo giorno",
       pickup: "Ritiro",

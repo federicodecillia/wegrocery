@@ -160,7 +160,7 @@ export const guideEn: GuideContent = {
         "The **Order calendar** shows, month by month, when orders open and close and when to pick up, past cycles included.",
       steps: [
         "On Home tap **Full calendar**, next to **To order** (or, when nothing is open, the link in **Order**).",
-        "Above the calendar choose the cycle: the coloured band is the days to order, the filled square the last day, the package the pickup. **All** shows them together, each in its own colour.",
+        "Above the calendar choose the cycle (swipe the buttons sideways when there are many): the coloured band is the days to order, the filled square the last day, the package the pickup. **All** shows on each day only the icons of what happens: a basket when it opens, a lock on the last day, a package for the pickup.",
         "Tap a day to see its cycle; when there are several, they are listed below. The arrows change month.",
       ],
       notes: [

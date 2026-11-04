@@ -160,7 +160,7 @@ export const guideFr: GuideContent = {
         "Le **Calendrier des commandes** montre, mois par mois, quand les commandes ouvrent et ferment et quand les retirer, cycles passés compris.",
       steps: [
         "Sur l'Accueil, touchez **Calendrier complet**, à côté de **À commander** (ou, si rien n'est ouvert, le lien dans **Commande**).",
-        "Au-dessus du calendrier, choisissez le cycle : la bande de couleur, ce sont les jours pour commander, le carré plein le dernier jour, le colis le retrait. **Toutes** les montre ensemble, chacune avec sa couleur.",
+        "Au-dessus du calendrier, choisissez le cycle (faites glisser les boutons s'il y en a beaucoup) : la bande de couleur, ce sont les jours pour commander, le carré plein le dernier jour, le colis le retrait. **Toutes** montre pour chaque jour seulement les icônes de ce qui s'y passe : un panier à l'ouverture, un cadenas le dernier jour, un colis le retrait.",
         "Touchez un jour pour voir son cycle ; s'il y en a plusieurs, ils sont listés en dessous. Les flèches changent de mois.",
       ],
       notes: [
