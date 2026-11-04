@@ -33,6 +33,7 @@ function writeDone(done: Set<string>) {
 
 const VIEW: Record<CycleStep, CycleView> = {
   overdue: "ordini",
+  to_open: "panoramica",
   open: "ordini",
   to_send: "fornitore",
   to_adjust: "ordini",
@@ -139,7 +140,7 @@ export function CycleTodo({
 
 function cta(step: CycleStep): string {
   const d = t.admin.workspace.todo;
-  return { overdue: d.overdueCta, open: d.openCta, to_send: d.sendCta, to_adjust: d.adjustCta, to_collect: d.collectCta, to_settle: d.settleCta }[step];
+  return { overdue: d.overdueCta, to_open: d.openPlannedCta, open: d.openCta, to_send: d.sendCta, to_adjust: d.adjustCta, to_collect: d.collectCta, to_settle: d.settleCta }[step];
 }
 
 function detail(task: CycleTask, step: CycleStep): string {
@@ -147,6 +148,8 @@ function detail(task: CycleTask, step: CycleStep): string {
   switch (step) {
     case "overdue":
       return d.overdueDetail(task.hours ?? 0);
+    case "to_open":
+      return d.openPlannedDetail(task.hours != null && task.hours >= 1);
     case "open":
       return d.openDetail(task.orderMembers, task.hours);
     case "to_send":

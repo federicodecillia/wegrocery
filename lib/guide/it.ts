@@ -166,6 +166,7 @@ export const guideIt: GuideContent = {
         "Tocca un giorno per vedere solo i suoi ordini; **Tutto il mese** torna all'elenco completo.",
       ],
       notes: [
+        "Un ciclo **In programma** non è ancora aperto: vedi le date (a volte **indicative**) e l'anteprima dei prodotti, e ordini quando apre.",
         "Ogni ciclo dice se hai ordinato e se l'ordine è stato ritirato. Da un ciclo aperto vai all'ordine, da uno passato al dettaglio nello **Storico**.",
       ],
       link: { href: "/calendario", label: "Apri il calendario" },

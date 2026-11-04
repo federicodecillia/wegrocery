@@ -48,7 +48,7 @@ Never read `.env*` files other than `.env.example` (Playbook 8.3).
 │   ├── page.tsx                # Home: saldo hero, ciclo aperto, ultimi movimenti
 │   ├── ordine/page.tsx         # Order: confirmed recap (edit/cancel) or the stepper form
 │   ├── storico/page.tsx        # Order history + ledger movements tabs
-│   ├── calendario/page.tsx     # Order calendar: month grid + the month's cycles (lib/calendar.ts pure, lib/db/calendar.ts read, components/calendar/cycle-calendar.tsx); from Home and from Ordine when nothing is open
+│   ├── calendario/page.tsx     # Order calendar: month grid + the month's cycles, planned ones with a product preview (lib/calendar.ts pure, lib/db/calendar.ts read, components/calendar/cycle-calendar.tsx); from Home (with the next planned cycle) and from Ordine when nothing is open
 │   ├── notifiche/page.tsx      # Notification list with mark-as-read
 │   ├── profilo/page.tsx        # Profile (header avatar): name, emails, card, family, notifications, money, app, sign-out (privacy stays in the footer)
 │   ├── guida/page.tsx          # Guide index: "Il nostro gruppo" (admin text), search, topics, news; cards in guida/[topic] (content in lib/guide); admin guide in guida/admin (lib/guide/admin, server only: adminGuideFor checks the role, 404 for members)
@@ -92,7 +92,7 @@ Never read `.env*` files other than `.env.example` (Playbook 8.3).
 │                               #   access.ts: pure checkAccess/sessionClaims (no imports, used by proxy.ts)
 ├── proxy.ts                     # Redirect unauthenticated to /login (Next.js 16's middleware)
 ├── auth.ts                     # Better Auth instance, auth() (session + member), signOut()
-├── drizzle/                    # SQL migrations (0000–0043)
+├── drizzle/                    # SQL migrations (0000–0048)
 ├── console/                    # WeGrocery Console: separate Next.js app (own package.json, registry DB, Vercel project with
 │                               #   Root Directory `console`) for the operator's fleet; excluded from the root tsc/eslint/vitest; see console/README.md
 └── public/logo.png, public/mail/logo.png (email logo, 3x)
@@ -338,7 +338,7 @@ User interaction → Server Action ("use server") → auth check → DB mutation
   - `refund_failed` (category `wallet_topup`) — a Stripe refund failed after being accepted: the member and every active admin
   - `order_corrected` — admin edits a member's order via `adminEditClosedOrder` (closed cycle, with a correction) or `adminSaveOpenOrder` (open cycle, deadline passed or not: only the lines change, the close charges them; `lib/admin/open-order-store.ts`)
   - `order_adjusted` — closed-cycle shipping recompute (only members whose share moved) OR per-line "actual delivered" rectification
-  - `cycle_opened` — a cycle is created (always created already-open, so this is the single emit point, in `adminCreateCycle`)
+  - `cycle_opened` — a cycle opens: created open (`adminCreateCycle`) or a planned one opened (`adminOpenPlannedCycle`), both through `notifyCycleOpened`; a cycle created as planned sends nothing
   - `pickup_changed` (category `pickup`) — `adminUpdateCycle` set, moved or cleared the pickup as members read it (`pickupNotice`, `lib/notifications/pickup.ts`, compares the formatted slots): every active member with an order on the cycle (the account, for a family), never on a cancelled cycle
   - `order_picked_up` (category `picked_up`) — an admin first marked the member's order as collected (`adminMarkPickup`, `lib/actions/admin-pickups.ts`); editing or clearing the mark sends nothing
   - `cycle_closing_reminder` — **retired in v1.9.0.** No longer emitted. Rows sent while the feature existed remain in members' inboxes and fall through `categoryForType` to the unknown-type branch: rendered in-app, never emailed. Do not reintroduce the name for something else.
@@ -390,7 +390,7 @@ and its sections).
 | Table | Purpose |
 |---|---|
 | `members` | User registry; `role`: admin / attivi / utenti; `orders_referent` the "Referente ordini" flag (migration 0047, see Role System); `merged_into` on an account absorbed by a merge (see Member merge); `household_of` on a person who joined a family (see Families); `welcome_dismissed_at` when the person closed the welcome card on Home (migration 0031, `lib/guide/welcome.ts`; `/?benvenuto=1` shows it again) and `welcome_step` where they stopped (migration 0036, `saveWelcomeStep`) |
-| `order_cycles` | Weekly order windows; one `open` at a time |
+| `order_cycles` | Weekly order windows; one `open` at a time. `status`: `planned` → `open` → `closed`, or `cancelled` once closed (`lib/cycle-status.ts`). A `planned` cycle (migration 0048) shows in `/calendario` with its dates and its products as a preview (`getPlannedPreviews`), takes products, fee and product-order changes like an open one (`BEFORE_CLOSE_STATUSES`; the 0026 fee trigger allows both), but nobody orders on it: every order write checks `status = 'open'`. `adminCreateCycle` with `planned` stores the planned `order_open_at`; `adminOpenPlannedCycle` opens it (now, `dates_tentative` cleared, `cycle_opened` sent), refused once its deadline has passed; `adminDeletePlannedCycle` deletes it with its products. `dates_tentative` = "Date indicative" in the calendar. Admin → Ciclo shows it under "In programma" (views Panoramica, Prodotti) and "Da fare ora" asks to open it from its planned day (`to_open`, `lib/admin/cycle-phase.ts`); there is no cron |
 | `products` | Per-cycle product list |
 | `orders` | Order lines per member per cycle |
 | `ledger_entries` | Balance: `topup` (+), `order_charge` (−), `shipping_charge` (−), `correction` (±), `payout` / `manual_charge` / `membership_fee` (−, Cassa, reason required), `refund_failed` (+, a Stripe refund that did not go through), `member_merge` (±, a pair with `counterpart`, see Member merge, never editable), `wallet_transfer` (±, a pair with `counterpart`: wallet credit moved onto a card cycle or back, see Wallet in card payments, never editable), legacy `adjustment`. Manual rows carry `method` (bonifico/contanti/satispay/altro) and `external_ref` (CRO/TRN, unique on `upper(trim())`, migration 0018). Rows of a refund carry `refund_id` (unique with `type`) |

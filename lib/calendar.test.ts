@@ -28,6 +28,7 @@ function row(over: Partial<CalendarCycleRow> = {}): CalendarCycleRow {
     productCount: 12,
     hasOrder: false,
     pickedUp: false,
+    datesTentative: false,
     ...over,
   };
 }
@@ -101,6 +102,30 @@ describe("buildCalendar", () => {
   it("closes a pickup with no end time at midnight", () => {
     const state = buildCalendar([row({ pickupDate: new Date("2026-11-04T08:00:00Z"), pickupEndTime: null })], NOW)[0].state;
     expect(state).toBe("closed");
+  });
+
+  it("shows a planned cycle with its planned dates, its preview and no link", () => {
+    const planned = row({
+      status: "planned",
+      orderOpenAt: new Date("2026-11-20T08:00:00Z"),
+      orderCloseAt: new Date("2026-11-27T20:00:00Z"),
+      pickupDate: new Date("2026-12-03T16:00:00Z"),
+      datesTentative: true,
+    });
+    const preview = [{ name: "Mele", detail: "Fuji · 1 kg", price: 2.5, emoji: null }];
+    const [entry] = buildCalendar([planned], NOW, new Map([["cyc_1", preview]]));
+    expect(entry).toMatchObject({ state: "planned", tentative: true, preview, href: null });
+    expect(entry.events.map((e) => [e.kind, e.day])).toEqual([
+      ["opens", "2026-11-20"],
+      ["closes", "2026-11-27"],
+      ["pickup", "2026-12-03"],
+    ]);
+  });
+
+  it("keeps the preview and the tentative flag for planned cycles only", () => {
+    const [entry] = buildCalendar([row({ datesTentative: true })], NOW, new Map([["cyc_1", [{ name: "x", detail: null, price: 1, emoji: null }]]]));
+    expect(entry.tentative).toBe(false);
+    expect(entry.preview).toEqual([]);
   });
 
   it("leaves cancelled cycles out", () => {

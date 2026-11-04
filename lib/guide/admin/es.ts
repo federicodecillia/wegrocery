@@ -118,6 +118,27 @@ export const adminGuideEs: GuideContent = {
       keywords: ["nuevo", "crear", "abrir", "empezar", "fecha límite"],
     },
     {
+      slug: "programmare-ciclo",
+      topic: "ciclo",
+      title: "Programar un ciclo",
+      intro:
+        "Un ciclo programado aparece en el **Calendario de pedidos** de los socios con sus fechas y una vista previa de los productos, pero nadie puede pedir hasta que abras los pedidos.",
+      steps: [
+        "En **Ciclo** toca **+ Nuevo ciclo** y en **Cuándo se abren los pedidos** elige **Más adelante**.",
+        "Elige la **Apertura de pedidos prevista** y el **Cierre de pedidos**. Si las fechas aún pueden cambiar, marca **Fechas orientativas**: los socios lo ven en el calendario.",
+        "Completa el resto como en un ciclo normal y toca **Crear ciclo**.",
+        "En **Productos** añade productos del catálogo o importa la lista Excel del proveedor: los socios los ven como vista previa.",
+        "El día de la apertura **Por hacer ahora** te lo recuerda: toca **Abrir los pedidos**. El ciclo se abre y se avisa a los socios.",
+      ],
+      notes: [
+        "Mientras está programado puedes cambiarlo todo desde **Editar**, fechas incluidas. Si el cierre ya ha pasado, cambia la fecha antes de abrir.",
+        "Si el ciclo se cancela, toca **Eliminar**: nadie ha pedido, así que no hay dinero que ajustar.",
+        "La app no abre los pedidos sola: siempre hace falta que toques **Abrir los pedidos**.",
+      ],
+      link: { href: "/admin?tab=ciclo&new=1", label: "Crear un ciclo" },
+      keywords: ["programado", "programar", "futuro", "calendario", "vista previa", "orientativo", "planificar", "próximo"],
+    },
+    {
       slug: "pagamento-ciclo",
       topic: "ciclo",
       title: "Saldo o tarjeta: cómo se paga un ciclo",

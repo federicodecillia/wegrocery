@@ -118,6 +118,27 @@ export const adminGuideEn: GuideContent = {
       keywords: ["new", "create", "open", "start", "deadline"],
     },
     {
+      slug: "programmare-ciclo",
+      topic: "ciclo",
+      title: "Plan a cycle ahead",
+      intro:
+        "A planned cycle shows in the members' **Order calendar** with its dates and a preview of its products, but nobody can order until you open the orders.",
+      steps: [
+        "In **Cycle** tap **+ New cycle** and under **When the orders open** choose **Later**.",
+        "Pick the **Planned order opening** and the **Order deadline**. If the dates may still change, tick **Tentative dates**: members see it in the calendar.",
+        "Fill in the rest as for an ordinary cycle and tap **Create cycle**.",
+        "In **Products** add products from the catalogue or import the supplier's Excel listing: members see them as a preview.",
+        "On the opening day **To do now** reminds you: tap **Open the orders**. The cycle opens and members are told.",
+      ],
+      notes: [
+        "While it is planned you can change everything from **Edit**, dates included. If the deadline has already passed, move it before opening.",
+        "If the cycle is called off, tap **Delete**: nobody ordered, so there is no money to sort out.",
+        "The app does not open the orders by itself: it always takes your tap on **Open the orders**.",
+      ],
+      link: { href: "/admin?tab=ciclo&new=1", label: "Create a cycle" },
+      keywords: ["planned", "plan", "future", "calendar", "preview", "tentative", "schedule", "upcoming"],
+    },
+    {
       slug: "pagamento-ciclo",
       topic: "ciclo",
       title: "Wallet or card: how a cycle is paid",

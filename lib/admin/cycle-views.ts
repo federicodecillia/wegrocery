@@ -30,13 +30,16 @@ export function supplierOrderReady(status: string, orderCloseAt: Date | null, no
 }
 
 /**
- * The views of a cycle by status: products only while it is open (the close
+ * The views of a cycle by status: a planned one only its overview and
+ * products; products only while it is open (the close
  * freezes them), the supplier once there is something to send (`supplierReady`:
  * an open cycle past its deadline), the pickups (on an open cycle the view
  * says to close it first), the accounts (settlement, cancelling) after the
  * close.
  */
 export function cycleViews(status: string, supplierReady = false): CycleView[] {
+  // Planned: nobody can order yet, so only its terms and its products.
+  if (status === "planned") return ["panoramica", "prodotti"];
   if (status === "open")
     return supplierReady ? ["panoramica", "prodotti", "ordini", "fornitore", "ritiri"] : ["panoramica", "prodotti", "ordini", "ritiri"];
   if (status === "cancelled") return ["panoramica", "ordini", "conti"];
@@ -78,7 +81,7 @@ export function defaultCycleId(cycles: IndexedCycle[], asked?: string): string |
   return newest?.cycleId ?? null;
 }
 
-export type CycleFilter = "all" | "open" | "closed" | "cancelled";
+export type CycleFilter = "all" | "open" | "planned" | "closed" | "cancelled";
 
 /** The list's filter and search: title words, accents and case ignored. */
 export function filterCycles<T extends { title: string; status: string }>(cycles: T[], filter: CycleFilter, query: string): T[] {
@@ -101,7 +104,7 @@ export function settlementCandidate(
   c: { status: string; paymentMode: string; settledAt: Date | null },
   now: Date,
 ): boolean {
-  if (c.paymentMode !== "per_order" || c.status === "open") return false;
+  if (c.paymentMode !== "per_order" || (c.status !== "closed" && c.status !== "cancelled")) return false;
   if (c.settledAt == null) return true;
   return now.getTime() - c.settledAt.getTime() <= SETTLEMENT_RECHECK_DAYS * 86_400_000;
 }
@@ -115,14 +118,15 @@ export function settlementPending(status: string | null): boolean {
   return status === "to_settle" || status === "needs_update" || status === "refund_failed";
 }
 
-export type CycleGroup = "toSettle" | "open" | "others";
+export type CycleGroup = "toSettle" | "open" | "planned" | "others";
 
-/** The list in three groups, each keeping its order: accounts to settle, open, the rest. */
+/** The list in groups, each keeping its order: accounts to settle, open, planned, the rest. */
 export function groupCycles<T extends { status: string; toSettle: boolean }>(cycles: T[]): { group: CycleGroup; cycles: T[] }[] {
   const groups: { group: CycleGroup; cycles: T[] }[] = [
     { group: "toSettle", cycles: cycles.filter((c) => c.toSettle) },
     { group: "open", cycles: cycles.filter((c) => !c.toSettle && c.status === "open") },
-    { group: "others", cycles: cycles.filter((c) => !c.toSettle && c.status !== "open") },
+    { group: "planned", cycles: cycles.filter((c) => !c.toSettle && c.status === "planned") },
+    { group: "others", cycles: cycles.filter((c) => !c.toSettle && c.status !== "open" && c.status !== "planned") },
   ];
   return groups.filter((g) => g.cycles.length > 0);
 }

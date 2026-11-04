@@ -120,6 +120,27 @@ export const adminGuideIt: GuideContent = {
       keywords: ["nuovo", "creare", "aprire", "iniziare", "scadenza"],
     },
     {
+      slug: "programmare-ciclo",
+      topic: "ciclo",
+      title: "Mettere in programma un ciclo",
+      intro:
+        "Un ciclo in programma compare nel **Calendario ordini** dei soci con le sue date e i prodotti come anteprima, ma nessuno può ordinare finché non apri gli ordini.",
+      steps: [
+        "In **Ciclo** tocca **+ Nuovo ciclo** e in **Quando aprono gli ordini** scegli **Più avanti**.",
+        "Scegli l'**Apertura ordini prevista** e la **Chiusura ordini**. Se le date possono ancora cambiare, spunta **Date indicative**: i soci lo vedono nel calendario.",
+        "Compila il resto come per un ciclo normale e tocca **Crea ciclo**.",
+        "In **Prodotti** aggiungi i prodotti dal catalogo o importa il listino Excel del fornitore: i soci li vedono come anteprima.",
+        "Il giorno dell'apertura **Da fare ora** te lo ricorda: tocca **Apri gli ordini**. Il ciclo diventa aperto e i soci ricevono l'avviso.",
+      ],
+      notes: [
+        "Finché è in programma puoi cambiare tutto da **Modifica**, date comprese. Se la chiusura è già passata, sposta la data prima di aprire.",
+        "Se il ciclo salta, tocca **Elimina**: nessuno ha ordinato, quindi non ci sono soldi da sistemare.",
+        "L'app non apre gli ordini da sola: serve sempre il tuo tocco su **Apri gli ordini**.",
+      ],
+      link: { href: "/admin?tab=ciclo&new=1", label: "Crea un ciclo" },
+      keywords: ["programma", "programmare", "futuro", "calendario", "anteprima", "indicativo", "pianificare", "prossimo"],
+    },
+    {
       slug: "pagamento-ciclo",
       topic: "ciclo",
       title: "Borsellino o carta: il pagamento del ciclo",

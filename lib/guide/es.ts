@@ -164,6 +164,7 @@ export const guideEs: GuideContent = {
         "Toca un día para ver solo sus pedidos; **Todo el mes** vuelve a la lista completa.",
       ],
       notes: [
+        "Un ciclo **Programado** aún no está abierto: ves sus fechas (a veces **orientativas**) y una vista previa de los productos, y pides cuando se abra.",
         "Cada ciclo indica si has pedido y si el pedido se ha recogido. Desde un ciclo abierto vas al pedido, desde uno pasado a su detalle en el **Historial**.",
       ],
       link: { href: "/calendario", label: "Abrir el calendario" },

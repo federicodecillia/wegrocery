@@ -118,6 +118,27 @@ export const adminGuideFr: GuideContent = {
       keywords: ["nouveau", "créer", "ouvrir", "commencer", "date limite"],
     },
     {
+      slug: "programmare-ciclo",
+      topic: "ciclo",
+      title: "Programmer un cycle",
+      intro:
+        "Un cycle programmé apparaît dans le **Calendrier des commandes** des membres avec ses dates et un aperçu des produits, mais personne ne peut commander tant que vous n'ouvrez pas les commandes.",
+      steps: [
+        "Dans **Cycle** touchez **+ Nouveau cycle** et sous **Quand les commandes ouvrent** choisissez **Plus tard**.",
+        "Choisissez l'**Ouverture des commandes prévue** et la **Clôture des commandes**. Si les dates peuvent encore changer, cochez **Dates indicatives** : les membres le voient dans le calendrier.",
+        "Remplissez le reste comme pour un cycle normal et touchez **Créer le cycle**.",
+        "Dans **Produits** ajoutez des produits du catalogue ou importez la liste Excel du fournisseur : les membres les voient en aperçu.",
+        "Le jour de l'ouverture **À faire maintenant** vous le rappelle : touchez **Ouvrir les commandes**. Le cycle s'ouvre et les membres sont prévenus.",
+      ],
+      notes: [
+        "Tant qu'il est programmé vous pouvez tout changer avec **Modifier**, dates comprises. Si la clôture est déjà passée, déplacez la date avant d'ouvrir.",
+        "Si le cycle est annulé, touchez **Supprimer** : personne n'a commandé, il n'y a donc pas d'argent à régulariser.",
+        "L'app n'ouvre pas les commandes toute seule : il faut toujours toucher **Ouvrir les commandes**.",
+      ],
+      link: { href: "/admin?tab=ciclo&new=1", label: "Créer un cycle" },
+      keywords: ["programmé", "programmer", "futur", "calendrier", "aperçu", "indicatif", "planifier", "prochain"],
+    },
+    {
       slug: "pagamento-ciclo",
       topic: "ciclo",
       title: "Solde ou carte : comment un cycle est payé",

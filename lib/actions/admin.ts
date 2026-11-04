@@ -5,11 +5,13 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { getAuthInstance } from "@/auth";
 import { admitEmail } from "@/lib/auth/admission";
-import { eq, and, isNull, notInArray, sql, inArray } from "drizzle-orm";
+import { eq, and, isNull, notInArray, or, sql, inArray } from "drizzle-orm";
 import { requireAdmin, requireOrderManager } from "@/lib/auth/session";
 import { managesCycle, requireCycleManager, requireOrderLineManager, requireProductManager } from "@/lib/auth/manager";
 import { t } from "@/lib/i18n";
 import { formatMoney, formatDate } from "@/lib/i18n/format";
+import { BEFORE_CLOSE_STATUSES } from "@/lib/cycle-status";
+import { zonedLocalToUtc } from "@/lib/i18n/zoned-time";
 import { parseCycleDates } from "@/lib/cycle-dates";
 import { brand } from "@/lib/brand";
 import { getBrand } from "@/lib/brand/get-brand";
@@ -150,7 +152,25 @@ export type CreateCycleInput = {
   weighingDepositPct?: string;
   /** "wallet" or "per_order" (lib/payments/cycle-mode.ts). Omitted: the group's mode. */
   paymentMode?: string;
+  /**
+   * In programma: members see it in the calendar, orders open later with
+   * adminOpenPlannedCycle (drizzle/0048_planned_cycles.sql). Needs orderOpenAt.
+   */
+  planned?: boolean;
+  /** Planned cycles: when the orders should open, wall-clock like the other dates. */
+  orderOpenAt?: string;
+  /** Planned cycles: the dates may still move ("Date indicative"). */
+  datesTentative?: boolean;
 };
+
+/** A planned cycle's opening: required, and before the close. */
+function readPlannedOpening(raw: string | undefined, orderCloseAt: Date): Date | { error: string } {
+  if (!raw) return { error: t.errors.fieldRequired(t.fields.orderOpenDate) };
+  const at = zonedLocalToUtc(raw);
+  if (!at) return { error: t.errors.invalidDate(t.fields.orderOpenDate) };
+  if (at.getTime() >= orderCloseAt.getTime()) return { error: t.errors.plannedOpenAfterClose };
+  return at;
+}
 
 export async function adminCreateCycle(data: CreateCycleInput): Promise<{error?: string}> {
   try {
@@ -163,6 +183,8 @@ export async function adminCreateCycle(data: CreateCycleInput): Promise<{error?:
     });
     if ("error" in dates) return { error: dates.error };
     const orderCloseAt = dates.orderCloseAt!;
+    const plannedOpenAt = data.planned ? readPlannedOpening(data.orderOpenAt, orderCloseAt) : null;
+    if (plannedOpenAt && "error" in plannedOpenAt) return { error: plannedOpenAt.error };
     if (!data.supplierId) return { error: t.errors.fieldRequired(t.fields.supplier) };
     const accessLevel = data.accessLevel ? normalizeAccessLevel(data.accessLevel) : DEFAULT_ACCESS_LEVEL;
     if (!accessLevel) return { error: t.errors.invalidAccessLevel };
@@ -227,9 +249,10 @@ export async function adminCreateCycle(data: CreateCycleInput): Promise<{error?:
           : null,
       shippingTotal:
         shippingMode === "proportional" && data.shippingTotal ? data.shippingTotal : null,
-      orderOpenAt: now,
+      orderOpenAt: plannedOpenAt ?? now,
       orderCloseAt,
-      status: "open",
+      status: plannedOpenAt ? "planned" : "open",
+      datesTentative: plannedOpenAt ? Boolean(data.datesTentative) : false,
       accessLevel,
       notes: data.notes?.trim() || null,
       createdBy: admin.email,
@@ -243,47 +266,125 @@ export async function adminCreateCycle(data: CreateCycleInput): Promise<{error?:
 
     await writeAudit(db, admin.email, "create_cycle", "cycle", cycleId, { ...data, accessLevel, paymentMode });
 
-    // Notify members who can see this cycle that it's open. Cycles are always
-    // created already-open (no scheduled opens), so this is the single emit
-    // point for cycle_opened. Kept independent of cycle creation: a delivery
-    // failure must not report the (already committed) cycle as failed.
-    try {
-      const allMembers = await db
-        .select({
-          memberId: members.memberId,
-          email: members.email,
-          role: members.role,
-          active: members.active,
-        })
-        .from(members)
-        // A person in a family sees the account's notifications: one each.
-        .where(isNull(members.householdOf));
-      const recipients = selectCycleAccessMembers(allMembers, accessLevel);
-      await dispatchToMembers(
-        db,
-        recipients.map((m) => ({ memberId: m.memberId, email: m.email })),
-        {
-          type: "cycle_opened",
-          title: t.notificationsServer.cycleOpenedTitle,
-          body: t.notificationsServer.cycleOpenedBody(
-            data.title.trim(),
-            formatDeadline(orderCloseAt),
-          ),
-          href: "/ordine",
-        },
-        now,
-      );
-    } catch (notifyError) {
-      console.error("[cycle_opened] dispatch failed:", notifyError);
-    }
+    // A planned cycle says nothing yet: members hear about it when its orders open.
+    if (!plannedOpenAt) await notifyCycleOpened(db, { title: data.title.trim(), accessLevel, orderCloseAt }, now);
 
     revalidatePath("/admin");
     revalidatePath("/");
+    revalidatePath("/calendario");
     revalidatePath("/notifiche");
     await recordUsage("cycle_created");
     return {};
   } catch (e) {
     return { error: e instanceof Error ? e.message : t.errors.cycleCreationError };
+  }
+}
+
+// Tells the members who can see a cycle that its orders are open: at the
+// creation of an open cycle and when a planned one opens, the two emit points
+// of cycle_opened. Kept apart from the write: a delivery failure must not
+// report the (already committed) cycle as failed.
+async function notifyCycleOpened(
+  db: ReturnType<typeof getDb>,
+  cycle: { title: string; accessLevel: string; orderCloseAt: Date | null },
+  now: Date,
+): Promise<void> {
+  try {
+    const allMembers = await db
+      .select({
+        memberId: members.memberId,
+        email: members.email,
+        role: members.role,
+        active: members.active,
+      })
+      .from(members)
+      // A person in a family sees the account's notifications: one each.
+      .where(isNull(members.householdOf));
+    const recipients = selectCycleAccessMembers(allMembers, cycle.accessLevel);
+    await dispatchToMembers(
+      db,
+      recipients.map((m) => ({ memberId: m.memberId, email: m.email })),
+      {
+        type: "cycle_opened",
+        title: t.notificationsServer.cycleOpenedTitle,
+        body: t.notificationsServer.cycleOpenedBody(cycle.title, cycle.orderCloseAt ? formatDeadline(cycle.orderCloseAt) : ""),
+        href: "/ordine",
+      },
+      now,
+    );
+  } catch (notifyError) {
+    console.error("[cycle_opened] dispatch failed:", notifyError);
+  }
+}
+
+/**
+ * "Apri gli ordini" on a planned cycle: it becomes open now, its dates are no
+ * longer indicative, and the members who can see it are told. Refused once
+ * its order deadline has passed (the admin moves it first) and on a cycle
+ * that is not planned.
+ */
+export async function adminOpenPlannedCycle(cycleId: string): Promise<{ error?: string }> {
+  try {
+    const admin = await requireCycleManager(cycleId);
+    const db = getDb();
+    const now = new Date();
+    const [opened] = await db
+      .update(orderCycles)
+      .set({ status: "open", orderOpenAt: now, datesTentative: false })
+      .where(
+        and(
+          eq(orderCycles.cycleId, cycleId),
+          eq(orderCycles.status, "planned"),
+          or(isNull(orderCycles.orderCloseAt), sql`${orderCycles.orderCloseAt} > now()`),
+        ),
+      )
+      .returning({ title: orderCycles.title, accessLevel: orderCycles.accessLevel, orderCloseAt: orderCycles.orderCloseAt });
+    if (!opened) {
+      const [current] = await db
+        .select({ status: orderCycles.status })
+        .from(orderCycles)
+        .where(eq(orderCycles.cycleId, cycleId))
+        .limit(1);
+      if (!current) return { error: t.errors.cycleNotFound };
+      return { error: current.status === "planned" ? t.errors.plannedCloseInPast : t.errors.cycleNotPlanned };
+    }
+    await writeAudit(db, admin.email, "open_planned_cycle", "cycle", cycleId, { openedAt: now.toISOString() });
+    await notifyCycleOpened(db, opened, now);
+    revalidatePath("/admin");
+    revalidatePath("/");
+    revalidatePath("/ordine");
+    revalidatePath("/calendario");
+    revalidatePath("/notifiche");
+    return {};
+  } catch (e) {
+    return { error: actionErrorMessage(e, t.errors.genericError, "adminOpenPlannedCycle") };
+  }
+}
+
+/**
+ * Deletes a planned cycle (the supplier dropped out, a duplicate): no order,
+ * draft or movement can sit on one, so its products go with it. Refused on
+ * any other status.
+ */
+export async function adminDeletePlannedCycle(cycleId: string): Promise<{ error?: string }> {
+  try {
+    const admin = await requireCycleManager(cycleId);
+    const db = getDb();
+    const planned = sql`EXISTS (SELECT 1 FROM order_cycles WHERE cycle_id = ${cycleId} AND status = 'planned')`;
+    const [, deleted] = await db.batch([
+      db.delete(products).where(and(eq(products.cycleId, cycleId), planned)),
+      db
+        .delete(orderCycles)
+        .where(and(eq(orderCycles.cycleId, cycleId), eq(orderCycles.status, "planned")))
+        .returning({ title: orderCycles.title }),
+    ]);
+    if (deleted.length === 0) return { error: t.errors.cycleNotPlanned };
+    await writeAudit(db, admin.email, "delete_planned_cycle", "cycle", cycleId, { title: deleted[0].title });
+    revalidatePath("/admin");
+    revalidatePath("/calendario");
+    return {};
+  } catch (e) {
+    return { error: actionErrorMessage(e, t.errors.genericError, "adminDeletePlannedCycle") };
   }
 }
 
@@ -824,6 +925,9 @@ export async function adminUpdateCycle(
     handlingFeeType?: string;
     handlingFeeValue?: string;
     weighingDepositPct?: string;
+    /** Planned cycles only: when the orders should open, and whether the dates are indicative. */
+    orderOpenAt?: string;
+    datesTentative?: boolean;
   },
 ): Promise<{ error?: string; adjustedMembers?: number; pickupNotified?: number }> {
   try {
@@ -836,6 +940,7 @@ export async function adminUpdateCycle(
       .select({
         status: orderCycles.status,
         title: orderCycles.title,
+        orderOpenAt: orderCycles.orderOpenAt,
         orderCloseAt: orderCycles.orderCloseAt,
         pickupDate: orderCycles.pickupDate,
         pickupEndTime: orderCycles.pickupEndTime,
@@ -878,6 +983,16 @@ export async function adminUpdateCycle(
     const dates = parseCycleDates(data);
     if ("error" in dates) return { error: dates.error };
 
+    // Only a planned cycle moves its opening: an open one opened already.
+    const planned = before.status === "planned";
+    let plannedOpenAt: Date | undefined;
+    if (planned && data.orderOpenAt !== undefined) {
+      const closeAt = dates.orderCloseAt ?? before.orderCloseAt;
+      const read = closeAt ? readPlannedOpening(data.orderOpenAt, closeAt) : { error: t.errors.fieldRequired(t.fields.orderCloseDate) };
+      if ("error" in read) return { error: read.error };
+      plannedOpenAt = read;
+    }
+
     let accessLevel: AccessLevel | undefined;
     if (typeof data.accessLevel === "string") {
       const parsed = normalizeAccessLevel(data.accessLevel);
@@ -901,7 +1016,7 @@ export async function adminUpdateCycle(
       const updated = await db
         .update(orderCycles)
         .set({ weighingDepositPct: depositPct === null ? null : depositPct.toFixed(2) })
-        .where(and(eq(orderCycles.cycleId, cycleId), eq(orderCycles.status, "open")))
+        .where(and(eq(orderCycles.cycleId, cycleId), inArray(orderCycles.status, [...BEFORE_CLOSE_STATUSES])))
         .returning({ cycleId: orderCycles.cycleId });
       if (updated.length === 0) return { error: t.errors.weighingDepositLocked };
     }
@@ -919,6 +1034,8 @@ export async function adminUpdateCycle(
         }),
         ...(data.pickup2EndTime !== undefined && { pickup2EndTime: data.pickup2EndTime || null }),
         ...(data.orderCloseAt !== undefined && { orderCloseAt: dates.orderCloseAt }),
+        ...(plannedOpenAt !== undefined && { orderOpenAt: plannedOpenAt }),
+        ...(planned && data.datesTentative !== undefined && { datesTentative: data.datesTentative }),
         ...(data.notes !== undefined && { notes: data.notes || null }),
         ...(data.supplierId !== undefined && { supplierId: data.supplierId || null }),
         ...(accessLevel !== undefined && { accessLevel }),
@@ -973,6 +1090,7 @@ export async function adminUpdateCycle(
 
     revalidatePath("/admin");
     revalidatePath("/");
+    revalidatePath("/calendario");
     return { adjustedMembers, pickupNotified };
   } catch (e) {
     return { error: actionErrorMessage(e, t.errors.cycleUpdateError, "adminUpdateCycle") };

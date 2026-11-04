@@ -7,6 +7,7 @@ import { and, eq, inArray, sql, type SQL } from "drizzle-orm";
 import type { BatchItem } from "drizzle-orm/batch";
 import { ActionError } from "@/lib/action-error";
 import { buildCycleCloseCharges, ordersSnapshot, type CycleCloseCharges } from "@/lib/cycle-close";
+import { BEFORE_CLOSE_STATUSES } from "@/lib/cycle-status";
 import { liveLedger } from "@/lib/db/ledger-live";
 import { ledgerEntries, orderCycles, orderDrafts, orders } from "@/lib/db/schema";
 import { t } from "@/lib/i18n";
@@ -284,14 +285,14 @@ export async function projectedCloseShipping(db: Db, cycleId: string): Promise<M
   return new Map(shippingCharges.map((c) => [c.memberId, -parseFloat(c.amount)]));
 }
 
-// Sets the fee of a cycle that is still open; false when it no longer is.
+// Sets the fee of a cycle not closed yet (open or planned); false once it is.
 // One conditional statement, so a close that commits first always wins
 // (drizzle/0026 refuses the change in the database too).
 export async function setOpenCycleFee(db: Db, cycleId: string, fee: HandlingFee | null): Promise<boolean> {
   const rows = await db
     .update(orderCycles)
     .set({ handlingFeeType: fee?.type ?? null, handlingFeeValue: fee ? fee.value.toFixed(2) : null })
-    .where(and(eq(orderCycles.cycleId, cycleId), eq(orderCycles.status, "open")))
+    .where(and(eq(orderCycles.cycleId, cycleId), inArray(orderCycles.status, [...BEFORE_CLOSE_STATUSES])))
     .returning({ cycleId: orderCycles.cycleId });
   return rows.length > 0;
 }
