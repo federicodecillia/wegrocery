@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import {
   buildCalendar,
   dayOf,
-  entriesIn,
   eventKindsByDay,
   monthGrid,
   monthRange,
@@ -140,7 +139,7 @@ describe("buildCalendar", () => {
   });
 });
 
-describe("entriesIn", () => {
+describe("month helpers", () => {
   const entries = buildCalendar(
     [
       row({ cycleId: "a", orderOpenAt: new Date("2026-11-10T08:00:00Z"), orderCloseAt: new Date("2026-11-17T20:00:00Z"), pickupDate: new Date("2026-12-02T16:00:00Z") }),
@@ -150,27 +149,11 @@ describe("entriesIn", () => {
     NOW,
   );
 
-  it("keeps the cycles with an event in the month, by their first one there", () => {
-    expect(entriesIn(entries, { month: "2026-11" }).map((e) => e.cycleId)).toEqual(["b", "a"]);
-    expect(entriesIn(entries, { month: "2026-10" }).map((e) => e.cycleId)).toEqual(["c", "b"]);
-  });
-
-  it("keeps every event of a cycle, also those of other months", () => {
-    const [b] = entriesIn(entries, { month: "2026-11" });
-    expect(b.events).toHaveLength(3);
-  });
-
-  it("narrows to a day", () => {
-    expect(entriesIn(entries, { month: "2026-11", day: "2026-11-05" }).map((e) => e.cycleId)).toEqual(["b"]);
-    expect(entriesIn(entries, { month: "2026-11", day: "2026-11-06" })).toEqual([]);
-  });
-
   it("marks the kinds of event of each day", () => {
     const kinds = eventKindsByDay(entries);
     expect([...(kinds.get("2026-11-05") ?? [])]).toEqual(["pickup"]);
     expect(kinds.has("2026-11-06")).toBe(false);
   });
-
   it("spans the months from the first event to the last, today and two months ahead included", () => {
     expect(monthRange(entries, "2026-11-04")).toEqual({ first: "2026-10", last: "2027-01" });
     expect(monthRange([], "2026-11-04")).toEqual({ first: "2026-11", last: "2027-01" });
@@ -178,4 +161,5 @@ describe("entriesIn", () => {
     expect(monthRange(far, "2026-11-04").last).toBe("2027-04");
   });
 });
+
 

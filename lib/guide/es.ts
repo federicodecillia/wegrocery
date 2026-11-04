@@ -160,8 +160,8 @@ export const guideEs: GuideContent = {
         "El **Calendario de pedidos** muestra mes a mes cuándo abren y cierran los pedidos y cuándo se recogen, también los ciclos pasados.",
       steps: [
         "En Inicio toca **Calendario completo**, junto a **Por pedir** (o, si no hay nada abierto, el enlace en **Pedido**).",
-        "Pasa de un mes a otro con las flechas: los puntos de colores marcan aperturas, cierres y recogidas.",
-        "Toca un día para ver solo sus pedidos; **Todo el mes** vuelve a la lista completa.",
+        "Encima del calendario elige el ciclo: la franja de color son los días para pedir, el cuadro lleno el último día, el paquete la recogida. **Todos** los muestra juntos, cada uno con su color.",
+        "Toca un día para ver su ciclo; si hay varios, aparecen en la lista de abajo. Las flechas cambian de mes.",
       ],
       notes: [
         "Un ciclo **Programado** aún no está abierto: ves sus fechas (a veces **orientativas**) y una vista previa de los productos, y pides cuando se abra.",
