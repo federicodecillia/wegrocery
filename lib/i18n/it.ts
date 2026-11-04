@@ -2571,6 +2571,21 @@ export const it = {
     notificationCta: (url: string) => `Apri nell'app: ${url}`,
     notificationManagePrefs: (url: string) => `Gestisci le tue preferenze di notifica: ${url}`,
     notificationFooter: (orgName: string) => orgName,
+    // The HTML part's buttons, by the page they open (lib/email/layout.ts).
+    buttons: {
+      app: "Apri l'app",
+      link: "Apri il link",
+      signIn: "Entra",
+      order: "Vai all'ordine",
+      history: "Apri lo Storico",
+      topUp: "Vai alla ricarica",
+      family: "Apri Famiglia",
+      calendar: "Apri il calendario",
+      notifications: "Apri le notifiche",
+      profile: "Apri il profilo",
+      admin: "Apri l'area Admin",
+      preferences: "Gestisci le notifiche",
+    },
     supplierOrderSubject: (orgName: string, cycleTitle: string) => `Ordine ${orgName}: ${cycleTitle}`,
     supplierOrderBody: (input: {
       appName: string;

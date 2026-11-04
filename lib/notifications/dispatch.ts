@@ -122,7 +122,7 @@ export async function dispatchNotification(
   }
 
   if (channels.email && input.memberEmail) {
-    const { subject, text } = notificationEmail(
+    const { subject, text, heading } = notificationEmail(
       { title: input.title, body: input.body, href: input.href },
       await getBrand(),
     );
@@ -135,6 +135,7 @@ export async function dispatchNotification(
       to: input.memberEmail,
       subject,
       text,
+      heading,
       ...(headers ? { headers } : {}),
       idempotencyKey: emailIdempotencyKey("notification", notificationId),
     });
@@ -181,13 +182,13 @@ export async function dispatchWithBodies(
   const emailItems = items
     .filter((i) => i.email && channelsForType(type, prefsByMember.get(i.memberId)!).email)
     .map((i) => {
-      const { subject, text } = notificationEmail({ title: i.title, body: i.body, href: i.href }, identity);
+      const { subject, text, heading } = notificationEmail({ title: i.title, body: i.body, href: i.href }, identity);
       const headers = unsubscribeHeaders(
         { memberId: i.memberId, category: categoryForType(type) },
         getAppBaseUrl(),
         process.env.AUTH_SECRET,
       );
-      return { to: i.email as string, subject, text, ...(headers ? { headers } : {}) };
+      return { to: i.email as string, subject, text, heading, ...(headers ? { headers } : {}) };
     });
   if (emailItems.length > 0) {
     const result = await sendMailBatch(emailItems, undefined, emailIdempotencyKey("notifications", type, createdAt));

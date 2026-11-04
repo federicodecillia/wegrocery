@@ -49,7 +49,7 @@ export function notificationEmail(
     href?: string | null;
   },
   identity: Pick<BrandConfig, "appName" | "orgName"> = brand,
-): { subject: string; text: string } {
+): { subject: string; text: string; heading: string } {
   const baseUrl = getAppBaseUrl();
   const subject = t.email.notificationSubject(identity.appName, input.title);
 
@@ -62,5 +62,6 @@ export function notificationEmail(
   }
   lines.push(t.email.notificationFooter(identity.orgName));
 
-  return { subject, text: lines.join("\n") };
+  // heading: the title on top of the HTML card (lib/email/layout.ts).
+  return { subject, text: lines.join("\n"), heading: input.title };
 }

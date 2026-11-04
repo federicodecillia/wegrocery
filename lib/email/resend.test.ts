@@ -17,11 +17,21 @@ vi.mock("resend", () => ({
   },
 }));
 
-// The group's identity, without a database: the signature switch.
+// The group's identity, without a database: the signature switch, a name,
+// a logo and a colour of its own.
 const brandState = { flylabsSignature: true };
-vi.mock("@/lib/brand/get-brand", () => ({
-  getBrand: async () => ({ flylabsSignature: brandState.flylabsSignature }),
-}));
+vi.mock("@/lib/brand/get-brand", async () => {
+  const { DEFAULT_BRAND } = await import("@/lib/brand/default");
+  return {
+    getBrand: async () => ({
+      ...DEFAULT_BRAND,
+      appName: "GAS Verde",
+      logoUrl: "/brand/logo-1.png",
+      theme: { primary: "#2e7d32" },
+      flylabsSignature: brandState.flylabsSignature,
+    }),
+  };
+});
 
 const { sendMail, sendMailBatch } = await import("./resend");
 const { REDIRECT_BATCH_CAP } = await import("./outbound-policy");
@@ -161,10 +171,15 @@ describe("branded HTML part (Playbook 7.7)", () => {
       expect(html).toContain('<a href="https://gas.example.org/storico"');
       expect(html).toContain('src="https://gas.example.org/mail/logo.png"');
       expect(html).toContain("flylabs.ai</span></a>");
+      // The group's identity, read per message.
+      expect(html).toContain('src="https://gas.example.org/brand/logo-1.png"');
+      expect(html).toContain(">GAS Verde</span>");
+      expect(html).toContain("border-top:4px solid #2e7d32");
 
-      await sendMailBatch([{ to: "a@example.org", subject: "S", text: "corpo" }]);
+      await sendMailBatch([{ to: "a@example.org", subject: "S", text: "corpo", heading: "Titolo" }]);
       const items = (batchSend.mock.calls[0] as unknown[])[0] as { text: string; html: string }[];
       expect(items[0].html).toContain("corpo");
+      expect(items[0].html).toContain(">Titolo</h1>");
     } finally {
       if (savedBase === undefined) delete process.env.APP_BASE_URL;
       else process.env.APP_BASE_URL = savedBase;

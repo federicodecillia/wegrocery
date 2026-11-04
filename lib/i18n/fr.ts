@@ -2563,6 +2563,20 @@ export const fr: Strings = {
     notificationCta: (url: string) => `Ouvrir dans l'app : ${url}`,
     notificationManagePrefs: (url: string) => `Gérez vos préférences de notification : ${url}`,
     notificationFooter: (orgName: string) => orgName,
+    buttons: {
+      app: "Ouvrir l'app",
+      link: "Ouvrir le lien",
+      signIn: "Se connecter",
+      order: "Aller à la commande",
+      history: "Ouvrir l'Historique",
+      topUp: "Aller à la recharge",
+      family: "Ouvrir Famille",
+      calendar: "Ouvrir le calendrier",
+      notifications: "Ouvrir les notifications",
+      profile: "Ouvrir le profil",
+      admin: "Ouvrir l'espace Admin",
+      preferences: "Gérer les notifications",
+    },
     supplierOrderSubject: (orgName: string, cycleTitle: string) => `Commande ${orgName} : ${cycleTitle}`,
     supplierOrderBody: (input: {
       appName: string;

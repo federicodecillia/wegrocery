@@ -33,6 +33,8 @@ dettagli tecnici", la release su GitHub la tiene.
 - 🗄️ [tecnico] **Migrazione `0049_cycle_open_alerts.sql`.** Nuova tabella `cycle_open_alerts` per le richieste "Avvisami quando apre"; da applicare prima del deploy.
 
 ### Modificato
+- ✉️ **Email con il volto del gruppo.** Le email dell'app (accesso, notifiche, inviti in famiglia, "Avvisami quando apre") mostrano in alto il logo e il nome del gruppo, nei suoi colori; il link all'app è un pulsante che dice dove porta ("Vai all'ordine", "Apri lo Storico", "Entra"), il codice d'accesso un riquadro grande, e la notifica ha il suo titolo.
+- 📅 **Legenda del calendario uguale per un ciclo e per Tutti.** Scegliendo un ciclo la legenda mostra anche **Apre**, come in Tutti.
 - 🏠 **Una Home più chiara: una sola lista di cicli.** Ogni ciclo compare una volta, nel gruppo di cosa devi fare: **Da ordinare** (la scadenza con il giorno della settimana per intero, "domani" o "Ultimo giorno", il tuo ordine raccolto in una riga, un piccolo pulsante "Ordina", "Modifica" o "Paga"), **Da ritirare** (i cicli chiusi con il tuo ordine e il ritiro ancora da fare) e **In arrivo** (i cicli in programma). Il riquadro con la data su ogni ciclo fa da calendario; il calendario completo è a un tocco, e da computer il mese corrente sta a destra. Il saldo è una riga piccola in fondo, e va in alto solo se è negativo.
 
 ## [1.43.0] - 1 novembre 2026
