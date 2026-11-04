@@ -47,7 +47,7 @@ export const guideEs: GuideContent = {
       topic: "primi-passi",
       title: "Cómo está organizada la app",
       steps: [
-        "**Inicio**: tu saldo, el pedido abierto con el tiempo que queda y tus últimos movimientos.",
+        "**Inicio**: el calendario con las próximas fechas, los pedidos abiertos con el tiempo que queda, y luego tu saldo y tus últimos movimientos.",
         "**Pedido**: el catálogo del ciclo abierto, donde eliges los productos y confirmas.",
         "**Historial**: tus pedidos pasados y cada movimiento del saldo.",
         "**Guía**: esta página, con las novedades de la app y los contactos.",
@@ -148,7 +148,7 @@ export const guideEs: GuideContent = {
         "En Inicio ves cuándo se cierra el pedido y cuánto tiempo queda. Tras el cierre el pedido ya no se puede cambiar: el grupo lo envía a los proveedores.",
       notes: [
         "Cuando hay varios pedidos abiertos a la vez, en **Pedido** eliges primero cuál abrir.",
-        "Los días de recogida aparecen en Inicio, bajo el pedido.",
+        "Los días de recogida están en Inicio, en la sección **Calendario**.",
       ],
       keywords: ["fecha límite", "cierre", "hora", "recogida", "entrega", "fecha"],
     },
@@ -159,7 +159,7 @@ export const guideEs: GuideContent = {
       intro:
         "El **Calendario de pedidos** muestra mes a mes cuándo abren y cierran los pedidos y cuándo se recogen, también los ciclos pasados.",
       steps: [
-        "En Inicio toca **Calendario de pedidos** (o, si no hay nada abierto, el enlace en **Pedido**).",
+        "En Inicio toca **Abrir el calendario** en la sección **Calendario** (o, si no hay nada abierto, el enlace en **Pedido**).",
         "Pasa de un mes a otro con las flechas: los puntos de colores marcan aperturas, cierres y recogidas.",
         "Toca un día para ver solo sus pedidos; **Todo el mes** vuelve a la lista completa.",
       ],
@@ -221,7 +221,7 @@ export const guideEs: GuideContent = {
       topic: "soldi",
       title: "Recargar por transferencia",
       steps: [
-        "En Inicio toca **Recargar saldo**.",
+        "En Inicio, junto al saldo, toca **Recargar**.",
         "En **Transferencia bancaria** copia el titular, el IBAN y el concepto: si pagas un pedido, usa el concepto de ese pedido, ya rellenado.",
         "Haz la transferencia desde tu banco.",
       ],
@@ -238,7 +238,7 @@ export const guideEs: GuideContent = {
       topic: "soldi",
       title: "Recargar online con tarjeta",
       steps: [
-        "En Inicio toca **Recargar saldo**.",
+        "En Inicio, junto al saldo, toca **Recargar**.",
         "En **Pagar online** elige un importe o escríbelo.",
         "Toca **Pagar** y completa el pago. Tu saldo se actualiza en cuanto se confirma el pago.",
       ],

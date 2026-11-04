@@ -47,7 +47,7 @@ export const guideEn: GuideContent = {
       topic: "primi-passi",
       title: "How the app is laid out",
       steps: [
-        "**Home**: your balance, the open order with the time left, and your latest movements.",
+        "**Home**: the calendar with the next dates, the open orders with the time left, then your balance and latest movements.",
         "**Order**: the open cycle's catalogue, where you pick products and confirm.",
         "**History**: your past orders and every balance movement.",
         "**Guide**: this page, with the app's news and the contacts.",
@@ -148,7 +148,7 @@ export const guideEn: GuideContent = {
         "Home shows when the order closes and how much time is left. After closing the order cannot be changed: the group sends it to the suppliers.",
       notes: [
         "When several orders are open at once, in **Order** you first choose which one to open.",
-        "The pickup days are shown on Home, under the order.",
+        "The pickup days are on Home, in the **Calendar** section.",
       ],
       keywords: ["deadline", "closing", "time", "pickup", "delivery", "date"],
     },
@@ -159,7 +159,7 @@ export const guideEn: GuideContent = {
       intro:
         "The **Order calendar** shows, month by month, when orders open and close and when to pick up, past cycles included.",
       steps: [
-        "On Home tap **Order calendar** (or, when nothing is open, the link in **Order**).",
+        "On Home tap **Open the calendar** in the **Calendar** section (or, when nothing is open, the link in **Order**).",
         "Move between months with the arrows: the coloured dots mark openings, closings and pickups.",
         "Tap a day to see only its orders; **Whole month** brings the full list back.",
       ],
@@ -221,7 +221,7 @@ export const guideEn: GuideContent = {
       topic: "soldi",
       title: "Topping up by bank transfer",
       steps: [
-        "On Home tap **Recharge balance**.",
+        "On Home, next to the balance, tap **Top up**.",
         "In **Bank transfer** copy the holder, the IBAN and the reference: when paying an order, use that order's reference, already filled in.",
         "Make the transfer from your bank.",
       ],
@@ -238,7 +238,7 @@ export const guideEn: GuideContent = {
       topic: "soldi",
       title: "Topping up online by card",
       steps: [
-        "On Home tap **Recharge balance**.",
+        "On Home, next to the balance, tap **Top up**.",
         "In **Pay online** pick an amount or type it.",
         "Tap **Pay** and complete the payment. Your balance is updated as soon as the payment is confirmed.",
       ],

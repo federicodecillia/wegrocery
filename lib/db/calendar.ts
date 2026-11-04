@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { CALENDAR_PAST_DAYS, CALENDAR_STATUSES, type CalendarCycleRow, type PreviewProduct } from "@/lib/calendar";
 import { canAccessCycle } from "@/lib/roles";
 import { memberProductEmoji } from "@/lib/utils";
@@ -89,23 +89,4 @@ export async function getPlannedPreviews(cycleIds: string[]): Promise<Map<string
       })),
     ]),
   );
-}
-
-export type NextPlannedCycle = { cycleId: string; title: string; orderOpenAt: Date; datesTentative: boolean };
-
-/** The next planned cycle a member can see, by its planned opening, for the calendar link on Home. */
-export async function getNextPlannedCycle(role: string | null): Promise<NextPlannedCycle | null> {
-  const rows = await getDb()
-    .select({
-      cycleId: orderCycles.cycleId,
-      title: orderCycles.title,
-      accessLevel: orderCycles.accessLevel,
-      orderOpenAt: orderCycles.orderOpenAt,
-      datesTentative: orderCycles.datesTentative,
-    })
-    .from(orderCycles)
-    .where(eq(orderCycles.status, "planned"))
-    .orderBy(asc(orderCycles.orderOpenAt));
-  const next = rows.find((r) => r.orderOpenAt !== null && canAccessCycle(r.accessLevel, role));
-  return next ? { cycleId: next.cycleId, title: next.title, orderOpenAt: new Date(next.orderOpenAt!), datesTentative: next.datesTentative } : null;
 }

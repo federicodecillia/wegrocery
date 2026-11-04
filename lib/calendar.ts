@@ -230,3 +230,30 @@ export function monthRange(entries: ReadonlyArray<CalendarEntry>, today: string)
   }
   return { first, last };
 }
+
+export type UpcomingEvent = { event: CalendarEvent; entry: CalendarEntry };
+
+/** When an event stops being "coming": a pickup at the end of its window, the others at their time. */
+function eventEnd(event: CalendarEvent): number {
+  if (event.kind !== "pickup") return new Date(event.at).getTime();
+  return pickupEnd(new Date(event.at), event.endTime).getTime();
+}
+
+/**
+ * The next events across the cycles (Home's calendar section): those not over
+ * yet, soonest first. A pickup under way still counts until its window ends.
+ */
+export function upcomingEvents(entries: ReadonlyArray<CalendarEntry>, now: Date, limit: number): UpcomingEvent[] {
+  return entries
+    .flatMap((entry) => entry.events.map((event) => ({ event, entry })))
+    .filter(({ event }) => eventEnd(event) > now.getTime())
+    .sort((a, b) => a.event.at.localeCompare(b.event.at))
+    .slice(0, limit);
+}
+
+/** The day after (or before, with -1) "YYYY-MM-DD". */
+export function shiftDay(day: string, by: number): string {
+  const d = new Date(`${day}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + by);
+  return d.toISOString().slice(0, 10);
+}

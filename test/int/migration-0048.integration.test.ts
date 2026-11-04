@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { setOpenCycleFee } from "@/lib/cycle-close-store";
 import { getDb } from "@/lib/db/client";
-import { getCalendarCycles, getNextPlannedCycle, getPlannedPreviews } from "@/lib/db/calendar";
+import { getCalendarCycles, getPlannedPreviews } from "@/lib/db/calendar";
 import { saveCustomProductOrder } from "@/lib/db/cycle-product-order";
 import { describeDb, makeScope, runSql } from "./fixtures";
 
@@ -68,16 +68,13 @@ describeDb("migration 0048 (planned cycles)", () => {
     expect(await setOpenCycleFee(getDb(), cycleId, { type: "percent", value: 7 })).toBe(false);
   });
 
-  it("shows a planned cycle in the calendar, with its preview, and as the next one on Home", async () => {
+  it("shows a planned cycle in the calendar, with its preview", async () => {
     const { cycleId } = await planned("calendar");
     const rows = (await getCalendarCycles("utenti", [scope.memberId])).filter((r) => r.cycleId === cycleId);
     expect(rows).toHaveLength(1);
     expect(rows[0]).toMatchObject({ status: "planned", datesTentative: true, hasOrder: false, productCount: 2 });
     const previews = await getPlannedPreviews([cycleId]);
     expect(previews.get(cycleId)?.map((p) => p.name)).toEqual(["Arance", "Zucca"]);
-    const next = await getNextPlannedCycle("admin");
-    expect(next).not.toBeNull();
-    expect(next!.orderOpenAt).toBeInstanceOf(Date);
   });
 
   it("has a rollback that cancels planned cycles and drops the column", async () => {

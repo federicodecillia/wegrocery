@@ -7,6 +7,7 @@ import {
   monthGrid,
   monthRange,
   shiftMonth,
+  upcomingEvents,
   type CalendarCycleRow,
 } from "./calendar";
 
@@ -176,5 +177,35 @@ describe("entriesIn", () => {
     expect(monthRange([], "2026-11-04")).toEqual({ first: "2026-11", last: "2027-01" });
     const far = buildCalendar([row({ cycleId: "far", pickupDate: new Date("2027-04-02T16:00:00Z") })], NOW);
     expect(monthRange(far, "2026-11-04").last).toBe("2027-04");
+  });
+});
+
+describe("upcomingEvents", () => {
+  it("lists the events not over yet, soonest first, a pickup under way included", () => {
+    const entries = buildCalendar(
+      [
+        // Closed: its pickup runs today 17:00-19:00 Rome, and it is 11:00 Rome.
+        row({ cycleId: "today", pickupDate: new Date("2026-11-04T16:00:00Z") }),
+        row({
+          cycleId: "open",
+          status: "open",
+          orderOpenAt: new Date("2026-11-01T08:00:00Z"),
+          orderCloseAt: new Date("2026-11-06T20:00:00Z"),
+          pickupDate: new Date("2026-11-10T16:00:00Z"),
+        }),
+        row({ cycleId: "past" }),
+      ],
+      NOW,
+    );
+    const next = upcomingEvents(entries, NOW, 3);
+    expect(next.map((x) => [x.entry.cycleId, x.event.kind])).toEqual([
+      ["today", "pickup"],
+      ["open", "closes"],
+      ["open", "pickup"],
+    ]);
+    expect(upcomingEvents(entries, NOW, 1)).toHaveLength(1);
+    // At 18:30 Rome the pickup is still under way, at 19:30 it is over.
+    expect(upcomingEvents(entries, new Date("2026-11-04T17:30:00Z"), 1)[0].entry.cycleId).toBe("today");
+    expect(upcomingEvents(entries, new Date("2026-11-04T18:30:00Z"), 1)[0].entry.cycleId).toBe("open");
   });
 });
