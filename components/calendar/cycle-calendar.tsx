@@ -345,7 +345,7 @@ function DayCell({
           : isToday
             ? "rounded-full bg-inverse font-bold text-inverse-foreground"
             : role?.pickup
-              ? "rounded-lg font-bold text-foreground ring-2 ring-inverse"
+              ? cn("rounded-lg font-bold text-foreground", chosen?.pickupTentative ? "border-2 border-dashed border-inverse" : "ring-2 ring-inverse")
               : role?.opens && chosenPaint
                 ? cn("rounded-full font-bold text-foreground ring-2", chosenPaint.ring)
                 : day < today
@@ -412,7 +412,7 @@ function Legend({ chosen, paint }: { chosen: CalendarEntry | null; paint: Paint 
           {item(<Lock aria-hidden className="size-3.5 text-foreground" strokeWidth={2.5} />, l.closes)}
         </>
       )}
-      {item(<Package aria-hidden className="size-3.5 text-foreground" strokeWidth={2.5} />, l.pickup)}
+      {item(<Package aria-hidden className="size-3.5 text-foreground" strokeWidth={2.5} />, chosen?.pickupTentative ? t.calendar.pickupTentative : l.pickup)}
       {item(<span aria-hidden className="size-3.5 rounded-full bg-inverse" />, l.today)}
     </ul>
   );
@@ -512,6 +512,7 @@ function CycleDetail({ entry, span, today, alerted }: { entry: CalendarEntry; sp
             <div className="mt-1.5 flex flex-wrap gap-1.5">
               <Badge variant={entry.state === "open" && !entry.hasOrder ? "brand" : entry.pickedUp ? "accent" : "default"}>{statusWord(entry)}</Badge>
               {entry.tentative && <Badge>{c.tentative}</Badge>}
+              {entry.pickupTentative && !entry.tentative && entry.state !== "past" && <Badge>{c.pickupTentative}</Badge>}
             </div>
           </div>
         </div>
@@ -526,7 +527,7 @@ function CycleDetail({ entry, span, today, alerted }: { entry: CalendarEntry; sp
               h.orderBy(deadline.day, deadline.time),
               entry.state === "open" && closeDays !== null ? (closeDays <= 0 ? h.lastDay : relativeDay(closeDays)) : null,
             )}
-          {pickups.map((p) => row(p.at, p.day, "neutral", Package, h.pickupOn(formatPickupLong(p.at, p.endTime))))}
+          {pickups.map((p) => row(p.at, p.day, "neutral", Package, (entry.pickupTentative ? h.pickupExpected : h.pickupOn)(formatPickupLong(p.at, p.endTime))))}
         </ul>
         {(entry.state === "planned" || entry.state === "open" || entry.state === "closed") && (
           <div className="mt-3 flex flex-wrap gap-2 border-t border-border pt-3">

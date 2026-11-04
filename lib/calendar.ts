@@ -25,6 +25,8 @@ export type CalendarCycleRow = {
   pickedUp: boolean;
   /** The dates may still move (a planned cycle, drizzle/0048_planned_cycles.sql). */
   datesTentative: boolean;
+  /** "Ritiro da confermare" (drizzle/0050_pickup_tentative.sql). */
+  pickupTentative?: boolean;
 };
 
 /** A product of a planned cycle, shown as a preview: name, detail, price. */
@@ -62,6 +64,8 @@ export type CalendarEntry = {
   pickedUp: boolean;
   /** "Date indicative": only on a planned cycle. */
   tentative: boolean;
+  /** The pickup is the expected one, "da confermare". */
+  pickupTentative: boolean;
   /** The products of a planned cycle, as a preview; empty otherwise. */
   preview: PreviewProduct[];
   /** Where the card leads: the order form, the cycle in Storico, or nowhere. */
@@ -135,6 +139,7 @@ export function buildCalendar(
     .filter((r) => (CALENDAR_STATUSES as readonly string[]).includes(r.status))
     .map((row) => {
       const state = stateOf(row, now);
+      const events = eventsOf(row);
       const href =
         state === "open"
           ? `/ordine?cycleId=${encodeURIComponent(row.cycleId)}`
@@ -146,11 +151,12 @@ export function buildCalendar(
         title: row.title,
         supplierName: row.supplierName,
         state,
-        events: eventsOf(row),
+        events,
         productCount: row.productCount,
         hasOrder: row.hasOrder,
         pickedUp: row.pickedUp,
         tentative: state === "planned" && row.datesTentative,
+        pickupTentative: Boolean(row.pickupTentative) && events.some((e) => e.kind === "pickup"),
         preview: state === "planned" ? (previews.get(row.cycleId) ?? []) : [],
         href,
       };

@@ -229,6 +229,7 @@ export const adminGuideEs: GuideContent = {
       notes: [
         "Quien pidió en ese ciclo recibe un aviso con la nueva recogida (en la app, y por email si lo eligió en sus preferencias). El mensaje de confirmación te dice cuántos socios han sido avisados.",
         "La recogida no toca cargos ni saldos: puedes cambiarla sin problema también con el ciclo cerrado.",
+        "Si la fecha es solo la prevista (a menudo se sabe solo después del cierre, tras hablar con el proveedor), marca **Recogida por confirmar**: los socios leen \"por confirmar\" junto a la recogida. Cuando el proveedor la confirme, desmárcala: quien ha pedido recibe **Recogida confirmada**, aunque la fecha no cambie.",
       ],
       link: { href: "/admin?tab=ciclo", label: "Ir a los ciclos" },
       keywords: ["recogida", "fecha de recogida", "hora", "entrega", "ciclo cerrado"],

@@ -47,6 +47,8 @@ export type SerializedCycle = {
   orderOpenAt?: string | null;
   /** A planned cycle's dates may still move ("Date indicative"). */
   datesTentative?: boolean;
+  /** The pickup date is the expected one ("Ritiro da confermare"). */
+  pickupTentative?: boolean;
   orderCloseAt: string | null;
   pickupDate: string | null;
   pickupEndTime: string | null;
@@ -204,6 +206,7 @@ export function CycleFacts({ cycle, suppliers }: { cycle: SerializedCycle; suppl
           <span className="font-semibold text-foreground">
             {formatPickupSlot(cycle.pickupDate, cycle.pickupEndTime ?? null)}
           </span>
+          {cycle.pickupTentative && <span className="font-semibold text-primary-text"> · {t.admin.cycle.pickupTentativeLabel}</span>}
         </div>
       )}
       {cycle.pickup2Date && (
@@ -414,6 +417,7 @@ function PickupSection({
   defPickup2Date,
   defPickup2Start,
   defPickup2End,
+  defTentative = false,
   focus = false,
 }: {
   defPickup1Date?: string;
@@ -422,6 +426,7 @@ function PickupSection({
   defPickup2Date?: string;
   defPickup2Start?: string;
   defPickup2End?: string;
+  defTentative?: boolean;
   focus?: boolean;
 }) {
   const [showPickup2, setShowPickup2] = useState(Boolean(defPickup2Date));
@@ -469,6 +474,13 @@ function PickupSection({
             {t.admin.cycle.addPickup2}
           </button>
         )}
+        <label className="flex min-h-11 items-start gap-2.5 text-[13px] text-foreground">
+          <input type="checkbox" name="pickupTentative" defaultChecked={defTentative} className="mt-0.5 size-4.5 accent-primary" />
+          <span>
+            <span className="font-semibold">{t.admin.cycle.pickupTentativeLabel}</span>
+            <span className="block text-label text-secondary-foreground">{t.admin.cycle.pickupTentativeHint}</span>
+          </span>
+        </label>
       </div>
     </div>
   );
@@ -709,6 +721,7 @@ export function EditCycleForm({
       pickupEndTime: fd.get("pickupEndTime") as string,
       pickup2Date: buildDateTime(fd.get("pickup2DateOnly") as string, fd.get("pickup2StartTime") as string),
       pickup2EndTime: fd.get("pickup2EndTime") as string,
+      pickupTentative: fd.get("pickupTentative") === "on",
       notes: fd.get("notes") as string,
       supplierId: fd.get("supplierId") as string,
       // Manual (distinta-imported) shipping has no inputs here: send no
@@ -831,6 +844,7 @@ export function EditCycleForm({
         defPickup2Date={pickup2Local.slice(0, 10)}
         defPickup2Start={pickup2Local.slice(11, 16)}
         defPickup2End={cycle.pickup2EndTime ?? ""}
+        defTentative={cycle.pickupTentative ?? false}
         focus={focusPickup}
       />
 
@@ -1074,6 +1088,7 @@ export function CreateCycleForm({
       pickupEndTime: fd.get("pickupEndTime") as string,
       pickup2Date: buildDateTime(fd.get("pickup2DateOnly") as string, fd.get("pickup2StartTime") as string),
       pickup2EndTime: fd.get("pickup2EndTime") as string,
+      pickupTentative: fd.get("pickupTentative") === "on",
       orderCloseAt: fd.get("orderCloseAt") as string,
       supplierId: fd.get("supplierId") as string,
       accessLevel: fd.get("accessLevel") as string,

@@ -149,6 +149,7 @@ export const guideEs: GuideContent = {
       notes: [
         "Cuando hay varios pedidos abiertos a la vez, en **Pedido** eliges primero cuál abrir.",
         "Los días de recogida están en Inicio, bajo cada ciclo; tras el cierre el ciclo pasa a **Por recoger**.",
+        "Si junto a la recogida lees **por confirmar**, la fecha es la prevista y aún puede cambiar: recibes un aviso cuando el grupo la confirme.",
       ],
       keywords: ["fecha límite", "cierre", "hora", "recogida", "entrega", "fecha"],
     },

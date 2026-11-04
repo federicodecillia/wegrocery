@@ -151,6 +151,7 @@ export const guideIt: GuideContent = {
       notes: [
         "Se ci sono più ordini aperti insieme, in **Ordine** scegli prima quale aprire.",
         "I giorni di ritiro sono in Home, sotto ogni ciclo; dopo la chiusura il ciclo passa in **Da ritirare**.",
+        "Se accanto al ritiro leggi **da confermare**, la data è quella prevista e può ancora cambiare: quando il gruppo la conferma ricevi un avviso.",
       ],
       keywords: ["scadenza", "chiusura", "orario", "ritiro", "consegna", "data"],
     },

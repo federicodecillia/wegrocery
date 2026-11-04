@@ -233,6 +233,7 @@ function serialize(c: FullCycle): SerializedCycle {
     title: c.title,
     orderOpenAt: c.orderOpenAt?.toISOString() ?? null,
     datesTentative: c.datesTentative,
+    pickupTentative: c.pickupTentative,
     orderCloseAt: c.orderCloseAt?.toISOString() ?? null,
     pickupDate: c.pickupDate?.toISOString() ?? null,
     pickupEndTime: c.pickupEndTime ?? null,

@@ -15,6 +15,8 @@ export type IcsCycle = {
   opensAt: Date | null;
   closeAt: Date | null;
   pickups: { at: Date; endTime: string | null }[];
+  /** "Ritiro da confermare": the pickups say so in their title. */
+  pickupTentative?: boolean;
   /** The calendar page, linked from each event. */
   url: string | null;
 };
@@ -23,6 +25,7 @@ export type IcsText = {
   opens: (title: string) => string;
   closes: (title: string) => string;
   pickup: (title: string) => string;
+  pickupTentative: (title: string) => string;
   closesAlarm: string;
 };
 
@@ -53,7 +56,7 @@ export function cycleEvents(cycle: IcsCycle, text: IcsText): IcsEvent[] {
   }
   cycle.pickups.forEach((p, i) => {
     const day = utcToZonedLocalInput(p.at).slice(0, 10);
-    const base = { uid: uid(`pickup-${i + 1}`), summary: text.pickup(name), url };
+    const base = { uid: uid(`pickup-${i + 1}`), summary: (cycle.pickupTentative ? text.pickupTentative : text.pickup)(name), url };
     // A pickup stored at 00:00 in the group's zone has a day and no time.
     if (isZonedMidnight(p.at)) {
       events.push({ ...base, day });

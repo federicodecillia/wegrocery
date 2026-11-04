@@ -187,6 +187,7 @@ export default async function HomePage({
                     cycle.pickupDate && { date: new Date(cycle.pickupDate).toISOString(), endTime: cycle.pickupEndTime ?? null },
                     cycle.pickup2Date && { date: new Date(cycle.pickup2Date).toISOString(), endTime: cycle.pickup2EndTime ?? null },
                   ].filter((x): x is { date: string; endTime: string | null } => Boolean(x)),
+                  pickupTentative: cycle.pickupTentative,
                 }}
                 payStatus={payStatus}
                 lines={myLines.map((line) => {
@@ -222,7 +223,7 @@ export default async function HomePage({
               day={pickup?.day ?? null}
               tone={pickup && pickup.day === today ? "urgent" : "neutral"}
               title={e.title}
-              when={pickup ? t.home.pickupOn(formatPickupLong(pickup.at, pickup.endTime)) : t.home.pickupTbd}
+              when={pickup ? (e.pickupTentative ? t.home.pickupExpected : t.home.pickupOn)(formatPickupLong(pickup.at, pickup.endTime)) : t.home.pickupTbd}
               detail={order && order.count > 0 ? t.home.ordered(order.count, formatEur(order.total)) : null}
             />
           );

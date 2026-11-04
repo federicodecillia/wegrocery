@@ -18,6 +18,8 @@ type CycleMeta = {
   // The second pickup, when the cycle has one.
   pickup2Date?: Date | null;
   pickup2EndTime?: string | null;
+  // "Ritiro da confermare" (drizzle/0050_pickup_tentative.sql).
+  pickupTentative?: boolean;
   cycleStatus: string;
   cycleCreatedAt: Date;
   // "wallet" when left out.
@@ -71,6 +73,8 @@ export type CycleHistoryEntry = {
   cycleId: string;
   title: string;
   pickupDate: Date | null;
+  // The pickup date is the expected one, "da confermare".
+  pickupTentative: boolean;
   // When the last pickup window closes, null while no pickup day is set.
   pickupEndsAt: Date | null;
   status: string;
@@ -178,6 +182,7 @@ export function buildCycleHistory(
         cycleId: meta.cycleId,
         title: meta.cycleTitle,
         pickupDate: meta.pickupDate,
+        pickupTentative: Boolean(meta.pickupTentative) && meta.pickupDate !== null,
         pickupEndsAt: latest(
           pickupEnd(meta.pickupDate, meta.pickupEndTime ?? null),
           pickupEnd(meta.pickup2Date ?? null, meta.pickup2EndTime ?? null),
