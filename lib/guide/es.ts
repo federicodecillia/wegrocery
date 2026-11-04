@@ -164,6 +164,7 @@ export const guideEs: GuideContent = {
         "Toca un día para ver su ciclo; si hay varios, aparecen en la lista de abajo. Las flechas cambian de mes.",
       ],
       notes: [
+        "En un ciclo **Programado** toca **Avísame cuando abra** para recibir un email cuando se abra. **Añadir al calendario** pone el cierre y la recogida en el calendario del móvil.",
         "Un ciclo **Programado** aún no está abierto: ves sus fechas (a veces **orientativas**) y una vista previa de los productos, y pides cuando se abra.",
         "Cada ciclo indica si has pedido y si el pedido se ha recogido. Desde un ciclo abierto vas al pedido, desde uno pasado a su detalle en el **Historial**.",
       ],

@@ -360,6 +360,19 @@ export const it = {
     previewNote: "Anteprima: prodotti e prezzi possono ancora cambiare prima che si aprano gli ordini.",
     previewEmpty: "I prodotti non sono ancora stati caricati.",
     plannedHint: "Si potrà ordinare dall'apertura: ti arriva l'avviso come sempre.",
+    notifyMe: "Avvisami quando apre",
+    notifyOn: "Ti avvisiamo per email quando apre.",
+    notifyCancel: "Annulla l'avviso",
+    notifyAdded: "Ti avviseremo per email quando apre",
+    notifyRemoved: "Avviso annullato",
+    addToCalendar: "Aggiungi al calendario",
+    addToCalendarHint: "Scadenza e ritiro nel calendario del telefono, con un promemoria.",
+    ics: {
+      opens: (title: string) => `Aprono gli ordini: ${title}`,
+      closes: (title: string) => `Ultimo momento per ordinare: ${title}`,
+      pickup: (title: string) => `Ritiro: ${title}`,
+      closesAlarm: "Gli ordini chiudono tra poco",
+    },
   },
 
   history: {
@@ -2215,6 +2228,8 @@ export const it = {
     },
   },
   notificationsServer: {
+    openAlertTitle: (title: string) => `Sono aperti gli ordini: ${title}`,
+    openAlertBody: (title: string, deadline: string) => `Avevi chiesto di essere avvisato: puoi ordinare "${title}" fino a ${deadline}.`,
     orderClosedTitle: "Ordine chiuso",
     orderClosedBody: (title: string, total: string) =>
       `È stato chiuso "${title}". Ti è stato addebitato ${total}.`,
@@ -2428,6 +2443,7 @@ export const it = {
     supplier: "Fornitore",
   },
   errors: {
+    alertNotPlanned: "Questo ciclo non è più in programma: gli ordini sono già aperti o il ciclo è stato tolto.",
     plannedOpenAfterClose: "L'apertura degli ordini deve venire prima della chiusura.",
     plannedCloseInPast: "La chiusura ordini di questo ciclo è già passata: sposta la data con Modifica, poi apri gli ordini.",
     cycleNotPlanned: "Questo ciclo non è più in programma.",

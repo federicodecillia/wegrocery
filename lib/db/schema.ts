@@ -650,6 +650,22 @@ export const cyclePickups = pgTable(
   ],
 );
 
+// "Avvisami quando apre" on a planned cycle (drizzle/0049_cycle_open_alerts.sql):
+// who asked for an email when its orders open. Consumed by adminOpenPlannedCycle.
+export const cycleOpenAlerts = pgTable(
+  "cycle_open_alerts",
+  {
+    cycleId: text("cycle_id")
+      .notNull()
+      .references(() => orderCycles.cycleId, { onDelete: "cascade" }),
+    memberId: text("member_id")
+      .notNull()
+      .references(() => members.memberId, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [primaryKey({ columns: [table.cycleId, table.memberId] }), index("cycle_open_alerts_member_idx").on(table.memberId)],
+);
+
 // Possible duplicate accounts an admin marked "not the same person"
 // (lib/members/duplicates.ts, drizzle/0028_member_duplicate_dismissals.sql).
 export const memberDuplicateDismissals = pgTable(

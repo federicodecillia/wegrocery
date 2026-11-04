@@ -4,7 +4,7 @@ import { canAccessCycle } from "@/lib/roles";
 import { memberProductEmoji } from "@/lib/utils";
 import { getDb } from "./client";
 import { getCycleProducts } from "./queries";
-import { cyclePickups, orderCycles, orders, products, suppliers } from "./schema";
+import { cycleOpenAlerts, cyclePickups, orderCycles, orders, products, suppliers } from "./schema";
 
 // Reads of the order calendar (/calendario, lib/calendar.ts).
 
@@ -89,4 +89,13 @@ export async function getPlannedPreviews(cycleIds: string[]): Promise<Map<string
       })),
     ]),
   );
+}
+
+/** The planned cycles this person asked to be told about ("Avvisami quando apre"). */
+export async function getMyOpenAlerts(personId: string): Promise<string[]> {
+  const rows = await getDb()
+    .select({ cycleId: cycleOpenAlerts.cycleId })
+    .from(cycleOpenAlerts)
+    .where(eq(cycleOpenAlerts.memberId, personId));
+  return rows.map((r) => r.cycleId);
 }

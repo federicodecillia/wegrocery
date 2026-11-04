@@ -164,6 +164,7 @@ export const guideFr: GuideContent = {
         "Touchez un jour pour voir son cycle ; s'il y en a plusieurs, ils sont listés en dessous. Les flèches changent de mois.",
       ],
       notes: [
+        "Sur un cycle **Programmé**, touchez **Prévenez-moi à l'ouverture** pour recevoir un e-mail à l'ouverture. **Ajouter au calendrier** met la clôture et le retrait dans le calendrier du téléphone.",
         "Un cycle **Programmé** n'est pas encore ouvert : vous voyez ses dates (parfois **indicatives**) et un aperçu des produits, et vous commandez à son ouverture.",
         "Chaque cycle indique si vous avez commandé et si la commande a été retirée. Un cycle ouvert mène à la commande, un cycle passé à son détail dans l'**Historique**.",
       ],

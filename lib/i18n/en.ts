@@ -360,6 +360,19 @@ export const en: Strings = {
     previewNote: "Preview: products and prices may still change before the orders open.",
     previewEmpty: "The products have not been added yet.",
     plannedHint: "You can order once it opens: you will be told as usual.",
+    notifyMe: "Tell me when it opens",
+    notifyOn: "We will email you when it opens.",
+    notifyCancel: "Cancel the reminder",
+    notifyAdded: "We will email you when it opens",
+    notifyRemoved: "Reminder cancelled",
+    addToCalendar: "Add to calendar",
+    addToCalendarHint: "The deadline and the pickup in your phone's calendar, with a reminder.",
+    ics: {
+      opens: (title: string) => `Orders open: ${title}`,
+      closes: (title: string) => `Last moment to order: ${title}`,
+      pickup: (title: string) => `Pickup: ${title}`,
+      closesAlarm: "Orders close soon",
+    },
   },
 
   history: {
@@ -2207,6 +2220,8 @@ export const en: Strings = {
     },
   },
   notificationsServer: {
+    openAlertTitle: (title: string) => `Orders are open: ${title}`,
+    openAlertBody: (title: string, deadline: string) => `You asked to be told: you can order "${title}" until ${deadline}.`,
     orderClosedTitle: "Order closed",
     orderClosedBody: (title: string, total: string) =>
       `"${title}" has been closed. You have been charged ${total}.`,
@@ -2418,6 +2433,7 @@ export const en: Strings = {
     supplier: "Supplier",
   },
   errors: {
+    alertNotPlanned: "This cycle is no longer planned: its orders are open already or it was removed.",
     plannedOpenAfterClose: "The orders must open before they close.",
     plannedCloseInPast: "This cycle's order deadline has passed: move it with Edit, then open the orders.",
     cycleNotPlanned: "This cycle is no longer planned.",

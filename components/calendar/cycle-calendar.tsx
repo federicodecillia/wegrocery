@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
-import { ChevronDown, ChevronLeft, ChevronRight, Lock, Package, ShoppingBasket } from "lucide-react";
+import { useMemo, useState, useTransition } from "react";
+import { Bell, BellOff, CalendarPlus, ChevronDown, ChevronLeft, ChevronRight, Lock, Package, ShoppingBasket } from "lucide-react";
+import { toast } from "@/components/ui/toast";
+import { setCycleOpenAlert } from "@/lib/actions/cycle-alerts";
 import { Badge } from "@/components/ui/badge";
 import { DateTile, type DateTileTone } from "@/components/home/date-tile";
 import { monthGrid, monthOf, monthRange, shiftMonth, type CalendarEntry } from "@/lib/calendar";
@@ -75,7 +77,16 @@ function roleWords(span: CycleSpan, day: string): string {
   return words.join(", ");
 }
 
-export function CycleCalendar({ entries, today }: { entries: CalendarEntry[]; today: string }) {
+export function CycleCalendar({
+  entries,
+  today,
+  alerts = [],
+}: {
+  entries: CalendarEntry[];
+  today: string;
+  /** The planned cycles this person asked to be told about. */
+  alerts?: string[];
+}) {
   const c = t.calendar;
   const range = useMemo(() => monthRange(entries, today), [entries, today]);
   const [month, setMonth] = useState(monthOf(today));
@@ -238,7 +249,7 @@ export function CycleCalendar({ entries, today }: { entries: CalendarEntry[]; to
         ) : dayList ? (
           <DayList day={dayList} cycles={cyclesOnDay(inMonth, dayList)} spans={spans} onChoose={choose} />
         ) : chosen ? (
-          <CycleDetail entry={chosen} span={spans.get(chosen.cycleId)!} today={today} />
+          <CycleDetail key={chosen.cycleId} entry={chosen} span={spans.get(chosen.cycleId)!} today={today} alerted={alerts.includes(chosen.cycleId)} />
         ) : (
           <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-card shadow-card">
             {inMonth.map((e) => (
@@ -464,7 +475,7 @@ function CycleRowButton({
 }
 
 /** The chosen cycle in Home's words: when it opens, until when to order, when to collect, and what to do. */
-function CycleDetail({ entry, span, today }: { entry: CalendarEntry; span: CycleSpan; today: string }) {
+function CycleDetail({ entry, span, today, alerted }: { entry: CalendarEntry; span: CycleSpan; today: string; alerted: boolean }) {
   const c = t.calendar;
   const h = t.home;
   const opens = entry.events.find((e) => e.kind === "opens");
@@ -515,6 +526,20 @@ function CycleDetail({ entry, span, today }: { entry: CalendarEntry; span: Cycle
             )}
           {pickups.map((p) => row(p.at, p.day, "neutral", Package, h.pickupOn(formatPickupLong(p.at, p.endTime))))}
         </ul>
+        {(entry.state === "planned" || entry.state === "open" || entry.state === "closed") && (
+          <div className="mt-3 flex flex-wrap gap-2 border-t border-border pt-3">
+            {entry.state === "planned" && <OpenAlertToggle cycleId={entry.cycleId} initial={alerted} />}
+            <a
+              href={`/calendario/ics/${encodeURIComponent(entry.cycleId)}`}
+              download
+              title={c.addToCalendarHint}
+              className="inline-flex min-h-11 items-center gap-2 rounded-full border border-border bg-card px-4 text-[15px] font-semibold text-foreground"
+            >
+              <CalendarPlus aria-hidden className="size-4.5 shrink-0" strokeWidth={2.25} />
+              {c.addToCalendar}
+            </a>
+          </div>
+        )}
         {entry.state === "planned" && <PlannedPreview entry={entry} />}
       </div>
       {entry.state === "open" ? (
@@ -582,5 +607,56 @@ function PlannedPreview({ entry }: { entry: CalendarEntry }) {
         </details>
       )}
     </div>
+  );
+}
+
+/** "Avvisami quando apre": an email when the planned cycle opens (drizzle/0049). */
+function OpenAlertToggle({ cycleId, initial }: { cycleId: string; initial: boolean }) {
+  const c = t.calendar;
+  const [on, setOn] = useState(initial);
+  const [pending, startTransition] = useTransition();
+
+  function toggle(next: boolean) {
+    setOn(next);
+    startTransition(async () => {
+      const result = await setCycleOpenAlert(cycleId, next);
+      if (result.error) {
+        setOn(!next);
+        toast.error(result.error);
+      } else {
+        toast.success(next ? c.notifyAdded : c.notifyRemoved);
+      }
+    });
+  }
+
+  if (on) {
+    return (
+      <div className="flex w-full flex-wrap items-center justify-between gap-2 rounded-xl bg-accent-bg px-3 py-1.5">
+        <span className="flex items-center gap-2 text-[15px] font-semibold text-accent-text">
+          <Bell aria-hidden className="size-4.5 shrink-0" strokeWidth={2.25} />
+          {c.notifyOn}
+        </span>
+        <button
+          type="button"
+          onClick={() => toggle(false)}
+          disabled={pending}
+          className="inline-flex min-h-11 items-center gap-1.5 text-[14px] font-semibold text-secondary-foreground underline-offset-2 hover:underline"
+        >
+          <BellOff aria-hidden className="size-4 shrink-0" strokeWidth={2.25} />
+          {c.notifyCancel}
+        </button>
+      </div>
+    );
+  }
+  return (
+    <button
+      type="button"
+      onClick={() => toggle(true)}
+      disabled={pending}
+      className="inline-flex min-h-11 items-center gap-2 rounded-full bg-primary px-4 text-[15px] font-bold text-primary-foreground"
+    >
+      <Bell aria-hidden className="size-4.5 shrink-0" strokeWidth={2.25} />
+      {c.notifyMe}
+    </button>
   );
 }

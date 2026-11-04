@@ -5,7 +5,7 @@ import { BackLink } from "@/components/ui/back-link";
 import { adminAccess } from "@/lib/auth/access";
 import { getUserRole, requireUserSession } from "@/lib/auth/session";
 import { buildCalendar, dayOf } from "@/lib/calendar";
-import { getCalendarCycles, getPlannedPreviews } from "@/lib/db/calendar";
+import { getCalendarCycles, getMyOpenAlerts, getPlannedPreviews } from "@/lib/db/calendar";
 import { getFamilyMemberIds } from "@/lib/db/queries";
 import { t } from "@/lib/i18n";
 
@@ -20,7 +20,11 @@ export default async function CalendarioPage() {
   // A family's account counts the orders its people placed too, as in Storico.
   const memberIds = await getFamilyMemberIds(memberId);
   const rows = await getCalendarCycles(getUserRole(session), memberIds);
-  const previews = await getPlannedPreviews(rows.filter((r) => r.status === "planned").map((r) => r.cycleId));
+  const [previews, alerts] = await Promise.all([
+    getPlannedPreviews(rows.filter((r) => r.status === "planned").map((r) => r.cycleId)),
+    // "Avvisami quando apre" is personal: the person who signed in.
+    getMyOpenAlerts(session.user.personId ?? memberId),
+  ]);
   const now = new Date();
 
   return (
@@ -28,7 +32,7 @@ export default async function CalendarioPage() {
       <BackLink href="/">{t.nav.home}</BackLink>
       <h1 className="mt-1 text-title font-black text-foreground">{t.calendar.title}</h1>
       <p className="mb-4 mt-1 max-w-prose text-[14px] text-secondary-foreground">{t.calendar.intro}</p>
-      <CycleCalendar entries={buildCalendar(rows, now, previews)} today={dayOf(now)} />
+      <CycleCalendar entries={buildCalendar(rows, now, previews)} today={dayOf(now)} alerts={alerts} />
     </AppShell>
   );
 }

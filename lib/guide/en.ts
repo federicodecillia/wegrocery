@@ -164,6 +164,7 @@ export const guideEn: GuideContent = {
         "Tap a day to see its cycle; when there are several, they are listed below. The arrows change month.",
       ],
       notes: [
+        "On a **Planned** cycle tap **Tell me when it opens** to get an email when it opens. **Add to calendar** puts the deadline and the pickup in your phone's calendar.",
         "A **Planned** cycle is not open yet: you see its dates (sometimes **tentative**) and a preview of its products, and you order once it opens.",
         "Each cycle says whether you ordered and whether the order was collected. An open cycle leads to the order, a past one to its detail in **History**.",
       ],
