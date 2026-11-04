@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
-import { KindIcon } from "@/components/calendar/kind-icon";
+import { KIND_DOT, KindIcon } from "@/components/calendar/kind-icon";
 import { Badge } from "@/components/ui/badge";
 import {
   entriesIn,
@@ -32,13 +32,6 @@ const KINDS: CalendarEventKind[] = ["opens", "closes", "pickup"];
 // Noon UTC is the same calendar day in every zone a group lives in.
 const noon = (day: string) => new Date(`${day}T12:00:00Z`);
 
-// Each kind has its own shape as well as its colour (Playbook 2.5): a round
-// dot opens, a square closes, a diamond is a pickup.
-const DOT: Record<CalendarEventKind, string> = {
-  opens: "rounded-full bg-accent",
-  closes: "bg-primary",
-  pickup: "rotate-45 bg-inverse",
-};
 
 // Monday first: 2024-01-01 was a Monday.
 const WEEKDAYS = Array.from({ length: 7 }, (_, i) => formatDate(noon(`2024-01-0${i + 1}`), { weekday: "short" }));
@@ -148,7 +141,7 @@ export function CycleCalendar({ entries, today }: { entries: CalendarEntry[]; to
                           {KINDS.filter((k) => kinds?.has(k)).map((k) => (
                             <span
                               key={k}
-                              className={cn("size-1.5", DOT[k])}
+                              className={cn("size-1.5", KIND_DOT[k])}
                             />
                           ))}
                         </span>
@@ -164,7 +157,7 @@ export function CycleCalendar({ entries, today }: { entries: CalendarEntry[]; to
         <ul aria-label={c.legendLabel} className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 border-t border-border pt-3">
           {KINDS.map((k) => (
             <li key={k} className="flex items-center gap-1.5 text-label text-secondary-foreground">
-              <span aria-hidden className={cn("size-2", DOT[k])} />
+              <span aria-hidden className={cn("size-2", KIND_DOT[k])} />
               {c.kinds[k]}
             </li>
           ))}

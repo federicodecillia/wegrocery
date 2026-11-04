@@ -1,24 +1,34 @@
 import Link from "next/link";
 
-// A section of Home: a small heading, an optional link on its right, then
-// its content. Keeps the page in readable blocks.
+// A section of Home: a readable heading (sentence case, not a small caps
+// label: many members are older), an optional link on its right, then its
+// content. The heading names the section for screen readers.
 export function HomeSection({
+  id,
   title,
   action,
   children,
   className = "",
 }: {
+  id: string;
   title: string;
-  action?: { href: string; label: string };
+  /** `mobileOnly`: hidden from lg, where the month card carries the same link. */
+  action?: { href: string; label: string; mobileOnly?: boolean };
   children: React.ReactNode;
   className?: string;
 }) {
+  const headingId = `home-${id}`;
   return (
-    <section aria-label={title} className={`mb-6 ${className}`}>
-      <div className="mb-1 flex items-center justify-between gap-3">
-        <h2 className="font-mono text-label font-semibold uppercase tracking-[0.1em] text-secondary-foreground">{title}</h2>
+    <section aria-labelledby={headingId} className={`mb-6 ${className}`}>
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <h2 id={headingId} className="text-[17px] font-extrabold tracking-[-0.01em] text-foreground">
+          {title}
+        </h2>
         {action && (
-          <Link href={action.href} className="flex min-h-11 items-center text-label font-bold text-primary-text">
+          <Link
+            href={action.href}
+            className={`flex min-h-11 items-center text-[14px] font-semibold text-primary-text ${action.mobileOnly ? "lg:hidden" : ""}`}
+          >
             {action.label} <span aria-hidden className="ml-1">→</span>
           </Link>
         )}

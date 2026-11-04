@@ -47,7 +47,7 @@ export const guideEn: GuideContent = {
       topic: "primi-passi",
       title: "How the app is laid out",
       steps: [
-        "**Home**: the calendar with the next dates, the open orders with the time left, then your balance and latest movements.",
+        "**Home**: the cycles in **To order**, **To collect** and **Coming up**, each with its date, then your balance and latest movements.",
         "**Order**: the open cycle's catalogue, where you pick products and confirm.",
         "**History**: your past orders and every balance movement.",
         "**Guide**: this page, with the app's news and the contacts.",
@@ -148,7 +148,7 @@ export const guideEn: GuideContent = {
         "Home shows when the order closes and how much time is left. After closing the order cannot be changed: the group sends it to the suppliers.",
       notes: [
         "When several orders are open at once, in **Order** you first choose which one to open.",
-        "The pickup days are on Home, in the **Calendar** section.",
+        "The pickup days are on Home, under each cycle; after the close the cycle moves to **To collect**.",
       ],
       keywords: ["deadline", "closing", "time", "pickup", "delivery", "date"],
     },
@@ -159,7 +159,7 @@ export const guideEn: GuideContent = {
       intro:
         "The **Order calendar** shows, month by month, when orders open and close and when to pick up, past cycles included.",
       steps: [
-        "On Home tap **Open the calendar** in the **Calendar** section (or, when nothing is open, the link in **Order**).",
+        "On Home tap **Full calendar**, next to **To order** (or, when nothing is open, the link in **Order**).",
         "Move between months with the arrows: the coloured dots mark openings, closings and pickups.",
         "Tap a day to see only its orders; **Whole month** brings the full list back.",
       ],
@@ -212,7 +212,7 @@ export const guideEn: GuideContent = {
       title: "How the balance works",
       intro:
         "The balance is your credit with the group. You top it up in advance and, when each order closes, its cost is taken from there.",
-      notes: ["Home shows today's balance and what will be left after the open order."],
+      notes: ["At the bottom of Home you see today's balance; if the open orders take it below zero, it tells you."],
       keywords: ["credit", "account", "money", "wallet"],
       when: { mode: "wallet" },
     },
