@@ -162,8 +162,8 @@ export const guideIt: GuideContent = {
         "Il **Calendario ordini** mostra mese per mese quando aprono e chiudono gli ordini e quando si ritira, anche per i cicli passati.",
       steps: [
         "In Home tocca **Calendario completo**, accanto a **Da ordinare** (o, se non c'è niente di aperto, il link in **Ordine**).",
-        "Sfoglia i mesi con le frecce: i pallini colorati segnano aperture, chiusure e ritiri.",
-        "Tocca un giorno per vedere solo i suoi ordini; **Tutto il mese** torna all'elenco completo.",
+        "Sopra il calendario scegli il ciclo: la fascia colorata sono i giorni per ordinare, il riquadro pieno l'ultimo giorno, il pacchetto il ritiro. **Tutti** li mostra insieme, ognuno con il suo colore.",
+        "Tocca un giorno per vedere il suo ciclo; se ce ne sono più di uno, li trovi elencati sotto. Le frecce cambiano mese.",
       ],
       notes: [
         "Un ciclo **In programma** non è ancora aperto: vedi le date (a volte **indicative**) e l'anteprima dei prodotti, e ordini quando apre.",

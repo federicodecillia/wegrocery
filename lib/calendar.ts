@@ -193,27 +193,6 @@ export function eventKindsByDay(entries: ReadonlyArray<CalendarEntry>): Map<stri
   return out;
 }
 
-export type CalendarScope = { month: string; day?: string | null };
-
-/** Whether an event falls in the month, or on the day when one is chosen. */
-export function eventInScope(event: Pick<CalendarEvent, "day">, scope: CalendarScope): boolean {
-  return scope.day ? event.day === scope.day : monthOf(event.day) === scope.month;
-}
-
-/**
- * The entries with an event in the scope, by their first such event. Each
- * keeps all its events, so a card shows the whole cycle (it opened last
- * month, the pickup is this month).
- */
-export function entriesIn(entries: ReadonlyArray<CalendarEntry>, scope: CalendarScope): CalendarEntry[] {
-  const firstIn = (entry: CalendarEntry) => entry.events.find((e) => eventInScope(e, scope))?.at ?? null;
-  return entries
-    .map((entry) => ({ entry, first: firstIn(entry) }))
-    .filter((x): x is { entry: CalendarEntry; first: string } => x.first !== null)
-    .sort((a, b) => a.first.localeCompare(b.first))
-    .map((x) => x.entry);
-}
-
 /** Months ahead of today the calendar always reaches, events or not ("nothing planned yet" is news too). */
 export const CALENDAR_AHEAD_MONTHS = 2;
 
