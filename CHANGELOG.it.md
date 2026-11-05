@@ -23,7 +23,9 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
-## [Unreleased]
+## [1.44.0] - 5 novembre 2026
+
+*Il calendario degli ordini, i cicli in programma, una Home più chiara e le email con il volto del gruppo.*
 
 ### Aggiunte
 - 📦 **Ritiro da confermare.** Spesso la data di ritiro si sa davvero solo dopo la chiusura, sentito il fornitore: nel ciclo l'admin può spuntare **Ritiro da confermare**, e i soci leggono "Ritiro previsto ..., da confermare" in Home, nel calendario (il ritiro tratteggiato), nello Storico e nel calendario del telefono. Quando l'admin toglie la spunta, chi ha ordinato riceve **Ritiro confermato**; se cambia anche la data, l'avviso di sempre del ritiro cambiato. Finché il ritiro di un ciclo chiuso resta da confermare, **Da fare ora** lo ricorda con **Conferma il ritiro**.
