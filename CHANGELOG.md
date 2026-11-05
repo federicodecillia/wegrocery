@@ -22,7 +22,9 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
-## [Unreleased]
+## [1.44.0] - 2026-11-05
+
+*The order calendar, planned cycles, a clearer Home and emails in the group's look.*
 
 ### Added
 - 📦 **Pickup to be confirmed.** The pickup date is often known for sure only after the close, once the supplier is heard: in the cycle an admin can tick **Pickup to be confirmed**, and members read "Pickup expected ..., to be confirmed" on Home, in the calendar (the pickup drawn dashed), in History and in the phone's calendar. When the admin unticks it, those who ordered get **Pickup confirmed**; if the date changes too, the usual pickup changed notice. While a closed cycle's pickup is still to be confirmed, **To do now** reminds you with **Confirm the pickup**.
