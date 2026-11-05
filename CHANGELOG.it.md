@@ -23,6 +23,11 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
+## [Unreleased]
+
+### Sicurezza
+- [tecnico] 🔒 **Better Auth aggiornato alla 1.7.18**, che corregge un avviso critico (lo stato di un accesso con Google accettato come link di accesso, GHSA-965c-763c-88jm) e due minori. Quello critico qui non era sfruttabile: i link di accesso sono salvati come hash, quindi uno stato di Google non ne coincide mai con uno. Gli altri riguardano l'OAuth Proxy, che qui non si usa, e una corsa sul limite dei tentativi con PostgreSQL. Un link inviato prima dell'aggiornamento smette di funzionare; il codice nella stessa email funziona ancora.
+
 ## [1.44.0] - 5 novembre 2026
 
 *Il calendario degli ordini, i cicli in programma, una Home più chiara e le email con il volto del gruppo.*
