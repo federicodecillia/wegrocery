@@ -22,6 +22,11 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
+## [Unreleased]
+
+### Security
+- [tech] 🔒 **Better Auth updated to 1.7.18**, which patches a critical advisory (the state of a Google sign-in accepted as a sign-in link, GHSA-965c-763c-88jm) and two lesser ones. The critical one was not exploitable here: sign-in links are stored hashed, so a Google state never matches one. The others concern the OAuth Proxy, not used here, and a rate-limit race on PostgreSQL. A link emailed before the update stops working; the code in the same email still does.
+
 ## [1.44.0] - 2026-11-05
 
 *The order calendar, planned cycles, a clearer Home and emails in the group's look.*
