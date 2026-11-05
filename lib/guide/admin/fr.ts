@@ -118,6 +118,27 @@ export const adminGuideFr: GuideContent = {
       keywords: ["nouveau", "créer", "ouvrir", "commencer", "date limite"],
     },
     {
+      slug: "programmare-ciclo",
+      topic: "ciclo",
+      title: "Programmer un cycle",
+      intro:
+        "Un cycle programmé apparaît dans le **Calendrier des commandes** des membres avec ses dates et un aperçu des produits, mais personne ne peut commander tant que vous n'ouvrez pas les commandes.",
+      steps: [
+        "Dans **Cycle** touchez **+ Nouveau cycle** et sous **Quand les commandes ouvrent** choisissez **Plus tard**.",
+        "Choisissez l'**Ouverture des commandes prévue** et la **Clôture des commandes**. Si les dates peuvent encore changer, cochez **Dates indicatives** : les membres le voient dans le calendrier.",
+        "Remplissez le reste comme pour un cycle normal et touchez **Créer le cycle**.",
+        "Dans **Produits** ajoutez des produits du catalogue ou importez la liste Excel du fournisseur : les membres les voient en aperçu.",
+        "Le jour de l'ouverture **À faire maintenant** vous le rappelle : touchez **Ouvrir les commandes**. Le cycle s'ouvre et les membres sont prévenus.",
+      ],
+      notes: [
+        "Tant qu'il est programmé vous pouvez tout changer avec **Modifier**, dates comprises. Si la clôture est déjà passée, déplacez la date avant d'ouvrir.",
+        "Si le cycle est annulé, touchez **Supprimer** : personne n'a commandé, il n'y a donc pas d'argent à régulariser.",
+        "L'app n'ouvre pas les commandes toute seule : il faut toujours toucher **Ouvrir les commandes**.",
+      ],
+      link: { href: "/admin?tab=ciclo&new=1", label: "Créer un cycle" },
+      keywords: ["programmé", "programmer", "futur", "calendrier", "aperçu", "indicatif", "planifier", "prochain"],
+    },
+    {
       slug: "pagamento-ciclo",
       topic: "ciclo",
       title: "Solde ou carte : comment un cycle est payé",
@@ -208,6 +229,7 @@ export const adminGuideFr: GuideContent = {
       notes: [
         "Les membres qui ont commandé dans ce cycle reçoivent un avis avec le nouveau retrait (dans l'app, et par email s'ils l'ont choisi dans leurs préférences). Le message de confirmation vous dit combien de membres ont été prévenus.",
         "Le retrait ne touche ni les débits ni les soldes : vous pouvez le changer sans souci, même sur un cycle clôturé.",
+        "Si la date n'est que prévue (souvent connue seulement après la clôture, une fois le fournisseur entendu), cochez **Retrait à confirmer** : les membres lisent \"à confirmer\" à côté du retrait. Quand le fournisseur la confirme, décochez-la : ceux qui ont commandé reçoivent **Retrait confirmé**, même si la date ne change pas. Tant qu'il reste à confirmer, **À faire maintenant** vous le rappelle.",
       ],
       link: { href: "/admin?tab=ciclo", label: "Aller aux cycles" },
       keywords: ["retrait", "date de retrait", "heure", "livraison", "cycle clôturé"],

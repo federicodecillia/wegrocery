@@ -301,72 +301,6 @@ export async function getOrderDraft(memberId: string, cycleId: string): Promise<
   return row ? normalizeDraftLines(row.lines) : null;
 }
 
-// Returns the next upcoming pickup the member should care about: a cycle
-// where they have at least one order line and whose pickup date (either
-// pickup or pickup2) is in the future. Used by the "Prossimo ritiro" home
-// card. Returns null if there is no future pickup with an order.
-export type NextPickup = {
-  cycleId: string;
-  cycleTitle: string;
-  pickupDate: Date;
-  pickupEndTime: string | null;
-  supplierName: string | null;
-  isSecondPickup: boolean;
-};
-
-export async function getNextMemberPickup(memberId: string): Promise<NextPickup | null> {
-  const db = getDb();
-
-  // Cycles where the member has at least one order line. We don't filter
-  // by status here — a member should still see the pickup info even after
-  // the cycle has been closed (charges already posted but pickup is later).
-  const rows = await db
-    .selectDistinct({
-      cycleId: orderCycles.cycleId,
-      cycleTitle: orderCycles.title,
-      pickupDate: orderCycles.pickupDate,
-      pickupEndTime: orderCycles.pickupEndTime,
-      pickup2Date: orderCycles.pickup2Date,
-      pickup2EndTime: orderCycles.pickup2EndTime,
-      supplierName: suppliers.name,
-    })
-    .from(orderCycles)
-    .innerJoin(orders, eq(orders.cycleId, orderCycles.cycleId))
-    .leftJoin(suppliers, eq(orderCycles.supplierId, suppliers.supplierId))
-    .where(eq(orders.memberId, memberId));
-
-  const now = new Date();
-  // Flatten each cycle into up-to-two candidate pickups, then pick the
-  // earliest one that is still in the future.
-  const candidates: NextPickup[] = [];
-  for (const r of rows) {
-    if (r.pickupDate && r.pickupDate >= now) {
-      candidates.push({
-        cycleId: r.cycleId,
-        cycleTitle: r.cycleTitle,
-        pickupDate: r.pickupDate,
-        pickupEndTime: r.pickupEndTime,
-        supplierName: r.supplierName,
-        isSecondPickup: false,
-      });
-    }
-    if (r.pickup2Date && r.pickup2Date >= now) {
-      candidates.push({
-        cycleId: r.cycleId,
-        cycleTitle: r.cycleTitle,
-        pickupDate: r.pickup2Date,
-        pickupEndTime: r.pickup2EndTime,
-        supplierName: r.supplierName,
-        isSecondPickup: true,
-      });
-    }
-  }
-
-  if (candidates.length === 0) return null;
-  candidates.sort((a, b) => a.pickupDate.getTime() - b.pickupDate.getTime());
-  return candidates[0];
-}
-
 // Returns the order lines from the most recent cycle (excluding the
 // supplied currentCycleId) where the member ordered something. Each line
 // is matched by product identity (name/variant/format/unit) against the
@@ -488,6 +422,7 @@ export async function getMemberStorico(memberId: string | string[]): Promise<Cyc
     pickupEndTime: orderCycles.pickupEndTime,
     pickup2Date: orderCycles.pickup2Date,
     pickup2EndTime: orderCycles.pickup2EndTime,
+    pickupTentative: orderCycles.pickupTentative,
     cycleStatus: orderCycles.status,
     cycleCreatedAt: orderCycles.createdAt,
     paymentMode: orderCycles.paymentMode,
@@ -535,6 +470,7 @@ export async function getMemberStorico(memberId: string | string[]): Promise<Cyc
         orderCycles.pickupEndTime,
         orderCycles.pickup2Date,
         orderCycles.pickup2EndTime,
+        orderCycles.pickupTentative,
         orderCycles.status,
         orderCycles.createdAt,
         orderCycles.paymentMode,
@@ -631,6 +567,7 @@ export async function getAllCycles(limit = 30) {
       pickupEndTime: orderCycles.pickupEndTime,
       pickup2Date: orderCycles.pickup2Date,
       pickup2EndTime: orderCycles.pickup2EndTime,
+      pickupTentative: orderCycles.pickupTentative,
       orderCloseAt: orderCycles.orderCloseAt,
       orderOpenAt: orderCycles.orderOpenAt,
       createdAt: orderCycles.createdAt,
@@ -647,6 +584,7 @@ export async function getAllCycles(limit = 30) {
       handlingFeeValue: orderCycles.handlingFeeValue,
       weighingDepositPct: orderCycles.weighingDepositPct,
       settledAt: orderCycles.settledAt,
+      datesTentative: orderCycles.datesTentative,
     })
     .from(orderCycles)
     .leftJoin(suppliers, eq(orderCycles.supplierId, suppliers.supplierId))

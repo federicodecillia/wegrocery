@@ -37,6 +37,7 @@ import {
   EditCycleButton,
   OpenCycleOverview,
   OrdersLink,
+  PlannedCycleActions,
   type SerializedCycle,
 } from "./ciclo-forms";
 import { CycleAccountsView } from "./cycle-accounts-view";
@@ -96,7 +97,7 @@ export async function CycleWorkspace({ cycleId: asked, view: askedView, creating
       perOrder: c.paymentMode === "per_order",
       toSettle: settle != null,
       settle,
-      date: (c.status === "open" ? c.orderCloseAt : (c.pickupDate ?? c.createdAt))?.toISOString() ?? null,
+      date: (c.status === "planned" ? c.orderOpenAt : c.status === "open" ? c.orderCloseAt : (c.pickupDate ?? c.createdAt))?.toISOString() ?? null,
     };
   });
 
@@ -105,6 +106,7 @@ export async function CycleWorkspace({ cycleId: asked, view: askedView, creating
   const inScope = cycles.filter(
     (c) =>
       c.status === "open" ||
+      c.status === "planned" ||
       (c.closedAt != null && c.closedAt.getTime() >= windowStart) ||
       settlementPending(settleStates.get(c.cycleId) ?? null),
   );
@@ -122,6 +124,7 @@ export async function CycleWorkspace({ cycleId: asked, view: askedView, creating
         cycleId: c.cycleId,
         title: c.title,
         status: c.status,
+        orderOpenAt: c.orderOpenAt,
         orderCloseAt: c.orderCloseAt,
         closedAt: c.closedAt,
         orderMembers: f?.orderMembers ?? 0,
@@ -129,6 +132,7 @@ export async function CycleWorkspace({ cycleId: asked, view: askedView, creating
         adjusted: f?.adjusted ?? false,
         settlementPending: settlementPending(settleStates.get(c.cycleId) ?? null),
         pickupDate: c.pickupDate,
+        pickupTentative: c.pickupTentative,
         pickedUp: f?.pickedUp ?? 0,
       };
     }),
@@ -228,6 +232,9 @@ function serialize(c: FullCycle): SerializedCycle {
   return {
     cycleId: c.cycleId,
     title: c.title,
+    orderOpenAt: c.orderOpenAt?.toISOString() ?? null,
+    datesTentative: c.datesTentative,
+    pickupTentative: c.pickupTentative,
     orderCloseAt: c.orderCloseAt?.toISOString() ?? null,
     pickupDate: c.pickupDate?.toISOString() ?? null,
     pickupEndTime: c.pickupEndTime ?? null,
@@ -262,6 +269,7 @@ async function SelectedCycle({
   const cycle = serialize(c);
   const w = t.admin.workspace;
   const isOpen = c.status === "open";
+  const isPlanned = c.status === "planned";
   const perOrder = c.paymentMode === "per_order";
   const [rawStats, settlement, pickups] = await Promise.all([
     isOpen ? getOpenCycleStats(c.cycleId) : null,
@@ -276,18 +284,30 @@ async function SelectedCycle({
     pendingPayments: rawStats?.pendingPayments ?? 0,
   };
 
-  const when = isOpen
-    ? c.orderCloseAt && w.closesAt(formatDeadline(c.orderCloseAt))
-    : c.closedAt && w.closedAt(formatDate(c.closedAt));
+  const when = isPlanned
+    ? c.orderOpenAt && w.opensAt(formatDeadline(c.orderOpenAt))
+    : isOpen
+      ? c.orderCloseAt && w.closesAt(formatDeadline(c.orderCloseAt))
+      : c.closedAt && w.closedAt(formatDate(c.closedAt));
 
   return (
     <section aria-labelledby="cycle-title">
       <header className="mb-3 flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="mb-1 flex flex-wrap gap-1.5">
-            <Badge variant={isOpen ? "accent" : c.status === "cancelled" ? "destructive" : "default"} dot={isOpen}>
-              {isOpen ? t.admin.cycle.openBadge : c.status === "cancelled" ? t.admin.cycle.cancelledBadge : t.admin.cycle.closedBadge}
+            <Badge
+              variant={isOpen ? "accent" : isPlanned ? "brand" : c.status === "cancelled" ? "destructive" : "default"}
+              dot={isOpen}
+            >
+              {isOpen
+                ? t.admin.cycle.openBadge
+                : isPlanned
+                  ? t.admin.cycle.plannedBadge
+                  : c.status === "cancelled"
+                    ? t.admin.cycle.cancelledBadge
+                    : t.admin.cycle.closedBadge}
             </Badge>
+            {isPlanned && c.datesTentative && <Badge>{t.admin.cycle.tentativeBadge}</Badge>}
             {perOrder && <Badge variant="brand">💳 {t.admin.cycle.cardBadge}</Badge>}
             {pickups.length > 0 && (
               // The pickup counter: a link to Ritiri, so not a Badge (a status, never clickable).
@@ -311,6 +331,7 @@ async function SelectedCycle({
         <div className="flex flex-wrap gap-2">
           {c.status !== "cancelled" && <EditCycleButton cycle={cycle} suppliers={suppliers} />}
           {isOpen && <CloseCycleAction cycle={cycle} stats={stats} />}
+          {isPlanned && <PlannedCycleActions cycle={cycle} />}
         </div>
       </header>
 
@@ -332,6 +353,15 @@ async function SelectedCycle({
       {view === "panoramica" &&
         (isOpen ? (
           <OpenCycleOverview cycle={cycle} stats={stats} suppliers={suppliers} />
+        ) : isPlanned ? (
+          <Card>
+            <CardContent>
+              <p className="mb-3 max-w-prose text-[13px] text-secondary-foreground">
+                <RichText text={w.plannedIntro} />
+              </p>
+              <CycleFacts cycle={cycle} suppliers={suppliers} />
+            </CardContent>
+          </Card>
         ) : (
           <Card>
             <CardContent>

@@ -1,10 +1,11 @@
-import Link from "next/link";
 import { adminAccess } from "@/lib/auth/access";
 import { AppShell } from "@/components/app-shell";
 import { BalanceDueCard } from "@/components/balance/balance-due-card";
-import { CycleCountdown } from "@/components/home/cycle-countdown";
-import { CycleNotes } from "@/components/cycle-notes";
-import { NextPickupCard } from "@/components/home/next-pickup-card";
+import { CycleRow, CycleRows } from "@/components/home/cycle-row";
+import { HomeMonth } from "@/components/home/home-month";
+import { HomeSection } from "@/components/home/home-section";
+import { OpenCycleCard } from "@/components/home/open-cycle-card";
+import { HomeBalance } from "@/components/home/home-balance";
 import { InstallPrompt } from "@/components/install-prompt";
 import { MovementRow } from "@/components/movement-row";
 import { WelcomeCard } from "@/components/home/welcome-card";
@@ -12,19 +13,22 @@ import { SetupBanner } from "@/components/admin/setup/setup-banner";
 import { getBrand } from "@/lib/brand/get-brand";
 import { isWelcomeStep, WELCOME_QUERY, welcomeDone, welcomeMoney } from "@/lib/guide/welcome";
 import { t } from "@/lib/i18n";
-import { formatSignedMoney } from "@/lib/i18n/format";
 import { getUserRole, requireUserSession } from "@/lib/auth/session";
 import {
   getCycleProducts,
   getMemberById,
   getWelcomeFacts,
   getMemberLedger,
+  getFamilyMemberIds,
   getMemberOrderLines,
-  getNextMemberPickup,
   getOpenCycles,
   getOrderDraft,
 } from "@/lib/db/queries";
 import { getDb } from "@/lib/db/client";
+import { getCalendarCycles } from "@/lib/db/calendar";
+import { buildCalendar, dayOf } from "@/lib/calendar";
+import { homeGroups } from "@/lib/home";
+import { formatLongDay, formatPickupLong } from "@/lib/i18n/deadline";
 import { getConsolidatedBalanceCents, getWalletBalance, getWalletOffset } from "@/lib/payments/balance-due";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
 import { getCycleCoverageCents } from "@/lib/payments/order-confirm";
@@ -50,13 +54,15 @@ export default async function HomePage({
   const memberId = session.user.memberId!;
   const personId = session.user.personId ?? memberId;
 
-  const [openCycles, recentMovements, nextPickup, settings, member] = await Promise.all([
+  const [openCycles, recentMovements, settings, member, calendarRows] = await Promise.all([
     getOpenCycles(),
-    getMemberLedger(memberId, 4),
-    getNextMemberPickup(memberId),
+    getMemberLedger(memberId, 3),
     getPaymentSettings(),
     getMemberById(memberId),
+    // The calendar section: the family's orders count, as in /calendario.
+    getFamilyMemberIds(memberId).then((ids) => getCalendarCycles(role, ids)),
   ]);
+  const now = new Date();
   // The welcome card is personal: the person who signed in, not the family
   // account they shop on.
   const person = personId === memberId ? member : await getMemberById(personId);
@@ -136,265 +142,144 @@ export default async function HomePage({
     .reduce((sum, d) => sum + (isNaN(d.orderTotal) ? 0 : d.orderTotal + d.feeCents / 100), 0);
   const afterBalance = (balance || 0) - globalOrderTotal;
 
-  const isNegative = balance < 0;
-  const balanceText = formatSignedMoney(balance);
+  const today = dayOf(now);
+  const entries = buildCalendar(calendarRows, now);
+  const { toCollect, comingUp } = homeGroups(entries);
+  // What the member ordered on each cycle still to collect (the row's second line).
+  const collectOrders = new Map(
+    await Promise.all(
+      toCollect.map(async (e) => {
+        const lines = await getMemberOrderLines(memberId, e.cycleId);
+        return [e.cycleId, { count: lines.length, total: lines.reduce((s, l) => s + parseFloat(l.lineTotal), 0) }] as const;
+      }),
+    ),
+  );
+  const firstDay = (e: (typeof entries)[number], kind: "opens" | "closes" | "pickup") => e.events.find((x) => x.kind === kind) ?? null;
+  const negative = !payPerOrder && balance < 0;
 
-  // Each open cycle: its countdown, notes, payment status and the order.
-  const cyclesBlock = (
-    <>
-        {cycleDataList.map(({ cycle, cycleProducts, myLines, orderTotal, payStatus }) => {
+  // One list of cycles, each once, by what the member has to do next.
+  const toOrderBlock = (
+    <HomeSection id="da-ordinare" title={t.home.sectionToOrder} action={{ href: "/calendario", label: t.home.fullCalendar, mobileOnly: true }}>
+      {cycleDataList.length === 0 ? (
+        <div className="rounded-card border border-border bg-card px-4 py-3.5 shadow-card">
+          <p className="text-[15px] font-semibold text-foreground">{t.home.noOpenNow}</p>
+          <p className="text-[14px] text-secondary-foreground">
+            {comingUp[0] && firstDay(comingUp[0], "opens")
+              ? t.home.nextOpens(formatLongDay(firstDay(comingUp[0], "opens")!.at), comingUp[0].title)
+              : t.home.weNotify}
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {cycleDataList.map(({ cycle, cycleProducts, myLines, orderTotal, payStatus }) => {
             const productMap = new Map(cycleProducts.map((p) => [p.productId, p]));
             return (
-              <div key={cycle.cycleId} className="mb-6">
-                <div className="mb-3.5">
-                  <CycleCountdown
-                    cycleId={cycle.cycleId}
-                    title={cycle.title}
-                    orderCloseAt={new Date(cycle.orderCloseAt ?? new Date()).toISOString()}
-                    orderOpenAt={new Date(cycle.orderOpenAt ?? cycle.createdAt).toISOString()}
-                    pickupDate={cycle.pickupDate ? new Date(cycle.pickupDate).toISOString() : null}
-                    pickupEndTime={cycle.pickupEndTime ?? null}
-                    pickup2Date={cycle.pickup2Date ? new Date(cycle.pickup2Date).toISOString() : null}
-                    pickup2EndTime={cycle.pickup2EndTime ?? null}
-                    hasOrder={myLines.length > 0}
-                  />
-                </div>
-
-                <CycleNotes notes={cycle.notes} className="mb-2.5" />
-
-                {payStatus && (
-                  <Link
-                    href={`/ordine?cycleId=${cycle.cycleId}`}
-                    className={`mb-2.5 flex items-center justify-between rounded-card border px-4 py-2.5 text-[14px] font-semibold ${
-                      payStatus.kind === "paid"
-                        ? "border-accent/25 bg-accent-bg text-accent-text"
-                        : "border-primary-mid bg-primary-bg text-primary-text"
-                    }`}
-                  >
-                    <span>
-                      {payStatus.kind === "draft"
-                        ? t.order.pay.statusDraft(formatEur(payStatus.amountCents / 100))
-                        : payStatus.kind === "paid"
-                          ? t.order.pay.statusPaid(formatEur(payStatus.amountCents / 100))
-                          : payStatus.kind === "changes"
-                            ? t.order.pay.statusChanges(formatEur(payStatus.amountCents / 100))
-                            : t.order.pay.statusChangesNoPay}
-                    </span>
-                    <span aria-hidden="true">→</span>
-                  </Link>
-                )}
-
-                {myLines.length > 0 ? (
-                  <div className="overflow-hidden rounded-card border border-border bg-card shadow-card">
-                    <div className="flex items-center justify-between border-b border-border px-4 py-3.5">
-                      <span className="font-mono text-label uppercase tracking-[0.1em] text-secondary-foreground">
-                        {t.home.yourOrder}
-                      </span>
-                      <Link
-                        href={`/ordine?cycleId=${cycle.cycleId}`}
-                        className="rounded-full border border-border px-3.25 py-1.25 font-mono text-label font-bold uppercase tracking-widest text-foreground"
-                      >
-                        {t.home.editButton}
-                      </Link>
-                    </div>
-                    {myLines.map((line) => {
-                      const p = productMap.get(line.productId);
-                      const meta = [p?.variant, p?.format].filter(Boolean).join(" · ");
-                      return (
-                        <div
-                          key={line.orderLineId}
-                          className="flex items-center justify-between border-b border-border px-4 py-2.75 last:border-none"
-                        >
-                          <div className="flex items-start gap-2">
-                            <span aria-hidden="true" className="mt-0.25 w-[18px] shrink-0 text-[18px] leading-none">
-                              {memberProductEmoji(p?.emoji, p?.name ?? "")}
-                            </span>
-                            <div>
-                              <div className="text-[14px] font-medium text-foreground">
-                                {p?.name ?? "?"}
-                              </div>
-                              {meta && (
-                                <div className="mt-0.25 tabular-nums text-label text-secondary-foreground">{meta}</div>
-                              )}
-                            </div>
-                          </div>
-                          <div className="tabular-nums text-[13px] font-semibold text-foreground">
-                            ×{line.quantity} · {formatEur(parseFloat(line.lineTotal))}
-                          </div>
-                        </div>
-                      );
-                    })}
-                    <div className="flex items-center justify-between border-t border-border bg-tint/[0.03] px-4 py-3">
-                      <span className="text-[14px] font-extrabold text-foreground">{t.home.totalLabel}</span>
-                      <span className="tabular-nums text-[13px] font-bold text-foreground">
-                        {formatEur(orderTotal)}
-                      </span>
-                    </div>
-                  </div>
-                ) : null}
-              </div>
+              <OpenCycleCard
+                key={cycle.cycleId}
+                today={today}
+                cycle={{
+                  cycleId: cycle.cycleId,
+                  title: cycle.title,
+                  supplierName: cycle.supplierName,
+                  notes: cycle.notes,
+                  orderCloseAt: new Date(cycle.orderCloseAt ?? now).toISOString(),
+                  pickups: [
+                    cycle.pickupDate && { date: new Date(cycle.pickupDate).toISOString(), endTime: cycle.pickupEndTime ?? null },
+                    cycle.pickup2Date && { date: new Date(cycle.pickup2Date).toISOString(), endTime: cycle.pickup2EndTime ?? null },
+                  ].filter((x): x is { date: string; endTime: string | null } => Boolean(x)),
+                  pickupTentative: cycle.pickupTentative,
+                }}
+                payStatus={payStatus}
+                lines={myLines.map((line) => {
+                  const p = productMap.get(line.productId);
+                  return {
+                    id: line.orderLineId,
+                    name: p?.name ?? "?",
+                    detail: [p?.variant, p?.format].filter(Boolean).join(" · ") || null,
+                    emoji: memberProductEmoji(p?.emoji, p?.name ?? ""),
+                    quantity: line.quantity,
+                    total: parseFloat(line.lineTotal),
+                  };
+                })}
+                orderTotal={orderTotal}
+              />
             );
           })}
-    </>
-  );
-  const balanceBlock = (
-    <>
-      {/* ── Saldo hero card (wallet groups only) ── */}
-      {!payPerOrder && (
-        <>
-      <div
-        className={`mb-3.5 rounded-card pt-5 px-5.5 pb-5.5 ${
-          isNegative
-            ? "border-[1.5px] border-destructive/30 bg-danger-bg"
-            : "border-[1.5px] border-primary-mid bg-primary-bg"
-        }`}
-      >
-        <div
-          className={`mb-2.5 font-mono text-label font-semibold uppercase tracking-[0.13em] ${
-            isNegative ? "text-destructive" : "text-primary-text"
-          }`}
-        >
-          {isNegative ? t.home.balanceToTopUp : t.home.balanceTitle}
-        </div>
-        {/* The explicit sign makes the amount longer: it shrinks to the card's
-            width (at most 70px) so a three-digit balance still fits a 375px
-            phone. 0.61em per character covers the widest format measured
-            ("+€888.88" is 0.60; Italian "+888,88 €" is 0.55), and nowrap keeps
-            the sign from ever dropping onto its own line. */}
-        <div className="@container mb-4 flex items-baseline gap-1.5">
-          {/* Smaller on phones, where the cycle card above needs the room. */}
-          <span
-            className={`whitespace-nowrap text-[length:min(52px,var(--fit))] font-black tabular-nums leading-none tracking-[-0.045em] sm:text-[length:min(70px,var(--fit))] ${
-              isNegative ? "text-destructive" : "text-foreground"
-            }`}
-            style={{ "--fit": `calc(100cqi / ${(0.61 * balanceText.length).toFixed(2)})` } as React.CSSProperties}
-          >
-            {balanceText}
-          </span>
-        </div>
-        <div
-          className={`flex overflow-hidden rounded-xl ${
-            isNegative ? "border border-destructive/30" : "border border-primary-mid"
-          }`}
-        >
-          <div className="flex-1 bg-card/60 py-2.25 px-3.25">
-            <div className="mb-0.75 font-mono text-label uppercase tracking-[0.07em] text-primary-text">
-              {t.home.thisOrder}
-            </div>
-            <div className="tabular-nums text-[13px] font-bold text-foreground">
-              {formatEur(globalOrderTotal)}
-            </div>
-          </div>
-          <div
-            className={`flex-1 bg-card/35 py-2.25 px-3.25 ${
-              isNegative ? "border-l border-destructive/30" : "border-l border-primary-mid"
-            }`}
-          >
-            <div className="mb-0.75 font-mono text-label uppercase tracking-[0.07em] text-primary-text">
-              {t.home.afterOrder}
-            </div>
-            <div
-              className={`tabular-nums text-[13px] font-bold ${
-                afterBalance < 0 ? "text-destructive" : "text-foreground"
-              }`}
-            >
-              {formatSignedMoney(afterBalance)}
-            </div>
-          </div>
-        </div>
-        {cycleDataList.some((d) => d.feeCents > 0) && (
-          <p className="mt-1.5 text-label text-muted-foreground">{t.home.feeIncluded}</p>
-        )}
-        {!topups ? (
-          isNegative && (
-            <p className="mt-2.5 text-[13px] text-secondary-foreground">
-              {settings.cardSettlesWallet ? (
-                t.home.topupsOffDebtCard
-              ) : (
-                <>
-                  {t.home.topupsOffDebtContact}{" "}
-                  <a href={`mailto:${brand.supportEmail}`} className="break-all font-semibold text-primary-text underline">
-                    {brand.supportEmail}
-                  </a>
-                </>
-              )}
-            </p>
-          )
-        ) : isNegative ? (
-          <div className="mt-3">
-            <Link
-              href="/ricarica"
-              className="flex w-full items-center justify-center rounded-full bg-danger px-4 py-2.5 text-[14px] font-bold text-danger-foreground"
-            >
-              {t.home.rechargeButton}
-            </Link>
-          </div>
-        ) : (
-          <div className="mt-2.5 text-right">
-            <Link href="/ricarica" className="font-mono text-label font-bold uppercase tracking-widest text-primary-text">
-              {t.home.rechargeLink} →
-            </Link>
-          </div>
-        )}
-      </div>
-
-        </>
-      )}
-
-
-    </>
-  );
-  const pickupBlock = (
-    <>
-      {/* ── Prossimo ritiro card: only for a cycle not already on screen ── */}
-      {nextPickup && !cycleDataList.some((d) => d.cycle.cycleId === nextPickup.cycleId) && (
-        <NextPickupCard pickup={nextPickup} />
-      )}
-
-    </>
-  );
-  const noOpenBlock = (
-    <>
-      {cycleDataList.length === 0 && (
-        <div className="mb-3.5 flex items-center justify-between rounded-card border border-border bg-card p-4.5 shadow-card">
-          <div>
-            <div className="text-[15px] font-bold">{t.home.noOpenOrders}</div>
-            <div className="tabular-nums text-label text-muted-foreground">
-              {t.home.noOpenOrdersHint}
-            </div>
-          </div>
-          <span className="rounded-full bg-tint/[0.06] px-2.5 py-1 tabular-nums text-label text-secondary-foreground">
-            {t.home.closed}
-          </span>
         </div>
       )}
-
-    </>
+    </HomeSection>
   );
-  const movementsBlock = (
-    <>
-      {/* ── Recent movements ── */}
-      {recentMovements.length > 0 && (
-        <div className="mt-1">
-          <div className="mb-2.5 flex items-center justify-between">
-            <span className="font-mono text-label uppercase tracking-[0.1em] text-secondary-foreground">
-              {t.home.recentMovements}
-            </span>
-            <Link
-              href="/storico"
-              className="tabular-nums text-label font-bold text-primary-text"
-            >
-              {t.home.seeAll}
-            </Link>
-          </div>
-          {recentMovements.map((e) => (
-            <MovementRow key={e.entryId} entry={e} href="/storico?tab=movimenti" />
-          ))}
-        </div>
-      )}
 
-    </>
+  const toCollectBlock = toCollect.length > 0 && (
+    <HomeSection id="da-ritirare" title={t.home.sectionToCollect}>
+      <CycleRows>
+        {toCollect.map((e) => {
+          const pickup = firstDay(e, "pickup");
+          const order = collectOrders.get(e.cycleId);
+          return (
+            <CycleRow
+              key={e.cycleId}
+              href={`/storico?cycleId=${encodeURIComponent(e.cycleId)}`}
+              day={pickup?.day ?? null}
+              tone={pickup && pickup.day === today ? "urgent" : "neutral"}
+              title={e.title}
+              when={pickup ? (e.pickupTentative ? t.home.pickupExpected : t.home.pickupOn)(formatPickupLong(pickup.at, pickup.endTime)) : t.home.pickupTbd}
+              detail={order && order.count > 0 ? t.home.ordered(order.count, formatEur(order.total)) : null}
+            />
+          );
+        })}
+      </CycleRows>
+    </HomeSection>
   );
+
+  const comingUpBlock = comingUp.length > 0 && (
+    <HomeSection id="in-arrivo" title={t.home.sectionComingUp}>
+      <CycleRows>
+        {comingUp.map((e) => {
+          const opens = firstDay(e, "opens");
+          return (
+            <CycleRow
+              key={e.cycleId}
+              href="/calendario"
+              day={opens?.day ?? null}
+              tone="neutral"
+              title={e.title}
+              when={opens ? t.home.opensOn(formatLongDay(opens.at)) : t.calendar.states.planned}
+              detail={e.supplierName}
+              badge={e.tentative ? t.calendar.tentative : t.calendar.states.planned}
+            />
+          );
+        })}
+      </CycleRows>
+    </HomeSection>
+  );
+
+  const balanceCard = !payPerOrder && (
+    <HomeBalance
+      balance={balance}
+      afterOrders={globalOrderTotal > 0 ? afterBalance : null}
+      feeIncluded={cycleDataList.some((d) => d.feeCents > 0)}
+      topups={topups}
+      cardSettlesWallet={settings.cardSettlesWallet}
+      supportEmail={brand.supportEmail}
+    />
+  );
+
+  // Money last (card payments keep the balance near zero), except a negative
+  // balance, which goes on top.
+  const moneyBlock = (
+    <HomeSection
+      id="saldo"
+      title={t.home.sectionMoney}
+      action={recentMovements.length > 0 ? { href: "/storico?tab=movimenti", label: t.home.seeAll } : undefined}
+    >
+      {!negative && balanceCard}
+      {recentMovements.map((e) => (
+        <MovementRow key={e.entryId} entry={e} href="/storico?tab=movimenti" />
+      ))}
+    </HomeSection>
+  );
+  const showMoney = (!payPerOrder && !negative) || recentMovements.length > 0;
 
   return (
     <AppShell email={session.user.email} name={session.user.fullName} admin={adminAccess(session.user)} memberId={memberId} personId={session.user.personId} layout="wide">
@@ -415,28 +300,22 @@ export default async function HomePage({
       {/* An amount due comes first: until it is paid no card order can be confirmed. */}
       {payPerOrder && <BalanceDueCard cents={consolidatedCents} canPay={settings.onlineTopupAvailable} />}
 
-      {/* From lg two columns: the cycle and the order on the left; the
-          balance, the pickup and the movements on the right. Without an open
-          cycle the balance and the pickup lead on the left. Phones read them
-          in the same order, one under the other. */}
-      <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start lg:gap-6">
-        <div className="min-w-0">
-          {cycleDataList.length > 0 ? cyclesBlock : (
-            <>
-              {balanceBlock}
-              {pickupBlock}
-              {noOpenBlock}
-            </>
-          )}
+      {negative && balanceCard}
+
+      {/* One list of cycles by what to do (order, collect, coming up), then the
+          money. From lg two columns: the list on the left; this month and the
+          money on the right. Phones read them one under the other. */}
+      <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start lg:gap-8">
+        <div className="min-w-0 lg:max-w-2xl">
+          {toOrderBlock}
+          {toCollectBlock}
+          {comingUpBlock}
         </div>
         <div className="min-w-0 lg:sticky lg:top-4">
-          {cycleDataList.length > 0 && (
-            <>
-              {balanceBlock}
-              {pickupBlock}
-            </>
-          )}
-          {movementsBlock}
+          <div className="hidden lg:block">
+            <HomeMonth entries={entries} today={today} />
+          </div>
+          {showMoney && moneyBlock}
         </div>
       </div>
 

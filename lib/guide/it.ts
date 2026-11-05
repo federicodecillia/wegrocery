@@ -49,7 +49,7 @@ export const guideIt: GuideContent = {
       topic: "primi-passi",
       title: "Com'è fatta l'app",
       steps: [
-        "**Home**: il tuo saldo, l'ordine aperto con il tempo che resta e gli ultimi movimenti.",
+        "**Home**: i cicli divisi in **Da ordinare**, **Da ritirare** e **In arrivo**, ognuno con la sua data, poi il saldo e gli ultimi movimenti.",
         "**Ordine**: il catalogo del ciclo aperto, dove scegli i prodotti e confermi.",
         "**Storico**: i tuoi ordini passati e tutti i movimenti del saldo.",
         "**Guida**: questa pagina, con le novità dell'app e i contatti.",
@@ -150,9 +150,29 @@ export const guideIt: GuideContent = {
         "La Home mostra quando chiude l'ordine e quanto tempo resta. Dopo la chiusura l'ordine non si può più cambiare: il gruppo lo manda ai fornitori.",
       notes: [
         "Se ci sono più ordini aperti insieme, in **Ordine** scegli prima quale aprire.",
-        "I giorni di ritiro sono indicati in Home, sotto l'ordine.",
+        "I giorni di ritiro sono in Home, sotto ogni ciclo; dopo la chiusura il ciclo passa in **Da ritirare**.",
+        "Se accanto al ritiro leggi **da confermare**, la data è quella prevista e può ancora cambiare: quando il gruppo la conferma ricevi un avviso.",
       ],
       keywords: ["scadenza", "chiusura", "orario", "ritiro", "consegna", "data"],
+    },
+    {
+      slug: "calendario-ordini",
+      topic: "ordinare",
+      title: "Vedere quando ci sono gli ordini",
+      intro:
+        "Il **Calendario ordini** mostra mese per mese quando aprono e chiudono gli ordini e quando si ritira, anche per i cicli passati.",
+      steps: [
+        "In Home tocca **Calendario completo**, accanto a **Da ordinare** (o, se non c'è niente di aperto, il link in **Ordine**).",
+        "Sopra il calendario scegli il ciclo (scorri i pulsanti di lato se sono tanti): la fascia colorata sono i giorni per ordinare, il riquadro pieno l'ultimo giorno, il pacchetto il ritiro. **Tutti** mostra per ogni giorno solo le icone di cosa succede: cestino quando apre, lucchetto l'ultimo giorno, pacchetto il ritiro.",
+        "Tocca un giorno per vedere il suo ciclo; se ce ne sono più di uno, li trovi elencati sotto. Le frecce cambiano mese.",
+      ],
+      notes: [
+        "Su un ciclo **In programma** tocca **Avvisami quando apre** per ricevere un'email all'apertura. **Aggiungi al calendario** mette scadenza e ritiro nel calendario del telefono.",
+        "Un ciclo **In programma** non è ancora aperto: vedi le date (a volte **indicative**) e l'anteprima dei prodotti, e ordini quando apre.",
+        "Ogni ciclo dice se hai ordinato e se l'ordine è stato ritirato. Da un ciclo aperto vai all'ordine, da uno passato al dettaglio nello **Storico**.",
+      ],
+      link: { href: "/calendario", label: "Apri il calendario" },
+      keywords: ["calendario", "date", "prossimi", "futuri", "quando", "ritiro", "apertura", "mese"],
     },
     {
       slug: "dopo-chiusura",
@@ -199,7 +219,7 @@ export const guideIt: GuideContent = {
       intro:
         "Il saldo è il tuo credito presso il gruppo. Lo ricarichi in anticipo e, alla chiusura di ogni ordine, il costo viene scalato da lì.",
       notes: [
-        "In Home vedi il saldo di oggi e quanto resterà dopo l'ordine aperto.",
+        "In Home, in fondo, vedi il saldo di oggi; se gli ordini aperti lo portano sotto zero, te lo dice.",
       ],
       keywords: ["credito", "conto", "soldi", "borsellino"],
       when: { mode: "wallet" },
@@ -209,7 +229,7 @@ export const guideIt: GuideContent = {
       topic: "soldi",
       title: "Ricaricare con un bonifico",
       steps: [
-        "In Home tocca **Ricarica il saldo**.",
+        "In Home, accanto al saldo, tocca **Ricarica**.",
         "Nella sezione **Bonifico** copia intestatario, IBAN e causale: se paghi un ordine, usa la causale di quell'ordine, già compilata.",
         "Fai il bonifico dalla tua banca.",
       ],
@@ -226,7 +246,7 @@ export const guideIt: GuideContent = {
       topic: "soldi",
       title: "Ricaricare online con la carta",
       steps: [
-        "In Home tocca **Ricarica il saldo**.",
+        "In Home, accanto al saldo, tocca **Ricarica**.",
         "In **Paga online** scegli un importo o scrivilo.",
         "Tocca **Paga** e completa il pagamento. Il saldo si aggiorna appena il pagamento è confermato.",
       ],

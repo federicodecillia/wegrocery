@@ -159,8 +159,8 @@ export async function inviteToFamily(emailInput: string): Promise<Result> {
     const title = t.family.notificationTitle;
     const body = t.family.notificationBody(account.fullName);
     await dispatchNotification(db, { memberId: target!.memberId, type: "family_invite", title, body, href: "/famiglia" });
-    const { subject, text } = notificationEmail({ title, body, href: "/famiglia" }, await getBrand());
-    const sent = await sendMail({ to: target!.email, subject, text });
+    const { subject, text, heading } = notificationEmail({ title, body, href: "/famiglia" }, await getBrand());
+    const sent = await sendMail({ to: target!.email, subject, text, heading });
     if ("error" in sent) console.error("[family] invite email not sent:", sent.error);
 
     revalidatePath("/famiglia");

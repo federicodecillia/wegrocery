@@ -1,9 +1,8 @@
 import { describe, expect, test } from "vitest";
-import { closesIn, formatDeadline, formatPickupSlot, formatPickups, isLastDay } from "./deadline";
+import { deadlineParts, formatDeadline, formatPickupLong, formatPickupSlot, formatPickups } from "./deadline";
 
 // Rome is UTC+2 until the last Sunday of October 2026.
 const MONDAY_MIDNIGHT = "2026-10-12T22:00:00.000Z"; // Tue 13 Oct 00:00 in Rome
-const now = new Date("2026-10-08T10:00:00.000Z");
 
 describe("formatDeadline", () => {
   test("a close at 00:00 reads as 23:59 of the day before, with the weekday", () => {
@@ -19,20 +18,6 @@ describe("formatDeadline", () => {
   });
 });
 
-describe("closesIn", () => {
-  test("days, then hours, then minutes", () => {
-    expect(closesIn(MONDAY_MIDNIGHT, now)).toBe("Closes in 4 days");
-    expect(closesIn("2026-10-08T15:30:00.000Z", now)).toBe("Closes in 5 hours");
-    expect(closesIn("2026-10-08T10:00:30.000Z", now)).toBe("Closes in 1 minute");
-    expect(closesIn("2026-10-08T09:00:00.000Z", now)).toBe("Closing now");
-  });
-
-  test("the countdown shows only in the last day", () => {
-    expect(isLastDay(MONDAY_MIDNIGHT, now)).toBe(false);
-    expect(isLastDay("2026-10-08T20:00:00.000Z", now)).toBe(true);
-    expect(isLastDay("2026-10-08T09:00:00.000Z", now)).toBe(false);
-  });
-});
 
 describe("pickups", () => {
   test("a pickup at midnight has no time", () => {
@@ -57,5 +42,16 @@ describe("pickups", () => {
       { date: "2026-10-15T07:00:00.000Z", endTime: "11:00" },
     );
     expect(lines).toHaveLength(2);
+  });
+});
+
+describe("long forms for Home", () => {
+  test("a midnight deadline reads as 23:59 of the day before, with the weekday in full", () => {
+    expect(deadlineParts(MONDAY_MIDNIGHT)).toEqual({ day: expect.stringMatching(/^Monday.*12 Oct$/), time: "23:59" });
+  });
+
+  test("a pickup with its hours, or the day alone at midnight", () => {
+    expect(formatPickupLong("2026-10-14T16:00:00.000Z", "20:00")).toMatch(/Wednesday.*14 Oct, 18:00–20:00/);
+    expect(formatPickupLong(MONDAY_MIDNIGHT, null)).toMatch(/^Tuesday.*13 Oct$/);
   });
 });

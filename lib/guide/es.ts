@@ -47,7 +47,7 @@ export const guideEs: GuideContent = {
       topic: "primi-passi",
       title: "Cómo está organizada la app",
       steps: [
-        "**Inicio**: tu saldo, el pedido abierto con el tiempo que queda y tus últimos movimientos.",
+        "**Inicio**: los ciclos en **Por pedir**, **Por recoger** y **Próximamente**, cada uno con su fecha, y luego tu saldo y tus últimos movimientos.",
         "**Pedido**: el catálogo del ciclo abierto, donde eliges los productos y confirmas.",
         "**Historial**: tus pedidos pasados y cada movimiento del saldo.",
         "**Guía**: esta página, con las novedades de la app y los contactos.",
@@ -148,9 +148,29 @@ export const guideEs: GuideContent = {
         "En Inicio ves cuándo se cierra el pedido y cuánto tiempo queda. Tras el cierre el pedido ya no se puede cambiar: el grupo lo envía a los proveedores.",
       notes: [
         "Cuando hay varios pedidos abiertos a la vez, en **Pedido** eliges primero cuál abrir.",
-        "Los días de recogida aparecen en Inicio, bajo el pedido.",
+        "Los días de recogida están en Inicio, bajo cada ciclo; tras el cierre el ciclo pasa a **Por recoger**.",
+        "Si junto a la recogida lees **por confirmar**, la fecha es la prevista y aún puede cambiar: recibes un aviso cuando el grupo la confirme.",
       ],
       keywords: ["fecha límite", "cierre", "hora", "recogida", "entrega", "fecha"],
+    },
+    {
+      slug: "calendario-ordini",
+      topic: "ordinare",
+      title: "Ver cuándo hay pedidos",
+      intro:
+        "El **Calendario de pedidos** muestra mes a mes cuándo abren y cierran los pedidos y cuándo se recogen, también los ciclos pasados.",
+      steps: [
+        "En Inicio toca **Calendario completo**, junto a **Por pedir** (o, si no hay nada abierto, el enlace en **Pedido**).",
+        "Encima del calendario elige el ciclo (desliza los botones de lado si hay muchos): la franja de color son los días para pedir, el cuadro lleno el último día, el paquete la recogida. **Todos** muestra en cada día solo los iconos de lo que pasa: una cesta cuando abre, un candado el último día, un paquete la recogida.",
+        "Toca un día para ver su ciclo; si hay varios, aparecen en la lista de abajo. Las flechas cambian de mes.",
+      ],
+      notes: [
+        "En un ciclo **Programado** toca **Avísame cuando abra** para recibir un email cuando se abra. **Añadir al calendario** pone el cierre y la recogida en el calendario del móvil.",
+        "Un ciclo **Programado** aún no está abierto: ves sus fechas (a veces **orientativas**) y una vista previa de los productos, y pides cuando se abra.",
+        "Cada ciclo indica si has pedido y si el pedido se ha recogido. Desde un ciclo abierto vas al pedido, desde uno pasado a su detalle en el **Historial**.",
+      ],
+      link: { href: "/calendario", label: "Abrir el calendario" },
+      keywords: ["calendario", "fechas", "próximos", "futuros", "cuándo", "recogida", "apertura", "mes"],
     },
     {
       slug: "dopo-chiusura",
@@ -194,7 +214,7 @@ export const guideEs: GuideContent = {
       title: "Cómo funciona el saldo",
       intro:
         "El saldo es tu crédito con el grupo. Lo recargas por adelantado y, cuando se cierra cada pedido, su coste se descuenta de ahí.",
-      notes: ["En Inicio ves el saldo de hoy y lo que quedará tras el pedido abierto."],
+      notes: ["Al final de Inicio ves el saldo de hoy; si los pedidos abiertos lo dejan bajo cero, te lo dice."],
       keywords: ["crédito", "cuenta", "dinero", "monedero"],
       when: { mode: "wallet" },
     },
@@ -203,7 +223,7 @@ export const guideEs: GuideContent = {
       topic: "soldi",
       title: "Recargar por transferencia",
       steps: [
-        "En Inicio toca **Recargar saldo**.",
+        "En Inicio, junto al saldo, toca **Recargar**.",
         "En **Transferencia bancaria** copia el titular, el IBAN y el concepto: si pagas un pedido, usa el concepto de ese pedido, ya rellenado.",
         "Haz la transferencia desde tu banco.",
       ],
@@ -220,7 +240,7 @@ export const guideEs: GuideContent = {
       topic: "soldi",
       title: "Recargar online con tarjeta",
       steps: [
-        "En Inicio toca **Recargar saldo**.",
+        "En Inicio, junto al saldo, toca **Recargar**.",
         "En **Pagar online** elige un importe o escríbelo.",
         "Toca **Pagar** y completa el pago. Tu saldo se actualiza en cuanto se confirma el pago.",
       ],

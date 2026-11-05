@@ -23,6 +23,24 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
+## [1.44.0] - 5 novembre 2026
+
+*Il calendario degli ordini, i cicli in programma, una Home più chiara e le email con il volto del gruppo.*
+
+### Aggiunte
+- 📦 **Ritiro da confermare.** Spesso la data di ritiro si sa davvero solo dopo la chiusura, sentito il fornitore: nel ciclo l'admin può spuntare **Ritiro da confermare**, e i soci leggono "Ritiro previsto ..., da confermare" in Home, nel calendario (il ritiro tratteggiato), nello Storico e nel calendario del telefono. Quando l'admin toglie la spunta, chi ha ordinato riceve **Ritiro confermato**; se cambia anche la data, l'avviso di sempre del ritiro cambiato. Finché il ritiro di un ciclo chiuso resta da confermare, **Da fare ora** lo ricorda con **Conferma il ritiro**.
+- 📅 **Calendario ordini.** Una nuova pagina, da Home (e da Ordine quando non c'è niente di aperto), mostra quando puoi ordinare e quando si ritira, per i cicli aperti, in programma e recenti. Scegli un ciclo con i pulsanti sopra il calendario (quello più urgente è già scelto): i giorni per ordinare sono una fascia colorata, l'ultimo giorno un quadrato pieno, il ritiro un pacchetto; **Tutti** mostra per ogni giorno le icone di cosa succede (apertura, ultimo giorno, ritiro); da telefono i pulsanti dei cicli scorrono di lato, così il calendario resta in alto. Toccando un giorno scegli il suo ciclo, e una scheda sotto dice quando apre, fino a quando ordinare e quando ritirare.
+- 🗓️ **Cicli in programma.** Creando un ciclo puoi scegliere **Più avanti** in "Quando aprono gli ordini": il ciclo entra nel calendario dei soci con le sue date (con "Date indicative" se possono ancora cambiare) e i prodotti come anteprima, aggiunti a mano o dal listino Excel del fornitore come sempre. Nessuno può ordinare finché un admin o un referente ordini non tocca **Apri gli ordini**; "Da fare ora" lo ricorda il giorno previsto, e un ciclo in programma si può eliminare. Il calendario in Home dice quando apre.
+- 🔔 **"Avvisami quando apre" e "Aggiungi al calendario".** Su un ciclo in programma nel calendario puoi chiedere un'email quando si aprono gli ordini (nessuno la riceve due volte se riceve già le email dei nuovi cicli). Ogni ciclo del calendario si può aggiungere al calendario del telefono: la scadenza con un promemoria tre ore prima, e il ritiro.
+- 🗄️ [tecnico] **Migrazione `0048_planned_cycles.sql`.** Nuova colonna `order_cycles.dates_tentative`, falsa per tutti i cicli, e il blocco delle spese di preparazione della 0026 ora lascia cambiare anche quelle di un ciclo in programma; da applicare prima del deploy.
+- 🗄️ [tecnico] **Migrazione `0049_cycle_open_alerts.sql`.** Nuova tabella `cycle_open_alerts` per le richieste "Avvisami quando apre"; da applicare prima del deploy.
+- 🗄️ [tecnico] **Migrazione `0050_pickup_tentative.sql`.** Nuova colonna `order_cycles.pickup_tentative`, falsa per tutti i cicli (ogni ritiro resta confermato come prima); da applicare prima del deploy.
+
+### Modificato
+- ✉️ **Email con il volto del gruppo.** Le email dell'app (accesso, notifiche, inviti in famiglia, "Avvisami quando apre") mostrano in alto il logo e il nome del gruppo, nei suoi colori; il link all'app è un pulsante che dice dove porta ("Vai all'ordine", "Apri lo Storico", "Entra"), il codice d'accesso un riquadro grande, e la notifica ha il suo titolo.
+- 📅 **Legenda del calendario uguale per un ciclo e per Tutti.** Scegliendo un ciclo la legenda mostra anche **Apre**, come in Tutti.
+- 🏠 **Una Home più chiara: una sola lista di cicli.** Ogni ciclo compare una volta, nel gruppo di cosa devi fare: **Da ordinare** (la scadenza con il giorno della settimana per intero, "domani" o "Ultimo giorno", il tuo ordine raccolto in una riga, un piccolo pulsante "Ordina", "Modifica" o "Paga"), **Da ritirare** (i cicli chiusi con il tuo ordine e il ritiro ancora da fare) e **In arrivo** (i cicli in programma). Il riquadro con la data su ogni ciclo fa da calendario; il calendario completo è a un tocco, e da computer il mese corrente sta a destra. Il saldo è una riga piccola in fondo, e va in alto solo se è negativo.
+
 ## [1.43.0] - 1 novembre 2026
 
 *Chi ha ritirato il suo ordine, e il nuovo "Referente ordini" per aiutare con i cicli.*

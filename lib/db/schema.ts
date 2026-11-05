@@ -117,6 +117,13 @@ export const orderCycles = pgTable("order_cycles", {
   // percentage of the products paid with the order and given back at the
   // settlement for what the weighing did not use. NULL = none.
   weighingDepositPct: numeric("weighing_deposit_pct", { precision: 5, scale: 2 }),
+  // The dates of a cycle may still move: "Date indicative" in the calendar
+  // (drizzle/0048_planned_cycles.sql). Set on a planned cycle, cleared when
+  // its orders open.
+  datesTentative: boolean("dates_tentative").notNull().default(false),
+  // The pickup date is the expected one: "da confermare" for the members
+  // until an admin confirms it (drizzle/0050_pickup_tentative.sql).
+  pickupTentative: boolean("pickup_tentative").notNull().default(false),
   // Last settlement of a pay-per-order cycle (drizzle/0024_settlement.sql).
   settledAt: timestamp("settled_at", { withTimezone: true }),
   // How members see the products (drizzle/0040_cycle_product_order.sql):
@@ -644,6 +651,22 @@ export const cyclePickups = pgTable(
     check("cycle_pickups_collected_by_len", sql`${table.collectedBy} IS NULL OR char_length(${table.collectedBy}) <= 120`),
     check("cycle_pickups_note_len", sql`${table.note} IS NULL OR char_length(${table.note}) <= 500`),
   ],
+);
+
+// "Avvisami quando apre" on a planned cycle (drizzle/0049_cycle_open_alerts.sql):
+// who asked for an email when its orders open. Consumed by adminOpenPlannedCycle.
+export const cycleOpenAlerts = pgTable(
+  "cycle_open_alerts",
+  {
+    cycleId: text("cycle_id")
+      .notNull()
+      .references(() => orderCycles.cycleId, { onDelete: "cascade" }),
+    memberId: text("member_id")
+      .notNull()
+      .references(() => members.memberId, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [primaryKey({ columns: [table.cycleId, table.memberId] }), index("cycle_open_alerts_member_idx").on(table.memberId)],
 );
 
 // Possible duplicate accounts an admin marked "not the same person"

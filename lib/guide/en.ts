@@ -47,7 +47,7 @@ export const guideEn: GuideContent = {
       topic: "primi-passi",
       title: "How the app is laid out",
       steps: [
-        "**Home**: your balance, the open order with the time left, and your latest movements.",
+        "**Home**: the cycles in **To order**, **To collect** and **Coming up**, each with its date, then your balance and latest movements.",
         "**Order**: the open cycle's catalogue, where you pick products and confirm.",
         "**History**: your past orders and every balance movement.",
         "**Guide**: this page, with the app's news and the contacts.",
@@ -148,9 +148,29 @@ export const guideEn: GuideContent = {
         "Home shows when the order closes and how much time is left. After closing the order cannot be changed: the group sends it to the suppliers.",
       notes: [
         "When several orders are open at once, in **Order** you first choose which one to open.",
-        "The pickup days are shown on Home, under the order.",
+        "The pickup days are on Home, under each cycle; after the close the cycle moves to **To collect**.",
+        "If the pickup says **to be confirmed**, the date is the expected one and may still change: you get a notice when the group confirms it.",
       ],
       keywords: ["deadline", "closing", "time", "pickup", "delivery", "date"],
+    },
+    {
+      slug: "calendario-ordini",
+      topic: "ordinare",
+      title: "See when the orders are",
+      intro:
+        "The **Order calendar** shows, month by month, when orders open and close and when to pick up, past cycles included.",
+      steps: [
+        "On Home tap **Full calendar**, next to **To order** (or, when nothing is open, the link in **Order**).",
+        "Above the calendar choose the cycle (swipe the buttons sideways when there are many): the coloured band is the days to order, the filled square the last day, the package the pickup. **All** shows on each day only the icons of what happens: a basket when it opens, a lock on the last day, a package for the pickup.",
+        "Tap a day to see its cycle; when there are several, they are listed below. The arrows change month.",
+      ],
+      notes: [
+        "On a **Planned** cycle tap **Tell me when it opens** to get an email when it opens. **Add to calendar** puts the deadline and the pickup in your phone's calendar.",
+        "A **Planned** cycle is not open yet: you see its dates (sometimes **tentative**) and a preview of its products, and you order once it opens.",
+        "Each cycle says whether you ordered and whether the order was collected. An open cycle leads to the order, a past one to its detail in **History**.",
+      ],
+      link: { href: "/calendario", label: "Open the calendar" },
+      keywords: ["calendar", "dates", "upcoming", "future", "when", "pickup", "opening", "month"],
     },
     {
       slug: "dopo-chiusura",
@@ -194,7 +214,7 @@ export const guideEn: GuideContent = {
       title: "How the balance works",
       intro:
         "The balance is your credit with the group. You top it up in advance and, when each order closes, its cost is taken from there.",
-      notes: ["Home shows today's balance and what will be left after the open order."],
+      notes: ["At the bottom of Home you see today's balance; if the open orders take it below zero, it tells you."],
       keywords: ["credit", "account", "money", "wallet"],
       when: { mode: "wallet" },
     },
@@ -203,7 +223,7 @@ export const guideEn: GuideContent = {
       topic: "soldi",
       title: "Topping up by bank transfer",
       steps: [
-        "On Home tap **Recharge balance**.",
+        "On Home, next to the balance, tap **Top up**.",
         "In **Bank transfer** copy the holder, the IBAN and the reference: when paying an order, use that order's reference, already filled in.",
         "Make the transfer from your bank.",
       ],
@@ -220,7 +240,7 @@ export const guideEn: GuideContent = {
       topic: "soldi",
       title: "Topping up online by card",
       steps: [
-        "On Home tap **Recharge balance**.",
+        "On Home, next to the balance, tap **Top up**.",
         "In **Pay online** pick an amount or type it.",
         "Tap **Pay** and complete the payment. Your balance is updated as soon as the payment is confirmed.",
       ],

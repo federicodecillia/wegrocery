@@ -7,8 +7,6 @@ import { utcToZonedLocalInput } from "./zoned-time";
 // The stored value never changes: only how it reads.
 
 const MINUTE_MS = 60_000;
-const HOUR_MS = 3_600_000;
-const DAY_MS = 86_400_000;
 
 /** Midnight in the app zone: a pickup with no time, or a deadline "at the end of the day before". */
 export function isZonedMidnight(d: Date): boolean {
@@ -23,21 +21,6 @@ export function formatDeadline(value: Date | string): string {
   const d = typeof value === "string" ? new Date(value) : value;
   const shown = isZonedMidnight(d) ? new Date(d.getTime() - MINUTE_MS) : d;
   return formatDateTime(shown, { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
-}
-
-/** "Chiude tra 5 giorni", "Chiude tra 3 ore", "Chiude tra 20 minuti". */
-export function closesIn(closeAt: Date | string, now: Date): string {
-  const ms = new Date(closeAt).getTime() - now.getTime();
-  if (ms <= 0) return t.cycle.closingNow;
-  if (ms >= DAY_MS) return t.cycle.closesInDays(Math.floor(ms / DAY_MS));
-  if (ms >= HOUR_MS) return t.cycle.closesInHours(Math.floor(ms / HOUR_MS));
-  return t.cycle.closesInMinutes(Math.max(1, Math.floor(ms / MINUTE_MS)));
-}
-
-/** The countdown boxes are worth their space only in the last day. */
-export function isLastDay(closeAt: Date | string, now: Date): boolean {
-  const ms = new Date(closeAt).getTime() - now.getTime();
-  return ms > 0 && ms < DAY_MS;
 }
 
 /**
@@ -72,4 +55,31 @@ export function formatPickups(
   const left = formatDate(a, sameMonth ? { weekday: "short", day: "numeric" } : { weekday: "short", day: "numeric", month: "short" });
   const right = formatDate(b, { weekday: "short", day: "numeric", month: "short" });
   return [`${t.cycle.pickupDays(left, right)}${hours}`];
+}
+
+const LONG_DAY: Intl.DateTimeFormatOptions = { weekday: "long", day: "numeric", month: "short" };
+
+/**
+ * A deadline in two parts for a sentence ("Ordina entro venerdì 6 nov, ore
+ * 21:14"): the weekday in full, which is how members plan. A close at 00:00
+ * reads as 23:59 of the day before, as in formatDeadline.
+ */
+export function deadlineParts(value: Date | string): { day: string; time: string } {
+  const d = typeof value === "string" ? new Date(value) : value;
+  const shown = isZonedMidnight(d) ? new Date(d.getTime() - MINUTE_MS) : d;
+  return { day: formatDate(shown, LONG_DAY), time: formatTime(shown) };
+}
+
+/** "lunedì 9 nov, 17:15–19:00", or the day alone for a pickup with no time. */
+export function formatPickupLong(value: Date | string, endTime: string | null): string {
+  const d = typeof value === "string" ? new Date(value) : value;
+  const day = formatDate(d, LONG_DAY);
+  if (isZonedMidnight(d)) return day;
+  const start = formatTime(d);
+  return `${day}, ${endTime ? `${start}–${endTime}` : start}`;
+}
+
+/** "giovedì 12 nov": a day in full, for the opening of a planned cycle. */
+export function formatLongDay(value: Date | string): string {
+  return formatDate(typeof value === "string" ? new Date(value) : value, LONG_DAY);
 }

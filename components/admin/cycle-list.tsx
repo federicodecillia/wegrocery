@@ -20,19 +20,21 @@ export type CycleListItem = {
   toSettle: boolean;
   /** Why, when toSettle: never settled, to update after a correction, a refund failed. */
   settle: SettleState | null;
-  /** ISO: the close for an open cycle, the pickup (or creation) otherwise. */
+  /** ISO: the planned opening, the close for an open cycle, the pickup (or creation) otherwise. */
   date: string | null;
 };
 
 const PAGE = 20;
 
 const STATUS: Record<string, string> = {
+  planned: t.admin.cycle.plannedBadge,
   open: t.admin.cycle.openBadge,
   closed: t.admin.cycle.closedBadge,
   cancelled: t.admin.cycle.cancelledBadge,
 };
 
 const DOT: Record<string, string> = {
+  planned: "bg-primary",
   open: "bg-accent",
   closed: "bg-neutral",
   cancelled: "bg-danger",

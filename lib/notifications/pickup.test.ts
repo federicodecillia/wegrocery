@@ -49,3 +49,26 @@ describe("pickupNotice", () => {
     expect(pickupNotice("Verdura", wed(), wed())).toBeNull();
   });
 });
+
+describe("a pickup da confermare", () => {
+  const at = { pickupDate: new Date("2026-11-14T16:00:00Z"), pickupEndTime: "19:00", pickup2Date: null, pickup2EndTime: null };
+
+  it("is confirmed when the mark goes and the date stays", () => {
+    expect(pickupChange({ ...at, pickupTentative: true }, { ...at, pickupTentative: false })).toBe("confirmed");
+    const notice = pickupNotice("Formaggi", { ...at, pickupTentative: true }, at);
+    expect(notice?.title).toContain("Formaggi");
+    expect(notice?.body).toContain("Formaggi");
+  });
+
+  it("is a change when the date moves too, and nothing when the mark stays", () => {
+    const moved = { ...at, pickupDate: new Date("2026-11-15T16:00:00Z") };
+    expect(pickupChange({ ...at, pickupTentative: true }, moved)).toBe("changed");
+    expect(pickupChange({ ...at, pickupTentative: true }, { ...at, pickupTentative: true })).toBeNull();
+    expect(pickupChange(at, { ...at, pickupTentative: true })).toBeNull();
+  });
+
+  it("has nothing to confirm without a date", () => {
+    const none = { pickupDate: null, pickupEndTime: null, pickup2Date: null, pickup2EndTime: null };
+    expect(pickupChange({ ...none, pickupTentative: true }, none)).toBeNull();
+  });
+});

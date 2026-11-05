@@ -118,6 +118,27 @@ export const adminGuideEn: GuideContent = {
       keywords: ["new", "create", "open", "start", "deadline"],
     },
     {
+      slug: "programmare-ciclo",
+      topic: "ciclo",
+      title: "Plan a cycle ahead",
+      intro:
+        "A planned cycle shows in the members' **Order calendar** with its dates and a preview of its products, but nobody can order until you open the orders.",
+      steps: [
+        "In **Cycle** tap **+ New cycle** and under **When the orders open** choose **Later**.",
+        "Pick the **Planned order opening** and the **Order deadline**. If the dates may still change, tick **Tentative dates**: members see it in the calendar.",
+        "Fill in the rest as for an ordinary cycle and tap **Create cycle**.",
+        "In **Products** add products from the catalogue or import the supplier's Excel listing: members see them as a preview.",
+        "On the opening day **To do now** reminds you: tap **Open the orders**. The cycle opens and members are told.",
+      ],
+      notes: [
+        "While it is planned you can change everything from **Edit**, dates included. If the deadline has already passed, move it before opening.",
+        "If the cycle is called off, tap **Delete**: nobody ordered, so there is no money to sort out.",
+        "The app does not open the orders by itself: it always takes your tap on **Open the orders**.",
+      ],
+      link: { href: "/admin?tab=ciclo&new=1", label: "Create a cycle" },
+      keywords: ["planned", "plan", "future", "calendar", "preview", "tentative", "schedule", "upcoming"],
+    },
+    {
       slug: "pagamento-ciclo",
       topic: "ciclo",
       title: "Wallet or card: how a cycle is paid",
@@ -208,6 +229,7 @@ export const adminGuideEn: GuideContent = {
       notes: [
         "Members who ordered in that cycle get a notice with the new pickup (in the app, and by email if they chose it in their preferences). The confirmation tells you how many members were told.",
         "The pickup does not touch charges or balances: you can change it freely, even on a closed cycle.",
+        "If the date is only the expected one (often known only after the close, once you hear from the supplier), tick **Pickup to be confirmed**: members read \"to be confirmed\" next to the pickup. When the supplier confirms it, untick it: those who ordered get **Pickup confirmed**, even if the date stays the same. Until then, **To do now** reminds you.",
       ],
       link: { href: "/admin?tab=ciclo", label: "Go to the cycles" },
       keywords: ["pickup", "pickup date", "time", "delivery", "collection", "closed cycle"],

@@ -26,10 +26,16 @@ const TABS: Tab[] = ["ordini", "movimenti"];
 
 type HistoryItem = CycleHistoryEntry & { badge: HistoryBadge; pickedUpAt: string | null; collectedBy: string | null };
 
+// The pickup day, "da confermare" while it is only the expected one.
+function pickupDay(o: HistoryItem): string {
+  const day = formatDate(o.pickupDate);
+  return o.pickupTentative ? t.history.pickupToConfirm(day) : day;
+}
+
 // Under a cycle's title: when the order was collected, once an admin marked
 // it (Admin → Ciclo → Ritiri), else the pickup day.
 function cycleWhen(o: HistoryItem): string {
-  if (!o.pickedUpAt) return formatDate(o.pickupDate);
+  if (!o.pickedUpAt) return pickupDay(o);
   const when = formatDateTime(o.pickedUpAt);
   return o.collectedBy ? t.history.pickedUpBy(when, o.collectedBy) : t.history.pickedUpAt(when);
 }
@@ -166,7 +172,7 @@ export function StoricoTabs({ orderHistory, movements, balance, bankRefs }: Prop
                         {o.title}
                       </div>
                       <div className="mt-0.5 tabular-nums text-label text-muted-foreground">
-                        {formatDate(o.pickupDate)}
+                        {pickupDay(o)}
                       </div>
                     </div>
                     <div className="flex shrink-0 items-center gap-2">

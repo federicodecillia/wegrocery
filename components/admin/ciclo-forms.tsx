@@ -18,9 +18,12 @@ import type { ShippingDefault } from "@/lib/payments/new-cycle-defaults";
 import { utcToZonedLocalInput } from "@/lib/i18n/zoned-time";
 import {
   adminCreateCycle,
+  adminDeletePlannedCycle,
+  adminOpenPlannedCycle,
   adminUpdateCycle,
   type CreateCycleInput,
 } from "@/lib/actions/admin";
+import { isBeforeClose } from "@/lib/cycle-status";
 import { formatEur } from "@/lib/utils";
 import { ACCESS_LEVELS, DEFAULT_ACCESS_LEVEL, getAccessLabel, normalizeAccessLevel } from "@/lib/roles";
 import { useAccessLevels } from "./access-levels";
@@ -40,6 +43,12 @@ type Supplier = { supplierId: string; name: string };
 export type SerializedCycle = {
   cycleId: string;
   title: string;
+  /** A planned cycle's planned opening (the opening, once open). */
+  orderOpenAt?: string | null;
+  /** A planned cycle's dates may still move ("Date indicative"). */
+  datesTentative?: boolean;
+  /** The pickup date is the expected one ("Ritiro da confermare"). */
+  pickupTentative?: boolean;
   orderCloseAt: string | null;
   pickupDate: string | null;
   pickupEndTime: string | null;
@@ -104,6 +113,62 @@ export function CloseCycleAction({ cycle, stats }: { cycle: SerializedCycle; sta
   );
 }
 
+/** A planned cycle's two actions: open the orders now, or delete it (it has no orders). */
+export function PlannedCycleActions({ cycle }: { cycle: SerializedCycle }) {
+  const c = t.admin.cycle;
+  const [isPending, startTransition] = useTransition();
+
+  async function open() {
+    const ok = await confirm({
+      title: c.openPlannedTitle,
+      message: c.openPlannedMessage(cycle.title),
+      confirmLabel: c.openPlannedConfirm,
+    });
+    if (!ok) return;
+    startTransition(async () => {
+      const result = await adminOpenPlannedCycle(cycle.cycleId);
+      if (result.error) toast.error(result.error);
+      else toast.success(c.plannedOpened);
+    });
+  }
+
+  async function remove() {
+    const ok = await confirm({
+      title: c.deletePlannedTitle,
+      message: c.deletePlannedMessage(cycle.title),
+      confirmLabel: c.deletePlannedConfirm,
+      danger: true,
+    });
+    if (!ok) return;
+    startTransition(async () => {
+      const result = await adminDeletePlannedCycle(cycle.cycleId);
+      if (result.error) toast.error(result.error);
+      else toast.success(c.plannedDeleted);
+    });
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={remove}
+        disabled={isPending}
+        className="min-h-(--control-h) rounded-xl border border-border bg-card px-3 text-[13px] font-semibold text-destructive hover:bg-tint/[0.03] disabled:opacity-60"
+      >
+        {c.deletePlannedButton}
+      </button>
+      <button
+        type="button"
+        onClick={open}
+        disabled={isPending}
+        className="min-h-(--control-h) rounded-xl bg-primary px-3.5 text-[13px] font-bold text-primary-foreground disabled:opacity-60"
+      >
+        {c.openPlannedButton}
+      </button>
+    </>
+  );
+}
+
 /** Deadline, pickups, shipping and access: the facts of a cycle, read-only. */
 // With `suppliers`, a cycle with no pickup yet says so, with a button that
 // opens the edit sheet on the pickup: it can be set even after the close, and
@@ -111,6 +176,12 @@ export function CloseCycleAction({ cycle, stats }: { cycle: SerializedCycle; sta
 export function CycleFacts({ cycle, suppliers }: { cycle: SerializedCycle; suppliers?: Supplier[] }) {
   return (
     <div className="space-y-1 text-[13px] text-secondary-foreground">
+      {cycle.status === "planned" && cycle.orderOpenAt && (
+        <div>
+          {t.fields.orderOpenDate}:{" "}
+          <span className="font-semibold text-foreground">{formatDeadline(cycle.orderOpenAt)}</span>
+        </div>
+      )}
       {cycle.orderCloseAt && (
         <div>
           {t.admin.cycle.orderCloseAt}:{" "}
@@ -135,6 +206,7 @@ export function CycleFacts({ cycle, suppliers }: { cycle: SerializedCycle; suppl
           <span className="font-semibold text-foreground">
             {formatPickupSlot(cycle.pickupDate, cycle.pickupEndTime ?? null)}
           </span>
+          {cycle.pickupTentative && <span className="font-semibold text-primary-text"> · {t.admin.cycle.pickupTentativeLabel}</span>}
         </div>
       )}
       {cycle.pickup2Date && (
@@ -345,6 +417,7 @@ function PickupSection({
   defPickup2Date,
   defPickup2Start,
   defPickup2End,
+  defTentative = false,
   focus = false,
 }: {
   defPickup1Date?: string;
@@ -353,6 +426,7 @@ function PickupSection({
   defPickup2Date?: string;
   defPickup2Start?: string;
   defPickup2End?: string;
+  defTentative?: boolean;
   focus?: boolean;
 }) {
   const [showPickup2, setShowPickup2] = useState(Boolean(defPickup2Date));
@@ -400,6 +474,13 @@ function PickupSection({
             {t.admin.cycle.addPickup2}
           </button>
         )}
+        <label className="flex min-h-11 items-start gap-2.5 text-[13px] text-foreground">
+          <input type="checkbox" name="pickupTentative" defaultChecked={defTentative} className="mt-0.5 size-4.5 accent-primary" />
+          <span>
+            <span className="font-semibold">{t.admin.cycle.pickupTentativeLabel}</span>
+            <span className="block text-label text-secondary-foreground">{t.admin.cycle.pickupTentativeHint}</span>
+          </span>
+        </label>
       </div>
     </div>
   );
@@ -607,6 +688,8 @@ export function EditCycleForm({
   const cycleFee = cycleHandlingFee(cycle);
   // Prefill in app-zone wall time: slicing the ISO string would show UTC.
   const closeAtLocal = utcToZonedLocalInput(cycle.orderCloseAt);
+  const planned = cycle.status === "planned";
+  const openAtLocal = utcToZonedLocalInput(cycle.orderOpenAt ?? null);
   const pickupLocal = utcToZonedLocalInput(cycle.pickupDate);
   const pickup2Local = utcToZonedLocalInput(cycle.pickup2Date);
   // "manual" means the cycle is being driven by a supplier-distinta import:
@@ -638,6 +721,7 @@ export function EditCycleForm({
       pickupEndTime: fd.get("pickupEndTime") as string,
       pickup2Date: buildDateTime(fd.get("pickup2DateOnly") as string, fd.get("pickup2StartTime") as string),
       pickup2EndTime: fd.get("pickup2EndTime") as string,
+      pickupTentative: fd.get("pickupTentative") === "on",
       notes: fd.get("notes") as string,
       supplierId: fd.get("supplierId") as string,
       // Manual (distinta-imported) shipping has no inputs here: send no
@@ -656,6 +740,10 @@ export function EditCycleForm({
           handlingFeeType: fd.get("handlingFeeType") as string,
           handlingFeeValue: fd.get("handlingFeeValue") as string,
           ...(isPerOrder && { weighingDepositPct: (fd.get("weighingDepositPct") as string | null) ?? "" }),
+          ...(planned && {
+            orderOpenAt: fd.get("orderOpenAt") as string,
+            datesTentative: fd.get("datesTentative") === "on",
+          }),
         };
     startTransition(async () => {
       const result = await adminUpdateCycle(cycle.cycleId, {
@@ -695,6 +783,8 @@ export function EditCycleForm({
           />
         </label>
       </div>
+
+      {planned && <PlannedFields defaultOpenAt={openAtLocal} defaultTentative={cycle.datesTentative ?? false} />}
 
       {!isClosed && (
         <div>
@@ -754,6 +844,7 @@ export function EditCycleForm({
         defPickup2Date={pickup2Local.slice(0, 10)}
         defPickup2Start={pickup2Local.slice(11, 16)}
         defPickup2End={cycle.pickup2EndTime ?? ""}
+        defTentative={cycle.pickupTentative ?? false}
         focus={focusPickup}
       />
 
@@ -817,6 +908,77 @@ export function EditCycleForm({
 // Wallet or card, for a new cycle of a wallet group. Same look as the
 // shipping and fee toggles. With card cycles switched off in Impostazioni the
 // card option stays in sight, greyed out, with the way to switch it on.
+/** A planned cycle's opening and whether its dates are indicative. */
+function PlannedFields({ defaultOpenAt = "", defaultTentative = false }: { defaultOpenAt?: string; defaultTentative?: boolean }) {
+  const c = t.admin.cycle;
+  return (
+    <div className="space-y-2">
+      <label className="block">
+        <span className={labelClass}>{c.orderOpenAtLabel}</span>
+        <Input name="orderOpenAt" type="datetime-local" required defaultValue={defaultOpenAt} />
+      </label>
+      <label className="flex min-h-11 items-start gap-2.5 text-[13px] text-foreground">
+        <input type="checkbox" name="datesTentative" defaultChecked={defaultTentative} className="mt-0.5 size-4.5 accent-primary" />
+        <span>
+          <span className="font-semibold">{c.tentativeLabel}</span>
+          <span className="block text-label text-secondary-foreground">{c.tentativeHint}</span>
+        </span>
+      </label>
+    </div>
+  );
+}
+
+/** **bold** in a hint (RichText reads the changelog module, server only). */
+function BoldText({ text }: { text: string }) {
+  return (
+    <>
+      {text.split(/\*\*(.+?)\*\*/).map((part, i) =>
+        i % 2 === 1 ? (
+          <strong key={i} className="font-semibold text-foreground">
+            {part}
+          </strong>
+        ) : (
+          part
+        ),
+      )}
+    </>
+  );
+}
+
+/** "Quando aprono gli ordini": now, or later (planned, with its opening). */
+function WhenFields({ planned, onChange }: { planned: boolean; onChange: (planned: boolean) => void }) {
+  const c = t.admin.cycle;
+  return (
+    <fieldset>
+      <legend className={labelClass}>{c.whenLabel}</legend>
+      <div className="flex gap-2">
+        {([false, true] as const).map((value) => (
+          <label
+            key={String(value)}
+            className={`flex min-h-(--control-h) flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl border px-3 text-[13px] font-semibold ${
+              planned === value ? "border-primary bg-primary-bg text-primary-text" : "border-border bg-card text-secondary-foreground"
+            }`}
+          >
+            <input
+              type="radio"
+              name="when"
+              checked={planned === value}
+              onChange={() => onChange(value)}
+              className="accent-primary"
+            />
+            {value ? c.whenPlanned : c.whenNow}
+          </label>
+        ))}
+      </div>
+      {planned && (
+        <p className="mt-1.5 text-label text-secondary-foreground">
+          <BoldText text={c.plannedHint} />
+        </p>
+      )}
+    </fieldset>
+  );
+}
+
 function PaymentModeFields({
   mode,
   onModeChange,
@@ -899,6 +1061,7 @@ export function CreateCycleForm({
   defaultOpen?: boolean;
 }) {
   const [open, setOpen] = useState(defaultOpen);
+  const [planned, setPlanned] = useState(false);
   const [paymentMode, setPaymentMode] = useState<"wallet" | "per_order">(groupMode);
   const handlingFee = paymentMode === "per_order" ? cardFee : walletFee;
   const shippingDefault = (mode: "wallet" | "per_order") => (mode === "per_order" ? cardShipping : walletShipping);
@@ -925,6 +1088,7 @@ export function CreateCycleForm({
       pickupEndTime: fd.get("pickupEndTime") as string,
       pickup2Date: buildDateTime(fd.get("pickup2DateOnly") as string, fd.get("pickup2StartTime") as string),
       pickup2EndTime: fd.get("pickup2EndTime") as string,
+      pickupTentative: fd.get("pickupTentative") === "on",
       orderCloseAt: fd.get("orderCloseAt") as string,
       supplierId: fd.get("supplierId") as string,
       accessLevel: fd.get("accessLevel") as string,
@@ -936,6 +1100,11 @@ export function CreateCycleForm({
       handlingFeeValue: fd.get("handlingFeeValue") as string,
       weighingDepositPct: paymentMode === "per_order" ? ((fd.get("weighingDepositPct") as string | null) ?? "") : "",
       paymentMode,
+      ...(planned && {
+        planned: true,
+        orderOpenAt: fd.get("orderOpenAt") as string,
+        datesTentative: fd.get("datesTentative") === "on",
+      }),
     };
     startTransition(async () => {
       const result = await adminCreateCycle(data);
@@ -943,7 +1112,7 @@ export function CreateCycleForm({
         toast.error(result.error);
         return;
       }
-      toast.success(t.admin.cycle.cycleCreated);
+      toast.success(planned ? t.admin.cycle.cycleCreatedPlanned : t.admin.cycle.cycleCreated);
       setOpen(false);
     });
   }
@@ -975,6 +1144,9 @@ export function CreateCycleForm({
           </label>
         </div>
 
+        <WhenFields planned={planned} onChange={setPlanned} />
+        {planned && <PlannedFields />}
+
         <div>
           <label className="block">
             <span className={labelClass}>{t.admin.cycle.orderCloseAtLabel}
@@ -992,7 +1164,7 @@ export function CreateCycleForm({
         )}
 
         <ShippingModeFields
-          key={paymentMode}
+          key={`shipping-${paymentMode}`}
           mode={shippingMode}
           onModeChange={setShippingMode}
           defaultPerMember={shippingAmount("fixed_per_member")}
@@ -1001,7 +1173,7 @@ export function CreateCycleForm({
 
         <HandlingFeeFields
           // A new mode starts from its own last fee.
-          key={paymentMode}
+          key={`fee-${paymentMode}`}
           defaultType={handlingFee?.type ?? "none"}
           defaultValue={handlingFee?.value ?? ""}
           perOrder={paymentMode === "per_order"}
@@ -1367,7 +1539,7 @@ export function EditCycleButton({
   focusPickup?: boolean;
 }) {
   const [open, setOpen] = useState(false);
-  const isClosed = cycle.status !== "open";
+  const isClosed = !isBeforeClose(cycle.status ?? "open");
   return (
     <>
       <button

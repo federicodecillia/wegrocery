@@ -28,7 +28,8 @@ export function modeChangeBlockers(input: {
   return blockers;
 }
 
-// Cycles still taking or preparing orders.
+// Cycles still taking or preparing orders, planned ones included (their payment
+// mode was fixed at creation).
 export const runningCyclesSql: SQL = sql`
   (SELECT count(*)::integer FROM order_cycles WHERE status NOT IN ('closed', 'cancelled'))`;
 
