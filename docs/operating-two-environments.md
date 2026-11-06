@@ -9,15 +9,39 @@ staging, in the Git branch they build from).
 | URL | `gas.portamoneta.org` | branch URL of `staging` on `porta-moneta` (see below) | `wegrocery-demo.vercel.app` |
 | Vercel project | `porta-moneta` (client: Porta Moneta) | `porta-moneta`, Preview deployment | `wegrocery-demo` |
 | Git branch | `main` | `staging` | `main` |
-| Database | production Neon (real members) | Neon branch `dev` (a copy of production, shared with local dev and previews) | separate demo Neon (fake data) |
+| Database | production Neon (real members) | Neon branch `staging` (a copy of production, shared with local dev and previews) | separate demo Neon (fake data) |
 | `DEMO_MODE` | unset | unset | `true` |
 | Auth | Google OAuth + member whitelist | same, with the staging redirect URI | one-click Socio/Admin demo login |
 | Outbound email | Resend | redirected to `EMAIL_REDIRECT_TO` | disabled |
 | Data | real, persistent | real copy, resettable (reset on demand) | reseeded nightly |
 
-There is no Neon branch named `staging`: the staging deployment, local dev and
-ordinary PR previews all use the Neon branch `dev`, which is why a reset of
-`dev` also resets staging (see AGENTS.md → "Database environments & access").
+The staging deployment, local dev and ordinary PR previews all use the Neon
+branch `staging` (called `dev` until 2026-11-06), which is why a reset of that
+branch resets all three (see AGENTS.md → "Database environments & access").
+
+## Names
+
+One rule since 2026-11-06: an installation has one name, used the same way in
+Vercel, Neon and GitHub (`wegrocery-<installation>`; Porta Moneta's Vercel
+project keeps its historical name `porta-moneta`). IDs never changed, so env
+vars and secrets did not either.
+
+| Installation | Vercel project | Neon organisation / project (id) | Neon branches | Repository |
+|---|---|---|---|---|
+| Porta Moneta | `porta-moneta` | WeGrocery / `wegrocery-porta-moneta` (`small-breeze-14972344`) | `production`, `staging`, `backup-YYYY-MM-DD-<reason>` | `wegrocery` (`main`, `staging`) |
+| Demo | `wegrocery-demo` | WeGrocery / `wegrocery-demo` (`flat-river-33694745`) | `production`; CI's throwaway `ci-*` | `wegrocery` (`main`) |
+| Example brand | `wegrocery-example-brand` | Vercel: WeGrocery / `wegrocery-example-brand` (`cold-sound-43697431`) | `main` (managed by Vercel) | `wegrocery-example-brand`, a copy updated from upstream |
+| Console | `wegrocery-console` | Vercel: WeGrocery / `wegrocery-console` (`icy-river-98732942`) | `main` (managed by Vercel) | `wegrocery`, folder `console/` |
+| Restore test | none | WeGrocery / `wegrocery-restore-test` (`late-frost-62618439`) | throwaway `restore-*` | `wegrocery` (`restore-test.yml`) |
+
+Git keeps two long-lived branches, `main` (production) and `staging`; every
+other branch is deleted when its PR closes ("Automatically delete head
+branches" is on). Name a manual backup branch of production
+`backup-YYYY-MM-DD-<reason>` and delete it once a newer backup exists.
+`wegrocery-example-brand` is a separate repository on purpose: it is installed
+the way another group would install WeGrocery (the Deploy button, the Neon
+integration, `MIGRATE_ON_BUILD`, updates merged from upstream), so it tests
+that path before a real group meets it.
 
 ## One codebase, env-driven differences
 
@@ -76,8 +100,8 @@ need to be set:
 
 | Variable | Staging value |
 |---|---|
-| `DATABASE_URL` | connection string of the Neon branch `dev` (the database every Preview uses) |
-| `EMAIL_REDIRECT_TO` | the tester's inbox (every email goes there, cc dropped, subject tagged `[STAGING -> <recipient>]`; broadcasts to all members are capped to 3 samples). Scoped to the `staging` branch only: ordinary PR previews, on the same `dev` database, have no value and refuse to send any email |
+| `DATABASE_URL` | connection string of the Neon branch `staging` (the database every Preview uses) |
+| `EMAIL_REDIRECT_TO` | the tester's inbox (every email goes there, cc dropped, subject tagged `[STAGING -> <recipient>]`; broadcasts to all members are capped to 3 samples). Scoped to the `staging` branch only: ordinary PR previews, on the same `staging` database, have no value and refuse to send any email |
 | `APP_BASE_URL` | the staging branch URL, so email links do not point at production |
 | `WALLYFOR_*` | membership-check credentials (the same read-only check as production) |
 | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | Stripe **sandbox** keys only (the app refuses live keys outside production). The sandbox webhook endpoint is `<staging URL>/api/stripe/webhook?x-vercel-protection-bypass=<secret>`, with the secret from Settings → Deployment Protection → Protection Bypass for Automation |
@@ -99,25 +123,25 @@ https://<staging branch URL>/api/auth/callback/google
 Only the stable branch URL works: per-commit URLs change on every push and
 cannot be whitelisted.
 
-### Database: the Neon branch `dev`
+### Database: the Neon branch `staging`
 
-Staging runs on the Neon branch `dev` of project `porta-moneta-app-gas`, a
-copy-on-write child of `production` that local development and ordinary PR
-previews use as well. It is throwaway data: there is no separate `staging`
-branch in the Neon project (checked 2026-09-30). Because the data is a copy of
+Staging runs on the Neon branch `staging` of project `wegrocery-porta-moneta`
+(`small-breeze-14972344`), a copy-on-write child of `production` that local
+development and ordinary PR previews use as well. It is throwaway data. It was
+called `dev` until 2026-11-06 (same id, `br-blue-morning-alztuzoj`). Because the data is a copy of
 production, the real member addresses are in it, and `EMAIL_REDIRECT_TO` is
 what keeps staging from mailing them.
 
 Refresh it from current production data (this **destroys** everything written
-on `dev`, so on staging and on every preview too, including migrations not yet
+on the `staging` branch, so on staging and on every preview too, including migrations not yet
 on production):
 
 ```bash
-npx -y neonctl branches reset dev --parent \
+npx -y neonctl branches reset staging --parent \
   --project-id small-breeze-14972344 --org-id org-gentle-violet-55538692
 ```
 
-After a reset, re-apply the pending migrations to `dev` (next section).
+After a reset, re-apply the pending migrations to `staging` (next section).
 
 ## Database migrations
 
@@ -148,7 +172,7 @@ that cannot run in a transaction (`CREATE INDEX CONCURRENTLY`, `VACUUM`) is
 refused before anything is applied: use a plain `CREATE INDEX`. A new migration
 starts with a header saying what it does, the exact command (`Apply:`) and how
 to undo it (`Rollback:`), and comes with `NNNN_name_down.sql`, the rollback as
-SQL. The runner never applies a `_down.sql`; run it by hand, on `dev` first,
+SQL. The runner never applies a `_down.sql`; run it by hand, on `staging` first,
 and delete the `_migrations` row of the file it undoes. A new migration also
 gets a test (`test/int/migration-NNNN.integration.test.ts`) or a case in an existing one.
 
