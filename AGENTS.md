@@ -194,11 +194,11 @@ variables, plus a staging deployment of the `staging` branch:
 - **Staging** — Preview deployment of the `staging` branch on the
   `porta-moneta` project, reached through its stable branch URL
   (`porta-moneta-git-staging-<scope>.vercel.app`). Env vars scoped to
-  Preview + Git branch `staging`: `DATABASE_URL` → the Neon branch `dev`, like
-  every Preview (a copy of production; there is no `staging` branch in the Neon
-  project, checked 2026-09-30; migrations for staging go to `dev`),
+  Preview + Git branch `staging`: `DATABASE_URL` → the Neon branch `staging`, like
+  every Preview (a copy of production; called `dev` until 2026-11-06, same id
+  `br-blue-morning-alztuzoj`; migrations for staging go there),
   `EMAIL_REDIRECT_TO` (set only on the `staging` branch: other previews share
-  `dev` but have none, so they refuse to send email),
+  the `staging` Neon branch but have none, so they refuse to send email),
   `APP_BASE_URL`, `WALLYFOR_*`, `STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET`
   (sandbox keys only). The Google OAuth client needs the staging
   branch URL's `/api/auth/callback/google` as an extra redirect URI.
@@ -566,7 +566,7 @@ All four emit `order_adjusted` or `order_corrected` notifications and `audit_log
 
 ### Database environments & access (since 2026-07-10)
 
-- **Local dev runs on the Neon branch `dev`** (project `porta-moneta-app-gas`,
+- **Local dev runs on the Neon branch `staging`** (project `wegrocery-porta-moneta`,
   a copy-on-write child of `production`): `.env.local`'s `DATABASE_URL` points
   there. The prod connection string lives ONLY in `.env.prod.local`, reserved
   for migrations the user explicitly confirmed. Never point local dev at prod.
@@ -574,21 +574,21 @@ All four emit `order_adjusted` or `order_corrected` notifications and `audit_log
   or `neonctl` (machine-wide OAuth token). Agents operate autonomously on
   non-prod branches; anything touching `production` needs Federico's explicit
   per-operation confirmation.
-- **Refresh dev data on demand** (resets the branch to current prod — destroys
-  any test data on `dev`):
-  `npx -y neonctl branches reset dev --parent --project-id small-breeze-14972344 --org-id org-gentle-violet-55538692`
-- **Vercel Preview deployments use the `dev` Neon branch** (since 2026-07-11:
-  `DATABASE_URL` has two entries on the porta-moneta project — Preview → dev
-  branch, Production → prod). PR previews share the dev branch with local dev;
-  both are throwaway (reset on demand). The `staging` branch deployment uses
-  `dev` too (the B2.1 Stripe check on staging wrote to it), so apply a
-  migration to `dev` before merging to `staging`. A per-PR Neon branch
+- **Refresh staging data on demand** (resets the branch to current prod, destroys
+  any test data on `staging`):
+  `npx -y neonctl branches reset staging --parent --project-id small-breeze-14972344 --org-id org-gentle-violet-55538692`
+- **Vercel Preview deployments use the `staging` Neon branch** (since 2026-07-11:
+  `DATABASE_URL` has two entries on the porta-moneta project: Preview → staging
+  branch, Production → prod). PR previews share that branch with local dev;
+  both are throwaway (reset on demand). The `staging` Git branch deployment uses
+  it too (the B2.1 Stripe check on staging wrote to it), so apply a
+  migration to the `staging` Neon branch before merging to `staging`. A per-PR Neon branch
   integration would be a further upgrade, not required.
 - **Migrations** (since 2026-07-11, issue #85): `scripts/db-migrate.mjs` tracks
   applied files in a `_migrations` table — the ledger is baselined on prod,
   demo and dev. Flow for a schema change: write the next `drizzle/NNNN_*.sql`
   (additive, idempotent), then run `npm run db:migrate` per environment
-  (defaults to `.env.local` = dev branch; target another DB with
+  (defaults to `.env.local` = the `staging` Neon branch; target another DB with
   `DATABASE_URL=… node scripts/db-migrate.mjs`). `--status` lists
   applied/pending, `--baseline` records without executing. This replaces the
   one-off-script convention; `db:push` remains for local schema iteration only.
@@ -670,7 +670,7 @@ Neon free tier only retains 6 hours of point-in-time history (the Launch plan go
 gunzip gas-backup-YYYY-MM-DD.sql.gz   # produces gas-backup-YYYY-MM-DD.sql
 
 # 2. In the Neon console (console.neon.tech):
-#    Branches → "Create branch" → from main → name e.g. "restore-test"
+#    Branches → "Create branch" → from production → name e.g. "restore-test"
 #    → copy the new branch's "Connection string" (pooled is fine).
 export RESTORE_URL='postgresql://…neon.tech/neondb?sslmode=require'
 
@@ -692,7 +692,7 @@ Then choose your path:
 
 - **Inspect only / look up a value** — query the branch, then delete it from the Neon console when done. Production is untouched.
 - **Recover a few specific rows** — `pg_dump --data-only --table=public.<table> "$RESTORE_URL"` filtered by `--where`, then `psql "$PROD_URL"` to apply. Keeps production live.
-- **Full production restore (catastrophic loss)** — in the Neon console, **Reset main from this branch** (or: rename main → main-broken, promote restore-test → main). Then update `DATABASE_URL` in Vercel only if the connection string changed. Stop Vercel traffic during the swap with a maintenance flag in `vercel.json` or by pausing the project.
+- **Full production restore (catastrophic loss)**: in the Neon console, **Reset production from this branch** (or: rename production → production-broken, promote restore-test → production). Then update `DATABASE_URL` in Vercel only if the connection string changed. Stop Vercel traffic during the swap with a maintenance flag in `vercel.json` or by pausing the project.
 
 `pg_dump` runs with `--no-owner --no-privileges --format=plain` so the dump is portable across Neon branches without role-name conflicts. The `\restrict` / `\unrestrict` directives at the top and bottom are PG 17 metadata — `psql` handles them transparently.
 
