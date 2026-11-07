@@ -1,0 +1,58 @@
+name: Deploy Health
+
+# When Vercel reports a deployment of this repository as ready (staging,
+# production, the demo), calls its /api/health and checks that it answers
+# ok, reaches its database and runs the version in package.json at the
+# deployed commit. Its result is what an agent reads to know a deploy is
+# healthy, also on staging behind Deployment Protection.
+#
+# Secret VERCEL_AUTOMATION_BYPASS_SECRET: a "Protection Bypass for Automation"
+# of the porta-moneta Vercel project, sent as the x-vercel-protection-bypass
+# header. Public deployments ignore it; without it a protected staging
+# answers 401 and the check fails, which says so.
+
+on: deployment_status
+
+permissions:
+  contents: read
+
+jobs:
+  health:
+    if: ${{ github.event.deployment_status.state == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.deployment.sha }}
+          sparse-checkout: package.json
+          sparse-checkout-cone-mode: false
+
+      - name: Check /api/health
+        env:
+          URL: ${{ github.event.deployment_status.environment_url || github.event.deployment_status.target_url }}
+          ENVIRONMENT: ${{ github.event.deployment.environment }}
+          BYPASS: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+        run: |
+          expected=$(node -p 'require("./package.json").version')
+          echo "Environment: $ENVIRONMENT, expected version $expected"
+          if [ -z "$URL" ]; then echo "::error::The deployment status has no URL"; exit 1; fi
+          for attempt in 1 2 3 4 5 6; do
+            code=$(curl -sS -o body.json -w '%{http_code}' --max-time 15 \
+              -H "x-vercel-protection-bypass: $BYPASS" "${URL%/}/api/health" || echo 000)
+            if [ "$code" = "200" ] \
+              && node -e 'const h = require("./body.json"); process.exit(h.ok === true && h.db === true && h.version === process.argv[1] ? 0 : 1)' "$expected"; then
+              echo "Healthy: $(cat body.json)"
+              exit 0
+            fi
+            echo "Attempt $attempt: HTTP $code"
+            sleep 10
+          done
+          if [ "$code" = "401" ] || [ "$code" = "403" ]; then
+            echo "::error::Deployment Protection refused the check: is VERCEL_AUTOMATION_BYPASS_SECRET set for this project?"
+          elif [ "$code" = "200" ] || [ "$code" = "503" ]; then
+            echo "::error::Unhealthy or wrong version (expected $expected): $(cat body.json)"
+          else
+            echo "::error::/api/health did not answer (HTTP $code)"
+          fi
+          exit 1
