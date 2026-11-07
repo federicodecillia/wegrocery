@@ -9,7 +9,9 @@ import { FLYLABS_PRODUCT_SLUG } from "@/lib/brand/flylabs";
 import { getPublicCycles, getPublicProducts } from "@/lib/db/public";
 import { t } from "@/lib/i18n";
 import { formatDate, formatDateTime, formatMoney, formatTime } from "@/lib/i18n/format";
+import { getDb } from "@/lib/db/client";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
+import { readSoldOutProductIds } from "@/lib/products/stock";
 import { joinAction, pickPublicCycle } from "@/lib/public-page";
 
 // Read on every visit: the admins may switch the page off at any time.
@@ -34,7 +36,10 @@ export default async function PublicGroupPage() {
   if (!settings.publicPage.enabled) redirect("/login");
   const s = t.publicPage;
   const cycle = pickPublicCycle(await getPublicCycles(), new Date());
-  const items = cycle && settings.publicPage.productsPreview ? await getPublicProducts(cycle.cycleId) : [];
+  const showProducts = cycle && settings.publicPage.productsPreview;
+  const [items, soldOut] = showProducts
+    ? await Promise.all([getPublicProducts(cycle.cycleId), readSoldOutProductIds(getDb(), cycle.cycleId)])
+    : [[], new Set<string>()];
   const join = joinAction(settings.signupMode);
 
   const button = "inline-flex min-h-11 flex-1 items-center justify-center rounded-xl px-4 text-[15px] font-bold";
@@ -118,6 +123,9 @@ export default async function PublicGroupPage() {
                   <span className="font-medium">{p.name}</span>
                   {p.variant || p.format ? (
                     <span className="text-secondary-foreground"> · {[p.variant, p.format].filter(Boolean).join(", ")}</span>
+                  ) : null}
+                  {soldOut.has(p.productId) ? (
+                    <span className="mt-0.5 block text-[13px] font-bold text-destructive">{t.order.stock.soldOut}</span>
                   ) : null}
                 </span>
                 <span className="shrink-0 tabular-nums text-[14px] font-semibold text-foreground">

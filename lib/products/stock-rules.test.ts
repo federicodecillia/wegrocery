@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fitToStock, isSoldOut, memberCap, parseLimit, stockShortages, type ProductStock } from "./stock-rules";
+import { fitToStock, isSoldOut, memberCap, parseLimit, parseLimitCell, stockShortages, type ProductStock } from "./stock-rules";
 
 const stock = (s: Partial<ProductStock>): ProductStock => ({
   productId: "p",
@@ -68,5 +68,20 @@ describe("limited quantities", () => {
     expect(parseLimit("1.5", 0, 99)).toBe("invalid");
     expect(parseLimit("-1", 0, 99)).toBe("invalid");
     expect(parseLimit("100", 0, 99)).toBe("invalid");
+  });
+});
+
+describe("parseLimitCell", () => {
+  it("reads the leading whole number of a file cell", () => {
+    expect(parseLimitCell("30", 0, 99999)).toBe(30);
+    expect(parseLimitCell(" 30 pz", 0, 99999)).toBe(30);
+    expect(parseLimitCell("30,0", 0, 99999)).toBe(30);
+    expect(parseLimitCell("0", 0, 99999)).toBe(0);
+  });
+
+  it("is no limit for anything else, never an error", () => {
+    for (const raw of ["", "2,5", "circa 30", "-3", "tanti", null, undefined]) expect(parseLimitCell(raw, 0, 99999)).toBeNull();
+    expect(parseLimitCell("0", 1, 9999)).toBeNull();
+    expect(parseLimitCell("100000", 0, 99999)).toBeNull();
   });
 });

@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { requireOrderManager } from "@/lib/auth/session";
 import { t } from "@/lib/i18n";
 import { getDb } from "@/lib/db/client";
@@ -17,6 +17,7 @@ import { inspectListing, pickSupplierMatch, type ListingInspection } from "@/lib
 import { hasSharedColumn, suggestMapping, type TargetField } from "@/lib/csv/header-heuristics";
 import { parsePriceCell, resolvePricePerKg } from "@/lib/csv/pack-weight";
 import { upsertCycleProducts } from "@/lib/db/cycle-products";
+import { parseLimitCell, setProductLimits } from "@/lib/products/stock";
 import { decodeUploadBase64 } from "@/lib/upload-limit";
 
 function genId(prefix: string): string {
@@ -258,6 +259,9 @@ export type WizardRow = {
   emoji: string;
   emojiAutoMatched: boolean;
   notes: string | null;
+  /** Limited quantities from the file: applied only to an import into a cycle. */
+  maxQuantity: number | null;
+  maxPerMember: number | null;
 };
 
 export type WizardApplyInput = {
@@ -277,6 +281,10 @@ export type WizardApplyInput = {
 };
 
 type PricePerKgOptions = { computeWhenMissing: boolean; replaceSuspect: boolean };
+
+function pickLimit(row: string[], idx: number | undefined, min: number, max: number): number | null {
+  return parseLimitCell(pickCell(row, idx), min, max);
+}
 
 function pickCell(row: string[], idx: number | undefined): string {
   if (idx === undefined || idx < 0 || idx >= row.length) return "";
@@ -338,6 +346,8 @@ function resolveRow(
       emoji,
       emojiAutoMatched: !emojiOverride && autoEmoji !== null,
       notes: pickCell(raw, mapping.notes) || null,
+      maxQuantity: pickLimit(raw, mapping.maxQuantity, 0, 99999),
+      maxPerMember: pickLimit(raw, mapping.maxPerMember, 1, 9999),
     },
   };
 }
@@ -366,9 +376,55 @@ async function loadExistingCatalogForSupplier(supplierId: string) {
   return map;
 }
 
+// The file's "Disponibili" and "Massimo per socio" on the cycle's products,
+// matched by name, variant and format. A column left out keeps what the
+// product has; units below what is already sold are refused (setProductLimits)
+// and only counted.
+async function applyFileLimits(
+  db: ReturnType<typeof getDb>,
+  input: WizardApplyInput,
+  selected: Set<number>,
+  ppkOptions: PricePerKgOptions,
+): Promise<{ limitsSet: number; limitsBelowSold: number }> {
+  const result = { limitsSet: 0, limitsBelowSold: 0 };
+  if (!input.cycleId || (input.mapping.maxQuantity === undefined && input.mapping.maxPerMember === undefined)) return result;
+  const wanted = new Map<string, { maxQuantity: number | null; maxPerMember: number | null }>();
+  for (let i = 0; i < input.rows.length; i++) {
+    if (!selected.has(i)) continue;
+    const resolved = resolveRow(input.rows[i], i, input.columns, input.mapping, input.emojiOverrides[i], ppkOptions);
+    if (!resolved.ok || (resolved.row.maxQuantity === null && resolved.row.maxPerMember === null)) continue;
+    const { name, variant, format, maxQuantity, maxPerMember } = resolved.row;
+    wanted.set(dedupKey(name, variant, format), { maxQuantity, maxPerMember });
+  }
+  if (wanted.size === 0) return result;
+  const { rows } = await db.execute<{
+    product_id: string;
+    name: string;
+    variant: string | null;
+    format: string | null;
+    max_quantity: number | null;
+    max_per_member: number | null;
+  }>(sql`SELECT product_id, name, variant, format, max_quantity, max_per_member FROM products WHERE cycle_id = ${input.cycleId}`);
+  for (const p of rows) {
+    const w = wanted.get(dedupKey(p.name, p.variant, p.format));
+    if (!w) continue;
+    const res = await setProductLimits(db, {
+      productId: p.product_id,
+      maxQuantity: w.maxQuantity ?? p.max_quantity,
+      maxPerMember: w.maxPerMember ?? p.max_per_member,
+    });
+    if (res.ok) result.limitsSet++;
+    else result.limitsBelowSold++;
+  }
+  return result;
+}
+
 export async function adminApplySupplierListingImport(
   input: WizardApplyInput,
-): Promise<{ data?: { added: number; updated: number; skipped: number; invalid: number; addedToCycle: number }; error?: string }> {
+): Promise<{
+  data?: { added: number; updated: number; skipped: number; invalid: number; addedToCycle: number; limitsSet: number; limitsBelowSold: number };
+  error?: string;
+}> {
   try {
     const admin = await requireOrderManager();
     if (input.mapping.name === undefined || input.mapping.unitPrice === undefined) {
@@ -493,6 +549,8 @@ export async function adminApplySupplierListingImport(
 
     // 4. optionally push the same rows into the chosen cycle
     let addedToCycle = 0;
+    let limitsSet = 0;
+    let limitsBelowSold = 0;
     if (input.cycleId) {
       const cycleRows = [...inserts, ...updates].map(({ row }) => ({
         name: row.name,
@@ -540,6 +598,7 @@ export async function adminApplySupplierListingImport(
       }
       await upsertCycleProducts(db, input.cycleId, cycleRows);
       addedToCycle = cycleRows.length;
+      ({ limitsSet, limitsBelowSold } = await applyFileLimits(db, input, selected, ppkOptions));
     }
 
     // 5. audit + revalidate
@@ -556,6 +615,8 @@ export async function adminApplySupplierListingImport(
         skipped,
         invalid,
         addedToCycle,
+        limitsSet,
+        limitsBelowSold,
       }),
       createdAt: now,
     });
@@ -569,6 +630,8 @@ export async function adminApplySupplierListingImport(
         skipped,
         invalid,
         addedToCycle,
+        limitsSet,
+        limitsBelowSold,
       },
     };
   } catch (e) {

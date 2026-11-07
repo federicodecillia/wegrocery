@@ -8,7 +8,7 @@
 
 import { sql, type SQL } from "drizzle-orm";
 import type { getDb } from "@/lib/db/client";
-import type { ProductStock, StockLine } from "./stock-rules";
+import { isSoldOut, type ProductStock, type StockLine } from "./stock-rules";
 
 export * from "./stock-rules";
 
@@ -104,6 +104,15 @@ export async function readCycleStock(db: Db, cycleId: string, memberId: string |
       },
     ]),
   );
+}
+
+/**
+ * The sold out products of a cycle, as ids only: what the public page may
+ * show a visitor ("Esaurito"), never a count. Empty with the setting off.
+ */
+export async function readSoldOutProductIds(db: Db, cycleId: string): Promise<Set<string>> {
+  const stock = await readCycleStock(db, cycleId, null);
+  return new Set([...stock.values()].filter(isSoldOut).map((s) => s.productId));
 }
 
 /** Units of each product ordered or reserved by anyone (admin: "venduti / disponibili"). */

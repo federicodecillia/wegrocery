@@ -8,7 +8,7 @@ import { applyOrderCredit } from "@/lib/payments/order-credit";
 import { confirmOrderWithoutPayment } from "@/lib/payments/order-confirm";
 import type { RefundApi } from "@/lib/payments/refund-request";
 import { planWebhookAction } from "@/lib/payments/webhook";
-import { readCycleSold, readCycleStock, setProductLimits, stockShortages } from "@/lib/products/stock";
+import { readCycleSold, readCycleStock, readSoldOutProductIds, setProductLimits, stockShortages } from "@/lib/products/stock";
 import { describeDb, makeScope, runSql } from "./fixtures";
 
 // Limited quantities (drizzle/0054_stock_limits.sql, lib/products/stock.ts) on
@@ -183,6 +183,22 @@ describeDb("limited quantities (migration 0054)", () => {
     expect(mine).toHaveLength(0);
     const refunds = await sql`SELECT reason, amount_cents FROM refunds WHERE payment_id = ${pay.paymentId}`;
     expect(refunds.map((r) => `${r.reason} ${r.amount_cents}`)).toEqual(["late_payment 440"]);
+  });
+
+  it("tells the public page which products are sold out, ids only", async () => {
+    const { cycleId, productIds } = await scope.createCycle("public", {
+      products: [{ name: "Figs", unitPrice: 4 }, { name: "Plums", unitPrice: 4 }],
+    });
+    const [figs, plums] = productIds;
+    await sql`UPDATE products SET max_quantity = 2 WHERE product_id IN (${figs}, ${plums})`;
+    expect(await save(scope.memberId, cycleId, figs, 2)).toBe("saved");
+    expect([...(await readSoldOutProductIds(db(), cycleId))]).toEqual([figs]);
+    await setSwitch(false);
+    try {
+      expect((await readSoldOutProductIds(db(), cycleId)).size).toBe(0);
+    } finally {
+      await setSwitch(true);
+    }
   });
 
   it("never lowers the units below what is sold", async () => {
