@@ -619,6 +619,24 @@ export const adminGuideFr: GuideContent = {
       keywords: ["conditions", "confidentialité", "acceptation", "rgpd", "politique"],
     },
     {
+      slug: "come-si-entra",
+      topic: "soci",
+      title: "Comment on rejoint le groupe",
+      intro: "Vous pouvez laisser entrer des personnes qui ne sont pas encore membres : sur demande à approuver, ou librement.",
+      steps: [
+        "Dans **Réglages**, **Membres et guide**, **Qui peut entrer** choisissez **Sur demande** ou **Ouverte** (par défaut **Membres uniquement**).",
+        "Choisissez le rôle des nouveaux et s'ils paient avant de commander.",
+        "Partagez la page **/aderisci** : la page de connexion affiche aussi le lien.",
+        "Avec **Sur demande**, **Membres** affiche les **Demandes d'adhésion** : **Approuver** crée le membre et lui envoie le lien de connexion.",
+      ],
+      notes: [
+        "Vous recevez une notification dans l'app pour chaque demande, aucun e-mail.",
+        "Avec **Les nouveaux paient avant de commander**, ils ne passent jamais sous zéro : ils paient par carte ou rechargent avant.",
+        "Les demandes refusées sont supprimées après 30 jours. Le demandeur ne reçoit rien quand vous refusez.",
+      ],
+      keywords: ["inscription", "adhésion", "rejoindre", "demande", "clients", "nouveaux membres", "aderisci"],
+    },
+    {
       slug: "famiglie-admin",
       topic: "soci",
       title: "Familles : ce que voit un admin",

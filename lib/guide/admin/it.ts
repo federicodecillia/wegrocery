@@ -621,6 +621,24 @@ export const adminGuideIt: GuideContent = {
       keywords: ["termini", "privacy", "condizioni", "accettazione", "gdpr", "informativa"],
     },
     {
+      slug: "come-si-entra",
+      topic: "soci",
+      title: "Come si entra nel gruppo",
+      intro: "Puoi lasciare entrare anche chi non è ancora socio: con una richiesta da approvare o liberamente.",
+      steps: [
+        "In **Impostazioni**, **Soci e guida**, **Chi può entrare** scegli **Su richiesta** o **Aperta** (di default **Solo soci**).",
+        "Scegli il ruolo dei nuovi e se devono pagare prima di ordinare.",
+        "Condividi la pagina **/aderisci**: anche la pagina di accesso mostra il link.",
+        "Con **Su richiesta**, in **Soci** trovi le **Richieste di adesione**: **Approva** crea il socio e gli manda il link per entrare.",
+      ],
+      notes: [
+        "Ricevi una notifica nell'app a ogni richiesta, nessuna email.",
+        "Con **I nuovi pagano prima di ordinare** i nuovi non vanno mai sotto zero: pagano con la carta o ricaricano prima.",
+        "Le richieste rifiutate si cancellano dopo 30 giorni. Chi chiede non riceve niente quando rifiuti.",
+      ],
+      keywords: ["registrazione", "iscrizione", "aderire", "richiesta", "clienti", "nuovi soci", "aderisci"],
+    },
+    {
       slug: "famiglie-admin",
       topic: "soci",
       title: "Famiglie: cosa vede l'admin",

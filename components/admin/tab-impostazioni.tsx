@@ -30,6 +30,7 @@ import { PaymentSettingsForm } from "./impostazioni-form";
 import { PaymentModeCard } from "./payment-mode-card";
 import { SearchMissesCard } from "./search-misses-card";
 import { ColorDots, SettingsPanel } from "./settings-panel";
+import { SignupCard } from "./signup-card";
 import { SetupBanner } from "./setup/setup-banner";
 import { StripeConnectionCard } from "./stripe-connection-card";
 
@@ -301,6 +302,9 @@ async function MembersView() {
   const sum = s.summaries;
   return (
     <>
+      <SettingsPanel id="chi-entra" title={s.signup.title} summary={s.signup.modes[settings.signupMode].label} defaultOpen>
+        <SignupCard mode={settings.signupMode} role={settings.signupRole} prepaid={settings.signupPrepaid} />
+      </SettingsPanel>
       <SettingsPanel id="nome-soci" title={s.namePrompt.title} summary={s.namePrompt.modes[settings.memberNamePrompt].label} defaultOpen>
         <NamePromptCard mode={settings.memberNamePrompt} />
       </SettingsPanel>

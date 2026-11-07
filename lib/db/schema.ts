@@ -60,6 +60,9 @@ export const members = pgTable(
     // The terms version this person accepted, and when (drizzle/0051_terms_acceptance.sql).
     termsAcceptedAt: timestamp("terms_accepted_at", { withTimezone: true }),
     termsAcceptedVersion: text("terms_accepted_version"),
+    // 'request' | 'open' for a member who joined by open sign-up, NULL
+    // otherwise (drizzle/0052_signup.sql, lib/membership/signup.ts).
+    joinedVia: text("joined_via"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
   },
@@ -71,6 +74,44 @@ export const members = pgTable(
     uniqueIndex("members_alias_email_lower_uniq")
       .on(sql`lower(${table.aliasEmail})`)
       .where(sql`${table.aliasEmail} IS NOT NULL`),
+    check("members_joined_via_check", sql`${table.joinedVia} IN ('request', 'open')`),
+  ],
+);
+
+// Requests to join in 'request' sign-up mode (drizzle/0052_signup.sql,
+// lib/membership/signup.ts): one pending request per address, an admin
+// approves (the member is created) or rejects (deleted after 30 days).
+export const membershipRequests = pgTable(
+  "membership_requests",
+  {
+    requestId: text("request_id").primaryKey(),
+    email: text("email").notNull(),
+    fullName: text("full_name").notNull(),
+    phone: text("phone"),
+    note: text("note"),
+    // 'pending' | 'approved' | 'rejected'
+    status: text("status").notNull().default("pending"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+    decidedAt: timestamp("decided_at", { withTimezone: true }),
+    decidedBy: text("decided_by"),
+    memberId: text("member_id").references(() => members.memberId, { onDelete: "set null" }),
+    // HMAC of the requester's IP for the hourly limit, never the address.
+    ipHash: text("ip_hash"),
+    // The terms version accepted on the form (lib/members/terms.ts), copied
+    // to the member on approval.
+    termsAcceptedVersion: text("terms_accepted_version"),
+  },
+  (table) => [
+    uniqueIndex("membership_requests_pending_email_uniq")
+      .on(sql`lower(${table.email})`)
+      .where(sql`${table.status} = 'pending'`),
+    index("membership_requests_status_created_idx").on(table.status, table.createdAt),
+    index("membership_requests_ip_created_idx").on(table.ipHash, table.createdAt),
+    check("membership_requests_status_check", sql`${table.status} IN ('pending', 'approved', 'rejected')`),
+    check("membership_requests_email_length", sql`char_length(${table.email}) <= 254`),
+    check("membership_requests_name_length", sql`char_length(${table.fullName}) BETWEEN 1 AND 120`),
+    check("membership_requests_phone_length", sql`char_length(${table.phone}) <= 40`),
+    check("membership_requests_note_length", sql`char_length(${table.note}) <= 500`),
   ],
 );
 
@@ -463,6 +504,12 @@ export const appSettings = pgTable(
     // is when an admin last asked everyone (drizzle/0051_terms_acceptance.sql).
     termsRequired: boolean("terms_required").notNull().default(false),
     termsVersion: text("terms_version"),
+    // Who may join without an admin: 'closed' | 'request' | 'open', the role
+    // newcomers get, and whether they must pay before ordering
+    // (drizzle/0052_signup.sql, lib/membership/signup.ts).
+    signupMode: text("signup_mode").notNull().default("closed"),
+    signupRole: text("signup_role").notNull().default("utenti"),
+    signupPrepaid: boolean("signup_prepaid").notNull().default(true),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
     updatedBy: text("updated_by").notNull(),
   },
@@ -473,6 +520,8 @@ export const appSettings = pgTable(
       "app_settings_new_cycle_payment_mode_check",
       sql`${table.newCyclePaymentMode} IN ('wallet', 'per_order')`,
     ),
+    check("app_settings_signup_mode_check", sql`${table.signupMode} IN ('closed', 'request', 'open')`),
+    check("app_settings_signup_role_check", sql`${table.signupRole} IN ('attivi', 'utenti')`),
     check("app_settings_member_name_prompt_check", sql`${table.memberNamePrompt} IN ('off', 'optional', 'required')`),
     check("app_settings_min_balance_check", sql`${table.minBalance} <= 0`),
     check(

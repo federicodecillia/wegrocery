@@ -28,6 +28,9 @@ A bullet that only matters to whoever hosts, runs or develops the app
 - 📜 **Terms and privacy to accept**: in Settings > Group an admin can ask whoever signs in to accept the group's privacy notice and terms of service (links to the group's own pages) before using the app, and ask everyone again when the texts change. Until then members cannot order or pay. Off by default.
 - 🔗 **Link to the terms of service** next to the privacy notice, on the sign-in page and at the foot of every page.
 - [tech] 🗄️ **Migration 0051** (`terms_acceptance`): `app_settings.terms_required`, `app_settings.terms_version`, `members.terms_accepted_at`, `members.terms_accepted_version`. Additive, apply before deploying. New optional brand field `termsUrl`.
+- 🚪 **New members can join on their own**: in Settings > Members & guide, "Who can join" offers "On request" (a form on /aderisci, an admin approves it in Members and the newcomer gets the sign-in link) or "Open" (a confirmed email joins at once). Members only by default.
+- 💳 **Newcomers pay before ordering**: by default whoever joins this way never goes below zero, paying each order by card or from a balance already topped up. The admin can give them the group's credit instead.
+- [tech] 🗄️ **Migration 0052** (`signup`): `app_settings.signup_mode`, `signup_role`, `signup_prepaid`, `members.joined_via`, table `membership_requests`. Additive, apply before deploying.
 
 ### Security
 - [tech] 🔒 **Better Auth updated to 1.7.18**, which patches a critical advisory (the state of a Google sign-in accepted as a sign-in link, GHSA-965c-763c-88jm) and two lesser ones. The critical one was not exploitable here: sign-in links are stored hashed, so a Google state never matches one. The others concern the OAuth Proxy, not used here, and a rate-limit race on PostgreSQL. A link emailed before the update stops working; the code in the same email still does.

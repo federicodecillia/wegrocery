@@ -12,6 +12,7 @@ import {
 import type { StripeKeyStatus } from "./config";
 import { DEFAULT_NAME_PROMPT, isNamePromptMode, type NamePromptMode } from "@/lib/members/name";
 import { parseNewCycleDefaults, type NewCycleDefaults } from "./new-cycle-defaults";
+import { isSignupMode, isSignupRole, type SignupMode, type SignupRole } from "@/lib/membership/signup";
 
 export type PaymentMode = "wallet" | "per_order";
 
@@ -45,6 +46,10 @@ export type PaymentSettingsRow = {
   // Optional: rows read before migration 0051 have no such columns.
   termsRequired?: boolean;
   termsVersion?: string | null;
+  // Optional: rows read before migration 0052 have no such columns.
+  signupMode?: string;
+  signupRole?: string;
+  signupPrepaid?: boolean;
   updatedAt: Date;
 };
 
@@ -93,6 +98,11 @@ export type PaymentSettings = {
   // version (lib/members/terms.ts); off and null by default.
   termsRequired: boolean;
   termsVersion: string | null;
+  // Who may join without an admin, with which role, and whether newcomers
+  // pay before ordering (lib/membership/signup.ts); closed by default.
+  signupMode: SignupMode;
+  signupRole: SignupRole;
+  signupPrepaid: boolean;
   // What members get: the bank details when that channel is on, online
   // top-ups when switched on and the deploy has a usable key. Both off in a
   // wallet group with top-ups off.
@@ -136,6 +146,9 @@ export function resolvePaymentSettings(
         groupInfo: row.groupInfo ?? null,
         termsRequired: row.termsRequired ?? false,
         termsVersion: row.termsVersion ?? null,
+        signupMode: isSignupMode(row.signupMode) ? row.signupMode : "closed",
+        signupRole: isSignupRole(row.signupRole) ? row.signupRole : "utenti",
+        signupPrepaid: row.signupPrepaid ?? true,
         savedAt: row.updatedAt,
       }
     : {
@@ -158,6 +171,9 @@ export function resolvePaymentSettings(
         groupInfo: null,
         termsRequired: false,
         termsVersion: null,
+        signupMode: "closed",
+        signupRole: "utenti",
+        signupPrepaid: true,
         savedAt: null,
       };
   const stripeKey: StripeKeyState = keyStatus.enabled

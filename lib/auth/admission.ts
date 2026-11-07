@@ -1,14 +1,16 @@
 import { eq, or, sql } from "drizzle-orm";
 import { getDb } from "@/lib/db/client";
-import { members } from "@/lib/db/schema";
+import { appSettings, members } from "@/lib/db/schema";
 import { normalizeEmail } from "@/lib/member-email";
 import {
   hasActiveAdmin,
   provisionBootstrapAdmin,
+  provisionSignupMember,
   provisionVerifiedMember,
   recordMembershipCheck,
 } from "@/lib/membership/members";
 import { existingMemberSignIn, matchesBootstrapEmail, newUserSignIn, type LoginError } from "@/lib/membership/policy";
+import { isSignupMode, type SignupMode } from "@/lib/membership/signup";
 import { checkMembership, checkMembershipAny, isMembershipCheckEnabled, type MembershipResult } from "@/lib/membership/wallyfor";
 
 // Who may sign in with an email address: the decisions of
@@ -18,7 +20,8 @@ import { checkMembership, checkMembershipAny, isMembershipCheckEnabled, type Mem
 
 export type Admission =
   | { kind: "member"; memberId: string }
-  | { kind: "provision" }
+  // A newcomer: a valid card, or the group's open sign-up.
+  | { kind: "provision"; via: "card" | "open" }
   // The first admin of a new installation (BOOTSTRAP_ADMIN_EMAIL).
   | { kind: "bootstrapAdmin" }
   | { kind: "deny"; error: LoginError };
@@ -34,6 +37,8 @@ export type MemberRow = {
   active: boolean;
   // The account this person joined (a family), or null.
   householdOf: string | null;
+  // 'request' | 'open' when they joined by open sign-up (no card asked).
+  joinedVia: string | null;
 };
 
 // The member an address belongs to, as main email or alias, ignoring case.
@@ -50,6 +55,7 @@ export async function findMemberByLoginEmail(email: string): Promise<MemberRow |
       ordersReferent: members.ordersReferent,
       active: members.active,
       householdOf: members.householdOf,
+      joinedVia: members.joinedVia,
     })
     .from(members)
     .where(or(eq(sql`lower(${members.email})`, address), eq(sql`lower(${members.aliasEmail})`, address)))
@@ -69,6 +75,7 @@ export async function findMemberById(memberId: string): Promise<MemberRow | null
       ordersReferent: members.ordersReferent,
       active: members.active,
       householdOf: members.householdOf,
+      joinedVia: members.joinedVia,
     })
     .from(members)
     .where(eq(members.memberId, memberId))
@@ -85,6 +92,22 @@ async function recordSafely(memberId: string, status: "valid" | "invalid") {
   }
 }
 
+// The group's sign-up mode (lib/membership/signup.ts). An unreadable setting
+// means closed: a database hiccup must never let strangers in.
+async function signupModeSafely(): Promise<SignupMode> {
+  try {
+    const [row] = await getDb()
+      .select({ mode: appSettings.signupMode })
+      .from(appSettings)
+      .where(eq(appSettings.id, 1))
+      .limit(1);
+    return isSignupMode(row?.mode) ? row.mode : "closed";
+  } catch (err) {
+    console.error("[auth] could not read the sign-up mode", err);
+    return "closed";
+  }
+}
+
 // `emailVerified`: whether the address is proven. The email link proves it by
 // itself; Google says so in its profile. An unproven address is never
 // provisioned.
@@ -96,16 +119,17 @@ export async function admitEmail(email: string, opts: { emailVerified: boolean }
     return { kind: "bootstrapAdmin" };
   }
   const checkEnabled = isMembershipCheckEnabled();
+  const mode = member ? "closed" : await signupModeSafely();
 
   let decision = member
     ? existingMemberSignIn(member, checkEnabled, null)
-    : newUserSignIn(checkEnabled, null, opts.emailVerified);
+    : newUserSignIn(checkEnabled, null, opts.emailVerified, mode);
   let result: MembershipResult | null = null;
   if (decision.kind === "check") {
     result = member ? await checkMembershipAny([member.email, member.aliasEmail]) : await checkMembership(address);
     decision = member
       ? existingMemberSignIn(member, checkEnabled, result)
-      : newUserSignIn(checkEnabled, result, opts.emailVerified);
+      : newUserSignIn(checkEnabled, result, opts.emailVerified, mode);
   }
   if ("logError" in decision && decision.logError && result?.status === "error") {
     console.error(`[auth] membership check unavailable at sign-in: ${result.message}`);
@@ -116,7 +140,7 @@ export async function admitEmail(email: string, opts: { emailVerified: boolean }
       if (member && decision.record) await recordSafely(member.memberId, decision.record);
       return member ? { kind: "member", memberId: member.memberId } : { kind: "deny", error: "AccessDenied" };
     case "provision":
-      return { kind: "provision" };
+      return { kind: "provision", via: decision.via };
     case "deny":
       if (member && decision.record) await recordSafely(member.memberId, decision.record);
       // No member and no card check: simply not one of the group's members.
@@ -137,7 +161,9 @@ export async function memberForNewSession(email: string, name: string | null): P
     return (await findMemberByLoginEmail(email))?.memberId ?? null;
   }
   if (admission.kind !== "provision") return null;
-  const provisioned = await provisionVerifiedMember(normalizeEmail(email)!, name);
+  const address = normalizeEmail(email)!;
+  const provisioned =
+    admission.via === "open" ? await provisionSignupMember(address, name) : await provisionVerifiedMember(address, name);
   if (!provisioned.active) return null;
   return (await findMemberByLoginEmail(email))?.memberId ?? null;
 }

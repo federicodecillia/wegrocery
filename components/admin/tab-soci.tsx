@@ -5,17 +5,28 @@ import { SociForm, SociList } from "./soci-form";
 import { MemberOrders } from "./member-orders";
 import { CreateToggle } from "./create-toggle";
 import { t } from "@/lib/i18n";
+import { formatDateTime } from "@/lib/i18n/format";
+import { getDb } from "@/lib/db/client";
+import { listPendingRequests, pruneRejectedRequests } from "@/lib/membership/requests";
+import { MembershipRequests } from "./membership-requests";
 
 // readOnly: a "Referente ordini" sees who the members are (name, role, access,
 // last sign-in), never their balances, orders or the editing.
 export async function TabSoci({ memberId, readOnly = false }: { memberId?: string; readOnly?: boolean }) {
   if (memberId && !readOnly) return <MemberOrders memberId={memberId} />;
-  const [members, balances, settings, dismissed] = await Promise.all([
+  const db = getDb();
+  const [members, balances, settings, dismissed, requests] = await Promise.all([
     getAllMembers(),
     readOnly ? [] : getAllMembersWithBalances(),
     getPaymentSettings(),
     getDismissedDuplicatePairs(),
+    readOnly ? [] : listPendingRequests(db),
   ]);
+  // Rejected requests leave after 30 days, when an admin opens Soci.
+  if (!readOnly) await pruneRejectedRequests(db);
+  // The requests panel shows while the group takes requests, or while some
+  // are still waiting after the mode changed.
+  const showRequests = !readOnly && (settings.signupMode === "request" || requests.length > 0);
   const balanceOf = new Map(balances.map((b) => [b.memberId, b.balance]));
   const nameOf = new Map(members.map((m) => [m.memberId, m.fullName]));
   // An account people joined: their names, for its own family badge.
@@ -28,6 +39,19 @@ export async function TabSoci({ memberId, readOnly = false }: { memberId?: strin
 
   return (
     <div className="space-y-4">
+      {showRequests ? (
+        <MembershipRequests
+          mode={settings.signupMode}
+          requests={requests.map((r) => ({
+            requestId: r.requestId,
+            fullName: r.fullName,
+            email: r.email,
+            phone: r.phone,
+            note: r.note,
+            createdLabel: formatDateTime(r.createdAt),
+          }))}
+        />
+      ) : null}
       {readOnly ? (
         <p className="max-w-prose text-[13px] text-secondary-foreground">{t.admin.members.readOnlyHint}</p>
       ) : (

@@ -3,9 +3,10 @@
 
 import { and, eq, or, sql } from "drizzle-orm";
 import { getDb } from "@/lib/db/client";
-import { auditLog, members } from "@/lib/db/schema";
+import { appSettings, auditLog, members } from "@/lib/db/schema";
 import { DEFAULT_ROLE } from "@/lib/roles";
 import { fullNameFromProfile } from "./policy";
+import { isSignupRole, type SignupRole } from "./signup";
 
 /** Base, least-privileged role given to self-onboarded members. */
 export const AUTO_PROVISION_ROLE = DEFAULT_ROLE;
@@ -68,6 +69,56 @@ export async function provisionVerifiedMember(
     return { active: true };
   }
 
+  const [existing] = await db
+    .select({ active: members.active })
+    .from(members)
+    .where(or(eq(members.email, email), eq(members.aliasEmail, email)))
+    .limit(1);
+  return { active: Boolean(existing?.active) };
+}
+
+/**
+ * Creates the member for a confirmed address in 'open' sign-up mode
+ * (lib/membership/signup.ts), with the role chosen in Impostazioni and marked
+ * as joined by sign-up (the "prepaid" rule reads it). Same race handling as
+ * provisionVerifiedMember.
+ */
+export async function provisionSignupMember(
+  email: string,
+  profileName: string | null | undefined,
+  now: Date = new Date(),
+): Promise<{ active: boolean }> {
+  const db = getDb();
+  const [settings] = await db.select({ role: appSettings.signupRole }).from(appSettings).where(eq(appSettings.id, 1)).limit(1);
+  const role: SignupRole = isSignupRole(settings?.role) ? settings.role : "utenti";
+  const memberId = `mem_${crypto.randomUUID().replace(/-/g, "").slice(0, 16)}`;
+  const inserted = await db
+    .insert(members)
+    .values({
+      memberId,
+      fullName: fullNameFromProfile(profileName, email),
+      email,
+      aliasEmail: null,
+      role,
+      active: true,
+      joinedVia: "open",
+      createdAt: now,
+      updatedAt: now,
+    })
+    .onConflictDoNothing()
+    .returning({ memberId: members.memberId });
+  if (inserted.length > 0) {
+    await db.insert(auditLog).values({
+      auditId: crypto.randomUUID(),
+      userEmail: "system",
+      action: "signup_provision_member",
+      entityType: "member",
+      entityId: memberId,
+      payloadJson: JSON.stringify({ email, role, reason: "open sign-up, address confirmed" }),
+      createdAt: now,
+    });
+    return { active: true };
+  }
   const [existing] = await db
     .select({ active: members.active })
     .from(members)

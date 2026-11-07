@@ -3,7 +3,15 @@ import type { Admission } from "./admission";
 // Which email answers a request for an email link. Everyone gets the same
 // screen ("check your inbox"), so the page never tells a member from a
 // stranger; the email does, and only to the owner of the address.
-export type AuthEmailKind = "login" | "invite" | "notMember" | "accountInactive" | "membershipInactive" | "checkUnavailable";
+export type AuthEmailKind =
+  | "login"
+  | "invite"
+  | "notMember"
+  | "accountInactive"
+  | "membershipInactive"
+  | "checkUnavailable"
+  // Not a member, and the group takes requests to join: how to ask.
+  | "signupRequired";
 
 export function authEmailKind(admission: Admission, invite: boolean): AuthEmailKind {
   if (admission.kind !== "deny") return invite ? "invite" : "login";
@@ -14,6 +22,8 @@ export function authEmailKind(admission: Admission, invite: boolean): AuthEmailK
       return "checkUnavailable";
     case "NotMember":
       return "notMember";
+    case "SignupRequired":
+      return "signupRequired";
     default:
       return admission.error === "AccessDenied" ? "accountInactive" : "notMember";
   }

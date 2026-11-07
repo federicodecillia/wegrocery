@@ -48,11 +48,22 @@ describe("resolvePaymentSettings", () => {
       groupInfo: null,
       termsRequired: false,
       termsVersion: null,
+      signupMode: "closed",
+      signupRole: "utenti",
+      signupPrepaid: true,
       bankTransfer: { holder: "Porta Moneta APS", iban: SPACED_IBAN },
       onlineTopupAvailable: true,
       stripeKey: { usable: true, livemode: false },
       savedAt: null,
     });
+  });
+
+  it("reads the sign-up settings, closed and prepaid for a row saved before 0052", () => {
+    const before = resolvePaymentSettings(row, brand, testKey);
+    expect([before.signupMode, before.signupRole, before.signupPrepaid]).toEqual(["closed", "utenti", true]);
+    const s = resolvePaymentSettings({ ...row, signupMode: "request", signupRole: "attivi", signupPrepaid: false }, brand, testKey);
+    expect([s.signupMode, s.signupRole, s.signupPrepaid]).toEqual(["request", "attivi", false]);
+    expect(resolvePaymentSettings({ ...row, signupMode: "public", signupRole: "admin" }, brand, testKey).signupRole).toBe("utenti");
   });
 
   it("reads the terms switch and version, off for a row saved before 0051", () => {
