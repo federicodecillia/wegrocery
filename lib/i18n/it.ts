@@ -1551,6 +1551,47 @@ export const it = {
       inviteSent: (name: string) => `Invito mandato a ${name}: riceve un link per entrare.`,
       inviteInactive: "Il socio è disattivato: riattivalo prima di invitarlo.",
       inviteRefused: "Il socio ora non può entrare (per esempio la tessera non è attiva): nessun link inviato.",
+      import: {
+        toggle: "Importa da file",
+        title: "Importa soci da file",
+        intro:
+          "Un file CSV (da Excel, Google Fogli o un altro programma) con almeno una colonna email. Riconosco anche nome, cognome, email secondaria, ruolo e paga fuori app. Prima vedi cosa succede, poi decidi.",
+        fileLabel: "File CSV",
+        pasteLabel: "Oppure incolla qui il testo",
+        check: "Controlla",
+        cancel: "Annulla",
+        importButton: (n: number) => (n === 1 ? "Importa 1 socio" : `Importa ${n} soci`),
+        nothingToImport: "Nessuna riga da importare.",
+        summaryTitle: "Cosa succede",
+        outcomes: {
+          new: "Nuovi",
+          possible_duplicate: "Nuovi, stesso nome di un socio",
+          existing: "Già soci",
+          duplicate_in_file: "Ripetuti nel file",
+          invalid_email: "Email non valida",
+          missing_email: "Senza email",
+          conflict: "Email secondaria già usata",
+        },
+        ignoredColumns: (cols: string) => `Colonne non usate: ${cols}`,
+        adminDropped: (n: number) =>
+          n === 1
+            ? "1 riga ha il ruolo admin: entra come utente, gli admin si nominano a mano."
+            : `${n} righe hanno il ruolo admin: entrano come utenti, gli admin si nominano a mano.`,
+        moreRows: (shown: number, total: number) => `Mostrate le prime ${shown} righe di ${total}.`,
+        columns: { line: "Riga", name: "Nome", email: "Email", outcome: "Esito" },
+        imported: (n: number) =>
+          n === 1 ? "1 socio creato. Non è partita nessuna email." : `${n} soci creati. Non è partita nessuna email.`,
+        invite: (n: number) => `Invita i nuovi soci (${n})`,
+        inviteNote: "Ogni clic invia fino a 20 link, per restare nel limite giornaliero di email.",
+        invited: (sent: number, remaining: number) =>
+          remaining === 0 ? `Inviti inviati: ${sent}. Finito.` : `Inviti inviati: ${sent}. Ne restano ${remaining}.`,
+        errors: {
+          empty: "Il file è vuoto o ha solo l'intestazione.",
+          tooBig: "Il file supera 500 KB.",
+          no_email_column: "Non trovo una colonna email: chiamala per esempio \"email\".",
+          too_many_rows: "Il file ha più di 2000 righe: dividilo in più file.",
+        },
+      },
       requests: {
         title: (n: number) => (n === 0 ? "Richieste di adesione" : `Richieste di adesione (${n})`),
         modeOff: "Le nuove richieste sono spente in Impostazioni, Soci e guida: decidi quelle rimaste.",

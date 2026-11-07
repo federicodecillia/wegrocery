@@ -654,6 +654,24 @@ export const adminGuideEn: GuideContent = {
       keywords: ["sign up", "registration", "join", "request", "customers", "new members", "aderisci"],
     },
     {
+      slug: "importa-soci",
+      topic: "soci",
+      title: "Importing members from a file",
+      intro: "If your members are already in an Excel or Google sheet, bring them into the app in one go.",
+      steps: [
+        "Save the sheet as **CSV**: it needs at least an **email** column; name, surname, secondary email, role and pays outside the app are optional.",
+        "In **Members** tap **Import from file**, pick the file or paste the text, then **Check**.",
+        "See what happens to each row: new, already members, repeated, invalid emails.",
+        "Tap **Import**, then **Invite the new members** to send them the sign-in link.",
+      ],
+      notes: [
+        "Existing members are left as they are: you can import the same file twice.",
+        "An admin role in the file does not count: admins are named by hand.",
+        "Invitations go out 20 at a time, to stay within the daily email limit.",
+      ],
+      keywords: ["import", "csv", "excel", "spreadsheet", "member list", "upload members"],
+    },
+    {
       slug: "famiglie-admin",
       topic: "soci",
       title: "Families: what an admin sees",

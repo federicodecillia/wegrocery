@@ -9,6 +9,7 @@ import { formatDateTime } from "@/lib/i18n/format";
 import { getDb } from "@/lib/db/client";
 import { listPendingRequests, pruneRejectedRequests } from "@/lib/membership/requests";
 import { MembershipRequests } from "./membership-requests";
+import { MembersImport } from "./members-import";
 
 // readOnly: a "Referente ordini" sees who the members are (name, role, access,
 // last sign-in), never their balances, orders or the editing.
@@ -57,6 +58,11 @@ export async function TabSoci({ memberId, readOnly = false }: { memberId?: strin
       ) : (
         <CreateToggle label={t.admin.members.addMember}>
           <SociForm offlineOption={offlineOption} />
+        </CreateToggle>
+      )}
+      {readOnly ? null : (
+        <CreateToggle label={t.admin.members.import.toggle}>
+          <MembersImport />
         </CreateToggle>
       )}
       <SociList

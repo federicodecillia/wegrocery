@@ -6,6 +6,10 @@ import { getAuthInstance } from "@/auth";
 import { admitEmail } from "@/lib/auth/admission";
 import { approveMembershipRequest, rejectMembershipRequest } from "@/lib/membership/requests";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
+import { inArray } from "drizzle-orm";
+import { members } from "@/lib/db/schema";
+import { IMPORT_INVITE_BATCH, IMPORT_MAX_BYTES, isImportable, planImport, type ImportOutcome, type ImportRow } from "@/lib/members/import";
+import { insertImportedMembers } from "@/lib/members/import-store";
 import { actionErrorMessage } from "@/lib/action-error";
 import { requireAdmin } from "@/lib/auth/session";
 import { getDb } from "@/lib/db/client";
@@ -180,5 +184,116 @@ export async function adminRejectRequest(requestId: string): Promise<{ error?: s
     return done ? { message: r.rejected } : { error: r.gone };
   } catch (e) {
     return { error: actionErrorMessage(e, t.errors.genericError, "adminRejectRequest") };
+  }
+}
+
+// Soci -> Importa da file (lib/members/import.ts). The preview and the import
+// plan the same text again on the server, against the members of that
+// moment: nothing from the browser is trusted but the file itself.
+
+export type ImportPreview = {
+  counts: Record<ImportOutcome, number>;
+  ignoredColumns: string[];
+  // At most 500 rows travel back for the table; the counts cover them all.
+  rows: Pick<ImportRow, "line" | "email" | "fullName" | "outcome" | "adminRoleDropped">[];
+  adminRolesDropped: number;
+};
+
+async function readImportPlan(text: unknown) {
+  const r = t.admin.members.import;
+  if (typeof text !== "string" || !text.trim()) return { error: r.errors.empty } as const;
+  if (new TextEncoder().encode(text).length > IMPORT_MAX_BYTES) return { error: r.errors.tooBig } as const;
+  const existing = await getDb()
+    .select({ email: members.email, aliasEmail: members.aliasEmail, fullName: members.fullName })
+    .from(members);
+  const plan = planImport(text, existing);
+  if (!plan.ok) return { error: r.errors[plan.error] } as const;
+  return { plan } as const;
+}
+
+export async function previewMemberImport(text: string): Promise<{ error?: string; preview?: ImportPreview }> {
+  try {
+    await requireAdmin();
+    const read = await readImportPlan(text);
+    if ("error" in read) return { error: read.error };
+    const { plan } = read;
+    return {
+      preview: {
+        counts: plan.counts,
+        ignoredColumns: plan.ignoredColumns,
+        rows: plan.rows.slice(0, 500).map(({ line, email, fullName, outcome, adminRoleDropped }) => ({
+          line,
+          email,
+          fullName,
+          outcome,
+          adminRoleDropped,
+        })),
+        adminRolesDropped: plan.rows.filter((row) => row.adminRoleDropped && isImportable(row)).length,
+      },
+    };
+  } catch (e) {
+    return { error: actionErrorMessage(e, t.errors.genericError, "previewMemberImport") };
+  }
+}
+
+/** Creates the importable rows (lib/members/import-store.ts). No email: the admin invites afterwards. */
+export async function adminImportMembers(text: string): Promise<{ error?: string; created?: number; memberIds?: string[] }> {
+  try {
+    const admin = await requireAdmin();
+    const read = await readImportPlan(text);
+    if ("error" in read) return { error: read.error };
+    const created = await insertImportedMembers(getDb(), read.plan, admin.email);
+    revalidatePath("/admin");
+    return { created: created.length, memberIds: created };
+  } catch (e) {
+    return { error: actionErrorMessage(e, t.errors.genericError, "adminImportMembers") };
+  }
+}
+
+/**
+ * Invites the members just imported, IMPORT_INVITE_BATCH at a time: the
+ * same link as Soci -> Invita. Returns how many went out and which ids are
+ * left for the next click. Never members already signed in.
+ */
+export async function adminInviteImported(
+  memberIds: string[],
+): Promise<{ error?: string; sent?: number; skipped?: number; remaining?: string[] }> {
+  try {
+    const admin = await requireAdmin();
+    if (!Array.isArray(memberIds) || memberIds.some((id) => typeof id !== "string")) return { error: t.errors.genericError };
+    const batch = memberIds.slice(0, IMPORT_INVITE_BATCH);
+    const remaining = memberIds.slice(IMPORT_INVITE_BATCH);
+    const db = getDb();
+    const rows =
+      batch.length === 0
+        ? []
+        : await db
+            .select({ memberId: members.memberId, email: members.email, active: members.active, lastLoginAt: members.lastLoginAt })
+            .from(members)
+            .where(inArray(members.memberId, batch));
+    let sent = 0;
+    const requestHeaders = await headers();
+    for (const m of rows) {
+      if (!m.active || m.lastLoginAt) continue;
+      const admission = await admitEmail(m.email, { emailVerified: true });
+      if (admission.kind === "deny") continue;
+      await getAuthInstance().api.signInMagicLink({
+        body: { email: m.email, callbackURL: "/", metadata: { invite: true } },
+        headers: requestHeaders,
+      });
+      await db.insert(auditLog).values({
+        auditId: crypto.randomUUID(),
+        userEmail: admin.email,
+        action: "invite_member",
+        entityType: "member",
+        entityId: m.memberId,
+        payloadJson: JSON.stringify({ via: "import" }),
+        createdAt: new Date(),
+      });
+      sent++;
+    }
+    return { sent, skipped: batch.length - sent, remaining };
+  } catch (e) {
+    return { error: actionErrorMessage(e, t.errors.genericError, "adminInviteImported") };
   }
 }
