@@ -31,6 +31,7 @@ import { PaymentModeCard } from "./payment-mode-card";
 import { SearchMissesCard } from "./search-misses-card";
 import { ColorDots, SettingsPanel } from "./settings-panel";
 import { SignupCard } from "./signup-card";
+import { PublicPageCard } from "./public-page-card";
 import { SetupBanner } from "./setup/setup-banner";
 import { StripeConnectionCard } from "./stripe-connection-card";
 
@@ -284,6 +285,13 @@ async function GroupView() {
         summary={current.supportEmail ? sum.supportEmail(current.supportEmail) : sum.noSupportEmail}
       >
         <IdentitySection section="contacts" />
+      </SettingsPanel>
+      <SettingsPanel
+        id="pagina-pubblica"
+        title={t.admin.settings.publicPage.title}
+        summary={settings.publicPage.enabled ? t.admin.settings.publicPage.on : t.admin.settings.publicPage.off}
+      >
+        <PublicPageCard saved={settings.publicPage} />
       </SettingsPanel>
       <SettingsPanel id="termini" title={terms.title} summary={settings.termsRequired ? terms.on : terms.off}>
         <TermsCard

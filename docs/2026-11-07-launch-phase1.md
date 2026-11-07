@@ -17,8 +17,11 @@ Requested by the maintainer to make WeGrocery ready for a cooperative that sells
 - The card check, when on, still admits a valid card as before; the mode applies to addresses without one. A deactivated member stays out in every mode. Members who joined this way (`members.joined_via`) are never asked for a card.
 - Prepaid: the credit check of `saveOrder` uses a limit of zero for these members (`effectiveMinBalance`), whatever the group's limit. A pay-per-order cycle is unchanged: the order is paid by card when confirmed.
 
-### C. Public page
-The next cycle and how to join, without signing in.
+### C. Public page (migration 0053)
+- Admin → Impostazioni → Gruppo → "Pagina pubblica": on (`public_page_enabled`), products of the next cycle (`public_products_preview`), indexable (`public_page_indexable`, else `noindex`), and a text in the format of "Il nostro gruppo" (`public_intro`, 2000 characters). All off by default.
+- `/gruppo`, outside the session redirect: logo, name, text, the next cycle open to every member (an open one closing soonest, else the planned one opening soonest; admin-only cycles never), optional products (name, variant, price), "Entra" and, by sign-up mode, "Chiedi di aderire" or "Registrati". Off: it redirects to `/login`.
+- `/` without a session cookie redirects to `/gruppo` (the proxy still reads no database), so a group without the page gets one extra hop to `/login`.
+- Every query of the page is in `lib/db/public.ts`, column by column; a unit test keeps member, order, payment and ledger tables out of it.
 
 ### D. Member import from CSV
 Name and email only.

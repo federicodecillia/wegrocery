@@ -340,6 +340,66 @@ export async function adminSetTermsRequired(action: "on" | "off" | "renew"): Pro
   }
 }
 
+// Impostazioni -> Gruppo -> Pagina pubblica: /gruppo on or off, the
+// products of the next cycle, indexing and the text (lib/public-page.ts).
+export async function adminSetPublicPage(input: {
+  enabled: boolean;
+  productsPreview: boolean;
+  indexable: boolean;
+  intro: string;
+}): Promise<{ error?: string }> {
+  try {
+    const admin = await requireAdmin();
+    const flags = [input?.enabled, input?.productsPreview, input?.indexable];
+    if (flags.some((f) => typeof f !== "boolean") || typeof input?.intro !== "string") return { error: t.errors.genericError };
+    const intro = normalizeGroupInfo(input.intro);
+    if (intro !== null && intro.length > GROUP_INFO_MAX) return { error: t.admin.settings.publicPage.tooLong(GROUP_INFO_MAX) };
+    const before = await getPaymentSettings();
+    const after = { enabled: input.enabled, productsPreview: input.productsPreview, indexable: input.indexable, intro };
+    if (JSON.stringify(before.publicPage) === JSON.stringify(after)) return {};
+    const db = getDb();
+    const now = new Date();
+    // No row yet: the defaults the group runs on are stored with the choice.
+    const stored = {
+      minBalance: before.minBalance === null ? null : before.minBalance.toFixed(2),
+      maxBalance: before.maxBalance === null ? null : before.maxBalance.toFixed(2),
+      bankTransferEnabled: before.bankTransferEnabled,
+      bankHolder: before.bankHolder,
+      bankIban: before.bankIban,
+      onlinePaymentsEnabled: before.onlinePaymentsEnabled,
+    };
+    const values = {
+      publicPageEnabled: after.enabled,
+      publicProductsPreview: after.productsPreview,
+      publicPageIndexable: after.indexable,
+      publicIntro: after.intro,
+    };
+    await db.batch([
+      db
+        .insert(appSettings)
+        .values({ id: 1, ...stored, ...values, updatedAt: now, updatedBy: admin.email })
+        .onConflictDoUpdate({ target: appSettings.id, set: { ...values, updatedAt: now, updatedBy: admin.email } }),
+      db.insert(auditLog).values({
+        auditId: crypto.randomUUID(),
+        userEmail: admin.email,
+        action: "set_public_page",
+        entityType: "app_settings",
+        entityId: "1",
+        // The flags and the text's length: the text itself is in the row.
+        payloadJson: JSON.stringify({
+          before: { ...before.publicPage, intro: before.publicPage.intro?.length ?? 0 },
+          after: { ...after, intro: after.intro?.length ?? 0 },
+        }),
+        createdAt: now,
+      }),
+    ]);
+    revalidatePath("/", "layout");
+    return {};
+  } catch (e) {
+    return { error: actionErrorMessage(e, t.errors.genericError, "adminSetPublicPage") };
+  }
+}
+
 // Impostazioni -> Soci -> Chi può entrare: the sign-up mode, the newcomers'
 // role and whether they pay before ordering (lib/membership/signup.ts).
 export async function adminSetSignup(input: {

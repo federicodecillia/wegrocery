@@ -50,6 +50,11 @@ export type PaymentSettingsRow = {
   signupMode?: string;
   signupRole?: string;
   signupPrepaid?: boolean;
+  // Optional: rows read before migration 0053 have no such columns.
+  publicPageEnabled?: boolean;
+  publicProductsPreview?: boolean;
+  publicPageIndexable?: boolean;
+  publicIntro?: string | null;
   updatedAt: Date;
 };
 
@@ -103,6 +108,8 @@ export type PaymentSettings = {
   signupMode: SignupMode;
   signupRole: SignupRole;
   signupPrepaid: boolean;
+  // The public page /gruppo (lib/public-page.ts); all off by default.
+  publicPage: { enabled: boolean; productsPreview: boolean; indexable: boolean; intro: string | null };
   // What members get: the bank details when that channel is on, online
   // top-ups when switched on and the deploy has a usable key. Both off in a
   // wallet group with top-ups off.
@@ -149,6 +156,12 @@ export function resolvePaymentSettings(
         signupMode: isSignupMode(row.signupMode) ? row.signupMode : "closed",
         signupRole: isSignupRole(row.signupRole) ? row.signupRole : "utenti",
         signupPrepaid: row.signupPrepaid ?? true,
+        publicPage: {
+          enabled: row.publicPageEnabled ?? false,
+          productsPreview: row.publicProductsPreview ?? false,
+          indexable: row.publicPageIndexable ?? false,
+          intro: row.publicIntro ?? null,
+        },
         savedAt: row.updatedAt,
       }
     : {
@@ -174,6 +187,7 @@ export function resolvePaymentSettings(
         signupMode: "closed",
         signupRole: "utenti",
         signupPrepaid: true,
+        publicPage: { enabled: false, productsPreview: false, indexable: false, intro: null },
         savedAt: null,
       };
   const stripeKey: StripeKeyState = keyStatus.enabled

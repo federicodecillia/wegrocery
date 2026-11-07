@@ -603,6 +603,23 @@ export const adminGuideEn: GuideContent = {
       keywords: ["name", "surname", "last name", "username", "email"],
     },
     {
+      slug: "pagina-pubblica",
+      topic: "impostazioni",
+      title: "The group's public page",
+      intro: "A shop window to link from your site, social media or a sign: people who are not in yet see who you are and the next order.",
+      steps: [
+        "In **Settings**, **Group**, **Public page** turn on **Page on** and write the presentation.",
+        "If you like, turn on **Show the products** and **Findable on Google**.",
+        "Tap **Save**, then **Open the page** to see it as a visitor.",
+      ],
+      notes: [
+        "The address is the app's followed by **/gruppo**; whoever opens the app without signing in lands there.",
+        "It shows only orders open to every member, never balances, orders or member names.",
+        "With sign-up open or on request, the button to join shows too.",
+      ],
+      keywords: ["public page", "shop window", "website", "group", "google", "presentation"],
+    },
+    {
       slug: "termini-privacy",
       topic: "soci",
       title: "Having the privacy notice and terms accepted",
