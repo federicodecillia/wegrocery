@@ -21,6 +21,9 @@ import { WalletTopupsCard } from "./wallet-topups-card";
 import { ConfigStatusCard } from "./config-status-card";
 import { FamiliesCard } from "./families-card";
 import { NamePromptCard } from "./name-prompt-card";
+import { TermsCard } from "./terms-card";
+import { termsHaveLink } from "@/lib/members/terms";
+import { formatDateTime } from "@/lib/i18n/format";
 import { NewCyclesCard } from "./new-cycles-card";
 import { GroupInfoCard } from "./group-info-card";
 import { PaymentSettingsForm } from "./impostazioni-form";
@@ -255,7 +258,8 @@ export async function TabImpostazioni({ view }: { view: SettingsView }) {
 }
 
 async function GroupView() {
-  const [current, identity] = await Promise.all([getBrand(), getGroupIdentity()]);
+  const [current, identity, settings] = await Promise.all([getBrand(), getGroupIdentity(), getPaymentSettings()]);
+  const terms = t.admin.settings.terms;
   const s = t.admin.settings.identity;
   const sum = t.admin.settings.summaries;
   const palette = resolvePalette(current.theme);
@@ -279,6 +283,13 @@ async function GroupView() {
         summary={current.supportEmail ? sum.supportEmail(current.supportEmail) : sum.noSupportEmail}
       >
         <IdentitySection section="contacts" />
+      </SettingsPanel>
+      <SettingsPanel id="termini" title={terms.title} summary={settings.termsRequired ? terms.on : terms.off}>
+        <TermsCard
+          required={settings.termsRequired}
+          versionLabel={settings.termsVersion ? formatDateTime(settings.termsVersion) : null}
+          hasLink={termsHaveLink(current)}
+        />
       </SettingsPanel>
     </>
   );

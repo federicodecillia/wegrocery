@@ -52,6 +52,12 @@ export type BrandConfig = {
    * session (proxy.ts), so a logged-out visitor could not open it.
    */
   privacyUrl: string | null;
+  /**
+   * Terms of service URL (the group's own page), linked next to the privacy
+   * notice and in the terms acceptance box (lib/members/terms.ts); null = no
+   * link. Absolute, for the same reason as privacyUrl.
+   */
+  termsUrl: string | null;
   /** Membership / renewal page shown when the membership check fails; null = no link */
   membershipUrl: string | null;
   /**

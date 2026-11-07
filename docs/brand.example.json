@@ -12,6 +12,7 @@
   "techEmail": "tech@riverside.example",
   "archiveCcEmail": null,
   "privacyUrl": "https://riverside.example/privacy",
+  "termsUrl": "https://riverside.example/terms",
   "membershipUrl": null,
   "minBalance": null,
   "bankTransfer": null,

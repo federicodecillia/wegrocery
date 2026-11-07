@@ -28,6 +28,7 @@ import { isMembershipCheckEnabled } from "@/lib/membership/wallyfor";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
 import { canAccessCycle } from "@/lib/roles";
 import { actionErrorMessage } from "@/lib/action-error";
+import { termsPending } from "@/lib/members/terms-gate";
 
 export type SaveOrderLine = { productId: string; quantity: number };
 
@@ -45,6 +46,7 @@ export type SaveOrderErrorCode =
   | "membership_inactive"
   | "credit_limit_exceeded"
   | "changed_elsewhere"
+  | "terms_required"
   | "unexpected";
 
 export type SaveOrderResult =
@@ -89,6 +91,9 @@ export async function saveOrder(
     const member = memberId ? await getMemberById(memberId) : null;
     if (!member) return { success: false, error: t.errors.memberNotFound, code: "member_not_found" };
     if (!member.active) return { success: false, error: t.errors.accountInactive, code: "account_inactive" };
+    // The group's terms, accepted by the person who signed in (lib/members/terms.ts).
+    const personId = (session.user as { personId?: string | null }).personId ?? member.memberId;
+    if (await termsPending(personId)) return { success: false, error: t.errors.termsRequired, code: "terms_required" };
 
     // The schema stores quantities as integers; reject anything the DB would
     // choke on (fractions, negatives, absurd values) before touching the order.

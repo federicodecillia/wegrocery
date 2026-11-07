@@ -605,6 +605,22 @@ export const adminGuideIt: GuideContent = {
       keywords: ["nome", "cognome", "nome strano", "username", "email"],
     },
     {
+      slug: "termini-privacy",
+      topic: "soci",
+      title: "Far accettare informativa e termini",
+      intro: "Il gruppo può chiedere a chi entra di leggere e accettare l'informativa privacy e i termini di servizio prima di usare l'app.",
+      steps: [
+        "In **Impostazioni**, **Gruppo**, **Contatti e link**, metti il link all'informativa, ai termini o a entrambi (pagine del vostro sito).",
+        "In **Termini e privacy** tocca **Chiedi l'accettazione**.",
+        "Quando cambi i testi tocca **Chiedi di nuovo a tutti**: li rivedono al prossimo accesso.",
+      ],
+      notes: [
+        "Finché non accetta, il socio vede solo il riquadro con i link e non può ordinare né pagare.",
+        "L'app registra chi ha accettato e quando; i testi restano sul vostro sito.",
+      ],
+      keywords: ["termini", "privacy", "condizioni", "accettazione", "gdpr", "informativa"],
+    },
+    {
       slug: "famiglie-admin",
       topic: "soci",
       title: "Famiglie: cosa vede l'admin",

@@ -10,6 +10,8 @@ import { t } from "@/lib/i18n";
 import { brand } from "@/lib/brand";
 import { GROUP_INFO_MAX, normalizeGroupInfo } from "@/lib/guide/group-info";
 import { isNamePromptMode, type NamePromptMode } from "@/lib/members/name";
+import { newTermsVersion, termsHaveLink } from "@/lib/members/terms";
+import { getBrand } from "@/lib/brand/get-brand";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
 import {
   modeChangeBlockers,
@@ -283,6 +285,57 @@ export async function adminSetWalletTopups(enabled: boolean): Promise<{ error?: 
     return {};
   } catch (e) {
     return { error: actionErrorMessage(e, t.errors.genericError, "adminSetWalletTopups") };
+  }
+}
+
+// Impostazioni -> Gruppo -> Termini e privacy: whether whoever signs in must
+// accept the privacy notice and terms first (lib/members/terms.ts). "renew"
+// asks everyone again: the version becomes now. Turning it on the first time
+// starts a version too; turning it off keeps it, so turning it back on does
+// not ask those who already accepted.
+export async function adminSetTermsRequired(action: "on" | "off" | "renew"): Promise<{ error?: string }> {
+  try {
+    const admin = await requireAdmin();
+    if (action !== "on" && action !== "off" && action !== "renew") return { error: t.errors.genericError };
+    const [before, current] = await Promise.all([getPaymentSettings(), getBrand()]);
+    if (action !== "off" && !termsHaveLink(current)) return { error: t.admin.settings.terms.needsLink };
+    if (action === "renew" && !before.termsRequired) return { error: t.errors.genericError };
+    const now = new Date();
+    const required = action !== "off";
+    const version = action === "renew" || (action === "on" && !before.termsVersion) ? newTermsVersion(now) : before.termsVersion;
+    if (required === before.termsRequired && version === before.termsVersion) return {};
+    const db = getDb();
+    // No row yet: the defaults the group runs on are stored with the choice.
+    const stored = {
+      minBalance: before.minBalance === null ? null : before.minBalance.toFixed(2),
+      maxBalance: before.maxBalance === null ? null : before.maxBalance.toFixed(2),
+      bankTransferEnabled: before.bankTransferEnabled,
+      bankHolder: before.bankHolder,
+      bankIban: before.bankIban,
+      onlinePaymentsEnabled: before.onlinePaymentsEnabled,
+    };
+    await db.batch([
+      db
+        .insert(appSettings)
+        .values({ id: 1, ...stored, termsRequired: required, termsVersion: version, updatedAt: now, updatedBy: admin.email })
+        .onConflictDoUpdate({
+          target: appSettings.id,
+          set: { termsRequired: required, termsVersion: version, updatedAt: now, updatedBy: admin.email },
+        }),
+      db.insert(auditLog).values({
+        auditId: crypto.randomUUID(),
+        userEmail: admin.email,
+        action: "set_terms_required",
+        entityType: "app_settings",
+        entityId: "1",
+        payloadJson: JSON.stringify({ action, before: { required: before.termsRequired, version: before.termsVersion }, after: { required, version } }),
+        createdAt: now,
+      }),
+    ]);
+    revalidatePath("/", "layout");
+    return {};
+  } catch (e) {
+    return { error: actionErrorMessage(e, t.errors.genericError, "adminSetTermsRequired") };
   }
 }
 

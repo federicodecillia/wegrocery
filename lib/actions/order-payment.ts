@@ -1,5 +1,6 @@
 "use server";
 
+import { termsPending } from "@/lib/members/terms-gate";
 import { recordUsage } from "@/lib/usage/events";
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
@@ -48,6 +49,7 @@ export type OrderPaymentErrorCode =
   | "too_high"
   | "changed"
   | "balance_due"
+  | "terms_required"
   | "unexpected";
 
 export type OrderPaymentResult =
@@ -69,7 +71,8 @@ export async function startOrderPayment(
   lines: { productId: string; quantity: number }[],
 ): Promise<OrderPaymentResult> {
   try {
-    const { memberId, email, role } = await requireActiveMember();
+    const { memberId, personId, email, role } = await requireActiveMember();
+    if (await termsPending(personId)) return refuse("terms_required", t.errors.termsRequired);
     const normalized = normalizeDraftLines(lines);
     if (!normalized) return refuse("invalid_quantity", t.errors.invalidQuantity);
     if (normalized.length === 0) return await cancelOrderOf(memberId, email, cycleId);

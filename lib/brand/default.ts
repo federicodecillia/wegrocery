@@ -14,6 +14,7 @@ export const DEFAULT_BRAND: BrandConfig = {
   headerShowName: true,
   flylabsSignature: true,
   privacyUrl: null,
+  termsUrl: null,
   membershipUrl: null,
   minBalance: null,
   bankTransfer: null,
