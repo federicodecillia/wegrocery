@@ -51,7 +51,13 @@ describeDb("public page (migration 0053)", () => {
   });
 
   it("refuses a text over 2000 characters", async () => {
-    await expect(sql`UPDATE app_settings SET public_intro = ${"x".repeat(2001)} WHERE id = 1`).rejects.toThrow();
+    // An upsert, not an UPDATE: a fresh database has no settings row yet, and
+    // the check refuses the text either way, so nothing is written.
+    const long = "x".repeat(2001);
+    await expect(sql`
+      INSERT INTO app_settings (id, bank_transfer_enabled, online_payments_enabled, updated_at, updated_by, public_intro)
+      VALUES (1, false, true, now(), 'int-test', ${long})
+      ON CONFLICT (id) DO UPDATE SET public_intro = EXCLUDED.public_intro`).rejects.toThrow(/public_intro_length|check/i);
   });
 
   it("has a rollback that drops the columns", async () => {
