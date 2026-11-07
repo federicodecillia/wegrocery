@@ -603,6 +603,22 @@ export const adminGuideFr: GuideContent = {
       keywords: ["nom", "prénom", "nom d'utilisateur", "e-mail"],
     },
     {
+      slug: "termini-privacy",
+      topic: "soci",
+      title: "Faire accepter la politique de confidentialité et les conditions",
+      intro: "Le groupe peut demander à qui se connecte de lire et d'accepter la politique de confidentialité et les conditions d'utilisation avant d'utiliser l'app.",
+      steps: [
+        "Dans **Réglages**, **Groupe**, **Contacts et liens**, mettez le lien vers la politique de confidentialité, les conditions ou les deux (pages de votre site).",
+        "Dans **Conditions et confidentialité** touchez **Demander l'acceptation**.",
+        "Quand vous changez les textes touchez **La redemander à tous** : chacun les revoit à sa prochaine connexion.",
+      ],
+      notes: [
+        "Tant qu'il n'a pas accepté, le membre ne voit que l'encadré avec les liens et ne peut ni commander ni payer.",
+        "L'app enregistre qui a accepté et quand ; les textes restent sur votre site.",
+      ],
+      keywords: ["conditions", "confidentialité", "acceptation", "rgpd", "politique"],
+    },
+    {
       slug: "famiglie-admin",
       topic: "soci",
       title: "Familles : ce que voit un admin",

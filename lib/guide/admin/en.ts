@@ -603,6 +603,22 @@ export const adminGuideEn: GuideContent = {
       keywords: ["name", "surname", "last name", "username", "email"],
     },
     {
+      slug: "termini-privacy",
+      topic: "soci",
+      title: "Having the privacy notice and terms accepted",
+      intro: "The group can ask whoever signs in to read and accept the privacy notice and the terms of service before using the app.",
+      steps: [
+        "In **Settings**, **Group**, **Contacts and links**, set the link to the privacy notice, the terms or both (pages on your own site).",
+        "In **Terms and privacy** tap **Ask for acceptance**.",
+        "When you change the texts tap **Ask everyone again**: they see them again at their next sign-in.",
+      ],
+      notes: [
+        "Until they accept, members see only the box with the links and cannot order or pay.",
+        "The app records who accepted and when; the texts stay on your site.",
+      ],
+      keywords: ["terms", "privacy", "conditions", "acceptance", "gdpr", "notice"],
+    },
+    {
       slug: "famiglie-admin",
       topic: "soci",
       title: "Families: what an admin sees",

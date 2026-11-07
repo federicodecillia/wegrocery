@@ -42,6 +42,9 @@ export type PaymentSettingsRow = {
   // Optional: rows read before migration 0033 have no such columns.
   bankReferenceTemplate?: string | null;
   bankReceiptEmail?: string | null;
+  // Optional: rows read before migration 0051 have no such columns.
+  termsRequired?: boolean;
+  termsVersion?: string | null;
   updatedAt: Date;
 };
 
@@ -86,6 +89,10 @@ export type PaymentSettings = {
   memberNamePrompt: NamePromptMode;
   // "Il nostro gruppo" at the top of the guide (lib/guide/group-info.ts); null = none.
   groupInfo: string | null;
+  // Whoever signs in accepts the privacy notice and terms first, and which
+  // version (lib/members/terms.ts); off and null by default.
+  termsRequired: boolean;
+  termsVersion: string | null;
   // What members get: the bank details when that channel is on, online
   // top-ups when switched on and the deploy has a usable key. Both off in a
   // wallet group with top-ups off.
@@ -127,6 +134,8 @@ export function resolvePaymentSettings(
         newCycleDefaults: parseNewCycleDefaults(row.newCycleDefaults),
         memberNamePrompt: isNamePromptMode(row.memberNamePrompt) ? row.memberNamePrompt : DEFAULT_NAME_PROMPT,
         groupInfo: row.groupInfo ?? null,
+        termsRequired: row.termsRequired ?? false,
+        termsVersion: row.termsVersion ?? null,
         savedAt: row.updatedAt,
       }
     : {
@@ -147,6 +156,8 @@ export function resolvePaymentSettings(
         newCycleDefaults: {},
         memberNamePrompt: DEFAULT_NAME_PROMPT,
         groupInfo: null,
+        termsRequired: false,
+        termsVersion: null,
         savedAt: null,
       };
   const stripeKey: StripeKeyState = keyStatus.enabled

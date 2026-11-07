@@ -81,15 +81,19 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         </div>
         </div>
       </div>
-      {brand.privacyUrl ? (
-        <a
-          href={brand.privacyUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-secondary-foreground mt-4 text-xs underline"
-        >
-          {t.login.privacyLink}
-        </a>
+      {brand.privacyUrl || brand.termsUrl ? (
+        <p className="mt-4 flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs">
+          {brand.privacyUrl ? (
+            <a href={brand.privacyUrl} target="_blank" rel="noopener noreferrer" className="text-secondary-foreground underline">
+              {t.login.privacyLink}
+            </a>
+          ) : null}
+          {brand.termsUrl ? (
+            <a href={brand.termsUrl} target="_blank" rel="noopener noreferrer" className="text-secondary-foreground underline">
+              {t.login.termsLink}
+            </a>
+          ) : null}
+        </p>
       ) : null}
       {/* "by flylabs.ai" in small plain text under the card, never above it:
           the page carries the group's brand (Playbook 2.11, kept discreet on

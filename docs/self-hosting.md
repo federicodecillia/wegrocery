@@ -101,7 +101,7 @@ the app is built.
   | `flylabsSignature` | `false` hides "by flylabs.ai" at the foot of the app, on the sign-in page and in emails (on by default; admins can also switch it in Impostazioni) |
   | `supportEmail`, `techEmail` | Who members and admins write to |
   | `archiveCcEmail` | Copy of every supplier order email, or `null` |
-  | `privacyUrl`, `membershipUrl` | Absolute links to the privacy notice and to the membership page, or `null` |
+  | `privacyUrl`, `termsUrl`, `membershipUrl` | Absolute links to the privacy notice, the terms of service and the membership page, or `null`. Admins can ask members to accept the privacy notice and terms on their next sign-in (Impostazioni > Gruppo) |
   | `minBalance` | Default credit limit (e.g. `-50`), or `null`; admins can change it in Impostazioni |
   | `bankTransfer` | `{ "holder": "...", "iban": "..." }` shown on the top-up page, or `null` |
   | `theme` | Hex colours: `primary`, `primaryLight`, `accent`, `accentLight`, `background`, `frame` |

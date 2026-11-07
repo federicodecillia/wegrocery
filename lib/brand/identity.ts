@@ -19,6 +19,7 @@ export type IdentityOverrides = {
   techEmail?: string;
   archiveCcEmail?: string | null;
   privacyUrl?: string | null;
+  termsUrl?: string | null;
   membershipUrl?: string | null;
   headerShowName?: boolean;
   flylabsSignature?: boolean;
@@ -89,7 +90,7 @@ export function validateIdentityInput(raw: unknown): { value: IdentityOverrides 
     if (v.length > 254 || (v && !EMAIL.test(v))) return { error: "email" };
     value.archiveCcEmail = v ? v.toLowerCase() : null;
   }
-  for (const key of ["privacyUrl", "membershipUrl"] as const) {
+  for (const key of ["privacyUrl", "termsUrl", "membershipUrl"] as const) {
     if (o[key] === undefined) continue;
     const v = str(o[key]);
     if (v === undefined) return { error: "invalid" };

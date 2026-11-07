@@ -46,11 +46,20 @@ describe("resolvePaymentSettings", () => {
       newCycleDefaults: {},
       memberNamePrompt: "optional",
       groupInfo: null,
+      termsRequired: false,
+      termsVersion: null,
       bankTransfer: { holder: "Porta Moneta APS", iban: SPACED_IBAN },
       onlineTopupAvailable: true,
       stripeKey: { usable: true, livemode: false },
       savedAt: null,
     });
+  });
+
+  it("reads the terms switch and version, off for a row saved before 0051", () => {
+    expect(resolvePaymentSettings(row, brand, testKey).termsRequired).toBe(false);
+    const s = resolvePaymentSettings({ ...row, termsRequired: true, termsVersion: "2026-11-07T12:00:00.000Z" }, brand, testKey);
+    expect(s.termsRequired).toBe(true);
+    expect(s.termsVersion).toBe("2026-11-07T12:00:00.000Z");
   });
 
   it("has no bank channel by default when the brand has no bank details", () => {

@@ -57,6 +57,9 @@ export const members = pgTable(
     // When the person closed the welcome card at the top of Admin
     // (drizzle/0039_admin_welcome.sql); NULL = the card shows to an admin.
     adminWelcomeDismissedAt: timestamp("admin_welcome_dismissed_at", { withTimezone: true }),
+    // The terms version this person accepted, and when (drizzle/0051_terms_acceptance.sql).
+    termsAcceptedAt: timestamp("terms_accepted_at", { withTimezone: true }),
+    termsAcceptedVersion: text("terms_accepted_version"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
   },
@@ -456,6 +459,10 @@ export const appSettings = pgTable(
     // Bank transfer reference per order and receipt address (drizzle/0033_bank_reference.sql).
     bankReferenceTemplate: text("bank_reference_template"),
     bankReceiptEmail: text("bank_receipt_email"),
+    // Ask whoever signs in to accept the privacy notice and terms; the version
+    // is when an admin last asked everyone (drizzle/0051_terms_acceptance.sql).
+    termsRequired: boolean("terms_required").notNull().default(false),
+    termsVersion: text("terms_version"),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
     updatedBy: text("updated_by").notNull(),
   },

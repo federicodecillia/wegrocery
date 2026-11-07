@@ -59,6 +59,40 @@ export async function postponeNamePrompt(): Promise<{ error?: string }> {
   }
 }
 
+// "Accetto" on the terms box (components/terms-prompt.tsx): the person who
+// signed in accepts the version in force. A version changed meanwhile is
+// recorded as the one they saw only if it is still current: otherwise the
+// box comes back with the new one.
+export async function acceptTerms(version: string): Promise<{ error?: string }> {
+  try {
+    const session = await requireActiveMember();
+    const settings = await getPaymentSettings();
+    if (!settings.termsRequired || !settings.termsVersion) return {};
+    if (version !== settings.termsVersion) return { error: t.terms.changed };
+    const db = getDb();
+    const now = new Date();
+    await db.batch([
+      db
+        .update(members)
+        .set({ termsAcceptedAt: now, termsAcceptedVersion: version, updatedAt: now })
+        .where(eq(members.memberId, session.personId)),
+      db.insert(auditLog).values({
+        auditId: crypto.randomUUID(),
+        userEmail: session.email,
+        action: "terms_accepted",
+        entityType: "member",
+        entityId: session.personId,
+        payloadJson: JSON.stringify({ version }),
+        createdAt: now,
+      }),
+    ]);
+    revalidatePath("/", "layout");
+    return {};
+  } catch (e) {
+    return { error: actionErrorMessage(e, t.errors.genericError, "acceptTerms") };
+  }
+}
+
 // The person who signed in, never the family account they work on. False
 // when their row is gone.
 async function renameSelf(session: { email: string; personId: string }, name: string): Promise<boolean> {

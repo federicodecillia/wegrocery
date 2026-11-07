@@ -603,6 +603,22 @@ export const adminGuideEs: GuideContent = {
       keywords: ["nombre", "apellido", "usuario", "email"],
     },
     {
+      slug: "termini-privacy",
+      topic: "soci",
+      title: "Hacer aceptar el aviso de privacidad y los términos",
+      intro: "El grupo puede pedir a quien entra que lea y acepte el aviso de privacidad y los términos del servicio antes de usar la app.",
+      steps: [
+        "En **Ajustes**, **Grupo**, **Contactos y enlaces**, pon el enlace al aviso de privacidad, a los términos o a ambos (páginas de vuestro sitio).",
+        "En **Términos y privacidad** toca **Pedir la aceptación**.",
+        "Cuando cambies los textos toca **Pedirla de nuevo a todos**: los vuelven a ver en su próximo acceso.",
+      ],
+      notes: [
+        "Hasta que acepta, el socio solo ve el recuadro con los enlaces y no puede pedir ni pagar.",
+        "La app registra quién aceptó y cuándo; los textos siguen en vuestro sitio.",
+      ],
+      keywords: ["términos", "privacidad", "condiciones", "aceptación", "rgpd", "aviso"],
+    },
+    {
       slug: "famiglie-admin",
       topic: "soci",
       title: "Familias: lo que ve un admin",

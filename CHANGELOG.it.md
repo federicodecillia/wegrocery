@@ -25,6 +25,11 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ## [Unreleased]
 
+### Aggiunto
+- 📜 **Termini e privacy da accettare**: in Impostazioni > Gruppo un admin può chiedere a chi entra di accettare l'informativa privacy e i termini di servizio del gruppo (link alle pagine del gruppo) prima di usare l'app, e chiederlo di nuovo a tutti quando cambia i testi. Fino ad allora non si può ordinare né pagare. Spento di default.
+- 🔗 **Link ai termini di servizio** accanto all'informativa privacy, nella pagina di accesso e in fondo a ogni pagina.
+- [tecnico] 🗄️ **Migrazione 0051** (`terms_acceptance`): `app_settings.terms_required`, `app_settings.terms_version`, `members.terms_accepted_at`, `members.terms_accepted_version`. Additiva, da applicare prima del deploy. Nuovo campo facoltativo del brand `termsUrl`.
+
 ### Sicurezza
 - [tecnico] 🔒 **Better Auth aggiornato alla 1.7.18**, che corregge un avviso critico (lo stato di un accesso con Google accettato come link di accesso, GHSA-965c-763c-88jm) e due minori. Quello critico qui non era sfruttabile: i link di accesso sono salvati come hash, quindi uno stato di Google non ne coincide mai con uno. Gli altri riguardano l'OAuth Proxy, che qui non si usa, e una corsa sul limite dei tentativi con PostgreSQL. Un link inviato prima dell'aggiornamento smette di funzionare; il codice nella stessa email funziona ancora.
 

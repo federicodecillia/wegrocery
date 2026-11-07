@@ -36,7 +36,7 @@ Found in the review of 2026-10-14 (each line, its reason and its timing are in
 - 7.6 Done for notification emails (idempotency key, one-click unsubscribe, see "Email compliance"). Sign-in emails and the supplier and family emails carry no unsubscribe on purpose.
 - 7.8 Done: `usage_events` (migration 0037) counts a fixed list of events per day, no member id, no text, nothing in the demo (`lib/usage/events.ts`, shown in Admin → Statistiche); Vercel Analytics and Speed Insights are gone.
 - 7.10 The Console (`console/`) redirects to its password login instead of answering 404: a 404 would hide the only way in. This stays.
-- 8.1 No versioned legal documents in the app: each group owns its privacy notice (`brand.privacyUrl`) as data controller. This stays for groups; FlyLabs-hosted terms are decided with hosting model A.
+- 8.1 No versioned legal documents in the app: each group owns its privacy notice and terms (`brand.privacyUrl`, `brand.termsUrl`) as data controller. An admin may ask whoever signs in to accept them (`app_settings.terms_required`, migration 0051, `lib/members/terms.ts`): AppShell shows `components/terms-prompt.tsx` instead of the page, and `saveOrder`, `startOrderPayment` and `startOnlineTopup` refuse with `terms_required` (`termsPending`, the person who signed in, never the family account) until they accept the current `terms_version`, recorded on `members.terms_accepted_*` with an audit row. This stays for groups; FlyLabs-hosted terms are decided with hosting model A.
 - 9.1 Feature specs live in the private project folder (Italian, with group details), not in `docs/`: from now on a dated English plan goes in `docs/` with no group or member data.
 
 Never read `.env*` files other than `.env.example` (Playbook 8.3).
@@ -92,7 +92,7 @@ Never read `.env*` files other than `.env.example` (Playbook 8.3).
 │                               #   access.ts: pure checkAccess/sessionClaims (no imports, used by proxy.ts)
 ├── proxy.ts                     # Redirect unauthenticated to /login (Next.js 16's middleware)
 ├── auth.ts                     # Better Auth instance, auth() (session + member), signOut()
-├── drizzle/                    # SQL migrations (0000–0048)
+├── drizzle/                    # SQL migrations (0000–0051)
 ├── console/                    # WeGrocery Console: separate Next.js app (own package.json, registry DB, Vercel project with
 │                               #   Root Directory `console`) for the operator's fleet; excluded from the root tsc/eslint/vitest; see console/README.md
 └── public/logo.png, public/mail/logo.png (email logo, 3x)
