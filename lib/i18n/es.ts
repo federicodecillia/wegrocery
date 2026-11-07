@@ -1548,6 +1548,47 @@ export const es: Strings = {
       inviteSent: (name: string) => `Invitación enviada a ${name}: recibe un enlace para entrar.`,
       inviteInactive: "El socio está desactivado: reactívalo antes de invitarlo.",
       inviteRefused: "El socio no puede entrar ahora mismo (por ejemplo, la tarjeta no está activa): no se ha enviado ningún enlace.",
+      import: {
+        toggle: "Importar desde archivo",
+        title: "Importar socios desde un archivo",
+        intro:
+          "Un archivo CSV (de Excel, Hojas de cálculo de Google u otro programa) con al menos una columna de email. También se reconocen nombre, apellidos, email secundario, rol y paga fuera de la app. Primero ves lo que pasará y luego decides.",
+        fileLabel: "Archivo CSV",
+        pasteLabel: "O pega aquí el texto",
+        check: "Comprobar",
+        cancel: "Cancelar",
+        importButton: (n: number) => (n === 1 ? "Importar 1 socio" : `Importar ${n} socios`),
+        nothingToImport: "No hay filas que importar.",
+        summaryTitle: "Qué pasará",
+        outcomes: {
+          new: "Nuevos",
+          possible_duplicate: "Nuevos, mismo nombre que un socio",
+          existing: "Ya son socios",
+          duplicate_in_file: "Repetidos en el archivo",
+          invalid_email: "Email no válido",
+          missing_email: "Sin email",
+          conflict: "Email secundario ya en uso",
+        },
+        ignoredColumns: (cols: string) => `Columnas no usadas: ${cols}`,
+        adminDropped: (n: number) =>
+          n === 1
+            ? "1 fila tiene el rol admin: entra como usuario, los admins se nombran a mano."
+            : `${n} filas tienen el rol admin: entran como usuarios, los admins se nombran a mano.`,
+        moreRows: (shown: number, total: number) => `Se muestran las primeras ${shown} filas de ${total}.`,
+        columns: { line: "Fila", name: "Nombre", email: "Email", outcome: "Resultado" },
+        imported: (n: number) =>
+          n === 1 ? "1 socio creado. No se ha enviado ningún email." : `${n} socios creados. No se ha enviado ningún email.`,
+        invite: (n: number) => `Invitar a los nuevos socios (${n})`,
+        inviteNote: "Cada clic envía hasta 20 enlaces, para no superar el límite diario de emails.",
+        invited: (sent: number, remaining: number) =>
+          remaining === 0 ? `Invitaciones enviadas: ${sent}. Terminado.` : `Invitaciones enviadas: ${sent}. Quedan ${remaining}.`,
+        errors: {
+          empty: "El archivo está vacío o solo tiene la cabecera.",
+          tooBig: "El archivo supera 500 KB.",
+          no_email_column: "No encuentro una columna de email: llámala, por ejemplo, \"email\".",
+          too_many_rows: "El archivo tiene más de 2000 filas: divídelo en varios archivos.",
+        },
+      },
       requests: {
         title: (n: number) => (n === 0 ? "Solicitudes de alta" : `Solicitudes de alta (${n})`),
         modeOff: "Las nuevas solicitudes están desactivadas en Ajustes, Socios y guía: decide las que quedan.",

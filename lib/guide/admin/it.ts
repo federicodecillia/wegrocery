@@ -656,6 +656,24 @@ export const adminGuideIt: GuideContent = {
       keywords: ["registrazione", "iscrizione", "aderire", "richiesta", "clienti", "nuovi soci", "aderisci"],
     },
     {
+      slug: "importa-soci",
+      topic: "soci",
+      title: "Importare i soci da un file",
+      intro: "Se i soci sono già in un foglio Excel o Google, li porti nell'app in una volta.",
+      steps: [
+        "Salva il foglio come **CSV**: serve almeno una colonna **email**; nome, cognome, email secondaria, ruolo e paga fuori app sono facoltativi.",
+        "In **Soci** tocca **Importa da file**, scegli il file o incolla il testo, poi **Controlla**.",
+        "Guarda cosa succede a ogni riga: nuovi, già soci, ripetuti, email non valide.",
+        "Tocca **Importa**, poi **Invita i nuovi soci** per mandare il link per entrare.",
+      ],
+      notes: [
+        "Chi è già socio non viene toccato: puoi importare lo stesso file due volte.",
+        "Il ruolo admin nel file non vale: gli admin si nominano a mano.",
+        "Gli inviti partono 20 alla volta, per restare nel limite giornaliero di email.",
+      ],
+      keywords: ["importa", "csv", "excel", "foglio", "elenco soci", "carica soci"],
+    },
+    {
       slug: "famiglie-admin",
       topic: "soci",
       title: "Famiglie: cosa vede l'admin",

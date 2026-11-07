@@ -654,6 +654,24 @@ export const adminGuideEs: GuideContent = {
       keywords: ["registro", "alta", "unirse", "solicitud", "clientes", "nuevos socios", "aderisci"],
     },
     {
+      slug: "importa-soci",
+      topic: "soci",
+      title: "Importar socios desde un archivo",
+      intro: "Si los socios ya están en una hoja de Excel o de Google, los pasas a la app de una vez.",
+      steps: [
+        "Guarda la hoja como **CSV**: necesita al menos una columna **email**; nombre, apellidos, email secundario, rol y paga fuera de la app son opcionales.",
+        "En **Socios** toca **Importar desde archivo**, elige el archivo o pega el texto y luego **Comprobar**.",
+        "Mira qué pasa con cada fila: nuevos, ya socios, repetidos, emails no válidos.",
+        "Toca **Importar** y luego **Invitar a los nuevos socios** para enviarles el enlace de acceso.",
+      ],
+      notes: [
+        "Los socios que ya existen no se tocan: puedes importar el mismo archivo dos veces.",
+        "El rol admin del archivo no cuenta: los admins se nombran a mano.",
+        "Las invitaciones salen de 20 en 20, para no superar el límite diario de emails.",
+      ],
+      keywords: ["importar", "csv", "excel", "hoja", "lista de socios", "cargar socios"],
+    },
+    {
       slug: "famiglie-admin",
       topic: "soci",
       title: "Familias: lo que ve un admin",

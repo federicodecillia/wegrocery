@@ -1548,6 +1548,47 @@ export const en: Strings = {
       inviteSent: (name: string) => `Invitation sent to ${name}: they receive a link to sign in.`,
       inviteInactive: "The member is deactivated: reactivate them before inviting.",
       inviteRefused: "The member cannot sign in right now (for example the card is not active): no link sent.",
+      import: {
+        toggle: "Import from file",
+        title: "Import members from a file",
+        intro:
+          "A CSV file (from Excel, Google Sheets or another program) with at least an email column. Name, surname, secondary email, role and pays outside the app are recognised too. You see what will happen first, then decide.",
+        fileLabel: "CSV file",
+        pasteLabel: "Or paste the text here",
+        check: "Check",
+        cancel: "Cancel",
+        importButton: (n: number) => (n === 1 ? "Import 1 member" : `Import ${n} members`),
+        nothingToImport: "No rows to import.",
+        summaryTitle: "What will happen",
+        outcomes: {
+          new: "New",
+          possible_duplicate: "New, same name as a member",
+          existing: "Already members",
+          duplicate_in_file: "Repeated in the file",
+          invalid_email: "Invalid email",
+          missing_email: "No email",
+          conflict: "Secondary email already in use",
+        },
+        ignoredColumns: (cols: string) => `Columns not used: ${cols}`,
+        adminDropped: (n: number) =>
+          n === 1
+            ? "1 row has the admin role: it joins as a user, admins are named by hand."
+            : `${n} rows have the admin role: they join as users, admins are named by hand.`,
+        moreRows: (shown: number, total: number) => `Showing the first ${shown} rows of ${total}.`,
+        columns: { line: "Row", name: "Name", email: "Email", outcome: "Result" },
+        imported: (n: number) =>
+          n === 1 ? "1 member created. No email was sent." : `${n} members created. No email was sent.`,
+        invite: (n: number) => `Invite the new members (${n})`,
+        inviteNote: "Each click sends up to 20 links, to stay within the daily email limit.",
+        invited: (sent: number, remaining: number) =>
+          remaining === 0 ? `Invitations sent: ${sent}. Done.` : `Invitations sent: ${sent}. ${remaining} left.`,
+        errors: {
+          empty: "The file is empty or has only the header.",
+          tooBig: "The file is larger than 500 KB.",
+          no_email_column: "No email column found: name it, for example, \"email\".",
+          too_many_rows: "The file has more than 2000 rows: split it into several files.",
+        },
+      },
       requests: {
         title: (n: number) => (n === 0 ? "Requests to join" : `Requests to join (${n})`),
         modeOff: "New requests are off in Settings, Members & guide: decide the ones left.",

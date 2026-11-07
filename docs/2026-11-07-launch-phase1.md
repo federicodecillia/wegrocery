@@ -24,7 +24,11 @@ Requested by the maintainer to make WeGrocery ready for a cooperative that sells
 - Every query of the page is in `lib/db/public.ts`, column by column; a unit test keeps member, order, payment and ledger tables out of it.
 
 ### D. Member import from CSV
-Name and email only.
+- Admin → Soci → "Importa da file": a CSV file or pasted text, comma, semicolon or tab, UTF-8 or Windows-1252, at most 2000 rows and 500 KB (under the server action body limit). No migration.
+- Columns are recognised by header in four languages: email (required), full name or first and last name, secondary email, role, pays outside the app. Other columns are listed as not used.
+- `planImport` (pure, `lib/members/import.ts`) gives every row an outcome against the members of that moment: new, new with the same name as a member, already a member, repeated in the file, invalid email, no email, secondary email already used. Emails and aliases share one namespace, lower-cased. An admin role in the file becomes the base role: admins are named by hand.
+- The preview and the import each plan the file again on the server. The insert is one statement with ON CONFLICT DO NOTHING, so importing twice, or a member created between preview and import, never doubles anyone. The audit keeps counts, never addresses.
+- No email at import. "Invita i nuovi soci" sends the usual invitation link 20 at a time (the email provider's daily limit), skipping members already signed in or not admitted.
 
 ### B. Availability
 A maximum quantity per product and cycle; members see only "Esaurito" when it runs out.

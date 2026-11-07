@@ -1548,6 +1548,47 @@ export const fr: Strings = {
       inviteSent: (name: string) => `Invitation envoyée à ${name} : la personne reçoit un lien pour se connecter.`,
       inviteInactive: "Le membre est désactivé : réactivez-le avant de l'inviter.",
       inviteRefused: "Le membre ne peut pas se connecter pour le moment (par exemple, la carte n'est pas active) : aucun lien envoyé.",
+      import: {
+        toggle: "Importer depuis un fichier",
+        title: "Importer des membres depuis un fichier",
+        intro:
+          "Un fichier CSV (depuis Excel, Google Sheets ou un autre programme) avec au moins une colonne e-mail. Le prénom, le nom, l'e-mail secondaire, le rôle et le paiement hors de l'app sont aussi reconnus. Vous voyez d'abord ce qui va se passer, puis vous décidez.",
+        fileLabel: "Fichier CSV",
+        pasteLabel: "Ou collez le texte ici",
+        check: "Vérifier",
+        cancel: "Annuler",
+        importButton: (n: number) => (n === 1 ? "Importer 1 membre" : `Importer ${n} membres`),
+        nothingToImport: "Aucune ligne à importer.",
+        summaryTitle: "Ce qui va se passer",
+        outcomes: {
+          new: "Nouveaux",
+          possible_duplicate: "Nouveaux, même nom qu'un membre",
+          existing: "Déjà membres",
+          duplicate_in_file: "Répétés dans le fichier",
+          invalid_email: "E-mail non valide",
+          missing_email: "Sans e-mail",
+          conflict: "E-mail secondaire déjà utilisé",
+        },
+        ignoredColumns: (cols: string) => `Colonnes non utilisées : ${cols}`,
+        adminDropped: (n: number) =>
+          n === 1
+            ? "1 ligne a le rôle admin : elle entre comme utilisateur, les admins se nomment à la main."
+            : `${n} lignes ont le rôle admin : elles entrent comme utilisateurs, les admins se nomment à la main.`,
+        moreRows: (shown: number, total: number) => `Affichage des ${shown} premières lignes sur ${total}.`,
+        columns: { line: "Ligne", name: "Nom", email: "E-mail", outcome: "Résultat" },
+        imported: (n: number) =>
+          n === 1 ? "1 membre créé. Aucun e-mail n'a été envoyé." : `${n} membres créés. Aucun e-mail n'a été envoyé.`,
+        invite: (n: number) => `Inviter les nouveaux membres (${n})`,
+        inviteNote: "Chaque clic envoie jusqu'à 20 liens, pour rester dans la limite quotidienne d'e-mails.",
+        invited: (sent: number, remaining: number) =>
+          remaining === 0 ? `Invitations envoyées : ${sent}. Terminé.` : `Invitations envoyées : ${sent}. Il en reste ${remaining}.`,
+        errors: {
+          empty: "Le fichier est vide ou ne contient que l'en-tête.",
+          tooBig: "Le fichier dépasse 500 Ko.",
+          no_email_column: "Aucune colonne e-mail trouvée : nommez-la par exemple « email ».",
+          too_many_rows: "Le fichier a plus de 2000 lignes : divisez-le en plusieurs fichiers.",
+        },
+      },
       requests: {
         title: (n: number) => (n === 0 ? "Demandes d'adhésion" : `Demandes d'adhésion (${n})`),
         modeOff: "Les nouvelles demandes sont désactivées dans Réglages, Membres et guide : traitez celles qui restent.",
