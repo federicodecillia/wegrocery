@@ -2239,9 +2239,9 @@ export const fr: Strings = {
         title: "Quantités limitées",
         on: "Activées",
         off: "Désactivées",
-        hint: "Pour les récoltes limitées : sur chaque produit du cycle, vous pouvez indiquer combien d'unités il y a et combien un membre peut en prendre. Les membres voient seulement « Épuisé », jamais combien il en reste.",
-        enabled: "Utiliser les quantités limitées",
-        enabledHint: "Désactivé, chaque produit est sans limite comme avant ; les nombres déjà enregistrés restent mais ne comptent pas.",
+        hint: "Pour les produits en quantité limitée, comme une petite récolte. Une fois l'option activée, ouvrez le cycle, touchez « Modifier » sur un produit et remplissez « Disponibles » (combien d'unités en tout) et « Maximum par membre ». Quand les unités sont épuisées, le membre voit « Épuisé » ; il ne voit jamais combien il en reste.",
+        enabled: "Activer les quantités limitées",
+        enabledHint: "Si vous la désactivez, tous les produits redeviennent sans limite. Les nombres déjà saisis restent enregistrés et comptent de nouveau quand vous la réactivez.",
         saved: "Réglage enregistré",
       },
       publicPage: {

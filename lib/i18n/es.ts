@@ -2239,9 +2239,9 @@ export const es: Strings = {
         title: "Cantidades limitadas",
         on: "Activadas",
         off: "Desactivadas",
-        hint: "Para cosechas limitadas: en cada producto del ciclo puedes indicar cuántas unidades hay y cuántas puede llevarse un socio. Los socios solo ven \"Agotado\", nunca cuántas quedan.",
-        enabled: "Usar cantidades limitadas",
-        enabledHint: "Apagado, cada producto no tiene límite como hasta ahora; los números ya guardados se quedan pero no cuentan.",
+        hint: "Para productos con cantidad limitada, como una cosecha pequeña. Con la opción activa, abre el ciclo, toca «Editar» en un producto y rellena «Disponibles» (cuántas unidades en total) y «Máximo por socio». Cuando se acaban las unidades el socio ve «Agotado»; nunca ve cuántas quedan.",
+        enabled: "Activa las cantidades limitadas",
+        enabledHint: "Si la apagas, todos los productos vuelven a no tener límite. Los números ya introducidos quedan guardados y vuelven a contar cuando la enciendes de nuevo.",
         saved: "Ajuste guardado",
       },
       publicPage: {
