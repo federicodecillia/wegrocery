@@ -56,4 +56,5 @@ export const MIGRATIONS = [
   "0051_terms_acceptance.sql",
   "0052_signup.sql",
   "0053_public_page.sql",
+  "0054_stock_limits.sql",
 ] as const;

@@ -55,6 +55,8 @@ export type PaymentSettingsRow = {
   publicProductsPreview?: boolean;
   publicPageIndexable?: boolean;
   publicIntro?: string | null;
+  // Optional: rows read before migration 0054.
+  stockLimitsEnabled?: boolean;
   updatedAt: Date;
 };
 
@@ -110,6 +112,8 @@ export type PaymentSettings = {
   signupPrepaid: boolean;
   // The public page /gruppo (lib/public-page.ts); all off by default.
   publicPage: { enabled: boolean; productsPreview: boolean; indexable: boolean; intro: string | null };
+  // Limited quantities per cycle product (lib/products/stock.ts); off by default.
+  stockLimitsEnabled: boolean;
   // What members get: the bank details when that channel is on, online
   // top-ups when switched on and the deploy has a usable key. Both off in a
   // wallet group with top-ups off.
@@ -162,6 +166,7 @@ export function resolvePaymentSettings(
           indexable: row.publicPageIndexable ?? false,
           intro: row.publicIntro ?? null,
         },
+        stockLimitsEnabled: row.stockLimitsEnabled ?? false,
         savedAt: row.updatedAt,
       }
     : {
@@ -188,6 +193,7 @@ export function resolvePaymentSettings(
         signupRole: "utenti",
         signupPrepaid: true,
         publicPage: { enabled: false, productsPreview: false, indexable: false, intro: null },
+        stockLimitsEnabled: false,
         savedAt: null,
       };
   const stripeKey: StripeKeyState = keyStatus.enabled

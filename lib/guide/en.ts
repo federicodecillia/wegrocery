@@ -141,6 +141,24 @@ export const guideEn: GuideContent = {
       keywords: ["draft", "saved", "lost", "cart", "unconfirmed"],
     },
     {
+      slug: "prodotti-esauriti",
+      topic: "ordinare",
+      title: "A product is sold out",
+      intro: "Some products come in limited quantities: when they run out you see **Sold out** and the + cannot be tapped.",
+      steps: [
+        "If a product runs out while you order, on confirming you see **Some products are not enough** with how many you can still take.",
+        "Tap **Fit to what is available**, check the cart and confirm again.",
+      ],
+      notes: [
+        "The confirmed order counts, not the cart: until you confirm, the units stay free for everyone.",
+        "What you already confirmed stays yours; if you remove something it is available to the others at once.",
+        "Some products also have a limit per member, shown under the name when you reach it.",
+      ],
+      link: { href: "/ordine", label: "Open Order" },
+      keywords: ["sold out", "finished", "not available", "availability", "limit", "quantity"],
+      when: { stockLimits: true },
+    },
+    {
       slug: "quando-ordinare",
       topic: "ordinare",
       title: "Until when can I order",

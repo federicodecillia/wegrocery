@@ -622,6 +622,24 @@ export const adminGuideIt: GuideContent = {
       keywords: ["pagina pubblica", "vetrina", "sito", "gruppo", "google", "presentazione"],
     },
     {
+      slug: "quantita-limitate",
+      topic: "ciclo",
+      title: "Prodotti in quantità limitata",
+      intro: "Per un raccolto che non basta per tutti: 30 cassette di fragole, 12 kg di zucchine.",
+      steps: [
+        "In **Impostazioni**, **Gruppo**, **Quantità limitate** accendi **Usa le quantità limitate**.",
+        "In **Ciclo**, **Prodotti** tocca la matita del prodotto e scrivi **Disponibili** e, se serve, **Massimo per socio**.",
+        "Accanto al prodotto vedi quanti ne sono già ordinati, per esempio **12 su 30**.",
+      ],
+      notes: [
+        "I soci vedono solo **Esaurito**, mai quanti ne restano.",
+        "Contano gli ordini confermati e i pagamenti con carta in corso, per mezz'ora; un ordine ridotto o annullato libera subito le unità.",
+        "Non puoi scendere sotto quanto già ordinato. I tuoi ordini per conto di un socio rispettano le quantità finché il ciclo è aperto.",
+        "Si contano le unità d'ordine, non le pesate: un prodotto a peso con **Disponibili 12** vuol dire 12 confezioni.",
+      ],
+      keywords: ["disponibilità", "esaurito", "quantità", "limite", "scorte", "raccolto", "massimo"],
+    },
+    {
       slug: "termini-privacy",
       topic: "soci",
       title: "Far accettare informativa e termini",

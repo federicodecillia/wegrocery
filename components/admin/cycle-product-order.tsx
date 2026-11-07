@@ -50,6 +50,10 @@ export type OrderableProduct = {
   emoji: string | null;
   pricePerKg?: string | null;
   notes?: string | null;
+  maxQuantity?: number | null;
+  maxPerMember?: number | null;
+  /** With limited quantities on: units ordered or reserved. */
+  sold?: number;
 };
 
 const po = t.admin.productOrder;
@@ -290,6 +294,7 @@ function SortableRow({
           {meta && <span className="truncate">{meta}</span>}
           <span className="shrink-0 font-bold tabular-nums text-primary-text">{formatEur(parseFloat(p.unitPrice))}</span>
           <PricePerKg value={p.pricePerKg} />
+          <StockBadge sold={p.sold} max={p.maxQuantity} />
         </div>
       </div>
       <EditButton name={p.name} expanded={editing} onEdit={onEdit} />
@@ -319,6 +324,18 @@ export function EditButton({ name, expanded, onEdit }: { name: string; expanded:
     >
       <Pencil className="size-4" aria-hidden />
     </button>
+  );
+}
+
+/** Limited quantities: "12 su 30" (ordered or reserved, of the units for sale), red when sold out. */
+export function StockBadge({ sold, max }: { sold: number | undefined; max: number | null | undefined }) {
+  if (sold === undefined) return null;
+  const out = max !== null && max !== undefined && sold >= max;
+  return (
+    <span className={`shrink-0 tabular-nums ${out ? "font-bold text-destructive" : ""}`}>
+      {out ? `${t.admin.products.stock.soldOutBadge} · ` : ""}
+      {t.admin.products.stock.sold(sold, max ?? null)}
+    </span>
   );
 }
 

@@ -52,6 +52,7 @@ describe("resolvePaymentSettings", () => {
       signupRole: "utenti",
       signupPrepaid: true,
       publicPage: { enabled: false, productsPreview: false, indexable: false, intro: null },
+      stockLimitsEnabled: false,
       bankTransfer: { holder: "Porta Moneta APS", iban: SPACED_IBAN },
       onlineTopupAvailable: true,
       stripeKey: { usable: true, livemode: false },

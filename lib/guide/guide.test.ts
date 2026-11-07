@@ -8,8 +8,8 @@ import { guideIt } from "./it";
 import { buildSearchIndex, normalizeText, searchGuide } from "./search";
 import { guideContext, isVisible, visibleGuide, type GuideContent, type GuideContext } from "./types";
 
-const wallet: GuideContext = { mode: "wallet", families: false, onlineTopup: true, bankTransfer: true, topups: true, cards: true };
-const perOrder: GuideContext = { mode: "per_order", families: true, onlineTopup: true, bankTransfer: false, topups: true, cards: true };
+const wallet: GuideContext = { mode: "wallet", families: false, onlineTopup: true, bankTransfer: true, topups: true, cards: true, stockLimits: false };
+const perOrder: GuideContext = { mode: "per_order", families: true, onlineTopup: true, bankTransfer: false, topups: true, cards: true, stockLimits: true };
 
 const slugs = (g: GuideContent) => g.articles.map((a) => a.slug);
 

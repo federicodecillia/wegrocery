@@ -7,6 +7,8 @@ import { getDb } from "@/lib/db/client";
 import { auditLog } from "@/lib/db/schema";
 import { ActionError, actionErrorMessage } from "@/lib/action-error";
 import { getAdminCycleProducts } from "@/lib/db/queries";
+import { getPaymentSettings } from "@/lib/payments/get-settings";
+import { readCycleSold } from "@/lib/products/stock";
 import {
   findOrderSource,
   readCustomOrderedProducts,
@@ -34,6 +36,8 @@ export type CycleProductsData = {
   productOrder: ProductOrderMode;
   /** The cycle "Usa l'ordine dell'ultimo ciclo" would copy, if any. */
   copySource: ProductOrderSource | null;
+  /** Limited quantities on, and the units ordered or reserved per product. */
+  stock: { enabled: boolean; sold: Record<string, number> };
 };
 
 export async function adminGetCycleProducts(cycleId: string): Promise<CycleProductsData | { error: string }> {
@@ -42,11 +46,13 @@ export async function adminGetCycleProducts(cycleId: string): Promise<CycleProdu
     const db = getDb();
     const state = await readCycleOrderState(db, cycleId);
     if (!state) throw new ActionError(t.errors.cycleNotFound);
-    const [products, copySource] = await Promise.all([
+    const [products, copySource, settings] = await Promise.all([
       getAdminCycleProducts(cycleId),
       findOrderSource(db, cycleId, state.supplierId),
+      getPaymentSettings(),
     ]);
-    return { products, productOrder: state.productOrder, copySource };
+    const sold = settings.stockLimitsEnabled ? Object.fromEntries(await readCycleSold(db, cycleId)) : {};
+    return { products, productOrder: state.productOrder, copySource, stock: { enabled: settings.stockLimitsEnabled, sold } };
   } catch (e) {
     return { error: actionErrorMessage(e, t.errors.genericError, "adminGetCycleProducts") };
   }

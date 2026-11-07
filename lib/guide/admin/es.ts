@@ -620,6 +620,24 @@ export const adminGuideEs: GuideContent = {
       keywords: ["página pública", "escaparate", "web", "grupo", "google", "presentación"],
     },
     {
+      slug: "quantita-limitate",
+      topic: "ciclo",
+      title: "Productos en cantidad limitada",
+      intro: "Para una cosecha que no alcanza para todos: 30 cajas de fresas, 12 kg de calabacines.",
+      steps: [
+        "En **Ajustes**, **Grupo**, **Cantidades limitadas** activa **Usar cantidades limitadas**.",
+        "En **Ciclo**, **Productos** toca el lápiz del producto y escribe **Disponibles** y, si hace falta, **Máximo por socio**.",
+        "Junto al producto ves cuántos están ya pedidos, por ejemplo **12 de 30**.",
+      ],
+      notes: [
+        "Los socios solo ven **Agotado**, nunca cuántos quedan.",
+        "Cuentan los pedidos confirmados y los pagos con tarjeta en curso, durante media hora; un pedido reducido o cancelado libera enseguida las unidades.",
+        "No puedes bajar de lo ya pedido. Tus pedidos en nombre de un socio respetan las cantidades mientras el ciclo está abierto.",
+        "Cuentan las unidades de pedido, no las pesadas: un producto a peso con **Disponibles 12** quiere decir 12 envases.",
+      ],
+      keywords: ["disponibilidad", "agotado", "cantidad", "límite", "existencias", "cosecha", "máximo"],
+    },
+    {
       slug: "termini-privacy",
       topic: "soci",
       title: "Hacer aceptar el aviso de privacidad y los términos",

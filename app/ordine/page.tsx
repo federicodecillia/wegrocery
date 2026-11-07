@@ -25,6 +25,7 @@ import { orderLinesKey, orderStateKey, resumeDraft } from "@/lib/order-draft";
 import { canAccessCycle } from "@/lib/roles";
 import { resolveOrderCycle } from "@/lib/order-cycle";
 import { normalizeProductOrder } from "@/lib/products/cycle-order";
+import { isSoldOut, readCycleStock, type ProductStock } from "@/lib/products/stock";
 import Link from "next/link";
 import type { Metadata } from "next";
 
@@ -77,10 +78,12 @@ export default async function OrdinePage({
     );
   }
 
-  const [cycleProducts, existingLines, storedDraft] = await Promise.all([
+  const [cycleProducts, existingLines, storedDraft, stock] = await Promise.all([
     getCycleProducts(openCycle!.cycleId),
     getMemberOrderLines(memberId, openCycle!.cycleId),
     getOrderDraft(memberId, openCycle!.cycleId),
+    // Limited quantities: empty with the setting off (lib/products/stock.ts).
+    readCycleStock(getDb(), openCycle!.cycleId, memberId),
   ]);
   // Unconfirmed edits to pick up, limited to the products still in the cycle.
   const availableProductIds = new Set(cycleProducts.map((p) => p.productId));
@@ -177,6 +180,7 @@ export default async function OrdinePage({
           category: p.category,
           emoji: p.emoji,
           sortOrder: p.sortOrder,
+          stock: stockView(stock.get(p.productId)),
         }))}
         existingLines={existingLines.map((l) => ({
           productId: l.productId,
@@ -211,4 +215,13 @@ export default async function OrdinePage({
       />
     </AppShell>
   );
+}
+
+// What the form needs of a limited product, never the number left (D3): sold
+// out keeps the member at what they hold, else only the cap per member counts.
+// More than what is left is refused at the confirm, with "Adatta".
+function stockView(s: ProductStock | undefined) {
+  if (!s) return null;
+  const soldOut = isSoldOut(s);
+  return { cap: soldOut ? s.mine : s.maxPerMember, soldOut, maxPerMember: s.maxPerMember };
 }

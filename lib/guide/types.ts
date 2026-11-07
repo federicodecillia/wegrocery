@@ -16,6 +16,8 @@ export type GuideCondition = {
   // Cycles can be paid by card: a pay-per-order group, or a wallet group with
   // a usable Stripe key (lib/payments/cycle-mode.ts).
   cards?: boolean;
+  // Limited quantities per cycle product (app_settings.stock_limits_enabled).
+  stockLimits?: boolean;
 };
 
 // The deploy's side of the conditions, read from the payment settings.
@@ -26,6 +28,7 @@ export type GuideContext = {
   bankTransfer: boolean;
   topups: boolean;
   cards: boolean;
+  stockLimits: boolean;
 };
 
 export type GuideTopic = {
@@ -83,6 +86,7 @@ export function guideContext(settings: {
   bankTransfer: unknown;
   walletTopupsEnabled: boolean;
   stripeKey: { usable: boolean };
+  stockLimitsEnabled?: boolean;
 }): GuideContext {
   return {
     mode: settings.mode,
@@ -91,5 +95,6 @@ export function guideContext(settings: {
     bankTransfer: settings.bankTransfer !== null,
     topups: settings.mode !== "wallet" || settings.walletTopupsEnabled,
     cards: settings.mode === "per_order" || settings.stripeKey.usable,
+    stockLimits: settings.stockLimitsEnabled ?? false,
   };
 }

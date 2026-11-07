@@ -195,6 +195,15 @@ export const en: Strings = {
     pickup: "Pickup",
   },
   order: {
+    stock: {
+      soldOut: "Sold out",
+      maxReached: (n: number) => `At most ${n} per member`,
+      title: "Some products are not enough",
+      line: (name: string, allowed: number, requested: number) =>
+        allowed === 0 ? `${name}: sold out` : `${name}: you can order at most ${allowed} (you asked for ${requested})`,
+      fit: "Fit to what is available",
+      fitted: "Order adjusted: check it and confirm.",
+    },
     // Pay per order (mode 2)
     pay: {
       products: "Products",
@@ -1332,6 +1341,17 @@ export const en: Strings = {
       helpCategoria: "Used to group products in the order form. Choose from the list or add a new one.",
       helpIcona: "Emoji shown next to the product. Click to choose or search.",
       helpNote: 'Free-text notes, shown to members. E.g. "Greenhouse-grown", "Consume within 3 days".',
+      stock: {
+        maxQuantity: "Available",
+        maxPerMember: "Limit per member",
+        maxQuantityHelp: "How many units can be sold in this cycle, in the order unit. Empty: no limit.",
+        maxPerMemberHelp: "How many units one member can order. Empty: no limit.",
+        unlimited: "No limit",
+        sold: (sold: number, max: number | null) => (max === null ? `${sold} ordered` : `${sold} of ${max}`),
+        soldOutBadge: "Sold out",
+        invalid: "Available and limit per member are whole numbers (the limit per member at least 1).",
+        belowSold: (sold: number) => `${sold} are already ordered or reserved: available cannot be less.`,
+      },
     },
     orders: {
       distintaHint: "The order sheet in Excel: by member, by product and the totals.",
@@ -2215,6 +2235,15 @@ export const en: Strings = {
         needsLink: "First set the link to the privacy notice or the terms, in Contacts and links.",
         saved: "Setting saved",
       },
+      stock: {
+        title: "Limited quantities",
+        on: "On",
+        off: "Off",
+        hint: "For limited harvests: on each product of the cycle you can set how many units there are and how many one member can take. Members only see \"Sold out\", never how many are left.",
+        enabled: "Use limited quantities",
+        enabledHint: "Off, every product has no limit as before; numbers already saved stay but do not count.",
+        saved: "Setting saved",
+      },
       publicPage: {
         title: "Public page",
         on: "On",
@@ -2616,6 +2645,9 @@ export const en: Strings = {
     cycleNotPlanned: "This cycle is no longer planned.",
     memberNotFound: "Member not found",
     accountInactive: "Account disabled: contact an administrator.",
+    openOrderSoldOut: (list: string) => `Quantities above what is available: ${list}.`,
+    soldOutLine: (name: string, allowed: number) => `${name} (at most ${allowed})`,
+    soldOut: "Some products are sold out or have a limit per member: fit the order to what is available.",
     termsRequired: "Accept the group's privacy notice and terms before ordering or paying.",
     invalidQuantity: "Invalid quantity",
     invalidRole: "Invalid role",
