@@ -2239,9 +2239,9 @@ export const en: Strings = {
         title: "Limited quantities",
         on: "On",
         off: "Off",
-        hint: "For limited harvests: on each product of the cycle you can set how many units there are and how many one member can take. Members only see \"Sold out\", never how many are left.",
-        enabled: "Use limited quantities",
-        enabledHint: "Off, every product has no limit as before; numbers already saved stay but do not count.",
+        hint: "For products in short supply, such as a small harvest. With this on, open the cycle, tap \"Edit\" on a product and fill in \"Available\" (how many units in all) and \"Limit per member\". When the units run out members see \"Sold out\"; they never see how many are left.",
+        enabled: "Turn on limited quantities",
+        enabledHint: "If you turn it off, every product goes back to no limit. Numbers already entered stay saved and count again when you turn it back on.",
         saved: "Setting saved",
       },
       publicPage: {

@@ -2243,9 +2243,9 @@ export const it = {
         title: "Quantità limitate",
         on: "Attive",
         off: "Spente",
-        hint: "Per i raccolti limitati: su ogni prodotto del ciclo puoi indicare quante unità ci sono e quante ne può prendere un socio. I soci vedono solo \"Esaurito\", mai quante ne restano.",
-        enabled: "Usa le quantità limitate",
-        enabledHint: "Spento, ogni prodotto è senza limite come finora; i numeri già salvati restano ma non contano.",
+        hint: "Per i prodotti che ci sono in quantità limitata, come un raccolto piccolo. Con l'opzione attiva, apri il ciclo, tocca «Modifica» su un prodotto e compila «Disponibili» (quante unità in tutto) e «Massimo per socio». Quando le unità finiscono il socio vede «Esaurito»; quante ne restano non lo vede mai.",
+        enabled: "Attiva le quantità limitate",
+        enabledHint: "Se la spegni, tutti i prodotti tornano senza limite. I numeri già inseriti restano salvati e tornano a valere quando la riaccendi.",
         saved: "Impostazione salvata",
       },
       publicPage: {
