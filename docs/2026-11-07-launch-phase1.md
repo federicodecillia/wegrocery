@@ -30,5 +30,13 @@ Requested by the maintainer to make WeGrocery ready for a cooperative that sells
 - The preview and the import each plan the file again on the server. The insert is one statement with ON CONFLICT DO NOTHING, so importing twice, or a member created between preview and import, never doubles anyone. The audit keeps counts, never addresses.
 - No email at import. "Invita i nuovi soci" sends the usual invitation link 20 at a time (the email provider's daily limit), skipping members already signed in or not admitted.
 
-### B. Availability
-A maximum quantity per product and cycle; members see only "Esaurito" when it runs out.
+### B. Availability (migration 0054)
+- Admin → Impostazioni → Gruppo → "Quantità limitate" (`app_settings.stock_limits_enabled`, off). On a cycle product: "Disponibili" (`products.max_quantity`) and "Massimo per socio" (`products.max_per_member`), empty = unlimited. Ciclo → Prodotti shows "12 su 30".
+- Nothing is counted down: what is left is computed (`lib/products/stock.ts`) as the units minus what the other members hold, where a member holds the larger of their confirmed quantity and what an open card Checkout of theirs reserves (32 minutes, a little more than the Checkout's 31).
+- `stockFitsSql` runs under the cycle's row lock, before the member's lines are replaced, in `saveOrder`, `confirmOrderWithoutPayment`, the pending payment of `startOrderPayment` (now written in a batch with the lock), the webhook's `creditBatch` and `replaceOpenOrder` (admin on an open cycle). A line that does not grow always passes, so trimming or keeping an order never fails. With the setting off it is always true.
+- Refused: `sold_out` with the short lines; the form shows them with "Adatta alle disponibilità". The member never sees a number left (D3): only "Esaurito" when nothing is left, the + stays at the cap per member.
+- A paid Checkout whose reservation expired and whose product went meanwhile follows the late-payment path: credit and full refund (`late_<paymentId>`).
+- Admin cannot set the units below what is held (same lock). Closed-cycle edits ignore the limits.
+- Nightly invariant `product_max_quantity` (open and planned cycles, setting on).
+- Not in this step: the "Disponibili" column in the product import (the import fills the catalogue, while limits belong to the cycle) and "Esaurito" on the public page.
+

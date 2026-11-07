@@ -195,6 +195,15 @@ export const fr: Strings = {
     pickup: "Retrait",
   },
   order: {
+    stock: {
+      soldOut: "Épuisé",
+      maxReached: (n: number) => `Maximum ${n} par membre`,
+      title: "Certains produits ne suffisent pas",
+      line: (name: string, allowed: number, requested: number) =>
+        allowed === 0 ? `${name} : épuisé` : `${name} : vous pouvez en commander au maximum ${allowed} (vous en avez demandé ${requested})`,
+      fit: "Adapter aux disponibilités",
+      fitted: "Commande adaptée : vérifiez et confirmez.",
+    },
     // Pay per order (mode 2)
     pay: {
       products: "Produits",
@@ -1332,6 +1341,17 @@ export const fr: Strings = {
       helpCategoria: "Sert à regrouper les produits dans le formulaire de commande. Choisissez dans la liste ou ajoutez-en une.",
       helpIcona: "Emoji affiché à côté du produit. Cliquez pour le choisir ou le rechercher.",
       helpNote: 'Notes libres, visibles par les membres. Ex. « Cultivé sous serre », « À consommer sous 3 jours ».',
+      stock: {
+        maxQuantity: "Disponibles",
+        maxPerMember: "Maximum par membre",
+        maxQuantityHelp: "Combien d'unités peuvent être vendues dans ce cycle, dans l'unité de commande. Vide : sans limite.",
+        maxPerMemberHelp: "Combien d'unités un membre peut commander. Vide : sans limite.",
+        unlimited: "Sans limite",
+        sold: (sold: number, max: number | null) => (max === null ? `${sold} commandés` : `${sold} sur ${max}`),
+        soldOutBadge: "Épuisé",
+        invalid: "Disponibles et maximum par membre sont des nombres entiers (le maximum par membre au moins 1).",
+        belowSold: (sold: number) => `${sold} sont déjà commandés ou réservés : les disponibles ne peuvent pas être moins.`,
+      },
     },
     orders: {
       distintaHint: "Le bon de commande en Excel : par membre, par produit et les totaux.",
@@ -2215,6 +2235,15 @@ export const fr: Strings = {
         needsLink: "Réglez d'abord le lien vers la politique de confidentialité ou les conditions, dans Contacts et liens.",
         saved: "Réglage enregistré",
       },
+      stock: {
+        title: "Quantités limitées",
+        on: "Activées",
+        off: "Désactivées",
+        hint: "Pour les récoltes limitées : sur chaque produit du cycle, vous pouvez indiquer combien d'unités il y a et combien un membre peut en prendre. Les membres voient seulement « Épuisé », jamais combien il en reste.",
+        enabled: "Utiliser les quantités limitées",
+        enabledHint: "Désactivé, chaque produit est sans limite comme avant ; les nombres déjà enregistrés restent mais ne comptent pas.",
+        saved: "Réglage enregistré",
+      },
       publicPage: {
         title: "Page publique",
         on: "Active",
@@ -2618,6 +2647,9 @@ export const fr: Strings = {
     cycleNotPlanned: "Ce cycle n'est plus programmé.",
     memberNotFound: "Membre introuvable",
     accountInactive: "Compte désactivé : contactez un administrateur.",
+    openOrderSoldOut: (list: string) => `Quantités au-delà des disponibilités : ${list}.`,
+    soldOutLine: (name: string, allowed: number) => `${name} (au maximum ${allowed})`,
+    soldOut: "Certains produits sont épuisés ou ont un maximum par membre : adaptez la commande aux disponibilités.",
     termsRequired: "Acceptez la politique de confidentialité et les conditions du groupe avant de commander ou de payer.",
     invalidQuantity: "Quantité non valide",
     invalidRole: "Rôle non valide",

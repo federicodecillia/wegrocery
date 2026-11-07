@@ -30,6 +30,7 @@ import { getPaymentSettings } from "@/lib/payments/get-settings";
 import { canAccessCycle } from "@/lib/roles";
 import { actionErrorMessage } from "@/lib/action-error";
 import { termsPending } from "@/lib/members/terms-gate";
+import { readCycleStock, stockFitsSql, stockShortages, type Shortage } from "@/lib/products/stock";
 
 export type SaveOrderLine = { productId: string; quantity: number };
 
@@ -48,11 +49,12 @@ export type SaveOrderErrorCode =
   | "credit_limit_exceeded"
   | "changed_elsewhere"
   | "terms_required"
+  | "sold_out"
   | "unexpected";
 
 export type SaveOrderResult =
   | { success: true; balanceWarning: string | null }
-  | { success: false; error: string; code: SaveOrderErrorCode; current?: OrderState };
+  | { success: false; error: string; code: SaveOrderErrorCode; current?: OrderState; shortages?: Shortage[] };
 
 // What the server holds for the member's order on a cycle, limited to the
 // products still in it: sent back when a write is refused as stale, so the
@@ -202,6 +204,12 @@ export async function saveOrder(
       sql`SELECT 1 / (CASE WHEN status = 'open' THEN 1 ELSE 0 END) AS open_guard
           FROM order_cycles WHERE cycle_id = ${cycleId} FOR UPDATE`,
     );
+    // Limited quantities (lib/products/stock.ts): under the same lock, before
+    // the member's lines are replaced.
+    const guardStock = db.execute(
+      sql`SELECT 1 / (CASE WHEN ${stockFitsSql({ cycleId, memberId: member.memberId, lines: newLines })}
+          THEN 1 ELSE 0 END) AS stock_guard`,
+    );
     const deleteExisting = db
       .delete(orders)
       .where(and(eq(orders.memberId, member.memberId), eq(orders.cycleId, cycleId)));
@@ -228,13 +236,18 @@ export async function saveOrder(
             };
           }),
         );
-        await db.batch([guardCycleStillOpen, deleteExisting, insertNew, deleteDraft]);
+        await db.batch([guardCycleStillOpen, guardStock, deleteExisting, insertNew, deleteDraft]);
       } else {
         await db.batch([guardCycleStillOpen, deleteExisting, deleteDraft]);
       }
     } catch (err) {
-      // 22012 = division_by_zero, i.e. the guard found the cycle closed.
+      // 22012 = division_by_zero: a guard fired, the cycle closed or a
+      // limited product ran out. Read again which one.
       if (err instanceof Error && /22012|division by zero/i.test(err.message)) {
+        const shortages = (await getOpenCycles()).some((c) => c.cycleId === cycleId)
+          ? stockShortages(newLines, await readCycleStock(db, cycleId, member.memberId))
+          : [];
+        if (shortages.length > 0) return { success: false, error: t.errors.soldOut, code: "sold_out", shortages };
         return { success: false, error: t.errors.cycleNotOpen, code: "cycle_not_open" };
       }
       throw err;

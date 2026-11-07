@@ -141,6 +141,24 @@ export const guideFr: GuideContent = {
       keywords: ["brouillon", "enregistré", "perdu", "panier", "non confirmé"],
     },
     {
+      slug: "prodotti-esauriti",
+      topic: "ordinare",
+      title: "Un produit est épuisé",
+      intro: "Certains produits sont en quantité limitée : quand il n'y en a plus, vous voyez **Épuisé** et le + ne se touche pas.",
+      steps: [
+        "Si un produit s'épuise pendant votre commande, à la confirmation vous voyez **Certains produits ne suffisent pas** avec ce que vous pouvez encore prendre.",
+        "Touchez **Adapter aux disponibilités**, vérifiez le panier et confirmez à nouveau.",
+      ],
+      notes: [
+        "C'est la commande confirmée qui compte, pas le panier : tant que vous ne confirmez pas, les unités restent libres pour tous.",
+        "Ce que vous avez déjà confirmé reste à vous ; si vous retirez quelque chose, c'est tout de suite disponible pour les autres.",
+        "Certains produits ont aussi un maximum par membre, indiqué sous le nom quand vous l'atteignez.",
+      ],
+      link: { href: "/ordine", label: "Ouvrir Commande" },
+      keywords: ["épuisé", "fini", "pas disponible", "disponibilité", "maximum", "quantité"],
+      when: { stockLimits: true },
+    },
+    {
       slug: "quando-ordinare",
       topic: "ordinare",
       title: "Jusqu'à quand puis-je commander",

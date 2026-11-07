@@ -220,9 +220,16 @@ export const products = pgTable(
     supplierId: text("supplier_id").references(() => suppliers.supplierId),
     category: text("category"),
     emoji: text("emoji"),
+    // Limited quantities (drizzle/0054_stock_limits.sql, lib/products/stock.ts):
+    // units for sale and units per member, NULL = unlimited. They count only
+    // with app_settings.stock_limits_enabled.
+    maxQuantity: integer("max_quantity"),
+    maxPerMember: integer("max_per_member"),
   },
   (table) => [
     index("products_cycle_id_idx").on(table.cycleId),
+    check("products_max_quantity_check", sql`${table.maxQuantity} >= 0 AND ${table.maxQuantity} <= 99999`),
+    check("products_max_per_member_check", sql`${table.maxPerMember} > 0 AND ${table.maxPerMember} <= 9999`),
     // DB-level twin of the app-side dedup in upsertCycleProducts: same
     // identity key (lower/trimmed name|variant|format|unit, NULL ≡ ''),
     // so two concurrent imports can't both pass the SELECT-then-INSERT
@@ -340,6 +347,10 @@ export const payments = pgTable(
   (table) => [
     index("payments_member_id_idx").on(table.memberId),
     index("payments_member_cycle_idx").on(table.memberId, table.cycleId),
+    // The open card Checkouts of a cycle: their quantities stay reserved (0054).
+    index("payments_order_pending_cycle_idx")
+      .on(table.cycleId)
+      .where(sql`${table.kind} = 'order' AND ${table.status} = 'pending'`),
     check("payments_kind_check", sql`${table.kind} IN ('topup', 'order', 'balance')`),
     check(
       "payments_order_complete_check",
@@ -516,6 +527,8 @@ export const appSettings = pgTable(
     publicProductsPreview: boolean("public_products_preview").notNull().default(false),
     publicPageIndexable: boolean("public_page_indexable").notNull().default(false),
     publicIntro: text("public_intro"),
+    // Limited quantities per cycle product (drizzle/0054_stock_limits.sql).
+    stockLimitsEnabled: boolean("stock_limits_enabled").notNull().default(false),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
     updatedBy: text("updated_by").notNull(),
   },

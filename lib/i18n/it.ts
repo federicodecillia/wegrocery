@@ -195,6 +195,15 @@ export const it = {
     pickup: "Ritiro",
   },
   order: {
+    stock: {
+      soldOut: "Esaurito",
+      maxReached: (n: number) => `Massimo ${n} per socio`,
+      title: "Alcuni prodotti non bastano",
+      line: (name: string, allowed: number, requested: number) =>
+        allowed === 0 ? `${name}: esaurito` : `${name}: puoi ordinarne al massimo ${allowed} (ne hai chiesti ${requested})`,
+      fit: "Adatta alle disponibilità",
+      fitted: "Ordine adattato: controlla e conferma.",
+    },
     // Pagamento per ordine (modalità 2)
     pay: {
       products: "Prodotti",
@@ -1335,6 +1344,17 @@ export const it = {
       helpCategoria: "Serve a raggruppare i prodotti nel form ordine. Scegli dall'elenco o aggiungine una nuova.",
       helpIcona: "Emoji mostrata accanto al prodotto. Clicca per scegliere o cercare.",
       helpNote: 'Note libere, mostrate al socio. Es: "Coltivata in serra", "Da consumare entro 3 giorni".',
+      stock: {
+        maxQuantity: "Disponibili",
+        maxPerMember: "Massimo per socio",
+        maxQuantityHelp: "Quante unità si possono vendere in questo ciclo, nell'unità d'ordine. Vuoto: senza limite.",
+        maxPerMemberHelp: "Quante unità può ordinare un socio. Vuoto: senza limite.",
+        unlimited: "Senza limite",
+        sold: (sold: number, max: number | null) => (max === null ? `${sold} ordinati` : `${sold} su ${max}`),
+        soldOutBadge: "Esaurito",
+        invalid: "Disponibili e massimo per socio sono numeri interi (il massimo per socio almeno 1).",
+        belowSold: (sold: number) => `Ne sono già stati ordinati o prenotati ${sold}: le disponibili non possono essere meno.`,
+      },
     },
     orders: {
       distintaHint: "La distinta in Excel: per socio, per prodotto e i totali.",
@@ -2219,6 +2239,15 @@ export const it = {
         needsLink: "Imposta prima il link all'informativa o ai termini, in Contatti e link.",
         saved: "Impostazione salvata",
       },
+      stock: {
+        title: "Quantità limitate",
+        on: "Attive",
+        off: "Spente",
+        hint: "Per i raccolti limitati: su ogni prodotto del ciclo puoi indicare quante unità ci sono e quante ne può prendere un socio. I soci vedono solo \"Esaurito\", mai quante ne restano.",
+        enabled: "Usa le quantità limitate",
+        enabledHint: "Spento, ogni prodotto è senza limite come finora; i numeri già salvati restano ma non contano.",
+        saved: "Impostazione salvata",
+      },
       publicPage: {
         title: "Pagina pubblica",
         on: "Attiva",
@@ -2626,6 +2655,9 @@ export const it = {
     cycleNotPlanned: "Questo ciclo non è più in programma.",
     memberNotFound: "Socio non trovato",
     accountInactive: "Account disabilitato: contatta un amministratore.",
+    openOrderSoldOut: (list: string) => `Quantità oltre le disponibilità: ${list}.`,
+    soldOutLine: (name: string, allowed: number) => `${name} (al massimo ${allowed})`,
+    soldOut: "Alcuni prodotti sono esauriti o hanno un massimo per socio: adatta l'ordine alle disponibilità.",
     termsRequired: "Prima di ordinare o pagare accetta l'informativa e i termini del gruppo.",
     invalidQuantity: "Quantità non valida",
     invalidRole: "Ruolo non valido",

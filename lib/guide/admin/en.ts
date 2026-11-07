@@ -620,6 +620,24 @@ export const adminGuideEn: GuideContent = {
       keywords: ["public page", "shop window", "website", "group", "google", "presentation"],
     },
     {
+      slug: "quantita-limitate",
+      topic: "ciclo",
+      title: "Products in limited quantities",
+      intro: "For a harvest that is not enough for everyone: 30 crates of strawberries, 12 kg of zucchini.",
+      steps: [
+        "In **Settings**, **Group**, **Limited quantities** turn on **Use limited quantities**.",
+        "In **Cycle**, **Products** tap the pencil of the product and fill in **Available** and, if needed, **Limit per member**.",
+        "Next to the product you see how many are already ordered, for example **12 of 30**.",
+      ],
+      notes: [
+        "Members only see **Sold out**, never how many are left.",
+        "Confirmed orders count, and card payments in progress for half an hour; an order reduced or cancelled frees the units at once.",
+        "You cannot go below what is already ordered. Your orders on behalf of a member respect the quantities while the cycle is open.",
+        "Order units count, not weights: a product by weight with **Available 12** means 12 packs.",
+      ],
+      keywords: ["availability", "sold out", "quantity", "limit", "stock", "harvest", "maximum"],
+    },
+    {
       slug: "termini-privacy",
       topic: "soci",
       title: "Having the privacy notice and terms accepted",

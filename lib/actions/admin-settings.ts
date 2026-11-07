@@ -400,6 +400,51 @@ export async function adminSetPublicPage(input: {
   }
 }
 
+// Impostazioni -> Gruppo -> Quantità limitate (lib/products/stock.ts). The
+// order guards read the switch themselves; numbers already saved on the
+// products stay, and count again when it is switched back on.
+export async function adminSetStockLimitsEnabled(enabled: boolean): Promise<{ error?: string }> {
+  try {
+    const admin = await requireAdmin();
+    if (typeof enabled !== "boolean") return { error: t.errors.genericError };
+    const before = await getPaymentSettings();
+    if (before.stockLimitsEnabled === enabled) return {};
+    const db = getDb();
+    const now = new Date();
+    // No row yet: the defaults the group runs on are stored with the switch.
+    const current = {
+      minBalance: before.minBalance === null ? null : before.minBalance.toFixed(2),
+      maxBalance: before.maxBalance === null ? null : before.maxBalance.toFixed(2),
+      bankTransferEnabled: before.bankTransferEnabled,
+      bankHolder: before.bankHolder,
+      bankIban: before.bankIban,
+      onlinePaymentsEnabled: before.onlinePaymentsEnabled,
+    };
+    await db.batch([
+      db
+        .insert(appSettings)
+        .values({ id: 1, ...current, stockLimitsEnabled: enabled, updatedAt: now, updatedBy: admin.email })
+        .onConflictDoUpdate({
+          target: appSettings.id,
+          set: { stockLimitsEnabled: enabled, updatedAt: now, updatedBy: admin.email },
+        }),
+      db.insert(auditLog).values({
+        auditId: crypto.randomUUID(),
+        userEmail: admin.email,
+        action: "set_stock_limits",
+        entityType: "app_settings",
+        entityId: "1",
+        payloadJson: JSON.stringify({ before: before.stockLimitsEnabled, after: enabled }),
+        createdAt: now,
+      }),
+    ]);
+    revalidatePath("/", "layout");
+    return {};
+  } catch (e) {
+    return { error: actionErrorMessage(e, t.errors.genericError, "adminSetStockLimitsEnabled") };
+  }
+}
+
 // Impostazioni -> Soci -> Chi può entrare: the sign-up mode, the newcomers'
 // role and whether they pay before ordering (lib/membership/signup.ts).
 export async function adminSetSignup(input: {

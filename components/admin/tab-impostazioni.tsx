@@ -32,6 +32,7 @@ import { SearchMissesCard } from "./search-misses-card";
 import { ColorDots, SettingsPanel } from "./settings-panel";
 import { SignupCard } from "./signup-card";
 import { PublicPageCard } from "./public-page-card";
+import { StockLimitsCard } from "./stock-limits-card";
 import { SetupBanner } from "./setup/setup-banner";
 import { StripeConnectionCard } from "./stripe-connection-card";
 
@@ -292,6 +293,13 @@ async function GroupView() {
         summary={settings.publicPage.enabled ? t.admin.settings.publicPage.on : t.admin.settings.publicPage.off}
       >
         <PublicPageCard saved={settings.publicPage} />
+      </SettingsPanel>
+      <SettingsPanel
+        id="quantita-limitate"
+        title={t.admin.settings.stock.title}
+        summary={settings.stockLimitsEnabled ? t.admin.settings.stock.on : t.admin.settings.stock.off}
+      >
+        <StockLimitsCard enabled={settings.stockLimitsEnabled} />
       </SettingsPanel>
       <SettingsPanel id="termini" title={terms.title} summary={settings.termsRequired ? terms.on : terms.off}>
         <TermsCard

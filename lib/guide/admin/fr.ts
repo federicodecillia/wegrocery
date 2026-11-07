@@ -620,6 +620,24 @@ export const adminGuideFr: GuideContent = {
       keywords: ["page publique", "vitrine", "site", "groupe", "google", "présentation"],
     },
     {
+      slug: "quantita-limitate",
+      topic: "ciclo",
+      title: "Produits en quantité limitée",
+      intro: "Pour une récolte qui ne suffit pas pour tout le monde : 30 cagettes de fraises, 12 kg de courgettes.",
+      steps: [
+        "Dans **Réglages**, **Groupe**, **Quantités limitées**, activez **Utiliser les quantités limitées**.",
+        "Dans **Cycle**, **Produits**, touchez le crayon du produit et indiquez **Disponibles** et, si besoin, **Maximum par membre**.",
+        "À côté du produit, vous voyez combien sont déjà commandés, par exemple **12 sur 30**.",
+      ],
+      notes: [
+        "Les membres voient seulement **Épuisé**, jamais combien il en reste.",
+        "Comptent les commandes confirmées et les paiements par carte en cours, pendant une demi-heure ; une commande réduite ou annulée libère tout de suite les unités.",
+        "Vous ne pouvez pas descendre sous ce qui est déjà commandé. Vos commandes pour un membre respectent les quantités tant que le cycle est ouvert.",
+        "Ce sont les unités de commande qui comptent, pas les pesées : un produit au poids avec **Disponibles 12** veut dire 12 barquettes.",
+      ],
+      keywords: ["disponibilité", "épuisé", "quantité", "limite", "stock", "récolte", "maximum"],
+    },
+    {
       slug: "termini-privacy",
       topic: "soci",
       title: "Faire accepter la politique de confidentialité et les conditions",
