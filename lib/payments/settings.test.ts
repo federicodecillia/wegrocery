@@ -51,11 +51,22 @@ describe("resolvePaymentSettings", () => {
       signupMode: "closed",
       signupRole: "utenti",
       signupPrepaid: true,
+      publicPage: { enabled: false, productsPreview: false, indexable: false, intro: null },
       bankTransfer: { holder: "Porta Moneta APS", iban: SPACED_IBAN },
       onlineTopupAvailable: true,
       stripeKey: { usable: true, livemode: false },
       savedAt: null,
     });
+  });
+
+  it("reads the public page settings, all off for a row saved before 0053", () => {
+    expect(resolvePaymentSettings(row, brand, testKey).publicPage).toEqual({ enabled: false, productsPreview: false, indexable: false, intro: null });
+    const s = resolvePaymentSettings(
+      { ...row, publicPageEnabled: true, publicProductsPreview: true, publicPageIndexable: true, publicIntro: "Ciao" },
+      brand,
+      testKey,
+    );
+    expect(s.publicPage).toEqual({ enabled: true, productsPreview: true, indexable: true, intro: "Ciao" });
   });
 
   it("reads the sign-up settings, closed and prepaid for a row saved before 0052", () => {

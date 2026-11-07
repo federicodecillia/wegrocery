@@ -603,6 +603,23 @@ export const adminGuideEs: GuideContent = {
       keywords: ["nombre", "apellido", "usuario", "email"],
     },
     {
+      slug: "pagina-pubblica",
+      topic: "impostazioni",
+      title: "La página pública del grupo",
+      intro: "Un escaparate para enlazar desde vuestra web, las redes o un cartel: quien aún no está dentro ve quiénes sois y el próximo pedido.",
+      steps: [
+        "En **Ajustes**, **Grupo**, **Página pública** activa **Página activa** y escribe la presentación.",
+        "Si quieres, activa **Mostrar los productos** y **Visible en Google**.",
+        "Pulsa **Guardar** y luego **Abrir la página** para verla como un visitante.",
+      ],
+      notes: [
+        "La dirección es la de la app seguida de **/gruppo**; quien abre la app sin haber iniciado sesión llega allí.",
+        "Solo muestra los pedidos abiertos a todos los socios, nunca saldos, pedidos ni nombres de socios.",
+        "Con el registro abierto o por solicitud aparece también el botón para unirse.",
+      ],
+      keywords: ["página pública", "escaparate", "web", "grupo", "google", "presentación"],
+    },
+    {
       slug: "termini-privacy",
       topic: "soci",
       title: "Hacer aceptar el aviso de privacidad y los términos",

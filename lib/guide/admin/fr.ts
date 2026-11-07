@@ -603,6 +603,23 @@ export const adminGuideFr: GuideContent = {
       keywords: ["nom", "prénom", "nom d'utilisateur", "e-mail"],
     },
     {
+      slug: "pagina-pubblica",
+      topic: "impostazioni",
+      title: "La page publique du groupe",
+      intro: "Une vitrine à mettre en lien sur votre site, les réseaux ou une affiche : les personnes qui ne sont pas encore dedans voient qui vous êtes et la prochaine commande.",
+      steps: [
+        "Dans **Réglages**, **Groupe**, **Page publique**, activez **Page active** et écrivez la présentation.",
+        "Si vous le souhaitez, activez **Afficher les produits** et **Visible sur Google**.",
+        "Touchez **Enregistrer**, puis **Ouvrir la page** pour la voir comme un visiteur.",
+      ],
+      notes: [
+        "L'adresse est celle de l'app suivie de **/gruppo** ; qui ouvre l'app sans être connecté y arrive directement.",
+        "Elle n'affiche que les commandes ouvertes à tous les membres, jamais de soldes, de commandes ni de noms de membres.",
+        "Avec l'inscription ouverte ou sur demande, le bouton pour adhérer apparaît aussi.",
+      ],
+      keywords: ["page publique", "vitrine", "site", "groupe", "google", "présentation"],
+    },
+    {
       slug: "termini-privacy",
       topic: "soci",
       title: "Faire accepter la politique de confidentialité et les conditions",

@@ -605,6 +605,23 @@ export const adminGuideIt: GuideContent = {
       keywords: ["nome", "cognome", "nome strano", "username", "email"],
     },
     {
+      slug: "pagina-pubblica",
+      topic: "impostazioni",
+      title: "La pagina pubblica del gruppo",
+      intro: "Una vetrina da linkare dal vostro sito, dai social o da un cartello: chi non è ancora dentro vede chi siete e il prossimo ordine.",
+      steps: [
+        "In **Impostazioni**, **Gruppo**, **Pagina pubblica** accendi **Pagina attiva** e scrivi la presentazione.",
+        "Se vuoi, accendi **Mostra i prodotti** e **Trovabile su Google**.",
+        "Tocca **Salva**, poi **Apri la pagina** per vederla come un visitatore.",
+      ],
+      notes: [
+        "L'indirizzo è quello dell'app seguito da **/gruppo**; chi apre l'app senza aver fatto l'accesso ci arriva da solo.",
+        "Mostra solo gli ordini aperti a tutti i soci, mai saldi, ordini o nomi dei soci.",
+        "Con la registrazione aperta o su richiesta compare anche il pulsante per aderire.",
+      ],
+      keywords: ["pagina pubblica", "vetrina", "sito", "gruppo", "google", "presentazione"],
+    },
+    {
       slug: "termini-privacy",
       topic: "soci",
       title: "Far accettare informativa e termini",
