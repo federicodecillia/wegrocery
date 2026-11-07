@@ -3,28 +3,38 @@
 // writes, these functions decide.
 
 import { normalizeEmail } from "@/lib/member-email";
+import type { SignupMode } from "./signup";
 import type { MembershipResult } from "./wallyfor";
 
-export type LoginError = "AccessDenied" | "NotMember" | "MembershipInactive" | "MembershipCheckUnavailable";
+export type LoginError =
+  | "AccessDenied"
+  | "NotMember"
+  | "MembershipInactive"
+  | "MembershipCheckUnavailable"
+  // Not a member, and the group takes requests to join (/aderisci).
+  | "SignupRequired";
 
+// `provision`: create the member now. `via` says why: a valid card (the
+// WallyFor check, as before) or the group's open sign-up.
 export type SignInDecision =
   | { kind: "check" }
   | { kind: "allow"; record?: "valid"; logError?: true }
   | { kind: "deny"; error: LoginError; record?: "invalid"; logError?: true }
-  | { kind: "provision" };
+  | { kind: "provision"; via: "card" | "open" };
 
 /**
  * A member row already exists for the login email (or its alias).
  * `result` is null until the caller has run the check the decision asked for.
  */
 export function existingMemberSignIn(
-  member: { active: boolean; role: string },
+  member: { active: boolean; role: string; joinedVia?: string | null },
   checkEnabled: boolean,
   result: MembershipResult | null,
 ): SignInDecision {
   // An admin deactivation always wins over a valid card.
   if (!member.active) return { kind: "deny", error: "AccessDenied" };
-  if (member.role === "admin" || !checkEnabled) return { kind: "allow" };
+  // A newcomer from open sign-up joined without a card: none is asked for.
+  if (member.role === "admin" || !checkEnabled || member.joinedVia) return { kind: "allow" };
   if (!result) return { kind: "check" };
   if (result.status === "valid") return { kind: "allow", record: "valid" };
   if (result.status === "invalid") return { kind: "deny", error: "MembershipInactive", record: "invalid" };
@@ -33,7 +43,10 @@ export function existingMemberSignIn(
 }
 
 /**
- * No member row for the login email: self-onboarding when the check is on.
+ * No member row for the login email. With the card check on, a valid card
+ * joins as before; without a card (or with the check off) the group's sign-up
+ * mode decides (lib/membership/signup.ts): 'open' joins, 'request' points to
+ * the form, 'closed' refuses as before.
  * `emailVerified` is Google's `email_verified` claim: an account whose address
  * Google has not verified must never be auto-provisioned under it.
  */
@@ -41,12 +54,21 @@ export function newUserSignIn(
   checkEnabled: boolean,
   result: MembershipResult | null,
   emailVerified = true,
+  mode: SignupMode = "closed",
 ): SignInDecision {
-  if (!checkEnabled || !emailVerified) return { kind: "deny", error: "AccessDenied" };
+  if (!emailVerified) return { kind: "deny", error: "AccessDenied" };
+  const withoutCard = (error: LoginError): SignInDecision =>
+    mode === "open"
+      ? { kind: "provision", via: "open" }
+      : mode === "request"
+        ? { kind: "deny", error: "SignupRequired" }
+        : { kind: "deny", error };
+  if (!checkEnabled) return withoutCard("AccessDenied");
   if (!result) return { kind: "check" };
-  if (result.status === "valid") return { kind: "provision" };
-  if (result.status === "invalid") return { kind: "deny", error: "NotMember" };
-  // Fail closed: we cannot tell a stranger from a member.
+  if (result.status === "valid") return { kind: "provision", via: "card" };
+  if (result.status === "invalid") return withoutCard("NotMember");
+  // Fail closed: we cannot tell a stranger from a member, and a member must
+  // not be made a newcomer by an outage.
   return { kind: "deny", error: "MembershipCheckUnavailable", logError: true };
 }
 
@@ -80,12 +102,13 @@ export const MEMBERSHIP_RECHECK_MS = 24 * 60 * 60 * 1000;
  * a member whose card lapsed can still withdraw what they ordered.
  */
 export function shouldRecheckMembershipOnOrder(
-  member: { role: string; membershipStatus: string | null; membershipVerifiedAt: Date | null },
+  member: { role: string; membershipStatus: string | null; membershipVerifiedAt: Date | null; joinedVia?: string | null },
   checkEnabled: boolean,
   now: Date,
   raisesOrder: boolean,
 ): boolean {
-  if (!checkEnabled || member.role === "admin" || !raisesOrder) return false;
+  // A newcomer from open sign-up has no card to check (existingMemberSignIn).
+  if (!checkEnabled || member.role === "admin" || !raisesOrder || member.joinedVia) return false;
   // Only a recent *valid* result is cached; an invalid one is rechecked every
   // time so a member who just renewed can order straight away.
   if (member.membershipStatus !== "valid" || !member.membershipVerifiedAt) return true;

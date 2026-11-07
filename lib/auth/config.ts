@@ -33,7 +33,8 @@ const DAY_SECONDS = 24 * 60 * 60;
 export type AuthEmail = {
   kind: AuthEmailKind;
   email: string;
-  // The confirmation page on this deploy, for the kinds that carry a link.
+  // The confirmation page on this deploy, for the kinds that carry a link;
+  // the request form (/aderisci) for "signupRequired".
   url: string | null;
   // The 6-digit code that works like the link (typed on /login), same kinds.
   code: string | null;
@@ -218,7 +219,8 @@ export function createAuth(db: Db, options: CreateAuthOptions) {
               await options.sendAuthEmail({
                 kind,
                 email,
-                url: withLink ? confirmationURL(url, token) : null,
+                // The request form on this deploy, for the email that explains how to ask.
+                url: withLink ? confirmationURL(url, token) : kind === "signupRequired" ? new URL("/aderisci", url).toString() : null,
                 code: withLink ? await issueSignInCode(email) : null,
               });
             } catch (e) {

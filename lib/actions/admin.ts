@@ -23,6 +23,7 @@ import { ActionError, actionErrorMessage } from "@/lib/action-error";
 import { getLastHandlingFee, getMemberPendingOrderTotals, getMembersByEmails } from "@/lib/db/queries";
 import { readMemberOrderLines, replaceOpenOrder } from "@/lib/admin/open-order-store";
 import { evaluateCreditLimit } from "@/lib/membership/policy";
+import { effectiveMinBalance } from "@/lib/membership/signup";
 import { getWalletBalance } from "@/lib/payments/balance-due";
 import { findEmailConflict, normalizeEmail } from "@/lib/member-email";
 import type { BatchItem } from "drizzle-orm/batch";
@@ -2206,6 +2207,7 @@ export async function adminSaveOpenOrder(input: SaveOpenOrderInput): Promise<Sav
         active: members.active,
         householdOf: members.householdOf,
         paysOffline: members.paysOffline,
+        joinedVia: members.joinedVia,
       })
       .from(members)
       .where(eq(members.memberId, input.memberId))
@@ -2253,7 +2255,8 @@ export async function adminSaveOpenOrder(input: SaveOpenOrderInput): Promise<Sav
 
     let overCreditLimit = false;
     if (cycle.paymentMode !== "per_order") {
-      const { minBalance } = await getPaymentSettings();
+      const settings = await getPaymentSettings();
+      const minBalance = effectiveMinBalance(settings.minBalance, member, settings.signupPrepaid);
       if (minBalance !== null) {
         const pending = await getMemberPendingOrderTotals(input.memberId, input.cycleId);
         overCreditLimit = !evaluateCreditLimit({

@@ -619,6 +619,24 @@ export const adminGuideEs: GuideContent = {
       keywords: ["términos", "privacidad", "condiciones", "aceptación", "rgpd", "aviso"],
     },
     {
+      slug: "come-si-entra",
+      topic: "soci",
+      title: "Cómo se entra en el grupo",
+      intro: "Puedes dejar entrar también a quien aún no es socio: con una solicitud que apruebas o libremente.",
+      steps: [
+        "En **Ajustes**, **Socios y guía**, **Quién puede entrar** elige **Por solicitud** o **Abierta** (por defecto **Solo socios**).",
+        "Elige el rol de los nuevos y si deben pagar antes de pedir.",
+        "Comparte la página **/aderisci**: la página de acceso también muestra el enlace.",
+        "Con **Por solicitud**, en **Socios** encuentras las **Solicitudes de alta**: **Aprobar** crea el socio y le envía el enlace para entrar.",
+      ],
+      notes: [
+        "Recibes una notificación en la app por cada solicitud, ningún email.",
+        "Con **Los nuevos pagan antes de pedir** nunca bajan de cero: pagan con tarjeta o recargan antes.",
+        "Las solicitudes rechazadas se borran a los 30 días. Quien la envió no recibe nada cuando la rechazas.",
+      ],
+      keywords: ["registro", "alta", "unirse", "solicitud", "clientes", "nuevos socios", "aderisci"],
+    },
+    {
       slug: "famiglie-admin",
       topic: "soci",
       title: "Familias: lo que ve un admin",

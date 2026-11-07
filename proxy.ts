@@ -8,7 +8,8 @@ import { hasSessionCookie } from "@/lib/auth/cookie";
 // would loop; the login page checks the real session.
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  if (pathname === "/login" || pathname.startsWith("/login/") || hasSessionCookie(request.cookies)) {
+  // /aderisci: how to join, for people who have no account yet.
+  if (pathname === "/login" || pathname.startsWith("/login/") || pathname === "/aderisci" || hasSessionCookie(request.cookies)) {
     return NextResponse.next();
   }
   return NextResponse.redirect(new URL("/login", request.url));

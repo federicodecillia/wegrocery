@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
+import Link from "next/link";
 import { getBrand } from "@/lib/brand/get-brand";
+import { getPaymentSettings } from "@/lib/payments/get-settings";
 import { t } from "@/lib/i18n";
 import { googleCredentials } from "@/lib/auth/config";
 import { LoginForm } from "./login-form";
@@ -18,8 +20,10 @@ type LoginPageProps = {
 };
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
-  const brand = await getBrand();
-  const session = await auth();
+  const [brand, session, settings] = await Promise.all([getBrand(), auth(), getPaymentSettings()]);
+  // How a newcomer joins (lib/membership/signup.ts): a link to /aderisci.
+  const joinLabel =
+    settings.signupMode === "open" ? t.login.joinOpen : settings.signupMode === "request" ? t.login.joinRequest : null;
   const params = await searchParams;
   const error = typeof params.error === "string" ? params.error : null;
   const deniedMessage =
@@ -31,6 +35,8 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           ? t.login.membershipInactive
           : error === "MembershipCheckUnavailable"
             ? t.login.membershipCheckUnavailable
+            : error === "SignupRequired"
+              ? t.login.signupRequired
             : error === "LinkInvalid" || error === "INVALID_TOKEN" || error === "EXPIRED_TOKEN"
               ? t.login.linkInvalid
               : error === "failed_to_create_session" || error === "unable_to_create_session"
@@ -60,6 +66,13 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         {deniedMessage ? (
           <div role="alert" className="mt-3 space-y-1 rounded-xl border border-destructive/30 bg-danger-bg p-3 text-sm text-destructive">
             <p>{deniedMessage}</p>
+            {error === "SignupRequired" ? (
+              <p>
+                <Link href="/aderisci" className="font-medium underline">
+                  {t.login.joinRequest}
+                </Link>
+              </p>
+            ) : null}
             {error === "MembershipInactive" && brand.membershipUrl ? (
               <p>
                 <a href={brand.membershipUrl} target="_blank" rel="noopener noreferrer" className="font-medium underline">
@@ -79,6 +92,13 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           {isDemo ? null : <LoginForm googleEnabled={hasGoogleAuth} next="/" />}
           {isDemo || hasDevLogin ? <ShortcutButtons demo={isDemo} dev={hasDevLogin} /> : null}
         </div>
+        {joinLabel && !isDemo ? (
+          <p className="mt-4 text-center text-sm">
+            <Link href="/aderisci" className="inline-flex min-h-11 items-center font-semibold text-foreground underline">
+              {joinLabel}
+            </Link>
+          </p>
+        ) : null}
         </div>
       </div>
       {brand.privacyUrl || brand.termsUrl ? (

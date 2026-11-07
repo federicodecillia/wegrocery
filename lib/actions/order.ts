@@ -24,6 +24,7 @@ import { requireActiveMember } from "@/lib/auth/session";
 import { isStaleOrderWrite, normalizeDraftLines, orderLinesKey, orderStateKey, sameOrderLines } from "@/lib/order-draft";
 import { membershipAllowsOrder } from "@/lib/membership/order-check";
 import { evaluateCreditLimit, raisesOrderTotal } from "@/lib/membership/policy";
+import { effectiveMinBalance } from "@/lib/membership/signup";
 import { isMembershipCheckEnabled } from "@/lib/membership/wallyfor";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
 import { canAccessCycle } from "@/lib/roles";
@@ -147,7 +148,9 @@ export async function saveOrder(
 
     // Uncharged order totals: needed by the credit limit and to tell whether
     // this save raises the cycle's order (trimming/cancelling is never blocked).
-    const minBalance = offline ? null : (await getPaymentSettings()).minBalance;
+    // A newcomer of a "prepaid" group never goes below zero (lib/membership/signup.ts).
+    const settings = offline ? null : await getPaymentSettings();
+    const minBalance = settings ? effectiveMinBalance(settings.minBalance, member, settings.signupPrepaid) : null;
     const checkEnabled = isMembershipCheckEnabled() && member.role !== "admin";
     const pending =
       minBalance !== null || checkEnabled

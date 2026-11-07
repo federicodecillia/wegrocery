@@ -619,6 +619,24 @@ export const adminGuideEn: GuideContent = {
       keywords: ["terms", "privacy", "conditions", "acceptance", "gdpr", "notice"],
     },
     {
+      slug: "come-si-entra",
+      topic: "soci",
+      title: "How people join the group",
+      intro: "You can let in people who are not members yet: with a request to approve, or freely.",
+      steps: [
+        "In **Settings**, **Members & guide**, **Who can join** pick **On request** or **Open** (the default is **Members only**).",
+        "Choose the role of newcomers and whether they pay before ordering.",
+        "Share the page **/aderisci**: the sign-in page shows the link too.",
+        "With **On request**, **Members** shows the **Requests to join**: **Approve** creates the member and sends the sign-in link.",
+      ],
+      notes: [
+        "You get an in-app notification for each request, no email.",
+        "With **Newcomers pay before ordering** they never go below zero: they pay by card or top up first.",
+        "Rejected requests are deleted after 30 days. The requester gets nothing when you reject.",
+      ],
+      keywords: ["sign up", "registration", "join", "request", "customers", "new members", "aderisci"],
+    },
+    {
       slug: "famiglie-admin",
       topic: "soci",
       title: "Families: what an admin sees",

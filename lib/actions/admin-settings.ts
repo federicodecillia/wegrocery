@@ -13,6 +13,7 @@ import { isNamePromptMode, type NamePromptMode } from "@/lib/members/name";
 import { newTermsVersion, termsHaveLink } from "@/lib/members/terms";
 import { getBrand } from "@/lib/brand/get-brand";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
+import { isSignupMode, isSignupRole, type SignupMode, type SignupRole } from "@/lib/membership/signup";
 import {
   modeChangeBlockers,
   readModeChangeState,
@@ -336,6 +337,61 @@ export async function adminSetTermsRequired(action: "on" | "off" | "renew"): Pro
     return {};
   } catch (e) {
     return { error: actionErrorMessage(e, t.errors.genericError, "adminSetTermsRequired") };
+  }
+}
+
+// Impostazioni -> Soci -> Chi può entrare: the sign-up mode, the newcomers'
+// role and whether they pay before ordering (lib/membership/signup.ts).
+export async function adminSetSignup(input: {
+  mode: SignupMode;
+  role: SignupRole;
+  prepaid: boolean;
+}): Promise<{ error?: string }> {
+  try {
+    const admin = await requireAdmin();
+    if (!isSignupMode(input?.mode) || !isSignupRole(input?.role) || typeof input?.prepaid !== "boolean") {
+      return { error: t.errors.genericError };
+    }
+    const { mode, role, prepaid } = input;
+    const before = await getPaymentSettings();
+    if (before.signupMode === mode && before.signupRole === role && before.signupPrepaid === prepaid) return {};
+    const db = getDb();
+    const now = new Date();
+    // No row yet: the defaults the group runs on are stored with the choice.
+    const stored = {
+      minBalance: before.minBalance === null ? null : before.minBalance.toFixed(2),
+      maxBalance: before.maxBalance === null ? null : before.maxBalance.toFixed(2),
+      bankTransferEnabled: before.bankTransferEnabled,
+      bankHolder: before.bankHolder,
+      bankIban: before.bankIban,
+      onlinePaymentsEnabled: before.onlinePaymentsEnabled,
+    };
+    const values = { signupMode: mode, signupRole: role, signupPrepaid: prepaid };
+    await db.batch([
+      db
+        .insert(appSettings)
+        .values({ id: 1, ...stored, ...values, updatedAt: now, updatedBy: admin.email })
+        .onConflictDoUpdate({
+          target: appSettings.id,
+          set: { ...values, updatedAt: now, updatedBy: admin.email },
+        }),
+      db.insert(auditLog).values({
+        auditId: crypto.randomUUID(),
+        userEmail: admin.email,
+        action: "set_signup",
+        entityType: "app_settings",
+        entityId: "1",
+        payloadJson: JSON.stringify({
+          before: { mode: before.signupMode, role: before.signupRole, prepaid: before.signupPrepaid },
+          after: values,
+        }),
+        createdAt: now,
+      }),
+    ]);
+    revalidatePath("/", "layout");
+    return {};
+  } catch (e) {
+    return { error: actionErrorMessage(e, t.errors.genericError, "adminSetSignup") };
   }
 }
 

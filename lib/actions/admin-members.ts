@@ -1,6 +1,11 @@
 "use server";
 
+import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
+import { getAuthInstance } from "@/auth";
+import { admitEmail } from "@/lib/auth/admission";
+import { approveMembershipRequest, rejectMembershipRequest } from "@/lib/membership/requests";
+import { getPaymentSettings } from "@/lib/payments/get-settings";
 import { actionErrorMessage } from "@/lib/action-error";
 import { requireAdmin } from "@/lib/auth/session";
 import { getDb } from "@/lib/db/client";
@@ -128,5 +133,52 @@ export async function adminDismissDuplicate(memberA: string, memberB: string): P
     return {};
   } catch (e) {
     return { error: actionErrorMessage(e, t.errors.genericError, "adminDismissDuplicate") };
+  }
+}
+
+// Soci -> Richieste in attesa ('request' sign-up mode, lib/membership/
+// requests.ts). Approving creates the member with the role of Impostazioni
+// and sends the invitation link, as Soci -> Invita; an address that is a
+// member already is only linked. "gone": another admin decided first.
+export async function adminApproveRequest(
+  requestId: string,
+): Promise<{ error?: string; message?: string }> {
+  try {
+    const admin = await requireAdmin();
+    const r = t.admin.members.requests;
+    if (typeof requestId !== "string" || !requestId) return { error: r.gone };
+    const settings = await getPaymentSettings();
+    const outcome = await approveMembershipRequest(getDb(), {
+      requestId,
+      adminEmail: admin.email,
+      role: settings.signupRole,
+    });
+    revalidatePath("/admin");
+    if (outcome.kind === "gone") return { error: r.gone };
+    if (!outcome.created) return { message: r.linked };
+    // The link goes out only if the address may sign in, like Soci -> Invita.
+    const admission = await admitEmail(outcome.email, { emailVerified: true });
+    if (admission.kind === "deny") return { message: r.approvedNoLink };
+    await getAuthInstance().api.signInMagicLink({
+      body: { email: outcome.email, callbackURL: "/", metadata: { invite: true } },
+      headers: await headers(),
+    });
+    return { message: r.approved };
+  } catch (e) {
+    return { error: actionErrorMessage(e, t.errors.genericError, "adminApproveRequest") };
+  }
+}
+
+// The reason, if any, stays with the admin: nothing is sent to the requester.
+export async function adminRejectRequest(requestId: string): Promise<{ error?: string; message?: string }> {
+  try {
+    const admin = await requireAdmin();
+    const r = t.admin.members.requests;
+    if (typeof requestId !== "string" || !requestId) return { error: r.gone };
+    const done = await rejectMembershipRequest(getDb(), { requestId, adminEmail: admin.email });
+    revalidatePath("/admin");
+    return done ? { message: r.rejected } : { error: r.gone };
+  } catch (e) {
+    return { error: actionErrorMessage(e, t.errors.genericError, "adminRejectRequest") };
   }
 }
