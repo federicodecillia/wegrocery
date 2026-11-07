@@ -2012,6 +2012,8 @@ export const fr: Strings = {
       importSkipped: (n: number) => `${n} inchangés`,
       importInvalid: (n: number) => `${n} écartés`,
       importAddedToCycle: (n: number) => `${n} dans le cycle`,
+      importLimitsSet: (n: number) => `${n} avec quantités limitées`,
+      importLimitsBelowSold: (n: number) => `${n} non limités : déjà plus commandés que disponibles`,
     },
     setup: {
       pageTitle: "Configuration initiale",

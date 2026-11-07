@@ -2016,6 +2016,8 @@ export const it = {
       importSkipped: (n: number) => `${n} invariati`,
       importInvalid: (n: number) => `${n} scartati`,
       importAddedToCycle: (n: number) => `${n} nel ciclo`,
+      importLimitsSet: (n: number) => `${n} con quantità limitate`,
+      importLimitsBelowSold: (n: number) => `${n} non limitati: già ordinati più delle disponibili`,
     },
     setup: {
       pageTitle: "Configurazione iniziale",

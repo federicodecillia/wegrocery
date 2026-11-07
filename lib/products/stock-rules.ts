@@ -61,3 +61,13 @@ export function parseLimit(raw: string | null | undefined, min: number, max: num
   const n = Number(v);
   return n < min || n > max ? "invalid" : n;
 }
+
+/**
+ * A limit read from an imported file: "30", "30 pz", "30,0" give 30. Anything
+ * else, or out of range, is no limit (null): a bad cell never fails the row.
+ */
+export function parseLimitCell(raw: string | null | undefined, min: number, max: number): number | null {
+  const lead = /^\s*(\d+)(?:[.,]0+)?(?:\s|$)/.exec(raw ?? "");
+  const v = lead ? parseLimit(lead[1], min, max) : null;
+  return typeof v === "number" ? v : null;
+}

@@ -38,5 +38,5 @@ Requested by the maintainer to make WeGrocery ready for a cooperative that sells
 - A paid Checkout whose reservation expired and whose product went meanwhile follows the late-payment path: credit and full refund (`late_<paymentId>`).
 - Admin cannot set the units below what is held (same lock). Closed-cycle edits ignore the limits.
 - Nightly invariant `product_max_quantity` (open and planned cycles, setting on).
-- Not in this step: the "Disponibili" column in the product import (the import fills the catalogue, while limits belong to the cycle) and "Esaurito" on the public page.
+- Added after the staging trial: the listing import into a cycle maps "Disponibili" and "Massimo per socio" columns (`lib/csv/header-heuristics.ts`, cells read by `parseLimitCell`) and applies them through `setProductLimits`, matched by name, variant and format; a column left out keeps the product's value, units below what is sold are refused and counted. The catalogue-only import hides both fields. The public page marks sold out products with `readSoldOutProductIds` (ids only, never a count; `lib/db/public.ts` still reads no orders).
 
