@@ -118,6 +118,10 @@ The managed projects expose six hours of instant restore history and no listed s
 
 Some project build/environment metadata, per-resource consumer connections, selected Marketplace assignment and supported transfer scope are not exposed by the available read tools. An empty integration-configuration project array is not proof that its resources have no consumers. The detailed inventory is private. No transfer decision is ready until those remaining associations and recovery are verified; no resource, plan, credential or configuration was changed.
 
+## Example-only runbook prepared
+
+Maintainer screenshots now confirm separate installed resources labeled Free, the example app as the displayed consumer on All Environments, and a single-resource Transfer Database entry disabled pending disconnection. This narrows the example trial scope but does not prove destination eligibility or recovery. See [the recovery-first example runbook](./2026-11-09-example-transfer-runbook.md). Its preparation is approved; backup/restore execution, a secure credential executor, disconnection, transfer and deployment remain unapproved.
+
 ## Approval requested
 
 Phase 0 read-only inventory is approved and in progress. A/B remain open until that inventory establishes cost, supported transfer scope and recovery. The suggested staged approach is to evaluate the least-change example trial before selecting any Console data migration. Strong organization-level Console isolation remains available; production customer databases stay where they are.
