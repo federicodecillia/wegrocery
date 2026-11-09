@@ -25,7 +25,7 @@ Still to do before a group turns on limited quantities with card payments: a Str
 
 ## Planned, not started
 
-- Launch phase 2, "safe fleet": per-instance backups, invariants and restore tests, rollouts driven by the Console's cron. Proposal only: no code until the maintainer approves it.
+- Launch phase 2, "safe fleet": executable spec in `docs/2026-11-09-launch-phase2-fleet.md`. Work packages in order WP1 (invariants per instance), WP2 (backups and restore tests), WP3 (data export), WP4 (shared sender), WP5 (subdomains), WP6 (Vercel Pro checklist), WP7 (rollouts). One PR per work package to `staging`. Choices marked **[default]** stand unless the maintainer changes them; steps marked **Maintainer** (private repo, secrets, keys, domain) are done by him, so stop and ask when one blocks you. Not started.
 - Possible next steps, undecided: comments from members on the calendar and Home; moving more pieces (planned cycles) into the FlyLabs Kit.
 
 ## Known open items
