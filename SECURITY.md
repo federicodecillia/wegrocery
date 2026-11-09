@@ -13,7 +13,7 @@ instance, upgrade to it (see [docs/upgrading.md](docs/upgrading.md)).
 Please **do not** open a public issue, discussion or pull request.
 
 Report it privately through GitHub:
-[**Report a vulnerability**](https://github.com/federicodecillia/wegrocery/security/advisories/new)
+[**Report a vulnerability**](https://github.com/flylabs-ai/wegrocery/security/advisories/new)
 (Security tab → Advisories). Include:
 
 - what an attacker can do, and which role they need (none, member, admin);

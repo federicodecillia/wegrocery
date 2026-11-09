@@ -25,6 +25,11 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ## [Unreleased]
 
+*Preparazione del trasferimento della repo a FlyLabs.*
+
+### Modificato
+- [tecnico] 🔗 **Preparazione del trasferimento della repo**: release e controlli UI accettano il futuro proprietario FlyLabs mantenendo la repo attuale; default della Console e link di installazione puntano a `flylabs-ai/wegrocery`. Il trasferimento resta da fare.
+
 ## [1.45.0] - 9 novembre 2026
 
 *Pronti ad aprire il gruppo a persone nuove: termini da accettare, iscrizione, pagina pubblica, import dei soci e quantità limitate, tutto spento finché un admin non lo accende.*

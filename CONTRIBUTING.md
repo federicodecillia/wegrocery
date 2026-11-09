@@ -21,10 +21,10 @@ By taking part you agree to follow the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## Ways to contribute
 
-- **Report a bug**: open a [bug report](https://github.com/federicodecillia/wegrocery/issues/new?template=bug_report.yml).
+- **Report a bug**: open a [bug report](https://github.com/flylabs-ai/wegrocery/issues/new?template=bug_report.yml).
   Reproduce it on the [public demo](https://wegrocery-demo.vercel.app) if you
   can: it runs the same code on fake data.
-- **Suggest a feature**: open a [feature request](https://github.com/federicodecillia/wegrocery/issues/new?template=feature_request.yml)
+- **Suggest a feature**: open a [feature request](https://github.com/flylabs-ai/wegrocery/issues/new?template=feature_request.yml)
   that describes the problem your group has, not only the solution.
 - **Improve the docs**: typos, unclear steps in [SETUP.md](SETUP.md) or
   [docs/self-hosting.md](docs/self-hosting.md), missing explanations.
@@ -45,8 +45,8 @@ place to start.
   variable, a change to how money moves): open an issue first and wait for
   agreement on the approach. A short written plan saves you from rewriting a
   PR that cannot be merged as is.
-- Check the open [issues](https://github.com/federicodecillia/wegrocery/issues)
-  and [pull requests](https://github.com/federicodecillia/wegrocery/pulls) so
+- Check the open [issues](https://github.com/flylabs-ai/wegrocery/issues)
+  and [pull requests](https://github.com/flylabs-ai/wegrocery/pulls) so
   you do not duplicate work, and comment on an issue to say you are taking it.
 
 ## Ground rules

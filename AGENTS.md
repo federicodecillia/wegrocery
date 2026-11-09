@@ -10,6 +10,10 @@ Guidance for every coding agent (Claude Code, Codex and others) working in this 
 
 **Live**: gas.portamoneta.org
 
+## Repository transfer preparation
+
+The target upstream is `flylabs-ai/wegrocery` (example brand: `flylabs-ai/wegrocery-example-brand`). WP0 A.1 prepares links and defaults before the transfer; the repositories have not moved yet. Release and UI-check guards temporarily accept the `flylabs-ai` owner and the current `federicodecillia/wegrocery` repository. The maintainer handles transfers and GitHub App access; remove the old guard only in the post-transfer cleanup PR. See [the phase 2 plan](./docs/2026-11-09-launch-phase2-fleet.md).
+
 ## Context outside the repository
 
 Two agents work on this project, Claude Code and Codex, and neither sees the other's memory. What they share:

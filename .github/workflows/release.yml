@@ -23,7 +23,7 @@ concurrency:
 
 jobs:
   release:
-    if: github.repository == 'federicodecillia/wegrocery'
+    if: github.repository_owner == 'flylabs-ai' || github.repository == 'federicodecillia/wegrocery'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
