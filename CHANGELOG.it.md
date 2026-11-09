@@ -25,6 +25,8 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ## [Unreleased]
 
+## [1.45.1] - 9 novembre 2026
+
 *Preparazione del trasferimento della repo a FlyLabs.*
 
 ### Modificato
@@ -865,6 +867,7 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
+[1.45.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.45.1
 [1.35.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.35.0
 [1.34.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.34.1
 [1.34.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.34.0

@@ -2,20 +2,22 @@
 
 The living snapshot of what is released, what waits on `staging` and what is planned. Any agent (Claude Code, Codex or another) reads it before starting and updates it in the same PR that changes the picture: a release, a migration applied somewhere, a plan approved or dropped. Keep it short; the detail lives in `CHANGELOG.md`, the dated plans in `docs/` and the PRs.
 
-Last updated: 2026-11-09 (WP0 A.1 preparation; release remains 1.45.0).
+Last updated: 2026-11-09 (release 1.45.1 verified).
 
 ## Versions and migrations
 
 | Installation | Version | Migrations applied |
 |---|---|---|
-| Production (`main`) | 1.45.0 (2026-11-09) | up to `0054` |
-| Public demo (`main`) | 1.45.0 | up to `0054` |
-| Example brand installation | 1.45.0 | up to `0054` (migrates on build) |
-| Staging (`staging`) | 1.45.0 | up to `0054` (Neon branch `staging`) |
+| Production (`main`) | 1.45.1 (2026-11-09) | up to `0054` |
+| Public demo (`main`) | 1.45.1 | up to `0054` |
+| Example brand installation | 1.45.1 | up to `0054` (migrates on build) |
+| Staging (`staging`) | 1.45.1 | up to `0054` (Neon branch `staging`) |
 
 ## Waiting on `staging` for the next release
 
-WP0 part A, step 1 is prepared in this PR: release and UI-check guards accept the future `flylabs-ai` owner and the current repository; the Console defaults to `flylabs-ai/wegrocery`; contributor and self-hosting links point there. No transfer, deployment or migration has been performed. Merge and release are still pending.
+Nothing awaiting a product release. Version 1.45.1 was released through PR #404 (merge commit `3015523`), staging fast-forwarded to that commit, and the example brand aligned (`0ed3d0e`). Public health endpoints on production, demo and example brand report `ok: true`, `db: true`, version `1.45.1`; staging Deploy Health passed before promotion. Manual backup and money invariants passed in run `42618843367`. No migrations or transfers were performed.
+
+WP0 A.1 is released: repository guards, Console defaults and public setup links are ready for the future `flylabs-ai` upstream. Next is the Maintainer-only GitHub transfer checklist in [the phase 2 plan](./2026-11-09-launch-phase2-fleet.md). Stop before those steps; post-transfer checks/cleanup and Vercel transfers are not done.
 
 ## Released in 1.45.0, off by default
 
@@ -25,12 +27,15 @@ Still to do before a group turns on limited quantities with card payments: a Str
 
 ## Planned and in progress
 
-- Launch phase 2, "safe fleet": executable spec in `docs/2026-11-09-launch-phase2-fleet.md`. Work packages in order: WP0 (move the repositories to `flylabs-ai` and the Vercel projects to the Pro account, the maintainer wants it first), WP1 (invariants per instance), WP2 (backups and restore tests, private repo `flylabs-ai/wegrocery-backups`), WP3 (data export), WP4 (shared sender), WP5 (subdomains), WP6 (rollouts). One PR per work package to `staging`. Choices marked **[default]** stand unless the maintainer changes them; steps marked **Maintainer** (transfers, private repo, secrets, keys, domain) are done by him, so stop and ask when one blocks you. Only WP0 A.1 is prepared. Stop before the Maintainer steps: release this preparation with explicit production approval, then the maintainer verifies organization 2FA/ownership, transfers both repositories, installs the GitHub Apps and reconnects Claude/Codex. Parts A.3/A.4 and B remain pending.
+- CI timing measurement completed, [report](./2026-11-09-ci-runtime-measurement.md), draft PR #403. Only measurement is approved. Five comparable successful runs have the same test inventory; median CI elapsed time is 10m10s. No runtime, workflow, test, query, timeout, concurrency or security setting was changed. Optimization remains an unapproved hypothesis requiring a separate equivalence and safety review.
+
+- Launch phase 2, "safe fleet": executable spec in `docs/2026-11-09-launch-phase2-fleet.md`. Work packages in order: WP0 (move the repositories to `flylabs-ai` and the Vercel projects to the Pro account, the maintainer wants it first), WP1 (invariants per instance), WP2 (backups and restore tests, private repo `flylabs-ai/wegrocery-backups`), WP3 (data export), WP4 (shared sender), WP5 (subdomains), WP6 (rollouts). One PR per work package to `staging`. Choices marked **[default]** stand unless the maintainer changes them; steps marked **Maintainer** (transfers, private repo, secrets, keys, domain) are done by him, so stop and ask when one blocks you. WP0 A.1 is released in 1.45.1. The maintainer next verifies organization 2FA/ownership, transfers both repositories, installs the GitHub Apps and reconnects Claude/Codex. Parts A.3/A.4 and B remain pending.
 - Possible next steps, undecided: comments from members on the calendar and Home; moving more pieces (planned cycles) into the FlyLabs Kit.
 
 ## Known open items
 
-- CI runtime optimization: [measurement and implementation plan](./2026-11-09-ci-runtime-optimization.md), proposed on 2026-11-09, not approved for implementation. Start with profiling and batching test-only reads; isolated database shards and documentation-only classification are conditional follow-ups. No checks have been removed or changed.
+- Deploy Health on release commit `3015523`: runs `42621910904` (Console) and `42621987253` (demo) received HTTP 302 from deployment URLs. Production/staging checks passed and the demo public health endpoint reports healthy 1.45.1. Investigate deployment URL redirects and the Console-specific health contract separately; do not treat these failed runs as green.
+- Autonomous manual backup dispatch: requested by the maintainer, not yet enabled. The current GitHub CLI credential cannot dispatch workflows (403); do not broaden credentials or change production backup behavior without a scoped access plan.
 
 - Issue #383: Dependabot advisories that do not affect the app (tracking).
 - Issue #111: ESLint 10, blocked upstream by `eslint-config-next`.

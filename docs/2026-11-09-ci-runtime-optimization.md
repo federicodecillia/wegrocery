@@ -1,6 +1,6 @@
 # CI runtime optimization implementation plan
 
-Status: proposal requested on 2026-11-09. Implementation requires maintainer approval. Separate from release 1.45.1 and WP0 transfers.
+Status: measurement only approved on 2026-11-09 and completed using existing run records; see [the measurement report](./2026-11-09-ci-runtime-measurement.md). No optimization implementation is approved. Delivery quality, security and stability take precedence over elapsed time. Separate from release 1.45.1 and WP0 transfers.
 
 **Goal:** reduce pull-request wall-clock time without losing assertions, isolation, failure visibility or money checks.
 
@@ -50,7 +50,7 @@ Files to inspect: `.github/workflows/ci.yml`, the Console CI workflow, `vitest.i
 
 Validation: no code path or test behavior changes; baseline document contains only aggregate technical metrics.
 
-## Task 2: Quick option, reduce test-helper round trips (recommended first)
+## Task 2: Quick hypothesis, reduce test-helper round trips (not approved)
 
 Files:
 - Create `test/int/invariant-checks.ts` only if a shared helper makes the three callers simpler.
@@ -103,4 +103,4 @@ Not the first optimization. Consider only after measurement and branch-protectio
 
 ## Decision requested
 
-Approve Task 1 plus the Quick option first. Tasks 3 and 4 remain proposals until the measurements justify them and the maintainer approves their separate plans. The current release and repository transfers do not depend on implementing CI optimization.
+Task 1 measurement is approved and its retrospective report is complete. No mutation experiment, batching, fixture change, sharding or filtering is approved. The next possible task is a separately approved equivalence/safety investigation on disposable fake-data infrastructure. Do not infer approval to implement Quick from approval to measure. If equivalent guarantees cannot be demonstrated, keep the existing serial suite even if it stays slower. The current release and repository transfers do not depend on implementing CI optimization.
