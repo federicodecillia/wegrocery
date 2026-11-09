@@ -25,6 +25,13 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ## [Unreleased]
 
+### Aggiunte
+- ⏰ **I cicli in programma si aprono da soli.** All'ora di apertura prevista (entro un minuto) gli ordini si aprono e i soci ricevono l'avviso, come quando un admin tocca **Apri gli ordini**, che resta per aprire prima. Un ciclo con **Date indicative** non si apre mai da solo. **Da fare ora** chiede di aprirlo solo se l'ora è passata e il ciclo è ancora in programma.
+- 🔑 [tecnico] **Variabile `CRON_SECRET`.** Facoltativa, almeno 32 caratteri: accende l'apertura automatica tramite il Vercel Cron in `vercel.json` (ogni minuto, serve Vercel Pro). Senza, `/api/cron/open-cycles` risponde 404 e i cicli si aprono a mano.
+
+### Modificato
+- 📅 **Calendario in Home come quello completo.** Il mese in Home (da computer) usa le stesse icone del Calendario ordini: cestino per l'apertura, lucchetto per l'ultimo giorno, pacco per il ritiro, e oggi in un cerchio pieno.
+
 ## [1.45.1] - 9 novembre 2026
 
 *Preparazione del trasferimento della repo a FlyLabs.*
