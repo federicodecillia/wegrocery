@@ -37,14 +37,14 @@ function outsideRepository(path) {
   if (rel === "" || (!rel.startsWith(`..${sep}`) && rel !== ".." && !isAbsolute(rel))) throw new Error("Unsafe local configuration");
 }
 
-function privatePath(path, directory = false) {
+export function privatePath(path, directory = false) {
   const stat = lstatSync(path);
   if (stat.isSymbolicLink() || stat.uid !== process.getuid?.() || (stat.mode & 0o077) !== 0 ||
       (directory ? !stat.isDirectory() : !stat.isFile())) throw new Error("Unsafe local configuration");
   outsideRepository(path);
 }
 
-function childEnvironment(manifest) {
+export function childEnvironment(manifest) {
   // Do not inherit DATABASE_URL, PGPASSWORD, PGOPTIONS or other ambient credentials/settings.
   return {
     PATH: `${dirname(process.execPath)}:/usr/bin:/bin`,

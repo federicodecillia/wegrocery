@@ -1,5 +1,6 @@
 """Maintainer-run local credential entry. No network calls, subprocesses or .env reads."""
 import getpass
+import json
 import os
 from pathlib import Path
 import re
@@ -55,7 +56,8 @@ def save_source(parent, host, database, role, password):
                "sslmode=verify-full\nsslrootcert=system\nchannel_binding=require\nconnect_timeout=10\n")
     escaped = password.replace("\\", "\\\\").replace(":", "\\:")
     for name, content in (("services.conf", service),
-                          ("passwords.conf", f"{host}:5432:{database}:{role}:{escaped}\n")):
+                          ("passwords.conf", f"{host}:5432:{database}:{role}:{escaped}\n"),
+                          ("identity.json", json.dumps({"host": host, "database": database, "role": role}))):
         descriptor = os.open(folder / name, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
         with os.fdopen(descriptor, "w", encoding="utf-8") as output:
             output.write(content)
@@ -74,7 +76,7 @@ def main():
     print("Incolla SOLO l’URL PostgreSQL da Neon, senza psql e senza virgolette. L’inserimento è nascosto.")
     with warnings.catch_warnings():
         warnings.simplefilter("error", getpass.GetPassWarning)
-        uri = getpass.getpass("URL sorgente (nascosto): ")
+        uri = getpass.getpass("URL database (nascosto): ")
     password = parse_source(uri, host, database, role)
     uri = None
     parent = Path.home() / "Library" / "Application Support" / "WeGroceryRecovery"

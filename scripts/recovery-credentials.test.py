@@ -26,6 +26,7 @@ class CredentialSetupTests(unittest.TestCase):
             self.assertIn("sslrootcert=system", service)
             self.assertIn("sslmode=verify-full", service)
             self.assertNotIn(password, service)
+            self.assertNotIn(password, (folder / "identity.json").read_text())
 
     def test_rejects_wrong_source_transport_role_and_injected_options_without_echo(self):
         good = f"postgresql://neondb_owner:synthetic-secret@{HOST}/neondb?sslmode=require"
