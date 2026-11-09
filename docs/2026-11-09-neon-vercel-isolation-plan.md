@@ -1,6 +1,6 @@
 # WP0: Neon ownership, isolation and Vercel transfer options
 
-Status: proposal, 2026-11-09. The maintainer authorized planning and is open to both options. No resource transfer, database migration, organization creation, billing change, credential change or production operation is authorized by this document. This supplements WP0 part B and withdraws its old assumption that every database should move into one normal Neon organization.
+Status: planning and Phase 0 read-only inventory approved on 2026-11-09; inventory is in progress. The maintainer is open to both options. No resource transfer, database migration, organization creation, billing change, credential change or production operation is authorized by this document. This supplements WP0 part B and withdraws its old assumption that every database should move into one normal Neon organization.
 
 ## Goal and boundaries
 
@@ -106,6 +106,18 @@ Each database needs its own approved runbook. No customer production database is
 - Planning validation: official source links checked, no contradiction with the managed-organization transfer limitation, per-resource scope and recovery made explicit, public docs free of customer data, `git diff --check`. No runtime test is needed for this planning-only PR.
 - Execution validation must compare expected version/data/roles and real outcomes, not just HTTP 200. Record blocked checks honestly. No change to ledger behavior, invariant coverage or CI delivery guarantees.
 
+## Phase 0 evidence so far
+
+Read-only Vercel metadata confirms the current Hobby and intended Pro teams and Git links for all four application projects under the new organization. The source team has one Neon Marketplace installation; the target query returned no Neon installation. The catalog exposes an installation-scoped Free plan, not proof of the selected resource-level assignment.
+
+The Neon connection is now available. Organization metadata confirms Free for the two relevant organizations and the separate unrelated organization. Five project records confirm the existing customer/demo/restore versus managed Console/example placement. Console and example use PostgreSQL 18; the other three projects use PostgreSQL 17, all in Frankfurt. Any copy must preserve the respective major version. No database query was executed.
+
+Current-month compute and transfer counters and branch metadata were collected privately; they are partial-month observations, not a forecast. Project storage counters returned zeros and are not used as evidence of zero storage. Branch logical sizes are distinct from billed physical storage and cannot simply be summed. Free's detailed consumption-history API requires a paid plan and was not invoked as a reason to upgrade.
+
+The managed projects expose six hours of instant restore history and no listed snapshots. This does not prove absence of off-site backups, but it does not establish a tested recovery either. Backup/restore verification remains a transfer gate.
+
+Some project build/environment metadata, per-resource consumer connections, selected Marketplace assignment and supported transfer scope are not exposed by the available read tools. An empty integration-configuration project array is not proof that its resources have no consumers. The detailed inventory is private. No transfer decision is ready until those remaining associations and recovery are verified; no resource, plan, credential or configuration was changed.
+
 ## Approval requested
 
-Approve Phase 0 read-only inventory first. A/B remain open until that inventory establishes cost, supported transfer scope and recovery. The suggested staged approach is to evaluate the least-change example trial before selecting any Console data migration. Strong organization-level Console isolation remains available; production customer databases stay where they are.
+Phase 0 read-only inventory is approved and in progress. A/B remain open until that inventory establishes cost, supported transfer scope and recovery. The suggested staged approach is to evaluate the least-change example trial before selecting any Console data migration. Strong organization-level Console isolation remains available; production customer databases stay where they are.
