@@ -15,7 +15,7 @@ Last updated: 2026-11-09 (1.45.1 release preparation; production remains 1.45.0)
 
 ## Waiting on `staging` for the next release
 
-Release 1.45.1 is being prepared. WP0 part A, step 1 was merged in PR #401: release and UI-check guards accept the future `flylabs-ai` owner and the current repository; the Console defaults to `flylabs-ai/wegrocery`; contributor and self-hosting links point there. No transfer or migration has been performed. Production promotion is pending a green manual backup, staging validation and release checks. The maintainer authorized the release on 2026-11-09; the agent cannot dispatch the backup workflow (GitHub 403), so the maintainer must start it on `main`.
+Release 1.45.1 is being prepared. WP0 part A, step 1 was merged in PR #401: release and UI-check guards accept the future `flylabs-ai` owner and the current repository; the Console defaults to `flylabs-ai/wegrocery`; contributor and self-hosting links point there. No transfer or migration has been performed. The maintainer authorized the release on 2026-11-09. Manual backup run `42618843367` on `main` passed, including money invariants. Production promotion is pending staging validation and release checks. The maintainer started the backup because the agent cannot dispatch workflows (GitHub 403); enabling autonomous backup dispatch is a separate access task.
 
 ## Released in 1.45.0, off by default
 
