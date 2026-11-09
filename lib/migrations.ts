@@ -53,4 +53,8 @@ export const MIGRATIONS = [
   "0048_planned_cycles.sql",
   "0049_cycle_open_alerts.sql",
   "0050_pickup_tentative.sql",
+  "0051_terms_acceptance.sql",
+  "0052_signup.sql",
+  "0053_public_page.sql",
+  "0054_stock_limits.sql",
 ] as const;

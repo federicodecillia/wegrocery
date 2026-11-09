@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import type { getDb } from "@/lib/db/client";
 import { orderLinesSnapshot, type ExistingOrderLine } from "@/lib/closed-order-edit";
+import { stockFitsSql } from "@/lib/products/stock";
 
 // The database side of adminSaveOpenOrder: an admin replaces a member's order
 // on a cycle that is still open, also after its deadline (a late order phoned
@@ -41,6 +42,7 @@ export async function readMemberOrderLines(db: Db, memberId: string, cycleId: st
 // matter here), and the member's lines must still be the ones the admin saw,
 // so a close, or a save by the member, in the meantime writes nothing. The
 // member's unconfirmed draft goes too: the admin's order is the one that counts.
+// Limited products count as for the member (lib/products/stock.ts).
 // "changed" = the guard fired and nothing was written.
 export async function replaceOpenOrder(
   db: Db,
@@ -58,6 +60,7 @@ export async function replaceOpenOrder(
              jsonb_build_array(quantity, line_total::text, actual_line_total::text)), '{}'::jsonb)
            FROM orders WHERE cycle_id = ${cycleId} AND member_id = ${memberId})
           = ${orderLinesSnapshot(input.expected)}::jsonb
+      AND ${stockFitsSql({ cycleId, memberId, lines: input.lines.map(({ productId, quantity }) => ({ productId, quantity })) })}
     THEN 1 ELSE 0 END) AS open_order_guard
   `);
   const deleteOrder = db.execute(sql`DELETE FROM orders WHERE member_id = ${memberId} AND cycle_id = ${cycleId}`);

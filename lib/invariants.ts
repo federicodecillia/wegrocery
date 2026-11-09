@@ -257,4 +257,23 @@ export const INVARIANT_CHECKS: InvariantCheck[] = [
             WHERE c.payment_mode = 'per_order' AND c.settled_at IS NOT NULL) mc
       WHERE ${owedBackToCardSql(sql.raw("mc.member_id"), sql.raw("mc.cycle_id"))}`,
   },
+  {
+    name: "product_max_quantity",
+    // The order guards keep both limits (lib/products/stock.ts). A break means
+    // a write without them, or limits saved while the setting was off and
+    // the setting turned on later over orders already beyond them.
+    description: "with limited quantities on, no product of an open or planned cycle is ordered beyond its units, nor a member beyond the cap",
+    query: sql`
+      SELECT pr.product_id AS id
+      FROM products pr
+      JOIN order_cycles c ON c.cycle_id = pr.cycle_id AND c.status IN ('open', 'planned')
+      WHERE coalesce((SELECT stock_limits_enabled FROM app_settings WHERE id = 1), false)
+        AND (
+          (pr.max_quantity IS NOT NULL
+            AND (SELECT coalesce(sum(o.quantity), 0) FROM orders o WHERE o.product_id = pr.product_id) > pr.max_quantity)
+          OR (pr.max_per_member IS NOT NULL AND EXISTS (
+            SELECT 1 FROM orders o WHERE o.product_id = pr.product_id
+            GROUP BY o.member_id HAVING sum(o.quantity) > pr.max_per_member))
+        )`,
+  },
 ];

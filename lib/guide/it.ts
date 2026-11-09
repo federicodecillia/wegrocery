@@ -143,6 +143,24 @@ export const guideIt: GuideContent = {
       keywords: ["bozza", "salvato", "perso", "carrello", "non confermato"],
     },
     {
+      slug: "prodotti-esauriti",
+      topic: "ordinare",
+      title: "Un prodotto è esaurito",
+      intro: "Alcuni prodotti ci sono in quantità limitata: quando sono finiti vedi **Esaurito** e il + non si tocca.",
+      steps: [
+        "Se un prodotto finisce mentre ordini, alla conferma vedi **Alcuni prodotti non bastano** con quanto puoi ancora prendere.",
+        "Tocca **Adatta alle disponibilità**, controlla il carrello e conferma di nuovo.",
+      ],
+      notes: [
+        "Conta l'ordine confermato, non il carrello: finché non confermi, le unità restano libere per tutti.",
+        "Quello che hai già confermato resta tuo; se togli qualcosa torna subito disponibile per gli altri.",
+        "Qualche prodotto ha anche un massimo per socio, scritto sotto il nome quando lo raggiungi.",
+      ],
+      link: { href: "/ordine", label: "Apri Ordine" },
+      keywords: ["esaurito", "finito", "non disponibile", "disponibilità", "massimo", "quantità"],
+      when: { stockLimits: true },
+    },
+    {
       slug: "quando-ordinare",
       topic: "ordinare",
       title: "Fino a quando posso ordinare",

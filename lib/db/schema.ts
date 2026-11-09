@@ -57,6 +57,12 @@ export const members = pgTable(
     // When the person closed the welcome card at the top of Admin
     // (drizzle/0039_admin_welcome.sql); NULL = the card shows to an admin.
     adminWelcomeDismissedAt: timestamp("admin_welcome_dismissed_at", { withTimezone: true }),
+    // The terms version this person accepted, and when (drizzle/0051_terms_acceptance.sql).
+    termsAcceptedAt: timestamp("terms_accepted_at", { withTimezone: true }),
+    termsAcceptedVersion: text("terms_accepted_version"),
+    // 'request' | 'open' for a member who joined by open sign-up, NULL
+    // otherwise (drizzle/0052_signup.sql, lib/membership/signup.ts).
+    joinedVia: text("joined_via"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
   },
@@ -68,6 +74,44 @@ export const members = pgTable(
     uniqueIndex("members_alias_email_lower_uniq")
       .on(sql`lower(${table.aliasEmail})`)
       .where(sql`${table.aliasEmail} IS NOT NULL`),
+    check("members_joined_via_check", sql`${table.joinedVia} IN ('request', 'open')`),
+  ],
+);
+
+// Requests to join in 'request' sign-up mode (drizzle/0052_signup.sql,
+// lib/membership/signup.ts): one pending request per address, an admin
+// approves (the member is created) or rejects (deleted after 30 days).
+export const membershipRequests = pgTable(
+  "membership_requests",
+  {
+    requestId: text("request_id").primaryKey(),
+    email: text("email").notNull(),
+    fullName: text("full_name").notNull(),
+    phone: text("phone"),
+    note: text("note"),
+    // 'pending' | 'approved' | 'rejected'
+    status: text("status").notNull().default("pending"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+    decidedAt: timestamp("decided_at", { withTimezone: true }),
+    decidedBy: text("decided_by"),
+    memberId: text("member_id").references(() => members.memberId, { onDelete: "set null" }),
+    // HMAC of the requester's IP for the hourly limit, never the address.
+    ipHash: text("ip_hash"),
+    // The terms version accepted on the form (lib/members/terms.ts), copied
+    // to the member on approval.
+    termsAcceptedVersion: text("terms_accepted_version"),
+  },
+  (table) => [
+    uniqueIndex("membership_requests_pending_email_uniq")
+      .on(sql`lower(${table.email})`)
+      .where(sql`${table.status} = 'pending'`),
+    index("membership_requests_status_created_idx").on(table.status, table.createdAt),
+    index("membership_requests_ip_created_idx").on(table.ipHash, table.createdAt),
+    check("membership_requests_status_check", sql`${table.status} IN ('pending', 'approved', 'rejected')`),
+    check("membership_requests_email_length", sql`char_length(${table.email}) <= 254`),
+    check("membership_requests_name_length", sql`char_length(${table.fullName}) BETWEEN 1 AND 120`),
+    check("membership_requests_phone_length", sql`char_length(${table.phone}) <= 40`),
+    check("membership_requests_note_length", sql`char_length(${table.note}) <= 500`),
   ],
 );
 
@@ -176,9 +220,16 @@ export const products = pgTable(
     supplierId: text("supplier_id").references(() => suppliers.supplierId),
     category: text("category"),
     emoji: text("emoji"),
+    // Limited quantities (drizzle/0054_stock_limits.sql, lib/products/stock.ts):
+    // units for sale and units per member, NULL = unlimited. They count only
+    // with app_settings.stock_limits_enabled.
+    maxQuantity: integer("max_quantity"),
+    maxPerMember: integer("max_per_member"),
   },
   (table) => [
     index("products_cycle_id_idx").on(table.cycleId),
+    check("products_max_quantity_check", sql`${table.maxQuantity} >= 0 AND ${table.maxQuantity} <= 99999`),
+    check("products_max_per_member_check", sql`${table.maxPerMember} > 0 AND ${table.maxPerMember} <= 9999`),
     // DB-level twin of the app-side dedup in upsertCycleProducts: same
     // identity key (lower/trimmed name|variant|format|unit, NULL ≡ ''),
     // so two concurrent imports can't both pass the SELECT-then-INSERT
@@ -296,6 +347,10 @@ export const payments = pgTable(
   (table) => [
     index("payments_member_id_idx").on(table.memberId),
     index("payments_member_cycle_idx").on(table.memberId, table.cycleId),
+    // The open card Checkouts of a cycle: their quantities stay reserved (0054).
+    index("payments_order_pending_cycle_idx")
+      .on(table.cycleId)
+      .where(sql`${table.kind} = 'order' AND ${table.status} = 'pending'`),
     check("payments_kind_check", sql`${table.kind} IN ('topup', 'order', 'balance')`),
     check(
       "payments_order_complete_check",
@@ -456,6 +511,24 @@ export const appSettings = pgTable(
     // Bank transfer reference per order and receipt address (drizzle/0033_bank_reference.sql).
     bankReferenceTemplate: text("bank_reference_template"),
     bankReceiptEmail: text("bank_receipt_email"),
+    // Ask whoever signs in to accept the privacy notice and terms; the version
+    // is when an admin last asked everyone (drizzle/0051_terms_acceptance.sql).
+    termsRequired: boolean("terms_required").notNull().default(false),
+    termsVersion: text("terms_version"),
+    // Who may join without an admin: 'closed' | 'request' | 'open', the role
+    // newcomers get, and whether they must pay before ordering
+    // (drizzle/0052_signup.sql, lib/membership/signup.ts).
+    signupMode: text("signup_mode").notNull().default("closed"),
+    signupRole: text("signup_role").notNull().default("utenti"),
+    signupPrepaid: boolean("signup_prepaid").notNull().default(true),
+    // The public page /gruppo: on, with the products of the next cycle,
+    // indexable, and its text (drizzle/0053_public_page.sql, lib/public-page.ts).
+    publicPageEnabled: boolean("public_page_enabled").notNull().default(false),
+    publicProductsPreview: boolean("public_products_preview").notNull().default(false),
+    publicPageIndexable: boolean("public_page_indexable").notNull().default(false),
+    publicIntro: text("public_intro"),
+    // Limited quantities per cycle product (drizzle/0054_stock_limits.sql).
+    stockLimitsEnabled: boolean("stock_limits_enabled").notNull().default(false),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
     updatedBy: text("updated_by").notNull(),
   },
@@ -466,6 +539,9 @@ export const appSettings = pgTable(
       "app_settings_new_cycle_payment_mode_check",
       sql`${table.newCyclePaymentMode} IN ('wallet', 'per_order')`,
     ),
+    check("app_settings_public_intro_length", sql`char_length(${table.publicIntro}) <= 2000`),
+    check("app_settings_signup_mode_check", sql`${table.signupMode} IN ('closed', 'request', 'open')`),
+    check("app_settings_signup_role_check", sql`${table.signupRole} IN ('attivi', 'utenti')`),
     check("app_settings_member_name_prompt_check", sql`${table.memberNamePrompt} IN ('off', 'optional', 'required')`),
     check("app_settings_min_balance_check", sql`${table.minBalance} <= 0`),
     check(

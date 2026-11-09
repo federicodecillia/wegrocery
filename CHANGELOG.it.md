@@ -23,6 +23,28 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
+## [Unreleased]
+
+## [1.45.0] - 9 novembre 2026
+
+*Pronti ad aprire il gruppo a persone nuove: termini da accettare, iscrizione, pagina pubblica, import dei soci e quantità limitate, tutto spento finché un admin non lo accende.*
+
+### Aggiunto
+- 📜 **Termini e privacy da accettare**: in Impostazioni > Gruppo un admin può chiedere a chi entra di accettare l'informativa privacy e i termini di servizio del gruppo (link alle pagine del gruppo) prima di usare l'app, e chiederlo di nuovo a tutti quando cambia i testi. Fino ad allora non si può ordinare né pagare. Spento di default.
+- 🔗 **Link ai termini di servizio** accanto all'informativa privacy, nella pagina di accesso e in fondo a ogni pagina.
+- [tecnico] 🗄️ **Migrazione 0051** (`terms_acceptance`): `app_settings.terms_required`, `app_settings.terms_version`, `members.terms_accepted_at`, `members.terms_accepted_version`. Additiva, da applicare prima del deploy. Nuovo campo facoltativo del brand `termsUrl`.
+- 🚪 **I nuovi soci possono entrare da soli**: in Impostazioni > Soci e guida, "Chi può entrare" offre "Su richiesta" (un modulo su /aderisci, un admin la approva in Soci e il nuovo socio riceve il link per entrare) o "Aperta" (chi conferma la propria email entra subito). Di default solo soci.
+- 💳 **I nuovi pagano prima di ordinare**: di default chi entra così non va mai sotto zero e paga ogni ordine con la carta o da un saldo già ricaricato. L'admin può dargli invece il credito del gruppo.
+- [tecnico] 🗄️ **Migrazione 0052** (`signup`): `app_settings.signup_mode`, `signup_role`, `signup_prepaid`, `members.joined_via`, tabella `membership_requests`. Additiva, da applicare prima del deploy.
+- 🪟 **Pagina pubblica del gruppo**: in Impostazioni > Gruppo un admin può accendere /gruppo, una vetrina per chi non è ancora dentro: il testo del gruppo, il prossimo ordine con le date e, se vuole, i prodotti, con i pulsanti per entrare o chiedere di aderire. Chi apre l'app senza aver fatto l'accesso arriva lì. Spenta di default, nascosta ai motori di ricerca se l'admin non sceglie diversamente.
+- [tecnico] 🗄️ **Migrazione 0053** (`public_page`): `app_settings.public_page_enabled`, `public_products_preview`, `public_page_indexable`, `public_intro`. Additiva, da applicare prima del deploy. `/` senza sessione ora porta a `/gruppo`, che rimanda a `/login` se la pagina è spenta.
+- 📥 **Importa i soci da un file**: in Soci, "Importa da file" legge un CSV da Excel o Google Fogli, mostra cosa succede a ogni riga (nuovo, già socio, ripetuto, email non valida) prima di importare, poi invita i nuovi soci 20 alla volta. I soci che ci sono già non vengono mai toccati.
+- 🧺 **Quantità limitate**: in Impostazioni > Gruppo un admin può accendere le quantità limitate e indicare su ogni prodotto del ciclo quante unità ci sono e quante ne può prendere un socio. I soci vedono solo "Esaurito"; se un prodotto finisce mentre ordinano, alla conferma vedono cosa resta con "Adatta alle disponibilità". Spente di default. Si possono impostare anche dal listino importato nel ciclo (colonne "Disponibili" e "Massimo per socio"), e la pagina pubblica segna "Esaurito" sui prodotti finiti.
+- [tecnico] 🗄️ **Migrazione 0054** (`stock_limits`): `products.max_quantity`, `products.max_per_member`, `app_settings.stock_limits_enabled`, indice parziale `payments_order_pending_cycle_idx`. Additiva, da applicare prima del deploy. Nuova invariante notturna `product_max_quantity`.
+
+### Sicurezza
+- [tecnico] 🔒 **Better Auth aggiornato alla 1.7.18**, che corregge un avviso critico (lo stato di un accesso con Google accettato come link di accesso, GHSA-965c-763c-88jm) e due minori. Quello critico qui non era sfruttabile: i link di accesso sono salvati come hash, quindi uno stato di Google non ne coincide mai con uno. Gli altri riguardano l'OAuth Proxy, che qui non si usa, e una corsa sul limite dei tentativi con PostgreSQL. Un link inviato prima dell'aggiornamento smette di funzionare; il codice nella stessa email funziona ancora.
+
 ## [1.44.0] - 5 novembre 2026
 
 *Il calendario degli ordini, i cicli in programma, una Home più chiara e le email con il volto del gruppo.*

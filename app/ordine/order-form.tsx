@@ -15,6 +15,7 @@ import { groupCycleProducts, OTHER_CATEGORY, type ProductOrderMode } from "@/lib
 import type { OrderState, SaveOrderLine, SaveOrderResult } from "@/lib/actions/order";
 import { discardOrderDraft, loadLastOrderForPrefill, saveOrderDraft } from "@/lib/actions/order";
 import type { OrderPaymentResult } from "@/lib/actions/order-payment";
+import { fitToStock, type Shortage } from "@/lib/products/stock-rules";
 import { draftSyncAction, orderLinesKey, type ResumedDraft } from "@/lib/order-draft";
 import { handlingFeeCents, orderPaymentAmount, type HandlingFee, type WalletOffset } from "@/lib/payments/order-payment";
 import { OrderSentDialog } from "./order-sent-dialog";
@@ -39,6 +40,9 @@ type Product = {
   category: string | null;
   emoji: string | null;
   sortOrder: number;
+  // Limited quantities (lib/products/stock.ts), null when the product has
+  // none: the most this member may hold, and whether nothing is left.
+  stock?: { cap: number | null; soldOut: boolean; maxPerMember: number | null } | null;
 };
 
 type OrderLine = {
@@ -290,9 +294,22 @@ export function OrderForm({
   const savedTotal = totalOf(savedQty);
   const savedWalletFeeCents = payPerOrder ? 0 : handlingFeeCents(Math.round(savedTotal * 100), walletFee ?? null);
 
+  // Lines refused for limited quantities at the last confirm (sold_out).
+  const [shortages, setShortages] = useState<Shortage[] | null>(null);
+
+  // The most the member can put in the cart: a sold-out product stays at what
+  // is already confirmed, and the cap per member counts.
+  function capOf(productId: string): number | null {
+    const st = productMap.get(productId)?.stock;
+    if (!st) return null;
+    return st.cap === null ? null : Math.max(st.cap, savedQty[productId] ?? 0);
+  }
+
   function changeQty(productId: string, delta: number) {
     setDraft((prev) => {
-      const next = Math.max(0, (prev[productId] ?? 0) + delta);
+      const cap = capOf(productId);
+      const wanted = Math.max(0, (prev[productId] ?? 0) + delta);
+      const next = delta > 0 && cap !== null ? Math.min(wanted, Math.max(cap, prev[productId] ?? 0)) : wanted;
       const updated = { ...prev };
       if (next === 0) {
         delete updated[productId];
@@ -335,6 +352,10 @@ export function OrderForm({
           if (result.code === "changed_elsewhere" && result.current) {
             adoptServer(result.current, result.error);
             return;
+          }
+          if (result.code === "sold_out" && result.shortages) {
+            setShortages(result.shortages);
+            router.refresh();
           }
           // Expected refusal (closed cycle, lapsed card, credit limit...):
           // nothing was saved.
@@ -383,7 +404,8 @@ export function OrderForm({
         if (result.status === "error") {
           toast.error(result.error);
           setSaveError({ key: orderLinesKey(toLines(quantities)), message: result.error });
-          if (["cycle_not_open", "changed", "in_progress"].includes(result.code)) router.refresh();
+          if (result.code === "sold_out" && result.shortages) setShortages(result.shortages);
+          if (["cycle_not_open", "changed", "in_progress", "sold_out"].includes(result.code)) router.refresh();
           return;
         }
         if (result.status === "redirect") {
@@ -667,6 +689,33 @@ export function OrderForm({
         <p className="py-8 text-center text-[14px] text-secondary-foreground">{onlyCart && query.trim() === "" ? t.order.cartEmpty : t.order.noResults}</p>
       )}
 
+      {/* Limited quantities refused at the last confirm, with the way out. */}
+      {isEditing && shortages && shortages.length > 0 && (
+        <div role="alert" className="mb-3 rounded-card border border-destructive/30 bg-danger-bg px-3.5 py-3 text-[14px] text-foreground">
+          <p className="font-bold">{t.order.stock.title}</p>
+          <ul className="mt-1 list-disc pl-5">
+            {shortages.map((x) => (
+              <li key={x.productId}>
+                {t.order.stock.line(productMap.get(x.productId)?.name ?? "", x.allowed, x.requested)}
+              </li>
+            ))}
+          </ul>
+          <button
+            type="button"
+            onClick={() => {
+              setDraft((prev) =>
+                Object.fromEntries(fitToStock(toLines(prev), shortages).map((l) => [l.productId, l.quantity])),
+              );
+              setShortages(null);
+              toast.success(t.order.stock.fitted);
+            }}
+            className="pressable mt-2 inline-flex min-h-11 items-center rounded-full bg-primary px-4 text-[14px] font-bold text-primary-foreground"
+          >
+            {t.order.stock.fit}
+          </button>
+        </div>
+      )}
+
       {/* Product list */}
       {isEditing && groups.map(({ category, products: prods }) => (
         <section key={category} id={categoryAnchor(category)} data-category={category} className="scroll-mt-16">
@@ -678,6 +727,10 @@ export function OrderForm({
           {prods.map((p) => {
             const qty = draft[p.productId] ?? 0;
             const meta = [p.variant, p.format].filter(Boolean).join(" · ");
+            const cap = capOf(p.productId);
+            const atCap = cap !== null && qty >= cap;
+            // "Esaurito" only when nothing is left for anyone (D3: never a number).
+            const soldOut = Boolean(p.stock?.soldOut) && atCap;
             return (
               <div
                 key={p.productId}
@@ -705,6 +758,11 @@ export function OrderForm({
                     {p.notes && (
                       <p className="mt-0.5 text-[13px] leading-[1.4] text-muted-foreground">{p.notes}</p>
                     )}
+                    {soldOut ? (
+                      <p className="mt-0.5 text-[13px] font-bold text-destructive">{t.order.stock.soldOut}</p>
+                    ) : atCap && p.stock?.maxPerMember != null && qty >= p.stock.maxPerMember ? (
+                      <p className="mt-0.5 text-[13px] text-secondary-foreground">{t.order.stock.maxReached(p.stock.maxPerMember)}</p>
+                    ) : null}
                   </div>
                 </div>
                 {/* One container whose "+" is always the last child with a
@@ -744,9 +802,10 @@ export function OrderForm({
                     key="plus"
                     type="button"
                     data-plus
+                    disabled={atCap}
                     onClick={() => changeQty(p.productId, 1)}
                     aria-label={qty === 0 ? t.order.addNamed(p.name) : t.order.moreNamed(p.name)}
-                    className={`pressable hit-44 flex size-(--control-h) items-center justify-center rounded-full text-[18px] font-light ${
+                    className={`pressable hit-44 flex size-(--control-h) items-center justify-center rounded-full text-[18px] font-light disabled:cursor-not-allowed disabled:opacity-40 ${
                       qty === 0 ? "text-secondary-foreground" : "bg-primary text-primary-foreground"
                     }`}
                   >

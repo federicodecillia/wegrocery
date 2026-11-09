@@ -12,6 +12,9 @@ import { SideNav } from "@/components/side-nav";
 import { WelcomeResume } from "@/components/home/welcome-resume";
 import { AppRefresh } from "@/components/app-refresh";
 import { NamePrompt } from "@/components/name-prompt";
+import { TermsPrompt } from "@/components/terms-prompt";
+import { termsPending } from "@/lib/members/terms-gate";
+import { getPaymentSettings } from "@/lib/payments/get-settings";
 import { signOut } from "@/auth";
 import { redirect } from "next/navigation";
 import { getUnreadNotificationCount, notificationOwners } from "@/lib/db/queries";
@@ -34,11 +37,20 @@ type AppShellProps = {
 
 export async function AppShell({ children, email, name, admin, memberId, personId, layout = "reading" }: AppShellProps) {
   const brand = await getBrand();
-  const [unreadCount, namePrompt] = await Promise.all([
+  const [unreadCount, namePrompt, mustAccept, settings] = await Promise.all([
     getUnreadNotificationCount(notificationOwners(memberId, personId)),
     // A member still named after their address answers first (lib/members/name.ts).
     namePromptFor(personId ?? memberId),
+    // The group's privacy notice and terms come before anything (lib/members/terms.ts).
+    termsPending(personId ?? memberId),
+    getPaymentSettings(),
   ]);
+  const signOutAction = async () => {
+    "use server";
+    await signOut();
+    redirect("/login");
+  };
+  const blocking = mustAccept || namePrompt !== null;
 
   return (
     <div className="min-h-screen bg-frame sm:p-6 md:flex md:bg-background md:p-0">
@@ -92,26 +104,33 @@ export async function AppShell({ children, email, name, admin, memberId, personI
 
         <main id="main" tabIndex={-1} className="flex-1 px-5 py-4 pb-[calc(var(--spacing-nav-h)+1rem)] md:px-8 md:py-6">
           <AppRefresh />
-          {!namePrompt && <WelcomeResume />}
+          {!blocking && <WelcomeResume />}
           <div className={CONTENT_WIDTH[layout]}>
-          {namePrompt ? (
-            <NamePrompt
-              currentName={name ?? ""}
-              required={namePrompt === "required"}
-              signOut={async () => {
-                "use server";
-                await signOut();
-                redirect("/login");
-              }}
+          {mustAccept && settings.termsVersion ? (
+            <TermsPrompt
+              group={brand.appName}
+              version={settings.termsVersion}
+              privacyUrl={brand.privacyUrl}
+              termsUrl={brand.termsUrl}
+              signOut={signOutAction}
             />
+          ) : namePrompt ? (
+            <NamePrompt currentName={name ?? ""} required={namePrompt === "required"} signOut={signOutAction} />
           ) : (
             children
           )}
-          {brand.privacyUrl ? (
-            <p className="mt-8 text-center text-xs">
-              <a href={brand.privacyUrl} target="_blank" rel="noopener noreferrer" className="text-secondary-foreground underline">
-                {t.login.privacyLink}
-              </a>
+          {brand.privacyUrl || brand.termsUrl ? (
+            <p className="mt-8 flex flex-wrap justify-center gap-x-4 gap-y-1 text-center text-xs">
+              {brand.privacyUrl ? (
+                <a href={brand.privacyUrl} target="_blank" rel="noopener noreferrer" className="text-secondary-foreground underline">
+                  {t.login.privacyLink}
+                </a>
+              ) : null}
+              {brand.termsUrl ? (
+                <a href={brand.termsUrl} target="_blank" rel="noopener noreferrer" className="text-secondary-foreground underline">
+                  {t.login.termsLink}
+                </a>
+              ) : null}
             </p>
           ) : null}
           </div>

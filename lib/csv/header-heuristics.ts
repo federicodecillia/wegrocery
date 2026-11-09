@@ -10,7 +10,9 @@ export type TargetField =
   | "pricePerKg"
   | "category"
   | "emoji"
-  | "notes";
+  | "notes"
+  | "maxQuantity"
+  | "maxPerMember";
 
 export const TARGET_FIELDS: TargetField[] = [
   "name",
@@ -21,7 +23,12 @@ export const TARGET_FIELDS: TargetField[] = [
   "category",
   "emoji",
   "notes",
+  "maxQuantity",
+  "maxPerMember",
 ];
+
+/** Limited quantities (lib/products/stock.ts): only for an import into a cycle. */
+export const STOCK_FIELDS: TargetField[] = ["maxQuantity", "maxPerMember"];
 
 export const TARGET_LABEL: Record<TargetField, string> = {
   name: "Nome",
@@ -32,6 +39,8 @@ export const TARGET_LABEL: Record<TargetField, string> = {
   category: "Categoria",
   emoji: "Icona",
   notes: "Note",
+  maxQuantity: "Disponibili",
+  maxPerMember: "Massimo per socio",
 };
 
 export const REQUIRED_FIELDS: TargetField[] = ["name", "unitPrice"];
@@ -72,6 +81,8 @@ const SYNONYMS: Record<TargetField, string[]> = {
   category: ["categoria", "reparto", "famiglia", "gruppo"],
   emoji: ["icona", "emoji", "simbolo"],
   notes: ["note", "annotazion", "commento", "osservazion"],
+  maxQuantity: ["disponibili", "disponibilita", "quantita disponibile", "qta disponibile", "giacenza", "stock"],
+  maxPerMember: ["massimo per socio", "max per socio", "limite per socio", "max socio", "per socio"],
 };
 
 function normalise(s: string): string {

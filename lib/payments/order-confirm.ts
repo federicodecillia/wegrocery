@@ -3,6 +3,7 @@ import { t } from "@/lib/i18n";
 import { walletCreditAvailableCentsSql } from "./balance-due";
 import type { Db } from "./effects";
 import { cycleWalletCreditCentsSql, walletTransferSql } from "./wallet-transfer";
+import { stockFitsSql } from "@/lib/products/stock";
 
 // The database side of what a member does in pay-per-order: read what the
 // cycle's payments cover, confirm an order that needs no payment, cancel.
@@ -45,7 +46,8 @@ export type ConfirmLine = { productId: string; quantity: number; unitPrice: stri
 // covers it. ONE transaction, like saveOrder: the cycle is row-locked and must
 // still be open, the coverage must still be what the amount was computed from
 // (a refund asked for in the meantime would make the order unpaid), and the
-// wallet must still hold that credit.
+// wallet must still hold that credit, and limited products must still have
+// the units (lib/products/stock.ts).
 // "changed" = the guard fired and nothing was written: the caller recomputes.
 export async function confirmOrderWithoutPayment(
   db: Db,
@@ -60,12 +62,14 @@ export async function confirmOrderWithoutPayment(
 ): Promise<"confirmed" | "changed"> {
   const { memberId, cycleId } = input;
   const credit = Math.max(0, input.walletCreditCents ?? 0);
+  const lines = input.lines.filter((l) => l.quantity > 0);
   const lock = db.execute(sql`SELECT 1 FROM order_cycles WHERE cycle_id = ${cycleId} FOR UPDATE`);
   const guard = db.execute(sql`
     SELECT 1 / (CASE WHEN
       ${openPerOrderCycle(cycleId)}
       AND ${coverageSql(memberId, cycleId)} = ${input.expectedCoveredCents}
       AND (${credit} = 0 OR ${walletCreditAvailableCentsSql(memberId)} >= ${credit})
+      AND ${stockFitsSql({ cycleId, memberId, lines: lines.map(({ productId, quantity }) => ({ productId, quantity })) })}
     THEN 1 ELSE 0 END) AS confirm_guard
   `);
   const transfer = db.execute(
@@ -79,7 +83,6 @@ export async function confirmOrderWithoutPayment(
     }),
   );
   const deleteOrder = db.execute(sql`DELETE FROM orders WHERE member_id = ${memberId} AND cycle_id = ${cycleId}`);
-  const lines = input.lines.filter((l) => l.quantity > 0);
   const insertOrder = db.execute(sql`
     INSERT INTO orders
       (order_line_id, cycle_id, member_id, product_id, quantity, unit_price_snapshot, line_total, updated_at)

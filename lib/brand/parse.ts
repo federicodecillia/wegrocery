@@ -52,7 +52,7 @@ export function parseBrandConfig(raw: string | undefined): BrandConfig {
   }
   // Rendered as <a href> for logged-out visitors: absolute http(s) only
   // (in-app paths need a session; this also rules out javascript: URLs).
-  for (const k of ["privacyUrl", "membershipUrl"] as const) {
+  for (const k of ["privacyUrl", "termsUrl", "membershipUrl"] as const) {
     if (o[k] !== undefined && o[k] !== null && !isHttpUrl(o[k])) {
       throw new Error(`brand.${k} must be an absolute http(s) URL or null`);
     }

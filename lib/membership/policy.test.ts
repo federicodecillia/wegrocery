@@ -65,6 +65,26 @@ describe("matchesBootstrapEmail", () => {
   });
 });
 
+describe("members who joined by sign-up", () => {
+  it("are never asked for a card, at sign-in or when ordering", () => {
+    expect(existingMemberSignIn({ active: true, role: "utenti", joinedVia: "request" }, true, null)).toEqual({ kind: "allow" });
+    expect(
+      shouldRecheckMembershipOnOrder(
+        { role: "utenti", membershipStatus: null, membershipVerifiedAt: null, joinedVia: "open" },
+        true,
+        new Date(),
+        true,
+      ),
+    ).toBe(false);
+  });
+  it("stay out once deactivated", () => {
+    expect(existingMemberSignIn({ active: false, role: "utenti", joinedVia: "open" }, false, null)).toEqual({
+      kind: "deny",
+      error: "AccessDenied",
+    });
+  });
+});
+
 describe("newUserSignIn", () => {
   it("denies as today when the check is disabled", () => {
     expect(newUserSignIn(false, null)).toEqual({ kind: "deny", error: "AccessDenied" });
@@ -73,7 +93,7 @@ describe("newUserSignIn", () => {
     expect(newUserSignIn(true, null)).toEqual({ kind: "check" });
   });
   it("valid → provision", () => {
-    expect(newUserSignIn(true, { status: "valid" })).toEqual({ kind: "provision" });
+    expect(newUserSignIn(true, { status: "valid" })).toEqual({ kind: "provision", via: "card" });
   });
   it("invalid → NotMember", () => {
     expect(newUserSignIn(true, { status: "invalid", message: "x" })).toEqual({ kind: "deny", error: "NotMember" });
@@ -88,6 +108,35 @@ describe("newUserSignIn", () => {
       error: "MembershipCheckUnavailable",
       logError: true,
     });
+  });
+});
+
+describe("newUserSignIn with a sign-up mode", () => {
+  const invalid = { status: "invalid" as const, message: "x" };
+  const error = { status: "error" as const, message: "x" };
+  // [check on, result, mode] -> decision, for a verified address.
+  const table: [boolean, Parameters<typeof newUserSignIn>[1], "closed" | "request" | "open", unknown][] = [
+    [false, null, "closed", { kind: "deny", error: "AccessDenied" }],
+    [false, null, "request", { kind: "deny", error: "SignupRequired" }],
+    [false, null, "open", { kind: "provision", via: "open" }],
+    [true, null, "open", { kind: "check" }],
+    [true, { status: "valid" }, "closed", { kind: "provision", via: "card" }],
+    [true, { status: "valid" }, "open", { kind: "provision", via: "card" }],
+    [true, { status: "valid" }, "request", { kind: "provision", via: "card" }],
+    [true, invalid, "closed", { kind: "deny", error: "NotMember" }],
+    [true, invalid, "request", { kind: "deny", error: "SignupRequired" }],
+    [true, invalid, "open", { kind: "provision", via: "open" }],
+    [true, error, "open", { kind: "deny", error: "MembershipCheckUnavailable", logError: true }],
+    [true, error, "request", { kind: "deny", error: "MembershipCheckUnavailable", logError: true }],
+  ];
+  it.each(table)("check %s, result %j, mode %s", (check, result, mode, expected) => {
+    expect(newUserSignIn(check, result, true, mode)).toEqual(expected);
+  });
+  it("never provisions an unverified address, whatever the mode", () => {
+    for (const mode of ["closed", "request", "open"] as const) {
+      expect(newUserSignIn(false, null, false, mode)).toEqual({ kind: "deny", error: "AccessDenied" });
+      expect(newUserSignIn(true, invalid, false, mode)).toEqual({ kind: "deny", error: "AccessDenied" });
+    }
   });
 });
 

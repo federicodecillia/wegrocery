@@ -1,11 +1,11 @@
-import { afterAll, beforeAll, beforeEach, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, beforeEach, expect, it, vi } from "vitest";
 import { getDb } from "@/lib/db/client";
 import { describeDb, makeScope } from "@/test/int/fixtures";
 import { createAuth, type Auth, type AuthEmail, type CreateAuthOptions } from "./config";
 
 // Better Auth with the app's configuration on a real database: who gets which
 // email, the link's (and its code's) single use and expiry, the session gate,
-// the rate limit.
+// the rate limit, and Google (its token endpoint stubbed).
 const BASE = "http://localhost:3000";
 
 function cookieOf(response: Response): string {
@@ -70,11 +70,11 @@ describeDb("sign-in with an email link", () => {
     await sql`UPDATE members SET email = ${memberEmail}, alias_email = ${aliasEmail} WHERE member_id = ${scope.memberId}`;
   });
 
-  function build(extra: Partial<CreateAuthOptions> = {}): Auth {
+  function build(extra: Partial<CreateAuthOptions> = {}, env: Record<string, string> = {}): Auth {
     return createAuth(getDb(), {
       baseURL: BASE,
       rateLimit: true,
-      env: { ...process.env, AUTH_SECRET: "test-secret-at-least-32-characters-long!!", NODE_ENV: "test" },
+      env: { ...process.env, AUTH_SECRET: "test-secret-at-least-32-characters-long!!", NODE_ENV: "test", ...env },
       // High caps here; the cap test below sets its own.
       emailCaps: { linksPerAddressPerHour: 100, noticesPerAddressPerDay: 100, noticesPerDay: 1000 },
       sendAuthEmail: async (m) => {
@@ -87,6 +87,10 @@ describeDb("sign-in with an email link", () => {
   beforeEach(() => {
     outbox = [];
     auth = build();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   afterAll(async () => {
@@ -247,5 +251,86 @@ describeDb("sign-in with an email link", () => {
     const statuses = [];
     for (let i = 0; i < 6; i++) statuses.push((await signInWithCode(strangerEmail, "000000", ip)).status);
     expect(statuses).toEqual([400, 400, 400, 400, 400, 429]);
+  });
+
+  const GOOGLE = { AUTH_GOOGLE_ID: "test-client.apps.googleusercontent.com", AUTH_GOOGLE_SECRET: "test-secret" };
+
+  // Starts a Google sign-in: the state Google would carry back, and the cookie
+  // that binds it to this browser.
+  async function startGoogle(body: Record<string, unknown> = {}): Promise<{ state: string; cookie: string }> {
+    const res = await post("/sign-in/social", { provider: "google", callbackURL: "/ordine", ...body });
+    expect(res.status).toBe(200);
+    const { url } = (await res.json()) as { url: string };
+    return { state: new URL(url).searchParams.get("state")!, cookie: cookieOf(res) };
+  }
+
+  // Google's token endpoint answers with an ID token for this identity.
+  function stubGoogle(claims: Record<string, unknown>): void {
+    const encode = (o: unknown) => Buffer.from(JSON.stringify(o)).toString("base64url");
+    const idToken = `${encode({ alg: "RS256", typ: "JWT" })}.${encode({
+      iss: "https://accounts.google.com",
+      aud: GOOGLE.AUTH_GOOGLE_ID,
+      sub: `google-${scope.prefix}`,
+      name: "Test",
+      iat: Math.floor(Date.now() / 1000),
+      exp: Math.floor(Date.now() / 1000) + 600,
+      ...claims,
+    })}.sig`;
+    const realFetch = globalThis.fetch;
+    vi.spyOn(globalThis, "fetch").mockImplementation((input, init) => {
+      const url = input instanceof Request ? input.url : String(input);
+      if (url.startsWith("https://oauth2.googleapis.com/token")) {
+        return Promise.resolve(
+          Response.json({ access_token: "at", id_token: idToken, token_type: "Bearer", expires_in: 3600 }),
+        );
+      }
+      return realFetch(input, init);
+    });
+  }
+
+  function googleCallback(state: string, cookie: string): Promise<Response> {
+    return auth.handler(
+      new Request(`${BASE}/api/auth/callback/google?code=test-code&state=${encodeURIComponent(state)}`, {
+        headers: { cookie, "x-vercel-forwarded-for": nextIp() },
+      }),
+    );
+  }
+
+  it("signs a member in with Google when Google verified the address", async () => {
+    auth = build({}, GOOGLE);
+    const { state, cookie } = await startGoogle();
+    stubGoogle({ email: memberEmail, email_verified: true });
+    const res = await googleCallback(state, cookie);
+    expect(res.status).toBe(302);
+    expect(await sessionEmail(cookieOf(res))).toBe(memberEmail);
+  });
+
+  it("refuses a Google identity whose address Google did not verify", async () => {
+    auth = build({}, GOOGLE);
+    const { state, cookie } = await startGoogle();
+    stubGoogle({ email: memberEmail, email_verified: false });
+    const res = await googleCallback(state, cookie);
+    expect(cookieOf(res)).not.toContain("session_token=");
+  });
+
+  it("refuses a Google identity that is not a member", async () => {
+    auth = build({}, GOOGLE);
+    const { state, cookie } = await startGoogle();
+    stubGoogle({ email: strangerEmail, email_verified: true });
+    const res = await googleCallback(state, cookie);
+    expect(cookieOf(res)).not.toContain("session_token=");
+  });
+
+  // GHSA-965c-763c-88jm: the state of a Google sign-in, which the requester
+  // sees and whose data it can choose, must never work as a sign-in link.
+  it("does not take a Google sign-in's state as a sign-in link", async () => {
+    auth = build({}, GOOGLE);
+    const { state } = await startGoogle({ additionalData: { email: memberEmail, name: "x" } });
+    const res = await auth.handler(
+      new Request(`${BASE}/api/auth/magic-link/verify?token=${encodeURIComponent(state)}&callbackURL=/ordine`, {
+        headers: { "x-vercel-forwarded-for": nextIp() },
+      }),
+    );
+    expect(cookieOf(res)).not.toContain("session_token=");
   });
 });

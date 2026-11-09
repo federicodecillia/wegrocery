@@ -27,6 +27,8 @@ function authEmailText({ kind, email, url, code }: AuthEmail, brand: BrandConfig
       return e.membershipInactive(brand.appName, brand.membershipUrl ?? null, brand.supportEmail);
     case "checkUnavailable":
       return e.checkUnavailable(brand.appName);
+    case "signupRequired":
+      return e.signupRequired(brand.appName, email, url!, brand.supportEmail);
   }
 }
 

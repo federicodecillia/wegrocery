@@ -24,10 +24,13 @@ import { requireActiveMember } from "@/lib/auth/session";
 import { isStaleOrderWrite, normalizeDraftLines, orderLinesKey, orderStateKey, sameOrderLines } from "@/lib/order-draft";
 import { membershipAllowsOrder } from "@/lib/membership/order-check";
 import { evaluateCreditLimit, raisesOrderTotal } from "@/lib/membership/policy";
+import { effectiveMinBalance } from "@/lib/membership/signup";
 import { isMembershipCheckEnabled } from "@/lib/membership/wallyfor";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
 import { canAccessCycle } from "@/lib/roles";
 import { actionErrorMessage } from "@/lib/action-error";
+import { termsPending } from "@/lib/members/terms-gate";
+import { readCycleStock, stockFitsSql, stockShortages, type Shortage } from "@/lib/products/stock";
 
 export type SaveOrderLine = { productId: string; quantity: number };
 
@@ -45,11 +48,13 @@ export type SaveOrderErrorCode =
   | "membership_inactive"
   | "credit_limit_exceeded"
   | "changed_elsewhere"
+  | "terms_required"
+  | "sold_out"
   | "unexpected";
 
 export type SaveOrderResult =
   | { success: true; balanceWarning: string | null }
-  | { success: false; error: string; code: SaveOrderErrorCode; current?: OrderState };
+  | { success: false; error: string; code: SaveOrderErrorCode; current?: OrderState; shortages?: Shortage[] };
 
 // What the server holds for the member's order on a cycle, limited to the
 // products still in it: sent back when a write is refused as stale, so the
@@ -89,6 +94,9 @@ export async function saveOrder(
     const member = memberId ? await getMemberById(memberId) : null;
     if (!member) return { success: false, error: t.errors.memberNotFound, code: "member_not_found" };
     if (!member.active) return { success: false, error: t.errors.accountInactive, code: "account_inactive" };
+    // The group's terms, accepted by the person who signed in (lib/members/terms.ts).
+    const personId = (session.user as { personId?: string | null }).personId ?? member.memberId;
+    if (await termsPending(personId)) return { success: false, error: t.errors.termsRequired, code: "terms_required" };
 
     // The schema stores quantities as integers; reject anything the DB would
     // choke on (fractions, negatives, absurd values) before touching the order.
@@ -142,7 +150,9 @@ export async function saveOrder(
 
     // Uncharged order totals: needed by the credit limit and to tell whether
     // this save raises the cycle's order (trimming/cancelling is never blocked).
-    const minBalance = offline ? null : (await getPaymentSettings()).minBalance;
+    // A newcomer of a "prepaid" group never goes below zero (lib/membership/signup.ts).
+    const settings = offline ? null : await getPaymentSettings();
+    const minBalance = settings ? effectiveMinBalance(settings.minBalance, member, settings.signupPrepaid) : null;
     const checkEnabled = isMembershipCheckEnabled() && member.role !== "admin";
     const pending =
       minBalance !== null || checkEnabled
@@ -194,6 +204,12 @@ export async function saveOrder(
       sql`SELECT 1 / (CASE WHEN status = 'open' THEN 1 ELSE 0 END) AS open_guard
           FROM order_cycles WHERE cycle_id = ${cycleId} FOR UPDATE`,
     );
+    // Limited quantities (lib/products/stock.ts): under the same lock, before
+    // the member's lines are replaced.
+    const guardStock = db.execute(
+      sql`SELECT 1 / (CASE WHEN ${stockFitsSql({ cycleId, memberId: member.memberId, lines: newLines })}
+          THEN 1 ELSE 0 END) AS stock_guard`,
+    );
     const deleteExisting = db
       .delete(orders)
       .where(and(eq(orders.memberId, member.memberId), eq(orders.cycleId, cycleId)));
@@ -220,13 +236,18 @@ export async function saveOrder(
             };
           }),
         );
-        await db.batch([guardCycleStillOpen, deleteExisting, insertNew, deleteDraft]);
+        await db.batch([guardCycleStillOpen, guardStock, deleteExisting, insertNew, deleteDraft]);
       } else {
         await db.batch([guardCycleStillOpen, deleteExisting, deleteDraft]);
       }
     } catch (err) {
-      // 22012 = division_by_zero, i.e. the guard found the cycle closed.
+      // 22012 = division_by_zero: a guard fired, the cycle closed or a
+      // limited product ran out. Read again which one.
       if (err instanceof Error && /22012|division by zero/i.test(err.message)) {
+        const shortages = (await getOpenCycles()).some((c) => c.cycleId === cycleId)
+          ? stockShortages(newLines, await readCycleStock(db, cycleId, member.memberId))
+          : [];
+        if (shortages.length > 0) return { success: false, error: t.errors.soldOut, code: "sold_out", shortages };
         return { success: false, error: t.errors.cycleNotOpen, code: "cycle_not_open" };
       }
       throw err;

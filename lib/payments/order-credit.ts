@@ -10,6 +10,7 @@ import type { OrderSnapshot } from "./order-payment";
 import { walletTransferSql } from "./wallet-transfer";
 import { sendRequestedRefund, type RefundApi } from "./refund-request";
 import { getStripe } from "./stripe";
+import { stockFitsSql } from "@/lib/products/stock";
 
 // A paid Checkout Session of an order payment (payments.kind = 'order').
 export type OrderCreditAction = {
@@ -96,6 +97,15 @@ async function debtParts(db: Db, payment: PaymentRow): Promise<BalancePart[]> {
 // counted on, as far as the wallet still holds it (what is missing stays to
 // pay on the cycle, for the settlement). A guard that fails rolls everything
 // back (22012).
+// The paid lines of the payment, as the `l` that stockFitsSql reads.
+function paidLinesSql(paymentId: string) {
+  return sql`(
+    SELECT x."productId", x.quantity
+    FROM payments p0, jsonb_to_recordset(p0.order_snapshot -> 'lines') AS x("productId" text, quantity integer)
+    WHERE p0.payment_id = ${paymentId}
+  ) l`;
+}
+
 async function creditBatch(db: Db, a: OrderCreditAction, payment: PaymentRow, parts: BalancePart[]): Promise<boolean> {
   const lock = db.execute(sql`SELECT 1 FROM order_cycles WHERE cycle_id = ${a.cycleId} FOR UPDATE`);
   const guard = db.execute(sql`
@@ -115,6 +125,7 @@ async function creditBatch(db: Db, a: OrderCreditAction, payment: PaymentRow, pa
             WHERE pr.product_id = l."productId" AND pr.cycle_id = ${a.cycleId} AND pr.active
           )
       )
+      AND ${stockFitsSql({ cycleId: a.cycleId, memberId: payment.member_id, lines: paidLinesSql(a.paymentId) })}
     THEN 1 ELSE 0 END) AS credit_guard
   `);
   const deleteOrder = db.execute(sql`
@@ -296,9 +307,10 @@ export async function applyOrderCredit(a: OrderCreditAction, stripeArg?: RefundA
     return;
   }
   const closedWithoutPayment = row.status !== "pending";
-  const { rows: blockers } = await db.execute<{ cycle_open: boolean; missing: number }>(sql`
+  const { rows: blockers } = await db.execute<{ cycle_open: boolean; missing: number; stock_ok: boolean }>(sql`
     SELECT
       (SELECT status FROM order_cycles WHERE cycle_id = ${a.cycleId}) = 'open' AS cycle_open,
+      ${stockFitsSql({ cycleId: a.cycleId, memberId: row.member_id, lines: paidLinesSql(a.paymentId) })} AS stock_ok,
       (SELECT count(*)::int FROM payments p, ${snapshotLines}
        WHERE p.payment_id = ${a.paymentId}
          AND NOT EXISTS (
@@ -307,7 +319,7 @@ export async function applyOrderCredit(a: OrderCreditAction, stripeArg?: RefundA
          )) AS missing
   `);
   const blocker = blockers[0];
-  if (!closedWithoutPayment && blocker?.cycle_open && blocker.missing === 0) {
+  if (!closedWithoutPayment && blocker?.cycle_open && blocker.missing === 0 && blocker.stock_ok) {
     // Nothing explains the refusal: let Stripe deliver the event again.
     throw new Error(`order payment ${a.paymentId} could not be credited`);
   }
@@ -319,6 +331,7 @@ export async function applyOrderCredit(a: OrderCreditAction, stripeArg?: RefundA
     amountCents: a.amountCents,
     cycleOpen: blocker?.cycle_open ?? false,
     missingProducts: blocker?.missing ?? 0,
+    soldOut: blocker ? !blocker.stock_ok : false,
   });
   try {
     // "retry" leaves the refund requested: Cassa shows it and sends it again.

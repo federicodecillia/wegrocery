@@ -313,6 +313,7 @@ function ContactsSection({ defaults, current }: Props) {
   const [techEmail, setTechEmail] = useState(current.techEmail ?? "");
   const [archiveCcEmail, setArchive] = useState(optional(current.archiveCcEmail, defaults.archiveCcEmail));
   const [privacyUrl, setPrivacy] = useState(optional(current.privacyUrl, defaults.privacyUrl));
+  const [termsUrl, setTerms] = useState(optional(current.termsUrl, defaults.termsUrl));
   const [membershipUrl, setMembership] = useState(optional(current.membershipUrl, defaults.membershipUrl));
 
   return (
@@ -324,11 +325,12 @@ function ContactsSection({ defaults, current }: Props) {
         <Field id="identity-tech" type="email" title={s.techEmail} value={techEmail} onChange={setTechEmail} placeholder={defaults.techEmail} />
         <Field id="identity-archive" type="email" title={s.archiveCcEmail} value={archiveCcEmail} onChange={setArchive} />
         <Field id="identity-privacy" type="url" title={s.privacyUrl} value={privacyUrl} onChange={setPrivacy} placeholder="https://" />
+        <Field id="identity-terms" type="url" title={s.termsUrl} value={termsUrl} onChange={setTerms} placeholder="https://" />
         <Field id="identity-membership" type="url" title={s.membershipUrl} value={membershipUrl} onChange={setMembership} placeholder="https://" />
       </div>
       <button
         type="button"
-        onClick={() => save({ supportEmail, techEmail, archiveCcEmail, privacyUrl, membershipUrl })}
+        onClick={() => save({ supportEmail, techEmail, archiveCcEmail, privacyUrl, termsUrl, membershipUrl })}
         disabled={isPending}
         className="mt-4 rounded-xl bg-inverse px-4 py-2 text-[13px] font-bold text-inverse-foreground disabled:opacity-60"
       >

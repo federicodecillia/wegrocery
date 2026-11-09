@@ -141,6 +141,24 @@ export const guideEs: GuideContent = {
       keywords: ["borrador", "guardado", "perdido", "carrito", "sin confirmar"],
     },
     {
+      slug: "prodotti-esauriti",
+      topic: "ordinare",
+      title: "Un producto está agotado",
+      intro: "Algunos productos hay en cantidad limitada: cuando se acaban ves **Agotado** y el + no se puede tocar.",
+      steps: [
+        "Si un producto se acaba mientras pides, al confirmar ves **Algunos productos no alcanzan** con cuántos puedes llevarte todavía.",
+        "Toca **Ajustar a lo disponible**, revisa el carrito y confirma de nuevo.",
+      ],
+      notes: [
+        "Cuenta el pedido confirmado, no el carrito: hasta que confirmas, las unidades quedan libres para todos.",
+        "Lo que ya confirmaste sigue siendo tuyo; si quitas algo, queda disponible enseguida para los demás.",
+        "Algunos productos tienen también un máximo por socio, escrito bajo el nombre cuando lo alcanzas.",
+      ],
+      link: { href: "/ordine", label: "Abrir Pedido" },
+      keywords: ["agotado", "terminado", "no disponible", "disponibilidad", "máximo", "cantidad"],
+      when: { stockLimits: true },
+    },
+    {
       slug: "quando-ordinare",
       topic: "ordinare",
       title: "Hasta cuándo puedo pedir",

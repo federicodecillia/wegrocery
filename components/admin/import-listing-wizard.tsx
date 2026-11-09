@@ -14,6 +14,7 @@ import {
 } from "@/lib/actions/admin-products";
 import {
   REQUIRED_FIELDS,
+  STOCK_FIELDS,
   TARGET_FIELDS,
   TARGET_LABEL,
   assignColumn,
@@ -79,11 +80,14 @@ export function ImportListingWizard({ open, onClose, cycleId, cycleTitle }: Prop
   // When the sheet selection changes, seed mapping + selection from server suggestion.
   useEffect(() => {
     if (!inspection || !sheet) return;
-    setMapping(inspection.suggestedMappings[sheetIdx] ?? {});
+    const suggested = { ...(inspection.suggestedMappings[sheetIdx] ?? {}) };
+    // Without a cycle the limit fields are hidden: they must not hold a column.
+    if (!cycleId) for (const f of STOCK_FIELDS) delete suggested[f];
+    setMapping(suggested);
     setSelectedIndexes(new Set(sheet.rows.map((_, i) => i)));
     setEmojiOverrides({});
     setReplaceSuspectPpk(false);
-  }, [inspection, sheetIdx, sheet]);
+  }, [inspection, sheetIdx, sheet, cycleId]);
 
   // When the inspection arrives, preselect the suggested supplier.
   useEffect(() => {
@@ -165,6 +169,8 @@ export function ImportListingWizard({ open, onClose, cycleId, cycleTitle }: Prop
         d.skipped ? t.admin.importWizard.importSkipped(d.skipped) : null,
         d.invalid ? t.admin.importWizard.importInvalid(d.invalid) : null,
         d.addedToCycle ? t.admin.importWizard.importAddedToCycle(d.addedToCycle) : null,
+        d.limitsSet ? t.admin.importWizard.importLimitsSet(d.limitsSet) : null,
+        d.limitsBelowSold ? t.admin.importWizard.importLimitsBelowSold(d.limitsBelowSold) : null,
       ].filter(Boolean);
       toast.success(t.admin.importWizard.importSuccess(bits.join(", ")));
       onClose();
@@ -254,7 +260,7 @@ export function ImportListingWizard({ open, onClose, cycleId, cycleTitle }: Prop
         />
       )}
       {step === 2 && sheet && (
-        <Step2Mapping sheet={sheet} mapping={mapping} setMapping={setMapping} />
+        <Step2Mapping sheet={sheet} mapping={mapping} setMapping={setMapping} stockFields={!!cycleId} />
       )}
       {step === 3 && sheet && (
         <Step3Review
@@ -436,10 +442,13 @@ function Step2Mapping({
   sheet,
   mapping,
   setMapping,
+  stockFields,
 }: {
   sheet: { columns: string[]; rows: string[][] };
   mapping: Partial<Record<TargetField, number>>;
   setMapping: (m: Partial<Record<TargetField, number>>) => void;
+  // Disponibili and Massimo per socio: only an import into a cycle sets them.
+  stockFields: boolean;
 }) {
   // Picking a column another field holds moves it: say which field let go.
   const [freedNotice, setFreedNotice] = useState<string | null>(null);
@@ -452,7 +461,7 @@ function Step2Mapping({
         </p>
       )}
       <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-        {TARGET_FIELDS.map((field) => {
+        {TARGET_FIELDS.filter((field) => stockFields || !STOCK_FIELDS.includes(field)).map((field) => {
           const required = REQUIRED_FIELDS.includes(field);
           const value = mapping[field];
           return (

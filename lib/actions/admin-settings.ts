@@ -10,7 +10,10 @@ import { t } from "@/lib/i18n";
 import { brand } from "@/lib/brand";
 import { GROUP_INFO_MAX, normalizeGroupInfo } from "@/lib/guide/group-info";
 import { isNamePromptMode, type NamePromptMode } from "@/lib/members/name";
+import { newTermsVersion, termsHaveLink } from "@/lib/members/terms";
+import { getBrand } from "@/lib/brand/get-brand";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
+import { isSignupMode, isSignupRole, type SignupMode, type SignupRole } from "@/lib/membership/signup";
 import {
   modeChangeBlockers,
   readModeChangeState,
@@ -283,6 +286,217 @@ export async function adminSetWalletTopups(enabled: boolean): Promise<{ error?: 
     return {};
   } catch (e) {
     return { error: actionErrorMessage(e, t.errors.genericError, "adminSetWalletTopups") };
+  }
+}
+
+// Impostazioni -> Gruppo -> Termini e privacy: whether whoever signs in must
+// accept the privacy notice and terms first (lib/members/terms.ts). "renew"
+// asks everyone again: the version becomes now. Turning it on the first time
+// starts a version too; turning it off keeps it, so turning it back on does
+// not ask those who already accepted.
+export async function adminSetTermsRequired(action: "on" | "off" | "renew"): Promise<{ error?: string }> {
+  try {
+    const admin = await requireAdmin();
+    if (action !== "on" && action !== "off" && action !== "renew") return { error: t.errors.genericError };
+    const [before, current] = await Promise.all([getPaymentSettings(), getBrand()]);
+    if (action !== "off" && !termsHaveLink(current)) return { error: t.admin.settings.terms.needsLink };
+    if (action === "renew" && !before.termsRequired) return { error: t.errors.genericError };
+    const now = new Date();
+    const required = action !== "off";
+    const version = action === "renew" || (action === "on" && !before.termsVersion) ? newTermsVersion(now) : before.termsVersion;
+    if (required === before.termsRequired && version === before.termsVersion) return {};
+    const db = getDb();
+    // No row yet: the defaults the group runs on are stored with the choice.
+    const stored = {
+      minBalance: before.minBalance === null ? null : before.minBalance.toFixed(2),
+      maxBalance: before.maxBalance === null ? null : before.maxBalance.toFixed(2),
+      bankTransferEnabled: before.bankTransferEnabled,
+      bankHolder: before.bankHolder,
+      bankIban: before.bankIban,
+      onlinePaymentsEnabled: before.onlinePaymentsEnabled,
+    };
+    await db.batch([
+      db
+        .insert(appSettings)
+        .values({ id: 1, ...stored, termsRequired: required, termsVersion: version, updatedAt: now, updatedBy: admin.email })
+        .onConflictDoUpdate({
+          target: appSettings.id,
+          set: { termsRequired: required, termsVersion: version, updatedAt: now, updatedBy: admin.email },
+        }),
+      db.insert(auditLog).values({
+        auditId: crypto.randomUUID(),
+        userEmail: admin.email,
+        action: "set_terms_required",
+        entityType: "app_settings",
+        entityId: "1",
+        payloadJson: JSON.stringify({ action, before: { required: before.termsRequired, version: before.termsVersion }, after: { required, version } }),
+        createdAt: now,
+      }),
+    ]);
+    revalidatePath("/", "layout");
+    return {};
+  } catch (e) {
+    return { error: actionErrorMessage(e, t.errors.genericError, "adminSetTermsRequired") };
+  }
+}
+
+// Impostazioni -> Gruppo -> Pagina pubblica: /gruppo on or off, the
+// products of the next cycle, indexing and the text (lib/public-page.ts).
+export async function adminSetPublicPage(input: {
+  enabled: boolean;
+  productsPreview: boolean;
+  indexable: boolean;
+  intro: string;
+}): Promise<{ error?: string }> {
+  try {
+    const admin = await requireAdmin();
+    const flags = [input?.enabled, input?.productsPreview, input?.indexable];
+    if (flags.some((f) => typeof f !== "boolean") || typeof input?.intro !== "string") return { error: t.errors.genericError };
+    const intro = normalizeGroupInfo(input.intro);
+    if (intro !== null && intro.length > GROUP_INFO_MAX) return { error: t.admin.settings.publicPage.tooLong(GROUP_INFO_MAX) };
+    const before = await getPaymentSettings();
+    const after = { enabled: input.enabled, productsPreview: input.productsPreview, indexable: input.indexable, intro };
+    if (JSON.stringify(before.publicPage) === JSON.stringify(after)) return {};
+    const db = getDb();
+    const now = new Date();
+    // No row yet: the defaults the group runs on are stored with the choice.
+    const stored = {
+      minBalance: before.minBalance === null ? null : before.minBalance.toFixed(2),
+      maxBalance: before.maxBalance === null ? null : before.maxBalance.toFixed(2),
+      bankTransferEnabled: before.bankTransferEnabled,
+      bankHolder: before.bankHolder,
+      bankIban: before.bankIban,
+      onlinePaymentsEnabled: before.onlinePaymentsEnabled,
+    };
+    const values = {
+      publicPageEnabled: after.enabled,
+      publicProductsPreview: after.productsPreview,
+      publicPageIndexable: after.indexable,
+      publicIntro: after.intro,
+    };
+    await db.batch([
+      db
+        .insert(appSettings)
+        .values({ id: 1, ...stored, ...values, updatedAt: now, updatedBy: admin.email })
+        .onConflictDoUpdate({ target: appSettings.id, set: { ...values, updatedAt: now, updatedBy: admin.email } }),
+      db.insert(auditLog).values({
+        auditId: crypto.randomUUID(),
+        userEmail: admin.email,
+        action: "set_public_page",
+        entityType: "app_settings",
+        entityId: "1",
+        // The flags and the text's length: the text itself is in the row.
+        payloadJson: JSON.stringify({
+          before: { ...before.publicPage, intro: before.publicPage.intro?.length ?? 0 },
+          after: { ...after, intro: after.intro?.length ?? 0 },
+        }),
+        createdAt: now,
+      }),
+    ]);
+    revalidatePath("/", "layout");
+    return {};
+  } catch (e) {
+    return { error: actionErrorMessage(e, t.errors.genericError, "adminSetPublicPage") };
+  }
+}
+
+// Impostazioni -> Gruppo -> Quantità limitate (lib/products/stock.ts). The
+// order guards read the switch themselves; numbers already saved on the
+// products stay, and count again when it is switched back on.
+export async function adminSetStockLimitsEnabled(enabled: boolean): Promise<{ error?: string }> {
+  try {
+    const admin = await requireAdmin();
+    if (typeof enabled !== "boolean") return { error: t.errors.genericError };
+    const before = await getPaymentSettings();
+    if (before.stockLimitsEnabled === enabled) return {};
+    const db = getDb();
+    const now = new Date();
+    // No row yet: the defaults the group runs on are stored with the switch.
+    const current = {
+      minBalance: before.minBalance === null ? null : before.minBalance.toFixed(2),
+      maxBalance: before.maxBalance === null ? null : before.maxBalance.toFixed(2),
+      bankTransferEnabled: before.bankTransferEnabled,
+      bankHolder: before.bankHolder,
+      bankIban: before.bankIban,
+      onlinePaymentsEnabled: before.onlinePaymentsEnabled,
+    };
+    await db.batch([
+      db
+        .insert(appSettings)
+        .values({ id: 1, ...current, stockLimitsEnabled: enabled, updatedAt: now, updatedBy: admin.email })
+        .onConflictDoUpdate({
+          target: appSettings.id,
+          set: { stockLimitsEnabled: enabled, updatedAt: now, updatedBy: admin.email },
+        }),
+      db.insert(auditLog).values({
+        auditId: crypto.randomUUID(),
+        userEmail: admin.email,
+        action: "set_stock_limits",
+        entityType: "app_settings",
+        entityId: "1",
+        payloadJson: JSON.stringify({ before: before.stockLimitsEnabled, after: enabled }),
+        createdAt: now,
+      }),
+    ]);
+    revalidatePath("/", "layout");
+    return {};
+  } catch (e) {
+    return { error: actionErrorMessage(e, t.errors.genericError, "adminSetStockLimitsEnabled") };
+  }
+}
+
+// Impostazioni -> Soci -> Chi può entrare: the sign-up mode, the newcomers'
+// role and whether they pay before ordering (lib/membership/signup.ts).
+export async function adminSetSignup(input: {
+  mode: SignupMode;
+  role: SignupRole;
+  prepaid: boolean;
+}): Promise<{ error?: string }> {
+  try {
+    const admin = await requireAdmin();
+    if (!isSignupMode(input?.mode) || !isSignupRole(input?.role) || typeof input?.prepaid !== "boolean") {
+      return { error: t.errors.genericError };
+    }
+    const { mode, role, prepaid } = input;
+    const before = await getPaymentSettings();
+    if (before.signupMode === mode && before.signupRole === role && before.signupPrepaid === prepaid) return {};
+    const db = getDb();
+    const now = new Date();
+    // No row yet: the defaults the group runs on are stored with the choice.
+    const stored = {
+      minBalance: before.minBalance === null ? null : before.minBalance.toFixed(2),
+      maxBalance: before.maxBalance === null ? null : before.maxBalance.toFixed(2),
+      bankTransferEnabled: before.bankTransferEnabled,
+      bankHolder: before.bankHolder,
+      bankIban: before.bankIban,
+      onlinePaymentsEnabled: before.onlinePaymentsEnabled,
+    };
+    const values = { signupMode: mode, signupRole: role, signupPrepaid: prepaid };
+    await db.batch([
+      db
+        .insert(appSettings)
+        .values({ id: 1, ...stored, ...values, updatedAt: now, updatedBy: admin.email })
+        .onConflictDoUpdate({
+          target: appSettings.id,
+          set: { ...values, updatedAt: now, updatedBy: admin.email },
+        }),
+      db.insert(auditLog).values({
+        auditId: crypto.randomUUID(),
+        userEmail: admin.email,
+        action: "set_signup",
+        entityType: "app_settings",
+        entityId: "1",
+        payloadJson: JSON.stringify({
+          before: { mode: before.signupMode, role: before.signupRole, prepaid: before.signupPrepaid },
+          after: values,
+        }),
+        createdAt: now,
+      }),
+    ]);
+    revalidatePath("/", "layout");
+    return {};
+  } catch (e) {
+    return { error: actionErrorMessage(e, t.errors.genericError, "adminSetSignup") };
   }
 }
 

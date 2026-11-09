@@ -12,6 +12,7 @@ import {
 import type { StripeKeyStatus } from "./config";
 import { DEFAULT_NAME_PROMPT, isNamePromptMode, type NamePromptMode } from "@/lib/members/name";
 import { parseNewCycleDefaults, type NewCycleDefaults } from "./new-cycle-defaults";
+import { isSignupMode, isSignupRole, type SignupMode, type SignupRole } from "@/lib/membership/signup";
 
 export type PaymentMode = "wallet" | "per_order";
 
@@ -42,6 +43,20 @@ export type PaymentSettingsRow = {
   // Optional: rows read before migration 0033 have no such columns.
   bankReferenceTemplate?: string | null;
   bankReceiptEmail?: string | null;
+  // Optional: rows read before migration 0051 have no such columns.
+  termsRequired?: boolean;
+  termsVersion?: string | null;
+  // Optional: rows read before migration 0052 have no such columns.
+  signupMode?: string;
+  signupRole?: string;
+  signupPrepaid?: boolean;
+  // Optional: rows read before migration 0053 have no such columns.
+  publicPageEnabled?: boolean;
+  publicProductsPreview?: boolean;
+  publicPageIndexable?: boolean;
+  publicIntro?: string | null;
+  // Optional: rows read before migration 0054.
+  stockLimitsEnabled?: boolean;
   updatedAt: Date;
 };
 
@@ -86,6 +101,19 @@ export type PaymentSettings = {
   memberNamePrompt: NamePromptMode;
   // "Il nostro gruppo" at the top of the guide (lib/guide/group-info.ts); null = none.
   groupInfo: string | null;
+  // Whoever signs in accepts the privacy notice and terms first, and which
+  // version (lib/members/terms.ts); off and null by default.
+  termsRequired: boolean;
+  termsVersion: string | null;
+  // Who may join without an admin, with which role, and whether newcomers
+  // pay before ordering (lib/membership/signup.ts); closed by default.
+  signupMode: SignupMode;
+  signupRole: SignupRole;
+  signupPrepaid: boolean;
+  // The public page /gruppo (lib/public-page.ts); all off by default.
+  publicPage: { enabled: boolean; productsPreview: boolean; indexable: boolean; intro: string | null };
+  // Limited quantities per cycle product (lib/products/stock.ts); off by default.
+  stockLimitsEnabled: boolean;
   // What members get: the bank details when that channel is on, online
   // top-ups when switched on and the deploy has a usable key. Both off in a
   // wallet group with top-ups off.
@@ -127,6 +155,18 @@ export function resolvePaymentSettings(
         newCycleDefaults: parseNewCycleDefaults(row.newCycleDefaults),
         memberNamePrompt: isNamePromptMode(row.memberNamePrompt) ? row.memberNamePrompt : DEFAULT_NAME_PROMPT,
         groupInfo: row.groupInfo ?? null,
+        termsRequired: row.termsRequired ?? false,
+        termsVersion: row.termsVersion ?? null,
+        signupMode: isSignupMode(row.signupMode) ? row.signupMode : "closed",
+        signupRole: isSignupRole(row.signupRole) ? row.signupRole : "utenti",
+        signupPrepaid: row.signupPrepaid ?? true,
+        publicPage: {
+          enabled: row.publicPageEnabled ?? false,
+          productsPreview: row.publicProductsPreview ?? false,
+          indexable: row.publicPageIndexable ?? false,
+          intro: row.publicIntro ?? null,
+        },
+        stockLimitsEnabled: row.stockLimitsEnabled ?? false,
         savedAt: row.updatedAt,
       }
     : {
@@ -147,6 +187,13 @@ export function resolvePaymentSettings(
         newCycleDefaults: {},
         memberNamePrompt: DEFAULT_NAME_PROMPT,
         groupInfo: null,
+        termsRequired: false,
+        termsVersion: null,
+        signupMode: "closed",
+        signupRole: "utenti",
+        signupPrepaid: true,
+        publicPage: { enabled: false, productsPreview: false, indexable: false, intro: null },
+        stockLimitsEnabled: false,
         savedAt: null,
       };
   const stripeKey: StripeKeyState = keyStatus.enabled

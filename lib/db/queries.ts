@@ -913,6 +913,8 @@ export async function getAdminCycleProducts(cycleId: string, alphabetical = fals
       sortOrder: products.sortOrder,
       category: products.category,
       emoji: products.emoji,
+      maxQuantity: products.maxQuantity,
+      maxPerMember: products.maxPerMember,
     })
     .from(products)
     .leftJoin(suppliers, eq(products.supplierId, suppliers.supplierId))

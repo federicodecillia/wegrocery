@@ -439,6 +439,7 @@ export function CatalogLoadForm({
 export function EditCycleProductForm({
   product,
   knownCategories = [],
+  stockEnabled = false,
   onClose,
 }: {
   product: {
@@ -451,8 +452,12 @@ export function EditCycleProductForm({
     pricePerKg: string | null;
     notes: string | null;
     category: string | null;
+    maxQuantity?: number | null;
+    maxPerMember?: number | null;
   };
   knownCategories?: ReadonlyArray<string>;
+  /** Impostazioni -> Gruppo -> Quantità limitate: show "Disponibili" and "Massimo per socio". */
+  stockEnabled?: boolean;
   onClose: () => void;
 }) {
   const [isPending, startTransition] = useTransition();
@@ -472,6 +477,9 @@ export function EditCycleProductForm({
       pricePerKg: pricePerKg != null && !Number.isNaN(pricePerKg) ? pricePerKg : null,
       notes: (fd.get("notes") as string) || undefined,
       category: (fd.get("category") as string) || undefined,
+      ...(stockEnabled
+        ? { maxQuantity: String(fd.get("maxQuantity") ?? ""), maxPerMember: String(fd.get("maxPerMember") ?? "") }
+        : {}),
     };
     startTransition(async () => {
       try {
@@ -556,6 +564,40 @@ export function EditCycleProductForm({
             placeholder={t.admin.products.priceKgOptional}
           />
         </div>
+        {stockEnabled && (
+          <>
+            <div className="col-span-1 sm:col-span-2">
+              <Label>
+                {t.admin.products.stock.maxQuantity}
+                <FieldHelp text={t.admin.products.stock.maxQuantityHelp} />
+              </Label>
+              <Input
+                name="maxQuantity"
+                type="number"
+                inputMode="numeric"
+                min={0}
+                step={1}
+                defaultValue={product.maxQuantity ?? ""}
+                placeholder={t.admin.products.stock.unlimited}
+              />
+            </div>
+            <div className="col-span-1 sm:col-span-2">
+              <Label>
+                {t.admin.products.stock.maxPerMember}
+                <FieldHelp text={t.admin.products.stock.maxPerMemberHelp} />
+              </Label>
+              <Input
+                name="maxPerMember"
+                type="number"
+                inputMode="numeric"
+                min={1}
+                step={1}
+                defaultValue={product.maxPerMember ?? ""}
+                placeholder={t.admin.products.stock.unlimited}
+              />
+            </div>
+          </>
+        )}
         <div className="col-span-2 sm:col-span-4">
           <Label>
             {t.admin.products.notesLabel}<FieldHelp text={HELP.note} />

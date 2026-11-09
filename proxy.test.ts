@@ -21,3 +21,22 @@ describe("proxy matcher", () => {
     }
   });
 });
+
+describe("proxy redirect", () => {
+  it("lets /aderisci through without a session, and nothing under it", async () => {
+    const { proxy } = await import("./proxy");
+    const { NextRequest } = await import("next/server");
+    const open = proxy(new NextRequest("https://app.example/aderisci"));
+    expect(open.headers.get("location")).toBeNull();
+    const guarded = proxy(new NextRequest("https://app.example/aderisci/x"));
+    expect(guarded.headers.get("location")).toBe("https://app.example/login");
+  });
+
+  it("sends the home without a session to /gruppo, other pages to /login", async () => {
+    const { proxy } = await import("./proxy");
+    const { NextRequest } = await import("next/server");
+    expect(proxy(new NextRequest("https://app.example/")).headers.get("location")).toBe("https://app.example/gruppo");
+    expect(proxy(new NextRequest("https://app.example/gruppo")).headers.get("location")).toBeNull();
+    expect(proxy(new NextRequest("https://app.example/ordine")).headers.get("location")).toBe("https://app.example/login");
+  });
+});

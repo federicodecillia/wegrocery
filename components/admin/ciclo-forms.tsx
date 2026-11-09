@@ -1266,6 +1266,7 @@ import {
   EditButton,
   PricePerKg,
   RemoveButton,
+  StockBadge,
   SortableProductList,
   type OrderableProduct,
 } from "./cycle-product-order";
@@ -1283,6 +1284,7 @@ export function CycleProductPicker({
   const [catalog, setCatalog] = useState<CatalogProductItem[]>([]);
   const [currentProducts, setCurrentProducts] = useState<CycleProduct[]>([]);
   const [productOrder, setProductOrder] = useState<ProductOrderMode>("alpha");
+  const [stockEnabled, setStockEnabled] = useState(false);
   const [copySource, setCopySource] = useState<ProductOrderSource | null>(null);
   // Bumped on every load: the sortable list starts again from the server.
   const [loadCount, setLoadCount] = useState(0);
@@ -1301,7 +1303,10 @@ export function CycleProductPicker({
         toast.error(data.error);
         return;
       }
-      setCurrentProducts(data.products);
+      setCurrentProducts(
+        data.stock.enabled ? data.products.map((p) => ({ ...p, sold: data.stock.sold[p.productId] ?? 0 })) : data.products,
+      );
+      setStockEnabled(data.stock.enabled);
       setProductOrder(data.productOrder);
       setCopySource(data.copySource);
       setLoadCount((n) => n + 1);
@@ -1372,6 +1377,7 @@ export function CycleProductPicker({
       <EditCycleProductForm
         product={{ ...p, pricePerKg: p.pricePerKg ?? null, notes: p.notes ?? null }}
         knownCategories={knownCategories}
+        stockEnabled={stockEnabled}
         onClose={() => {
           setEditingId(null);
           refresh();
@@ -1447,6 +1453,7 @@ export function CycleProductPicker({
                             {formatEur(parseFloat(p.unitPrice))}
                           </span>
                           <PricePerKg value={p.pricePerKg} />
+                          <StockBadge sold={p.sold} max={p.maxQuantity} />
                         </div>
                       </div>
                       <EditButton

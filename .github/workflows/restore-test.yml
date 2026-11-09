@@ -12,7 +12,7 @@ name: Weekly Backup Restore Test
 #                                             below (not CI's NEON_API_KEY, which is
 #                                             scoped to the CI project)
 #   - project  late-frost-62618439            "wegrocery-restore-test" in the
-#                                             PortaMoneta Neon organisation, empty;
+#                                             WeGrocery Neon organisation, empty;
 #                                             its throwaway branch receives the dump
 #                                             (variable RESTORE_TEST_NEON_PROJECT_ID
 #                                             overrides the id)

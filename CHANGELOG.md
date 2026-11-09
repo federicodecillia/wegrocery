@@ -22,6 +22,28 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
+## [Unreleased]
+
+## [1.45.0] - 2026-11-09
+
+*Ready to open the group to new people: terms to accept, sign-up, a public page, member import and limited quantities, all off until an admin turns them on.*
+
+### Added
+- 📜 **Terms and privacy to accept**: in Settings > Group an admin can ask whoever signs in to accept the group's privacy notice and terms of service (links to the group's own pages) before using the app, and ask everyone again when the texts change. Until then members cannot order or pay. Off by default.
+- 🔗 **Link to the terms of service** next to the privacy notice, on the sign-in page and at the foot of every page.
+- [tech] 🗄️ **Migration 0051** (`terms_acceptance`): `app_settings.terms_required`, `app_settings.terms_version`, `members.terms_accepted_at`, `members.terms_accepted_version`. Additive, apply before deploying. New optional brand field `termsUrl`.
+- 🚪 **New members can join on their own**: in Settings > Members & guide, "Who can join" offers "On request" (a form on /aderisci, an admin approves it in Members and the newcomer gets the sign-in link) or "Open" (a confirmed email joins at once). Members only by default.
+- 💳 **Newcomers pay before ordering**: by default whoever joins this way never goes below zero, paying each order by card or from a balance already topped up. The admin can give them the group's credit instead.
+- [tech] 🗄️ **Migration 0052** (`signup`): `app_settings.signup_mode`, `signup_role`, `signup_prepaid`, `members.joined_via`, table `membership_requests`. Additive, apply before deploying.
+- 🪟 **Public page of the group**: in Settings > Group an admin can turn on /gruppo, a shop window for people who are not in yet: the group's text, the next order with its dates and, if wanted, its products, with buttons to sign in or ask to join. Whoever opens the app without signing in lands there. Off by default, hidden from search engines unless the admin chooses.
+- [tech] 🗄️ **Migration 0053** (`public_page`): `app_settings.public_page_enabled`, `public_products_preview`, `public_page_indexable`, `public_intro`. Additive, apply before deploying. `/` without a session now redirects to `/gruppo`, which sends on to `/login` when the page is off.
+- 📥 **Import members from a file**: in Members, "Import from file" reads a CSV from Excel or Google Sheets, shows what happens to each row (new, already a member, repeated, invalid email) before importing, then invites the new members 20 at a time. Existing members are never changed.
+- 🧺 **Limited quantities**: in Settings > Group an admin can turn on limited quantities, then set on each product of a cycle how many units there are and how many one member may take. Members only see "Sold out"; if a product runs out while they order, the confirm shows what is left with "Fit to what is available". Off by default. They can also come from a listing imported into the cycle ("Disponibili" and "Massimo per socio" columns), and the public page marks finished products "Sold out".
+- [tech] 🗄️ **Migration 0054** (`stock_limits`): `products.max_quantity`, `products.max_per_member`, `app_settings.stock_limits_enabled`, partial index `payments_order_pending_cycle_idx`. Additive, apply before deploying. New nightly invariant `product_max_quantity`.
+
+### Security
+- [tech] 🔒 **Better Auth updated to 1.7.18**, which patches a critical advisory (the state of a Google sign-in accepted as a sign-in link, GHSA-965c-763c-88jm) and two lesser ones. The critical one was not exploitable here: sign-in links are stored hashed, so a Google state never matches one. The others concern the OAuth Proxy, not used here, and a rate-limit race on PostgreSQL. A link emailed before the update stops working; the code in the same email still does.
+
 ## [1.44.0] - 2026-11-05
 
 *The order calendar, planned cycles, a clearer Home and emails in the group's look.*

@@ -8,10 +8,20 @@ import { hasSessionCookie } from "@/lib/auth/cookie";
 // would loop; the login page checks the real session.
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  if (pathname === "/login" || pathname.startsWith("/login/") || hasSessionCookie(request.cookies)) {
+  // /aderisci: how to join; /gruppo: the group's public page, for people
+  // who have no account yet.
+  if (
+    pathname === "/login" ||
+    pathname.startsWith("/login/") ||
+    pathname === "/aderisci" ||
+    pathname === "/gruppo" ||
+    hasSessionCookie(request.cookies)
+  ) {
     return NextResponse.next();
   }
-  return NextResponse.redirect(new URL("/login", request.url));
+  // The home without a session: /gruppo, which sends on to /login when the
+  // group has no public page (the proxy never reads the database).
+  return NextResponse.redirect(new URL(pathname === "/" ? "/gruppo" : "/login", request.url));
 }
 
 // api/auth is Better Auth (its own allowlist), api/stripe/webhook is called by

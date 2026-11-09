@@ -22,7 +22,9 @@ import { isUniqueViolation } from "@/lib/db/errors";
 import { ActionError, actionErrorMessage } from "@/lib/action-error";
 import { getLastHandlingFee, getMemberPendingOrderTotals, getMembersByEmails } from "@/lib/db/queries";
 import { readMemberOrderLines, replaceOpenOrder } from "@/lib/admin/open-order-store";
+import { parseLimit, readCycleStock, setProductLimits, stockShortages } from "@/lib/products/stock";
 import { evaluateCreditLimit } from "@/lib/membership/policy";
+import { effectiveMinBalance } from "@/lib/membership/signup";
 import { getWalletBalance } from "@/lib/payments/balance-due";
 import { findEmailConflict, normalizeEmail } from "@/lib/member-email";
 import type { BatchItem } from "drizzle-orm/batch";
@@ -1126,10 +1128,21 @@ export async function adminUpdateCycleProduct(
     unitPrice: number;
     pricePerKg?: number | null;
     notes?: string;
+    // Limited quantities, sent only when the group has them on: the text typed
+    // in "Disponibili" and "Massimo per socio" (empty = no limit).
+    maxQuantity?: string;
+    maxPerMember?: string;
   }
 ): Promise<{ error?: string }> {
   try {
     const admin = await requireProductManager(productId);
+    const limits =
+      data.maxQuantity === undefined && data.maxPerMember === undefined
+        ? null
+        : { maxQuantity: parseLimit(data.maxQuantity, 0, 99999), maxPerMember: parseLimit(data.maxPerMember, 1, 9999) };
+    if (limits && (limits.maxQuantity === "invalid" || limits.maxPerMember === "invalid")) {
+      return { error: t.admin.products.stock.invalid };
+    }
     const db = getDb();
     const pricePerKg =
       data.pricePerKg != null && !Number.isNaN(data.pricePerKg)
@@ -1148,7 +1161,15 @@ export async function adminUpdateCycleProduct(
         notes: data.notes || null,
       })
       .where(eq(products.productId, productId));
-      
+    if (limits) {
+      const set = await setProductLimits(db, {
+        productId,
+        maxQuantity: limits.maxQuantity as number | null,
+        maxPerMember: limits.maxPerMember as number | null,
+      });
+      if (!set.ok) return { error: t.admin.products.stock.belowSold(set.sold) };
+    }
+
     await writeAudit(db, admin.email, "update_cycle_product", "product", productId, data);
     revalidatePath("/admin");
     revalidatePath("/ordine");
@@ -2206,6 +2227,7 @@ export async function adminSaveOpenOrder(input: SaveOpenOrderInput): Promise<Sav
         active: members.active,
         householdOf: members.householdOf,
         paysOffline: members.paysOffline,
+        joinedVia: members.joinedVia,
       })
       .from(members)
       .where(eq(members.memberId, input.memberId))
@@ -2249,11 +2271,28 @@ export async function adminSaveOpenOrder(input: SaveOpenOrderInput): Promise<Sav
       lines,
       expected: previous,
     });
-    if (saved === "changed") return { error: t.errors.openOrderChanged };
+    if (saved === "changed") {
+      const shortages = stockShortages(lines, await readCycleStock(db, input.cycleId, input.memberId));
+      if (shortages.length === 0) return { error: t.errors.openOrderChanged };
+      const names = new Map(
+        (
+          await db
+            .select({ productId: products.productId, name: products.name })
+            .from(products)
+            .where(inArray(products.productId, shortages.map((x) => x.productId)))
+        ).map((p) => [p.productId, p.name]),
+      );
+      return {
+        error: t.errors.openOrderSoldOut(
+          shortages.map((x) => t.errors.soldOutLine(names.get(x.productId) ?? x.productId, x.allowed)).join(", "),
+        ),
+      };
+    }
 
     let overCreditLimit = false;
     if (cycle.paymentMode !== "per_order") {
-      const { minBalance } = await getPaymentSettings();
+      const settings = await getPaymentSettings();
+      const minBalance = effectiveMinBalance(settings.minBalance, member, settings.signupPrepaid);
       if (minBalance !== null) {
         const pending = await getMemberPendingOrderTotals(input.memberId, input.cycleId);
         overCreditLimit = !evaluateCreditLimit({

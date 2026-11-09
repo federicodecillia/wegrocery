@@ -46,11 +46,43 @@ describe("resolvePaymentSettings", () => {
       newCycleDefaults: {},
       memberNamePrompt: "optional",
       groupInfo: null,
+      termsRequired: false,
+      termsVersion: null,
+      signupMode: "closed",
+      signupRole: "utenti",
+      signupPrepaid: true,
+      publicPage: { enabled: false, productsPreview: false, indexable: false, intro: null },
+      stockLimitsEnabled: false,
       bankTransfer: { holder: "Porta Moneta APS", iban: SPACED_IBAN },
       onlineTopupAvailable: true,
       stripeKey: { usable: true, livemode: false },
       savedAt: null,
     });
+  });
+
+  it("reads the public page settings, all off for a row saved before 0053", () => {
+    expect(resolvePaymentSettings(row, brand, testKey).publicPage).toEqual({ enabled: false, productsPreview: false, indexable: false, intro: null });
+    const s = resolvePaymentSettings(
+      { ...row, publicPageEnabled: true, publicProductsPreview: true, publicPageIndexable: true, publicIntro: "Ciao" },
+      brand,
+      testKey,
+    );
+    expect(s.publicPage).toEqual({ enabled: true, productsPreview: true, indexable: true, intro: "Ciao" });
+  });
+
+  it("reads the sign-up settings, closed and prepaid for a row saved before 0052", () => {
+    const before = resolvePaymentSettings(row, brand, testKey);
+    expect([before.signupMode, before.signupRole, before.signupPrepaid]).toEqual(["closed", "utenti", true]);
+    const s = resolvePaymentSettings({ ...row, signupMode: "request", signupRole: "attivi", signupPrepaid: false }, brand, testKey);
+    expect([s.signupMode, s.signupRole, s.signupPrepaid]).toEqual(["request", "attivi", false]);
+    expect(resolvePaymentSettings({ ...row, signupMode: "public", signupRole: "admin" }, brand, testKey).signupRole).toBe("utenti");
+  });
+
+  it("reads the terms switch and version, off for a row saved before 0051", () => {
+    expect(resolvePaymentSettings(row, brand, testKey).termsRequired).toBe(false);
+    const s = resolvePaymentSettings({ ...row, termsRequired: true, termsVersion: "2026-11-07T12:00:00.000Z" }, brand, testKey);
+    expect(s.termsRequired).toBe(true);
+    expect(s.termsVersion).toBe("2026-11-07T12:00:00.000Z");
   });
 
   it("has no bank channel by default when the brand has no bank details", () => {

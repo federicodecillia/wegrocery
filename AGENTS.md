@@ -10,6 +10,16 @@ Guidance for every coding agent (Claude Code, Codex and others) working in this 
 
 **Live**: gas.portamoneta.org
 
+## Context outside the repository
+
+Two agents work on this project, Claude Code and Codex, and neither sees the other's memory. What they share:
+
+- **This file** for rules and conventions, and [`docs/status.md`](./docs/status.md) for where the work stands (versions, migrations per installation, what waits on `staging`, what is planned). Read both before starting; update `docs/status.md` in the PR that changes the picture.
+- **The maintainer's private notes** for what cannot be in a public repository (Italian specs with group details, business and launch plans, operating notes, the maintainer's to-do list): the Obsidian vault next to the local clone, `../second_brain_Fede/01_Projects/wegrocery/` (start from `wegrocery.md`). Never copy anything from there into this repository; when a decision there changes how the code works, write it here or in a dated English plan in `docs/`.
+- **Skills**: `.claude/skills/` (Claude Code) and `.agents/skills/` (Codex, a link to the same folder) hold the same skills.
+
+At the end of a piece of work, update whichever of these changed: `docs/status.md` in the PR, and the private notes (`stato-e-backlog.md`) when a plan, a decision or a to-do moved.
+
 ## FlyLabs Kit
 
 This app follows the FlyLabs Playbook: https://github.com/flylabs-ai/flylabs-kit/blob/main/PLAYBOOK.md
@@ -31,12 +41,12 @@ Found in the review of 2026-10-14 (each line, its reason and its timing are in
 - 2.7 Done for the components: `Sheet` and `ConfirmDialog` are on Base UI Dialog, `Button` is shadcn's Button on Base UI (`buttonVariants`, variants `default`, `brand`, `accent`, `destructive`, `outline`, `ghost`), `Card` (`CardHeader`, `CardContent`, `CardFooter`), `Badge` (`badgeVariants`, variants `default`, `brand`, `accent`, `destructive`) and the Sonner `Toaster` (`components/ui/sonner.tsx`) follow shadcn, and the interface icons are lucide (the movement icons in `components/movement-icon.tsx` and the Statistiche chart stay hand-drawn, as the rule allows). The fields are shadcn too: `Input` (on Base UI Input), `Textarea`, `NativeSelect` (a real `<select>` with a lucide chevron) and `Label` (the uppercase caption; `labelClass` for a caption on a `<span>` or `<legend>`), all with their borders on `input`. What stays custom: checkboxes, radios and switches (native inputs with `accent-*`), file and colour inputs, the filter chips, and the hand-drawn domain icons above.
 - 4.4 Welcome card: the steps shown follow the settings; the ones the member's own rows already show as done (top-up or payment, an order, saved preferences, a family) carry "Già fatto" (`getWelcomeFacts`, `welcomeDone`), and the step they stopped at is `members.welcome_step` (migration 0036). The "Riprendi" bar on other pages still uses `sessionStorage`, per tab, on purpose.
 - 5.1 Integration tests run on a throwaway Neon branch that needs `NEON_API_KEY` (skipped on forks), not on a plain Postgres: the Neon HTTP driver needs Neon's proxy. This stays.
-- 6.3 and 9.5 Claude runs releases end to end, production migrations included, after a green manual backup and with Federico's explicit ok for each production operation, instead of handing him commands: Federico's choice (2026-10-07). This stays.
+- 6.3 and 9.5 The agent (Claude Code or Codex) runs releases end to end, production migrations included, after a green manual backup and with Federico's explicit ok for each production operation, instead of handing him commands: Federico's choice (2026-10-07). This stays.
 - 6.5 A weekly job (`.github/workflows/restore-test.yml`) restores the latest dump into a throwaway Neon branch, counts the main tables and runs the money invariants on it. It is skipped until Federico sets `RESTORE_TEST_NEON_API_KEY` (a Neon key scoped to the restore project; CI's `NEON_API_KEY` is scoped to the CI project) and the variable `RESTORE_TEST_NEON_PROJECT_ID` (a project of the same organisation).
 - 7.6 Done for notification emails (idempotency key, one-click unsubscribe, see "Email compliance"). Sign-in emails and the supplier and family emails carry no unsubscribe on purpose.
 - 7.8 Done: `usage_events` (migration 0037) counts a fixed list of events per day, no member id, no text, nothing in the demo (`lib/usage/events.ts`, shown in Admin → Statistiche); Vercel Analytics and Speed Insights are gone.
 - 7.10 The Console (`console/`) redirects to its password login instead of answering 404: a 404 would hide the only way in. This stays.
-- 8.1 No versioned legal documents in the app: each group owns its privacy notice (`brand.privacyUrl`) as data controller. This stays for groups; FlyLabs-hosted terms are decided with hosting model A.
+- 8.1 No versioned legal documents in the app: each group owns its privacy notice and terms (`brand.privacyUrl`, `brand.termsUrl`) as data controller. An admin may ask whoever signs in to accept them (`app_settings.terms_required`, migration 0051, `lib/members/terms.ts`): AppShell shows `components/terms-prompt.tsx` instead of the page, and `saveOrder`, `startOrderPayment` and `startOnlineTopup` refuse with `terms_required` (`termsPending`, the person who signed in, never the family account) until they accept the current `terms_version`, recorded on `members.terms_accepted_*` with an audit row. This stays for groups; FlyLabs-hosted terms are decided with hosting model A.
 - 9.1 Feature specs live in the private project folder (Italian, with group details), not in `docs/`: from now on a dated English plan goes in `docs/` with no group or member data.
 
 Never read `.env*` files other than `.env.example` (Playbook 8.3).
@@ -92,7 +102,7 @@ Never read `.env*` files other than `.env.example` (Playbook 8.3).
 │                               #   access.ts: pure checkAccess/sessionClaims (no imports, used by proxy.ts)
 ├── proxy.ts                     # Redirect unauthenticated to /login (Next.js 16's middleware)
 ├── auth.ts                     # Better Auth instance, auth() (session + member), signOut()
-├── drizzle/                    # SQL migrations (0000–0048)
+├── drizzle/                    # SQL migrations (0000–0054)
 ├── console/                    # WeGrocery Console: separate Next.js app (own package.json, registry DB, Vercel project with
 │                               #   Root Directory `console`) for the operator's fleet; excluded from the root tsc/eslint/vitest; see console/README.md
 └── public/logo.png, public/mail/logo.png (email logo, 3x)
@@ -131,6 +141,8 @@ npm run test:int     # Integration tests on a test database (see below)
 **Nightly UI check**: `.github/workflows/ui-check.yml` runs `scripts/ui-check.mjs` after the demo reset: the main member and admin pages at 390, 820 and 1280 px against the demo (`vars.UI_CHECK_URL`, else the public demo on the upstream repository; a `DEMO_MODE` deploy only, it signs in through the demo buttons). It fails on axe problems of serious or critical impact (axe runs on the whole page height, so the sticky bottom bar does not count the row behind it as an obscured target), horizontal scrolling and four keyboard paths (order stepper, focus back after a sheet, visible focus outline, Esc on the cycle-close review), and the `notify` job opens (or comments on) one issue. Labels are matched in English and Italian. Locally: install `playwright` and `@axe-core/playwright` next to a copy of the script and run it with `UI_CHECK_URL=http://localhost:3000` (`CHROMIUM_PATH` for a preinstalled browser).
 
 **Releases**: open the `staging` → `main` PR with `?template=release.md` (`.github/PULL_REQUEST_TEMPLATE/release.md`): upgrade notes, migration before the merge, smoke test on `/api/health`, rollback. The merge to `main` tags `vX.Y.Z` and publishes the GitHub release by itself (`.github/workflows/release.yml`, notes from that version's `CHANGELOG.md` entry, upstream repository only). An installation whose Git deploys Vercel blocks sets the `VERCEL_DEPLOY_HOOK` repository secret: `.github/workflows/deploy-hook.yml` then calls the hook on every push to `main`. To redeploy production without a code change (a new variable, a rotated key), run `.github/workflows/deploy-production.yml` from the Actions tab: it calls the `VERCEL_PRODUCTION_DEPLOY_HOOK` hook once, never on push, and fails when the secret is missing.
+
+**Deploy health**: `.github/workflows/deploy-health.yml` runs on every successful Vercel deployment status (staging, production, demo): it calls `/api/health` with the `x-vercel-protection-bypass` header (secret `VERCEL_AUTOMATION_BYPASS_SECRET`, a "Protection Bypass for Automation" of the porta-moneta project) and fails unless it answers ok, with the database, at the `package.json` version of the deployed commit. Agents read its run to know a deploy is healthy, also behind Deployment Protection.
 
 **Health and errors**: `/api/health` (public, `lib/health.ts` from the FlyLabs Kit module `console`) returns `{ ok, version, db }`, 503 when the database does not answer within 3 seconds. Unexpected errors go through `reportError` (`lib/observability.ts`): always the server log, Sentry too when `SENTRY_DSN` is set, or `NEXT_PUBLIC_SENTRY_DSN` as Vercel's Sentry integration sets it (server only, errors only; data collection is off, console breadcrumbs are dropped and `beforeSend` cuts the query parameters a driver error quotes; initialized in `instrumentation.ts`, which hands the client to `reportError` through `globalThis`, since each route is a separate server bundle with its own copy of the module). Use it instead of a bare `console.error` for errors someone should look at.
 
@@ -194,11 +206,11 @@ variables, plus a staging deployment of the `staging` branch:
 - **Staging** — Preview deployment of the `staging` branch on the
   `porta-moneta` project, reached through its stable branch URL
   (`porta-moneta-git-staging-<scope>.vercel.app`). Env vars scoped to
-  Preview + Git branch `staging`: `DATABASE_URL` → the Neon branch `dev`, like
-  every Preview (a copy of production; there is no `staging` branch in the Neon
-  project, checked 2026-09-30; migrations for staging go to `dev`),
+  Preview + Git branch `staging`: `DATABASE_URL` → the Neon branch `staging`, like
+  every Preview (a copy of production; called `dev` until 2026-11-06, same id
+  `br-blue-morning-alztuzoj`; migrations for staging go there),
   `EMAIL_REDIRECT_TO` (set only on the `staging` branch: other previews share
-  `dev` but have none, so they refuse to send email),
+  the `staging` Neon branch but have none, so they refuse to send email),
   `APP_BASE_URL`, `WALLYFOR_*`, `STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET`
   (sandbox keys only). The Google OAuth client needs the staging
   branch URL's `/api/auth/callback/google` as an extra redirect URI.
@@ -566,7 +578,7 @@ All four emit `order_adjusted` or `order_corrected` notifications and `audit_log
 
 ### Database environments & access (since 2026-07-10)
 
-- **Local dev runs on the Neon branch `dev`** (project `porta-moneta-app-gas`,
+- **Local dev runs on the Neon branch `staging`** (project `wegrocery-porta-moneta`,
   a copy-on-write child of `production`): `.env.local`'s `DATABASE_URL` points
   there. The prod connection string lives ONLY in `.env.prod.local`, reserved
   for migrations the user explicitly confirmed. Never point local dev at prod.
@@ -574,21 +586,21 @@ All four emit `order_adjusted` or `order_corrected` notifications and `audit_log
   or `neonctl` (machine-wide OAuth token). Agents operate autonomously on
   non-prod branches; anything touching `production` needs Federico's explicit
   per-operation confirmation.
-- **Refresh dev data on demand** (resets the branch to current prod — destroys
-  any test data on `dev`):
-  `npx -y neonctl branches reset dev --parent --project-id small-breeze-14972344 --org-id org-gentle-violet-55538692`
-- **Vercel Preview deployments use the `dev` Neon branch** (since 2026-07-11:
-  `DATABASE_URL` has two entries on the porta-moneta project — Preview → dev
-  branch, Production → prod). PR previews share the dev branch with local dev;
-  both are throwaway (reset on demand). The `staging` branch deployment uses
-  `dev` too (the B2.1 Stripe check on staging wrote to it), so apply a
-  migration to `dev` before merging to `staging`. A per-PR Neon branch
+- **Refresh staging data on demand** (resets the branch to current prod, destroys
+  any test data on `staging`):
+  `npx -y neonctl branches reset staging --parent --project-id small-breeze-14972344 --org-id org-gentle-violet-55538692`
+- **Vercel Preview deployments use the `staging` Neon branch** (since 2026-07-11:
+  `DATABASE_URL` has two entries on the porta-moneta project: Preview → staging
+  branch, Production → prod). PR previews share that branch with local dev;
+  both are throwaway (reset on demand). The `staging` Git branch deployment uses
+  it too (the B2.1 Stripe check on staging wrote to it), so apply a
+  migration to the `staging` Neon branch before merging to `staging`. A per-PR Neon branch
   integration would be a further upgrade, not required.
 - **Migrations** (since 2026-07-11, issue #85): `scripts/db-migrate.mjs` tracks
   applied files in a `_migrations` table — the ledger is baselined on prod,
   demo and dev. Flow for a schema change: write the next `drizzle/NNNN_*.sql`
   (additive, idempotent), then run `npm run db:migrate` per environment
-  (defaults to `.env.local` = dev branch; target another DB with
+  (defaults to `.env.local` = the `staging` Neon branch; target another DB with
   `DATABASE_URL=… node scripts/db-migrate.mjs`). `--status` lists
   applied/pending, `--baseline` records without executing. This replaces the
   one-off-script convention; `db:push` remains for local schema iteration only.
@@ -670,7 +682,7 @@ Neon free tier only retains 6 hours of point-in-time history (the Launch plan go
 gunzip gas-backup-YYYY-MM-DD.sql.gz   # produces gas-backup-YYYY-MM-DD.sql
 
 # 2. In the Neon console (console.neon.tech):
-#    Branches → "Create branch" → from main → name e.g. "restore-test"
+#    Branches → "Create branch" → from production → name e.g. "restore-test"
 #    → copy the new branch's "Connection string" (pooled is fine).
 export RESTORE_URL='postgresql://…neon.tech/neondb?sslmode=require'
 
@@ -692,7 +704,7 @@ Then choose your path:
 
 - **Inspect only / look up a value** — query the branch, then delete it from the Neon console when done. Production is untouched.
 - **Recover a few specific rows** — `pg_dump --data-only --table=public.<table> "$RESTORE_URL"` filtered by `--where`, then `psql "$PROD_URL"` to apply. Keeps production live.
-- **Full production restore (catastrophic loss)** — in the Neon console, **Reset main from this branch** (or: rename main → main-broken, promote restore-test → main). Then update `DATABASE_URL` in Vercel only if the connection string changed. Stop Vercel traffic during the swap with a maintenance flag in `vercel.json` or by pausing the project.
+- **Full production restore (catastrophic loss)**: in the Neon console, **Reset production from this branch** (or: rename production → production-broken, promote restore-test → production). Then update `DATABASE_URL` in Vercel only if the connection string changed. Stop Vercel traffic during the swap with a maintenance flag in `vercel.json` or by pausing the project.
 
 `pg_dump` runs with `--no-owner --no-privileges --format=plain` so the dump is portable across Neon branches without role-name conflicts. The `\restrict` / `\unrestrict` directives at the top and bottom are PG 17 metadata — `psql` handles them transparently.
 

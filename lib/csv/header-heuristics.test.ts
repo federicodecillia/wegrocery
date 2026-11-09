@@ -81,3 +81,15 @@ describe("assignColumn", () => {
     expect(fieldUsingColumn({ unitPrice: 1 }, 1, "pricePerKg")).toBe("unitPrice");
   });
 });
+
+describe("limited quantity columns", () => {
+  it("recognises Disponibili and Massimo per socio", () => {
+    expect(suggestMapping(["Prodotto", "Prezzo", "Disponibilità", "Max per socio"])).toEqual({
+      name: 0,
+      unitPrice: 1,
+      maxQuantity: 2,
+      maxPerMember: 3,
+    });
+  });
+});
+

@@ -1,7 +1,8 @@
 "use server";
 
+import { termsPending } from "@/lib/members/terms-gate";
 import { recordUsage } from "@/lib/usage/events";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { actionErrorMessage } from "@/lib/action-error";
 import { requireActiveMember } from "@/lib/auth/session";
@@ -34,6 +35,8 @@ import { SETTLEMENT_MIN_DUE_CENTS } from "@/lib/payments/settlement";
 import { getStripe } from "@/lib/payments/stripe";
 import { requestOrigin } from "@/lib/request-origin";
 import { canAccessCycle } from "@/lib/roles";
+import { readCycleStock, stockFitsSql, stockShortages, type Shortage, type StockLine } from "@/lib/products/stock";
+import type { Db } from "@/lib/payments/effects";
 
 // Pay-per-order (payment mode 'per_order'): the member confirms the order by
 // paying it. Refusals come back as values, like saveOrder's.
@@ -48,15 +51,29 @@ export type OrderPaymentErrorCode =
   | "too_high"
   | "changed"
   | "balance_due"
+  | "terms_required"
+  | "sold_out"
   | "unexpected";
 
 export type OrderPaymentResult =
   | { status: "confirmed" }
   | { status: "cancelled"; refunded: boolean }
   | { status: "redirect"; url: string }
-  | { status: "error"; error: string; code: OrderPaymentErrorCode };
+  | { status: "error"; error: string; code: OrderPaymentErrorCode; shortages?: Shortage[] };
 
 const refuse = (code: OrderPaymentErrorCode, error: string): OrderPaymentResult => ({ status: "error", error, code });
+
+// A guard fired: tell "a limited product ran out" from "something else changed".
+async function soldOutOr(
+  db: Db,
+  cycleId: string,
+  memberId: string,
+  lines: readonly StockLine[],
+  otherwise: OrderPaymentResult,
+): Promise<OrderPaymentResult> {
+  const shortages = stockShortages(lines, await readCycleStock(db, cycleId, memberId));
+  return shortages.length > 0 ? { status: "error", error: t.errors.soldOut, code: "sold_out", shortages } : otherwise;
+}
 
 function genId(prefix: string): string {
   return `${prefix}_${crypto.randomUUID().replace(/-/g, "").slice(0, 12)}`;
@@ -69,7 +86,8 @@ export async function startOrderPayment(
   lines: { productId: string; quantity: number }[],
 ): Promise<OrderPaymentResult> {
   try {
-    const { memberId, email, role } = await requireActiveMember();
+    const { memberId, personId, email, role } = await requireActiveMember();
+    if (await termsPending(personId)) return refuse("terms_required", t.errors.termsRequired);
     const normalized = normalizeDraftLines(lines);
     if (!normalized) return refuse("invalid_quantity", t.errors.invalidQuantity);
     if (normalized.length === 0) return await cancelOrderOf(memberId, email, cycleId);
@@ -144,7 +162,7 @@ export async function startOrderPayment(
         expectedCoveredCents: covered,
         walletCreditCents: amount.walletCreditCents,
       });
-      if (written === "changed") return refuse("changed", t.order.pay.changed);
+      if (written === "changed") return await soldOutOr(db, cycleId, memberId, normalized, refuse("changed", t.order.pay.changed));
       await writeAudit(email, "confirmMyOrder", cycleId, { lineCount: priced.length, amount });
       revalidateOrderPages();
       await recordUsage("order_saved");
@@ -177,20 +195,37 @@ export async function startOrderPayment(
     };
     const paymentId = genId("pay");
     const currency = brand.currency.toLowerCase();
-    await db.insert(payments).values({
-      paymentId,
-      memberId,
-      provider: "stripe",
-      status: "pending",
-      amountCents: amount.chargeCents,
-      balanceCents: amount.balanceCents,
-      currency,
-      createdAt: now,
-      updatedAt: now,
-      kind: "order",
-      cycleId,
-      orderSnapshot: snapshot,
-    });
+    // The pending payment reserves the quantities of limited products while
+    // its Checkout lasts (lib/products/stock.ts): written under the cycle's
+    // lock, and only if they still fit.
+    try {
+      await db.batch([
+        db.execute(sql`SELECT 1 FROM order_cycles WHERE cycle_id = ${cycleId} FOR UPDATE`),
+        db.execute(sql`SELECT 1 / (CASE WHEN
+            coalesce((SELECT status = 'open' FROM order_cycles WHERE cycle_id = ${cycleId}), false)
+            AND ${stockFitsSql({ cycleId, memberId, lines: normalized })}
+          THEN 1 ELSE 0 END) AS reserve_guard`),
+        db.insert(payments).values({
+          paymentId,
+          memberId,
+          provider: "stripe",
+          status: "pending",
+          amountCents: amount.chargeCents,
+          balanceCents: amount.balanceCents,
+          currency,
+          createdAt: now,
+          updatedAt: now,
+          kind: "order",
+          cycleId,
+          orderSnapshot: snapshot,
+        }),
+      ]);
+    } catch (e) {
+      if (e instanceof Error && /22012|division by zero/i.test(e.message)) {
+        return await soldOutOr(db, cycleId, memberId, normalized, refuse("cycle_not_open", t.errors.cycleNotOpen));
+      }
+      throw e;
+    }
 
     try {
       const origin = await requestOrigin();

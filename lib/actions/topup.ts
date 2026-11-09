@@ -1,5 +1,6 @@
 "use server";
 
+import { termsPending } from "@/lib/members/terms-gate";
 import { recordUsage } from "@/lib/usage/events";
 import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
@@ -50,6 +51,7 @@ export async function startOnlineTopup(amountInput: string): Promise<StartTopupR
   const member = await getMemberById(memberId);
   if (!member) return { error: t.errors.memberNotFound };
   if (!member.active) return { error: t.errors.accountInactive };
+  if (await termsPending(session.user?.personId ?? member.memberId)) return { error: t.errors.termsRequired };
 
   const parsed = parseTopupAmount(amountInput);
   if ("error" in parsed) return { error: amountErrorMessage(parsed.error) };
