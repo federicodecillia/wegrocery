@@ -66,7 +66,7 @@ function MonthDay({ day, today, entries }: { day: string; today: string; entries
           const Icon = KIND_ICON[k];
           return <Icon key={i} aria-hidden className="size-3 text-foreground" strokeWidth={2.5} />;
         })}
-        {marks.length > DAY_ICONS && <span className="text-[10px] font-bold leading-none text-foreground">{t.calendar.moreLanes(marks.length - DAY_ICONS)}</span>}
+        {marks.length > DAY_ICONS && <span className="text-label font-bold leading-none text-foreground">{t.calendar.moreLanes(marks.length - DAY_ICONS)}</span>}
       </span>
     </span>
   );
