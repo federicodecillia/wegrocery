@@ -2,27 +2,26 @@
 
 The living snapshot of what is released, what waits on `staging` and what is planned. Any agent (Claude Code, Codex or another) reads it before starting and updates it in the same PR that changes the picture: a release, a migration applied somewhere, a plan approved or dropped. Keep it short; the detail lives in `CHANGELOG.md`, the dated plans in `docs/` and the PRs.
 
-Last updated: 2026-11-09.
+Last updated: 2026-11-09 (release 1.45.0).
 
 ## Versions and migrations
 
 | Installation | Version | Migrations applied |
 |---|---|---|
-| Production (`main`) | 1.44.0 (2026-11-05) | up to `0050` |
-| Public demo (`main`) | 1.44.0 | up to `0050` |
-| Example brand installation | 1.44.0 | up to `0050` (migrates on build) |
-| Staging (`staging`) | 1.44.0 + `[Unreleased]` | up to `0054` (Neon branch `staging`) |
+| Production (`main`) | 1.45.0 (2026-11-09) | up to `0054` |
+| Public demo (`main`) | 1.45.0 | up to `0054` |
+| Example brand installation | 1.45.0 | up to `0054` (migrates on build) |
+| Staging (`staging`) | 1.45.0 | up to `0054` (Neon branch `staging`) |
 
-`package.json` still says 1.44.0 on `staging`: the release PR bumps it.
+## Waiting on `staging` for the next release
 
-## Waiting on `staging` for the next release (1.45.0)
+Nothing yet.
 
-- Launch phase 1 ([plan](./2026-11-07-launch-phase1.md)), every feature off by default: terms and privacy acceptance (#388, `0051`), open sign-up and `/aderisci` (#389, `0052`), public page `/gruppo` (#390, `0053`), member import from CSV (#391), limited quantities (#392, #393, #395, `0054`).
-- Better Auth 1.7.18 (#386, security advisory GHSA-965c-763c-88jm, not exploitable here). After deploy, sign-in links already emailed stop working; codes keep working.
-- `/api/health` check on every deploy from GitHub Actions (#394).
-- Dependency bumps (#396).
+## Released in 1.45.0, off by default
 
-Before the release: a Stripe sandbox run on staging with a limited-quantity product (checkout, sold out, refund), then the release PR `staging` → `main` with the release template, migrations `0051`-`0054` on production and demo after a green manual backup, with the maintainer's explicit ok for each production step. Then align `wegrocery-example-brand`.
+Launch phase 1 ([plan](./2026-11-07-launch-phase1.md)): terms and privacy acceptance, open sign-up and `/aderisci`, public page `/gruppo`, member import from CSV, limited quantities (also from the listing import). Better Auth 1.7.18 (GHSA-965c-763c-88jm, not exploitable here; sign-in links emailed before the deploy stopped working, codes did not). `/api/health` checked on every deploy from GitHub Actions.
+
+Still to do before a group turns on limited quantities with card payments: a Stripe sandbox run on staging (a Checkout that holds the units, a late payment refunded when the product ran out).
 
 ## Planned, not started
 

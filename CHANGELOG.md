@@ -24,6 +24,10 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ## [Unreleased]
 
+## [1.45.0] - 2026-11-09
+
+*Ready to open the group to new people: terms to accept, sign-up, a public page, member import and limited quantities, all off until an admin turns them on.*
+
 ### Added
 - 📜 **Terms and privacy to accept**: in Settings > Group an admin can ask whoever signs in to accept the group's privacy notice and terms of service (links to the group's own pages) before using the app, and ask everyone again when the texts change. Until then members cannot order or pay. Off by default.
 - 🔗 **Link to the terms of service** next to the privacy notice, on the sign-in page and at the foot of every page.
