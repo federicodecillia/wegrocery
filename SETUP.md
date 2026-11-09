@@ -12,7 +12,7 @@ follow [docs/self-hosting.md](docs/self-hosting.md) instead.
 ## 1. Code and dependencies
 
 ```bash
-git clone https://github.com/federicodecillia/wegrocery.git
+git clone https://github.com/flylabs-ai/wegrocery.git
 cd wegrocery
 npm install
 ```

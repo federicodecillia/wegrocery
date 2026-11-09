@@ -6,7 +6,7 @@ body:
     attributes:
       value: |
         Thanks for reporting. Please do not include real names, email addresses, balances or any secret: issues are public.
-        A security vulnerability goes through the private form in [SECURITY.md](https://github.com/federicodecillia/wegrocery/blob/main/SECURITY.md), not here.
+        A security vulnerability goes through the private form in [SECURITY.md](https://github.com/flylabs-ai/wegrocery/blob/main/SECURITY.md), not here.
   - type: textarea
     id: what
     attributes:

@@ -36,7 +36,7 @@ export const env = {
   neonApiKey: () => read("NEON_API_KEY"),
   sharedMailDomain: () => read("CONSOLE_SHARED_MAIL_DOMAIN"),
   sharedMailDomainId: () => read("CONSOLE_SHARED_MAIL_DOMAIN_ID"),
-  repo: () => read("WEGROCERY_REPO") ?? "federicodecillia/wegrocery",
+  repo: () => read("WEGROCERY_REPO") ?? "flylabs-ai/wegrocery",
   repoId: () => read("WEGROCERY_REPO_ID"),
   githubToken: () => read("GITHUB_TOKEN"),
 };
