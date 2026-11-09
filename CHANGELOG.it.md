@@ -25,6 +25,10 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ## [Unreleased]
 
+## [1.45.0] - 9 novembre 2026
+
+*Pronti ad aprire il gruppo a persone nuove: termini da accettare, iscrizione, pagina pubblica, import dei soci e quantità limitate, tutto spento finché un admin non lo accende.*
+
 ### Aggiunto
 - 📜 **Termini e privacy da accettare**: in Impostazioni > Gruppo un admin può chiedere a chi entra di accettare l'informativa privacy e i termini di servizio del gruppo (link alle pagine del gruppo) prima di usare l'app, e chiederlo di nuovo a tutti quando cambia i testi. Fino ad allora non si può ordinare né pagare. Spento di default.
 - 🔗 **Link ai termini di servizio** accanto all'informativa privacy, nella pagina di accesso e in fondo a ogni pagina.
