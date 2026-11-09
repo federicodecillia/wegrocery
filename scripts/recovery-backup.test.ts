@@ -50,6 +50,14 @@ describe("bounded recovery backup", () => {
     ]) expect(() => validateManifest(invalid)).toThrow("Invalid recovery manifest");
   });
 
+  it("accepts provider shard hostnames without accepting another region or pooler", () => {
+    const manifest = fixture();
+    expect(() => validateManifest({ ...manifest, sourceHost: "ep-synthetic-123.c-5.eu-central-1.aws.neon.tech" })).not.toThrow();
+    for (const sourceHost of ["ep-synthetic-123.c-5.us-east-1.aws.neon.tech", "ep-synthetic-123-pooler.c-5.eu-central-1.aws.neon.tech", "ep-synthetic-123.c-5.eu-central-1.aws.neon.tech.attacker.invalid"]) {
+      expect(() => validateManifest({ ...manifest, sourceHost })).toThrow();
+    }
+  });
+
   it("refuses credential files with group access before any process runs", async () => {
     const manifest = fixture();
     chmodSync(manifest.passwordFile, 0o640);

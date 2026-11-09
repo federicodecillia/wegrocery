@@ -26,6 +26,7 @@ dettagli tecnici", la release su GitHub la tiene.
 ## [Unreleased]
 
 ### Aggiunto
+- [tecnico] **Inserimento locale delle credenziali**: un prompt nascosto prepara file leggibili solo dal proprio utente senza collegarsi al database; l’export riconosce gli hostname Neon di Francoforte con segmento shard.
 - [tecnico] 🔐 **Strumento locale per il recupero**: prepara archivi cifrati del database, con controllo offline predefinito e comando esplicito di esportazione. Verifica del ripristino e trasferimenti richiedono ancora preparazione e approvazione separate.
 
 ## [1.45.1] - 9 novembre 2026

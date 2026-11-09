@@ -20,7 +20,7 @@ export function validateManifest(manifest) {
       Object.keys(manifest).length !== fields.length || fields.some((key) => !Object.hasOwn(manifest, key))) invalid();
   if (manifest.version !== 1 || manifest.classification !== "fake-data" ||
       typeof manifest.sourceHost !== "string" ||
-      !/^ep-[a-z0-9-]+\.eu-central-1\.aws\.neon\.tech$/.test(manifest.sourceHost) ||
+      !/^ep-[a-z0-9-]+(?:\.c-[0-9]+)?\.eu-central-1\.aws\.neon\.tech$/.test(manifest.sourceHost) ||
       manifest.sourceHost.includes("-pooler.") ||
       !/^age1[023456789acdefghjklmnpqrstuvwxyz]{58}$/.test(manifest.recipient)) invalid();
   for (const key of ["database", "user", "service"]) {
