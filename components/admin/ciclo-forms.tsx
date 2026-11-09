@@ -946,7 +946,7 @@ function BoldText({ text }: { text: string }) {
 }
 
 /** "Quando aprono gli ordini": now, or later (planned, with its opening). */
-function WhenFields({ planned, onChange }: { planned: boolean; onChange: (planned: boolean) => void }) {
+function WhenFields({ planned, onChange, autoOpen }: { planned: boolean; onChange: (planned: boolean) => void; autoOpen: boolean }) {
   const c = t.admin.cycle;
   return (
     <fieldset>
@@ -972,7 +972,7 @@ function WhenFields({ planned, onChange }: { planned: boolean; onChange: (planne
       </div>
       {planned && (
         <p className="mt-1.5 text-label text-secondary-foreground">
-          <BoldText text={c.plannedHint} />
+          <BoldText text={c.plannedHint(autoOpen)} />
         </p>
       )}
     </fieldset>
@@ -1040,9 +1040,12 @@ export function CreateCycleForm({
   cardDeposit = null,
   walletShipping = null,
   cardShipping = null,
+  autoOpen = false,
   defaultOpen = false,
 }: {
   suppliers: Supplier[];
+  /** Planned cycles open by themselves on this deploy (CRON_SECRET, lib/cycles/cron-auth.ts). */
+  autoOpen?: boolean;
   /** The mode a new cycle starts from (lib/payments/cycle-mode.ts, defaultNewCycleMode). */
   paymentMode: "wallet" | "per_order";
   /** A wallet group may pay this cycle by card (lib/payments/cycle-mode.ts). */
@@ -1144,7 +1147,7 @@ export function CreateCycleForm({
           </label>
         </div>
 
-        <WhenFields planned={planned} onChange={setPlanned} />
+        <WhenFields planned={planned} onChange={setPlanned} autoOpen={autoOpen} />
         {planned && <PlannedFields />}
 
         <div>

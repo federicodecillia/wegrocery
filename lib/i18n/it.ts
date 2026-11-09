@@ -815,7 +815,12 @@ export const it = {
       more: "Altre azioni",
       closesAt: (date: string) => `Chiude ${date}`,
       opensAt: (date: string) => `Apertura prevista ${date}`,
-      plannedIntro: "In programma: i soci lo vedono nel calendario con le date e i prodotti come anteprima, ma non possono ancora ordinare. Quando è il momento premi **Apri gli ordini**: i soci vengono avvisati.",
+      plannedIntro: (mode: "auto" | "tentative" | "manual"): string =>
+        mode === "auto"
+          ? "In programma: i soci lo vedono nel calendario con le date e i prodotti come anteprima, ma non possono ancora ordinare. Gli ordini si aprono da soli all'apertura prevista e i soci vengono avvisati; per aprirli prima premi **Apri gli ordini**."
+          : mode === "tentative"
+            ? "In programma, con date indicative: i soci lo vedono nel calendario ma non possono ancora ordinare, e il ciclo non si apre da solo. Quando le date sono sicure togli la spunta da **Modifica**, oppure premi **Apri gli ordini**: i soci vengono avvisati."
+            : "In programma: i soci lo vedono nel calendario con le date e i prodotti come anteprima, ma non possono ancora ordinare. Quando è il momento premi **Apri gli ordini**: i soci vengono avvisati.",
       closedAt: (date: string) => `Chiuso il ${date}`,
       pickup: (slots: string) => `Ritiro ${slots}`,
       productsIntro: "I prodotti che i soci vedono in questo ciclo. Aggiungili dal catalogo dei fornitori o importa un listino.",
@@ -950,6 +955,7 @@ export const it = {
         sentry: "Segnalazione degli errori (Sentry)",
         dbRole: "Accesso al database con ruolo limitato",
         fleet: "Statistiche anonime per la console (WeGrocery Console)",
+        autoOpen: "Apertura automatica dei cicli in programma",
       } as Record<string, string>,
       notes: {
         noAdmin: "Nessun admin: imposta BOOTSTRAP_ADMIN_EMAIL e accedi con quell'indirizzo.",
@@ -977,6 +983,7 @@ export const it = {
         connectedInApp: "Collegato da un admin dal riquadro «Collegamento a Stripe», tra le impostazioni dei pagamenti.",
         reconnectStripe: "Il collegamento a Stripe salvato non si legge più (è cambiata AUTH_SECRET): ricollegalo dal riquadro «Collegamento a Stripe».",
         shortStatsSecret: "Il segreto è troppo corto (servono almeno 32 caratteri): le statistiche restano chiuse.",
+        shortCronSecret: "Il segreto è troppo corto (servono almeno 32 caratteri): i cicli in programma non si aprono da soli.",
       } as Record<string, string>,
       groups: {
         essential: "Essenziali",
@@ -1031,6 +1038,10 @@ export const it = {
         fleet: [
           "Serve solo a chi gestisce più gruppi: la sua console legge numeri anonimi (soci, cicli, ordini, versione) senza entrare nel database. Per il gruppo non cambia nulla.",
           "Genera un segreto (openssl rand -hex 32), mettilo in INSTANCE_STATS_SECRET e incollalo uguale nella console, alla voce Aggiungi istanza esistente. Un segreto diverso per ogni installazione.",
+        ],
+        autoOpen: [
+          "I cicli in programma aprono gli ordini da soli all'ora prevista (entro un minuto), se le date non sono indicative. Senza, li apre l'admin con Apri gli ordini.",
+          "Genera un segreto (openssl rand -hex 32) e mettilo in CRON_SECRET nel progetto Vercel: Vercel lo usa per chiamare il controllo ogni minuto (serve il piano Pro). Poi rifai il deploy.",
         ],
       } as Record<string, readonly [string, string]>,
       variables: "Variabili:",
@@ -1094,10 +1105,13 @@ export const it = {
       whenLabel: "Quando aprono gli ordini",
       whenNow: "Subito",
       whenPlanned: "Più avanti",
-      plannedHint: "Il ciclo va in programma: i soci lo vedono nel calendario, con le date e i prodotti che aggiungi, ma ordinano solo dopo che premi **Apri gli ordini**.",
+      plannedHint: (auto: boolean): string =>
+        auto
+          ? "Il ciclo va in programma: i soci lo vedono nel calendario, con le date e i prodotti che aggiungi. Gli ordini si aprono da soli all'apertura prevista, se le date non sono indicative; puoi aprirli prima con **Apri gli ordini**."
+          : "Il ciclo va in programma: i soci lo vedono nel calendario, con le date e i prodotti che aggiungi, ma ordinano solo dopo che premi **Apri gli ordini**.",
       orderOpenAtLabel: "Apertura ordini prevista *",
       tentativeLabel: "Date indicative",
-      tentativeHint: "Nel calendario i soci vedono che le date possono ancora cambiare.",
+      tentativeHint: "Nel calendario i soci vedono che le date possono ancora cambiare. Con le date indicative il ciclo non si apre da solo: lo apri tu.",
     pickupTentativeLabel: "Ritiro da confermare",
     pickupTentativeHint: "I soci leggono la data come prevista. Togli la spunta quando il fornitore la conferma: chi ha ordinato riceve una notifica.",
       cycleCreatedPlanned: "Ciclo messo in programma",

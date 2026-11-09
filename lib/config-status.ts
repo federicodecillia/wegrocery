@@ -46,7 +46,8 @@ export type ConfigItemId =
   | "stripe"
   | "membership"
   | "sentry"
-  | "fleet";
+  | "fleet"
+  | "autoOpen";
 
 export type ConfigItem = {
   id: ConfigItemId;
@@ -188,6 +189,7 @@ export function configStatus(env: Env, facts: ConfigFacts): ConfigItem[] {
     },
     dbRole(facts),
     fleet(env),
+    autoOpen(env),
   ];
 }
 
@@ -207,4 +209,14 @@ function fleet(env: Env): ConfigItem {
   const secret = env.INSTANCE_STATS_SECRET?.trim() ?? "";
   if (!secret) return { ...base, status: "off" };
   return secret.length < MIN_SECRET_LENGTH ? { ...base, status: "warning", note: "shortStatsSecret" } : { ...base, status: "ok" };
+}
+
+// Planned cycles opening by themselves at their time: Vercel Cron calls
+// /api/cron/open-cycles every minute with CRON_SECRET (vercel.json); without
+// it the route is closed and an admin opens them by hand.
+function autoOpen(env: Env): ConfigItem {
+  const base = { id: "autoOpen", required: false, vars: ["CRON_SECRET"] } as const;
+  const secret = env.CRON_SECRET?.trim() ?? "";
+  if (!secret) return { ...base, status: "off" };
+  return secret.length < MIN_SECRET_LENGTH ? { ...base, status: "warning", note: "shortCronSecret" } : { ...base, status: "ok" };
 }

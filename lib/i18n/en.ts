@@ -813,7 +813,12 @@ export const en: Strings = {
       more: "More actions",
       closesAt: (date: string) => `Closes ${date}`,
       opensAt: (date: string) => `Opens ${date} (planned)`,
-      plannedIntro: "Planned: members see it in the calendar with its dates and a preview of its products, but cannot order yet. When the time comes, tap **Open the orders**: members are told.",
+      plannedIntro: (mode: "auto" | "tentative" | "manual"): string =>
+        mode === "auto"
+          ? "Planned: members see it in the calendar with its dates and a preview of its products, but cannot order yet. The orders open by themselves at the planned opening and members are told; to open them earlier, tap **Open the orders**."
+          : mode === "tentative"
+            ? "Planned, with tentative dates: members see it in the calendar but cannot order yet, and the cycle does not open by itself. When the dates are firm, untick them in **Edit**, or tap **Open the orders**: members are told."
+            : "Planned: members see it in the calendar with its dates and a preview of its products, but cannot order yet. When the time comes, tap **Open the orders**: members are told.",
       closedAt: (date: string) => `Closed on ${date}`,
       pickup: (slots: string) => `Pickup ${slots}`,
       productsIntro: "The products members see in this cycle. Add them from the suppliers' catalogue or import a price list.",
@@ -948,6 +953,7 @@ export const en: Strings = {
         sentry: "Error reporting (Sentry)",
         dbRole: "Database access with a restricted role",
         fleet: "Anonymous stats for the console (WeGrocery Console)",
+        autoOpen: "Planned cycles opening by themselves",
       } as Record<string, string>,
       notes: {
         noAdmin: "No admin yet: set BOOTSTRAP_ADMIN_EMAIL and sign in with that address.",
@@ -975,6 +981,7 @@ export const en: Strings = {
         connectedInApp: "Connected by an admin from the “Stripe connection” card, in the payment settings.",
         reconnectStripe: "The saved Stripe connection can no longer be read (AUTH_SECRET changed): connect it again from the “Stripe connection” card.",
         shortStatsSecret: "The secret is too short (at least 32 characters): the stats stay closed.",
+        shortCronSecret: "The secret is too short (at least 32 characters): planned cycles do not open by themselves.",
       } as Record<string, string>,
       groups: {
         essential: "Essential",
@@ -1029,6 +1036,10 @@ export const en: Strings = {
         fleet: [
           "Only for whoever runs several groups: their console reads anonymous counts (members, cycles, orders, version) without touching the database. Nothing changes for the group.",
           "Generate a secret (openssl rand -hex 32), set it as INSTANCE_STATS_SECRET and paste the same value in the console under Add existing instance. Use a different secret for each installation.",
+        ],
+        autoOpen: [
+          "Planned cycles open their orders by themselves at the planned time (within a minute), unless their dates are tentative. Without it, an admin opens them with Open the orders.",
+          "Generate a secret (openssl rand -hex 32) and put it in CRON_SECRET in the Vercel project: Vercel uses it to call the check every minute (it needs the Pro plan). Then redeploy.",
         ],
       } as Record<string, readonly [string, string]>,
       variables: "Variables:",
@@ -1092,10 +1103,13 @@ export const en: Strings = {
       whenLabel: "When the orders open",
       whenNow: "Now",
       whenPlanned: "Later",
-      plannedHint: "The cycle is planned: members see it in the calendar, with its dates and the products you add, but can order only after you tap **Open the orders**.",
+      plannedHint: (auto: boolean): string =>
+        auto
+          ? "The cycle is planned: members see it in the calendar, with its dates and the products you add. The orders open by themselves at the planned opening, unless the dates are tentative; you can open them earlier with **Open the orders**."
+          : "The cycle is planned: members see it in the calendar, with its dates and the products you add, but can order only after you tap **Open the orders**.",
       orderOpenAtLabel: "Planned order opening *",
       tentativeLabel: "Tentative dates",
-      tentativeHint: "In the calendar members see that the dates may still change.",
+      tentativeHint: "In the calendar members see that the dates may still change. With tentative dates the cycle does not open by itself: you open it.",
     pickupTentativeLabel: "Pickup to be confirmed",
     pickupTentativeHint: "Members read the date as expected. Untick it when the supplier confirms it: those who ordered get a notification.",
       cycleCreatedPlanned: "Cycle planned",

@@ -813,7 +813,12 @@ export const fr: Strings = {
       more: "Plus d'actions",
       closesAt: (date: string) => `Clôture le ${date}`,
       opensAt: (date: string) => `Ouverture prévue ${date}`,
-      plannedIntro: "Programmé : les membres le voient dans le calendrier avec ses dates et un aperçu des produits, mais ne peuvent pas encore commander. Le moment venu, touchez **Ouvrir les commandes** : les membres sont prévenus.",
+      plannedIntro: (mode: "auto" | "tentative" | "manual"): string =>
+        mode === "auto"
+          ? "Programmé : les membres le voient dans le calendrier avec ses dates et un aperçu des produits, mais ne peuvent pas encore commander. Les commandes s'ouvrent seules à l'ouverture prévue et les membres sont prévenus ; pour les ouvrir plus tôt, touchez **Ouvrir les commandes**."
+          : mode === "tentative"
+            ? "Programmé, avec des dates indicatives : les membres le voient dans le calendrier mais ne peuvent pas encore commander, et le cycle ne s'ouvre pas seul. Quand les dates sont sûres, décochez-les dans **Modifier**, ou touchez **Ouvrir les commandes** : les membres sont prévenus."
+            : "Programmé : les membres le voient dans le calendrier avec ses dates et un aperçu des produits, mais ne peuvent pas encore commander. Le moment venu, touchez **Ouvrir les commandes** : les membres sont prévenus.",
       closedAt: (date: string) => `Clôturé le ${date}`,
       pickup: (slots: string) => `Retrait ${slots}`,
       productsIntro: "Les produits que les membres voient dans ce cycle. Ajoutez-les depuis le catalogue des fournisseurs ou importez une liste de prix.",
@@ -948,6 +953,7 @@ export const fr: Strings = {
         sentry: "Signalement des erreurs (Sentry)",
         dbRole: "Accès à la base de données avec un rôle restreint",
         fleet: "Statistiques anonymes pour la console (WeGrocery Console)",
+        autoOpen: "Ouverture automatique des cycles programmés",
       } as Record<string, string>,
       notes: {
         noAdmin: "Pas encore d'admin : définissez BOOTSTRAP_ADMIN_EMAIL et connectez-vous avec cette adresse.",
@@ -975,6 +981,7 @@ export const fr: Strings = {
         connectedInApp: "Connecté par un admin depuis la carte « Connexion Stripe », dans les réglages de paiement.",
         reconnectStripe: "La connexion Stripe enregistrée ne peut plus être lue (AUTH_SECRET a changé) : reconnectez-la depuis la carte « Connexion Stripe ».",
         shortStatsSecret: "Le secret est trop court (32 caractères au moins) : les statistiques restent fermées.",
+        shortCronSecret: "Le secret est trop court (32 caractères au moins) : les cycles programmés ne s'ouvrent pas seuls.",
       } as Record<string, string>,
       groups: {
         essential: "Essentiels",
@@ -1029,6 +1036,10 @@ export const fr: Strings = {
         fleet: [
           "Uniquement pour qui gère plusieurs groupes : sa console lit des décomptes anonymes (membres, cycles, commandes, version) sans toucher à la base de données. Rien ne change pour le groupe.",
           "Générez un secret (openssl rand -hex 32), définissez-le comme INSTANCE_STATS_SECRET et collez la même valeur dans la console, sous Ajouter une instance existante. Utilisez un secret différent pour chaque installation.",
+        ],
+        autoOpen: [
+          "Les cycles programmés ouvrent leurs commandes seuls à l'heure prévue (en moins d'une minute), si leurs dates ne sont pas indicatives. Sinon, un admin les ouvre avec Ouvrir les commandes.",
+          "Générez un secret (openssl rand -hex 32) et mettez-le dans CRON_SECRET dans le projet Vercel : Vercel s'en sert pour appeler le contrôle chaque minute (il faut le plan Pro). Puis redéployez.",
         ],
       } as Record<string, readonly [string, string]>,
       variables: "Variables :",
@@ -1092,10 +1103,13 @@ export const fr: Strings = {
       whenLabel: "Quand les commandes ouvrent",
       whenNow: "Maintenant",
       whenPlanned: "Plus tard",
-      plannedHint: "Le cycle est programmé : les membres le voient dans le calendrier, avec ses dates et les produits que vous ajoutez, mais ne commandent qu'après que vous avez touché **Ouvrir les commandes**.",
+      plannedHint: (auto: boolean): string =>
+        auto
+          ? "Le cycle est programmé : les membres le voient dans le calendrier, avec ses dates et les produits que vous ajoutez. Les commandes s'ouvrent seules à l'ouverture prévue, sauf si les dates sont indicatives ; vous pouvez les ouvrir plus tôt avec **Ouvrir les commandes**."
+          : "Le cycle est programmé : les membres le voient dans le calendrier, avec ses dates et les produits que vous ajoutez, mais ne commandent qu'après que vous avez touché **Ouvrir les commandes**.",
       orderOpenAtLabel: "Ouverture des commandes prévue *",
       tentativeLabel: "Dates indicatives",
-      tentativeHint: "Dans le calendrier les membres voient que les dates peuvent encore changer.",
+      tentativeHint: "Dans le calendrier les membres voient que les dates peuvent encore changer. Avec des dates indicatives le cycle ne s'ouvre pas seul : c'est vous qui l'ouvrez.",
     pickupTentativeLabel: "Retrait à confirmer",
     pickupTentativeHint: "Les membres lisent la date comme prévue. Décochez-la quand le fournisseur la confirme : ceux qui ont commandé reçoivent une notification.",
       cycleCreatedPlanned: "Cycle programmé",

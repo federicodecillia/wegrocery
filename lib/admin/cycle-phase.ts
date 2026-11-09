@@ -37,6 +37,8 @@ export type CycleFacts = {
   status: string;
   /** For a planned cycle, when its orders should open. */
   orderOpenAt: Date | null;
+  /** A planned cycle's "Date indicative": it never opens by itself. */
+  datesTentative?: boolean;
   orderCloseAt: Date | null;
   closedAt: Date | null;
   /** Members with an order on the cycle. */
@@ -70,8 +72,11 @@ export type CycleTask = {
 };
 
 /** The steps a cycle still asks for, in the order they are done. Empty: nothing to do. */
-export function cycleSteps(f: CycleFacts, now: Date): CycleStep[] {
+export function cycleSteps(f: CycleFacts, now: Date, autoOpen = false): CycleStep[] {
   if (f.status === "planned") {
+    // It opens by itself at its time (lib/cycles/open-planned.ts): nothing to
+    // do unless that time passed and it is still planned.
+    if (autoOpen && !f.datesTentative && f.orderOpenAt != null && f.orderOpenAt.getTime() > now.getTime()) return [];
     // From the planned day on, in the group's time zone.
     return f.orderOpenAt != null && dayOf(f.orderOpenAt) <= dayOf(now) ? ["to_open"] : [];
   }
@@ -106,9 +111,9 @@ const URGENCY: Record<CycleStep, number> = { overdue: 0, to_open: 1, to_settle: 
  * the earliest deadline, among closed ones the latest close (the cycle just
  * closed is the one being delivered).
  */
-export function cycleTasks(cycles: CycleFacts[], now: Date): CycleTask[] {
+export function cycleTasks(cycles: CycleFacts[], now: Date, autoOpen = false): CycleTask[] {
   const tasks = cycles.flatMap((f) => {
-    const steps = cycleSteps(f, now);
+    const steps = cycleSteps(f, now, autoOpen);
     if (steps.length === 0) return [];
     const close = f.orderCloseAt?.getTime() ?? null;
     const opening = f.orderOpenAt?.getTime() ?? null;

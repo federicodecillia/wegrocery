@@ -15,7 +15,9 @@ Last updated: 2026-11-09 (release 1.45.1 verified).
 
 ## Waiting on `staging` for the next release
 
-Nothing awaiting a product release. Version 1.45.1 was released through PR #404 (merge commit `3015523`), staging fast-forwarded to that commit, and the example brand aligned (`0ed3d0e`). Public health endpoints on production, demo and example brand report `ok: true`, `db: true`, version `1.45.1`; staging Deploy Health passed before promotion. Manual backup and money invariants passed in run `42618843367`. No migrations or transfers were performed.
+On the PR branch for the next release (not merged while the Vercel move is under way): Home's month view draws the same icons as `/calendario`, and planned cycles open by themselves at their planned time (Vercel Cron every minute, `CRON_SECRET`, `lib/cycles/open-planned.ts`). The cron needs every project built from this repository (porta-moneta, demo) on Vercel Pro before it reaches `staging`, and `CRON_SECRET` set on each installation.
+
+Version 1.45.1 was released through PR #404 (merge commit `3015523`), staging fast-forwarded to that commit, and the example brand aligned (`0ed3d0e`). Public health endpoints on production, demo and example brand report `ok: true`, `db: true`, version `1.45.1`; staging Deploy Health passed before promotion. Manual backup and money invariants passed in run `42618843367`. No migrations or transfers were performed.
 
 WP0 A.1 is released: repository guards, Console defaults and public setup links are ready for the future `flylabs-ai` upstream. Next is the Maintainer-only GitHub transfer checklist in [the phase 2 plan](./2026-11-09-launch-phase2-fleet.md). Stop before those steps; post-transfer checks/cleanup and Vercel transfers are not done.
 

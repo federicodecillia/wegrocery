@@ -813,7 +813,12 @@ export const es: Strings = {
       more: "Más acciones",
       closesAt: (date: string) => `Cierra el ${date}`,
       opensAt: (date: string) => `Apertura prevista ${date}`,
-      plannedIntro: "Programado: los socios lo ven en el calendario con sus fechas y una vista previa de los productos, pero aún no pueden pedir. Cuando llegue el momento pulsa **Abrir los pedidos**: se avisa a los socios.",
+      plannedIntro: (mode: "auto" | "tentative" | "manual"): string =>
+        mode === "auto"
+          ? "Programado: los socios lo ven en el calendario con sus fechas y una vista previa de los productos, pero aún no pueden pedir. Los pedidos se abren solos en la apertura prevista y se avisa a los socios; para abrirlos antes pulsa **Abrir los pedidos**."
+          : mode === "tentative"
+            ? "Programado, con fechas orientativas: los socios lo ven en el calendario pero aún no pueden pedir, y el ciclo no se abre solo. Cuando las fechas sean seguras desmárcalas en **Editar**, o pulsa **Abrir los pedidos**: se avisa a los socios."
+            : "Programado: los socios lo ven en el calendario con sus fechas y una vista previa de los productos, pero aún no pueden pedir. Cuando llegue el momento pulsa **Abrir los pedidos**: se avisa a los socios.",
       closedAt: (date: string) => `Cerrado el ${date}`,
       pickup: (slots: string) => `Recogida ${slots}`,
       productsIntro: "Los productos que ven los socios en este ciclo. Añádelos desde el catálogo de los proveedores o importa una lista de precios.",
@@ -948,6 +953,7 @@ export const es: Strings = {
         sentry: "Avisos de errores (Sentry)",
         dbRole: "Acceso a la base de datos con un rol restringido",
         fleet: "Estadísticas anónimas para la consola (WeGrocery Console)",
+        autoOpen: "Apertura automática de los ciclos programados",
       } as Record<string, string>,
       notes: {
         noAdmin: "Aún no hay admin: define BOOTSTRAP_ADMIN_EMAIL y entra con esa dirección.",
@@ -975,6 +981,7 @@ export const es: Strings = {
         connectedInApp: "Conectado por un admin desde la tarjeta “Conexión con Stripe”, en los ajustes de pago.",
         reconnectStripe: "La conexión con Stripe guardada ya no se puede leer (ha cambiado AUTH_SECRET): vuelve a conectarla desde la tarjeta “Conexión con Stripe”.",
         shortStatsSecret: "El secreto es demasiado corto (al menos 32 caracteres): las estadísticas quedan cerradas.",
+        shortCronSecret: "El secreto es demasiado corto (al menos 32 caracteres): los ciclos programados no se abren solos.",
       } as Record<string, string>,
       groups: {
         essential: "Esenciales",
@@ -1029,6 +1036,10 @@ export const es: Strings = {
         fleet: [
           "Solo para quien gestiona varios grupos: su consola lee recuentos anónimos (socios, ciclos, pedidos, versión) sin tocar la base de datos. Para el grupo no cambia nada.",
           "Genera un secreto (openssl rand -hex 32), defínelo como INSTANCE_STATS_SECRET y pega el mismo valor en la consola, en Añadir instancia existente. Usa un secreto distinto para cada instalación.",
+        ],
+        autoOpen: [
+          "Los ciclos programados abren los pedidos solos a la hora prevista (en menos de un minuto), si sus fechas no son orientativas. Sin él, los abre un admin con Abrir los pedidos.",
+          "Genera un secreto (openssl rand -hex 32) y ponlo en CRON_SECRET en el proyecto de Vercel: Vercel lo usa para llamar al control cada minuto (requiere el plan Pro). Luego vuelve a desplegar.",
         ],
       } as Record<string, readonly [string, string]>,
       variables: "Variables:",
@@ -1092,10 +1103,13 @@ export const es: Strings = {
       whenLabel: "Cuándo se abren los pedidos",
       whenNow: "Ahora",
       whenPlanned: "Más adelante",
-      plannedHint: "El ciclo queda programado: los socios lo ven en el calendario, con sus fechas y los productos que añadas, pero solo pueden pedir cuando pulses **Abrir los pedidos**.",
+      plannedHint: (auto: boolean): string =>
+        auto
+          ? "El ciclo queda programado: los socios lo ven en el calendario, con sus fechas y los productos que añadas. Los pedidos se abren solos en la apertura prevista, si las fechas no son orientativas; puedes abrirlos antes con **Abrir los pedidos**."
+          : "El ciclo queda programado: los socios lo ven en el calendario, con sus fechas y los productos que añadas, pero solo pueden pedir cuando pulses **Abrir los pedidos**.",
       orderOpenAtLabel: "Apertura de pedidos prevista *",
       tentativeLabel: "Fechas orientativas",
-      tentativeHint: "En el calendario los socios ven que las fechas aún pueden cambiar.",
+      tentativeHint: "En el calendario los socios ven que las fechas aún pueden cambiar. Con fechas orientativas el ciclo no se abre solo: lo abres tú.",
     pickupTentativeLabel: "Recogida por confirmar",
     pickupTentativeHint: "Los socios leen la fecha como prevista. Desmárcalo cuando el proveedor la confirme: quien ha pedido recibe una notificación.",
       cycleCreatedPlanned: "Ciclo programado",

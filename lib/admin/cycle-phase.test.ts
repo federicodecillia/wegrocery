@@ -31,6 +31,14 @@ describe("cycleSteps", () => {
     expect(cycleSteps(planned(null), now)).toEqual([]);
   });
 
+  it("with automatic opening, asks only when the time passed and it is still planned, or when its dates are indicative", () => {
+    const planned = (orderOpenAt: Date, datesTentative = false) =>
+      facts({ status: "planned", orderOpenAt, datesTentative, orderCloseAt: h(200), closedAt: null });
+    expect(cycleSteps(planned(h(6)), now, true)).toEqual([]);
+    expect(cycleSteps(planned(h(-1)), now, true)).toEqual(["to_open"]);
+    expect(cycleSteps(planned(h(6), true), now, true)).toEqual(["to_open"]);
+  });
+
   it("puts a planned cycle due to open right after an overdue one, with the hours it is late", () => {
     const tasks = cycleTasks(
       [
