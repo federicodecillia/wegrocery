@@ -30,6 +30,8 @@ Still to do before a group turns on limited quantities with card payments: a Str
 
 ## Known open items
 
+- CI runtime optimization: [measurement and implementation plan](./2026-11-09-ci-runtime-optimization.md), proposed on 2026-11-09, not approved for implementation. Start with profiling and batching test-only reads; isolated database shards and documentation-only classification are conditional follow-ups. No checks have been removed or changed.
+
 - Issue #383: Dependabot advisories that do not affect the app (tracking).
 - Issue #111: ESLint 10, blocked upstream by `eslint-config-next`.
 - Issue #199: turn `set-state-in-effect` back on.
