@@ -186,19 +186,6 @@ export function monthGrid(month: string): DayCell[][] {
   return weeks;
 }
 
-/** The kinds of event on each day, for the dots of the grid. */
-export function eventKindsByDay(entries: ReadonlyArray<CalendarEntry>): Map<string, Set<CalendarEventKind>> {
-  const out = new Map<string, Set<CalendarEventKind>>();
-  for (const entry of entries) {
-    for (const event of entry.events) {
-      const kinds = out.get(event.day) ?? new Set<CalendarEventKind>();
-      kinds.add(event.kind);
-      out.set(event.day, kinds);
-    }
-  }
-  return out;
-}
-
 /** Months ahead of today the calendar always reaches, events or not ("nothing planned yet" is news too). */
 export const CALENDAR_AHEAD_MONTHS = 2;
 

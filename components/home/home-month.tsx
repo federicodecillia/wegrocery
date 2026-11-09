@@ -1,19 +1,19 @@
 import Link from "next/link";
-import { KIND_DOT } from "@/components/calendar/kind-icon";
-import { eventKindsByDay, monthGrid, monthOf, type CalendarEntry, type CalendarEventKind } from "@/lib/calendar";
+import { DAY_ICONS, KIND_ICON } from "@/components/calendar/kind-icon";
+import { monthGrid, monthOf, type CalendarEntry } from "@/lib/calendar";
+import { dayMarks } from "@/lib/calendar-view";
 import { t } from "@/lib/i18n";
 import { formatDate } from "@/lib/i18n/format";
 import { cn } from "@/lib/utils";
 
-const KINDS: CalendarEventKind[] = ["opens", "closes", "pickup"];
 const noon = (day: string) => new Date(`${day}T12:00:00Z`);
 
-// Home on a computer: this month at a glance beside the list, with the same
-// marks as /calendario (round opens, square closes, diamond pickup). Read
-// only: the full calendar is one click away.
+// Home on a computer: this month at a glance beside the list, drawn like
+// "Tutti" on /calendario: the same icons (basket opens, lock last day,
+// package pickup, at most DAY_ICONS and "+n") and today as a filled circle.
+// Read only: the full calendar, with its legend, is one click away.
 export function HomeMonth({ entries, today }: { entries: CalendarEntry[]; today: string }) {
   const month = monthOf(today);
-  const kinds = eventKindsByDay(entries);
   const weekdays = Array.from({ length: 7 }, (_, i) => formatDate(noon(`2024-01-0${i + 1}`), { weekday: "narrow" }));
   return (
     <div className="mb-6 rounded-card border border-border bg-card p-3 shadow-card">
@@ -38,21 +38,7 @@ export function HomeMonth({ entries, today }: { entries: CalendarEntry[]; today:
             <tr key={week[0].day}>
               {week.map(({ day, inMonth }) => (
                 <td key={day} className="p-0.5 text-center">
-                  {inMonth && (
-                    <span
-                      className={cn(
-                        "flex h-9 flex-col items-center justify-center gap-0.5 rounded-lg text-[13px] tabular-nums",
-                        day === today ? "bg-primary-bg font-bold text-primary-text" : day < today ? "text-secondary-foreground" : "text-foreground",
-                      )}
-                    >
-                      {Number(day.slice(8))}
-                      <span className="flex h-1.5 gap-1">
-                        {KINDS.filter((k) => kinds.get(day)?.has(k)).map((k) => (
-                          <span key={k} className={cn("size-1.5", KIND_DOT[k])} />
-                        ))}
-                      </span>
-                    </span>
-                  )}
+                  {inMonth && <MonthDay day={day} today={today} entries={entries} />}
                 </td>
               ))}
             </tr>
@@ -60,5 +46,28 @@ export function HomeMonth({ entries, today }: { entries: CalendarEntry[]; today:
         </tbody>
       </table>
     </div>
+  );
+}
+
+function MonthDay({ day, today, entries }: { day: string; today: string; entries: CalendarEntry[] }) {
+  const marks = dayMarks(entries, day);
+  return (
+    <span className="flex h-11 flex-col items-center justify-start gap-0.5 pt-0.5">
+      <span
+        className={cn(
+          "flex size-6 items-center justify-center rounded-full text-[13px] tabular-nums",
+          day === today ? "bg-inverse font-bold text-inverse-foreground" : day < today ? "text-secondary-foreground" : "text-foreground",
+        )}
+      >
+        {Number(day.slice(8))}
+      </span>
+      <span className="flex h-3 items-center gap-0.5">
+        {marks.slice(0, DAY_ICONS).map((k, i) => {
+          const Icon = KIND_ICON[k];
+          return <Icon key={i} aria-hidden className="size-3 text-foreground" strokeWidth={2.5} />;
+        })}
+        {marks.length > DAY_ICONS && <span className="text-[10px] font-bold leading-none text-foreground">{t.calendar.moreLanes(marks.length - DAY_ICONS)}</span>}
+      </span>
+    </span>
   );
 }

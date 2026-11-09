@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import {
   buildCalendar,
   dayOf,
-  eventKindsByDay,
   monthGrid,
   monthRange,
   shiftMonth,
@@ -149,11 +148,6 @@ describe("month helpers", () => {
     NOW,
   );
 
-  it("marks the kinds of event of each day", () => {
-    const kinds = eventKindsByDay(entries);
-    expect([...(kinds.get("2026-11-05") ?? [])]).toEqual(["pickup"]);
-    expect(kinds.has("2026-11-06")).toBe(false);
-  });
   it("spans the months from the first event to the last, today and two months ahead included", () => {
     expect(monthRange(entries, "2026-11-04")).toEqual({ first: "2026-10", last: "2027-01" });
     expect(monthRange([], "2026-11-04")).toEqual({ first: "2026-11", last: "2027-01" });

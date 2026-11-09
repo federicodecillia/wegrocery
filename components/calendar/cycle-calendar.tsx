@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
-import { Bell, BellOff, CalendarPlus, ChevronDown, ChevronLeft, ChevronRight, Lock, Package, ShoppingBasket } from "lucide-react";
+import { Bell, BellOff, CalendarPlus, ChevronDown, ChevronLeft, ChevronRight, type LucideIcon } from "lucide-react";
+import { DAY_ICONS, KIND_ICON } from "@/components/calendar/kind-icon";
 import { toast } from "@/components/ui/toast";
 import { setCycleOpenAlert } from "@/lib/actions/cycle-alerts";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +12,7 @@ import { monthGrid, monthOf, monthRange, shiftMonth, type CalendarEntry } from "
 import {
   cyclesInMonth,
   cyclesOnDay,
+  dayMarks,
   dayRole,
   defaultCycleId,
   spanOf,
@@ -37,8 +39,6 @@ import { cn } from "@/lib/utils";
 type Paint = { band: string; solid: string; ring: string; border: string };
 const CURRENT: Paint = { band: "bg-primary-bg", solid: "bg-primary text-primary-foreground", ring: "ring-primary", border: "border-primary" };
 const PAST: Paint = { band: "bg-tint/[0.06]", solid: "bg-tint/[0.14] text-foreground", ring: "ring-neutral", border: "border-neutral" };
-/** Icons drawn in a day of "Tutti"; a busier day adds "+n". */
-const DAY_ICONS = 2;
 
 const noon = (day: string) => new Date(`${day}T12:00:00Z`);
 const longDay = (day: string) => formatDate(noon(day), { weekday: "long", day: "numeric", month: "long" });
@@ -328,13 +328,7 @@ function DayCell({
     .join(". ");
   // "Tutti": the icons of what happens on the day across its cycles (last
   // days first, then pickups, then openings), at most DAY_ICONS and a count.
-  const marks: (typeof Lock)[] = [];
-  if (!chosen) {
-    const roles = cycles.map((e) => dayRole(spans.get(e.cycleId)!, day));
-    for (const r of roles) if (r.closes) marks.push(Lock);
-    for (const r of roles) if (r.pickup) marks.push(Package);
-    for (const r of roles) if (r.opens) marks.push(ShoppingBasket);
-  }
+  const marks = chosen ? [] : dayMarks(cycles, day).map((k) => KIND_ICON[k]);
 
   const number = (
     <span
@@ -356,7 +350,7 @@ function DayCell({
       {Number(day.slice(8))}
     </span>
   );
-  const Icon = role ? (role.pickup ? Package : role.closes ? Lock : role.opens ? ShoppingBasket : null) : null;
+  const Icon = role ? (role.pickup ? KIND_ICON.pickup : role.closes ? KIND_ICON.closes : role.opens ? KIND_ICON.opens : null) : null;
   const content = (
     <span className="relative flex h-14 flex-col items-center pt-1">
       {number}
@@ -408,11 +402,11 @@ function Legend({ chosen, paint }: { chosen: CalendarEntry | null; paint: Paint 
         </>
       ) : (
         <>
-          {item(<ShoppingBasket aria-hidden className="size-3.5 text-foreground" strokeWidth={2.5} />, l.opens)}
-          {item(<Lock aria-hidden className="size-3.5 text-foreground" strokeWidth={2.5} />, l.closes)}
+          {item(<KIND_ICON.opens aria-hidden className="size-3.5 text-foreground" strokeWidth={2.5} />, l.opens)}
+          {item(<KIND_ICON.closes aria-hidden className="size-3.5 text-foreground" strokeWidth={2.5} />, l.closes)}
         </>
       )}
-      {item(<Package aria-hidden className="size-3.5 text-foreground" strokeWidth={2.5} />, chosen?.pickupTentative ? t.calendar.pickupTentative : l.pickup)}
+      {item(<KIND_ICON.pickup aria-hidden className="size-3.5 text-foreground" strokeWidth={2.5} />, chosen?.pickupTentative ? t.calendar.pickupTentative : l.pickup)}
       {item(<span aria-hidden className="size-3.5 rounded-full bg-inverse" />, l.today)}
     </ul>
   );
@@ -489,7 +483,7 @@ function CycleDetail({ entry, span, today, alerted }: { entry: CalendarEntry; sp
   const deadline = closes ? deadlineParts(closes.at) : null;
   const orderHref = `/ordine?cycleId=${encodeURIComponent(entry.cycleId)}`;
 
-  const row = (key: string, day: string | null, tone: DateTileTone, Icon: typeof Lock, text: string, note?: string | null) => (
+  const row = (key: string, day: string | null, tone: DateTileTone, Icon: LucideIcon, text: string, note?: string | null) => (
     <li key={key} className="flex items-center gap-3">
       {day ? <DateTile day={day} tone={tone} /> : <span aria-hidden className="size-12 shrink-0 rounded-xl bg-tint/[0.05]" />}
       <span className="min-w-0 flex-1">
@@ -517,17 +511,17 @@ function CycleDetail({ entry, span, today, alerted }: { entry: CalendarEntry; sp
           </div>
         </div>
         <ul className="space-y-2.5">
-          {opens && row("opens", span.open, "neutral", ShoppingBasket, c.opensAt(formatLongDay(opens.at), formatTime(opens.at)))}
+          {opens && row("opens", span.open, "neutral", KIND_ICON.opens, c.opensAt(formatLongDay(opens.at), formatTime(opens.at)))}
           {deadline &&
             row(
               "closes",
               span.close,
               closeTone,
-              Lock,
+              KIND_ICON.closes,
               h.orderBy(deadline.day, deadline.time),
               entry.state === "open" && closeDays !== null ? (closeDays <= 0 ? h.lastDay : relativeDay(closeDays)) : null,
             )}
-          {pickups.map((p) => row(p.at, p.day, "neutral", Package, (entry.pickupTentative ? h.pickupExpected : h.pickupOn)(formatPickupLong(p.at, p.endTime))))}
+          {pickups.map((p) => row(p.at, p.day, "neutral", KIND_ICON.pickup, (entry.pickupTentative ? h.pickupExpected : h.pickupOn)(formatPickupLong(p.at, p.endTime))))}
         </ul>
         {(entry.state === "planned" || entry.state === "open" || entry.state === "closed") && (
           <div className="mt-3 flex flex-wrap gap-2 border-t border-border pt-3">
