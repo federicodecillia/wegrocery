@@ -103,7 +103,7 @@ Each database needs its own approved runbook. No customer production database is
 - First decision: metadata-only inventory. Next decision: approve exact example trial. Next: review the results and choose a Console-specific boundary/method. Demo and customer hosting follow only afterward, as WP0 already requires; the real customer goes last with explicit operation approval and a fresh backup.
 - Complete GitHub post-transfer ruleset/secret-name/workflow checks and reconnection separately; existence of the three apps is not proof that every protection or deployment connection survived.
 - New organization/key/secret configuration, resource transfers, provisioning, production deploys and destructive cleanup remain Maintainer steps. No automatic action is authorized here.
-- Planning validation: official source links checked, no contradiction with the managed-organization transfer limitation, per-resource scope and recovery made explicit, public docs free of customer data, `git diff --check`. No runtime test is needed for this planning-only PR.
+- Planning validation: official source links checked, no contradiction with the managed-organization transfer limitation, per-resource scope and recovery made explicit, public docs free of customer data, `git diff --check`. The options document itself needs no runtime test; the subsequently approved local exporter is tested separately, without database access.
 - Execution validation must compare expected version/data/roles and real outcomes, not just HTTP 200. Record blocked checks honestly. No change to ledger behavior, invariant coverage or CI delivery guarantees.
 
 ## Phase 0 evidence so far
@@ -120,7 +120,7 @@ Some project build/environment metadata, per-resource consumer connections, sele
 
 ## Example-only runbook prepared
 
-Maintainer screenshots now confirm separate installed resources labeled Free, the example app as the displayed consumer on All Environments, and a single-resource Transfer Database entry disabled pending disconnection. This narrows the example trial scope but does not prove destination eligibility or recovery. See [the recovery-first example runbook](./2026-11-09-example-transfer-runbook.md). Its preparation is approved; backup/restore execution, a secure credential executor, disconnection, transfer and deployment remain unapproved.
+Maintainer screenshots now confirm separate installed resources labeled Free, the example app as the displayed consumer on All Environments, and a single-resource Transfer Database entry disabled pending disconnection. This narrows the example trial scope but does not prove destination eligibility or recovery. See [the recovery-first example runbook](./2026-11-09-example-transfer-runbook.md). Its preparation and preparation of the local exporter are approved; see the [runner boundary and local checks](./2026-11-09-local-recovery-runner.md). Backup/restore execution, exact secure credential configuration, disconnection, transfer and deployment remain unapproved.
 
 ## Approval requested
 

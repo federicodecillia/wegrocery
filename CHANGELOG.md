@@ -24,6 +24,9 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ## [Unreleased]
 
+### Added
+- [tech] 🔐 **Local recovery export tool**: prepares encrypted database archives with an offline default and an explicit export command. Restore validation and transfers still require separate preparation and approval.
+
 ## [1.45.1] - 2026-11-09
 
 *Preparing the repository move to FlyLabs.*

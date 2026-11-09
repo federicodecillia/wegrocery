@@ -25,6 +25,9 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ## [Unreleased]
 
+### Aggiunto
+- [tecnico] 🔐 **Strumento locale per il recupero**: prepara archivi cifrati del database, con controllo offline predefinito e comando esplicito di esportazione. Verifica del ripristino e trasferimenti richiedono ancora preparazione e approvazione separate.
+
 ## [1.45.1] - 9 novembre 2026
 
 *Preparazione del trasferimento della repo a FlyLabs.*
