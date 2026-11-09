@@ -34,15 +34,69 @@ A managed instance's fee promises backups, a nightly check of the money and upda
 
 | # | WP | Where | New secrets | Evenings |
 |---|---|---|---|---|
+| 0 | Move the code to `flylabs-ai` and the hosting to the Pro account | GitHub + Vercel, mostly operations | none | 1.5-2 |
 | 1 | Nightly invariants for every instance | app + Console | none | 1 |
 | 2 | Nightly backup and restore test for every instance | new private repo + app scripts + Console | one read-only URL per instance, an `age` key, `FLEET_REPORT_SECRET` | 2.5 |
 | 3 | Full data export for the admin | app | none | 1.5 |
 | 4 | Shared email sender with Reply-To | app + Console | none | 0.5-1 |
 | 5 | `*.wegrocery.app` subdomains | Console | none | 0.5 |
-| 6 | Move the Vercel projects to the Pro team | operations | none | 1-1.5 |
-| 7 | Fleet rollout without a browser, with a canary | Console | none | 2.5 |
+| 6 | Fleet rollout without a browser, with a canary | Console | none | 2.5 |
 
-WP1 and WP2 are the promise of the fee: do them first. WP7 needs a cron every few minutes, which Vercel Hobby does not allow, so it comes after WP6.
+WP0 comes first, by the maintainer's choice: everything after it is built in the new place. Then WP1 and WP2, which are the promise of the fee. WP6 needs a cron every few minutes, which only the Pro plan allows.
+
+---
+
+## WP0. Move the code to `flylabs-ai` and the hosting to the Pro account
+
+The maintainer wants this first: the code moves from the personal GitHub account to the `flylabs-ai` organization, and the Vercel projects move from the current Hobby account (`federicos-projects-9705e949`, login `federico.decillia@portamoneta.org`) to the maintainer's Vercel account on the Pro plan, which allows commercial use. Every later WP is written for the new place: the Pro cron of WP6, the domain of WP5 and the private repository of WP2 all assume it.
+
+Two parts, in this order, in the same week, on weekdays. Part A is GitHub, part B is Vercel. Between the GitHub transfer and the Vercel reconnection, pushes to `main` and `staging` do not deploy: merge nothing in that window.
+
+### Part A. GitHub: `federicodecillia/*` to `flylabs-ai/*`
+
+1. **Agent, before** (one PR to `staging`, merged and released before the transfer, so nothing breaks the day after):
+   - `.github/workflows/release.yml` and `.github/workflows/ui-check.yml`: the guard `github.repository == 'federicodecillia/wegrocery'` becomes `github.repository_owner == 'flylabs-ai' || github.repository == 'federicodecillia/wegrocery'`, so the release keeps working on both sides of the transfer; the old name is removed in step 4;
+   - `console/lib/env.ts`: default of `WEGROCERY_REPO` becomes `flylabs-ai/wegrocery`; same in `console/.env.example`;
+   - links in `README.md`, `SETUP.md`, `SECURITY.md`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `docs/self-hosting.md` (also the "Deploy with Vercel" button URL), `console/README.md`, `.github/ISSUE_TEMPLATE/*`: `github.com/federicodecillia/wegrocery` becomes `github.com/flylabs-ai/wegrocery`. GitHub redirects the old URLs, so this can land before the transfer. Leave the maintainer's personal profile links (LinkedIn, GitHub profile) as they are, and leave old `CHANGELOG` entries as they are;
+   - tests that use the name as sample data (`lib/brand/image-patterns.test.ts`, `console/lib/providers/providers.test.ts`) may stay: they test parsing, not the owner;
+   - `AGENTS.md` and `docs/status.md`: the new names.
+2. **Maintainer**, in this order:
+   - make sure the `flylabs-ai` organization requires 2FA and that the maintainer is owner;
+   - Settings, Transfer for `wegrocery`, then `wegrocery-example-brand`, to `flylabs-ai`. Names stay the same. GitHub keeps issues, PRs, releases, tags, Actions secrets and variables, environments, rulesets and webhooks, and redirects the old URLs and git remotes;
+   - install on `flylabs-ai`, for these two repositories, the GitHub Apps that were on the personal account: Vercel (of the Pro account, see part B), Claude, and Codex's connector; re-enable Dependabot alerts and security updates, and Private vulnerability reporting, if they show as off;
+   - in Claude (Project settings, repositories) and in Codex, replace the old repositories with the new ones.
+3. **Agent, after**, verifies and reports:
+   - the rulesets "main e staging" are still on (restrict deletions, block force pushes) and auto-delete of head branches is on;
+   - the Actions secrets are still listed by name on both repositories (never read their values): `DATABASE_URL`, `NEON_API_KEY`, `RESTORE_TEST_NEON_API_KEY`, `VERCEL_PRODUCTION_DEPLOY_HOOK`, `VERCEL_DEPLOY_HOOK`, `VERCEL_AUTOMATION_BYPASS_SECRET` and the others named in the workflows;
+   - one manual run each of `backup.yml`, `restore-test.yml` and the CI on a docs PR is green;
+   - `git remote set-url origin https://github.com/flylabs-ai/<repo>.git` in every local clone, the vault notes and the example brand's `upstream` remote.
+4. **Agent, cleanup PR**: remove the old name from the guards of step 1. In the vault and in this repository, no reference to `federicodecillia/wegrocery` is left except history (`CHANGELOG`, dated docs).
+
+### Part B. Vercel: Hobby account to the Pro account
+
+All transfers are done by the **Maintainer** (Vercel asks for the account owner). An agent prepares the checklist, then verifies after each step.
+
+1. **Prepare**:
+   - in the Pro account, install the Vercel GitHub app on the `flylabs-ai` organization with access to `wegrocery` and `wegrocery-example-brand`;
+   - write an inventory per project (`porta-moneta`, `wegrocery-demo`, `wegrocery-example-brand`, `wegrocery-console`): env var **names** per environment, domains, deploy hooks, Ignored Build Step, Deployment Protection and "Protection Bypass for Automation", crons, integrations. It goes in the maintainer's private notes (the vault), never in this repository. Values are not copied: Vercel moves them with the project. Before starting, collect provider strings (Resend, Stripe, Google, Sentry) from the providers' dashboards in case one does not survive, because `AUTH_SECRET` cannot be recovered and changing it closes every session and requires reconnecting Stripe in the app.
+2. **Neon integration first**: `wegrocery-example-brand` and `wegrocery-console` have their databases in the Neon organization that Vercel manages ("Vercel: WeGrocery"), tied to the old account. Before transferring them, either move those two databases to the normal Neon organization "WeGrocery" (where production, demo and restore-test already are) and set `DATABASE_URL` and `DATABASE_MIGRATION_URL` explicitly, or install the Neon integration in the Pro account and reconnect the existing databases. **[default]** Move them to the normal organization: one Neon organization for everything, nothing tied to a Vercel account.
+3. **Trial on the example brand** (no real data): Settings, Transfer to the Pro account. Then reconnect Git to `flylabs-ai/wegrocery-example-brand` if Vercel asks, a production deploy from the GitHub source, `/api/health`, a sign-in, an email.
+4. Then the **Console**, then the **demo**, then **`porta-moneta` last**, on a quiet weekday, after a manual Neon backup branch.
+5. **After each transfer**:
+   - Git connected to the `flylabs-ai` repository, production branch `main`, `vercel.json` rules unchanged (deploys only `main` and `staging`);
+   - a production deploy from the GitHub source, and the `Deploy Health` workflow run for that commit is green;
+   - for `porta-moneta`: the nightly invariants, a real sign-in, and a sandbox payment on staging (the Stripe sandbox endpoint points at the staging URL; check it still answers).
+6. **Update**, then a docs PR:
+   - the deploy hooks: run `deploy-production.yml` (wegrocery) and `deploy-hook.yml` (example brand) once; if a hook no longer answers, create a new one in the project and the maintainer puts its URL in `VERCEL_PRODUCTION_DEPLOY_HOOK` or `VERCEL_DEPLOY_HOOK`;
+   - `VERCEL_AUTOMATION_BYPASS_SECRET`, if the bypass key changed;
+   - the Console: `VERCEL_TOKEN` (a token of the Pro account, with expiry), and in its registry `vercel_team_id` and `vercel_team_slug` for every instance;
+   - `AGENTS.md` (CLI scope, staging URL), `docs/status.md`, `docs/operating-two-environments.md`;
+   - the cloud environment's allowed domains, if any `*.vercel.app` URL changed;
+   - **Maintainer**: delete the empty projects in the old account only after a week without problems.
+
+### Done when
+
+The four projects deploy from `flylabs-ai/*` in the Pro account, the `Deploy Health` runs are green on all of them, the nightly backup, invariants and restore test of the first production group are green for two nights, and the release of the next version runs from `flylabs-ai/wegrocery` with its tag and GitHub release.
 
 ---
 
@@ -89,7 +143,9 @@ The Console shows a "Conti" value for every live instance on a supported version
 
 ## WP2. Nightly backup and restore test for every instance
 
-### Private repository `flylabs-ai/wegrocery-fleet`
+### Private repository `flylabs-ai/wegrocery-backups`
+
+What it is, in short: `wegrocery` is public, so it cannot hold the list of paying groups nor the database passwords their backups need. This small private repository holds only that list and the backup jobs. Each night GitHub Actions runs, for every managed group, the same backup that `backup.yml` already does today for the first production group, encrypts the file and copies it to the backup folder; on Sunday it restores one of them as a test. The Console never sees the passwords: it only receives a signed "backup ok / failed" for its table.
 
 **Maintainer**: create the private repository under the `flylabs-ai` organization, with MFA required and the maintainer as the only admin. An agent then fills it with:
 
@@ -111,7 +167,7 @@ The Console shows a "Conti" value for every live instance on a supported version
   2. fetch its latest file;
   3. decrypt with the `BACKUP_AGE_KEY` secret (only this workflow's environment `restore` has it);
   4. create a throwaway branch in the restore Neon project with `neonctl` and `RESTORE_TEST_NEON_API_KEY`;
-  5. restore, count the main tables, and run the money invariants with the app's `scripts/check-invariants.mts`, from a checkout of `federicodecillia/wegrocery` at `main`;
+  5. restore, count the main tables, and run the money invariants with the app's `scripts/check-invariants.mts`, from a checkout of `flylabs-ai/wegrocery` at `main`;
   6. delete the branch in an `always()` step.
   The app's `restore-test.yml` is the model to copy.
 - `README.md` in English: what runs when, the secrets by name only, how to add an instance, and how to rotate a role.
@@ -141,7 +197,7 @@ Secrets, all set by the **Maintainer** and never by an agent:
 
 ### Console: create the role at provisioning, receive the report
 
-- `console/lib/provisioning/app-role.ts`: in the same step that creates `app_rw`, also create `backup_ro`, using the same builders, ported or imported as the Console already does for `app_rw`. Show its connection string **once** in the step's result, with the line "Copia questa stringa nel segreto `BACKUP_DB_URL_<SLUG>` della repo wegrocery-fleet: non viene salvata". Never store it.
+- `console/lib/provisioning/app-role.ts`: in the same step that creates `app_rw`, also create `backup_ro`, using the same builders, ported or imported as the Console already does for `app_rw`. Show its connection string **once** in the step's result, with the line "Copia questa stringa nel segreto `BACKUP_DB_URL_<SLUG>` della repo wegrocery-backups: non viene salvata". Never store it.
 - New route `console/app/api/backup-report/route.ts`, `POST`:
   - body `{ slug, ok, finishedAt }`;
   - signed with the same HMAC scheme as the stats (`<ts>.POST./api/backup-report`, 5 minute window) using `FLEET_REPORT_SECRET`, a new Console env var documented in `console/lib/env.ts`;
@@ -233,7 +289,7 @@ An admin of the demo downloads the file, the round trip test passes, and the gui
 
 ## WP5. `*.wegrocery.app` subdomains
 
-- **Maintainer**: buy `wegrocery.app` and put it on Vercel nameservers in the team that holds the projects. After WP6 that is the Pro team.
+- **Maintainer**: buy `wegrocery.app` and put it on Vercel nameservers in the team that holds the projects. After WP0 that is the Pro account.
 - Console:
   - the "Dominio" step proposes `<slug>.wegrocery.app` by default. It adds that exact domain to the instance's project, never a wildcard shared between projects, then updates `APP_BASE_URL` and redeploys from the GitHub source, as the step already does for custom domains;
   - a group's own domain stays possible and becomes the primary one.
@@ -246,36 +302,7 @@ An admin of the demo downloads the file, the round trip test passes, and the gui
 
 ---
 
-## WP6. Move the Vercel projects to the Pro team
-
-All of it is operations by the **Maintainer**. An agent prepares the checklist and verifies after each step. It is done on weekdays, before the first fee is invoiced, because Hobby forbids commercial use. **[default]** It comes after the Console's first real installation for the pilot.
-
-1. **Prepare**:
-   - the maintainer has a seat in the Pro team;
-   - the team's Vercel GitHub app can see `federicodecillia/wegrocery` and `federicodecillia/wegrocery-example-brand`;
-   - write an inventory per project (env var **names** per environment, domains, deploy hooks, integrations, protection settings, crons) in the maintainer's private notes, never in this repository.
-2. **Neon integration first**: the example brand and the Console have their databases in the Neon organization that Vercel manages, which is tied to the old team. Before transferring them, move those two databases to a normal Neon organization, or reinstall the integration in the Pro team and reconnect the existing databases, with `DATABASE_URL` set explicitly. The production group and the demo already use a normal Neon organization.
-3. **Trial on the example brand** (no real data): Settings, Transfer. Then a production deploy from the GitHub source, `/api/health`, a sign-in and an email.
-4. Then the **Console**, then the **demo**, then the **first production group last**, on a quiet weekday, after a manual Neon backup branch.
-5. **After each transfer**:
-   - a production deploy from the GitHub source;
-   - `/api/health` (or the `Deploy Health` workflow run for that commit);
-   - invariants and logs;
-   - a real sign-in;
-   - for the production group, a sandbox payment on staging.
-6. **Update**:
-   - `AGENTS.md`: the CLI scope and the staging URL;
-   - `docs/status.md`;
-   - the Console registry (`vercel_team_id`, `vercel_team_slug`);
-   - the Console's `VERCEL_TOKEN`, if the account changes;
-   - deploy hook secrets (`VERCEL_DEPLOY_HOOK`, `VERCEL_PRODUCTION_DEPLOY_HOOK`), if the hooks did not follow;
-   - the "Protection Bypass for Automation" secret `VERCEL_AUTOMATION_BYPASS_SECRET` and the staging Stripe sandbox endpoint, if they changed.
-
-Risks to check on the trial: Sensitive env vars must survive the transfer. `AUTH_SECRET` cannot be recovered; changing it closes every session and requires reconnecting Stripe in the app, because keys are sealed with it. Collect provider strings from the providers' dashboards beforehand.
-
----
-
-## WP7. Fleet rollout without a browser, with a canary
+## WP6. Fleet rollout without a browser, with a canary
 
 - Console migration `console/drizzle/0002_rollouts.sql` (and `_down`):
   - `rollouts (id, release_tag, commit_sha, status CHECK IN ('running','waiting_confirm','paused','failed','done'), created_at, created_by, observe_until timestamptz)`;
@@ -287,7 +314,7 @@ Risks to check on the trial: Sensitive env vars must survive the transfer. `AUTH
   2. observation pause, **[default]** 2 hours, during which health and the WP1 invariants are checked every tick;
   3. managed customers one at a time;
   4. the **first production group**, which **never starts by itself**: the rollout stops in `waiting_confirm` until the maintainer presses "Prosegui" in the Console, after the manual migration and backup, as today.
-- Each tick (`console/app/api/cron/rollout/route.ts`, every 5 minutes, Pro only) does at most one short action:
+- Each tick (`console/app/api/cron/rollout/route.ts`, every 5 minutes, possible since WP0) does at most one short action:
   - create a production deploy of the release commit via `gitSource`, as the wizard does;
   - or poll the deployment until `READY`;
   - or check `/api/health` for the expected version plus `/api/instance-invariants` all ok, and pending migrations from the signed stats.
