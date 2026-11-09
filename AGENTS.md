@@ -12,7 +12,7 @@ Guidance for every coding agent (Claude Code, Codex and others) working in this 
 
 ## Repository transfer preparation
 
-The target upstream is `flylabs-ai/wegrocery` (example brand: `flylabs-ai/wegrocery-example-brand`). WP0 A.1 prepares links and defaults before the transfer; the repositories have not moved yet. Release and UI-check guards temporarily accept the `flylabs-ai` owner and the current `federicodecillia/wegrocery` repository. The maintainer handles transfers and GitHub App access; remove the old guard only in the post-transfer cleanup PR. See [the phase 2 plan](./docs/2026-11-09-launch-phase2-fleet.md).
+The upstream is now `flylabs-ai/wegrocery` (public; example brand: `flylabs-ai/wegrocery-example-brand`, private). WP0 A.1 was released in 1.45.1 before the maintainer transferred both repositories on 2026-11-09. Post-transfer checks and Vercel reconnection remain pending; keep the main/staging merge/push freeze until reconnection is verified. Release and UI-check guards temporarily accept the `flylabs-ai` owner and the current `federicodecillia/wegrocery` repository. The maintainer handles transfers and GitHub App access; remove the old guard only in the post-transfer cleanup PR. See [the phase 2 plan](./docs/2026-11-09-launch-phase2-fleet.md).
 
 ## Context outside the repository
 

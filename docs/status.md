@@ -2,7 +2,7 @@
 
 The living snapshot of what is released, what waits on `staging` and what is planned. Any agent (Claude Code, Codex or another) reads it before starting and updates it in the same PR that changes the picture: a release, a migration applied somewhere, a plan approved or dropped. Keep it short; the detail lives in `CHANGELOG.md`, the dated plans in `docs/` and the PRs.
 
-Last updated: 2026-11-09 (release 1.45.1 verified).
+Last updated: 2026-11-09 (GitHub transfers verified; Neon/Vercel options proposed).
 
 ## Versions and migrations
 
@@ -15,9 +15,9 @@ Last updated: 2026-11-09 (release 1.45.1 verified).
 
 ## Waiting on `staging` for the next release
 
-Nothing awaiting a product release. Version 1.45.1 was released through PR #404 (merge commit `3015523`), staging fast-forwarded to that commit, and the example brand aligned (`0ed3d0e`). Public health endpoints on production, demo and example brand report `ok: true`, `db: true`, version `1.45.1`; staging Deploy Health passed before promotion. Manual backup and money invariants passed in run `42618843367`. No migrations or transfers were performed.
+Nothing awaiting a product release. Version 1.45.1 was released through PR #404 (merge commit `3015523`), staging fast-forwarded to that commit, and the example brand aligned (`0ed3d0e`). Public health endpoints on production, demo and example brand report `ok: true`, `db: true`, version `1.45.1`; staging Deploy Health passed before promotion. Manual backup and money invariants passed in run `42618843367`. No database migrations or Vercel transfers were performed as part of that release.
 
-WP0 A.1 is released: repository guards, Console defaults and public setup links are ready for the future `flylabs-ai` upstream. Next is the Maintainer-only GitHub transfer checklist in [the phase 2 plan](./2026-11-09-launch-phase2-fleet.md). Stop before those steps; post-transfer checks/cleanup and Vercel transfers are not done.
+WP0 A.1 is released. The maintainer has now transferred both repositories to `flylabs-ai`; the upstream remains public and example-brand private, verified through GitHub. Organization 2FA/Owner status and all-repository access for Vercel, Claude and Codex were confirmed by the maintainer. Post-transfer ruleset/secret-name/workflow checks, local remote cleanup and Vercel Git reconnection are not yet verified. Keep the merge/push freeze on `main` and `staging` until reconnection is cleared. No Vercel or database move is authorized by the new planning proposal.
 
 ## Released in 1.45.0, off by default
 
@@ -27,7 +27,7 @@ Still to do before a group turns on limited quantities with card payments: a Str
 
 ## Planned and in progress
 
-- Launch phase 2, "safe fleet": executable spec in `docs/2026-11-09-launch-phase2-fleet.md`. Work packages in order: WP0 (move the repositories to `flylabs-ai` and the Vercel projects to the Pro account, the maintainer wants it first), WP1 (invariants per instance), WP2 (backups and restore tests, private repo `flylabs-ai/wegrocery-backups`), WP3 (data export), WP4 (shared sender), WP5 (subdomains), WP6 (rollouts). One PR per work package to `staging`. Choices marked **[default]** stand unless the maintainer changes them; steps marked **Maintainer** (transfers, private repo, secrets, keys, domain) are done by him, so stop and ask when one blocks you. WP0 A.1 is released in 1.45.1. The maintainer next verifies organization 2FA/ownership, transfers both repositories, installs the GitHub Apps and reconnects Claude/Codex. Parts A.3/A.4 and B remain pending.
+- Launch phase 2, "safe fleet": executable spec in `docs/2026-11-09-launch-phase2-fleet.md`. Work packages in order: WP0 (move the repositories to `flylabs-ai` and the Vercel projects to the Pro account, the maintainer wants it first), WP1 (invariants per instance), WP2 (backups and restore tests, private repo `flylabs-ai/wegrocery-backups`), WP3 (data export), WP4 (shared sender), WP5 (subdomains), WP6 (rollouts). One PR per work package to `staging`. Choices marked **[default]** stand unless the maintainer changes them; steps marked **Maintainer** (transfers, private repo, secrets, keys, domain) are done by him, so stop and ask when one blocks you. WP0 A.1 is released in 1.45.1. GitHub transfers and app access were confirmed; parts A.3/A.4 and B remain pending. [Neon/Vercel isolation options](./2026-11-09-neon-vercel-isolation-plan.md) replace the old single-organization/direct-transfer default. The maintainer is open to both approaches and separate customer/Console boundaries; the exact option and execution are not approved.
 - Possible next steps, undecided: comments from members on the calendar and Home; moving more pieces (planned cycles) into the FlyLabs Kit.
 
 ## Known open items
