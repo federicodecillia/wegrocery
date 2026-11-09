@@ -23,7 +23,7 @@ The database is created for you on **Neon** during the deploy.
 
 ## 1. Deploy
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Ffedericodecillia%2Fwegrocery&project-name=wegrocery&repository-name=wegrocery&env=AUTH_SECRET%2CBOOTSTRAP_ADMIN_EMAIL%2CRESEND_API_KEY%2CMAIL_FROM%2CMIGRATE_ON_BUILD&envDefaults=%7B%22MIGRATE_ON_BUILD%22%3A%22true%22%7D&envDescription=AUTH_SECRET%3A%20run%20openssl%20rand%20-hex%2032.%20BOOTSTRAP_ADMIN_EMAIL%3A%20your%20address%2C%20it%20becomes%20the%20first%20admin.%20RESEND_API_KEY%20and%20MAIL_FROM%3A%20email%20from%20a%20domain%20verified%20on%20Resend.%20Keep%20MIGRATE_ON_BUILD%3Dtrue.&envLink=https%3A%2F%2Fgithub.com%2Ffedericodecillia%2Fwegrocery%2Fblob%2Fmain%2Fdocs%2Fself-hosting.md%232-the-variables-the-deploy-asks-for&stores=%5B%7B%22type%22%3A%22integration%22%2C%22protocol%22%3A%22storage%22%2C%22integrationSlug%22%3A%22neon%22%2C%22productSlug%22%3A%22neon%22%7D%5D)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fflylabs-ai%2Fwegrocery&project-name=wegrocery&repository-name=wegrocery&env=AUTH_SECRET%2CBOOTSTRAP_ADMIN_EMAIL%2CRESEND_API_KEY%2CMAIL_FROM%2CMIGRATE_ON_BUILD&envDefaults=%7B%22MIGRATE_ON_BUILD%22%3A%22true%22%7D&envDescription=AUTH_SECRET%3A%20run%20openssl%20rand%20-hex%2032.%20BOOTSTRAP_ADMIN_EMAIL%3A%20your%20address%2C%20it%20becomes%20the%20first%20admin.%20RESEND_API_KEY%20and%20MAIL_FROM%3A%20email%20from%20a%20domain%20verified%20on%20Resend.%20Keep%20MIGRATE_ON_BUILD%3Dtrue.&envLink=https%3A%2F%2Fgithub.com%2Fflylabs-ai%2Fwegrocery%2Fblob%2Fmain%2Fdocs%2Fself-hosting.md%232-the-variables-the-deploy-asks-for&stores=%5B%7B%22type%22%3A%22integration%22%2C%22protocol%22%3A%22storage%22%2C%22integrationSlug%22%3A%22neon%22%2C%22productSlug%22%3A%22neon%22%7D%5D)
 
 The button walks you through:
 
@@ -199,7 +199,7 @@ integration can give each preview its own database branch instead.
 ## Updating
 
 New versions are published on
-[github.com/federicodecillia/wegrocery](https://github.com/federicodecillia/wegrocery)
+[github.com/flylabs-ai/wegrocery](https://github.com/flylabs-ai/wegrocery)
 with notes in the CHANGELOG. Before updating, read
 [upgrading.md](upgrading.md): it lists, per version, the migrations, new
 variables and Stripe events.
@@ -209,7 +209,7 @@ so the first update needs one extra step to link it to WeGrocery's. From a
 clone of your repository:
 
 ```bash
-git remote add upstream https://github.com/federicodecillia/wegrocery.git
+git remote add upstream https://github.com/flylabs-ai/wegrocery.git
 git fetch upstream
 git merge -s ours --allow-unrelated-histories --no-edit upstream/main
 git read-tree -u --reset upstream/main

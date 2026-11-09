@@ -55,7 +55,7 @@ the group's GitHub), otherwise creating the project or deploying fails.
 | `NEON_API_KEY` | for provisioning | The operator's personal Neon API key. |
 | `CONSOLE_SHARED_MAIL_DOMAIN` | optional | A domain verified on the operator's Resend account, for groups without their own (`<slug>@domain`). |
 | `CONSOLE_SHARED_MAIL_DOMAIN_ID` | with the above | Its Resend domain id: the groups' sending keys are restricted to it. |
-| `WEGROCERY_REPO` | optional | Default `federicodecillia/wegrocery`. |
+| `WEGROCERY_REPO` | optional | Default `flylabs-ai/wegrocery`. |
 | `WEGROCERY_REPO_ID` | optional | Numeric GitHub repository id for Vercel's `gitSource`; read from the public GitHub API when unset. |
 | `GITHUB_TOKEN` | optional | Only raises the GitHub API rate limit (latest release, repository id). |
 

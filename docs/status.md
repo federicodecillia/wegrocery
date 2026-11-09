@@ -2,7 +2,7 @@
 
 The living snapshot of what is released, what waits on `staging` and what is planned. Any agent (Claude Code, Codex or another) reads it before starting and updates it in the same PR that changes the picture: a release, a migration applied somewhere, a plan approved or dropped. Keep it short; the detail lives in `CHANGELOG.md`, the dated plans in `docs/` and the PRs.
 
-Last updated: 2026-11-09 (release 1.45.0).
+Last updated: 2026-11-09 (1.45.1 release preparation; production remains 1.45.0).
 
 ## Versions and migrations
 
@@ -15,7 +15,7 @@ Last updated: 2026-11-09 (release 1.45.0).
 
 ## Waiting on `staging` for the next release
 
-Nothing yet.
+Release 1.45.1 is being prepared. WP0 part A, step 1 was merged in PR #401: release and UI-check guards accept the future `flylabs-ai` owner and the current repository; the Console defaults to `flylabs-ai/wegrocery`; contributor and self-hosting links point there. No transfer or migration has been performed. The maintainer authorized the release on 2026-11-09. Manual backup run `42618843367` on `main` passed, including money invariants. Production promotion is pending staging validation and release checks. The maintainer started the backup because the agent cannot dispatch workflows (GitHub 403); enabling autonomous backup dispatch is a separate access task.
 
 ## Released in 1.45.0, off by default
 
@@ -23,9 +23,9 @@ Launch phase 1 ([plan](./2026-11-07-launch-phase1.md)): terms and privacy accept
 
 Still to do before a group turns on limited quantities with card payments: a Stripe sandbox run on staging (a Checkout that holds the units, a late payment refunded when the product ran out).
 
-## Planned, not started
+## Planned and in progress
 
-- Launch phase 2, "safe fleet": per-instance backups, invariants and restore tests, rollouts driven by the Console's cron. Proposal only: no code until the maintainer approves it.
+- Launch phase 2, "safe fleet": executable spec in `docs/2026-11-09-launch-phase2-fleet.md`. Work packages in order: WP0 (move the repositories to `flylabs-ai` and the Vercel projects to the Pro account, the maintainer wants it first), WP1 (invariants per instance), WP2 (backups and restore tests, private repo `flylabs-ai/wegrocery-backups`), WP3 (data export), WP4 (shared sender), WP5 (subdomains), WP6 (rollouts). One PR per work package to `staging`. Choices marked **[default]** stand unless the maintainer changes them; steps marked **Maintainer** (transfers, private repo, secrets, keys, domain) are done by him, so stop and ask when one blocks you. WP0 A.1 is merged on staging; version 1.45.1 is being prepared. Stop before the Maintainer steps: release this preparation with explicit production approval, then the maintainer verifies organization 2FA/ownership, transfers both repositories, installs the GitHub Apps and reconnects Claude/Codex. Parts A.3/A.4 and B remain pending.
 - Possible next steps, undecided: comments from members on the calendar and Home; moving more pieces (planned cycles) into the FlyLabs Kit.
 
 ## Known open items

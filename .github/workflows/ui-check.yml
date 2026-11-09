@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      UI_CHECK_URL: ${{ vars.UI_CHECK_URL || (github.repository == 'federicodecillia/wegrocery' && 'https://wegrocery-demo.vercel.app' || '') }}
+      UI_CHECK_URL: ${{ vars.UI_CHECK_URL || ((github.repository_owner == 'flylabs-ai' || github.repository == 'federicodecillia/wegrocery') && 'https://wegrocery-demo.vercel.app' || '') }}
     steps:
       - name: Skip without a target
         id: target

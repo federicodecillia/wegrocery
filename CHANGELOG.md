@@ -24,6 +24,13 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ## [Unreleased]
 
+## [1.45.1] - 2026-11-09
+
+*Preparing the repository move to FlyLabs.*
+
+### Changed
+- [tech] 🔗 **Repository transfer preparation**: release and UI checks accept the future FlyLabs owner while retaining the current repository; Console defaults and setup links point to `flylabs-ai/wegrocery`. The transfer is still pending.
+
 ## [1.45.0] - 2026-11-09
 
 *Ready to open the group to new people: terms to accept, sign-up, a public page, member import and limited quantities, all off until an admin turns them on.*
@@ -858,6 +865,7 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
+[1.45.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.45.1
 [1.35.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.35.0
 [1.34.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.34.1
 [1.34.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.34.0
