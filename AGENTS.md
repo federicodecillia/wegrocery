@@ -10,6 +10,16 @@ Guidance for every coding agent (Claude Code, Codex and others) working in this 
 
 **Live**: gas.portamoneta.org
 
+## Context outside the repository
+
+Two agents work on this project, Claude Code and Codex, and neither sees the other's memory. What they share:
+
+- **This file** for rules and conventions, and [`docs/status.md`](./docs/status.md) for where the work stands (versions, migrations per installation, what waits on `staging`, what is planned). Read both before starting; update `docs/status.md` in the PR that changes the picture.
+- **The maintainer's private notes** for what cannot be in a public repository (Italian specs with group details, business and launch plans, operating notes, the maintainer's to-do list): the Obsidian vault next to the local clone, `../second_brain_Fede/01_Projects/wegrocery/` (start from `wegrocery.md`). Never copy anything from there into this repository; when a decision there changes how the code works, write it here or in a dated English plan in `docs/`.
+- **Skills**: `.claude/skills/` (Claude Code) and `.agents/skills/` (Codex, a link to the same folder) hold the same skills.
+
+At the end of a piece of work, update whichever of these changed: `docs/status.md` in the PR, and the private notes (`stato-e-backlog.md`) when a plan, a decision or a to-do moved.
+
 ## FlyLabs Kit
 
 This app follows the FlyLabs Playbook: https://github.com/flylabs-ai/flylabs-kit/blob/main/PLAYBOOK.md
@@ -31,7 +41,7 @@ Found in the review of 2026-10-14 (each line, its reason and its timing are in
 - 2.7 Done for the components: `Sheet` and `ConfirmDialog` are on Base UI Dialog, `Button` is shadcn's Button on Base UI (`buttonVariants`, variants `default`, `brand`, `accent`, `destructive`, `outline`, `ghost`), `Card` (`CardHeader`, `CardContent`, `CardFooter`), `Badge` (`badgeVariants`, variants `default`, `brand`, `accent`, `destructive`) and the Sonner `Toaster` (`components/ui/sonner.tsx`) follow shadcn, and the interface icons are lucide (the movement icons in `components/movement-icon.tsx` and the Statistiche chart stay hand-drawn, as the rule allows). The fields are shadcn too: `Input` (on Base UI Input), `Textarea`, `NativeSelect` (a real `<select>` with a lucide chevron) and `Label` (the uppercase caption; `labelClass` for a caption on a `<span>` or `<legend>`), all with their borders on `input`. What stays custom: checkboxes, radios and switches (native inputs with `accent-*`), file and colour inputs, the filter chips, and the hand-drawn domain icons above.
 - 4.4 Welcome card: the steps shown follow the settings; the ones the member's own rows already show as done (top-up or payment, an order, saved preferences, a family) carry "Già fatto" (`getWelcomeFacts`, `welcomeDone`), and the step they stopped at is `members.welcome_step` (migration 0036). The "Riprendi" bar on other pages still uses `sessionStorage`, per tab, on purpose.
 - 5.1 Integration tests run on a throwaway Neon branch that needs `NEON_API_KEY` (skipped on forks), not on a plain Postgres: the Neon HTTP driver needs Neon's proxy. This stays.
-- 6.3 and 9.5 Claude runs releases end to end, production migrations included, after a green manual backup and with Federico's explicit ok for each production operation, instead of handing him commands: Federico's choice (2026-10-07). This stays.
+- 6.3 and 9.5 The agent (Claude Code or Codex) runs releases end to end, production migrations included, after a green manual backup and with Federico's explicit ok for each production operation, instead of handing him commands: Federico's choice (2026-10-07). This stays.
 - 6.5 A weekly job (`.github/workflows/restore-test.yml`) restores the latest dump into a throwaway Neon branch, counts the main tables and runs the money invariants on it. It is skipped until Federico sets `RESTORE_TEST_NEON_API_KEY` (a Neon key scoped to the restore project; CI's `NEON_API_KEY` is scoped to the CI project) and the variable `RESTORE_TEST_NEON_PROJECT_ID` (a project of the same organisation).
 - 7.6 Done for notification emails (idempotency key, one-click unsubscribe, see "Email compliance"). Sign-in emails and the supplier and family emails carry no unsubscribe on purpose.
 - 7.8 Done: `usage_events` (migration 0037) counts a fixed list of events per day, no member id, no text, nothing in the demo (`lib/usage/events.ts`, shown in Admin → Statistiche); Vercel Analytics and Speed Insights are gone.
