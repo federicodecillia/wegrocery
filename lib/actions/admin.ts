@@ -85,6 +85,8 @@ import { getStripe } from "@/lib/payments/stripe";
 import { isAboveMaxBalance } from "@/lib/payments/settings";
 import { DEFAULT_ACCESS_LEVEL, normalizeAccessLevel, normalizeRole, type AccessLevel } from "@/lib/roles";
 import { formatDeadline } from "@/lib/i18n/deadline";
+import { applyProductEmojiEverywhere, loadSavedProductEmojis } from "@/lib/db/product-emoji";
+import { productEmojiKey } from "@/lib/products/emoji";
 
 function ledgerAmountErrorMessage(code: LedgerAmountError): string {
   switch (code) {
@@ -1128,6 +1130,9 @@ export async function adminUpdateCycleProduct(
     unitPrice: number;
     pricePerKg?: number | null;
     notes?: string;
+    // The icon picked in the form: when it changes, every product with this
+    // name gets it (catalogues and cycles, applyProductEmojiEverywhere).
+    emoji?: string;
     // Limited quantities, sent only when the group has them on: the text typed
     // in "Disponibili" and "Massimo per socio" (empty = no limit).
     maxQuantity?: string;
@@ -1148,6 +1153,13 @@ export async function adminUpdateCycleProduct(
       data.pricePerKg != null && !Number.isNaN(data.pricePerKg)
         ? data.pricePerKg.toFixed(2)
         : null;
+    const [before] = await db
+      .select({ emoji: products.emoji })
+      .from(products)
+      .where(eq(products.productId, productId))
+      .limit(1);
+    const newEmoji = data.emoji?.trim() || null;
+    const emojiChanged = newEmoji !== null && newEmoji !== (before?.emoji?.trim() || null);
     await db
       .update(products)
       .set({
@@ -1159,8 +1171,10 @@ export async function adminUpdateCycleProduct(
         unitPrice: data.unitPrice.toFixed(2),
         pricePerKg,
         notes: data.notes || null,
+        ...(newEmoji ? { emoji: newEmoji } : {}),
       })
       .where(eq(products.productId, productId));
+    const iconsChanged = emojiChanged ? await applyProductEmojiEverywhere(db, data.name, newEmoji) : null;
     if (limits) {
       const set = await setProductLimits(db, {
         productId,
@@ -1170,9 +1184,13 @@ export async function adminUpdateCycleProduct(
       if (!set.ok) return { error: t.admin.products.stock.belowSold(set.sold) };
     }
 
-    await writeAudit(db, admin.email, "update_cycle_product", "product", productId, data);
+    await writeAudit(db, admin.email, "update_cycle_product", "product", productId, {
+      ...data,
+      ...(iconsChanged ? { iconsChanged } : {}),
+    });
     revalidatePath("/admin");
     revalidatePath("/ordine");
+    if (iconsChanged) revalidatePath("/", "layout");
     return {};
   } catch (e: unknown) {
     return { error: e instanceof Error ? e.message : t.errors.genericError };
@@ -2751,6 +2769,10 @@ export type UpsertCatalogProductInput = {
   notes?: string;
   category?: string;
   emoji?: string;
+  // True when the admin picked the icon in the form (not the one suggested
+  // from the name): only then it becomes the icon of every product with this
+  // name (applyProductEmojiEverywhere).
+  emojiPicked?: boolean;
 };
 
 export async function adminUpsertCatalogProduct(data: UpsertCatalogProductInput): Promise<{error?: string; archived?: boolean}> {
@@ -2758,6 +2780,18 @@ export async function adminUpsertCatalogProduct(data: UpsertCatalogProductInput)
     const admin = await requireOrderManager();
     const db = getDb();
     const now = new Date();
+    const picked = data.emojiPicked === true ? data.emoji?.trim() || null : null;
+    // An icon the admin did not pick: the one the group already uses for
+    // this name wins over the form's suggestion from the name.
+    if (!picked) {
+      const saved = (await loadSavedProductEmojis(db, [data.name])).get(productEmojiKey(data.name));
+      if (saved && !data.catalogProductId) data = { ...data, emoji: saved };
+    }
+    const spreadIcon = async () => {
+      if (!picked) return;
+      const changed = await applyProductEmojiEverywhere(db, data.name, picked);
+      if (changed.catalog + changed.cycles > 0) revalidatePath("/", "layout");
+    };
 
     if (data.catalogProductId) {
       const [existing] = await db
@@ -2793,6 +2827,7 @@ export async function adminUpsertCatalogProduct(data: UpsertCatalogProductInput)
           createdAt: now,
         });
         await writeAudit(db, admin.email, "upsert_catalog_product", "catalog", newId, data);
+        await spreadIcon();
         revalidatePath("/admin");
         return { archived: true };
       } else {
@@ -2812,6 +2847,7 @@ export async function adminUpsertCatalogProduct(data: UpsertCatalogProductInput)
           })
           .where(eq(supplierProducts.catalogProductId, data.catalogProductId));
         await writeAudit(db, admin.email, "update_catalog_product", "catalog", data.catalogProductId, data);
+        await spreadIcon();
         revalidatePath("/admin");
         return {};
       }
@@ -2837,6 +2873,7 @@ export async function adminUpsertCatalogProduct(data: UpsertCatalogProductInput)
         createdAt: now,
       });
       await writeAudit(db, admin.email, "create_catalog_product", "catalog", newId, data);
+      await spreadIcon();
       revalidatePath("/admin");
       return {};
     }

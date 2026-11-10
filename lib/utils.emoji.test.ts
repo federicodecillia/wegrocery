@@ -60,6 +60,14 @@ describe("getProductEmoji", () => {
     expect(getProductEmoji("Mandarino tardivo")).toBe("🍊");
     expect(getProductEmoji("Olive taggiasche")).toBe("🫒");
   });
+
+  it("recognizes common cheeses by name", () => {
+    for (const name of ["Gorgonzola dolce", "Stracchino", "Taleggio DOP", "Fontina", "Asiago fresco", "Provola affumicata", "Scamorza", "Caciocavallo", "Robiola", "Grana Padano", "Burrata", "Primo sale", "Formaggio di latte crudo"]) {
+      expect(getProductEmoji(name)).toBe("🧀");
+    }
+    expect(getProductEmoji("Latte intero")).toBe("🥛");
+    expect(getProductEmoji("Melagrana")).toBe("❤️");
+  });
 });
 
 describe("memberProductEmoji", () => {

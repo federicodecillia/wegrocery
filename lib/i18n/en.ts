@@ -1339,7 +1339,7 @@ export const en: Strings = {
       helpPrezzo: "What the member pays for ONE unit (e.g. €5 for the 2kg bag). Decimals with comma or dot.",
       helpPrezzoKg: "Optional: price per kg as a reference (e.g. €2.50/kg), shown to members next to the price. Handy for weight-based products; leave it empty for items sold by the piece or pack.",
       helpCategoria: "Used to group products in the order form. Choose from the list or add a new one.",
-      helpIcona: "Emoji shown next to the product. Click to choose or search.",
+      helpIcona: "Emoji shown next to the product. Click to choose or search. The one you pick goes to every product with this name, in the catalogue and in the cycles, and the next imports keep it.",
       helpNote: 'Free-text notes, shown to members. E.g. "Greenhouse-grown", "Consume within 3 days".',
       stock: {
         maxQuantity: "Available",

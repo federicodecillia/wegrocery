@@ -8,7 +8,6 @@ import { getDb } from "@/lib/db/client";
 import { supplierProducts, auditLog, suppliers } from "@/lib/db/schema";
 import {
   getProductEmoji,
-  getProductEmojiOrNull,
   guessProductCategory,
   isGenericCategoryLabel,
 } from "@/lib/utils";
@@ -19,6 +18,8 @@ import { parsePriceCell, resolvePricePerKg } from "@/lib/csv/pack-weight";
 import { upsertCycleProducts } from "@/lib/db/cycle-products";
 import { parseLimitCell, setProductLimits } from "@/lib/products/stock";
 import { decodeUploadBase64 } from "@/lib/upload-limit";
+import { isChosenEmoji, productEmojiKey, resolveProductEmoji } from "@/lib/products/emoji";
+import { applyProductEmojiEverywhere, loadSavedProductEmojis } from "@/lib/db/product-emoji";
 
 function genId(prefix: string): string {
   return `${prefix}_${crypto.randomUUID().replace(/-/g, "").slice(0, 16)}`;
@@ -47,6 +48,11 @@ export async function adminImportProductsCsv(supplierId: string, csvText: string
     const header = lines[0].toLowerCase();
     const usesLegacyLayout = header.includes("unità") || header.includes("unita");
 
+    const savedEmojis = await loadSavedProductEmojis(
+      db,
+      rows.map((r) => r.split(/[;,]/)[0]?.trim().replace(/^"(.*)"$/, "$1") ?? ""),
+    );
+
     for (const row of rows) {
       // Robust parsing: try semicolon first (common in Italian Excel), then comma
       let columns = row.split(";").map(c => c.trim().replace(/^"(.*)"$/, '$1'));
@@ -72,7 +78,7 @@ export async function adminImportProductsCsv(supplierId: string, csvText: string
         unit = columns[3] || null;
         unitPriceStr = (columns[4] || "").replace(",", ".");
         category = columns[5] || null;
-        emoji = columns[6] || getProductEmoji(name);
+        emoji = resolveProductEmoji(name, columns[6], savedEmojis.get(productEmojiKey(name))).emoji;
         notes = columns[7] || null;
       } else {
         // New: Nome; Varietà; Formato; Prezzo; Prezzo/kg; Categoria; Icona; Note
@@ -80,7 +86,7 @@ export async function adminImportProductsCsv(supplierId: string, csvText: string
         const ppk = (columns[4] || "").replace(",", ".");
         pricePerKgStr = ppk && !isNaN(parseFloat(ppk)) ? parseFloat(ppk).toFixed(2) : null;
         category = columns[5] || null;
-        emoji = columns[6] || getProductEmoji(name);
+        emoji = resolveProductEmoji(name, columns[6], savedEmojis.get(productEmojiKey(name))).emoji;
         notes = columns[7] || null;
       }
 
@@ -151,6 +157,7 @@ export async function adminImportProductsXlsx(supplierId: string, base64: string
     const rows = await parseProductTemplate(buf);
     if (rows.length === 0) return { error: t.errors.csvInvalid };
 
+    const savedEmojis = await loadSavedProductEmojis(db, rows.map((r) => r.name));
     const values = rows.map((r) => ({
       catalogProductId: genId("cp"),
       supplierId,
@@ -161,7 +168,7 @@ export async function adminImportProductsXlsx(supplierId: string, base64: string
       unitPrice: r.unitPrice,
       pricePerKg: r.pricePerKg,
       category: r.category,
-      emoji: r.emoji ?? getProductEmoji(r.name),
+      emoji: resolveProductEmoji(r.name, r.emoji, savedEmojis.get(productEmojiKey(r.name))).emoji,
       notes: r.notes,
       active: true,
       createdAt: now,
@@ -298,6 +305,7 @@ function resolveRow(
   mapping: Partial<Record<TargetField, number>>,
   emojiOverride: string | undefined,
   ppkOptions: PricePerKgOptions,
+  savedEmojis?: ReadonlyMap<string, string>,
 ): { ok: true; row: WizardRow } | { ok: false; reason: string } {
   void columns;
   const name = pickCell(raw, mapping.name);
@@ -315,8 +323,11 @@ function resolveRow(
     ...ppkOptions,
   }).value;
 
-  const autoEmoji = getProductEmojiOrNull(name);
-  const emoji = (emojiOverride && emojiOverride.trim()) || autoEmoji || "🛒";
+  const { emoji, source: emojiSource } = resolveProductEmoji(
+    name,
+    emojiOverride,
+    savedEmojis?.get(productEmojiKey(name)),
+  );
 
   // Category: the deterministic guess from the name wins whenever it
   // recognizes the product, so the same product always lands in the same
@@ -344,7 +355,7 @@ function resolveRow(
       category,
       categoryGuessed: guessedCategory !== null,
       emoji,
-      emojiAutoMatched: !emojiOverride && autoEmoji !== null,
+      emojiAutoMatched: emojiSource === "name",
       notes: pickCell(raw, mapping.notes) || null,
       maxQuantity: pickLimit(raw, mapping.maxQuantity, 0, 99999),
       maxPerMember: pickLimit(raw, mapping.maxPerMember, 1, 9999),
@@ -358,6 +369,8 @@ function dedupKey(name: string, variant: string | null, format: string | null): 
     .join("|");
 }
 
+type CatalogHit = Awaited<ReturnType<typeof loadExistingCatalogForSupplier>> extends Map<string, infer V> ? V : never;
+
 async function loadExistingCatalogForSupplier(supplierId: string) {
   const db = getDb();
   const rows = await db
@@ -368,6 +381,7 @@ async function loadExistingCatalogForSupplier(supplierId: string) {
       format: supplierProducts.format,
       unitPrice: supplierProducts.unitPrice,
       pricePerKg: supplierProducts.pricePerKg,
+      emoji: supplierProducts.emoji,
     })
     .from(supplierProducts)
     .where(eq(supplierProducts.supplierId, supplierId));
@@ -473,6 +487,12 @@ export async function adminApplySupplierListingImport(
     // 2. resolve rows and split by action
     const existing = await loadExistingCatalogForSupplier(supplierId);
     const selected = new Set(input.selectedIndexes);
+    // The icons the group already uses for these names: an import keeps them
+    // unless the admin picks another one in the preview.
+    const savedEmojis = await loadSavedProductEmojis(
+      db,
+      input.selectedIndexes.map((i) => pickCell(input.rows[i] ?? [], input.mapping.name)),
+    );
 
     type Insert = {
       catalogProductId: string;
@@ -482,29 +502,43 @@ export async function adminApplySupplierListingImport(
       catalogProductId: string;
       row: WizardRow;
     };
+    type Skip = {
+      hit: CatalogHit;
+      row: WizardRow;
+    };
     const inserts: Insert[] = [];
     const updates: Update[] = [];
+    const skippedRows: Skip[] = [];
+    // Icons the admin picked in the preview, by product name (last pick wins).
+    const pickedEmojis = new Map<string, { name: string; emoji: string }>();
     let skipped = 0;
     let invalid = 0;
 
     for (let i = 0; i < input.rows.length; i++) {
       if (!selected.has(i)) continue;
-      const resolved = resolveRow(input.rows[i], i, input.columns, input.mapping, input.emojiOverrides[i], ppkOptions);
+      const override = input.emojiOverrides[i]?.trim() || undefined;
+      const resolved = resolveRow(input.rows[i], i, input.columns, input.mapping, override, ppkOptions, savedEmojis);
       if (!resolved.ok) {
         invalid++;
         continue;
       }
       const row = resolved.row;
+      if (override) pickedEmojis.set(productEmojiKey(row.name), { name: row.name, emoji: override });
       const key = dedupKey(row.name, row.variant, row.format);
       const hit = existing.get(key);
+      // The same product already in this supplier's catalogue keeps its own
+      // icon, unless the admin picked one in the preview.
+      if (hit && !override && isChosenEmoji(hit.emoji)) row.emoji = hit.emoji.trim();
       if (!hit) {
         inserts.push({ catalogProductId: genId("cp"), row });
       } else if (hit.unitPrice === row.unitPrice && (hit.pricePerKg ?? null) === row.pricePerKg) {
         skipped++;
+        skippedRows.push({ hit, row });
       } else if (input.updatePriceOnDuplicate) {
         updates.push({ catalogProductId: hit.catalogProductId, row });
       } else {
         skipped++;
+        skippedRows.push({ hit, row });
       }
     }
 
@@ -546,6 +580,20 @@ export async function adminApplySupplierListingImport(
       );
       await db.batch(updateStatements as [(typeof updateStatements)[number], ...typeof updateStatements]);
     }
+    // A skipped row (same price) still fixes a catalogue icon left on the
+    // cart when the group already uses a real one for that name.
+    const iconFixes = skippedRows.filter(
+      ({ hit, row }) => isChosenEmoji(row.emoji) && (hit.emoji ?? "").trim() !== row.emoji,
+    );
+    if (iconFixes.length > 0) {
+      const iconStatements = iconFixes.map(({ hit, row }) =>
+        db
+          .update(supplierProducts)
+          .set({ emoji: row.emoji })
+          .where(eq(supplierProducts.catalogProductId, hit.catalogProductId)),
+      );
+      await db.batch(iconStatements as [(typeof iconStatements)[number], ...typeof iconStatements]);
+    }
 
     // 4. optionally push the same rows into the chosen cycle
     let addedToCycle = 0;
@@ -565,43 +613,39 @@ export async function adminApplySupplierListingImport(
         category: row.category,
         emoji: row.emoji,
       }));
-      // include even unchanged rows the user explicitly selected, so the
-      // "skipped" ones still land in the cycle if missing there
-      if (input.updatePriceOnDuplicate === false || true) {
-        // load every catalog row matching the user's selection so the cycle
-        // can be seeded from the full picked set, not just inserts+updates
-        const allKeys = new Set<string>();
-        for (let i = 0; i < input.rows.length; i++) {
-          if (!selected.has(i)) continue;
-          const resolved = resolveRow(input.rows[i], i, input.columns, input.mapping, input.emojiOverrides[i], ppkOptions);
-          if (!resolved.ok) continue;
-          allKeys.add(dedupKey(resolved.row.name, resolved.row.variant, resolved.row.format));
-        }
-        // pull skipped rows from the catalog so they go into the cycle too
-        for (const [key, hit] of existing.entries()) {
-          if (!allKeys.has(key)) continue;
-          if (cycleRows.some((r) => dedupKey(r.name, r.variant, r.format) === key)) continue;
-          cycleRows.push({
-            name: hit.name,
-            variant: hit.variant,
-            format: hit.format,
-            unitPrice: hit.unitPrice,
-            pricePerKg: hit.pricePerKg,
-            unit: null,
-            supplier: null,
-            supplierId,
-            notes: null,
-            category: null,
-            emoji: getProductEmoji(hit.name),
-          });
-        }
+      // Rows skipped in the catalogue (same price) still land in the cycle
+      // the admin picked, at the catalogue's price, with the row's icon.
+      for (const { hit, row } of skippedRows) {
+        const key = dedupKey(hit.name, hit.variant, hit.format);
+        if (cycleRows.some((r) => dedupKey(r.name, r.variant, r.format) === key)) continue;
+        cycleRows.push({
+          name: hit.name,
+          variant: hit.variant,
+          format: hit.format,
+          unitPrice: hit.unitPrice,
+          pricePerKg: hit.pricePerKg,
+          unit: null,
+          supplier: null,
+          supplierId,
+          notes: null,
+          category: null,
+          emoji: row.emoji,
+        });
       }
       await upsertCycleProducts(db, input.cycleId, cycleRows);
       addedToCycle = cycleRows.length;
       ({ limitsSet, limitsBelowSold } = await applyFileLimits(db, input, selected, ppkOptions));
     }
 
-    // 5. audit + revalidate
+    // 5. an icon picked in the preview becomes the icon of every product with
+    // that name: other suppliers' catalogues and every cycle, this one too.
+    let iconsChanged = 0;
+    for (const { name, emoji } of pickedEmojis.values()) {
+      const changed = await applyProductEmojiEverywhere(db, name, emoji);
+      iconsChanged += changed.catalog + changed.cycles;
+    }
+
+    // 6. audit + revalidate
     await db.insert(auditLog).values({
       auditId: crypto.randomUUID(),
       userEmail: admin.email,
@@ -617,12 +661,16 @@ export async function adminApplySupplierListingImport(
         addedToCycle,
         limitsSet,
         limitsBelowSold,
+        iconsPicked: pickedEmojis.size,
+        iconsChanged,
       }),
       createdAt: now,
     });
 
     revalidatePath("/admin");
     revalidatePath("/ordine");
+    // A changed icon shows on Home, history, calendar and the public page too.
+    if (iconsChanged > 0) revalidatePath("/", "layout");
     return {
       data: {
         added: inserts.length,
@@ -636,5 +684,20 @@ export async function adminApplySupplierListingImport(
     };
   } catch (e) {
     return { error: e instanceof Error ? e.message : t.errors.importApplyError };
+  }
+}
+
+// The icons the group already uses for these product names (keyed by
+// productEmojiKey), so the import preview shows the icon the import will keep.
+export async function adminSavedProductEmojis(
+  names: string[],
+): Promise<{ data?: Record<string, string>; error?: string }> {
+  try {
+    await requireOrderManager();
+    const list = Array.isArray(names) ? names.filter((n) => typeof n === "string").slice(0, 5000) : [];
+    const saved = await loadSavedProductEmojis(getDb(), list);
+    return { data: Object.fromEntries(saved) };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : t.errors.genericError };
   }
 }
