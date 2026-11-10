@@ -3,6 +3,7 @@ import { getDb } from "@/lib/db/client";
 import { products } from "@/lib/db/schema";
 import { guessProductCategory } from "@/lib/utils";
 import { productIdentityKey } from "@/lib/products/cycle-order";
+import { isChosenEmoji } from "@/lib/products/emoji";
 
 function genId(prefix: string): string {
   return `${prefix}_${crypto.randomUUID().replace(/-/g, "").slice(0, 16)}`;
@@ -81,7 +82,9 @@ export async function upsertCycleProducts(
           category: guessedCategory ?? (np.category || existing.category),
           supplier: np.supplier || existing.supplier,
           supplierId: np.supplierId ?? existing.supplierId,
-          emoji: np.emoji || existing.emoji,
+          // An icon already chosen for this product stays: an admin's pick
+          // reaches every product through applyProductEmojiEverywhere.
+          emoji: isChosenEmoji(existing.emoji) ? existing.emoji : np.emoji || existing.emoji,
           active: true,
         })
         .where(eq(products.productId, existing.productId));
