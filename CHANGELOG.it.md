@@ -31,6 +31,7 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ### Modificato
 - 📅 **Calendario in Home come quello completo.** Il mese in Home (da computer) usa le stesse icone del Calendario ordini: cestino per l'apertura, lucchetto per l'ultimo giorno, pacco per il ritiro, oggi in un cerchio pieno, e la legenda sotto.
+- 🗓️ **Form del ciclo più ordinato.** Le date stanno insieme come una linea del tempo: apertura e chiusura affiancate da tablet e PC, poi le date indicative e i ritiri, e solo dopo spedizione e spese. Testi di aiuto più brevi e pulsanti più facili da toccare.
 
 ## [1.45.1] - 9 novembre 2026
 
