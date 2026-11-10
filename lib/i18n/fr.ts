@@ -1105,13 +1105,13 @@ export const fr: Strings = {
       whenPlanned: "Plus tard",
       plannedHint: (auto: boolean): string =>
         auto
-          ? "Le cycle est programmé : les membres le voient dans le calendrier, avec ses dates et les produits que vous ajoutez. Les commandes s'ouvrent seules le matin du jour prévu, sauf si les dates sont indicatives ; vous pouvez les ouvrir plus tôt avec **Ouvrir les commandes**."
-          : "Le cycle est programmé : les membres le voient dans le calendrier, avec ses dates et les produits que vous ajoutez, mais ne commandent qu'après que vous avez touché **Ouvrir les commandes**.",
+          ? "Les membres voient le cycle dans le calendrier. Les commandes s'ouvrent seules le matin de l'ouverture ; vous pouvez les ouvrir plus tôt avec **Ouvrir les commandes**."
+          : "Les membres voient le cycle dans le calendrier, mais ne commandent qu'une fois que vous avez touché **Ouvrir les commandes**.",
       orderOpenAtLabel: "Ouverture des commandes prévue *",
       tentativeLabel: "Dates indicatives",
-      tentativeHint: "Dans le calendrier les membres voient que les dates peuvent encore changer. Avec des dates indicatives le cycle ne s'ouvre pas seul : c'est vous qui l'ouvrez.",
+      tentativeHint: "Dans le calendrier les dates apparaissent provisoires et le cycle ne s'ouvre pas seul.",
     pickupTentativeLabel: "Retrait à confirmer",
-    pickupTentativeHint: "Les membres lisent la date comme prévue. Décochez-la quand le fournisseur la confirme : ceux qui ont commandé reçoivent une notification.",
+    pickupTentativeHint: "Décochez-la quand le fournisseur confirme : ceux qui ont commandé reçoivent un avis.",
       cycleCreatedPlanned: "Cycle programmé",
       openPlannedButton: "Ouvrir les commandes",
       openPlannedTitle: "Ouvrir les commandes maintenant ?",

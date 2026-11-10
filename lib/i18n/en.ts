@@ -1105,13 +1105,13 @@ export const en: Strings = {
       whenPlanned: "Later",
       plannedHint: (auto: boolean): string =>
         auto
-          ? "The cycle is planned: members see it in the calendar, with its dates and the products you add. The orders open by themselves on the morning of the planned day, unless the dates are tentative; you can open them earlier with **Open the orders**."
-          : "The cycle is planned: members see it in the calendar, with its dates and the products you add, but can order only after you tap **Open the orders**.",
+          ? "Members see the cycle in the calendar. The orders open by themselves on the morning of the opening; you can open them earlier with **Open the orders**."
+          : "Members see the cycle in the calendar, but can order only once you tap **Open the orders**.",
       orderOpenAtLabel: "Planned order opening *",
       tentativeLabel: "Tentative dates",
-      tentativeHint: "In the calendar members see that the dates may still change. With tentative dates the cycle does not open by itself: you open it.",
+      tentativeHint: "In the calendar the dates show as provisional and the cycle does not open by itself.",
     pickupTentativeLabel: "Pickup to be confirmed",
-    pickupTentativeHint: "Members read the date as expected. Untick it when the supplier confirms it: those who ordered get a notification.",
+    pickupTentativeHint: "Untick it when the supplier confirms: whoever ordered gets a notice.",
       cycleCreatedPlanned: "Cycle planned",
       openPlannedButton: "Open the orders",
       openPlannedTitle: "Open the orders now?",

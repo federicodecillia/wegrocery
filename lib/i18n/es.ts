@@ -1105,13 +1105,13 @@ export const es: Strings = {
       whenPlanned: "Más adelante",
       plannedHint: (auto: boolean): string =>
         auto
-          ? "El ciclo queda programado: los socios lo ven en el calendario, con sus fechas y los productos que añadas. Los pedidos se abren solos la mañana del día previsto, si las fechas no son orientativas; puedes abrirlos antes con **Abrir los pedidos**."
-          : "El ciclo queda programado: los socios lo ven en el calendario, con sus fechas y los productos que añadas, pero solo pueden pedir cuando pulses **Abrir los pedidos**.",
+          ? "Los socios ven el ciclo en el calendario. Los pedidos se abren solos la mañana de la apertura; puedes abrirlos antes con **Abrir los pedidos**."
+          : "Los socios ven el ciclo en el calendario, pero solo pueden pedir cuando pulses **Abrir los pedidos**.",
       orderOpenAtLabel: "Apertura de pedidos prevista *",
       tentativeLabel: "Fechas orientativas",
-      tentativeHint: "En el calendario los socios ven que las fechas aún pueden cambiar. Con fechas orientativas el ciclo no se abre solo: lo abres tú.",
+      tentativeHint: "En el calendario las fechas aparecen como provisionales y el ciclo no se abre solo.",
     pickupTentativeLabel: "Recogida por confirmar",
-    pickupTentativeHint: "Los socios leen la fecha como prevista. Desmárcalo cuando el proveedor la confirme: quien ha pedido recibe una notificación.",
+    pickupTentativeHint: "Desmárcalo cuando el proveedor confirme: quien ha pedido recibe un aviso.",
       cycleCreatedPlanned: "Ciclo programado",
       openPlannedButton: "Abrir los pedidos",
       openPlannedTitle: "¿Abrir los pedidos ahora?",

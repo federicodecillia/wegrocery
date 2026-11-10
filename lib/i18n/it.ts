@@ -1107,13 +1107,13 @@ export const it = {
       whenPlanned: "Più avanti",
       plannedHint: (auto: boolean): string =>
         auto
-          ? "Il ciclo va in programma: i soci lo vedono nel calendario, con le date e i prodotti che aggiungi. Gli ordini si aprono da soli la mattina del giorno previsto, se le date non sono indicative; puoi aprirli prima con **Apri gli ordini**."
-          : "Il ciclo va in programma: i soci lo vedono nel calendario, con le date e i prodotti che aggiungi, ma ordinano solo dopo che premi **Apri gli ordini**.",
+          ? "I soci vedono il ciclo nel calendario. Gli ordini si aprono da soli la mattina dell'apertura; puoi aprirli prima con **Apri gli ordini**."
+          : "I soci vedono il ciclo nel calendario, ma ordinano solo quando premi **Apri gli ordini**.",
       orderOpenAtLabel: "Apertura ordini prevista *",
       tentativeLabel: "Date indicative",
-      tentativeHint: "Nel calendario i soci vedono che le date possono ancora cambiare. Con le date indicative il ciclo non si apre da solo: lo apri tu.",
+      tentativeHint: "Nel calendario le date risultano provvisorie e il ciclo non si apre da solo.",
     pickupTentativeLabel: "Ritiro da confermare",
-    pickupTentativeHint: "I soci leggono la data come prevista. Togli la spunta quando il fornitore la conferma: chi ha ordinato riceve una notifica.",
+    pickupTentativeHint: "Togli la spunta quando il fornitore conferma: chi ha ordinato riceve un avviso.",
       cycleCreatedPlanned: "Ciclo messo in programma",
       openPlannedButton: "Apri gli ordini",
       openPlannedTitle: "Aprire gli ordini adesso?",
