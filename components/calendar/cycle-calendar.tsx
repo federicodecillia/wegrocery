@@ -511,7 +511,7 @@ function CycleDetail({ entry, span, today, alerted }: { entry: CalendarEntry; sp
           </div>
         </div>
         <ul className="space-y-2.5">
-          {opens && row("opens", span.open, "neutral", KIND_ICON.opens, c.opensAt(formatLongDay(opens.at), formatTime(opens.at)))}
+          {opens && row("opens", span.open, "neutral", KIND_ICON.opens, c.opensAt(formatLongDay(opens.at), entry.state === "planned" ? undefined : formatTime(opens.at)))}
           {deadline &&
             row(
               "closes",

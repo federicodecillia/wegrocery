@@ -4,7 +4,7 @@ import { confirm } from "@/components/ui/confirm-dialog";
 import { useState, useTransition, useEffect, useCallback } from "react";
 import { toast } from "@/components/ui/toast";
 import { Sheet } from "@/components/ui/sheet";
-import { formatDeadline, formatPickupSlot } from "@/lib/i18n/deadline";
+import { formatDeadline, formatLongDay, formatPickupSlot } from "@/lib/i18n/deadline";
 import { t } from "@/lib/i18n";
 import { formatMoney, formatHandlingFee } from "@/lib/i18n/format";
 import {
@@ -179,7 +179,7 @@ export function CycleFacts({ cycle, suppliers }: { cycle: SerializedCycle; suppl
       {cycle.status === "planned" && cycle.orderOpenAt && (
         <div>
           {t.fields.orderOpenDate}:{" "}
-          <span className="font-semibold text-foreground">{formatDeadline(cycle.orderOpenAt)}</span>
+          <span className="font-semibold text-foreground">{formatLongDay(cycle.orderOpenAt)}</span>
         </div>
       )}
       {cycle.orderCloseAt && (
@@ -689,7 +689,7 @@ export function EditCycleForm({
   // Prefill in app-zone wall time: slicing the ISO string would show UTC.
   const closeAtLocal = utcToZonedLocalInput(cycle.orderCloseAt);
   const planned = cycle.status === "planned";
-  const openAtLocal = utcToZonedLocalInput(cycle.orderOpenAt ?? null);
+  const openAtLocal = utcToZonedLocalInput(cycle.orderOpenAt ?? null).slice(0, 10);
   const pickupLocal = utcToZonedLocalInput(cycle.pickupDate);
   const pickup2Local = utcToZonedLocalInput(cycle.pickup2Date);
   // "manual" means the cycle is being driven by a supplier-distinta import:
@@ -915,7 +915,7 @@ function PlannedFields({ defaultOpenAt = "", defaultTentative = false }: { defau
     <div className="space-y-2">
       <label className="block">
         <span className={labelClass}>{c.orderOpenAtLabel}</span>
-        <Input name="orderOpenAt" type="datetime-local" required defaultValue={defaultOpenAt} />
+        <Input name="orderOpenAt" type="date" required defaultValue={defaultOpenAt} />
       </label>
       <label className="flex min-h-11 items-start gap-2.5 text-[13px] text-foreground">
         <input type="checkbox" name="datesTentative" defaultChecked={defaultTentative} className="mt-0.5 size-4.5 accent-primary" />

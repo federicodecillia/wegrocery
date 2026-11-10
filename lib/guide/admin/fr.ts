@@ -128,7 +128,7 @@ export const adminGuideFr: GuideContent = {
         "Choisissez l'**Ouverture des commandes prévue** et la **Clôture des commandes**. Si les dates peuvent encore changer, cochez **Dates indicatives** : les membres le voient dans le calendrier.",
         "Remplissez le reste comme pour un cycle normal et touchez **Créer le cycle**.",
         "Dans **Produits** ajoutez des produits du catalogue ou importez la liste Excel du fournisseur : les membres les voient en aperçu.",
-        "Si le groupe a l'ouverture automatique (Réglages → Technique), le cycle s'ouvre seul à l'heure prévue, sauf si ses dates sont indicatives, et les membres sont prévenus. Sinon, le jour de l'ouverture **À faire maintenant** vous le rappelle : touchez **Ouvrir les commandes**.",
+        "Si le groupe a l'ouverture automatique (Réglages → Technique), le cycle s'ouvre seul le matin du jour prévu, sauf si ses dates sont indicatives, et les membres sont prévenus. Sinon, le jour de l'ouverture **À faire maintenant** vous le rappelle : touchez **Ouvrir les commandes**.",
       ],
       notes: [
         "Tant qu'il est programmé vous pouvez tout changer avec **Modifier**, dates comprises. Si la clôture est déjà passée, déplacez la date avant d'ouvrir.",

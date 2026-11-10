@@ -357,7 +357,7 @@ export const it = {
       pickedUp: "Ritirato",
       planned: "In programma",
     },
-    opensAt: (day: string, time: string) => `Apre ${day}, ore ${time}`,
+    opensAt: (day: string, time?: string) => (time ? `Apre ${day}, ore ${time}` : `Apre ${day}`),
     monthSummary: (month: string, n: number) => (n === 0 ? `${month}, nessun ordine` : n === 1 ? `${month}, 1 ordine` : `${month}, ${n} ordini`),
     moreLanes: (n: number) => `+${n}`,
     emptyMonth: (month: string) => `A ${month} non ci sono ordini.`,
@@ -817,7 +817,7 @@ export const it = {
       opensAt: (date: string) => `Apertura prevista ${date}`,
       plannedIntro: (mode: "auto" | "tentative" | "manual"): string =>
         mode === "auto"
-          ? "In programma: i soci lo vedono nel calendario con le date e i prodotti come anteprima, ma non possono ancora ordinare. Gli ordini si aprono da soli all'apertura prevista e i soci vengono avvisati; per aprirli prima premi **Apri gli ordini**."
+          ? "In programma: i soci lo vedono nel calendario con le date e i prodotti come anteprima, ma non possono ancora ordinare. Gli ordini si aprono da soli la mattina del giorno previsto e i soci vengono avvisati; per aprirli prima premi **Apri gli ordini**."
           : mode === "tentative"
             ? "In programma, con date indicative: i soci lo vedono nel calendario ma non possono ancora ordinare, e il ciclo non si apre da solo. Quando le date sono sicure togli la spunta da **Modifica**, oppure premi **Apri gli ordini**: i soci vengono avvisati."
             : "In programma: i soci lo vedono nel calendario con le date e i prodotti come anteprima, ma non possono ancora ordinare. Quando è il momento premi **Apri gli ordini**: i soci vengono avvisati.",
@@ -1040,8 +1040,8 @@ export const it = {
           "Genera un segreto (openssl rand -hex 32), mettilo in INSTANCE_STATS_SECRET e incollalo uguale nella console, alla voce Aggiungi istanza esistente. Un segreto diverso per ogni installazione.",
         ],
         autoOpen: [
-          "I cicli in programma aprono gli ordini da soli all'ora prevista (entro un minuto), se le date non sono indicative. Senza, li apre l'admin con Apri gli ordini.",
-          "Genera un segreto (openssl rand -hex 32) e mettilo in CRON_SECRET nel progetto Vercel: Vercel lo usa per chiamare il controllo ogni minuto (serve il piano Pro). Poi rifai il deploy.",
+          "I cicli in programma aprono gli ordini da soli la mattina del giorno previsto, se le date non sono indicative. Senza, li apre l'admin con Apri gli ordini.",
+          "Genera un segreto (openssl rand -hex 32) e mettilo in CRON_SECRET nel progetto Vercel: Vercel lo usa per il controllo di ogni mattina. Poi rifai il deploy.",
         ],
       } as Record<string, readonly [string, string]>,
       variables: "Variabili:",
@@ -1107,7 +1107,7 @@ export const it = {
       whenPlanned: "Più avanti",
       plannedHint: (auto: boolean): string =>
         auto
-          ? "Il ciclo va in programma: i soci lo vedono nel calendario, con le date e i prodotti che aggiungi. Gli ordini si aprono da soli all'apertura prevista, se le date non sono indicative; puoi aprirli prima con **Apri gli ordini**."
+          ? "Il ciclo va in programma: i soci lo vedono nel calendario, con le date e i prodotti che aggiungi. Gli ordini si aprono da soli la mattina del giorno previsto, se le date non sono indicative; puoi aprirli prima con **Apri gli ordini**."
           : "Il ciclo va in programma: i soci lo vedono nel calendario, con le date e i prodotti che aggiungi, ma ordinano solo dopo che premi **Apri gli ordini**.",
       orderOpenAtLabel: "Apertura ordini prevista *",
       tentativeLabel: "Date indicative",

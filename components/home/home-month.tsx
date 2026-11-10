@@ -11,7 +11,8 @@ const noon = (day: string) => new Date(`${day}T12:00:00Z`);
 // Home on a computer: this month at a glance beside the list, drawn like
 // "Tutti" on /calendario: the same icons (basket opens, lock last day,
 // package pickup, at most DAY_ICONS and "+n") and today as a filled circle.
-// Read only: the full calendar, with its legend, is one click away.
+// A legend under the grid, like /calendario's "Tutti". Read only: the full
+// calendar is one click away.
 export function HomeMonth({ entries, today }: { entries: CalendarEntry[]; today: string }) {
   const month = monthOf(today);
   const weekdays = Array.from({ length: 7 }, (_, i) => formatDate(noon(`2024-01-0${i + 1}`), { weekday: "narrow" }));
@@ -45,6 +46,21 @@ export function HomeMonth({ entries, today }: { entries: CalendarEntry[]; today:
           ))}
         </tbody>
       </table>
+      <ul aria-hidden className="mt-2 flex flex-wrap gap-x-3 gap-y-1 border-t border-border px-1 pt-2">
+        {(["opens", "closes", "pickup"] as const).map((k) => {
+          const Icon = KIND_ICON[k];
+          return (
+            <li key={k} className="flex items-center gap-1 text-label text-secondary-foreground">
+              <Icon className="size-3 text-foreground" strokeWidth={2.5} />
+              {t.calendar.legend[k]}
+            </li>
+          );
+        })}
+        <li className="flex items-center gap-1 text-label text-secondary-foreground">
+          <span className="size-3 rounded-full bg-inverse" />
+          {t.calendar.legend.today}
+        </li>
+      </ul>
     </div>
   );
 }

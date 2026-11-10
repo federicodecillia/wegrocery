@@ -41,7 +41,8 @@ export function cycleEvents(cycle: IcsCycle, text: IcsText): IcsEvent[] {
   const events: IcsEvent[] = [];
 
   if (cycle.opensAt) {
-    events.push({ uid: uid("opens"), summary: text.opens(name), url, start: cycle.opensAt, end: new Date(cycle.opensAt.getTime() + 30 * MINUTE) });
+    // A planned opening is a day (lib/cycles/open-planned.ts): an all-day event.
+    events.push({ uid: uid("opens"), summary: text.opens(name), url, day: utcToZonedLocalInput(cycle.opensAt).slice(0, 10) });
   }
   if (cycle.closeAt) {
     // A close at 00:00 is the end of the day before: the event sits just before it.

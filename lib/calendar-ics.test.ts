@@ -63,6 +63,8 @@ describe("buildCycleIcs", () => {
     );
     expect(planned).toContain("UID:p-opens@wegrocery");
     expect(planned).toContain("SUMMARY:Opens: Formaggi");
+    // A day, not a time: it opens by itself that morning.
+    expect(planned).toContain("DTSTART;VALUE=DATE:20261116");
     expect(planned).not.toContain("URL:");
   });
 

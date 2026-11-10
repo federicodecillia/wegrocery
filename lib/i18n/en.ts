@@ -357,7 +357,7 @@ export const en: Strings = {
       pickedUp: "Collected",
       planned: "Planned",
     },
-    opensAt: (day: string, time: string) => `Opens ${day}, ${time}`,
+    opensAt: (day: string, time?: string) => (time ? `Opens ${day}, ${time}` : `Opens ${day}`),
     monthSummary: (month: string, n: number) => (n === 0 ? `${month}, no orders` : n === 1 ? `${month}, 1 order` : `${month}, ${n} orders`),
     moreLanes: (n: number) => `+${n}`,
     emptyMonth: (month: string) => `No orders in ${month}.`,
@@ -815,7 +815,7 @@ export const en: Strings = {
       opensAt: (date: string) => `Opens ${date} (planned)`,
       plannedIntro: (mode: "auto" | "tentative" | "manual"): string =>
         mode === "auto"
-          ? "Planned: members see it in the calendar with its dates and a preview of its products, but cannot order yet. The orders open by themselves at the planned opening and members are told; to open them earlier, tap **Open the orders**."
+          ? "Planned: members see it in the calendar with its dates and a preview of its products, but cannot order yet. The orders open by themselves on the morning of the planned day and members are told; to open them earlier, tap **Open the orders**."
           : mode === "tentative"
             ? "Planned, with tentative dates: members see it in the calendar but cannot order yet, and the cycle does not open by itself. When the dates are firm, untick them in **Edit**, or tap **Open the orders**: members are told."
             : "Planned: members see it in the calendar with its dates and a preview of its products, but cannot order yet. When the time comes, tap **Open the orders**: members are told.",
@@ -1038,8 +1038,8 @@ export const en: Strings = {
           "Generate a secret (openssl rand -hex 32), set it as INSTANCE_STATS_SECRET and paste the same value in the console under Add existing instance. Use a different secret for each installation.",
         ],
         autoOpen: [
-          "Planned cycles open their orders by themselves at the planned time (within a minute), unless their dates are tentative. Without it, an admin opens them with Open the orders.",
-          "Generate a secret (openssl rand -hex 32) and put it in CRON_SECRET in the Vercel project: Vercel uses it to call the check every minute (it needs the Pro plan). Then redeploy.",
+          "Planned cycles open their orders by themselves on the morning of the planned day, unless their dates are tentative. Without it, an admin opens them with Open the orders.",
+          "Generate a secret (openssl rand -hex 32) and put it in CRON_SECRET in the Vercel project: Vercel uses it for the check every morning. Then redeploy.",
         ],
       } as Record<string, readonly [string, string]>,
       variables: "Variables:",
@@ -1105,7 +1105,7 @@ export const en: Strings = {
       whenPlanned: "Later",
       plannedHint: (auto: boolean): string =>
         auto
-          ? "The cycle is planned: members see it in the calendar, with its dates and the products you add. The orders open by themselves at the planned opening, unless the dates are tentative; you can open them earlier with **Open the orders**."
+          ? "The cycle is planned: members see it in the calendar, with its dates and the products you add. The orders open by themselves on the morning of the planned day, unless the dates are tentative; you can open them earlier with **Open the orders**."
           : "The cycle is planned: members see it in the calendar, with its dates and the products you add, but can order only after you tap **Open the orders**.",
       orderOpenAtLabel: "Planned order opening *",
       tentativeLabel: "Tentative dates",

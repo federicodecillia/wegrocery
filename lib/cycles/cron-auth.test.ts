@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cronAuthorized, openingDue } from "./cron-auth";
+import { autoOpenEnabled, cronAuthorized } from "./cron-auth";
 
 const SECRET = "s".repeat(40);
 
@@ -18,11 +18,10 @@ describe("cronAuthorized", () => {
   });
 });
 
-describe("openingDue", () => {
-  const now = new Date("2026-11-24T08:00:30Z");
-  it("is due from the planned minute on, never without a planned opening", () => {
-    expect(openingDue("2026-11-24T08:00:00.000Z", now)).toBe(true);
-    expect(openingDue("2026-11-24T08:01:00.000Z", now)).toBe(false);
-    expect(openingDue(null, now)).toBe(false);
+describe("autoOpenEnabled", () => {
+  it("needs a long enough CRON_SECRET", () => {
+    expect(autoOpenEnabled({ CRON_SECRET: SECRET })).toBe(true);
+    expect(autoOpenEnabled({ CRON_SECRET: "short" })).toBe(false);
+    expect(autoOpenEnabled({})).toBe(false);
   });
 });

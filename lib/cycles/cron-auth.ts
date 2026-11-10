@@ -11,11 +11,6 @@ export function cronAuthorized(header: string | null, secret: string | undefined
   return timingSafeEqual(digest(header), digest(`Bearer ${key}`));
 }
 
-/** Whether the cached next opening asks for a look at the database now. */
-export function openingDue(nextOpening: string | null, now: Date): boolean {
-  return nextOpening !== null && new Date(nextOpening).getTime() <= now.getTime();
-}
-
 /** Whether this deploy opens planned cycles by itself: a long enough CRON_SECRET (see vercel.json). */
 export function autoOpenEnabled(env: Record<string, string | undefined> = process.env): boolean {
   return (env.CRON_SECRET?.trim().length ?? 0) >= MIN_SECRET_LENGTH;

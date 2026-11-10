@@ -20,7 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { t } from "@/lib/i18n";
 import { formatDate } from "@/lib/i18n/format";
-import { formatDeadline } from "@/lib/i18n/deadline";
+import { formatDeadline, formatLongDay } from "@/lib/i18n/deadline";
 import { adminHref } from "@/lib/admin/nav";
 import { CYCLE_VIEW_LABELS, cycleViews, defaultCycleId, resolveCycleView, settlementCandidate, settlementPending, supplierOrderReady, viewsFor, type CycleView } from "@/lib/admin/cycle-views";
 import { CycleTodo } from "./cycle-todo";
@@ -290,7 +290,7 @@ async function SelectedCycle({
   };
 
   const when = isPlanned
-    ? c.orderOpenAt && w.opensAt(formatDeadline(c.orderOpenAt))
+    ? c.orderOpenAt && w.opensAt(formatLongDay(c.orderOpenAt))
     : isOpen
       ? c.orderCloseAt && w.closesAt(formatDeadline(c.orderCloseAt))
       : c.closedAt && w.closedAt(formatDate(c.closedAt));

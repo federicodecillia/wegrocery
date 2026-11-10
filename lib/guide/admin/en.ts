@@ -128,7 +128,7 @@ export const adminGuideEn: GuideContent = {
         "Pick the **Planned order opening** and the **Order deadline**. If the dates may still change, tick **Tentative dates**: members see it in the calendar.",
         "Fill in the rest as for an ordinary cycle and tap **Create cycle**.",
         "In **Products** add products from the catalogue or import the supplier's Excel listing: members see them as a preview.",
-        "If the group has automatic opening (Settings → Technical), the cycle opens by itself at the planned time, unless its dates are tentative, and members are told. Otherwise on the opening day **To do now** reminds you: tap **Open the orders**.",
+        "If the group has automatic opening (Settings → Technical), the cycle opens by itself on the morning of the planned day, unless its dates are tentative, and members are told. Otherwise on the opening day **To do now** reminds you: tap **Open the orders**.",
       ],
       notes: [
         "While it is planned you can change everything from **Edit**, dates included. If the deadline has already passed, move it before opening.",

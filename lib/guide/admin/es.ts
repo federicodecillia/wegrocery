@@ -128,7 +128,7 @@ export const adminGuideEs: GuideContent = {
         "Elige la **Apertura de pedidos prevista** y el **Cierre de pedidos**. Si las fechas aún pueden cambiar, marca **Fechas orientativas**: los socios lo ven en el calendario.",
         "Completa el resto como en un ciclo normal y toca **Crear ciclo**.",
         "En **Productos** añade productos del catálogo o importa la lista Excel del proveedor: los socios los ven como vista previa.",
-        "Si el grupo tiene la apertura automática (Ajustes → Técnicos), el ciclo se abre solo a la hora prevista, si sus fechas no son orientativas, y se avisa a los socios. Si no, el día de la apertura **Qué hacer ahora** te lo recuerda: toca **Abrir los pedidos**.",
+        "Si el grupo tiene la apertura automática (Ajustes → Técnicos), el ciclo se abre solo la mañana del día previsto, si sus fechas no son orientativas, y se avisa a los socios. Si no, el día de la apertura **Qué hacer ahora** te lo recuerda: toca **Abrir los pedidos**.",
       ],
       notes: [
         "Mientras está programado puedes cambiarlo todo desde **Editar**, fechas incluidas. Si el cierre ya ha pasado, cambia la fecha antes de abrir.",

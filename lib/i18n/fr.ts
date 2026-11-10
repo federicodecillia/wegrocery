@@ -357,7 +357,7 @@ export const fr: Strings = {
       pickedUp: "Retiré",
       planned: "Programmé",
     },
-    opensAt: (day: string, time: string) => `Ouvre ${day}, ${time}`,
+    opensAt: (day: string, time?: string) => (time ? `Ouvre ${day}, ${time}` : `Ouvre ${day}`),
     monthSummary: (month: string, n: number) => (n === 0 ? `${month}, aucune commande` : n === 1 ? `${month}, 1 commande` : `${month}, ${n} commandes`),
     moreLanes: (n: number) => `+${n}`,
     emptyMonth: (month: string) => `Aucune commande en ${month}.`,
@@ -815,7 +815,7 @@ export const fr: Strings = {
       opensAt: (date: string) => `Ouverture prévue ${date}`,
       plannedIntro: (mode: "auto" | "tentative" | "manual"): string =>
         mode === "auto"
-          ? "Programmé : les membres le voient dans le calendrier avec ses dates et un aperçu des produits, mais ne peuvent pas encore commander. Les commandes s'ouvrent seules à l'ouverture prévue et les membres sont prévenus ; pour les ouvrir plus tôt, touchez **Ouvrir les commandes**."
+          ? "Programmé : les membres le voient dans le calendrier avec ses dates et un aperçu des produits, mais ne peuvent pas encore commander. Les commandes s'ouvrent seules le matin du jour prévu et les membres sont prévenus ; pour les ouvrir plus tôt, touchez **Ouvrir les commandes**."
           : mode === "tentative"
             ? "Programmé, avec des dates indicatives : les membres le voient dans le calendrier mais ne peuvent pas encore commander, et le cycle ne s'ouvre pas seul. Quand les dates sont sûres, décochez-les dans **Modifier**, ou touchez **Ouvrir les commandes** : les membres sont prévenus."
             : "Programmé : les membres le voient dans le calendrier avec ses dates et un aperçu des produits, mais ne peuvent pas encore commander. Le moment venu, touchez **Ouvrir les commandes** : les membres sont prévenus.",
@@ -1038,8 +1038,8 @@ export const fr: Strings = {
           "Générez un secret (openssl rand -hex 32), définissez-le comme INSTANCE_STATS_SECRET et collez la même valeur dans la console, sous Ajouter une instance existante. Utilisez un secret différent pour chaque installation.",
         ],
         autoOpen: [
-          "Les cycles programmés ouvrent leurs commandes seuls à l'heure prévue (en moins d'une minute), si leurs dates ne sont pas indicatives. Sinon, un admin les ouvre avec Ouvrir les commandes.",
-          "Générez un secret (openssl rand -hex 32) et mettez-le dans CRON_SECRET dans le projet Vercel : Vercel s'en sert pour appeler le contrôle chaque minute (il faut le plan Pro). Puis redéployez.",
+          "Les cycles programmés ouvrent leurs commandes seuls le matin du jour prévu, si leurs dates ne sont pas indicatives. Sinon, un admin les ouvre avec Ouvrir les commandes.",
+          "Générez un secret (openssl rand -hex 32) et mettez-le dans CRON_SECRET dans le projet Vercel : Vercel s'en sert pour le contrôle de chaque matin. Puis redéployez.",
         ],
       } as Record<string, readonly [string, string]>,
       variables: "Variables :",
@@ -1105,7 +1105,7 @@ export const fr: Strings = {
       whenPlanned: "Plus tard",
       plannedHint: (auto: boolean): string =>
         auto
-          ? "Le cycle est programmé : les membres le voient dans le calendrier, avec ses dates et les produits que vous ajoutez. Les commandes s'ouvrent seules à l'ouverture prévue, sauf si les dates sont indicatives ; vous pouvez les ouvrir plus tôt avec **Ouvrir les commandes**."
+          ? "Le cycle est programmé : les membres le voient dans le calendrier, avec ses dates et les produits que vous ajoutez. Les commandes s'ouvrent seules le matin du jour prévu, sauf si les dates sont indicatives ; vous pouvez les ouvrir plus tôt avec **Ouvrir les commandes**."
           : "Le cycle est programmé : les membres le voient dans le calendrier, avec ses dates et les produits que vous ajoutez, mais ne commandent qu'après que vous avez touché **Ouvrir les commandes**.",
       orderOpenAtLabel: "Ouverture des commandes prévue *",
       tentativeLabel: "Dates indicatives",

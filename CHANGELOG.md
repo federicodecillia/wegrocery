@@ -25,11 +25,11 @@ A bullet that only matters to whoever hosts, runs or develops the app
 ## [Unreleased]
 
 ### Added
-- ⏰ **Planned cycles open by themselves.** At the planned opening time (within a minute) the orders open and members are told, as when an admin taps **Open the orders**, which stays for opening earlier. A cycle with **Tentative dates** never opens by itself. **To do now** asks to open it only once its time has passed and it is still planned.
-- 🔑 [tech] **`CRON_SECRET` variable.** Optional, at least 32 characters: turns on automatic opening through the Vercel Cron in `vercel.json` (every minute, needs Vercel Pro). Without it `/api/cron/open-cycles` answers 404 and cycles open by hand.
+- ⏰ **Planned cycles open by themselves.** The planned opening is now a day, with no time: early that morning the orders open and members are told, as when an admin taps **Open the orders**, which stays for opening earlier. A cycle with **Tentative dates** never opens by itself. **To do now** asks to open it only once its day has passed and it is still planned.
+- 🔑 [tech] **`CRON_SECRET` variable.** Optional, at least 32 characters: turns on automatic opening through the Vercel Cron in `vercel.json` (once a day at 05:00 UTC, Hobby too). Without it `/api/cron/open-cycles` answers 404 and cycles open by hand.
 
 ### Changed
-- 📅 **Home's calendar like the full one.** The month on Home (on a computer) uses the same icons as the order calendar: a basket for the opening, a lock for the last day, a package for the pickup, and today in a filled circle.
+- 📅 **Home's calendar like the full one.** The month on Home (on a computer) uses the same icons as the order calendar: a basket for the opening, a lock for the last day, a package for the pickup, today in a filled circle, and the legend below.
 
 ## [1.45.1] - 2026-11-09
 

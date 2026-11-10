@@ -130,7 +130,7 @@ export const adminGuideIt: GuideContent = {
         "Scegli l'**Apertura ordini prevista** e la **Chiusura ordini**. Se le date possono ancora cambiare, spunta **Date indicative**: i soci lo vedono nel calendario.",
         "Compila il resto come per un ciclo normale e tocca **Crea ciclo**.",
         "In **Prodotti** aggiungi i prodotti dal catalogo o importa il listino Excel del fornitore: i soci li vedono come anteprima.",
-        "Se il gruppo ha l'apertura automatica (Impostazioni → Tecniche), il ciclo si apre da solo all'ora prevista, purché le date non siano indicative, e i soci ricevono l'avviso. Altrimenti il giorno dell'apertura **Da fare ora** te lo ricorda: tocca **Apri gli ordini**.",
+        "Se il gruppo ha l'apertura automatica (Impostazioni → Tecniche), il ciclo si apre da solo la mattina del giorno previsto, purché le date non siano indicative, e i soci ricevono l'avviso. Altrimenti il giorno dell'apertura **Da fare ora** te lo ricorda: tocca **Apri gli ordini**.",
       ],
       notes: [
         "Finché è in programma puoi cambiare tutto da **Modifica**, date comprese. Se la chiusura è già passata, sposta la data prima di aprire.",

@@ -1,11 +1,11 @@
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { getDb } from "@/lib/db/client";
-import { AUTO_OPEN_ACTOR, openDuePlannedCycles, openPlannedCycle, readNextPlannedOpening } from "@/lib/cycles/open-planned";
+import { AUTO_OPEN_ACTOR, endOfDay, openDuePlannedCycles, openPlannedCycle } from "@/lib/cycles/open-planned";
 import { describeDb, makeScope } from "@/test/int/fixtures";
 
 // Planned cycles opening by themselves (app/api/cron/open-cycles) and by hand
-// ("Apri gli ordini"), on a real database: only due cycles with firm dates
-// open by themselves, once, keeping their planned time.
+// ("Apri gli ordini"), on a real database: only cycles whose day has come,
+// with firm dates, open by themselves, once, keeping their planned day.
 describeDb("opening planned cycles", () => {
   const scope = makeScope("autoopen");
   const { sql } = scope;
@@ -27,7 +27,7 @@ describeDb("opening planned cycles", () => {
     await scope.cleanup();
   });
 
-  it("opens a due cycle with firm dates once, at its planned time", async () => {
+  it("opens a cycle with firm dates once, on its planned day", async () => {
     const id = await planned("due", "-2 minutes");
     const before = await row(id);
     const opened = await openDuePlannedCycles(getDb(), new Date());
@@ -42,7 +42,7 @@ describeDb("opening planned cycles", () => {
 
   it("leaves indicative dates, future openings and passed deadlines to the admin", async () => {
     const tentative = await planned("tentative", "-2 minutes", { tentative: true });
-    const future = await planned("future", "3 hours");
+    const future = await planned("future", "2 days");
     const late = await planned("late", "-3 days", { closesIn: "-1 day" });
     const opened = await openDuePlannedCycles(getDb(), new Date());
     for (const id of [tentative, future, late]) {
@@ -52,15 +52,13 @@ describeDb("opening planned cycles", () => {
     expect(await openPlannedCycle(getDb(), future, { actor: AUTO_OPEN_ACTOR, now: new Date(), auto: true })).toEqual({ error: "not_due" });
   });
 
-  it("knows the next automatic opening without the indicative ones", async () => {
-    const soon = await planned("soon", "1 hour");
-    await planned("sooner-tentative", "10 minutes", { tentative: true });
-    const next = await readNextPlannedOpening(getDb());
-    const expected = Number((await row(soon)).open_ms);
-    expect(next).not.toBeNull();
-    expect(next!.getTime()).toBeLessThanOrEqual(expected);
-    expect(next!.getTime()).toBeGreaterThan(Date.now() + 10 * 60 * 1000);
-  });
+  it("opens on the planned day even before the planned time of an older cycle", () =>
+    (async () => {
+      const id = await planned("later-today", "1 day");
+      // The last minute of today in the group's time zone.
+      await sql`UPDATE order_cycles SET order_open_at = ${new Date(endOfDay(new Date()).getTime() - 60_000)} WHERE cycle_id = ${id}`;
+      expect(await openDuePlannedCycles(getDb(), new Date())).toContain(id);
+    })());
 
   it("opens by hand now, even with indicative dates", async () => {
     const id = await planned("manual", "2 days", { tentative: true });

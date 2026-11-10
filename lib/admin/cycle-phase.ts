@@ -74,9 +74,9 @@ export type CycleTask = {
 /** The steps a cycle still asks for, in the order they are done. Empty: nothing to do. */
 export function cycleSteps(f: CycleFacts, now: Date, autoOpen = false): CycleStep[] {
   if (f.status === "planned") {
-    // It opens by itself at its time (lib/cycles/open-planned.ts): nothing to
-    // do unless that time passed and it is still planned.
-    if (autoOpen && !f.datesTentative && f.orderOpenAt != null && f.orderOpenAt.getTime() > now.getTime()) return [];
+    // It opens by itself on its day (lib/cycles/open-planned.ts): nothing to
+    // do unless that day passed and it is still planned.
+    if (autoOpen && !f.datesTentative && f.orderOpenAt != null && dayOf(f.orderOpenAt) >= dayOf(now)) return [];
     // From the planned day on, in the group's time zone.
     return f.orderOpenAt != null && dayOf(f.orderOpenAt) <= dayOf(now) ? ["to_open"] : [];
   }

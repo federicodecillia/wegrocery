@@ -182,14 +182,13 @@ addresses or amounts. Without the variable the endpoint answers 404.
 
 ### Planned cycles opening by themselves
 
-`vercel.json` runs a Vercel Cron every minute on `/api/cron/open-cycles`: a
-planned cycle with firm dates opens at its planned time (within a minute) and
-members are told, as when an admin taps "Open the orders". Set `CRON_SECRET`
-(`openssl rand -hex 32`) on the Production environment and redeploy; without
-it the route answers 404 and admins open planned cycles by hand. A cron that
-runs every minute needs the Vercel Pro plan (on Hobby, Vercel refuses the
-deploy). Most minutes the route answers from Next's data cache and does not
-touch the database, so Neon can still scale to zero.
+`vercel.json` runs a Vercel Cron once a day (05:00 UTC) on
+`/api/cron/open-cycles`: a planned cycle with firm dates opens on the morning
+of its planned day and members are told, as when an admin taps "Open the
+orders". Set `CRON_SECRET` (`openssl rand -hex 32`) on the Production
+environment and redeploy; without it the route answers 404 and admins open
+planned cycles by hand. It works on the Hobby plan (Vercel then runs it at
+some minute of that hour).
 
 ### Membership card check (WallyFor)
 

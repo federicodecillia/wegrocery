@@ -70,7 +70,7 @@ import {
   getMemberEmails,
   getResolvedPreferences,
 } from "@/lib/notifications/dispatch";
-import { invalidatePlannedOpenings, notifyCycleOpened, openPlannedCycle } from "@/lib/cycles/open-planned";
+import { notifyCycleOpened, openPlannedCycle } from "@/lib/cycles/open-planned";
 import { pickupNotice, type CyclePickup } from "@/lib/notifications/pickup";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
 import { parseWeighingDeposit, resolveCycleFee, type HandlingFee } from "@/lib/payments/order-payment";
@@ -166,10 +166,16 @@ export type CreateCycleInput = {
   pickupTentative?: boolean;
 };
 
-/** A planned cycle's opening: required, and before the close. */
+/**
+ * A planned cycle's opening: a day, required, before the close. Stored as
+ * 00:00 of that day in the group's time zone (it opens by itself that
+ * morning, lib/cycles/open-planned.ts). A date and time, from a form of an
+ * older version, keeps only its day.
+ */
 function readPlannedOpening(raw: string | undefined, orderCloseAt: Date): Date | { error: string } {
   if (!raw) return { error: t.errors.fieldRequired(t.fields.orderOpenDate) };
-  const at = zonedLocalToUtc(raw);
+  const day = raw.trim().slice(0, 10);
+  const at = /^\d{4}-\d{2}-\d{2}$/.test(day) ? zonedLocalToUtc(`${day}T00:00`) : null;
   if (!at) return { error: t.errors.invalidDate(t.fields.orderOpenDate) };
   if (at.getTime() >= orderCloseAt.getTime()) return { error: t.errors.plannedOpenAfterClose };
   return at;
@@ -272,7 +278,6 @@ export async function adminCreateCycle(data: CreateCycleInput): Promise<{error?:
 
     // A planned cycle says nothing yet: members hear about it when its orders open.
     if (!plannedOpenAt) await notifyCycleOpened(db, { title: data.title.trim(), accessLevel, orderCloseAt }, now);
-    else invalidatePlannedOpenings();
 
     revalidatePath("/admin");
     revalidatePath("/");
@@ -299,7 +304,6 @@ export async function adminOpenPlannedCycle(cycleId: string): Promise<{ error?: 
     if ("error" in result) {
       return { error: result.error === "not_found" ? t.errors.cycleNotFound : result.error === "close_in_past" ? t.errors.plannedCloseInPast : t.errors.cycleNotPlanned };
     }
-    invalidatePlannedOpenings();
     revalidatePath("/admin");
     revalidatePath("/");
     revalidatePath("/ordine");
@@ -330,7 +334,6 @@ export async function adminDeletePlannedCycle(cycleId: string): Promise<{ error?
     ]);
     if (deleted.length === 0) return { error: t.errors.cycleNotPlanned };
     await writeAudit(db, admin.email, "delete_planned_cycle", "cycle", cycleId, { title: deleted[0].title });
-    invalidatePlannedOpenings();
     revalidatePath("/admin");
     revalidatePath("/calendario");
     return {};
@@ -1000,8 +1003,6 @@ export async function adminUpdateCycle(
         ...shippingPatch,
       })
       .where(eq(orderCycles.cycleId, cycleId));
-    // Its opening, its deadline or "Date indicative" may have moved.
-    if (planned) invalidatePlannedOpenings();
 
     let adjustedMembers = 0;
     if (isClosed && shippingChanged) {
