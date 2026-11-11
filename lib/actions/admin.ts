@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { getAuthInstance } from "@/auth";
 import { admitEmail } from "@/lib/auth/admission";
-import { eq, and, isNull, notInArray, or, sql, inArray } from "drizzle-orm";
+import { eq, and, isNull, notInArray, sql, inArray } from "drizzle-orm";
 import { requireAdmin, requireOrderManager } from "@/lib/auth/session";
 import { managesCycle, requireCycleManager, requireOrderLineManager, requireProductManager } from "@/lib/auth/manager";
 import { t } from "@/lib/i18n";
@@ -70,8 +70,7 @@ import {
   getMemberEmails,
   getResolvedPreferences,
 } from "@/lib/notifications/dispatch";
-import { selectCycleAccessMembers } from "@/lib/notifications/reminder";
-import { sendOpenAlerts } from "@/lib/notifications/open-alerts";
+import { notifyCycleOpened, openPlannedCycle } from "@/lib/cycles/open-planned";
 import { pickupNotice, type CyclePickup } from "@/lib/notifications/pickup";
 import { getPaymentSettings } from "@/lib/payments/get-settings";
 import { parseWeighingDeposit, resolveCycleFee, type HandlingFee } from "@/lib/payments/order-payment";
@@ -84,7 +83,6 @@ import { previewSettlement, settleCycle, type SettleResult } from "@/lib/payment
 import { getStripe } from "@/lib/payments/stripe";
 import { isAboveMaxBalance } from "@/lib/payments/settings";
 import { DEFAULT_ACCESS_LEVEL, normalizeAccessLevel, normalizeRole, type AccessLevel } from "@/lib/roles";
-import { formatDeadline } from "@/lib/i18n/deadline";
 import { applyProductEmojiEverywhere, loadSavedProductEmojis } from "@/lib/db/product-emoji";
 import { productEmojiKey } from "@/lib/products/emoji";
 
@@ -170,10 +168,16 @@ export type CreateCycleInput = {
   pickupTentative?: boolean;
 };
 
-/** A planned cycle's opening: required, and before the close. */
+/**
+ * A planned cycle's opening: a day, required, before the close. Stored as
+ * 00:00 of that day in the group's time zone (it opens by itself that
+ * morning, lib/cycles/open-planned.ts). A date and time, from a form of an
+ * older version, keeps only its day.
+ */
 function readPlannedOpening(raw: string | undefined, orderCloseAt: Date): Date | { error: string } {
   if (!raw) return { error: t.errors.fieldRequired(t.fields.orderOpenDate) };
-  const at = zonedLocalToUtc(raw);
+  const day = raw.trim().slice(0, 10);
+  const at = /^\d{4}-\d{2}-\d{2}$/.test(day) ? zonedLocalToUtc(`${day}T00:00`) : null;
   if (!at) return { error: t.errors.invalidDate(t.fields.orderOpenDate) };
   if (at.getTime() >= orderCloseAt.getTime()) return { error: t.errors.plannedOpenAfterClose };
   return at;
@@ -288,80 +292,20 @@ export async function adminCreateCycle(data: CreateCycleInput): Promise<{error?:
   }
 }
 
-// Tells the members who can see a cycle that its orders are open: at the
-// creation of an open cycle and when a planned one opens, the two emit points
-// of cycle_opened. Kept apart from the write: a delivery failure must not
-// report the (already committed) cycle as failed.
-async function notifyCycleOpened(
-  db: ReturnType<typeof getDb>,
-  cycle: { title: string; accessLevel: string; orderCloseAt: Date | null },
-  now: Date,
-): Promise<void> {
-  try {
-    const allMembers = await db
-      .select({
-        memberId: members.memberId,
-        email: members.email,
-        role: members.role,
-        active: members.active,
-      })
-      .from(members)
-      // A person in a family sees the account's notifications: one each.
-      .where(isNull(members.householdOf));
-    const recipients = selectCycleAccessMembers(allMembers, cycle.accessLevel);
-    await dispatchToMembers(
-      db,
-      recipients.map((m) => ({ memberId: m.memberId, email: m.email })),
-      {
-        type: "cycle_opened",
-        title: t.notificationsServer.cycleOpenedTitle,
-        body: t.notificationsServer.cycleOpenedBody(cycle.title, cycle.orderCloseAt ? formatDeadline(cycle.orderCloseAt) : ""),
-        href: "/ordine",
-      },
-      now,
-    );
-  } catch (notifyError) {
-    console.error("[cycle_opened] dispatch failed:", notifyError);
-  }
-}
-
 /**
- * "Apri gli ordini" on a planned cycle: it becomes open now, its dates are no
- * longer indicative (its pickup stays "da confermare" if they were), and the members who can see it are told. Refused once
- * its order deadline has passed (the admin moves it first) and on a cycle
- * that is not planned.
+ * "Apri gli ordini" on a planned cycle: it opens now, before its planned time
+ * or when it did not open by itself (indicative dates), see
+ * lib/cycles/open-planned.ts. Refused once its order deadline has passed (the
+ * admin moves it first) and on a cycle that is not planned.
  */
 export async function adminOpenPlannedCycle(cycleId: string): Promise<{ error?: string }> {
   try {
     const admin = await requireCycleManager(cycleId);
     const db = getDb();
-    const now = new Date();
-    const [opened] = await db
-      .update(orderCycles)
-      // "Date indicative" ends here, but a pickup that was only indicative
-      // stays "da confermare" (the right side reads the row before the update).
-      .set({ status: "open", orderOpenAt: now, datesTentative: false, pickupTentative: sql`${orderCycles.pickupTentative} OR ${orderCycles.datesTentative}` })
-      .where(
-        and(
-          eq(orderCycles.cycleId, cycleId),
-          eq(orderCycles.status, "planned"),
-          or(isNull(orderCycles.orderCloseAt), sql`${orderCycles.orderCloseAt} > now()`),
-        ),
-      )
-      .returning({ title: orderCycles.title, accessLevel: orderCycles.accessLevel, orderCloseAt: orderCycles.orderCloseAt });
-    if (!opened) {
-      const [current] = await db
-        .select({ status: orderCycles.status })
-        .from(orderCycles)
-        .where(eq(orderCycles.cycleId, cycleId))
-        .limit(1);
-      if (!current) return { error: t.errors.cycleNotFound };
-      return { error: current.status === "planned" ? t.errors.plannedCloseInPast : t.errors.cycleNotPlanned };
+    const result = await openPlannedCycle(db, cycleId, { actor: admin.email, now: new Date(), auto: false });
+    if ("error" in result) {
+      return { error: result.error === "not_found" ? t.errors.cycleNotFound : result.error === "close_in_past" ? t.errors.plannedCloseInPast : t.errors.cycleNotPlanned };
     }
-    await notifyCycleOpened(db, opened, now);
-    // "Avvisami quando apre": an email to those who asked (and are not emailed already).
-    const alerted = await sendOpenAlerts(db, { cycleId, title: opened.title, orderCloseAt: opened.orderCloseAt });
-    await writeAudit(db, admin.email, "open_planned_cycle", "cycle", cycleId, { openedAt: now.toISOString(), alertsEmailed: alerted });
     revalidatePath("/admin");
     revalidatePath("/");
     revalidatePath("/ordine");

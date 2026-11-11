@@ -20,7 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { t } from "@/lib/i18n";
 import { formatDate } from "@/lib/i18n/format";
-import { formatDeadline } from "@/lib/i18n/deadline";
+import { formatDeadline, formatLongDay } from "@/lib/i18n/deadline";
 import { adminHref } from "@/lib/admin/nav";
 import { CYCLE_VIEW_LABELS, cycleViews, defaultCycleId, resolveCycleView, settlementCandidate, settlementPending, supplierOrderReady, viewsFor, type CycleView } from "@/lib/admin/cycle-views";
 import { CycleTodo } from "./cycle-todo";
@@ -46,6 +46,7 @@ import { CycleList, CyclePicker, type CycleListItem, type SettleState } from "./
 import { CycleOrdersView } from "./cycle-orders-view";
 import { CyclePickupsView } from "./cycle-pickups-view";
 import { RichText } from "@/components/guide/rich-text";
+import { autoOpenEnabled } from "@/lib/cycles/cron-auth";
 import { getCyclePickups } from "@/lib/db/pickups";
 import { pickupProgressLabel } from "@/lib/pickups";
 
@@ -66,6 +67,7 @@ type Props = {
 // deadline), Panoramica · Ordini · Fornitore · Ritiri · Conti once closed.
 export async function CycleWorkspace({ cycleId: asked, view: askedView, creating, access = "admin", role = null }: Props) {
   const referent = access === "referent";
+  const autoOpen = autoOpenEnabled();
   const [allCycles, suppliers, settings] = await Promise.all([getAllCycles(1000), getAllSuppliers(), getPaymentSettings()]);
   // A referent sees the cycles their role sees as a member, nothing more.
   const cycles = referent ? allCycles.filter((c) => managesCycle({ access, role }, c.accessLevel)) : allCycles;
@@ -125,6 +127,7 @@ export async function CycleWorkspace({ cycleId: asked, view: askedView, creating
         title: c.title,
         status: c.status,
         orderOpenAt: c.orderOpenAt,
+        datesTentative: c.datesTentative,
         orderCloseAt: c.orderCloseAt,
         closedAt: c.closedAt,
         orderMembers: f?.orderMembers ?? 0,
@@ -137,6 +140,7 @@ export async function CycleWorkspace({ cycleId: asked, view: askedView, creating
       };
     }),
     now,
+    autoOpen,
   );
   // As in Soci: a person who joined a family is not a duplicate of anyone.
   const duplicates = findDuplicatePairs(
@@ -220,6 +224,7 @@ async function NewCycle({
         walletShipping={defaults.wallet?.shipping ?? null}
         cardShipping={defaults.per_order?.shipping ?? null}
         cardDeposit={defaults.per_order?.depositPct ?? null}
+        autoOpen={autoOpenEnabled()}
         defaultOpen
       />
     </div>
@@ -285,7 +290,7 @@ async function SelectedCycle({
   };
 
   const when = isPlanned
-    ? c.orderOpenAt && w.opensAt(formatDeadline(c.orderOpenAt))
+    ? c.orderOpenAt && w.opensAt(formatLongDay(c.orderOpenAt))
     : isOpen
       ? c.orderCloseAt && w.closesAt(formatDeadline(c.orderCloseAt))
       : c.closedAt && w.closedAt(formatDate(c.closedAt));
@@ -357,7 +362,7 @@ async function SelectedCycle({
           <Card>
             <CardContent>
               <p className="mb-3 max-w-prose text-[13px] text-secondary-foreground">
-                <RichText text={w.plannedIntro} />
+                <RichText text={w.plannedIntro(!autoOpenEnabled() ? "manual" : cycle.datesTentative ? "tentative" : "auto")} />
               </p>
               <CycleFacts cycle={cycle} suppliers={suppliers} />
             </CardContent>

@@ -84,7 +84,7 @@ export default async function PublicGroupPage() {
               {cycle.status === "planned" && cycle.orderOpenAt ? (
                 <div>
                   <dt className="text-secondary-foreground">{s.opens}</dt>
-                  <dd className="font-medium text-foreground">{when(cycle.orderOpenAt)}</dd>
+                  <dd className="font-medium text-foreground">{formatDate(cycle.orderOpenAt, { weekday: "long", day: "numeric", month: "long" })}</dd>
                 </div>
               ) : null}
               {cycle.orderCloseAt ? (

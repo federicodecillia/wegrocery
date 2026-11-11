@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildCalendar, type CalendarCycleRow } from "./calendar";
-import { cyclesInMonth, cyclesOnDay, dayRole, defaultCycleId, spanOf, weekSegment } from "./calendar-view";
+import { cyclesInMonth, cyclesOnDay, dayMarks, dayRole, defaultCycleId, spanOf, weekSegment } from "./calendar-view";
 
 const NOW = new Date("2026-11-04T10:00:00Z");
 
@@ -44,6 +44,28 @@ describe("spanOf and dayRole", () => {
     expect(dayRole(span, "2026-11-08")).toMatchObject({ window: true, closes: true });
     expect(dayRole(span, "2026-11-10")).toEqual({ window: false, opens: false, closes: false, pickup: false });
     expect(dayRole(span, "2026-11-12").pickup).toBe(true);
+  });
+});
+
+describe("dayMarks", () => {
+  const entries = buildCalendar(
+    [
+      row({ cycleId: "a" }),
+      row({ cycleId: "b", orderOpenAt: new Date("2026-11-08T08:00:00Z"), orderCloseAt: new Date("2026-11-09T23:00:00Z"), pickupDate: new Date("2026-11-08T16:00:00Z") }),
+    ],
+    NOW,
+  );
+
+  it("lists last days first, then pickups, then openings, one per cycle", () => {
+    expect(dayMarks(entries, "2026-11-08")).toEqual(["closes", "pickup", "opens"]);
+    expect(dayMarks(entries, "2026-11-02")).toEqual(["opens"]);
+    expect(dayMarks(entries, "2026-11-05")).toEqual([]);
+  });
+
+  it("puts a midnight close on the day before, as the grid does", () => {
+    // b closes at 00:00 of 10 November in Rome: its last day is the 9th.
+    expect(dayMarks(entries, "2026-11-09")).toEqual(["closes"]);
+    expect(dayMarks(entries, "2026-11-10")).toEqual([]);
   });
 });
 

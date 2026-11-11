@@ -24,6 +24,18 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ## [Unreleased]
 
+## [1.46.0] - 2026-11-11
+
+*Planned cycles open by themselves.*
+
+### Added
+- ⏰ **Planned cycles open by themselves.** The planned opening is now a day, with no time: early that morning the orders open and members are told, as when an admin taps **Open the orders**, which stays for opening earlier. A cycle with **Tentative dates** never opens by itself. **To do now** asks to open it only once its day has passed and it is still planned.
+- 🔑 [tech] **`CRON_SECRET` variable.** Optional, at least 32 characters: turns on automatic opening through the Vercel Cron in `vercel.json` (once a day at 05:00 UTC, Hobby too). Without it `/api/cron/open-cycles` answers 404 and cycles open by hand.
+
+### Changed
+- 📅 **Home's calendar like the full one.** The month on Home (on a computer) uses the same icons as the order calendar: a basket for the opening, a lock for the last day, a package for the pickup, today in a filled circle, and the legend below.
+- 🗓️ **A tidier cycle form.** The dates sit together as a timeline: opening and close side by side on a tablet or computer, then tentative dates and pickups, and only then shipping and fees. Shorter help texts and easier buttons to tap.
+
 ## [1.45.2] - 2026-11-11
 
 *Product icons stay put.*
@@ -878,6 +890,7 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
+[1.46.0]: https://github.com/flylabs-ai/wegrocery/releases/tag/v1.46.0
 [1.45.2]: https://github.com/flylabs-ai/wegrocery/releases/tag/v1.45.2
 [1.45.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.45.1
 [1.35.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.35.0

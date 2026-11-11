@@ -4,7 +4,7 @@ import { confirm } from "@/components/ui/confirm-dialog";
 import { useState, useTransition, useEffect, useCallback } from "react";
 import { toast } from "@/components/ui/toast";
 import { Sheet } from "@/components/ui/sheet";
-import { formatDeadline, formatPickupSlot } from "@/lib/i18n/deadline";
+import { formatDeadline, formatLongDay, formatPickupSlot } from "@/lib/i18n/deadline";
 import { t } from "@/lib/i18n";
 import { formatMoney, formatHandlingFee } from "@/lib/i18n/format";
 import {
@@ -179,7 +179,7 @@ export function CycleFacts({ cycle, suppliers }: { cycle: SerializedCycle; suppl
       {cycle.status === "planned" && cycle.orderOpenAt && (
         <div>
           {t.fields.orderOpenDate}:{" "}
-          <span className="font-semibold text-foreground">{formatDeadline(cycle.orderOpenAt)}</span>
+          <span className="font-semibold text-foreground">{formatLongDay(cycle.orderOpenAt)}</span>
         </div>
       )}
       {cycle.orderCloseAt && (
@@ -358,7 +358,7 @@ const TIME_SLOTS: string[] = (() => {
 function TimeSlotSelect({ name, defValue, ariaLabel }: { name: string; defValue?: string; ariaLabel: string }) {
   const options = defValue && !TIME_SLOTS.includes(defValue) ? [defValue, ...TIME_SLOTS] : TIME_SLOTS;
   return (
-    <NativeSelect name={name} defaultValue={defValue ?? ""} aria-label={ariaLabel} wrapperClassName="min-w-0 flex-1" className="pl-2 pr-8 text-[13px]">
+    <NativeSelect name={name} defaultValue={defValue ?? ""} aria-label={ariaLabel} wrapperClassName="min-w-0 flex-1" className="pl-2 pr-8">
       <option value="">-</option>
       {options.map((t) => (
         <option key={t} value={t}>
@@ -393,7 +393,7 @@ function PickupRow({
         type="date"
         aria-label={label}
         defaultValue={defDate}
-        className="w-[140px] shrink-0 px-2 text-[13px]"
+        className="w-[140px] shrink-0 px-2"
       />
       <div className="flex min-w-[190px] flex-1 items-center gap-1.5">
         <span className={miniLabelCls}>{t.admin.cycle.timeFrom}</span>
@@ -469,7 +469,7 @@ function PickupSection({
           <button
             type="button"
             onClick={() => setShowPickup2(true)}
-            className="text-[12px] font-semibold text-primary-text hover:underline"
+            className="flex min-h-11 items-center text-[13px] font-semibold text-primary-text hover:underline"
           >
             {t.admin.cycle.addPickup2}
           </button>
@@ -513,7 +513,7 @@ function ShippingModeFields({
             key={opt.v}
             type="button"
             onClick={() => onModeChange(opt.v)}
-            className={`flex-1 rounded-md py-1.5 text-label font-semibold transition-colors ${
+            className={`flex min-h-(--control-h) flex-1 items-center justify-center rounded-md px-1 text-center text-[13px] font-semibold transition-colors ${
               mode === opt.v
                 ? "bg-card text-foreground shadow-sm"
                 : "bg-transparent text-secondary-foreground"
@@ -594,7 +594,7 @@ function HandlingFeeFields({
             key={opt.v}
             type="button"
             onClick={() => setType(opt.v)}
-            className={`flex-1 rounded-md py-1.5 text-label font-semibold transition-colors ${
+            className={`flex min-h-(--control-h) flex-1 items-center justify-center rounded-md px-1 text-center text-[13px] font-semibold transition-colors ${
               type === opt.v ? "bg-card text-foreground shadow-sm" : "bg-transparent text-secondary-foreground"
             }`}
           >
@@ -642,7 +642,7 @@ function WeighingDepositFields({ defaultPct, warning }: { defaultPct: number | n
             key={String(opt.v)}
             type="button"
             onClick={() => setOn(opt.v)}
-            className={`flex-1 rounded-md py-1.5 text-label font-semibold transition-colors ${
+            className={`flex min-h-(--control-h) flex-1 items-center justify-center rounded-md px-1 text-center text-[13px] font-semibold transition-colors ${
               on === opt.v ? "bg-card text-foreground shadow-sm" : "bg-transparent text-secondary-foreground"
             }`}
           >
@@ -689,7 +689,8 @@ export function EditCycleForm({
   // Prefill in app-zone wall time: slicing the ISO string would show UTC.
   const closeAtLocal = utcToZonedLocalInput(cycle.orderCloseAt);
   const planned = cycle.status === "planned";
-  const openAtLocal = utcToZonedLocalInput(cycle.orderOpenAt ?? null);
+  const [tentative, setTentative] = useState(cycle.datesTentative ?? false);
+  const openAtLocal = utcToZonedLocalInput(cycle.orderOpenAt ?? null).slice(0, 10);
   const pickupLocal = utcToZonedLocalInput(cycle.pickupDate);
   const pickup2Local = utcToZonedLocalInput(cycle.pickup2Date);
   // "manual" means the cycle is being driven by a supplier-distinta import:
@@ -784,22 +785,26 @@ export function EditCycleForm({
         </label>
       </div>
 
-      {planned && <PlannedFields defaultOpenAt={openAtLocal} defaultTentative={cycle.datesTentative ?? false} />}
+      <CycleDateFields
+        planned={planned}
+        showClose={!isClosed}
+        defaultOpenAt={openAtLocal}
+        defaultCloseAt={closeAtLocal}
+        tentative={tentative}
+        onTentativeChange={setTentative}
+      />
 
-      {!isClosed && (
-        <div>
-          <label className="block">
-            <span className={labelClass}>{t.admin.cycle.orderCloseAtLabel}
-            </span>
-            <Input
-              name="orderCloseAt"
-              type="datetime-local"
-              required
-              defaultValue={closeAtLocal}
-            />
-          </label>
-        </div>
-      )}
+      {/* The dates as one timeline, then the money. */}
+      <PickupSection
+        defPickup1Date={pickupLocal.slice(0, 10)}
+        defPickup1Start={pickupLocal.slice(11, 16)}
+        defPickup1End={cycle.pickupEndTime ?? ""}
+        defPickup2Date={pickup2Local.slice(0, 10)}
+        defPickup2Start={pickup2Local.slice(11, 16)}
+        defPickup2End={cycle.pickup2EndTime ?? ""}
+        defTentative={cycle.pickupTentative ?? false}
+        focus={focusPickup}
+      />
 
       {shippingMode === "manual" ? (
         <div>
@@ -836,17 +841,6 @@ export function EditCycleForm({
           warning={t.admin.cycle.handlingFeeEditWarning}
         />
       )}
-
-      <PickupSection
-        defPickup1Date={pickupLocal.slice(0, 10)}
-        defPickup1Start={pickupLocal.slice(11, 16)}
-        defPickup1End={cycle.pickupEndTime ?? ""}
-        defPickup2Date={pickup2Local.slice(0, 10)}
-        defPickup2Start={pickup2Local.slice(11, 16)}
-        defPickup2End={cycle.pickup2EndTime ?? ""}
-        defTentative={cycle.pickupTentative ?? false}
-        focus={focusPickup}
-      />
 
       <div className={isClosed ? "" : "grid grid-cols-2 gap-3"}>
         <div>
@@ -908,22 +902,60 @@ export function EditCycleForm({
 // Wallet or card, for a new cycle of a wallet group. Same look as the
 // shipping and fee toggles. With card cycles switched off in Impostazioni the
 // card option stays in sight, greyed out, with the way to switch it on.
-/** A planned cycle's opening and whether its dates are indicative. */
-function PlannedFields({ defaultOpenAt = "", defaultTentative = false }: { defaultOpenAt?: string; defaultTentative?: boolean }) {
+/**
+ * The cycle's dates as one timeline: the planned opening and the close side
+ * by side from 640px (stacked on a phone, where a half-width date-time input
+ * gets cut), "Date indicative" under them. Every required field stays in
+ * sight: no tabs, so a missing date is never hidden.
+ */
+function CycleDateFields({
+  planned,
+  showClose = true,
+  defaultOpenAt = "",
+  defaultCloseAt,
+  tentative,
+  onTentativeChange,
+}: {
+  planned: boolean;
+  showClose?: boolean;
+  defaultOpenAt?: string;
+  defaultCloseAt?: string;
+  tentative: boolean;
+  onTentativeChange: (tentative: boolean) => void;
+}) {
   const c = t.admin.cycle;
+  if (!planned && !showClose) return null;
   return (
     <div className="space-y-2">
-      <label className="block">
-        <span className={labelClass}>{c.orderOpenAtLabel}</span>
-        <Input name="orderOpenAt" type="datetime-local" required defaultValue={defaultOpenAt} />
-      </label>
-      <label className="flex min-h-11 items-start gap-2.5 text-[13px] text-foreground">
-        <input type="checkbox" name="datesTentative" defaultChecked={defaultTentative} className="mt-0.5 size-4.5 accent-primary" />
-        <span>
-          <span className="font-semibold">{c.tentativeLabel}</span>
-          <span className="block text-label text-secondary-foreground">{c.tentativeHint}</span>
-        </span>
-      </label>
+      <div className="grid grid-cols-1 items-end gap-3 sm:grid-cols-2">
+        {planned && (
+          <label className="block">
+            <span className={labelClass}>{c.orderOpenAtLabel}</span>
+            <Input name="orderOpenAt" type="date" required defaultValue={defaultOpenAt} />
+          </label>
+        )}
+        {showClose && (
+          <label className="block">
+            <span className={labelClass}>{c.orderCloseAtLabel}</span>
+            <Input name="orderCloseAt" type="datetime-local" required defaultValue={defaultCloseAt} />
+          </label>
+        )}
+      </div>
+      {planned && (
+        <label className="flex min-h-11 items-start gap-2.5 text-[13px] text-foreground">
+          <input
+            type="checkbox"
+            name="datesTentative"
+            checked={tentative}
+            onChange={(e) => onTentativeChange(e.target.checked)}
+            className="mt-0.5 size-4.5 accent-primary"
+          />
+          <span>
+            <span className="font-semibold">{c.tentativeLabel}</span>
+            <span className="block text-label text-secondary-foreground">{c.tentativeHint}</span>
+          </span>
+        </label>
+      )}
     </div>
   );
 }
@@ -946,7 +978,7 @@ function BoldText({ text }: { text: string }) {
 }
 
 /** "Quando aprono gli ordini": now, or later (planned, with its opening). */
-function WhenFields({ planned, onChange }: { planned: boolean; onChange: (planned: boolean) => void }) {
+function WhenFields({ planned, onChange, autoOpen }: { planned: boolean; onChange: (planned: boolean) => void; autoOpen: boolean }) {
   const c = t.admin.cycle;
   return (
     <fieldset>
@@ -972,7 +1004,7 @@ function WhenFields({ planned, onChange }: { planned: boolean; onChange: (planne
       </div>
       {planned && (
         <p className="mt-1.5 text-label text-secondary-foreground">
-          <BoldText text={c.plannedHint} />
+          <BoldText text={c.plannedHint(autoOpen)} />
         </p>
       )}
     </fieldset>
@@ -1004,7 +1036,7 @@ function PaymentModeFields({
             disabled={opt.disabled}
             aria-describedby={opt.disabled ? "payment-mode-card-off" : undefined}
             onClick={() => onModeChange(opt.v)}
-            className={`flex-1 rounded-md py-1.5 text-label font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+            className={`flex min-h-(--control-h) flex-1 items-center justify-center rounded-md px-1 text-center text-[13px] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
               mode === opt.v ? "bg-card text-foreground shadow-sm" : "bg-transparent text-secondary-foreground"
             }`}
           >
@@ -1040,9 +1072,12 @@ export function CreateCycleForm({
   cardDeposit = null,
   walletShipping = null,
   cardShipping = null,
+  autoOpen = false,
   defaultOpen = false,
 }: {
   suppliers: Supplier[];
+  /** Planned cycles open by themselves on this deploy (CRON_SECRET, lib/cycles/cron-auth.ts). */
+  autoOpen?: boolean;
   /** The mode a new cycle starts from (lib/payments/cycle-mode.ts, defaultNewCycleMode). */
   paymentMode: "wallet" | "per_order";
   /** A wallet group may pay this cycle by card (lib/payments/cycle-mode.ts). */
@@ -1062,6 +1097,7 @@ export function CreateCycleForm({
 }) {
   const [open, setOpen] = useState(defaultOpen);
   const [planned, setPlanned] = useState(false);
+  const [tentative, setTentative] = useState(false);
   const [paymentMode, setPaymentMode] = useState<"wallet" | "per_order">(groupMode);
   const handlingFee = paymentMode === "per_order" ? cardFee : walletFee;
   const shippingDefault = (mode: "wallet" | "per_order") => (mode === "per_order" ? cardShipping : walletShipping);
@@ -1144,20 +1180,11 @@ export function CreateCycleForm({
           </label>
         </div>
 
-        <WhenFields planned={planned} onChange={setPlanned} />
-        {planned && <PlannedFields />}
+        <WhenFields planned={planned} onChange={setPlanned} autoOpen={autoOpen && !tentative} />
+        <CycleDateFields planned={planned} tentative={tentative} onTentativeChange={setTentative} />
 
-        <div>
-          <label className="block">
-            <span className={labelClass}>{t.admin.cycle.orderCloseAtLabel}
-            </span>
-            <Input
-              name="orderCloseAt"
-              type="datetime-local"
-              required
-            />
-          </label>
-        </div>
+        {/* The dates as one timeline, then the money. */}
+        <PickupSection />
 
         {(cardSelectable || cardSwitchedOff) && (
           <PaymentModeFields mode={paymentMode} onModeChange={changePaymentMode} cardDisabled={!cardSelectable} />
@@ -1185,8 +1212,6 @@ export function CreateCycleForm({
         />
 
         {paymentMode === "per_order" && <WeighingDepositFields defaultPct={cardDeposit} />}
-
-        <PickupSection />
 
         <div className="grid grid-cols-2 gap-3">
           <div>
