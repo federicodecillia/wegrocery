@@ -2,22 +2,20 @@
 
 The living snapshot of what is released, what waits on `staging` and what is planned. Any agent (Claude Code, Codex or another) reads it before starting and updates it in the same PR that changes the picture: a release, a migration applied somewhere, a plan approved or dropped. Keep it short; the detail lives in `CHANGELOG.md`, the dated plans in `docs/` and the PRs.
 
-Last updated: 2026-11-11 (release 1.46.0 prepared).
+Last updated: 2026-11-11 (release 1.46.0 verified).
 
 ## Versions and migrations
 
 | Installation | Version | Migrations applied |
 |---|---|---|
-| Production (`main`) | 1.45.2 (2026-11-11) | up to `0054` |
-| Public demo (`main`) | 1.45.2 | up to `0054` |
-| Example brand installation | 1.45.2 | up to `0054` (migrates on build) |
-| Staging (`staging`) | 1.45.2 | up to `0054` (Neon branch `staging`) |
+| Production (`main`) | 1.46.0 (2026-11-11) | up to `0054` |
+| Public demo (`main`) | 1.46.0 | up to `0054` |
+| Example brand installation | 1.46.0 | up to `0054` (migrates on build) |
+| Staging (`staging`) | 1.46.0 | up to `0054` (Neon branch `staging`) |
 
 ## Waiting on `staging` for the next release
 
-Release 1.46.0 in progress (no migration): Home's month view draws the same icons as `/calendario`, planned cycles open by themselves on the morning of their planned day (a date, no time; Vercel Cron daily at 05:00 UTC, `CRON_SECRET`, `lib/cycles/open-planned.ts`), and the cycle form is tidier. `CRON_SECRET` must be set on each installation; Hobby is enough.
-
-Nothing awaiting a product release. Version 1.45.2 (product icons, PR #409, no migration) was released through PR #411 (merge commit `4c137e9`) after manual backup run `42979381978`; staging fast-forwarded to it and the example brand aligned (`212c35b`). `/api/health` on production, demo and example brand reports `ok: true`, `db: true`, version `1.45.2`; the GitHub release workflow passed. Production product icons were aligned on 2026-11-10 (51 names with one icon in use, Neon backup branch `backup-pre-icone-2026-11-10`, audit row `fix_product_emoji`).
+Nothing awaiting a product release. Version 1.46.0 (planned cycles open by themselves, Home calendar icons, tidier cycle form; PR #408, no migration) was released through PR #414 (merge commit `50d2972`) after manual backup run `43062446242`; staging fast-forwarded to it and the example brand aligned (`f5bcb6a`). `CRON_SECRET` is set (Production) on porta-moneta, demo and example brand; `/api/cron/open-cycles` answers 404 without it. `/api/health` on production, demo and example brand reports `ok: true`, `db: true`, version `1.46.0`; the GitHub release workflow published `v1.46.0`. First automatic run: 2026-11-12 at 05:00 UTC.
 
 WP0 is done (2026-11-11): the repositories are under `flylabs-ai`, and all four Vercel projects (porta-moneta, demo, example brand, Console) are in the Flylabs team. PR #407 was closed without merging. The production Deploy Hook and the Deploy Health bypass followed the project and work (Deploy Health run `43061887968` green on the new deploy).
 
