@@ -19,7 +19,7 @@ Release 1.46.0 in progress (no migration): Home's month view draws the same icon
 
 Nothing awaiting a product release. Version 1.45.2 (product icons, PR #409, no migration) was released through PR #411 (merge commit `4c137e9`) after manual backup run `42979381978`; staging fast-forwarded to it and the example brand aligned (`212c35b`). `/api/health` on production, demo and example brand reports `ok: true`, `db: true`, version `1.45.2`; the GitHub release workflow passed. Production product icons were aligned on 2026-11-10 (51 names with one icon in use, Neon backup branch `backup-pre-icone-2026-11-10`, audit row `fix_product_emoji`).
 
-WP0 A.1 is released: repository guards, Console defaults and public setup links are ready for the future `flylabs-ai` upstream. Next is the Maintainer-only GitHub transfer checklist in [the phase 2 plan](./2026-11-09-launch-phase2-fleet.md). Stop before those steps; post-transfer checks/cleanup and Vercel transfers are not done.
+WP0 is done (2026-11-11): the repositories are under `flylabs-ai`, and all four Vercel projects (porta-moneta, demo, example brand, Console) are in the Flylabs team. PR #407 was closed without merging. The production Deploy Hook and the Deploy Health bypass followed the project and work (Deploy Health run `43061887968` green on the new deploy).
 
 ## Released in 1.45.0, off by default
 
