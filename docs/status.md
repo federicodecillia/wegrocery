@@ -2,20 +2,20 @@
 
 The living snapshot of what is released, what waits on `staging` and what is planned. Any agent (Claude Code, Codex or another) reads it before starting and updates it in the same PR that changes the picture: a release, a migration applied somewhere, a plan approved or dropped. Keep it short; the detail lives in `CHANGELOG.md`, the dated plans in `docs/` and the PRs.
 
-Last updated: 2026-11-11 (1.45.2 release preparation; production remains 1.45.1).
+Last updated: 2026-11-11 (release 1.45.2 verified).
 
 ## Versions and migrations
 
 | Installation | Version | Migrations applied |
 |---|---|---|
-| Production (`main`) | 1.45.1 (2026-11-09) | up to `0054` |
-| Public demo (`main`) | 1.45.1 | up to `0054` |
-| Example brand installation | 1.45.1 | up to `0054` (migrates on build) |
-| Staging (`staging`) | 1.45.1 | up to `0054` (Neon branch `staging`) |
+| Production (`main`) | 1.45.2 (2026-11-11) | up to `0054` |
+| Public demo (`main`) | 1.45.2 | up to `0054` |
+| Example brand installation | 1.45.2 | up to `0054` (migrates on build) |
+| Staging (`staging`) | 1.45.2 | up to `0054` (Neon branch `staging`) |
 
 ## Waiting on `staging` for the next release
 
-Release 1.45.2 is being prepared, authorized by the maintainer on 2026-11-11. Product icons fix (PR #409, no migration): imports keep the icon already used for a product name, an admin's pick (import preview, catalogue, cycle product) goes to every product with that name, more cheeses recognised. Before that, version 1.45.1 was released through PR #404 (merge commit `3015523`), staging fast-forwarded to that commit, and the example brand aligned (`0ed3d0e`). Public health endpoints on production, demo and example brand report `ok: true`, `db: true`, version `1.45.1`; staging Deploy Health passed before promotion. Manual backup and money invariants passed in run `42618843367`. No migrations or transfers were performed.
+Nothing awaiting a product release. Version 1.45.2 (product icons, PR #409, no migration) was released through PR #411 (merge commit `4c137e9`) after manual backup run `42979381978`; staging fast-forwarded to it and the example brand aligned (`212c35b`). `/api/health` on production, demo and example brand reports `ok: true`, `db: true`, version `1.45.2`; the GitHub release workflow passed. Production product icons were aligned on 2026-11-10 (51 names with one icon in use, Neon backup branch `backup-pre-icone-2026-11-10`, audit row `fix_product_emoji`).
 
 WP0 A.1 is released: repository guards, Console defaults and public setup links are ready for the future `flylabs-ai` upstream. Next is the Maintainer-only GitHub transfer checklist in [the phase 2 plan](./2026-11-09-launch-phase2-fleet.md). Stop before those steps; post-transfer checks/cleanup and Vercel transfers are not done.
 
