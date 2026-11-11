@@ -2,7 +2,7 @@
 
 The living snapshot of what is released, what waits on `staging` and what is planned. Any agent (Claude Code, Codex or another) reads it before starting and updates it in the same PR that changes the picture: a release, a migration applied somewhere, a plan approved or dropped. Keep it short; the detail lives in `CHANGELOG.md`, the dated plans in `docs/` and the PRs.
 
-Last updated: 2026-11-11 (release 1.45.2 verified).
+Last updated: 2026-11-11 (release 1.46.0 prepared).
 
 ## Versions and migrations
 
@@ -15,11 +15,11 @@ Last updated: 2026-11-11 (release 1.45.2 verified).
 
 ## Waiting on `staging` for the next release
 
-On the PR branch for the next release (not merged while the Vercel move is under way): Home's month view draws the same icons as `/calendario`, planned cycles open by themselves on the morning of their planned day (a date, no time; Vercel Cron daily at 05:00 UTC, `CRON_SECRET`, `lib/cycles/open-planned.ts`), and the cycle form is tidier. `CRON_SECRET` must be set on each installation; Hobby is enough.
+Release 1.46.0 in progress (no migration): Home's month view draws the same icons as `/calendario`, planned cycles open by themselves on the morning of their planned day (a date, no time; Vercel Cron daily at 05:00 UTC, `CRON_SECRET`, `lib/cycles/open-planned.ts`), and the cycle form is tidier. `CRON_SECRET` must be set on each installation; Hobby is enough.
 
 Nothing awaiting a product release. Version 1.45.2 (product icons, PR #409, no migration) was released through PR #411 (merge commit `4c137e9`) after manual backup run `42979381978`; staging fast-forwarded to it and the example brand aligned (`212c35b`). `/api/health` on production, demo and example brand reports `ok: true`, `db: true`, version `1.45.2`; the GitHub release workflow passed. Production product icons were aligned on 2026-11-10 (51 names with one icon in use, Neon backup branch `backup-pre-icone-2026-11-10`, audit row `fix_product_emoji`).
 
-WP0 A.1 is released: repository guards, Console defaults and public setup links are ready for the future `flylabs-ai` upstream. Next is the Maintainer-only GitHub transfer checklist in [the phase 2 plan](./2026-11-09-launch-phase2-fleet.md). Stop before those steps; post-transfer checks/cleanup and Vercel transfers are not done.
+WP0 is done (2026-11-11): the repositories are under `flylabs-ai`, and all four Vercel projects (porta-moneta, demo, example brand, Console) are in the Flylabs team. PR #407 was closed without merging. The production Deploy Hook and the Deploy Health bypass followed the project and work (Deploy Health run `43061887968` green on the new deploy).
 
 ## Released in 1.45.0, off by default
 

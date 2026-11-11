@@ -25,6 +25,10 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ## [Unreleased]
 
+## [1.46.0] - 11 novembre 2026
+
+*I cicli in programma si aprono da soli.*
+
 ### Aggiunte
 - ⏰ **I cicli in programma si aprono da soli.** L'apertura prevista ora è un giorno, senza ora: quella mattina presto gli ordini si aprono e i soci ricevono l'avviso, come quando un admin tocca **Apri gli ordini**, che resta per aprire prima. Un ciclo con **Date indicative** non si apre mai da solo. **Da fare ora** chiede di aprirlo solo se il giorno è passato e il ciclo è ancora in programma.
 - 🔑 [tecnico] **Variabile `CRON_SECRET`.** Facoltativa, almeno 32 caratteri: accende l'apertura automatica tramite il Vercel Cron in `vercel.json` (una volta al giorno, alle 5:00 UTC, anche su Hobby). Senza, `/api/cron/open-cycles` risponde 404 e i cicli si aprono a mano.
@@ -888,6 +892,7 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
+[1.46.0]: https://github.com/flylabs-ai/wegrocery/releases/tag/v1.46.0
 [1.45.2]: https://github.com/flylabs-ai/wegrocery/releases/tag/v1.45.2
 [1.45.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.45.1
 [1.35.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.35.0
