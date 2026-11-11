@@ -358,7 +358,7 @@ const TIME_SLOTS: string[] = (() => {
 function TimeSlotSelect({ name, defValue, ariaLabel }: { name: string; defValue?: string; ariaLabel: string }) {
   const options = defValue && !TIME_SLOTS.includes(defValue) ? [defValue, ...TIME_SLOTS] : TIME_SLOTS;
   return (
-    <NativeSelect name={name} defaultValue={defValue ?? ""} aria-label={ariaLabel} wrapperClassName="min-w-0 flex-1" className="pl-2 pr-8 text-[13px]">
+    <NativeSelect name={name} defaultValue={defValue ?? ""} aria-label={ariaLabel} wrapperClassName="min-w-0 flex-1" className="pl-2 pr-8">
       <option value="">-</option>
       {options.map((t) => (
         <option key={t} value={t}>
@@ -393,7 +393,7 @@ function PickupRow({
         type="date"
         aria-label={label}
         defaultValue={defDate}
-        className="w-[140px] shrink-0 px-2 text-[13px]"
+        className="w-[140px] shrink-0 px-2"
       />
       <div className="flex min-w-[190px] flex-1 items-center gap-1.5">
         <span className={miniLabelCls}>{t.admin.cycle.timeFrom}</span>
@@ -513,7 +513,7 @@ function ShippingModeFields({
             key={opt.v}
             type="button"
             onClick={() => onModeChange(opt.v)}
-            className={`flex min-h-11 flex-1 items-center justify-center rounded-md px-1 text-label font-semibold transition-colors ${
+            className={`flex min-h-(--control-h) flex-1 items-center justify-center rounded-md px-1 text-center text-[13px] font-semibold transition-colors ${
               mode === opt.v
                 ? "bg-card text-foreground shadow-sm"
                 : "bg-transparent text-secondary-foreground"
@@ -594,7 +594,7 @@ function HandlingFeeFields({
             key={opt.v}
             type="button"
             onClick={() => setType(opt.v)}
-            className={`flex min-h-11 flex-1 items-center justify-center rounded-md px-1 text-label font-semibold transition-colors ${
+            className={`flex min-h-(--control-h) flex-1 items-center justify-center rounded-md px-1 text-center text-[13px] font-semibold transition-colors ${
               type === opt.v ? "bg-card text-foreground shadow-sm" : "bg-transparent text-secondary-foreground"
             }`}
           >
@@ -642,7 +642,7 @@ function WeighingDepositFields({ defaultPct, warning }: { defaultPct: number | n
             key={String(opt.v)}
             type="button"
             onClick={() => setOn(opt.v)}
-            className={`flex min-h-11 flex-1 items-center justify-center rounded-md px-1 text-label font-semibold transition-colors ${
+            className={`flex min-h-(--control-h) flex-1 items-center justify-center rounded-md px-1 text-center text-[13px] font-semibold transition-colors ${
               on === opt.v ? "bg-card text-foreground shadow-sm" : "bg-transparent text-secondary-foreground"
             }`}
           >
@@ -1036,7 +1036,7 @@ function PaymentModeFields({
             disabled={opt.disabled}
             aria-describedby={opt.disabled ? "payment-mode-card-off" : undefined}
             onClick={() => onModeChange(opt.v)}
-            className={`flex min-h-11 flex-1 items-center justify-center rounded-md px-1 text-label font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+            className={`flex min-h-(--control-h) flex-1 items-center justify-center rounded-md px-1 text-center text-[13px] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
               mode === opt.v ? "bg-card text-foreground shadow-sm" : "bg-transparent text-secondary-foreground"
             }`}
           >
