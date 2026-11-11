@@ -1353,7 +1353,7 @@ export const es: Strings = {
       helpPrezzo: "Lo que paga el socio por UNA unidad (p. ej. 5 € por la bolsa de 2 kg). Decimales con coma o punto.",
       helpPrezzoKg: "Opcional: precio por kg como referencia (p. ej. 2,50 €/kg), que los socios ven junto al precio. Útil para productos a peso; déjalo vacío para lo que se vende por pieza o paquete.",
       helpCategoria: "Sirve para agrupar los productos en el formulario del pedido. Elige de la lista o añade una nueva.",
-      helpIcona: "Emoji que aparece junto al producto. Haz clic para elegirlo o buscarlo.",
+      helpIcona: "Emoji que aparece junto al producto. Haz clic para elegirlo o buscarlo. El que elijas pasa a todos los productos con este nombre, en el catálogo y en los ciclos, y las próximas importaciones lo mantienen.",
       helpNote: 'Notas libres, visibles para los socios. P. ej. "Cultivado en invernadero", "Consumir en 3 días".',
       stock: {
         maxQuantity: "Disponibles",

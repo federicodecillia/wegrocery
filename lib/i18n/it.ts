@@ -1356,7 +1356,7 @@ export const it = {
       helpPrezzo: "Quanto paga il socio per UN formato (es. €5 per il sacco da 2kg). Decimali con virgola o punto.",
       helpPrezzoKg: "Opzionale: prezzo al chilo come riferimento (es. €2,50/kg), mostrato al socio accanto al prezzo. Comodo per prodotti a peso; lascialo vuoto per quelli venduti a pezzo o confezione.",
       helpCategoria: "Serve a raggruppare i prodotti nel form ordine. Scegli dall'elenco o aggiungine una nuova.",
-      helpIcona: "Emoji mostrata accanto al prodotto. Clicca per scegliere o cercare.",
+      helpIcona: "Emoji mostrata accanto al prodotto. Clicca per scegliere o cercare. Quella che scegli passa a tutti i prodotti con questo nome, nel catalogo e nei cicli, e i prossimi import la tengono.",
       helpNote: 'Note libere, mostrate al socio. Es: "Coltivata in serra", "Da consumare entro 3 giorni".',
       stock: {
         maxQuantity: "Disponibili",
