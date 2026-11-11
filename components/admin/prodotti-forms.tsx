@@ -75,6 +75,7 @@ export function CatalogProductForm({
       notes: fd.get("notes") as string,
       category: fd.get("category") as string,
       emoji: fd.get("emoji") as string,
+      emojiPicked: emojiTouched,
     };
 
     startTransition(async () => {
@@ -452,6 +453,7 @@ export function EditCycleProductForm({
     pricePerKg: string | null;
     notes: string | null;
     category: string | null;
+    emoji?: string | null;
     maxQuantity?: number | null;
     maxPerMember?: number | null;
   };
@@ -461,6 +463,10 @@ export function EditCycleProductForm({
   onClose: () => void;
 }) {
   const [isPending, startTransition] = useTransition();
+  const [currentEmoji, setCurrentEmoji] = useState(product.emoji || getProductEmoji(product.name));
+  // Sent only when the admin picks one: it then becomes the icon of every
+  // product with this name, in the catalogue and in every cycle.
+  const [emojiTouched, setEmojiTouched] = useState(false);
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -477,6 +483,7 @@ export function EditCycleProductForm({
       pricePerKg: pricePerKg != null && !Number.isNaN(pricePerKg) ? pricePerKg : null,
       notes: (fd.get("notes") as string) || undefined,
       category: (fd.get("category") as string) || undefined,
+      ...(emojiTouched ? { emoji: currentEmoji } : {}),
       ...(stockEnabled
         ? { maxQuantity: String(fd.get("maxQuantity") ?? ""), maxPerMember: String(fd.get("maxPerMember") ?? "") }
         : {}),
@@ -508,11 +515,26 @@ export function EditCycleProductForm({
       </div>
 
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        <div className="col-span-2 sm:col-span-4">
-          <Label>
-            {t.admin.products.nameLabel}<FieldHelp text={HELP.nome} />
-          </Label>
-          <Input name="name" required defaultValue={product.name} />
+        <div className="col-span-2 flex items-end gap-2 sm:col-span-4">
+          <div className="min-w-0 flex-1">
+            <Label>
+              {t.admin.products.nameLabel}<FieldHelp text={HELP.nome} />
+            </Label>
+            <Input name="name" required defaultValue={product.name} />
+          </div>
+          <div className="w-[64px] shrink-0">
+            <Label>
+              {t.admin.products.iconLabel}<FieldHelp text={HELP.icona} />
+            </Label>
+            <EmojiPicker
+              name="emoji"
+              value={currentEmoji}
+              onChange={(emoji) => {
+                setCurrentEmoji(emoji);
+                setEmojiTouched(true);
+              }}
+            />
+          </div>
         </div>
         <div className="col-span-2 sm:col-span-2">
           <Label>

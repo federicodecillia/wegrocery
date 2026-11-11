@@ -1339,7 +1339,7 @@ export const fr: Strings = {
       helpPrezzo: "Ce que le membre paie pour UNE unité (ex. 5 € le sachet de 2 kg). Décimales avec virgule ou point.",
       helpPrezzoKg: "Facultatif : prix au kg pour référence (ex. 2,50 €/kg), affiché aux membres à côté du prix. Pratique pour les produits au poids ; laissez vide pour ce qui se vend à la pièce ou au paquet.",
       helpCategoria: "Sert à regrouper les produits dans le formulaire de commande. Choisissez dans la liste ou ajoutez-en une.",
-      helpIcona: "Emoji affiché à côté du produit. Cliquez pour le choisir ou le rechercher.",
+      helpIcona: "Emoji affiché à côté du produit. Cliquez pour le choisir ou le rechercher. Celui que vous choisissez passe à tous les produits de ce nom, dans le catalogue et dans les cycles, et les prochaines importations le gardent.",
       helpNote: 'Notes libres, visibles par les membres. Ex. « Cultivé sous serre », « À consommer sous 3 jours ».',
       stock: {
         maxQuantity: "Disponibles",

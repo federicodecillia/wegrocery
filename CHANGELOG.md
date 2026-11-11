@@ -24,6 +24,19 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ## [Unreleased]
 
+## [1.45.2] - 2026-11-11
+
+*Product icons stay put.*
+
+### Fixed
+
+- 🧀 **Product icons survive a new listing**: an import keeps the icon the group already uses for a product with that name, in the catalogue and in the cycle, instead of putting back the cart or the guess from the name. The preview shows that icon.
+
+### Changed
+
+- 🎨 **One icon per product, everywhere**: an icon picked in the import preview, in the catalogue or in a cycle's product (now with its own icon field) goes to every product with the same name, and picking it on one preview row picks it for the rows with the same name.
+- 🔎 **More cheeses recognised**: gorgonzola, stracchino, taleggio, fontina, asiago, provola, scamorza, caciotta, robiola, grana and others get 🧀 by themselves.
+
 ## [1.45.1] - 2026-11-09
 
 *Preparing the repository move to FlyLabs.*
@@ -865,6 +878,7 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ---
 
+[1.45.2]: https://github.com/flylabs-ai/wegrocery/releases/tag/v1.45.2
 [1.45.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.45.1
 [1.35.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.35.0
 [1.34.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.34.1

@@ -9,6 +9,7 @@ import { EmojiPicker } from "@/components/ui/emoji-picker";
 import {
   adminInspectSupplierListing,
   adminApplySupplierListingImport,
+  adminSavedProductEmojis,
   type WizardInspectionResult,
   type WizardApplyInput,
 } from "@/lib/actions/admin-products";
@@ -22,7 +23,8 @@ import {
   type TargetField,
 } from "@/lib/csv/header-heuristics";
 import { parsePriceCell, resolvePricePerKg } from "@/lib/csv/pack-weight";
-import { formatEur, getProductEmojiOrNull, guessProductCategory, isGenericCategoryLabel } from "@/lib/utils";
+import { formatEur, guessProductCategory, isGenericCategoryLabel } from "@/lib/utils";
+import { productEmojiKey, resolveProductEmoji, rowsWithSameName } from "@/lib/products/emoji";
 import { t } from "@/lib/i18n";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
@@ -554,6 +556,45 @@ function Step3Review({
     return sheet.rows[rowIdx]?.[col] ?? "";
   }
 
+  const names = useMemo(
+    () => sheet.rows.map((r) => (mapping.name === undefined ? "" : (r[mapping.name] ?? "").trim())),
+    [sheet.rows, mapping.name],
+  );
+  // The icons the group already uses for these names: the import keeps them,
+  // so the preview shows them instead of the guess from the name.
+  const [savedEmojis, setSavedEmojis] = useState<Record<string, string>>({});
+  useEffect(() => {
+    let cancelled = false;
+    const wanted = Array.from(new Set(names.filter(Boolean)));
+    if (wanted.length === 0) {
+      setSavedEmojis({});
+      return;
+    }
+    adminSavedProductEmojis(wanted)
+      .then((res) => {
+        if (!cancelled && res.data) setSavedEmojis(res.data);
+      })
+      .catch(() => {
+        // The preview falls back to the name match; the import still keeps
+        // the saved icons on the server.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [names]);
+
+  function rowEmoji(i: number) {
+    const name = names[i] ?? "";
+    return resolveProductEmoji(name, emojiOverrides[i], savedEmojis[productEmojiKey(name)]);
+  }
+
+  // Picking an icon on one row picks it for every row with the same name.
+  function pickEmoji(i: number, emoji: string) {
+    const next = { ...emojiOverrides };
+    for (const j of rowsWithSameName(names, i)) next[j] = emoji;
+    setEmojiOverrides(next);
+  }
+
   function toggle(idx: number) {
     const next = new Set(selectedIndexes);
     if (next.has(idx)) next.delete(idx);
@@ -567,14 +608,10 @@ function Step3Review({
 
   const unmatchedEmojiCount = useMemo(
     () =>
-      sheet.rows.filter((_, i) => {
-        if (!selectedIndexes.has(i)) return false;
-        if (emojiOverrides[i]) return false;
-        const name = cell(i, "name");
-        return name && getProductEmojiOrNull(name) === null;
-      }).length,
+      sheet.rows.filter((_, i) => selectedIndexes.has(i) && Boolean(names[i]) && rowEmoji(i).source === "fallback")
+        .length,
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [sheet.rows, selectedIndexes, emojiOverrides, mapping],
+    [sheet.rows, selectedIndexes, emojiOverrides, names, savedEmojis],
   );
 
   // Same rule as the server (resolveRow), so the preview shows what is saved.
@@ -669,9 +706,7 @@ function Step3Review({
           <tbody>
             {sheet.rows.map((_, i) => {
               const name = cell(i, "name");
-              const auto = name ? getProductEmojiOrNull(name) : null;
-              const override = emojiOverrides[i];
-              const currentEmoji = override || auto || "🛒";
+              const { emoji: currentEmoji, source: emojiSource } = rowEmoji(i);
               const selected = selectedIndexes.has(i);
               const fileCategoryRaw = cell(i, "category");
               // A generic catch-all ("Altro", "Varie"...) doesn't count as a
@@ -691,9 +726,9 @@ function Step3Review({
                     <EmojiPicker
                       name={`emoji_${i}`}
                       value={currentEmoji}
-                      onChange={(v) => setEmojiOverrides({ ...emojiOverrides, [i]: v })}
+                      onChange={(v) => pickEmoji(i, v)}
                     />
-                    {!override && !auto && (
+                    {emojiSource === "fallback" && (
                       <div className="text-label text-destructive">{t.admin.importWizard.emojiNotAuto}</div>
                     )}
                   </td>

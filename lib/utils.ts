@@ -97,8 +97,8 @@ const EMOJI_MAP: [RegExp, string][] = [
   [/fungo|funghi|porcino|porcini|champignon/i, "🍄"],
   // ── Prodotti animali ──────────────────────────────────────────────
   [/uov/i, "🥚"],
+  [/formagg|ricotta|mozzarella|burrata|pecorino|parmigian|\bgrana\b|gorgonzola|stracchino|crescenza|robiola|taleggio|fontina|asiago|montasio|provol|scamorza|cacio|tomino|squacquerone|\bprimo sale\b|mascarpone|emmental|\bbrie\b|\bfeta\b/i, "🧀"],
   [/latte|yogurt|kefir/i, "🥛"],
-  [/formagg|ricotta|mozzarella|pecorino|parmigian/i, "🧀"],
   [/burro|panna|crema/i, "🧈"],
   [/miele/i, "🍯"],
   [/poll|gallin|tacchin|anatr/i, "🍗"],

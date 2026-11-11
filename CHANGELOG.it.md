@@ -25,6 +25,19 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ## [Unreleased]
 
+## [1.45.2] - 11 novembre 2026
+
+*Le icone dei prodotti restano al loro posto.*
+
+### Risolto
+
+- 🧀 **Le icone dei prodotti restano dopo un nuovo listino**: l'import tiene l'icona che il gruppo usa già per un prodotto con quel nome, nel catalogo e nel ciclo, invece di rimettere il carrello o quella dedotta dal nome. L'anteprima mostra quell'icona.
+
+### Modificato
+
+- 🎨 **Un'icona per prodotto, dappertutto**: l'icona scelta nell'anteprima dell'import, nel catalogo o su un prodotto del ciclo (che ora ha il suo campo icona) passa a tutti i prodotti con lo stesso nome, e sceglierla su una riga dell'anteprima la sceglie per le righe con lo stesso nome.
+- 🔎 **Più formaggi riconosciuti**: gorgonzola, stracchino, taleggio, fontina, asiago, provola, scamorza, caciotta, robiola, grana e altri prendono 🧀 da soli.
+
 ## [1.45.1] - 9 novembre 2026
 
 *Preparazione del trasferimento della repo a FlyLabs.*
@@ -867,6 +880,7 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ---
 
+[1.45.2]: https://github.com/flylabs-ai/wegrocery/releases/tag/v1.45.2
 [1.45.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.45.1
 [1.35.0]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.35.0
 [1.34.1]: https://github.com/federicodecillia/wegrocery/releases/tag/v1.34.1
