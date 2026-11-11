@@ -25,6 +25,14 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ## [Unreleased]
 
+### Aggiunte
+- ⏰ **I cicli in programma si aprono da soli.** L'apertura prevista ora è un giorno, senza ora: quella mattina presto gli ordini si aprono e i soci ricevono l'avviso, come quando un admin tocca **Apri gli ordini**, che resta per aprire prima. Un ciclo con **Date indicative** non si apre mai da solo. **Da fare ora** chiede di aprirlo solo se il giorno è passato e il ciclo è ancora in programma.
+- 🔑 [tecnico] **Variabile `CRON_SECRET`.** Facoltativa, almeno 32 caratteri: accende l'apertura automatica tramite il Vercel Cron in `vercel.json` (una volta al giorno, alle 5:00 UTC, anche su Hobby). Senza, `/api/cron/open-cycles` risponde 404 e i cicli si aprono a mano.
+
+### Modificato
+- 📅 **Calendario in Home come quello completo.** Il mese in Home (da computer) usa le stesse icone del Calendario ordini: cestino per l'apertura, lucchetto per l'ultimo giorno, pacco per il ritiro, oggi in un cerchio pieno, e la legenda sotto.
+- 🗓️ **Form del ciclo più ordinato.** Le date stanno insieme come una linea del tempo: apertura e chiusura affiancate da tablet e PC, poi le date indicative e i ritiri, e solo dopo spedizione e spese. Testi di aiuto più brevi e pulsanti più facili da toccare.
+
 ## [1.45.2] - 11 novembre 2026
 
 *Le icone dei prodotti restano al loro posto.*

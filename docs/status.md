@@ -15,6 +15,8 @@ Last updated: 2026-11-11 (release 1.45.2 verified).
 
 ## Waiting on `staging` for the next release
 
+On the PR branch for the next release (not merged while the Vercel move is under way): Home's month view draws the same icons as `/calendario`, planned cycles open by themselves on the morning of their planned day (a date, no time; Vercel Cron daily at 05:00 UTC, `CRON_SECRET`, `lib/cycles/open-planned.ts`), and the cycle form is tidier. `CRON_SECRET` must be set on each installation; Hobby is enough.
+
 Nothing awaiting a product release. Version 1.45.2 (product icons, PR #409, no migration) was released through PR #411 (merge commit `4c137e9`) after manual backup run `42979381978`; staging fast-forwarded to it and the example brand aligned (`212c35b`). `/api/health` on production, demo and example brand reports `ok: true`, `db: true`, version `1.45.2`; the GitHub release workflow passed. Production product icons were aligned on 2026-11-10 (51 names with one icon in use, Neon backup branch `backup-pre-icone-2026-11-10`, audit row `fix_product_emoji`).
 
 WP0 A.1 is released: repository guards, Console defaults and public setup links are ready for the future `flylabs-ai` upstream. Next is the Maintainer-only GitHub transfer checklist in [the phase 2 plan](./2026-11-09-launch-phase2-fleet.md). Stop before those steps; post-transfer checks/cleanup and Vercel transfers are not done.

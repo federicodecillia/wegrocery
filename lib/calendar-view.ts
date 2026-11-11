@@ -2,7 +2,7 @@
 // cycle at a time, or all of them in lanes. Pure, unit tested. Days are
 // "YYYY-MM-DD" in the group's time zone (lib/calendar.ts).
 
-import { monthOf, type CalendarEntry } from "./calendar";
+import { monthOf, type CalendarEntry, type CalendarEventKind } from "./calendar";
 import { deadlineDay } from "./home";
 
 /** Where a cycle sits in time, by day: the ordering window and the pickups. */
@@ -73,6 +73,20 @@ export function dayRole(span: CycleSpan, day: string): DayRole {
 
 export function hasRole(role: DayRole): boolean {
   return role.window || role.opens || role.closes || role.pickup;
+}
+
+/**
+ * The marks of a day with every cycle shown ("Tutti" on /calendario, and
+ * Home's month): one per cycle and event, last days first, then pickups,
+ * then openings. Both calendars draw these, so they cannot drift apart.
+ */
+export function dayMarks(entries: ReadonlyArray<CalendarEntry>, day: string): CalendarEventKind[] {
+  const roles = entries.map((e) => dayRole(spanOf(e), day));
+  return [
+    ...roles.filter((r) => r.closes).map(() => "closes" as const),
+    ...roles.filter((r) => r.pickup).map(() => "pickup" as const),
+    ...roles.filter((r) => r.opens).map(() => "opens" as const),
+  ];
 }
 
 /** The cycles that have something on the day (its window, its opening, close or a pickup). */

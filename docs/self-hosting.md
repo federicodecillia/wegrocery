@@ -180,6 +180,16 @@ installation and give the same value to the console: it then reads counts
 only (members, cycles, orders, version, configuration states), never names,
 addresses or amounts. Without the variable the endpoint answers 404.
 
+### Planned cycles opening by themselves
+
+`vercel.json` runs a Vercel Cron once a day (05:00 UTC) on
+`/api/cron/open-cycles`: a planned cycle with firm dates opens on the morning
+of its planned day and members are told, as when an admin taps "Open the
+orders". Set `CRON_SECRET` (`openssl rand -hex 32`) on the Production
+environment and redeploy; without it the route answers 404 and admins open
+planned cycles by hand. It works on the Hobby plan (Vercel then runs it at
+some minute of that hour).
+
 ### Membership card check (WallyFor)
 
 Specific to groups that manage their membership on WallyFor: with

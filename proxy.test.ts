@@ -13,7 +13,7 @@ describe("proxy matcher", () => {
   });
 
   it("leaves the public endpoints open and guards the pages", () => {
-    for (const url of ["/api/health", "/api/instance-stats", "/api/unsubscribe", "/manifest.webmanifest"]) {
+    for (const url of ["/api/health", "/api/instance-stats", "/api/cron/open-cycles", "/api/unsubscribe", "/manifest.webmanifest"]) {
       expect(matches(url)).toBe(false);
     }
     for (const url of ["/", "/ordine", "/admin", "/changelog", "/api/health/x"]) {
