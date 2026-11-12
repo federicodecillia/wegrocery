@@ -24,6 +24,9 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ## [Unreleased]
 
+### Changed
+- 🪵 [tech] **Automatic opening leaves a trace.** Each daily run of `/api/cron/open-cycles` writes one line to the runtime logs with the number of cycles opened and their ids.
+
 ## [1.46.0] - 2026-11-11
 
 *Planned cycles open by themselves.*

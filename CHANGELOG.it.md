@@ -25,6 +25,9 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ## [Unreleased]
 
+### Modificato
+- 🪵 [tecnico] **L'apertura automatica lascia traccia.** Ogni giro giornaliero di `/api/cron/open-cycles` scrive una riga nei log runtime con il numero di cicli aperti e i loro id.
+
 ## [1.46.0] - 11 novembre 2026
 
 *I cicli in programma si aprono da soli.*
