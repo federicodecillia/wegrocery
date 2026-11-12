@@ -16,6 +16,8 @@ export async function GET(request: Request): Promise<Response> {
   }
   try {
     const opened = await openDuePlannedCycles(getDb(), new Date());
+    // One line per run, so the Vercel runtime logs show that it ran and what it did.
+    console.info(`[auto_open] ok, opened ${opened.length}${opened.length > 0 ? `: ${opened.join(", ")}` : ""}`);
     if (opened.length > 0) {
       revalidatePath("/admin");
       revalidatePath("/");
