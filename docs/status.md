@@ -27,6 +27,8 @@ Still to do before a group turns on limited quantities with card payments: a Str
 
 ## Planned and in progress
 
+- CI timing measurement completed, [report](./2026-11-09-ci-runtime-measurement.md), draft PR #403. Only measurement is approved. Five comparable successful runs have the same test inventory; median CI elapsed time is 10m10s. No runtime, workflow, test, query, timeout, concurrency or security setting was changed. Optimization remains an unapproved hypothesis requiring a separate equivalence and safety review.
+
 - Launch phase 2, "safe fleet": executable spec in `docs/2026-11-09-launch-phase2-fleet.md`. Work packages in order: WP0 (move the repositories to `flylabs-ai` and the Vercel projects to the Pro account, the maintainer wants it first), WP1 (invariants per instance), WP2 (backups and restore tests, private repo `flylabs-ai/wegrocery-backups`), WP3 (data export), WP4 (shared sender), WP5 (subdomains), WP6 (rollouts). One PR per work package to `staging`. Choices marked **[default]** stand unless the maintainer changes them; steps marked **Maintainer** (transfers, private repo, secrets, keys, domain) are done by him, so stop and ask when one blocks you. WP0 A.1 is released in 1.45.1. The maintainer next verifies organization 2FA/ownership, transfers both repositories, installs the GitHub Apps and reconnects Claude/Codex. Parts A.3/A.4 and B remain pending.
 - Possible next steps, undecided: comments from members on the calendar and Home; moving more pieces (planned cycles) into the FlyLabs Kit.
 
