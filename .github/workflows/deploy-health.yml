@@ -6,10 +6,13 @@ name: Deploy Health
 # deployed commit. Its result is what an agent reads to know a deploy is
 # healthy, also on staging behind Deployment Protection.
 #
-# Secret VERCEL_AUTOMATION_BYPASS_SECRET: a "Protection Bypass for Automation"
-# of the porta-moneta Vercel project, sent as the x-vercel-protection-bypass
-# header. Public deployments ignore it; without it a protected staging
-# answers 401 and the check fails, which says so.
+# Secrets: a "Protection Bypass for Automation" per Vercel project, sent as
+# the x-vercel-protection-bypass header. VERCEL_AUTOMATION_BYPASS_SECRET is
+# porta-moneta's, VERCEL_AUTOMATION_BYPASS_SECRET_DEMO wegrocery-demo's: each
+# deployment URL is protected by its own project's key. Without the right one
+# a protected deployment answers 401 or redirects (302) to the Vercel login,
+# and the check fails, which says so. The Console (wegrocery-console) has its
+# own version in console/package.json and is not checked here.
 
 on: deployment_status
 
@@ -18,7 +21,7 @@ permissions:
 
 jobs:
   health:
-    if: ${{ github.event.deployment_status.state == 'success' }}
+    if: ${{ github.event.deployment_status.state == 'success' && !contains(github.event.deployment.environment, 'wegrocery-console') }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -32,7 +35,7 @@ jobs:
         env:
           URL: ${{ github.event.deployment_status.environment_url || github.event.deployment_status.target_url }}
           ENVIRONMENT: ${{ github.event.deployment.environment }}
-          BYPASS: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+          BYPASS: ${{ contains(github.event.deployment.environment, 'wegrocery-demo') && secrets.VERCEL_AUTOMATION_BYPASS_SECRET_DEMO || secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
         run: |
           expected=$(node -p 'require("./package.json").version')
           echo "Environment: $ENVIRONMENT, expected version $expected"
@@ -48,7 +51,7 @@ jobs:
             echo "Attempt $attempt: HTTP $code"
             sleep 10
           done
-          if [ "$code" = "401" ] || [ "$code" = "403" ]; then
+          if [ "$code" = "401" ] || [ "$code" = "403" ] || [ "$code" = "302" ]; then
             echo "::error::Deployment Protection refused the check: is VERCEL_AUTOMATION_BYPASS_SECRET set for this project?"
           elif [ "$code" = "200" ] || [ "$code" = "503" ]; then
             echo "::error::Unhealthy or wrong version (expected $expected): $(cat body.json)"
