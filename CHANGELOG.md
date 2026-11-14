@@ -24,6 +24,9 @@ A bullet that only matters to whoever hosts, runs or develops the app
 
 ## [Unreleased]
 
+### Added
+- 📝 **See unconfirmed drafts.** In an open cycle's Overview and Orders, admins and order referents can see who still has a new order or changes to confirm, with an estimated amount and the last edit time.
+
 ### Changed
 - 🪵 [tech] **Automatic opening leaves a trace.** Each daily run of `/api/cron/open-cycles` writes one line to the runtime logs with the number of cycles opened and their ids.
 

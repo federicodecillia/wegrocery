@@ -25,6 +25,9 @@ dettagli tecnici", la release su GitHub la tiene.
 
 ## [Unreleased]
 
+### Aggiunte
+- 📝 **Vedi le bozze non confermate.** In Panoramica e Ordini di un ciclo aperto, admin e referenti ordini vedono chi ha un nuovo ordine o modifiche da confermare, con importo indicativo e ultima modifica.
+
 ### Modificato
 - 🪵 [tecnico] **L'apertura automatica lascia traccia.** Ogni giro giornaliero di `/api/cron/open-cycles` scrive una riga nei log runtime con il numero di cicli aperti e i loro id.
 

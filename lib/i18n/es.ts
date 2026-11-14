@@ -1191,6 +1191,13 @@ export const es: Strings = {
       closeProducts: "Cerrar productos",
       importListing: "📥 Importar lista de precios",
       recapOrders: "Ver los pedidos →",
+      unconfirmedDrafts: "Borradores sin confirmar",
+      draftsUnpaid: "Sin pagar: quedan fuera del pedido",
+      draftsUnconfirmed: "Sin confirmar: quedan fuera del pedido",
+      draftNewOrder: "Nuevo pedido",
+      draftChanges: "Cambios",
+      draftEstimate: (amount: string) => `aprox. ${amount}`,
+      draftModified: (when: string) => `modificado ${when}`,
       perOrderCloseWarning: (drafts: number, pending: number) =>
         `Borradores sin pagar: ${drafts} (quedan fuera del pedido). Pagos en curso: ${pending} (se reembolsan si llegan tras el cierre).`,
       cycleClosed: (n: number) => `Ciclo cerrado. ${n} cargos generados.`,

@@ -1,10 +1,12 @@
 import { getAdminCycleSummary } from "@/lib/db/queries";
+import type { CycleDraftSummary } from "@/lib/admin/cycle-drafts";
 import { formatEur, getProductEmoji } from "@/lib/utils";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { t } from "@/lib/i18n";
 import { CsvExportButton } from "./ordini-client";
 import { CycleOrdersByMember } from "./closed-cycle-details";
 import { OrdersSplit } from "./orders-split";
+import { CycleDraftsCard } from "./cycle-drafts-card";
 
 // Admin → Ciclo → Ordini: the cycle's orders in one place, "Per socio" and
 // "Per prodotto" (side by side from a PC), with the one "Scarica distinta".
@@ -15,10 +17,14 @@ export async function CycleOrdersView({
   cycleId,
   cycleTitle,
   cycleStatus,
+  drafts,
+  cardPayment,
 }: {
   cycleId: string;
   cycleTitle: string;
   cycleStatus: string;
+  drafts: ReadonlyArray<CycleDraftSummary>;
+  cardPayment: boolean;
 }) {
   const summary = await getAdminCycleSummary(cycleId);
   const o = t.admin.orders;
@@ -96,6 +102,7 @@ export async function CycleOrdersView({
           <CsvExportButton cycleId={cycleId} />
         </div>
       )}
+      {cycleStatus === "open" && <CycleDraftsCard drafts={drafts} cardPayment={cardPayment} />}
       <OrdersSplit byMember={byMember} byProduct={byProduct} />
     </div>
   );
