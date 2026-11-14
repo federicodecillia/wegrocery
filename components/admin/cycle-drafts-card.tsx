@@ -20,17 +20,17 @@ export function CycleDraftsCard({ drafts, cardPayment }: {
       </CardHeader>
       <ul className="divide-y divide-border">
         {drafts.map((draft) => (
-          <li key={draft.memberId} className="min-w-0 p-4.5">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-              <div className="min-w-0 flex-1">
-                <p className="break-words text-[14px] font-semibold text-foreground">{draft.name}</p>
-                <Badge className="mt-1">{draft.kind === "new" ? c.draftNewOrder : c.draftChanges}</Badge>
-              </div>
-              <p className="text-[14px] font-semibold tabular-nums text-foreground">{c.draftEstimate(formatEur(draft.estimatedTotal))}</p>
+          <li key={draft.memberId} className="min-w-0 px-4 py-2.5">
+            <div className="flex items-start justify-between gap-3">
+              <p className="min-w-0 flex-1 break-words text-[14px] font-semibold text-foreground">{draft.name}</p>
+              <p className="shrink-0 whitespace-nowrap text-[14px] font-semibold tabular-nums text-foreground">{c.draftEstimate(formatEur(draft.estimatedTotal))}</p>
             </div>
-            <p className="mt-2 text-[12px] text-muted-foreground">
-              <time dateTime={draft.updatedAt.toISOString()}>{c.draftModified(formatDateTime(draft.updatedAt))}</time>
-            </p>
+            <div className="mt-1 flex items-center gap-2">
+              <Badge className="shrink-0">{draft.kind === "new" ? c.draftNewOrder : c.draftChanges}</Badge>
+              <p className="min-w-0 text-[12px] text-muted-foreground">
+                <time dateTime={draft.updatedAt.toISOString()}>{c.draftModified(formatDateTime(draft.updatedAt))}</time>
+              </p>
+            </div>
           </li>
         ))}
       </ul>
