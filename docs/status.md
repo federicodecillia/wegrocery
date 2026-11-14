@@ -2,7 +2,7 @@
 
 The living snapshot of what is released, what waits on `staging` and what is planned. Any agent (Claude Code, Codex or another) reads it before starting and updates it in the same PR that changes the picture: a release, a migration applied somewhere, a plan approved or dropped. Keep it short; the detail lives in `CHANGELOG.md`, the dated plans in `docs/` and the PRs.
 
-Last updated: 2026-11-11 (release 1.46.0 verified).
+Last updated: 2026-11-14 (unconfirmed draft visibility PR opened; release 1.46.0 unchanged).
 
 ## Versions and migrations
 
@@ -15,7 +15,9 @@ Last updated: 2026-11-11 (release 1.46.0 verified).
 
 ## Waiting on `staging` for the next release
 
-Nothing awaiting a product release. Version 1.46.0 (planned cycles open by themselves, Home calendar icons, tidier cycle form; PR #408, no migration) was released through PR #414 (merge commit `50d2972`) after manual backup run `43062446242`; staging fast-forwarded to it and the example brand aligned (`f5bcb6a`). `CRON_SECRET` is set (Production) on porta-moneta, demo and example brand; `/api/cron/open-cycles` answers 404 without it. `/api/health` on production, demo and example brand reports `ok: true`, `db: true`, version `1.46.0`; the GitHub release workflow published `v1.46.0`. First automatic run: 2026-11-12 at 05:00 UTC.
+- PR [#418](https://github.com/flylabs-ai/wegrocery/pull/418) to `staging`: read-only unconfirmed draft lists in open-cycle Overview and Orders for admins and order referents, with the warning count following the same resume rules; no migration.
+
+Latest release: version 1.46.0 (planned cycles open by themselves, Home calendar icons, tidier cycle form; PR #408, no migration) was released through PR #414 (merge commit `50d2972`) after manual backup run `43062446242`; staging fast-forwarded to it and the example brand aligned (`f5bcb6a`). `CRON_SECRET` is set (Production) on porta-moneta, demo and example brand; `/api/cron/open-cycles` answers 404 without it. `/api/health` on production, demo and example brand reports `ok: true`, `db: true`, version `1.46.0`; the GitHub release workflow published `v1.46.0`. First automatic run: 2026-11-12 at 05:00 UTC.
 
 WP0 is done (2026-11-11): the repositories are under `flylabs-ai`, and all four Vercel projects (porta-moneta, demo, example brand, Console) are in the Flylabs team. PR #407 was closed without merging. The production Deploy Hook and the Deploy Health bypass followed the project and work (Deploy Health run `43061887968` green on the new deploy).
 

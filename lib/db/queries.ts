@@ -22,6 +22,7 @@ import {
   type DraftLine,
 } from "./schema";
 import type { CycleLedgerRow } from "@/lib/admin/cycle-money";
+import { summarizeCycleDrafts } from "@/lib/admin/cycle-drafts";
 import { buildCycleHistory, type CycleHistoryEntry } from "@/lib/cycle-history";
 import { MISS_RETENTION_DAYS } from "@/lib/guide/search-misses";
 import { normalizeEmail } from "@/lib/member-email";
@@ -592,6 +593,41 @@ export async function getAllCycles(limit = 30) {
     .limit(limit);
 }
 
+// Read only: names, current products and the draft owners' confirmed lines.
+// Normalize like getOrderDraft so the admin sees the same resumable drafts.
+export async function getCycleDrafts(cycleId: string) {
+  const db = getDb();
+  const [drafts, cycleProducts] = await Promise.all([
+    db
+      .select({ memberId: orderDrafts.memberId, name: members.fullName, lines: orderDrafts.lines, updatedAt: orderDrafts.updatedAt })
+      .from(orderDrafts)
+      .innerJoin(members, eq(orderDrafts.memberId, members.memberId))
+      .where(eq(orderDrafts.cycleId, cycleId)),
+    db
+      .select({ productId: products.productId, unitPrice: products.unitPrice })
+      .from(products)
+      .where(and(eq(products.cycleId, cycleId), eq(products.active, true))),
+  ]);
+  if (drafts.length === 0) return [];
+
+  const confirmedLines = await db
+    .select({ memberId: orders.memberId, productId: orders.productId, quantity: orders.quantity })
+    .from(orders)
+    .where(and(eq(orders.cycleId, cycleId), inArray(orders.memberId, drafts.map((draft) => draft.memberId))));
+  const confirmedLinesByMember = new Map<string, DraftLine[]>();
+  for (const line of confirmedLines) {
+    const lines = confirmedLinesByMember.get(line.memberId) ?? [];
+    lines.push({ productId: line.productId, quantity: line.quantity });
+    confirmedLinesByMember.set(line.memberId, lines);
+  }
+
+  return summarizeCycleDrafts(
+    drafts.map((draft) => ({ ...draft, lines: normalizeDraftLines(draft.lines) })),
+    cycleProducts,
+    confirmedLinesByMember,
+  );
+}
+
 export async function getOpenCycleStats(cycleId: string) {
   const db = getDb();
   const [result] = await db
@@ -603,16 +639,19 @@ export async function getOpenCycleStats(cycleId: string) {
     .where(eq(orders.cycleId, cycleId));
   // Pay-per-order: drafts nobody paid stay out of the order at the close, and
   // a Checkout still open may complete after it (then it is refunded).
-  const { rows } = await db.execute<{ drafts: number; pending: number }>(sql`
-    SELECT
-      (SELECT count(*)::int FROM order_drafts WHERE cycle_id = ${cycleId}) AS drafts,
-      (SELECT count(*)::int FROM payments WHERE cycle_id = ${cycleId} AND kind = 'order' AND status = 'pending') AS pending
-  `);
+  const [drafts, { rows }] = await Promise.all([
+    getCycleDrafts(cycleId),
+    db.execute<{ pending: number }>(sql`
+      SELECT count(*)::int AS pending FROM payments
+      WHERE cycle_id = ${cycleId} AND kind = 'order' AND status = 'pending'
+    `),
+  ]);
   return {
     orderCount: parseInt(result?.orderCount ?? "0"),
     grandTotal: parseFloat(result?.grandTotal ?? "0"),
-    unpaidDrafts: rows[0]?.drafts ?? 0,
+    unpaidDrafts: drafts.length,
     pendingPayments: rows[0]?.pending ?? 0,
+    drafts,
   };
 }
 

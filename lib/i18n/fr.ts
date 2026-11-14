@@ -1191,6 +1191,13 @@ export const fr: Strings = {
       closeProducts: "Fermer les produits",
       importListing: "📥 Importer une liste de prix",
       recapOrders: "Voir les commandes →",
+      unconfirmedDrafts: "Brouillons non confirmés",
+      draftsUnpaid: "Non payés : ils restent hors de la commande",
+      draftsUnconfirmed: "Non confirmés : ils restent hors de la commande",
+      draftNewOrder: "Nouvelle commande",
+      draftChanges: "Modifications",
+      draftEstimate: (amount: string) => `environ ${amount}`,
+      draftModified: (when: string) => `modifié le ${when}`,
       perOrderCloseWarning: (drafts: number, pending: number) =>
         `Brouillons non payés : ${drafts} (ils restent hors de la commande). Paiements en cours : ${pending} (remboursés s'ils arrivent après la clôture).`,
       cycleClosed: (n: number) => `Cycle clôturé. ${n} débits générés.`,

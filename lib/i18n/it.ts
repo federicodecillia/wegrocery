@@ -1193,6 +1193,13 @@ export const it = {
       closeProducts: "Chiudi Prodotti",
       importListing: "📥 Importa listino",
       recapOrders: "Vedi gli ordini →",
+      unconfirmedDrafts: "Bozze non confermate",
+      draftsUnpaid: "Non pagate: restano fuori dall'ordine",
+      draftsUnconfirmed: "Non confermate: restano fuori dall'ordine",
+      draftNewOrder: "Nuovo ordine",
+      draftChanges: "Modifiche",
+      draftEstimate: (amount: string) => `circa ${amount}`,
+      draftModified: (when: string) => `modificata ${when}`,
       perOrderCloseWarning: (drafts: number, pending: number) =>
         `Bozze non pagate: ${drafts} (restano fuori dall'ordine). Pagamenti in corso: ${pending} (se arrivano dopo la chiusura vengono rimborsati).`,
       cycleClosed: (n: number) => `Ciclo chiuso. ${n} addebiti generati.`,

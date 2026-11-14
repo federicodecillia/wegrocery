@@ -450,6 +450,7 @@ ID prefix convention: `cyc_*`, `mem_*`, `prd_*`, `ord_*`, `led_*`, `not_*`, `aud
   debounce, guarded by the cycle row `FOR SHARE` so no draft lands after the
   close or the deadline). A draft equal to the confirmed order is deleted;
   `saveOrder` and `performCycleClose` delete drafts in their batch.
+  Admin → Ciclo → Panoramica/Ordini lists resumable `order_drafts` by name for admins and order referents on open cycles (`getCycleDrafts`, `lib/admin/cycle-drafts.ts`, `components/admin/cycle-drafts-card.tsx`); `getOpenCycleStats.unpaidDrafts` counts that same list, with estimates from current available products only.
 - **Server Actions return expected refusals as values, never throw them**:
   Next.js masks thrown Server Action messages in production. Internally a
   refusal is an `ActionError` (`lib/action-error.ts`, also thrown by the

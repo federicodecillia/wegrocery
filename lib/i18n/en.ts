@@ -1191,6 +1191,13 @@ export const en: Strings = {
       closeProducts: "Close Products",
       importListing: "📥 Import listing",
       recapOrders: "See the orders →",
+      unconfirmedDrafts: "Unconfirmed drafts",
+      draftsUnpaid: "Unpaid: they stay out of the order",
+      draftsUnconfirmed: "Unconfirmed: they stay out of the order",
+      draftNewOrder: "New order",
+      draftChanges: "Changes",
+      draftEstimate: (amount: string) => `about ${amount}`,
+      draftModified: (when: string) => `edited ${when}`,
       perOrderCloseWarning: (drafts: number, pending: number) =>
         `Unpaid drafts: ${drafts} (they stay out of the order). Payments in progress: ${pending} (refunded if they arrive after the close).`,
       cycleClosed: (n: number) => `Cycle closed. ${n} charges generated.`,

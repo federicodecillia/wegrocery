@@ -44,6 +44,7 @@ import { CycleAccountsView } from "./cycle-accounts-view";
 import { SupplierSteps } from "./supplier-steps";
 import { CycleList, CyclePicker, type CycleListItem, type SettleState } from "./cycle-list";
 import { CycleOrdersView } from "./cycle-orders-view";
+import { CycleDraftsCard } from "./cycle-drafts-card";
 import { CyclePickupsView } from "./cycle-pickups-view";
 import { RichText } from "@/components/guide/rich-text";
 import { autoOpenEnabled } from "@/lib/cycles/cron-auth";
@@ -357,7 +358,12 @@ async function SelectedCycle({
 
       {view === "panoramica" &&
         (isOpen ? (
-          <OpenCycleOverview cycle={cycle} stats={stats} suppliers={suppliers} />
+          <OpenCycleOverview
+            cycle={cycle}
+            stats={stats}
+            suppliers={suppliers}
+            draftsCard={rawStats && rawStats.drafts.length > 0 ? <CycleDraftsCard drafts={rawStats.drafts} cardPayment={perOrder} /> : null}
+          />
         ) : isPlanned ? (
           <Card>
             <CardContent>
@@ -380,7 +386,15 @@ async function SelectedCycle({
 
       {view === "prodotti" && <CycleProductsView cycle={cycle} suppliers={suppliers} />}
 
-      {view === "ordini" && <CycleOrdersView cycleId={c.cycleId} cycleTitle={c.title} cycleStatus={c.status} />}
+      {view === "ordini" && (
+        <CycleOrdersView
+          cycleId={c.cycleId}
+          cycleTitle={c.title}
+          cycleStatus={c.status}
+          drafts={rawStats?.drafts ?? []}
+          cardPayment={perOrder}
+        />
+      )}
 
       {view === "fornitore" &&
         (c.supplierName ? (
